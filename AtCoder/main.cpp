@@ -1,0 +1,125 @@
+#ifndef HIDDEN_IN_VISUAL_STUDIO // 無意味．折りたたむのが目的．
+
+// 警告の抑制
+#define _CRT_SECURE_NO_WARNINGS
+
+// 使えるライブラリの読み込み
+#include <bits/stdc++.h>
+using namespace std;
+
+// 型名の短縮
+using ll = long long; // -2^63 ～ 2^63 = 9 * 10^18（int は -2^31 ～ 2^31 = 2 * 10^9）
+using pii = pair<int, int>;	using pll = pair<ll, ll>;	using pil = pair<int, ll>;	using pli = pair<ll, int>;
+using vi = vector<int>;		using vvi = vector<vi>;		using vvvi = vector<vvi>;
+using vl = vector<ll>;		using vvl = vector<vl>;		using vvvl = vector<vvl>;
+using vb = vector<bool>;	using vvb = vector<vb>;		using vvvb = vector<vvb>;
+using vc = vector<char>;	using vvc = vector<vc>;		using vvvc = vector<vvc>;
+using vd = vector<double>;	using vvd = vector<vd>;		using vvvd = vector<vvd>;
+template <class T> using priority_queue_rev = priority_queue<T, vector<T>, greater<T>>;
+using Graph = vvi;
+
+// 定数の定義
+const double PI = 3.14159265359;
+const double DEG = PI / 180.; // θ [deg] = θ * DEG [rad]
+const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
+const vi dy4 = { 0, 1, 0, -1 };
+const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
+const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
+const ll INFL = (ll)2e18;	const int INF = (int)1e9;
+const double EPS = 1e-10; // 許容誤差に応じて調整
+
+// 汎用マクロの定義
+#define all(a) (a).begin(), (a).end()
+#define sz(x) ((int)(x).size())
+#define distance (int)distance
+#define Yes(b) {cout << ((b) ? "Yes" : "No") << endl;}
+#define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
+#define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
+#define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
+#define repe(v, a) for(const auto& v : (a)) // a の全要素（変更不可能）
+#define repea(v, a) for(auto& v : (a)) // a の全要素（変更可能）
+#define repb(set, d) for(int set = 0; set < (1 << int(d)); ++set) // d ビット全探索（昇順）
+#define repp(a) sort(all(a)); for(bool a##_perm = true; a##_perm; a##_perm = next_permutation(all(a))) // a の順列全て（昇順）
+#define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
+#define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
+
+// 汎用関数の定義
+template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
+template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; return true; } return false; } // 最大値を更新（更新されたら true を返す）
+template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
+
+// 入出力用の >>, << のオーバーロード
+template <class T, class U> inline istream& operator>> (istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
+template <class T, class U> inline ostream& operator<< (ostream& os, const pair<T, U>& p) { os << "(" << p.first << "," << p.second << ")"; return os; }
+template <class T, class U, class V> inline istream& operator>> (istream& is, tuple<T, U, V>& t) { is >> get<0>(t) >> get<1>(t) >> get<2>(t); return is; }
+template <class T, class U, class V> inline ostream& operator<< (ostream& os, const tuple<T, U, V>& t) { os << "(" << get<0>(t) << "," << get<1>(t) << "," << get<2>(t) << ")"; return os; }
+template <class T, class U, class V, class W> inline istream& operator>> (istream& is, tuple<T, U, V, W>& t) { is >> get<0>(t) >> get<1>(t) >> get<2>(t) >> get<3>(t); return is; }
+template <class T, class U, class V, class W> inline ostream& operator<< (ostream& os, const tuple<T, U, V, W>& t) { os << "(" << get<0>(t) << "," << get<1>(t) << "," << get<2>(t) << "," << get<3>(t) << ")"; return os; }
+template <class T> inline istream& operator>> (istream& is, vector<T>& v) { repea(x, v) is >> x; return is; }
+template <class T> inline ostream& operator<< (ostream& os, const vector<T>& v) { repe(x, v) os << x << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
+template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
+
+// 手元環境（Visual Studio）
+#ifdef _MSC_VER
+#define popcount (int)__popcnt // 全ビットにおける 1 の個数
+#define popcountll (int)__popcnt64
+inline int lsb(unsigned int n) { unsigned long i; _BitScanForward(&i, n); return i; } // 最下位ビットの位置（0-indexed）
+inline int lsbll(unsigned long long n) { unsigned long i; _BitScanForward64(&i, n); return i; }
+inline int msb(unsigned int n) { unsigned long i; _BitScanReverse(&i, n); return i; } // 最上位ビットの位置（0-indexed）
+inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, n); return i; }
+template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
+#define dump(x) cerr << "\033[1;36m" << (x) << "\033[0m" << endl; // デバッグ出力用
+#define dumpel(v) cerr << "\033[1;36m"; repe(x, (v)) {cerr << x << endl;} cerr << "\033[0m";
+#define dumpeli(v) cerr << "\033[1;36m"; rep(i, sz(v)) {cerr << i << ": " << v[i] << endl;} cerr << "\033[0m";
+#define input_from_file(f) ifstream in(f); cin.rdbuf(in.rdbuf());
+// 提出用（GCC）
+#else
+#define popcount (int)__builtin_popcount
+#define popcountll (int)__builtin_popcountll
+#define lsb __builtin_ctz
+#define lsbll __builtin_ctzll
+#define msb(n) (31 - __builtin_clz(n))
+#define msbll(n) (63 - __builtin_clzll(n))
+#define gcd __gcd
+#define dump(x)
+#define dumpel(v)
+#define dumpeli(v)
+#define input_from_file(f)
+#endif
+
+#endif // 無意味．折りたたむのが目的．
+
+
+//-----------------AtCoder 専用-----------------
+#include <atcoder/all>
+using namespace atcoder;
+
+//using mint = modint1000000007;
+using mint = modint998244353;
+//using mint = modint; // mint::set_mod(m);
+
+istream& operator>> (istream& is, mint& x) { ll tmp; is >> tmp; x = tmp; return is; }
+ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+//----------------------------------------------
+
+
+int main() {
+//  input_from_file("input.txt"); // ファイルから入力
+
+	vi a(10);
+
+	a[1 + 1] = 2;
+
+	int i = 0;
+
+	a[i + 1] = 1;
+	a[i + 4U] = 4;
+	a[i + 5L] = 5;
+	a[i + 6LL] = 6;
+	a[(ll)i + 7] = 7;
+
+	cout << a << endl;
+}

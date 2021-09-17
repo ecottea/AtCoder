@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\幾何">
+      <UniqueIdentifier>{9818732e-84c1-4d2f-be07-8a5158e8fe82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\グラフ">
+      <UniqueIdentifier>{7ebc4f41-b407-424b-8f38-0c7af0d34a82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\クエリ処理">
+      <UniqueIdentifier>{59d0395d-d97f-40d9-bcbf-0e1ecfbb1a55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\典型問題">
+      <UniqueIdentifier>{3d7ede8b-66a9-4288-8a55-1c2d9a64d7ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\行列ベクトル">
+      <UniqueIdentifier>{123631c0-bf2a-494d-8537-b924053d4f00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\代数">
+      <UniqueIdentifier>{2a020077-534a-477b-9a83-27ae4d7d2bdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\列">
+      <UniqueIdentifier>{9624464e-a2c8-4e1a-b285-83292d7c1f9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\区間">
+      <UniqueIdentifier>{29392755-fd06-423f-a2da-fbaaed974ab3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\探索">
+      <UniqueIdentifier>{1a49ddbb-8e29-412b-98db-3a1a3a0c7386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\格子">
+      <UniqueIdentifier>{8f190f5c-97b7-4334-93a7-b6b1192b2ac8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\最適化">
+      <UniqueIdentifier>{10924012-fe11-45fb-985f-2db4efb5c97f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="header.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ゲーム.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="その他.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="構造%28幾何%29.h">
+      <Filter>ヘッダー ファイル\幾何</Filter>
+    </ClInclude>
+    <ClInclude Include="判定%28幾何%29.h">
+      <Filter>ヘッダー ファイル\幾何</Filter>
+    </ClInclude>
+    <ClInclude Include="作図.h">
+      <Filter>ヘッダー ファイル\幾何</Filter>
+    </ClInclude>
+    <ClInclude Include="計量.h">
+      <Filter>ヘッダー ファイル\幾何</Filter>
+    </ClInclude>
+    <ClInclude Include="グラフ.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="根付き木.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="セグメント木.h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="Union-Find.h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="DP.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="ナップサック.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="行列.h">
+      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+    </ClInclude>
+    <ClInclude Include="疎行列.h">
+      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+    </ClInclude>
+    <ClInclude Include="ベクトル.h">
+      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+    </ClInclude>
+    <ClInclude Include="多項式.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="ソート.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="判定(グラフ).h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(グラフ).h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="木クエリ.h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="二分木.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="構造(グラフ).h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="木.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="フェニック木.h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="部分列.h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="列.h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="文字列.h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="座標圧縮.h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="数論.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="数の表示.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="合同式.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="組合せ論.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="部分和問題.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="区間.h">
+      <Filter>ヘッダー ファイル\区間</Filter>
+    </ClInclude>
+    <ClInclude Include="いもす法.h">
+      <Filter>ヘッダー ファイル\区間</Filter>
+    </ClInclude>
+    <ClInclude Include="マッチング.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="探索.h">
+      <Filter>ヘッダー ファイル\探索</Filter>
+    </ClInclude>
+    <ClInclude Include="全探索.h">
+      <Filter>ヘッダー ファイル\探索</Filter>
+    </ClInclude>
+    <ClInclude Include="格子.h">
+      <Filter>ヘッダー ファイル\格子</Filter>
+    </ClInclude>
+    <ClInclude Include="マンハッタン.h">
+      <Filter>ヘッダー ファイル\幾何</Filter>
+    </ClInclude>
+    <ClInclude Include="線形計画問題.h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
+    </ClInclude>
+    <ClInclude Include="グラフ最適化.h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
+    </ClInclude>
+    <ClInclude Include="クエリ.h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="ビット行列.h">
+      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+    </ClInclude>
+    <ClInclude Include="特殊化.h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="対称群.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="input.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

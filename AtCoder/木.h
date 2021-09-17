@@ -1,0 +1,334 @@
+#pragma once
+#include "header.h"
+#include "構造(グラフ).h"
+// ■■■■■ 木 ■■■■■
+
+
+
+//【木のオイラーツアー】O(|V|)
+/*
+* 頂点 r を始点とする木 g のオイラーツアーを求める．
+*
+* in[v] : 最初に頂点 v を訪れた時刻（r なら 0）
+* out[v] : 最後に頂点 v から離れた時刻（r なら 2 |V| - 1）
+* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 |V| - 1）
+*/
+template <class G>
+void euler_tour(G& g, int r, vi& in, vi& out, vi& pos) {
+	// 参考 : https://qiita.com/recuraki/items/72e37eb9be9f71bc623a
+
+	int n = (int)g.size();
+
+	int time = 0;
+	in = vi(n);
+	out = vi(n);
+	pos = vi(2 * n - 1);
+
+	// 再帰用の関数
+	function<void(int, int)> rf = [&](int s, int p) {
+		// s を最初に訪れた
+		in[s] = time;
+		pos[time++] = s;
+
+		for (auto t : g[s]) {
+			// 親には戻らない．
+			if (t == p) {
+				continue;
+			}
+
+			rf(t, s);
+			pos[time++] = s;
+		}
+
+		// s から最後に離れる
+		out[s] = time;
+	};
+
+	// 根から順に探索する．
+	rf(r, -1);
+}
+
+
+//【独立集合の数え上げ】O(|V|)
+/*
+* 木 g の独立集合の個数を返す．
+*
+*（木の状態 DP）
+*/
+mint count_independent_set(Graph& g) {
+	int n = sz(g);
+
+	// 便宜上 0 を根とした根付き木とみなし，黒で塗った頂点を独立集合として選ぶことにする．
+	// dp[i][j] : 頂点 i が色 j(1:黒, 0:白) のとき，その部分木に含まれる独立集合の個数
+	vvm dp(n, vm(2));
+	vvb seen(n, vb(2));
+
+	// メモ化再帰用の関数
+	// s : 注目頂点，c : s の色，p : 親頂点
+	function<mint(int, int, int)> dfs = [&](int s, int c, int p) {
+		// 既に計算済ならその値を返す．
+		if (seen[s][c]) {
+			return dp[s][c];
+		}
+		seen[s][c] = true;
+
+		// 積についての単位元で初期化しておく．
+		dp[s][c] = 1;
+
+		// s のそれぞれの子 t について処理を行う．
+		for (auto t : g[s]) {
+			// 親には戻らない
+			if (t == p) {
+				continue;
+			}
+
+			// t が白になるような部分木は候補になる．
+			mint mul = dfs(t, 0, s);
+			if (!c) {
+				// s の色が白ならば，t が黒になるような部分木も候補になる．
+				mul += dfs(t, 1, s);
+			}
+
+			// s の部分木については独立なので，積の法則で数え上げる．
+			dp[s][c] *= mul;
+		}
+
+		return dp[s][c];
+	};
+
+	return dfs(0, 0, 0) + dfs(0, 1, 0);
+}
+
+
+//【部分木の数え上げ】O(|V|)
+/*
+* 木 g の部分木のうち頂点 i を含むものの個数を cnt[i] に格納する．
+*
+*（全方位木 DP）
+*/
+void count_subtree(Graph& g, vm& cnt) {
+	int n = sz(g);
+
+	// 辺 (p, s) を切断したときの s を含む部分木を部分木 (p, s) と呼ぶ．
+	// dp[{p, s}] : 部分木 (p, s) の s を含む部分木の個数
+	map<pii, mint> dp;
+
+	// 頂点 0 を根とし，葉の方向に向かってのみの dp[{p, s}] を計算する．
+	function<mint(int, int)> dfs_to_leaf = [&](int p, int s) {
+		dp[{p, s}] = 1;
+
+		// 子の情報を集めて積をとり，自身の情報を計算する．
+		for (auto t : g[s]) {
+			if (t != p) {
+				dp[{p, s}] *= dfs_to_leaf(s, t) + 1;
+			}
+		}
+
+		return dp[{p, s}];
+	};
+
+	// 頂点 0 を根とし，根の方向に向かってのみの dp[{s, p}] を計算する．
+	// また特に方向を持たない dp[{s, s}] も計算する．
+	function<void(int, int)> dfs_to_root = [&](int p, int s) {
+		// s から出ている辺の本数
+		int m = sz(g[s]);
+
+		// 左右からの累積積を計算する．
+		vector<mint> acc_l(m + 1), acc_r(m + 1);
+		acc_l[0] = 1;
+		for (int i = 0; i < m; i++) {
+			int t = g[s][i];
+			acc_l[i + 1] = acc_l[i] * (dp[{s, t}] + 1);
+		}
+		acc_r[m] = 1;
+		for (int i = m - 1; i >= 0; i--) {
+			int t = g[s][i];
+			acc_r[i] = acc_r[i + 1] * (dp[{s, t}] + 1);
+		}
+
+		// 左右からの累積積を用いて 1 つ抜きの積を計算する．
+		rep(i, m) {
+			int t = g[s][i];
+			dp[{t, s}] = acc_l[i] * acc_r[i + 1];
+		}
+
+		// 総積も記録しておく．
+		dp[{s, s}] = acc_l[m];
+
+		// これで子から自身への情報が計算できたので，
+		// 子に対して同様の計算を行っていく．
+		for (auto t : g[s]) {
+			if (t != p) {
+				dfs_to_root(s, t);
+			}
+		}
+	};
+
+	// 頂点 0 を根とし，葉の方向に向かってのみの dp[{p, s}] を計算する．
+	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
+	dfs_to_leaf(0, 0);
+
+	// 頂点 0 を根とし，根の方向に向かってのみの dp[{p, s}] を計算する．
+	// また特に方向を持たない dp[{s, s}] も計算する．
+	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
+	dfs_to_root(0, 0);
+
+	cnt = vector<mint>(n);
+	rep(s, n) {
+		cnt[s] = dp[{s, s}];
+	}
+}
+
+
+//【木の高さ】O(|V|)
+/*
+* 木 g の頂点 i を根にしたときの高さを h[i] に格納する．
+*
+*（全方位木 DP）
+*/
+void height_of_undirected_tree(Graph& g, vl& h) {
+	int n = sz(g);
+
+	// 辺 (p, s) を切断したときの s を根とする部分木を部分木 (p, s) と呼ぶ．
+	// dp[{p, s}] : 部分木 (p, s) の高さ
+	map<pii, ll> dp;
+
+	// 頂点 0 を根とし，葉の方向に向かってのみの dp[{p, s}] を計算する．
+	function<ll(int, int)> dfs_to_leaf = [&](int p, int s) {
+		// 子の情報を集めてその最大値をとり，自身の情報を計算する．
+		for (auto t : g[s]) {
+			if (t != p) {
+				chmax(dp[{p, s}], dfs_to_leaf(s, t) + 1);
+			}
+		}
+
+		return dp[{p, s}];
+	};
+
+	// 頂点 0 を根とし，根の方向に向かってのみの dp[{s, p}] を計算する．
+	// また特に方向を持たない dp[{s, s}] も計算する．
+	function<void(int, int)> dfs_to_root = [&](int p, int s) {
+		// s から出ている辺の本数
+		int m = sz(g[s]);
+
+		// 左右からの累積最大値を計算する．
+		vl acc_l(m + 1), acc_r(m + 1);
+		for (int i = 0; i < m; i++) {
+			auto t = g[s][i];
+			acc_l[i + 1] = max(acc_l[i], dp[{s, t}] + 1);
+		}
+		for (int i = m - 1; i >= 0; i--) {
+			auto t = g[s][i];
+			acc_r[i] = max(acc_r[i + 1], dp[{s, t}] + 1);
+		}
+
+		// 左右からの累積最大値を用いて 1 つ抜きの最大値を計算する．
+		rep(i, m) {
+			int t = g[s][i];
+			dp[{t, s}] = max(acc_l[i], acc_r[i + 1]);
+		}
+
+		// 総最大値も記録しておく．
+		dp[{s, s}] = acc_l[m];
+
+		// これで子から自身への情報が計算できたので，
+		// 子に対して同様の計算を行っていく．
+		for (auto t : g[s]) {
+			if (t != p) {
+				dfs_to_root(s, t);
+			}
+		}
+	};
+
+	// 頂点 0 を根とし，葉の方向に向かってのみの dp[{p, s}] を計算する．
+	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
+	dfs_to_leaf(0, 0);
+
+	// 頂点 0 を根とし，根の方向に向かってのみの dp[{p, s}] を計算する．
+	// また特に方向を持たない dp[{s, s}] も計算する．
+	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
+	dfs_to_root(0, 0);
+
+	h = vl(n);
+	rep(s, n) {
+		h[s] = dp[{s, s}];
+	}
+}
+
+
+//【コスト付き木の高さ】O(|V|)
+/*
+* コスト付き木 g の頂点 i を根にしたときの高さを h[i] に格納する．
+*
+*（全方位木 DP）
+*/
+void height_of_undirected_tree(WGraph& g, vl& h) {
+	int n = sz(g);
+
+	// 辺 (p, s) を切断したときの s を根とする部分木を部分木 (p, s) と呼ぶ．
+	// dp[{p, s}] : 部分木 (p, s) の高さ
+	map<pii, ll> dp;
+
+	// 頂点 0 を根とし，葉の方向に向かってのみの dp[{p, s}] を計算する．
+	function<ll(int, int)> dfs_to_leaf = [&](int p, int s) {
+		// 子の情報を集めてその最大値をとり，自身の情報を計算する．
+		for (auto e : g[s]) {
+			if (e.to != p) {
+				chmax(dp[{p, s}], dfs_to_leaf(s, e.to) + e.cost);
+			}
+		}
+
+		return dp[{p, s}];
+	};
+
+	// 頂点 0 を根とし，根の方向に向かってのみの dp[{s, p}] を計算する．
+	// また特に方向を持たない dp[{s, s}] も計算する．
+	function<void(int, int)> dfs_to_root = [&](int p, int s) {
+		// s から出ている辺の本数
+		int m = sz(g[s]);
+
+		// 左右からの累積最大値を計算する．
+		vl acc_l(m + 1), acc_r(m + 1);
+		for (int i = 0; i < m; i++) {
+			auto e = g[s][i];
+			acc_l[i + 1] = max(acc_l[i], dp[{s, e.to}] + e.cost);
+		}
+		for (int i = m - 1; i >= 0; i--) {
+			auto e = g[s][i];
+			acc_r[i] = max(acc_r[i + 1], dp[{s, e.to}] + e.cost);
+		}
+
+		// 左右からの累積最大値を用いて 1 つ抜きの最大値を計算する．
+		rep(i, m) {
+			int t = g[s][i].to;
+			dp[{t, s}] = max(acc_l[i], acc_r[i + 1]);
+		}
+
+		// 総最大値も記録しておく．
+		dp[{s, s}] = acc_l[m];
+
+		// これで子から自身への情報が計算できたので，
+		// 子に対して同様の計算を行っていく．
+		for (auto e : g[s]) {
+			if (e.to != p) {
+				dfs_to_root(s, e.to);
+			}
+		}
+	};
+
+	// 頂点 0 を根とし，葉の方向に向かってのみの dp[{p, s}] を計算する．
+	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
+	dfs_to_leaf(0, 0);
+
+	// 頂点 0 を根とし，根の方向に向かってのみの dp[{p, s}] を計算する．
+	// また特に方向を持たない dp[{s, s}] も計算する．
+	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
+	dfs_to_root(0, 0);
+
+	h = vl(n);
+	rep(s, n) {
+		h[s] = dp[{s, s}];
+	}
+}
+
+
