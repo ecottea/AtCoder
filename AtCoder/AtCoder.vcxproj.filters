@@ -46,6 +46,9 @@
     <Filter Include="ヘッダー ファイル\最適化">
       <UniqueIdentifier>{10924012-fe11-45fb-985f-2db4efb5c97f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\組合せ論">
+      <UniqueIdentifier>{e017bbf7-004b-4785-8b3d-ccf9c5b0b44c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -149,9 +152,6 @@
     <ClInclude Include="合同式.h">
       <Filter>ヘッダー ファイル\代数</Filter>
     </ClInclude>
-    <ClInclude Include="組合せ論.h">
-      <Filter>ヘッダー ファイル\代数</Filter>
-    </ClInclude>
     <ClInclude Include="部分和問題.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
@@ -193,6 +193,12 @@
     </ClInclude>
     <ClInclude Include="対称群.h">
       <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="組合せ論.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="数列.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

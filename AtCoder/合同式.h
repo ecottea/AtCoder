@@ -261,7 +261,7 @@ struct mint {
 	static int mod() { return MOD; }
 
 	// ’l‚ÌŠm”F
-	int val() const { return v; }
+	int val() const { return int(v % MOD); }
 };
 
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;

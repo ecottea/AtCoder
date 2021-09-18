@@ -96,8 +96,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-//using mint = modint1000000007;
-using mint = modint998244353;
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>> (istream& is, mint& x) { ll tmp; is >> tmp; x = tmp; return is; }
@@ -109,17 +109,5 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 int main() {
 //  input_from_file("input.txt"); // ƒtƒ@ƒCƒ‹‚©‚ç“ü—Í
 
-	vi a(10);
-
-	a[1 + 1] = 2;
-
-	int i = 0;
-
-	a[i + 1] = 1;
-	a[i + 4U] = 4;
-	a[i + 5L] = 5;
-	a[i + 6LL] = 6;
-	a[(ll)i + 7] = 7;
-
-	cout << a << endl;
+	
 }

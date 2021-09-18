@@ -149,6 +149,7 @@
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="対称群.h" />
+    <ClInclude Include="数列.h" />
     <ClInclude Include="特殊化.h" />
     <ClInclude Include="ビット行列.h" />
     <ClInclude Include="フェニック木.h" />
