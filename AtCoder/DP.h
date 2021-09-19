@@ -185,7 +185,7 @@ mint count_perfect_matching(vvb& e);
 * len[i] : 頂点 i からの最長パスの長さを格納する．
 * 戻り値 : g の最長パスの長さ
 * 
-* → 最適化(グラフ).h
+* → グラフ最適化.h
 */
 int longest_path(Graph& g, vi& len);
 

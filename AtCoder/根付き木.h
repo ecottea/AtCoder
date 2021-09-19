@@ -15,7 +15,7 @@
 */
 template <class TREE>
 void euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
-	int n = (int)rt.v.size();
+	int n = sz(rt.v);
 
 	int time = 0;
 	in = vi(n);

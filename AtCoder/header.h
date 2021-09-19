@@ -1,4 +1,4 @@
-#ifndef HIDDEN_IN_VISUAL_STUDIO // 無意味．折りたたむのが目的．
+#ifndef HIDDEN_IN_VISUAL_STUDIO // 折りたたみ用
 
 // 警告の抑制
 #define _CRT_SECURE_NO_WARNINGS
@@ -25,12 +25,13 @@ const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi dy4 = { 0, 1, 0, -1 };
 const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
 const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
-const ll INFL = (ll)9e18;	const int INF = (int)2e9;
+const ll INFL = (ll)2e18;	const int INF = (int)1e9;
 const double EPS = 1e-10; // 許容誤差に応じて調整
 
 // 汎用マクロの定義
 #define all(a) (a).begin(), (a).end()
 #define sz(x) ((int)(x).size())
+#define distance (int)distance
 #define Yes(b) {cout << ((b) ? "Yes" : "No") << endl;}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
@@ -88,7 +89,7 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define input_from_file(f)
 #endif
 
-#endif // 無意味．折りたたむのが目的．
+#endif // 折りたたみ用
 
 
 //-----------------AtCoder 専用-----------------

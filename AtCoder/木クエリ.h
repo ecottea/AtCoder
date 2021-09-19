@@ -10,7 +10,7 @@
 /*
 * 与えられた根付き木について，頂点対の最小共通祖先を求める．
 *
-* lowest_common_ancestor(rt) : O(|V|)
+* Lowest_common_ancestor(rt) : O(|V|)
 *	根付き木 rt で初期化する．
 *
 * lca(u, v) : O(log |V|)
@@ -23,9 +23,9 @@
 */
 pli op1(pli a, pli b) { return min(a, b); } // segtree用
 pli e1() { return { INFL, -1 }; }
-template <class T>
-struct lowest_common_ancestor {
-	T rt;
+template <class TREE>
+struct Lowest_common_ancestor {
+	TREE rt;
 
 	// オイラーツアーの結果の記録用
 	// in[v] : v に最初に入った時刻
@@ -39,7 +39,7 @@ struct lowest_common_ancestor {
 
 
 	// コンストラクタ（根付き木で初期化）：O(|V|)
-	lowest_common_ancestor(T& rt_) : rt(rt_) {
+	Lowest_common_ancestor(TREE& rt_) : rt(rt_) {
 		// オイラーツアーを求めておく．
 		euler_tour(rt, in, out, pos);
 
@@ -77,7 +77,7 @@ struct lowest_common_ancestor {
 
 //【辺加算／根からのパス総和クエリ】
 /*
-* path_sum_query(g, r) : O(|V|)
+* Path_sum_query(g, r) : O(|V|)
 *	木 g を根を r とみなして初期化する．
 *
 * add(v, val) : O(1)
@@ -90,7 +90,7 @@ struct lowest_common_ancestor {
 *	【木のオイラーツアー】
 */
 template <class T>
-struct path_sum_query {
+struct Path_sum_query {
 	// 参考：https://perogram.hateblo.jp/entry/2020/10/01/034136
 
 	// オイラーツアーの結果の記録用
@@ -104,7 +104,7 @@ struct path_sum_query {
 
 
 	// コンストラクタ（木と根で初期化）
-	path_sum_query(Graph& g, int r) {
+	Path_sum_query(Graph& g, int r) {
 		// オイラーツアーを求めておく．
 		vi pos;
 		euler_tour(g, r, in, out, pos);
@@ -128,7 +128,7 @@ struct path_sum_query {
 
 //【パス加算／パス総和クエリ】
 /*
-* path_add_sum_query(rt) : O(|V|)
+* Path_add_sum_query(rt) : O(|V|)
 *	根付き木 rt で初期化する．
 *
 * add(v1, v2, val) : O((log |V|)^2)
@@ -142,7 +142,7 @@ struct path_sum_query {
 *	【遅延評価セグメント木：区間加算／区間総和クエリ】
 */
 template <class TREE, class T>
-struct path_add_sum_query {
+struct Path_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
 	// 根付き木
@@ -160,7 +160,7 @@ struct path_add_sum_query {
 
 
 	// コンストラクタ（根付き木で初期化）
-	path_add_sum_query(TREE& rt_) : rt(rt_) {
+	Path_add_sum_query(TREE& rt_) : rt(rt_) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, pos, top);
 
@@ -225,7 +225,7 @@ struct path_add_sum_query {
 
 //【部分木加算／パス総和クエリ】
 /*
-* subtree_add_path_sum_query(rt) : O(|V|)
+* Subtree_add_path_sum_query(rt) : O(|V|)
 *	根付き木 rt で初期化する．
 *	rt がコスト付き木ならそのコストで，さもなくば 0 で初期化する．
 *
@@ -246,7 +246,7 @@ struct path_add_sum_query {
 *	【遅延評価セグメント木：区間加算／区間総和クエリ】
 */
 template <class TREE>
-struct subtree_add_path_sum_query {
+struct Subtree_add_path_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
 	// 根付き木
@@ -265,7 +265,7 @@ struct subtree_add_path_sum_query {
 
 
 	// コンストラクタ（根付き木で初期化）
-	subtree_add_path_sum_query(TREE& rt_) : rt(rt_) {
+	Subtree_add_path_sum_query(TREE& rt_) : rt(rt_) {
 		// rt を HL 分解しつつオイラーツアーを得る．
 		hld_and_et(rt, in, out, pos, top);
 

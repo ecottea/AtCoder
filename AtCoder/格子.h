@@ -6,6 +6,179 @@
 
 
 
+//【グリッド → グラフ】O(h w)
+/*
+* h 行 w 列のグリッドから nb_type 近傍を連結としたグラフ g を構築する．
+* 壁マスは wall，空きマスはその他とする．
+* i 行目の j 列目にあるマス (i, j) はグラフ頂点 i * w + j に対応する．
+*/
+template <class T>
+void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb_type = 4) {
+	int h = sz(c);
+	int w = sz(c[0]);
+
+	const vi& dx = (nb_type == 4 ? dx4 : dx8);
+	const vi& dy = (nb_type == 4 ? dy4 : dy8);
+
+	g = Graph(h * w);
+	rep(i, h) {
+		rep(j, w) {
+			// 空きマスでなかったら辺は追加しない．
+			if (c[i][j] == wall) {
+				continue;
+			}
+
+			// 今考えている近傍それぞれについて
+			rep(k, nb_type) {
+				// 近傍のマスの座標
+				int ni = i + dx[k];
+				int nj = j + dy[k];
+
+				// 範囲外だったり空きマスでなかったら辺は追加しない．
+				if (ni < 0 || ni >= h || nj < 0 || nj >= w || c[ni][nj] == wall) {
+					continue;
+				}
+
+				// 近傍に空きマスがあったら辺を追加する．
+				g[i * w + j].push_back(ni * w + nj);
+			}
+		}
+	}
+}
+
+
+//【迷路】O(h w)
+/*
+* 壁が wall で表された h * w の迷路 c について，スタート s = (sx, sy) から
+* 各マス c[i][j] への最短経路長を dist[i][j] に格納する．（到達不能なら -1）
+*
+*（幅優先探索）
+*/
+void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
+	int h = sz(c);
+	int w = sz(c[0]);
+
+	dist = vvi(h, vi(w, -1));
+	dist[s.first][s.second] = 0;
+
+	// q : 未探索のマスを記録しておくキュー
+	queue<pii> q;
+	q.push(s);
+
+	while (!q.empty()) {
+		int x, y;
+		tie(x, y) = q.front();
+		q.pop();
+
+		// マス (x, y) の 4 近傍を調べる．
+		rep(k, 4) {
+			// (nx, ny) : (x, y) の近傍の座標
+			int nx = x + dx4[k];
+			int ny = y + dy4[k];
+
+			// 範囲外または壁マスなら何もしない．
+			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
+				continue;
+			}
+
+			// 既に最短経路長が確定済みなら何もしない．
+			if (dist[nx][ny] != -1) {
+				continue;
+			}
+
+			// 最短経路長の確定
+			dist[nx][ny] = dist[x][y] + 1;
+
+			q.push({ nx, ny });
+		}
+	}
+}
+
+
+//【単純多角形判定】O(h w)
+/*
+* h × w の盤面で，外部が '.'，内部がそれ以外で表された多角形が単純であるかを返す．
+*/
+bool simple_polygonQ(const vvc& c_) {
+	int h = sz(c_) + 2;
+	int w = sz(c_[0]) + 2;
+
+	// 外周に空マスを追加しておく．
+	vvc c(h, vc(w, '.'));
+	rep(i, h - 2) {
+		rep(j, w - 2) {
+			c[i + 1][j + 1] = c_[i][j];
+		}
+	}
+
+	// 探索済みかどうか
+	vvb seen(h, vb(w));
+
+	// 多角形内[外]のマスの 1 つ
+	pii in = { -1, -1 }, out = { -1, -1 };
+	rep(i, h) {
+		rep(j, w) {
+			if (c[i][j] == '.') {
+				out = { i, j };
+			}
+			else {
+				in = { i, j };
+			}
+		}
+	}
+
+	// 多角形内[外]のマスそれぞれをキューに登録する．
+	queue<pii> q;
+	if (in != make_pair(-1, -1)) {
+		q.push(in);
+		seen[in.first][in.second] = true;
+	}
+	q.push(out);
+	seen[out.first][out.second] = true;
+
+	// 幅優先探索を行う．
+	while (!q.empty()) {
+		int x, y;
+		tie(x, y) = q.front();
+		q.pop();
+
+		// マス (x, y) の 4 近傍を調べる．
+		rep(k, 4) {
+			// (nx, ny) : (x, y) の近傍の座標
+			int nx = x + dx4[k];
+			int ny = y + dy4[k];
+
+			// 盤面の外に出たり，異種のマスへ移動することはない．
+			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] != c[x][y]) {
+				continue;
+			}
+
+			// 探索したことを記録しておく．
+			if (seen[nx][ny]) {
+				continue;
+			}
+			seen[nx][ny] = true;
+
+			// 後で探索するためキューに追加する．
+			q.push({ nx, ny });
+		}
+	}
+
+	// 多角形内のマスで未探索のマスがあるなら多角形が非連結または自己交差あり．
+	// 多角形外のマスで未探索のマスがあるなら多角形に穴が空いているまたは自己交差あり．
+	// どちらにせよ単純多角形ではないので false を返す．
+	rep(i, h) {
+		rep(j, w) {
+			if (!seen[i][j]) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+
 //【最大正方形】O(h w)
 /*
 * a[i][j] = 1[0] はマス (i, j) を使える[使えない]ことを意味するとき，
@@ -120,95 +293,6 @@ ll largest_rectangle_in_histogram(vector<T>& hist) {
 	hist.pop_back();
 
 	return res;
-}
-
-
-//【迷路】O(h w)
-/*
-* 壁が wall で表された h * w の迷路 c について，スタート s = (sx, sy) から
-* 各マス c[i][j] への最短経路長を dist[i][j] に格納する．（到達不能なら -1）
-*
-*（幅優先探索）
-*/
-void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
-	int h = sz(c);
-	int w = sz(c[0]);
-
-	dist = vvi(h, vi(w, -1));
-	dist[s.first][s.second] = 0;
-
-	// q : 未探索のマスを記録しておくキュー
-	queue<pii> q;
-	q.push(s);
-
-	while (!q.empty()) {
-		int x, y;
-		tie(x, y) = q.front();
-		q.pop();
-
-		// マス (x, y) の 4 近傍を調べる．
-		rep(k, 4) {
-			// (nx, ny) : (x, y) の近傍の座標
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
-
-			// 範囲外または壁マスなら何もしない．
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
-				continue;
-			}
-
-			// 既に最短経路長が確定済みなら何もしない．
-			if (dist[nx][ny] != -1) {
-				continue;
-			}
-
-			// 最短経路長の確定
-			dist[nx][ny] = dist[x][y] + 1;
-
-			q.push({ nx, ny });
-		}
-	}
-}
-
-
-//【グリッド → グラフ】O(h w)
-/*
-* h 行 w 列のグリッドから nb_type 近傍を連結としたグラフ g を構築する．
-* 壁マスは wall，空きマスはその他とする．
-* i 行目の j 列目にあるマス (i, j) はグラフ頂点 i * w + j に対応する．
-*/
-template <class T>
-void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb_type = 4) {
-	int h = sz(c);
-	int w = sz(c[0]);
-
-	const vi& dx = (nb_type == 4 ? dx4 : dx8);
-	const vi& dy = (nb_type == 4 ? dy4 : dy8);
-
-	g = Graph(h * w);
-	rep(i, h) {
-		rep(j, w) {
-			// 空きマスでなかったら辺は追加しない．
-			if (c[i][j] == wall) {
-				continue;
-			}
-
-			// 今考えている近傍それぞれについて
-			rep(k, nb_type) {
-				// 近傍のマスの座標
-				int ni = i + dx[k];
-				int nj = j + dy[k];
-
-				// 範囲外だったり空きマスでなかったら辺は追加しない．
-				if (ni < 0 || ni >= h || nj < 0 || nj >= w || c[ni][nj] == wall) {
-					continue;
-				}
-
-				// 近傍に空きマスがあったら辺を追加する．
-				g[i * w + j].push_back(ni * w + nj);
-			}
-		}
-	}
 }
 
 

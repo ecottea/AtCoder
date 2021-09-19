@@ -17,7 +17,7 @@ template <class G>
 void euler_tour(G& g, int r, vi& in, vi& out, vi& pos) {
 	// 参考 : https://qiita.com/recuraki/items/72e37eb9be9f71bc623a
 
-	int n = (int)g.size();
+	int n = sz(g);
 
 	int time = 0;
 	in = vi(n);
@@ -51,52 +51,40 @@ void euler_tour(G& g, int r, vi& in, vi& out, vi& pos) {
 
 //【独立集合の数え上げ】O(|V|)
 /*
-* 木 g の独立集合の個数を返す．
+* 木 g の独立集合（辺を共有しない頂点の集合）の個数を返す．
 *
 *（木の状態 DP）
 */
 mint count_independent_set(Graph& g) {
 	int n = sz(g);
 
-	// 便宜上 0 を根とした根付き木とみなし，黒で塗った頂点を独立集合として選ぶことにする．
-	// dp[i][j] : 頂点 i が色 j(1:黒, 0:白) のとき，その部分木に含まれる独立集合の個数
-	vvm dp(n, vm(2));
-	vvb seen(n, vb(2));
-
-	// メモ化再帰用の関数
-	// s : 注目頂点，c : s の色，p : 親頂点
+	// s : 注目頂点，c : s が独立集合に含まれるか，p : 親頂点
+	// 戻り値 : 部分木 s に含まれる独立集合の個数（便宜上 0 を根とした根付き木とみなす）
 	function<mint(int, int, int)> dfs = [&](int s, int c, int p) {
-		// 既に計算済ならその値を返す．
-		if (seen[s][c]) {
-			return dp[s][c];
-		}
-		seen[s][c] = true;
-
 		// 積についての単位元で初期化しておく．
-		dp[s][c] = 1;
+		mint res = 1;
 
 		// s のそれぞれの子 t について処理を行う．
 		for (auto t : g[s]) {
 			// 親には戻らない
-			if (t == p) {
-				continue;
-			}
-
-			// t が白になるような部分木は候補になる．
+			if (t == p) continue;
+			
+			// t が独立集合に含まれないような部分木は候補になる．
 			mint mul = dfs(t, 0, s);
 			if (!c) {
-				// s の色が白ならば，t が黒になるような部分木も候補になる．
+				// s が独立集合に含まれないならば，
+				// t が独立集合に含まれるような部分木も候補になる．
 				mul += dfs(t, 1, s);
 			}
 
 			// s の部分木については独立なので，積の法則で数え上げる．
-			dp[s][c] *= mul;
+			res *= mul;
 		}
 
-		return dp[s][c];
+		return res;
 	};
 
-	return dfs(0, 0, 0) + dfs(0, 1, 0);
+	return dfs(0, 0, -1) + dfs(0, 1, -1);
 }
 
 

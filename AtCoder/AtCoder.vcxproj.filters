@@ -197,8 +197,11 @@
     <ClInclude Include="組合せ論.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
-    <ClInclude Include="数列.h">
+    <ClInclude Include="場合の数.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="グラフクエリ.h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

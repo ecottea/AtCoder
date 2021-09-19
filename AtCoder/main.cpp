@@ -1,4 +1,4 @@
-#ifndef HIDDEN_IN_VISUAL_STUDIO // 無意味．折りたたむのが目的．
+#ifndef HIDDEN_IN_VISUAL_STUDIO // 折りたたみ用
 
 // 警告の抑制
 #define _CRT_SECURE_NO_WARNINGS
@@ -89,7 +89,7 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define input_from_file(f)
 #endif
 
-#endif // 無意味．折りたたむのが目的．
+#endif // 折りたたみ用
 
 
 //-----------------AtCoder 専用-----------------
@@ -107,7 +107,9 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 
 
 int main() {
-//  input_from_file("input.txt"); // ファイルから入力
+	//  input_from_file("input.txt"); // ファイルから入力
 
-	
+	int n, m;
+	cin >> n >> m;
+
 }
