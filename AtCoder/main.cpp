@@ -60,6 +60,7 @@ template <class T> inline ostream& operator<< (ostream& os, const vector<T>& v) 
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
+template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -106,10 +107,324 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
 
 
+//【ウェーブレット行列】
+/*
+* Wavelet_matrix(a) : O(n)
+*	辞書を多重集合 a で初期化する．
+* 
+* get(i) : O(log(max a))
+*	昇順で i 番目の要素を返す．
+*
+* get(l, r, i) : O(log(max a))
+*	a[l..r) の中で昇順で i 番目の要素を返す．
+*
+* count(l, r, v) : O(log(max a))
+*	a[l..r) に v が何個あるかを返す．
+* 
+* position(v, c) : O(log(n) log(max a))
+*	昇順で c 番目の v の位置を返す．
+* 
+* frequency(l, r, c, freq) : O((r - l) log(max a))
+*	a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組のリストを freq に格納する．
+* 
+* sum(l, r) : O((r - l) log(max a))
+*	a[l..r) の和を返す．
+* 
+* intersection(l1, r1, l2, r2, freq) : O(((r1 - l1) + (r2 - l2)) log(max a))
+*	a[l1..r1) と a[l2..r2) に共通する要素を求め，
+*	その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
+*/
+struct Wavelet_matrix {
+	// 参考 : https://miti-7.hatenablog.com/entry/2018/04/28/152259
+	
+	int n; // 要素数
+	int k; // msb 以下の桁数（1-indexed）
+	vvb bs; // bs[j][i] : 第 j + 1 ビットについての安定ソート後の a[i] の第 j ビット
+	vvvi bs_acc; // bs[b] : のビット b = 0, 1 それぞれの個数の累積和
+	vi num_zeros; // num_zeros[j] : bs[j] の 0 の個数
+	unordered_map<ll, int> id; // 値 → 安定ソートが終わったときの最左位置
+	
+	// コンストラクタ（何もしない）
+	Wavelet_matrix() : n(0) {}
+
+	// 辞書を多重集合 a で初期化する．
+	Wavelet_matrix(const vl& t)
+		: n(sz(t)), k(msbll(*max_element(all(t))) + 1),
+		bs(k, vb(n)), bs_acc(2, vvi(k, vi(n + 1))), num_zeros(k)
+	{
+		// ビットと組にして安定ソートするためのリスト
+		vector<pair<bool, ll>> bt(n);
+		rep(i, n) {
+			bt[i].second = t[i];
+		}
+
+		// j : 注目ビット位置（上位ビットから順に見ていく）
+		repir(j, k - 1, 0) {
+			rep(i, n) {
+				// 注目ビットが 1 か
+				bs[j][i] = bt[i].first = (bt[i].second & (1LL << j));
+
+				// ビット 0, 1 それぞれの個数の累積和を求めておく．
+				rep(b, 2) {
+					bs_acc[b][j][i + 1] = bs_acc[b][j][i];
+				}
+				if (bs[j][i]) {
+					bs_acc[1][j][i + 1]++;
+				}
+				else {
+					bs_acc[0][j][i + 1]++;
+					num_zeros[j]++;
+				}
+			}
+
+			// 注目ビットが 0 のものを左，1 のものを右に寄せる安定ソートを行う．
+			stable_sort(all(bt), [](auto const& lhs, auto const& rhs) {
+				return lhs.first < rhs.first;
+			});
+		}
+
+		// 値 → 安定ソートが終わったときの最左位置
+		rep(i, n) {
+			if (!id.count(bt[i].second)) id[bt[i].second] = i;
+		}
+	}
+
+	// 昇順で i 番目の要素を返す．
+	ll get(int i) {
+		ll res = 0;
+
+		// 最上位ビットから順に見ていく
+		repir(j, k - 1, 0) {
+			res *= 2;
+
+			// 注目ビットに応じて次の位置を求めつつ，値を更新していく．
+			if (bs[j][i]) {
+				res++;
+				i = num_zeros[j] + bs_acc[1][j][i];
+			}
+			else {
+				i = bs_acc[0][j][i];
+			}
+		}
+
+		return res;
+	}
+
+	// a[l..r) に v が何個あるかを返す．
+	int count(int l, int r, ll v) {
+		return count_sub(r, v) - count_sub(l, v);
+	}
+
+	// a[0..r) に v が何個あるかを返す．
+	int count_sub(int r, ll v) {
+		// 一つも無ければすぐに 0 を返す．
+		if (!id.count(v)) return 0;
+
+		// 最上位ビットから順に見ていく
+		repir(j, k - 1, 0) {
+			// 注目ビットに応じて次の位置を求めていく．
+			if (v & (1LL << j)) {
+				r = num_zeros[j] + bs_acc[1][j][r];
+			}
+			else {
+				r = bs_acc[0][j][r];
+			}
+		}
+
+		return r - id[v];
+	}
+
+	// 昇順で c 番目の v の位置を返す．
+	int position(ll v, int c) {
+		if (!id.count(v)) return -1;
+
+		int i = id[v] + c;
+		rep(j, k) {
+			if (v & (1LL << j)) {
+				auto it = upper_bound(all(bs_acc[1][j]), i - num_zeros[j]);
+				i = distance(bs_acc[1][j].begin(), it) - 1;
+			}
+			else {
+				auto it = upper_bound(all(bs_acc[0][j]), i);
+				i = distance(bs_acc[0][j].begin(), it) - 1;
+			}
+		}
+
+		return i;
+	}
+
+	// a[l..r) のうち昇順で i 番目の要素を返す．
+	ll get(int l, int r, int i) {
+		ll res = 0;
+
+		repir(j, k - 1, 0) {
+			res *= 2;
+
+			int cnt0 = bs_acc[0][j][r] - bs_acc[0][j][l];
+			if (i >= cnt0) {
+				res++;
+				l = num_zeros[j] + bs_acc[1][j][l];
+				r = num_zeros[j] + bs_acc[1][j][r];
+				i -= cnt0;
+			}
+			else {
+				l = bs_acc[0][j][l];
+				r = bs_acc[0][j][r];
+			}
+		}
+
+		return res;
+	}
+
+	// a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組を返す．
+	void frequency(int l, int r, int c, vector<pli>& freq) {
+		freq.clear();
+
+		priority_queue<tuple<int, int, int, int, ll>> q;
+		q.push({ r - l, k - 1, l, r, 0 });
+
+		while (!q.empty()) {
+			int w, j;
+			ll v;
+			tie(w, j, l, r, v) = q.top();
+			q.pop();
+
+			if (j == -1) {
+				freq.push_back({ v, w });
+				if (--c == 0) return;
+			}
+			else {
+				int l1 = num_zeros[j] + bs_acc[1][j][l];
+				int r1 = num_zeros[j] + bs_acc[1][j][r];
+				int l0 = bs_acc[0][j][l];
+				int r0 = bs_acc[0][j][r];
+
+				q.push({ r1 - l1, j - 1, l1, r1, 2 * v + 1 });
+				q.push({ r0 - l0, j - 1, l0, r0, 2 * v });
+			}
+		}
+	}
+
+	// a[l..r) の和を返す．
+	ll sum(int l, int r) {
+		vector<pli> freq;
+		frequency(l, r, INF, freq);
+
+		ll res = 0;
+		repe(p, freq) {
+			res += p.first * p.second;
+		}
+
+		return res;
+	}
+
+	// a[l1..r1) と a[l2..r2) に共通する要素を求め，
+	// その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
+	void intersection(int l1, int r1, int l2, int r2, vector<tuple<ll, int, int>>& freq) {
+		freq.clear();
+
+		queue<tuple<int, int, int, int, int, ll>> q;
+		q.push({ k - 1, l1, r1, l2, r2, 0 });
+
+		while (!q.empty()) {
+			int j;
+			ll v;
+			tie(j, l1, r1, l2, r2, v) = q.front();
+			q.pop();
+
+			if (l1 == r1 || l2 == r2) {
+				continue;
+			}
+
+			if (j == -1) {
+				freq.push_back({ v, r1 - l1, r2 - l2 });
+			}
+			else {
+				int l11 = num_zeros[j] + bs_acc[1][j][l1];
+				int r11 = num_zeros[j] + bs_acc[1][j][r1];
+				int l10 = bs_acc[0][j][l1];
+				int r10 = bs_acc[0][j][r1];
+				int l21 = num_zeros[j] + bs_acc[1][j][l2];
+				int r21 = num_zeros[j] + bs_acc[1][j][r2];
+				int l20 = bs_acc[0][j][l2];
+				int r20 = bs_acc[0][j][r2];
+
+				q.push({ j - 1, l11, r11, l21, r21, 2 * v + 1 });
+				q.push({ j - 1, l10, r10, l20, r20, 2 * v });
+			}
+		}
+	}
+
+	// a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
+	int count(int l, int r, ll v0, ll v1) {
+		return count_rsub(l, r, v1) - count_rsub(l, r, v0);
+	}
+
+	// a[l..r) の中で [0..v) に値をもつ要素の個数を返す．
+	int count_rsub(int l, int r, ll v) {
+		if (msbll(v) >= k) return r - l;
+
+		int cnt = 0;
+		repir(j, k - 1, 0) {
+			if (v & (1LL << j)) {
+				cnt += bs_acc[0][j][r] - bs_acc[0][j][l];
+				r = num_zeros[j] + bs_acc[1][j][r];
+				l = num_zeros[j];
+			}
+			else {
+				r = bs_acc[0][j][r];
+				l = bs_acc[0][j][l];
+			}
+		}
+
+		return cnt;
+	}
+};
+
+
 int main() {
-	//  input_from_file("input.txt"); // ファイルから入力
+//	input_from_file("input.txt"); // ファイルから入力
 
-	int n, m;
-	cin >> n >> m;
+	vl t({ 5, 4, 5, 5, 2, 1, 5, 6, 1, 3, 5, 0 });
+	int n = sz(t);
 
+	Wavelet_matrix wm(t);
+	dump(wm.n);
+	dump(wm.k);
+	dumpel(wm.bs);
+	dumpel(wm.bs_acc[1]);
+	dumpel(wm.bs_acc[0]);
+	dump(wm.num_zeros);
+	dump(wm.id);
+
+	rep(i, n) {
+		dump(wm.get(i));
+	}
+	dump("dt78fth68tre78ht78her78rtfh8");
+
+	repi(i, 0, n) {
+		cout << wm.count(0, i, 5, 6) << " ";
+		dump(wm.count(0, i, 5));
+	}
+	dump("dt78fth68tre78ht78her78rtfh8");
+
+	rep(c, 5) {
+		dump(wm.position(5, c));
+	}
+	dump("dt78fth68tre78ht78her78rtfh8");
+
+	rep(i, 11 - 1) {
+		dump(wm.get(1, 11, i));
+	}
+	dump("dt78fth68tre78ht78her78rtfh8");
+
+	vector<pli> freq;
+	wm.frequency(1, 10, 2, freq);
+	dump(freq);
+
+	dump(wm.sum(1, 10));
+
+	vector<tuple<ll, int, int>> freq2;
+	wm.intersection(0, 6, 6, 11, freq2);
+	dump(freq2);
 }

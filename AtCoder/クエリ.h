@@ -4,6 +4,57 @@
 
 
 
+//【法を m とした和クエリ】
+/*
+* Mod_sum_query(a) : O(n)
+*	配列 a で初期化する．
+*
+* sum(m) : O(max(a) log(n) / m)
+*	a[0..n) mod m の和を返す．
+*/
+struct Mod_sum_query {
+	vi a;    // ★ a でなくバケツで累積和を持てば O(log n) を落とせる．
+	int n;
+	ll asum; // a[0..n) の和
+
+
+	// コンストラクタ（何もしない）
+	Mod_sum_query() : n(0), asum(0) {}
+
+	// 配列 a で初期化
+	Mod_sum_query(const vi& a_) : a(a_), n(sz(a)), asum(0LL) {
+		sort(all(a));
+		rep(i, n) asum += a[i];
+	}
+
+	// a[0..n) mod m の和を返す．
+	ll sum_mod(int m) {
+		ll res = asum;
+
+		for (ll v = m; v <= a[n - 1]; v += m) {
+			// 通常の和とくらべて何個 m を引かれるかを二分探索で求めれば良い．
+			res -= (ll)m * distance(lower_bound(all(a), v), a.end());
+		}
+
+		return res;
+	}
+
+	// a[0..n) を m で割った不足の和を返す．
+	ll sum_lack(int m) {
+		// sum : 1-indexed での a[0..n) mod m の和
+		ll sum = asum;
+
+		for (ll v = m; v < a[n - 1]; v += m) {
+			// 通常の和とくらべて何個 m を引かれるかを二分探索で求めれば良い．
+			sum -= (ll)m * distance(lower_bound(all(a), v + 1), a.end());
+		}
+
+		// 不足分を返す．
+		return (ll)m * n - sum;
+	}
+};
+
+
 //【Convex-Hull Trick（挿入単調／クエリ単調）】
 /*
 * insert(l) : n 回で O(n)

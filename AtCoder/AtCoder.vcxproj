@@ -145,7 +145,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="いもす法.h" />
-    <ClInclude Include="その他.h" />
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
@@ -191,6 +190,7 @@
     <ClInclude Include="文字列.h" />
     <ClInclude Include="ゲーム.h" />
     <ClInclude Include="ナップサック.h" />
+    <ClInclude Include="辞書.h" />
     <ClInclude Include="部分列.h" />
     <ClInclude Include="部分和問題.h" />
   </ItemGroup>
