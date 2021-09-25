@@ -247,55 +247,6 @@ ll largest_square(vvi& a) {
 }
 
 
-//【ヒストグラム内最大長方形】O(n)
-/*
-* 長さ n のヒストグラム hist に含まれる長方形の面積の最大値を返す．
-*/
-template <class T>
-ll largest_rectangle_in_histogram(vector<T>& hist) {
-	// 参考：http://algorithms.blog55.fc2.com/blog-entry-132.html
-
-
-	int n = sz(hist);
-
-	ll res = 0;
-
-	// 面積未確定の長方形を記憶しておくためのスタック
-	// 要素 (l, h) は，左端位置が l，高さが h であることを表す．
-	stack<pair<int, T>> st;
-
-	// hist の末尾に番兵を仕込んでおき，左から順に見ていく．
-	hist.push_back(0);
-	rep(i, n + 1) {
-		// 位置 i で高さ hist[i] を実現する長方形の左端位置
-		int left = i;
-
-		// スタックに記録されている長方形を順に見ていく．
-		while (!st.empty()) {
-			int l;
-			T h;
-			tie(l, h) = st.top();
-
-			// 注目位置以下の高さをもつ長方形についてはまだ面積を増やせる．
-			if (h <= hist[i]) {
-				break;
-			}
-
-			// 注目位置より高い左端をもつ長方形はこれ以上伸ばせないので面積確定．
-			chmax(res, (ll)h * (i - l));
-			left = l;
-			st.pop();
-		}
-
-		// 面積未確定の長方形として高さ hist[i] をもつものを追加する．
-		st.push({ left, hist[i] });
-	}
-	hist.pop_back();
-
-	return res;
-}
-
-
 //【キング配置問題】O(h w 1.6^w)
 /*
 * h * w の穴あき盤に互いの効きに入らないようにキングを配置する方法が何通りあるかを返す．
@@ -452,4 +403,5 @@ void defect_repair_2d(vector<vector<T>>& c, T defect) {
 	13 13 13 13 13 13 13 13
 	*/
 }
+
 

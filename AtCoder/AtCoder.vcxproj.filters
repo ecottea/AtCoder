@@ -52,6 +52,9 @@
     <Filter Include="ヘッダー ファイル\ゲーム">
       <UniqueIdentifier>{0a0a9687-d523-498f-b2bd-8450c11ceabf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\計算">
+      <UniqueIdentifier>{59318c8d-7ef2-4194-b058-dabafd79dab4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -131,9 +134,6 @@
     <ClInclude Include="部分列.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
-    <ClInclude Include="列.h">
-      <Filter>ヘッダー ファイル\列</Filter>
-    </ClInclude>
     <ClInclude Include="文字列.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
@@ -206,9 +206,21 @@
     <ClInclude Include="ゲーム.h">
       <Filter>ヘッダー ファイル\ゲーム</Filter>
     </ClInclude>
+    <ClInclude Include="二重和.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="数列.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="ヒストグラム.h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+    <Text Include="output.txt">
       <Filter>リソース ファイル</Filter>
     </Text>
   </ItemGroup>

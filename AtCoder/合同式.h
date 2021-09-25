@@ -247,7 +247,7 @@ struct mint {
 	mint pow(ll d) const {
 		mint res(1), pow2 = *this;
 		while (d > 0) {
-			if ((d & 1) != 0) res *= pow2;
+			if (d & 1LL) res *= pow2;
 			pow2 *= pow2;
 			d /= 2;
 		}
@@ -263,6 +263,6 @@ struct mint {
 	// ’l‚ÌŠm”F
 	int val() const { return int(v % MOD); }
 };
-using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 
 

@@ -140,31 +140,18 @@ int count_3select_sum(vector<T>& a, vector<T>& b, vector<T>& c, T sum) {
 }
 
 
-//【1 の連続しないビット列の列挙】O(1.6^n)
+//【1 の連続しないビット列の列挙】O(1.6^n)（フィボナッチ数）
 /*
-* 長さ n のビット列のうち 1 が連続しないものを全出力する．
-*
-* 戻り値 : 列が何通りあるか（フィボナッチ数 F_(n+1)）
+* 長さ n のビット列のうち 1 が連続しないものを seqs に格納する．
 */
-int noncontinuous_bitsequence(int n) {
+void noncontinuous_bitsequence(int n, vl& seqs) {
 	ll b = 0;
-	int res = 0;
+	seqs.clear();
 
 	function<void(int, int)> rf = [&](int len, int d) {
 		// 残りの長さが 0 の場合
 		if (len == 0) {
-			// ビット列が完成しているので出力
-			rep(i, n) {
-				if (b & (1LL << i)) {
-					cout << '1';
-				}
-				else {
-					cout << '0';
-				}
-			}
-			cout << endl;
-
-			res++;
+			seqs.push_back(b);
 			return;
 		}
 
@@ -174,6 +161,7 @@ int noncontinuous_bitsequence(int n) {
 			rf(len - 1, 1);
 			b = (b - 1) / 2;
 		}
+
 		// 0 を使う．
 		b *= 2;
 		rf(len - 1, 0);
@@ -183,28 +171,22 @@ int noncontinuous_bitsequence(int n) {
 	};
 
 	rf(n, 0);
-
-	return res;
 }
 
 
-//【括弧列の列挙】O(4^n n^(-3/2))
+//【括弧列の列挙】O(4^n n^(-3/2))（カタラン数）
 /*
-* 長さ 2 n の括弧列を辞書順に全出力する．
-*
-* 戻り値 : 括弧列が何通りあるか（カタラン数 C_n）
+* 長さ 2 n の括弧列を辞書順に seqs に格納する．
 */
-int parenthesis_sequence(int n) {
+void parenthesis_sequence(int n, vector<string>& seqs) {
 	string s = "";
-	int res = 0;
+	seqs.clear();
 
 	function<void(int, int)> rf = [&](int l, int r) {
 		// 左右の括弧を使い切っている場合
 		if (l == 0 && r == 0) {
-			// 長さ 2 n の括弧列が完成しているので出力する．
-			cout << s << endl;
-
-			res++;
+			// 長さ 2 n の括弧列が完成しているので格納する．
+			seqs.push_back(s);
 			return;
 		}
 
@@ -224,8 +206,6 @@ int parenthesis_sequence(int n) {
 	};
 
 	rf(n, n);
-
-	return res;
 }
 
 

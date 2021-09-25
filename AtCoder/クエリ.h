@@ -114,6 +114,115 @@ struct Convex_hull_trick {
 };
 
 
+//【slope trick】
+/*
+* Slope_trick() : O(1)
+*	f(x) = 0 で初期化する．
+*
+* min(lr) : O(1)
+*	min f(x) を返し，必要ならそれを与える x の範囲 [l, r] を lr に格納する．
+*
+* add_const(x0) : O(1)
+*	f(x) += y0 とする．
+*
+* add_right(x0) : O(1)
+*	f(x) += min(x - x0, 0) とする．（＿／ の形を加算する．）
+*
+* add_left(x0) : O(1)
+*	f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
+*
+* add_abs(x0) : O(1)
+*	f(x) += |x - x0| とする．（＼／ の形を加算する．）
+*
+* acc_min_left() : O(1)
+*	f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
+*
+* acc_min_right() : O(1)
+*	f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
+*
+* shift(x0) : O(1)
+*	f(x) を x0 だけ平行移動する．（f(x) ← f(x - x0)）
+*
+* sliding_window_min(x0, x1) : O(1)
+*	f(x) を min f([x+x0, x+x1]) に置き換える．（＼＿＿／ の形にする．）
+*/
+struct Slope_trick {
+	// 参考 : https://maspypy.com/slope-trick-1-%E8%A7%A3%E8%AA%AC%E7%B7%A8
+
+	ll y_min; // 最小値
+	priority_queue<ll> l; // 最小値より左の折れ点の x 座標を降順に取り出せるキュー
+	priority_queue_rev<ll> r; // 最小値より右の折れ点の x 座標を昇順に取り出せるキュー
+	ll add_l; // 最小値より左側の平行移動量
+	ll add_r; // 最小値より右側の平行移動量
+
+
+	// f(x) = 0 で初期化する．
+	Slope_trick() : y_min(0), add_l(0), add_r(0) {
+		l.push(-INFL);
+		r.push(INFL);
+	};
+
+	// min f(x) を返し，必要ならそれを与える x の範囲 [l, r] を lr に格納する．
+	ll min(pll* lr = nullptr) {
+		if (lr != nullptr) {
+			*lr = { l.top() + add_l, r.top() + add_r };
+		}
+		return y_min;
+	}
+
+	// f(x) += y0 とする．
+	void add_const(ll y0) {
+		y_min += y0;
+	}
+
+	// f(x) += min(x - x0, 0) とする．（＿／ の形を加算する．）
+	void add_right(ll x0) {
+		y_min += max(0LL, (l.top() + add_l) - x0);
+		l.push(x0 - add_l);
+		r.push((l.top() + add_l) - add_r);
+		l.pop();
+	}
+
+	// f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
+	void add_left(ll x0) {
+		y_min += max(0LL, x0 - (r.top() + add_r));
+		r.push(x0 - add_r);
+		l.push((r.top() + add_r) - add_l);
+		r.pop();
+	}
+
+	// f(x) += |x - x0| とする．（＼／ の形を加算する．）
+	void add_abs(ll x0) {
+		add_right(x0);
+		add_left(x0);
+	}
+
+	// f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
+	void acc_min_left() {
+		r = priority_queue_rev<ll>();
+		r.push(INFL);
+	}
+
+	// f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
+	void acc_min_right() {
+		l = priority_queue<ll>();
+		l.push(-INFL);
+	}
+
+	// f(x) を x0 だけ平行移動する．（f(x) ← f(x - x0)）
+	void shift(ll x0) {
+		add_l += x0;
+		add_r += x0;
+	}
+
+	// f(x) を min f([x+x0, x+x1]) に置き換える．（＼＿＿／ の形にする．）
+	void sliding_window_min(ll x0, ll x1) {
+		add_l += x0;
+		add_r += x1;
+	}
+};
+
+
 //【kd 木】
 /*
 * KDTree() : O(1)

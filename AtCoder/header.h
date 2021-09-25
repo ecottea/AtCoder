@@ -60,6 +60,7 @@ template <class T> inline ostream& operator<< (ostream& os, const vector<T>& v) 
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
+template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -73,7 +74,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define dump(x) cerr << "\033[1;36m" << (x) << "\033[0m" << endl; // デバッグ出力用
 #define dumpel(v) cerr << "\033[1;36m"; repe(x, (v)) {cerr << x << endl;} cerr << "\033[0m";
 #define dumpeli(v) cerr << "\033[1;36m"; rep(i, sz(v)) {cerr << i << ": " << v[i] << endl;} cerr << "\033[0m";
-#define input_from_file(f) ifstream in(f); cin.rdbuf(in.rdbuf());
+#define input_from_file(f) ifstream _in_(f); cin.rdbuf(_in_.rdbuf());
+#define output_to_file(f) ofstream _out_(f); cout.rdbuf(_out_.rdbuf());
 // 提出用（GCC）
 #else
 #define popcount (int)__builtin_popcount
@@ -87,6 +89,7 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define dumpel(v)
 #define dumpeli(v)
 #define input_from_file(f)
+#define output_to_file(f)
 #endif
 
 #endif // 折りたたみ用
@@ -96,8 +99,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>> (istream& is, mint& x) { ll tmp; is >> tmp; x = tmp; return is; }
@@ -111,9 +114,6 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 /*
 * // 小数点以下の桁数の指定
 * cout << fixed << setprecision(12);
-* 
-* // ファイルからの入力
-* ifstream in("input.txt"); cin.rdbuf(in.rdbuf());
 * 
 * // 入出力の高速化（これに加えて endl を使わず "\n" を出力するようにする）
 * cin.tie(nullptr); ios::sync_with_stdio(false);

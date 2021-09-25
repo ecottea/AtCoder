@@ -148,15 +148,17 @@
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
+    <ClInclude Include="ヒストグラム.h" />
+    <ClInclude Include="二重和.h" />
     <ClInclude Include="対称群.h" />
     <ClInclude Include="場合の数.h" />
+    <ClInclude Include="数列.h" />
     <ClInclude Include="特殊化.h" />
     <ClInclude Include="ビット行列.h" />
     <ClInclude Include="フェニック木.h" />
     <ClInclude Include="マッチング.h" />
     <ClInclude Include="マンハッタン.h" />
     <ClInclude Include="二分木.h" />
-    <ClInclude Include="列.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />
     <ClInclude Include="グラフ最適化.h" />
@@ -196,6 +198,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />
+    <Text Include="output.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
