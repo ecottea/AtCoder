@@ -21,7 +21,7 @@
 *
 * maximum_matching(es) : O((n + m) |E|)
 *	最大マッチングの例を具体的に求め es に格納する．
-*	match() の後に呼び出すこと．
+*	flow() の後に呼び出すこと．
 * 	es : 最大マッチングに含まれる辺 {s, t} ∈ S×T のリスト
 *
 * minimum_edge_covering : O((n + m) |E|)
@@ -110,7 +110,7 @@ struct bipartite_matching {
 /*
 * 二部グラフ (S, T) の最小コスト最大マッチングを求める．
 *
-* bipartite_matching(m, n) : O(m + n)
+* minimum_cost_bipartite_matching(m, n) : O(m + n)
 *	S, T の要素数を m, n で初期化する．
 *
 * add_edge(s, t, c) : O(1)
@@ -175,56 +175,59 @@ struct minimum_cost_bipartite_matching {
 * コスト付き完全二部グラフ (S, T) のコスト最小弾性マッチングのコストを返す．
 * またそのようなマッチングを昇順に match に格納する．
 *
-* e[i][j] : S[i] と T[j] の間にある辺のコスト．
+* c[i][j] : S[i] と T[j] の間にある辺のコスト．
 * (i, j) ∈ res : S[i] と T[j] がマッチングしていることを表す．
 *
 *（二次元 DP）
 */
-ll minimum_cost_elastic_matching(vvl& c, vector<pii>& match) {
-	// m = |S|, n = |T|
-	int m = sz(c);
-	int n = sz(c[0]);
+ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
+	// n = |S|, m = |T|
+	int n = sz(c);
+	int m = sz(c[0]);
 
-	// dp[i][j] : S の i 番目までと T の j 番目までの弾性マッチングの最小コスト
-	// c[i][j] は 0-indexed で dp[i][j] は 1-indexed なので注意．
-	vvl dp(m + 1, vl(n + 1, INFL));
+	// dp[i][j] : S[0..i) と T[0..j) の弾性マッチングの最小コスト
+	vvl dp(n + 1LL, vl(m + 1LL, INFL));
 	dp[0][0] = 0;
 
 	// 貰う DP
-	repi(i, 1, m) {
-		repi(j, 1, n) {
+	rep(i, n) {
+		rep(j, m) {
 			// S[i] と T[j] は繋ぐしかないのでその分のコストは絶対必要になる．
 			// その他に
 			//		S[i] に T[j - 1] が繋がる
 			//		T[j] に S[i - 1] が繋がる
 			//		S[i], T[j] 共に他に繋がる頂点はなし
 			// の 3 通りの場合が考えられるので，そのうち最小のものを選ぶ．
-			dp[i][j] = min({ dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1] }) + c[i - 1][j - 1];
+			dp[i + 1LL][j + 1LL]
+				= min({ dp[i + 1LL][j], dp[i][j + 1LL], dp[i][j] }) + c[i][j];
 		}
 	}
 
 	// DP 復元
-	match = vector<pii>();
-	int i = m, j = n;
-	while (i >= 1 && j >= 1) {
-		match.push_back({ i, j });
+	if (match != nullptr) {
+		match->clear();
+		int i = n - 1, j = m - 1;
+		while (i >= 0 && j >= 0) {
+			match->push_back({ i, j });
 
-		auto dp_min = min({ dp[i][j - 1], dp[i - 1][j], dp[i - 1][j - 1] });
+			auto dp_min = min({ dp[i + 1LL][j], dp[i][j + 1LL], dp[i][j] });
 
-		if (dp_min == dp[i][j - 1]) {
-			j--;
+			if (dp_min == dp[i + 1LL][j]) {
+				j--;
+			}
+			else if (dp_min == dp[i][j + 1LL]) {
+				i--;
+			}
+			else {
+				i--;
+				j--;
+			}
 		}
-		else if (dp_min == dp[i - 1][j]) {
-			i--;
-		}
-		else {
-			i--;
-			j--;
-		}
+
+		reverse(all(*match));
 	}
-	reverse(all(match));
 
-	return dp[m][n];
+	return dp[n][m];
 }
 
 
@@ -237,11 +240,13 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>& match) {
 *（bit DP）
 */
 mint count_perfect_matching(vvb& e) {
+	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231035
+
 	int n = sz(e);
 
-	// dp[set] : set ⊂ T と，[0, ..., |set|) ⊂ S との完全マッチングの個数
-	vm dp(int(1 << n));
-	vb seen(int(1 << n));
+	// dp[set] : set ⊂ T と，[0..|set|) ⊂ S との完全マッチングの個数
+	vm dp(1LL << n);
+	vb seen(1LL << n);
 
 	// メモ化再帰用の関数
 	function<mint(int)> rf = [&](int set) {
@@ -251,9 +256,7 @@ mint count_perfect_matching(vvb& e) {
 		}
 
 		// dp[set] が計算済ならその値を返す．
-		if (seen[set]) {
-			return dp[set];
-		}
+		if (seen[set]) return dp[set];
 		seen[set] = true;
 
 		// S の |set| 番目の頂点 i を得る．
@@ -262,10 +265,8 @@ mint count_perfect_matching(vvb& e) {
 		// 頂点 i が j ∈ set とマッチしている場合についてループ．
 		rep(j, n) {
 			// (i, j) に辺がなかったり，j が set に属していなければ何もしない．
-			if (!e[i][j] || !(set & (1 << j))) {
-				continue;
-			}
-
+			if (!e[i][j] || !(set & (1 << j))) continue;
+			
 			// i と j がマッチしている場合の数を加算する．
 			dp[set] += rf(set - (1 << j));
 		}

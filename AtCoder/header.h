@@ -42,6 +42,7 @@ const double EPS = 1e-10; // 許容誤差に応じて調整
 #define repp(a) sort(all(a)); for(bool a##_perm = true; a##_perm; a##_perm = next_permutation(all(a))) // a の順列全て（昇順）
 #define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
+#define total(a) accumulate(all(a), 0)
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -61,6 +62,10 @@ template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { r
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while (!s.empty()) { os << s.top() << " "; s.pop(); } return os; }
+template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop(); } return os; }
+template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop_front(); } return os; }
+template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -71,9 +76,9 @@ inline int lsbll(unsigned long long n) { unsigned long i; _BitScanForward64(&i, 
 inline int msb(unsigned int n) { unsigned long i; _BitScanReverse(&i, n); return i; } // 最上位ビットの位置（0-indexed）
 inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, n); return i; }
 template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
-#define dump(x) cerr << "\033[1;36m" << (x) << "\033[0m" << endl; // デバッグ出力用
-#define dumpel(v) cerr << "\033[1;36m"; repe(x, (v)) {cerr << x << endl;} cerr << "\033[0m";
-#define dumpeli(v) cerr << "\033[1;36m"; rep(i, sz(v)) {cerr << i << ": " << v[i] << endl;} cerr << "\033[0m";
+#define dump(x) cout << "\033[1;36m" << (x) << "\033[0m" << endl;
+#define dumps(x) cout << "\033[1;36m" << (x) << "\033[0m ";
+#define dumpel(a) { int i = 0; cout << "\033[1;36m"; repe(x, a) {cout << i++ << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream _in_(f); cin.rdbuf(_in_.rdbuf());
 #define output_to_file(f) ofstream _out_(f); cout.rdbuf(_out_.rdbuf());
 // 提出用（GCC）
@@ -86,8 +91,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define msbll(n) (63 - __builtin_clzll(n))
 #define gcd __gcd
 #define dump(x)
+#define dumps(x)
 #define dumpel(v)
-#define dumpeli(v)
 #define input_from_file(f)
 #define output_to_file(f)
 #endif
@@ -103,7 +108,7 @@ using namespace atcoder;
 using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
-istream& operator>> (istream& is, mint& x) { ll tmp; is >> tmp; x = tmp; return is; }
+istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------

@@ -3,7 +3,7 @@
 // ■■■■■ 全探索 ■■■■■
 
 
-// 【中間集合の全探索】
+//【中間集合の全探索】
 /*
 * 大きさ d の全体集合 Ω のうち，部分集合 set⊂Ω を含む
 * 中間集合 mid⊂Ω を昇順に全探索する．
@@ -11,18 +11,18 @@
 #define repbm(mid, set, d) for(int mid = set; mid < (1 << int(d)); mid = (mid + 1) | set)
 
 
-// 【部分集合の全探索】
+//【部分集合の全探索】
 /*
 * 全体集合 Ω の部分集合 set⊂Ω について，set の部分集合 sub⊂set を降順に全探索する．
 */
-#define repbs(sub, set) for(int sub = set, bsub = 1; bsub > 0; bsub = sub, sub = (sub - 1) & set) 
+#define repbs(sub, set) for(int sub = int(set), bsub = 1; bsub > 0; bsub = sub, sub = (sub - 1) & int(set)) 
 
 
-// 【部分集合の全探索（大きさ固定）】
+//【部分集合の全探索（大きさ固定）】
 /*
 * 大きさ d の全体集合 Ω のうち，大きさ k の部分集合 set⊂Ω を昇順に全探索する．
 */
-#define repbc(set, k, d) for(int set = (1 << k) - 1, lb, nx; set < (1 << n); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
+#define repbc(set, k, d) for(int set = (1 << int(k)) - 1, lb, nx; set < (1 << int(d)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
 
 
 //【広義単調増加列の列挙】O(binomial(n + m - 1, n))

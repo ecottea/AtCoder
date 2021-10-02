@@ -16,9 +16,11 @@
 * get(l, r) : O(1)
 *	部分文字列 s[l, r) のハッシュ値を返す．
 */
-template <typename STR, int MOD, int BASE, int SHIFT>
+template <class STR, int MOD, int BASE, int SHIFT>
 struct rolling_hash_sub {
 	using mint = static_modint<MOD>;
+	using vm = vector<mint>;
+
 	const mint B = BASE; // 適当な基数
 	const mint invB = B.inv(); // 基数の逆数
 	const mint S = SHIFT; // 適当なシフト
@@ -50,22 +52,19 @@ struct rolling_hash_sub {
 		}
 	}
 
-
 	// s[l, r) のハッシュ値の取得
 	int get(int l, int r) {
 		return ((v[r] - v[l]) * pow_invB[l]).val();
 	}
 };
-template <typename STR> // STR は例えば string, vector<int>
+template <class STR> // STR は例えば string, vector<int>
 struct rolling_hash {
 	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
 	rolling_hash_sub<STR, 1000000007, 100007, 17> rh1;
 	rolling_hash_sub<STR, 998244353, 99991, 91> rh2;
 
-
 	// コンストラクタ（文字列 s で初期化）
 	rolling_hash(const STR& s) : rh1(s), rh2(s) {}
-
 
 	// s[l, r) のハッシュ値の取得
 	ll get(int l, int r) {
@@ -86,9 +85,12 @@ struct rolling_hash {
 * get(x1, y1, x2, y2) : O(1)
 *	部分長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 */
-template <typename T, int MOD, int BASE_X, int BASE_Y, int SHIFT>
+template <class T, int MOD, int BASE_X, int BASE_Y, int SHIFT>
 struct rolling_hash_2d_sub {
 	using mint = static_modint<MOD>;
+	using vm = vector<mint>;
+	using vvm = vector<vm>;
+
 	const mint BX = BASE_X; // 適当な基数
 	const mint invBX = BX.inv(); // 基数の逆数
 	const mint BY = BASE_Y;
@@ -131,23 +133,20 @@ struct rolling_hash_2d_sub {
 		}
 	}
 
-
 	// 長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 	int get(int x1, int y1, int x2, int y2) {
 		return ((v[x2][y2] - v[x1][y2] - v[x2][y1] + v[x1][y1])
 			* pow_invBX[x1] * pow_invBY[y1]).val();
 	}
 };
-template <typename T> // T は例えば int, ll, char
+template <class T> // T は例えば int, ll, char
 struct rolling_hash_2d {
 	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
 	rolling_hash_2d_sub<T, 1000000007, 100007, 26627, 17> rh1;
 	rolling_hash_2d_sub<T, 998244353, 99991, 54401, 91> rh2;
 
-
 	// コンストラクタ（二次元配列 a で初期化）
 	rolling_hash_2d(vector<vector<T>>& a) : rh1(a), rh2(a) {}
-
 
 	// 長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 	ll get(int x1, int y1, int x2, int y2) {
@@ -161,7 +160,7 @@ struct rolling_hash_2d {
 * s の連続部分列として w が含まれているかどうか調べ，
 * 最初に見つかった場所の先頭位置を返す．（見つからなかったら -1 を返す．）
 */
-template <typename STR> // STR は例えば string, vector<int>
+template <class STR> // STR は例えば string, vector<int>
 int knuth_morris_pratt(const STR& s, const STR& w) {
 	int n = sz(s);
 	int m = sz(w);
@@ -237,10 +236,10 @@ int knuth_morris_pratt(const STR& s, const STR& w) {
 *
 *（二次元 DP）
 */
-template <typename STR> // STR は例えば string, vector<int>
-ll levenshtein_distance(const STR& s, const STR& t,
+template <class T>
+ll levenshtein_distance(const vector<T>& s, const vector<T>& t,
 	const tuple<ll, ll, ll, ll>& dist = { 0, 1, 1, 1 },
-	STR* s2 = nullptr, STR* t2 = nullptr) {
+	vector<T>* s2 = nullptr, vector<T>* t2 = nullptr) {
 
 	int n = sz(s);
 	int m = sz(t);

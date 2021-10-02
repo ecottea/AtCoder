@@ -14,23 +14,24 @@
 * x[j] は小さい方から j 番目の要素が何かを表す．
 */
 template <typename T>
-int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>& x) {
+int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* x = nullptr) {
 	int n = sz(a);
+	if (x == nullptr) x = new vector<T>;
 
 	// unique() のためにまずソートを行う．
-	x = a;
-	sort(all(x));
+	*x = a;
+	sort(all(*x));
 
 	// 隣り合う重複する要素を末尾に送り，末尾を消去する．
-	x.erase(unique(all(x)), x.end());
+	x->erase(unique(all(*x)), x->end());
 
 	// a[i] が x において何番目かを求める．
 	a_cp = vi(n);
 	rep(i, n) {
-		a_cp[i] = (int)distance(x.begin(), lower_bound(all(x), a[i]));
+		a_cp[i] = (int)distance(x->begin(), lower_bound(all(*x), a[i]));
 	}
 
-	return sz(x);
+	return sz(*x);
 }
 
 
@@ -44,7 +45,7 @@ int coordinate_compression_interval(vector<pll>& a, vector<pii>& a_cp, vector<ll
 	int n = sz(a);
 
 	// x 座標だけを抜き出す．
-	x = vector<ll>();
+	x.clear();
 	rep(i, n) {
 		ll l, r;
 		tie(l, r) = a[i];
@@ -90,8 +91,8 @@ pii coordinate_compression_rectangle(vector<tuple<ll, ll, ll, ll>>& a, vector<tu
 	int n = sz(a);
 
 	// x, y それぞれの座標だけを抜き出す．
-	x = vector<ll>();
-	y = vector<ll>();
+	x.clear();
+	y.clear();
 	rep(i, n) {
 		ll x1, y1, x2, y2;
 		tie(x1, y1, x2, y2) = a[i];
@@ -131,4 +132,5 @@ pii coordinate_compression_rectangle(vector<tuple<ll, ll, ll, ll>>& a, vector<tu
 
 	return { sz(x), sz(y) };
 }
+
 

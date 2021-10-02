@@ -89,60 +89,60 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 
 //【最長共通部分列】O(|s| |t|)
 /*
-* 2 つの文字列 s, t の最長共通部分列の一例を lcs に格納する．
-* また最長共通部分列の長さを返す．
+* 2 つの文字列 s, t の最長共通部分列の長さを返す．
+* またその一例を lcs に格納する．
 *
 *（二次元 DP）
 */
-template <typename STR> // STR は例えば string, vector<int>
-int longest_common_subsequence(const STR& s, const STR& t, STR& lcs) {
+template <class T>
+int longest_common_subsequence(const vector<T>& s, const vector<T>& t, vector<T>* lcs = nullptr) {
 	// 文字列の長さ
-	int m = sz(s);
-	int n = sz(t);
+	int n = sz(s);
+	int m = sz(t);
 
-	// dp[i][j] : s の i 文字目までと t の j 文字目までの最長共通部分列の長さ
-	// s[i], t[i] は 0-indexed で dp[i][j] は 1-indexed なので注意．
-	vvi dp(m + 1, vi(n + 1));
-	repi(i, 1, m) {
-		repi(j, 1, n) {
+	// dp[i][j] : s[0..i) と t[0..j) の最長共通部分列の長さ
+	vvi dp(n + 1LL, vi(m + 1LL));
+	rep(i, n) {
+		rep(j, m) {
 			// s の i 文字目と t の j 文字目が等しい場合
-			if (s[i - 1] == t[j - 1]) {
+			if (s[i] == t[j]) {
 				// その文字は採用し，1 つ短い文字列に帰着する．
-				dp[i][j] = dp[i - 1][j - 1] + 1;
+				dp[i + 1LL][j + 1LL] = dp[i][j] + 1;
 			}
 			// s の i 文字目と t の j 文字目が異なる場合
 			else {
 				// どちらかを 1 文字削った文字列に帰着する．
-				dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+				dp[i + 1LL][j + 1LL] = max(dp[i][j + 1LL], dp[i + 1LL][j]);
 			}
 		}
 	}
 
 	// DP 復元を行い最長共通部分列 lcs を求める．
-	lcs.clear();
-	int i = m, j = n;
-	while (i >= 1 && j >= 1) {
-		// s の i 文字目と t の j 文字目が等しい場合
-		if (s[i - 1] == t[j - 1]) {
-			// その文字は採用し，1 つ短い文字列に帰着する．
-			lcs += s[i - 1];
-			i--;
-			j--;
-		}
-		// s の i 文字目と t の j 文字目が異なる場合
-		else {
-			// どちらを 1 文字削る方が長い文字列が得られるかを調べて短い文字列に帰着する．
-			if (dp[i - 1][j] > dp[i][j - 1]) {
+	if (lcs != nullptr) {
+		*lcs = vector<T>(dp[n][m]);
+		int i = n - 1, j = m - 1, pt = dp[n][m] - 1;
+		while (i >= 0 && j >= 0) {
+			// s の i 文字目と t の j 文字目が等しい場合
+			if (s[i] == t[j]) {
+				// その文字は採用し，1 つ短い文字列に帰着する．
+				(*lcs)[pt--] = s[i];
 				i--;
-			}
-			else {
 				j--;
+			}
+			// s の i 文字目と t の j 文字目が異なる場合
+			else {
+				// どちらを 1 文字削る方が長い文字列が得られるかを調べて短い文字列に帰着する．
+				if (dp[i][j + 1LL] > dp[i + 1LL][j]) {
+					i--;
+				}
+				else {
+					j--;
+				}
 			}
 		}
 	}
-	reverse(all(lcs));
 
-	return sz(lcs);
+	return dp[n][m];
 }
 
 

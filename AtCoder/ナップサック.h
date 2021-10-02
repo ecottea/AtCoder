@@ -57,7 +57,7 @@ ll knapsack01_problem(const vl& v, const vi& w, int W, vb* sel = nullptr) {
 *
 *（価値を状態とした状態 DP）
 */
-ll knapsack01_problem(const vi& v, vl& w, ll W, vb& sel) {
+ll knapsack01_problem(const vi& v, vl& w, ll W, vb* sel = nullptr) {
 	int N = sz(v); // 品物の個数
 
 	// 重さを無視した合計価値 v の計算
@@ -99,12 +99,14 @@ ll knapsack01_problem(const vi& v, vl& w, ll W, vb& sel) {
 	V = j;
 
 	// DP 復元を行う．
-	sel = vb(N);
-	repir(i, N, 1) {
-		// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
-		if (dp[i][j] != dp[i - 1][j]) {
-			sel[i - 1] = true;
-			j -= v[i - 1];
+	if (sel != nullptr) {
+		*sel = vb(N);
+		repir(i, N, 1) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
+			if (dp[i][j] != dp[i - 1][j]) {
+				(*sel)[i - 1] = true;
+				j -= v[i - 1];
+			}
 		}
 	}
 

@@ -13,7 +13,6 @@
 mint count_partial_sum(const vi& a, int v) {
 	// 参考 : https://qiita.com/suisen_cp/items/794f24d31852b97d58a6
 
-
 	int n = sz(a);
 
 	// dp[i + 1][j] : i 番目の数までで，和がちょうど j という状態をとる場合の数
@@ -63,6 +62,40 @@ void enumerate_partial_sum(const vi& a, bitset<A>& res) {
 }
 
 
+//【部分和問題（個数最小化）】O(n v)
+/*
+* 長さ n の非負整数の列 a の部分和として v を作るために必要な要素の最小個数を返す．
+* a の部分和として v が作れないなら INF を返す．
+*
+*（和を状態にもつ状態 DP）
+*/
+int minimize_partial_sum(const vi& a, int v) {
+	int n = sz(a);
+
+	// dp[i][j] : a[0..i) の中で和がちょうど j を実現できる最小個数
+	vvi dp(n + 1, vi(v + 1, INF));
+	dp[0][0] = 0; // 空和が 0 であることに対応
+
+	// 貰う DP
+	rep(i, n) {
+		repi(j, 0, v) {
+			// i 番目の数を選ばない場合
+			dp[i + 1][j] = dp[i][j];
+
+			// i 番目の数が j より大きいと選べない．
+			if (j < a[i]) {
+				continue;
+			}
+
+			// i 番目の数を選ぶ場合
+			chmin(dp[i + 1][j], dp[i][j - a[i]] + 1);
+		}
+	}
+
+	return dp[n][v];
+}
+
+
 //【部分和問題】O(2^(n/2))
 /*
 * 長さ n の非負整数の列 a の部分和として v が作れるかを返す．
@@ -73,9 +106,7 @@ template <class T>
 bool partial_sum(const vector<T>& a, T v) {
 	// 参考：https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
 
-
 	int n = sz(a);
-
 
 	// 前半の要素数
 	int n1 = n / 2;
@@ -149,6 +180,36 @@ bool partial_sum(const vector<T>& a, T v) {
 }
 
 
+//【部分和問題（倍数，存在判定）】O(n m)
+/*
+* 長さ n の非負整数の列 a と正整数 m，r∈[0..m) について，
+* a の部分列で和が m で割って r 余る数になるものが存在するかを返す．
+*
+*（mod m で和を状態にもつ状態 DP）
+*/
+template <class T>
+bool multiple_partial_sum(const vector<T>& a, int m, int r) {
+	int n = sz(a);
+
+	// dp[i][j] : a[0..i) で和が j mod m にできるか
+	vvb dp(n + 1, vb(m));
+	dp[0][0] = true; // 空和が 0 であることに対応
+
+	// 貰う DP
+	rep(i, n) {
+		rep(j, m) {
+			// i 番目の数を選ばない場合
+			dp[i + 1][j] = dp[i][j];
+
+			// i 番目の数を選ぶ場合
+			dp[i + 1][j] = dp[i + 1][j] | dp[i][((j - a[i]) % m + m) % m];
+		}
+	}
+
+	return dp[n][r];
+}
+
+
 //【部分和問題（倍数，数え上げ）】O(n m)
 /*
 * 長さ n の非負整数の列 a と正整数 m について，
@@ -189,7 +250,6 @@ mint count_multiple_partial_sum(const vector<T>& a, int m) {
 mint count_unlimited_partial_sum(const vi& a, int v) {
 	// 参考 : https://qiita.com/suisen_cp/items/794f24d31852b97d58a6
 
-
 	int n = sz(a);
 
 	// dp[i + 1][j] : i 番目の数までで，和がちょうど j という状態をとる場合の数
@@ -216,11 +276,10 @@ mint count_unlimited_partial_sum(const vi& a, int v) {
 }
 
 
-//【部分和問題（個数制限なし，最小化）】O(n v)
+//【部分和問題（個数制限なし，個数最小化）】O(n v)
 /*
-* 長さ n の正整数の列 a の部分和として v を作る．
-* 各 a[i] は 0 個以上の任意個用いることができる．
-* このときに必要となる要素の最小個数を返す．
+* 長さ n の正整数列 a の部分和として v を作るために必要な最小要素数を返す．
+* 各 a[i] は [0..∞) 個用いることができる．
 *
 * コイン両替問題としても知られる．
 *
@@ -253,16 +312,61 @@ int minimize_unlimited_partial_sum(const vi& a, int v) {
 }
 
 
+//【部分和問題（個数制限付き，存在判定）】O(n v)
+/*
+* 長さ n の正整数列 a の部分和として v を作れるかを返す．
+* 各 a[i] は [0..m[i]] 個用いることができる．
+*
+*（和を状態にもつ状態 DP）
+*/
+bool limited_partial_sum(const vi& a, const vi& m, int v) {
+	// 参考 : https://algo-method.com/tasks/313/editorial
+
+	int n = sz(a);
+
+	// dp[i][j] : a[0..i) の中で和をちょうど j にするときの a[i-1] の個数の最小値
+	vvi dp(n + 1, vi(v + 1, INF));
+	dp[0][0] = 0; // 空和が 0 であることに対応
+
+	// 貰う DP
+	rep(i, n) {
+		repi(j, 0, v) {
+			// i 番目の数を選ばない場合
+			if (dp[i][j] != INF)
+				chmin(dp[i + 1][j], 0);
+			else
+				chmin(dp[i + 1][j], INF);
+
+			// i 番目の数を選べる場合
+			if (j >= a[i]) {
+				// i 番目の数を新たに選ぶ場合
+				if (dp[i][j - a[i]] != INF)
+					chmin(dp[i + 1][j], 1);
+				else
+					chmin(dp[i + 1][j], INF);
+
+				// i 番目の数を追加で選ぶ場合
+				if (dp[i + 1][j - a[i]] < m[i])
+					chmin(dp[i + 1][j], dp[i + 1][j - a[i]] + 1);
+				else
+					chmin(dp[i + 1][j], INF);
+			}
+		}
+	}
+
+	return dp[n][v] != INF;
+}
+
+
 //【部分和問題（個数制限付き，数え上げ）】O(n v)
 /*
-* 長さ n の正整数の列 a の部分和として v を作る方法が何通りあるかを返す．
-* 各 a[i] は 0 個以上 m[i] 個以下の範囲で用いることができる．
+* 長さ n の正整数列 a の部分和として v を作る方法が何通りあるかを返す．
+* 各 a[i] は [0..m[i]] 個用いることができる．
 *
 *（和を状態にもつ状態 DP）
 */
 mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 	// 参考 : https://betrue12.hateblo.jp/entry/2020/10/05/124052
-
 
 	int n = sz(a);
 
@@ -293,16 +397,15 @@ mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 }
 
 
-//【部分和問題（整数値，個数制限付き，数え上げ）】O(n Σ|a[i]m[i]|)
+//【部分和問題（負値可，個数制限付き，数え上げ）】O(n Σ|a[i]m[i]|)
 /*
-* 長さ n の整数の列 a の部分和として v を作る方法が何通りあるかを返す．
-* 各 a[i] は 0 個以上 m[i] 個以下の範囲で用いることができる．
+* 長さ n の整数列 a の部分和として v を作る方法が何通りあるかを返す．
+* 各 a[i] は [0..m[i]] 個用いることができる．
 *
 *（和を状態にもつ状態 DP）
 */
 mint count_limited_signed_partial_sum(const vi& a, const vi& m, int v) {
 	// 参考 : https://betrue12.hateblo.jp/entry/2020/10/05/124052
-
 
 	int n = sz(a);
 
@@ -380,4 +483,5 @@ mint count_limited_signed_partial_sum(const vi& a, const vi& m, int v) {
 
 	return dp[n][v - MIN];
 }
+
 

@@ -328,7 +328,7 @@ Polynomial<modint998244353> operator%(ll d, const Polynomial<modint998244353>& f
 	return res;
 }
 
-// 単項式 f = x ^ d を返す．
+// 単項式 f = x^d を返す．
 template <class T>
 Polynomial<T> monomial(int d) {
 	vector<T> coef(d + 1);

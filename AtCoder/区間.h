@@ -44,7 +44,6 @@ template <class T>
 void slide_minimum(const vector<T>& a, int w, vector<T>& a_min) {
 	// 参考：https://qiita.com/kuuso1/items/318d42cd089a49eeb332
 
-
 	int n = sz(a);
 	a_min = vector<T>(n + 1 - w);
 
@@ -72,63 +71,6 @@ void slide_minimum(const vector<T>& a, int w, vector<T>& a_min) {
 			a_min[i - w + 1] = a[q.front()];
 		}
 	}
-}
-
-
-//【区間スコア和最大化】O((n + m) log n)
-/*
-* ビット列 [0, n) 上の m 個の区間 [l, r] とそのスコア a が与えられる．
-* 区間内に 1 があればスコア a が加算されるとき，スコアの最大値を返す．
-* 
-*（遅延評価セグメント木で高速化したインライン DP）
-*/
-ll op2(ll x, ll y) { return max(x, y); } // 区間最大値を得たい
-ll e2() { return -INFL; }
-ll mapping2(ll f, ll x) { return f + x; } // 区間への加算を行いたい
-ll composition2(ll f, ll g) { return f + g; }
-ll id2() { return 0; }
-ll maximize_interval_score(int n, vi& l, vi& r, vl& a) {
-	int m = sz(l);
-
-	// 区間 [l, r] のスコアが a であることを r_to_la[r] ∋ {l, a} で記録する．
-	vector<vector<pil>> r_to_la(n);
-	rep(i, m) {
-		r_to_la[r[i]].push_back({ l[i], a[i] });
-	}
-
-	// dp : 区間最大値の計算と区間への加算ができる遅延評価セグメント木．
-	// dp[j + 1] : 今まで見てきた区間の中で考えたときの，
-	//   最も右の 1 の位置が j であるようなものの中での最高スコア
-	//   （j + 1 = 0 は 1 が全くないことを表す．）
-	lazy_segtree<ll, op2, e2, ll, mapping2, composition2, id2> dp(n + 1);
-
-	// 1 が全くないときのスコアは 0 である．
-	dp.set(0, 0);
-
-	// 区間の右端 r について昇順に見ていく．
-	rep(r, n) {
-		ll a_sum = 0;
-		repe(la, r_to_la[r]) {
-			a_sum += la.second;
-		}
-
-		// 位置 r を 1 にする場合
-		//   r を右端にもつ区間のスコアの和 A が加算される．
-		//   よって今までのスコアの最大値 + A が右端位置 r の最高スコアとなる．
-		//   区間最大値を必要とするので遅延評価セグメント木が有効．
-		dp.set(r + 1, dp.prod(0, r + 1) + a_sum);
-
-		// 位置 r を 0 にする場合
-		//   r を右端にもつ各区間 [l, r] とそのスコア a について，
-		//   最も右の 1 が [l, r) に含まれている場合は，a が加算される．
-		//   区間への加算を必要とするので遅延評価セグメント木が有効．
-		repe(la, r_to_la[r]) {
-			dp.apply(la.first + 1, r + 1, la.second);
-		}
-	}
-
-	// 右端の 1 の位置を任意としたときの最高スコアを返す．
-	return dp.all_prod();
 }
 
 

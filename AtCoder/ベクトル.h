@@ -38,6 +38,15 @@ template <class T> inline vector<T> operator-(const vector<T>& x, const vector<T
 	vector<T> res = x; return res -= y;
 }
 
+// ベクトルの成分積 : O(n)
+template <class T> inline vector<T>& operator*=(vector<T>& x, const vector<T>& y) {
+	rep(i, sz(x)) x[i] *= y[i];
+	return x;
+}
+template <class T> inline vector<T> operator*(const vector<T>& x, const vector<T>& y) {
+	vector<T> res = x; return res *= y;
+}
+
 // スカラー倍 : O(n)
 template <class T> inline vector<T>& operator*=(vector<T>& x, const T& c) {
 	rep(i, sz(x)) x[i] *= c;

@@ -2,6 +2,7 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "マッチング.h"
+#include "全探索.h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
 
 
@@ -518,6 +519,8 @@ int longest_path(const Graph& g, vi& len) {
 //【最大クリーク問題】O(2^√(2|E|) |V|)
 /*
 * 無向グラフ g の最大クリークの大きさを返す．
+* 
+* 利用：【部分集合の全探索】
 */
 int maximum_clique(const Graph& g) {
 	// 参考：https://www.slideshare.net/wata_orz/ss-12131479

@@ -153,7 +153,6 @@ double convex_diameter(const Polygon<T>& poly, pii& id) {
 			id.first = i % n;
 			id.second = j % n;
 		}
-
 	}
 
 	return sqrt(sqres);
@@ -163,7 +162,7 @@ double convex_diameter(const Polygon<T>& poly, pii& id) {
 //【最短バイトニックツアー】O(n^2)
 /*
 * x 座標の互いに異なる n 個の点列 p について，
-* x 座標最小の点 →(x 座標昇順)→ x 座標最大の点 →(x 座標降順)→ x 座標最小の点
+*	x 座標最小の点 →(x 座標昇順)→ x 座標最大の点 →(x 座標降順)→ x 座標最小の点
 * の順に点を結ぶ経路の最短長を返す．
 */
 template <class T>

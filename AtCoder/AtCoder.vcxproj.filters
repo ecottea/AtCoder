@@ -55,6 +55,12 @@
     <Filter Include="ヘッダー ファイル\計算">
       <UniqueIdentifier>{59318c8d-7ef2-4194-b058-dabafd79dab4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\整数">
+      <UniqueIdentifier>{bfa2e7c8-eb39-4a41-ba8f-1845a0d9c0c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\確率">
+      <UniqueIdentifier>{36597baf-90fc-48c6-a94a-085803720106}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -88,9 +94,6 @@
     </ClInclude>
     <ClInclude Include="Union-Find.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
-    </ClInclude>
-    <ClInclude Include="DP.h">
-      <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
     <ClInclude Include="ナップサック.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
@@ -140,15 +143,6 @@
     <ClInclude Include="座標圧縮.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
-    <ClInclude Include="数論.h">
-      <Filter>ヘッダー ファイル\代数</Filter>
-    </ClInclude>
-    <ClInclude Include="数の表示.h">
-      <Filter>ヘッダー ファイル\代数</Filter>
-    </ClInclude>
-    <ClInclude Include="合同式.h">
-      <Filter>ヘッダー ファイル\代数</Filter>
-    </ClInclude>
     <ClInclude Include="部分和問題.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
@@ -176,9 +170,6 @@
     <ClInclude Include="線形計画問題.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
-    <ClInclude Include="グラフ最適化.h">
-      <Filter>ヘッダー ファイル\最適化</Filter>
-    </ClInclude>
     <ClInclude Include="クエリ.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
@@ -188,7 +179,7 @@
     <ClInclude Include="特殊化.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
-    <ClInclude Include="対称群.h">
+    <ClInclude Include="置換.h">
       <Filter>ヘッダー ファイル\代数</Filter>
     </ClInclude>
     <ClInclude Include="組合せ論.h">
@@ -214,6 +205,36 @@
     </ClInclude>
     <ClInclude Include="ヒストグラム.h">
       <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="グラフ最適化.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="合同式.h">
+      <Filter>ヘッダー ファイル\整数</Filter>
+    </ClInclude>
+    <ClInclude Include="数論.h">
+      <Filter>ヘッダー ファイル\整数</Filter>
+    </ClInclude>
+    <ClInclude Include="数の表示.h">
+      <Filter>ヘッダー ファイル\整数</Filter>
+    </ClInclude>
+    <ClInclude Include="畳み込み.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="確率.h">
+      <Filter>ヘッダー ファイル\確率</Filter>
+    </ClInclude>
+    <ClInclude Include="期待値.h">
+      <Filter>ヘッダー ファイル\確率</Filter>
+    </ClInclude>
+    <ClInclude Include="組合せゲーム.h">
+      <Filter>ヘッダー ファイル\ゲーム</Filter>
+    </ClInclude>
+    <ClInclude Include="桁DP.h">
+      <Filter>ヘッダー ファイル\整数</Filter>
+    </ClInclude>
+    <ClInclude Include="区間DP.h">
+      <Filter>ヘッダー ファイル\区間</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
