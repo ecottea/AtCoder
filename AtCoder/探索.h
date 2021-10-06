@@ -202,7 +202,7 @@ double golden_search(double left, double right, function<double(double)>& f) {
 
 //y‘g‚Ì˜a‚Ì’Tõz
 /*
-* sort_outer_sum(a, b) : O(n log n + m log m)
+* Sort_outer_sum(a, b) : O(n log n + m log m)
 *	S = { a[i] + b[j] | i¸[0..n), j¸[0..m) } ‚Å‰Šú‰»‚·‚éD
 *
 * lower_bound(v) : O(n log m)
@@ -219,14 +219,14 @@ double golden_search(double left, double right, function<double(double)>& f) {
 *
 * —˜—pFy‚ß‚®‚é®“ñ•ª’Tõz
 */
-struct sort_outer_sum {
+struct Sort_outer_sum {
 	int n, m;
 	vl a, b, acc_b;
 
-	sort_outer_sum() {}
+	Sort_outer_sum() {}
 
 	// S = { a[i] + b[j] | i¸[0..n), j¸[0..m) } ‚Å‰Šú‰»‚·‚éD
-	sort_outer_sum(const vl& a_, const vl& b_)
+	Sort_outer_sum(const vl& a_, const vl& b_)
 		: n(sz(a_)), m(sz(b_)), a(a_), b(b_) {
 		sort(all(a));
 		sort(all(b));

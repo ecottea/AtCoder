@@ -11,7 +11,7 @@
 * start から各頂点 i への最短経路長を dist[i] に格納する．
 * i が start から到達不能な頂点の場合は dist[i] = -1 となる．
 */
-void breadth_first_search(Graph& g, int start, vi& dist) {
+void breadth_first_search(const Graph& g, int start, vi& dist) {
 	int n = sz(g);
 	dist = vi(n, -1); // スタートからの最短距離を保持するテーブル
 	dist[start] = 0;

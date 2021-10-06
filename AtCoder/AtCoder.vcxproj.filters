@@ -61,6 +61,9 @@
     <Filter Include="ヘッダー ファイル\確率">
       <UniqueIdentifier>{36597baf-90fc-48c6-a94a-085803720106}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\集合">
+      <UniqueIdentifier>{4cbbb6b1-b0b0-4a8a-a58d-468e172956ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -158,9 +161,6 @@
     <ClInclude Include="探索.h">
       <Filter>ヘッダー ファイル\探索</Filter>
     </ClInclude>
-    <ClInclude Include="全探索.h">
-      <Filter>ヘッダー ファイル\探索</Filter>
-    </ClInclude>
     <ClInclude Include="格子.h">
       <Filter>ヘッダー ファイル\格子</Filter>
     </ClInclude>
@@ -235,6 +235,15 @@
     </ClInclude>
     <ClInclude Include="区間DP.h">
       <Filter>ヘッダー ファイル\区間</Filter>
+    </ClInclude>
+    <ClInclude Include="bitDP.h">
+      <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="ビット全探索.h">
+      <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="全列挙.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

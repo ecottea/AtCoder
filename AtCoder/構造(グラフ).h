@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "全探索.h"
+#include "ビット全探索.h"
 // ■■■■■ グラフ（構造） ■■■■■
 
 
@@ -11,6 +11,36 @@
 * g[v] : 頂点 v から行ける頂点を並べたリスト
 */
 using Graph = vvi;
+
+
+//【グラフの入力】O(|E|)
+/*
+* 入力を受け取り n 頂点 m 辺のグラフを構成する．
+*
+* n : グラフの頂点の数
+* m : グラフの辺の数
+* g : ここにグラフを構築して返す
+* directed : 有向グラフなら true
+* one_indexed : 入力が 1-indexed で与えられるなら true
+*/
+void read_graph(int n, int m, Graph& g,
+	bool directed = false, bool one_indexed = true) {
+	g = Graph(n);
+	rep(i, m) {
+		int a, b;
+		cin >> a >> b;
+
+		if (one_indexed) {
+			a--;
+			b--;
+		}
+
+		g[a].push_back(b);
+		if (!directed) {
+			g[b].push_back(a);
+		}
+	}
+}
 
 
 //【根付き木のノード】
@@ -111,6 +141,37 @@ struct Edge {
 using WGraph = vector<vector<Edge>>;
 
 
+//【コスト付きグラフの入力】O(|E|)
+/*
+* 入力を受け取り n 頂点 m 辺のコスト付きグラフを構成する．
+*
+* n : グラフの頂点の数
+* m : グラフの辺の数
+* g : ここにグラフを構築して返す
+* directed : 有向グラフなら true
+* one_indexed : 入力が 1-indexed で与えられるなら true
+*/
+void read_graph(int n, int m, WGraph& g,
+	bool directed = false, bool one_indexed = true) {
+	g = WGraph(n);
+	rep(i, m) {
+		int a, b;
+		ll c;
+		cin >> a >> b >> c;
+
+		if (one_indexed) {
+			a--;
+			b--;
+		}
+
+		g[a].push_back({ b, c });
+		if (!directed) {
+			g[b].push_back({ a, c });
+		}
+	}
+}
+
+
 //【コスト付き根付き木のノード】
 /*
 * parent : 親の頂点（なければ -1）
@@ -189,67 +250,6 @@ inline ll get_cost(const Edge& e) {
 }
 inline ll get_cost(const int& t) {
 	return INFL;
-}
-
-
-//【グラフの入力】O(|E|)
-/*
-* 入力を受け取り n 頂点 m 辺のグラフを構成する．
-*
-* n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* directed : 有向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
-*/
-void read_graph(int n, int m, Graph& g,
-	bool directed = false, bool one_indexed = true) {
-	g = Graph(n);
-	rep(i, m) {
-		int a, b;
-		cin >> a >> b;
-
-		if (one_indexed) {
-			a--;
-			b--;
-		}
-
-		g[a].push_back(b);
-		if (!directed) {
-			g[b].push_back(a);
-		}
-	}
-}
-
-
-//【コスト付きグラフの入力】O(|E|)
-/*
-* 入力を受け取り n 頂点 m 辺のコスト付きグラフを構成する．
-*
-* n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* directed : 有向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
-*/
-void read_graph(int n, int m, WGraph& g,
-	bool directed = false, bool one_indexed = true) {
-	g = WGraph(n);
-	rep(i, m) {
-		int a, b;
-		ll c;
-		cin >> a >> b >> c;
-
-		if (one_indexed) {
-			a--;
-			b--;
-		}
-
-		g[a].push_back({ b, c });
-		if (!directed) {
-			g[b].push_back({ a, c });
-		}
-	}
 }
 
 

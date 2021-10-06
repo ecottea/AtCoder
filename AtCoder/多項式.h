@@ -84,20 +84,12 @@ struct Polynomial {
 	Polynomial(const vector<T>& c_) : n(sz(c_)), c(c_) {}
 
 	// 代入
-	Polynomial(const Polynomial& old) = default;
-	Polynomial& operator=(const Polynomial& other) = default;
+	Polynomial(const Polynomial& f) = default;
+	Polynomial& operator=(const Polynomial& f) = default;
 	Polynomial& operator=(const T& c0) { n = 1; c = { c0 }; return *this; }
 
-	// 出力
-	friend ostream& operator<<(ostream& os, const Polynomial& f) {
-		rep(i, f.n) {
-			os << f.c[i] << "x^" << i;
-			if (i < f.n - 1) {
-				os << " + ";
-			}
-		}
-		return os;
-	}
+	// アクセス
+	T& operator[](int i) { return c[i]; }
 
 	// 加算
 	Polynomial& operator+=(const Polynomial& g) {
@@ -111,7 +103,7 @@ struct Polynomial {
 		}
 		return *this;
 	}
-	Polynomial operator+(const Polynomial& g) const {Polynomial h = *this; h += g; return h;}
+	Polynomial operator+(const Polynomial& g) const { Polynomial h = *this; h += g; return h; }
 
 	// 定数加算
 	Polynomial& operator+=(const T& sc) {
@@ -227,6 +219,19 @@ struct Polynomial {
 
 	// 次数
 	int deg() const { return n - 1; }
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Polynomial& f) {
+		if (f.n == 0)
+			os << 0;
+		else {
+			rep(i, f.n) {
+				os << f.c[i] << "x^" << i;
+				if (i < f.n - 1) os << " + ";
+			}
+		}
+		return os;
+	}
 };
 
 // 積

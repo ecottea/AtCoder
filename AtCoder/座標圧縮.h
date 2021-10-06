@@ -41,28 +41,29 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* x = nullptr)
 * また x[i] に圧縮された座標 i に対応する元の座標を格納する．
 * 戻り値として x 座標の数を返す．
 */
-int coordinate_compression_interval(vector<pll>& a, vector<pii>& a_cp, vector<ll>& x) {
+int coordinate_compression_interval(vector<pll>& a, vector<pii>& a_cp, vl* x = nullptr) {
 	int n = sz(a);
+	if (x == nullptr) x = new vl;
 
 	// x 座標だけを抜き出す．
-	x.clear();
+	x->clear();
 	rep(i, n) {
 		ll l, r;
 		tie(l, r) = a[i];
 
-		x.push_back(l);
-		x.push_back(r);
+		x->push_back(l);
+		x->push_back(r);
 	}
 
 	// 左右の余白が消えてしまわないようにする．
-	x.push_back(-INFL);
-	x.push_back(INFL);
+	x->push_back(-INFL);
+	x->push_back(INFL);
 
 	// unique() のためにまずソートを行う．
-	sort(all(x));
+	sort(all(*x));
 
 	// 隣り合う重複する要素を末尾に送り，末尾を消去する．
-	x.erase(unique(all(x)), x.end());
+	x->erase(unique(all(*x)), x->end());
 
 	// a[i] の左右の座標が x において何番目かを求める．
 	a_cp = vector<pii>(n);
@@ -70,12 +71,12 @@ int coordinate_compression_interval(vector<pll>& a, vector<pii>& a_cp, vector<ll
 		ll l, r;
 		tie(l, r) = a[i];
 
-		int l_cp = (int)distance(x.begin(), lower_bound(all(x), l));
-		int r_cp = (int)distance(x.begin(), lower_bound(all(x), r));
+		int l_cp = (int)distance(x->begin(), lower_bound(all(*x), l));
+		int r_cp = (int)distance(x->begin(), lower_bound(all(*x), r));
 		a_cp[i] = { l_cp, r_cp };
 	}
 
-	return sz(x);
+	return sz(*x);
 }
 
 
@@ -87,35 +88,38 @@ int coordinate_compression_interval(vector<pll>& a, vector<pii>& a_cp, vector<ll
 * また x[i], y[j] に圧縮された座標 i, j に対応する元の座標を格納する．
 * 戻り値として，(x 座標の数, y 座標の数) を返す．
 */
-pii coordinate_compression_rectangle(vector<tuple<ll, ll, ll, ll>>& a, vector<tuple<int, int, int, int>>& a_cp, vector<ll>& x, vector<ll>& y) {
+pii coordinate_compression_rectangle(vector<tuple<ll, ll, ll, ll>>& a,
+	vector<tuple<int, int, int, int>>& a_cp, vl* x, vl* y) {
 	int n = sz(a);
+	if (x == nullptr) x = new vl;
+	if (y == nullptr) y = new vl;
 
 	// x, y それぞれの座標だけを抜き出す．
-	x.clear();
-	y.clear();
+	x->clear();
+	y->clear();
 	rep(i, n) {
 		ll x1, y1, x2, y2;
 		tie(x1, y1, x2, y2) = a[i];
 
-		x.push_back(x1);
-		y.push_back(y1);
-		x.push_back(x2);
-		y.push_back(y2);
+		x->push_back(x1);
+		y->push_back(y1);
+		x->push_back(x2);
+		y->push_back(y2);
 	}
 
 	// 上下左右の余白が消えてしまわないようにする．
-	x.push_back(-INFL);
-	y.push_back(-INFL);
-	x.push_back(INFL);
-	y.push_back(INFL);
+	x->push_back(-INFL);
+	y->push_back(-INFL);
+	x->push_back(INFL);
+	y->push_back(INFL);
 
 	// unique() のためにまずソートを行う．
-	sort(all(x));
-	sort(all(y));
+	sort(all(*x));
+	sort(all(*y));
 
 	// 隣り合う重複する要素を末尾に送り，末尾を消去する．
-	x.erase(unique(all(x)), x.end());
-	y.erase(unique(all(y)), y.end());
+	x->erase(unique(all(*x)), x->end());
+	y->erase(unique(all(*y)), y->end());
 
 	// a[i] の左上や右下の座標が x, y において何番目かを求める．
 	a_cp = vector<tuple<int, int, int, int>>(n);
@@ -123,14 +127,14 @@ pii coordinate_compression_rectangle(vector<tuple<ll, ll, ll, ll>>& a, vector<tu
 		ll x1, y1, x2, y2;
 		tie(x1, y1, x2, y2) = a[i];
 
-		int x1_cp = (int)distance(x.begin(), lower_bound(all(x), x1));
-		int y1_cp = (int)distance(y.begin(), lower_bound(all(y), y1));
-		int x2_cp = (int)distance(x.begin(), lower_bound(all(x), x2));
-		int y2_cp = (int)distance(y.begin(), lower_bound(all(y), y2));
+		int x1_cp = (int)distance(x->begin(), lower_bound(all(*x), x1));
+		int y1_cp = (int)distance(y->begin(), lower_bound(all(*y), y1));
+		int x2_cp = (int)distance(x->begin(), lower_bound(all(*x), x2));
+		int y2_cp = (int)distance(y->begin(), lower_bound(all(*y), y2));
 		a_cp[i] = { x1_cp, y1_cp, x2_cp, y2_cp };
 	}
 
-	return { sz(x), sz(y) };
+	return { sz(*x), sz(*y) };
 }
 
 

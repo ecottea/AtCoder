@@ -1,28 +1,6 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 全探索 ■■■■■
-
-
-//【中間集合の全探索】
-/*
-* 大きさ d の全体集合 Ω のうち，部分集合 set⊂Ω を含む
-* 中間集合 mid⊂Ω を昇順に全探索する．
-*/
-#define repbm(mid, set, d) for(int mid = set; mid < (1 << int(d)); mid = (mid + 1) | set)
-
-
-//【部分集合の全探索】
-/*
-* 全体集合 Ω の部分集合 set⊂Ω について，set の部分集合 sub⊂set を降順に全探索する．
-*/
-#define repbs(sub, set) for(int sub = int(set), bsub = 1; bsub > 0; bsub = sub, sub = (sub - 1) & int(set)) 
-
-
-//【部分集合の全探索（大きさ固定）】
-/*
-* 大きさ d の全体集合 Ω のうち，大きさ k の部分集合 set⊂Ω を昇順に全探索する．
-*/
-#define repbc(set, k, d) for(int set = (1 << int(k)) - 1, lb, nx; set < (1 << int(d)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
+// ■■■■■ 全列挙 ■■■■■
 
 
 //【広義単調増加列の列挙】O(binomial(n + m - 1, n))
@@ -57,86 +35,6 @@ int weakly_increase_sequence(int n, int m) {
 	rf(0);
 
 	return res;
-}
-
-
-//【2 選択和数え上げ問題（ビット全探索）】O(2^n n)
-/*
-* 長さ N の列 a, b と目標値 sum が与えられる．
-* 各 i ごとに a[i] か b[i] のいずれかを選択して得られる和が
-* ちょうど sum になるものの個数を返す．
-*/
-template <class T>
-int count_2select_sum(vector<T>& a, vector<T>& b, T sum) {
-	int n = sz(a);
-
-	int cnt = 0;
-
-	// set の i ビット目が a[i] と b[i] のどちらを選択するかを表す．
-	repb(bit, n) {
-		// 選択されたものの和を計算する．
-		T v = 0;
-		rep(i, n) {
-			// set の i ビット目が 1 であれば a[i] を選択する．
-			if (bit & (1 << i)) {
-				v += a[i];
-			}
-			// set の i ビット目が 1 であれば b[i] を選択する．
-			else {
-				v += b[i];
-			}
-		}
-
-		// 和が目標に一致していればカウントする．
-		if (v == sum) {
-			cnt++;
-		}
-	}
-
-	return cnt;
-}
-
-
-//【3 選択和数え上げ問題（3 進全探索）】O(3^n n)
-/*
-* 長さ N の列 a, b, c と目標値 sum が与えられる．
-* 各 i ごとに a[i], b[i], c[i] のいずれかを選択して得られる和が
-* ちょうど sum になるものの個数を返す．
-*/
-template <class T>
-int count_3select_sum(vector<T>& a, vector<T>& b, vector<T>& c, T sum) {
-	int n = sz(a);
-
-	int cnt = 0;
-
-	// tit が 3 進数表記されているものと考える．
-	// tit の i 桁目が a[i], b[i], c[i] のいずれを選択するかを表す．
-	rep(tit, pow(3, n)) {
-		// 選択されたものの和を計算する．
-		T v = 0;
-		rep(i, n) {
-			// tit の i 桁目を抜き出す．
-			switch ((tit / pow(3, i)) % 3) {
-			case 0:
-				v += a[i];
-				break;
-			case 1:
-				v += b[i];
-				break;
-			case 2:
-				v += c[i];
-				break;
-			default:;
-			}
-		}
-
-		// 和が目標に一致していればカウントする．
-		if (v == sum) {
-			cnt++;
-		}
-	}
-
-	return cnt;
 }
 
 
@@ -209,29 +107,25 @@ void parenthesis_sequence(int n, vector<string>& seqs) {
 }
 
 
-//【自然数の分割の列挙】O(?)
+//【自然数の分割の列挙】O(?)（k = n なら分割数）
 /*
-* 自然数 n を k 以下の数に分割する方法を全出力する．
-*
-* 戻り値 : 分割の個数（k = n なら分割数 p(n)）
+* 自然数 n を k 以下の数に分割する方法を ips に格納する．
 */
-int integer_partitions(int n, int k) {
-	map<int, int> ip;
-	int res = 0;
+void integer_partitions(int n, int k, vvi& ips) {
+	ips.clear();
+	map<int, int> ip; // ip[i] : 分割に i を何個用いたか
 
-	// 再帰用の関数
+	// n を k 以下の数で分割する．
 	function<void(int, int)> rf = [&](int n, int k) {
 		// 分割しきった場合
 		if (n == 0) {
-			// 分割の出力
-			repe(p, ip) {
-				rep(i, p.second) {
-					cout << p.first << " ";
+			// 分割の記録
+			ips.push_back(vi());
+			repitr(it, ip) {
+				rep(i, it->second) {
+					ips.rbegin()->push_back(it->first);
 				}
 			}
-			cout << endl;
-
-			res++;
 			return;
 		}
 
@@ -243,7 +137,9 @@ int integer_partitions(int n, int k) {
 		// n が k 以上のときは，n を k と n-k に分割できる．
 		if (n >= k) {
 			ip[k]++;
+
 			rf(n - k, k);
+
 			ip[k]--;
 			if (ip[k] == 0) {
 				ip.erase(k);
@@ -255,14 +151,12 @@ int integer_partitions(int n, int k) {
 	};
 
 	rf(n, k);
-
-	return res;
 }
 
 
 //【集合の分割の列挙】O((n / log n)^n)
 /*
-* 大きさ n の集合の分割を全出力する．
+* n 点集合の分割を全出力する．
 *
 * 戻り値 : 分割の個数（ベル数 B_n）
 */

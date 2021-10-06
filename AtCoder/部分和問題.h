@@ -15,7 +15,7 @@ mint count_partial_sum(const vi& a, int v) {
 
 	int n = sz(a);
 
-	// dp[i + 1][j] : i ”Ô–Ú‚Ì”‚Ü‚Å‚ÅC˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
+	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
 	vvm dp(n + 1, vm(v + 1));
 	dp[0][0] = 1; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 
@@ -191,7 +191,7 @@ template <class T>
 bool multiple_partial_sum(const vector<T>& a, int m, int r) {
 	int n = sz(a);
 
-	// dp[i][j] : a[0..i) ‚Å˜a‚ª j mod m ‚É‚Å‚«‚é‚©
+	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª j mod m ‚É‚Å‚«‚é‚©
 	vvb dp(n + 1, vb(m));
 	dp[0][0] = true; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 
@@ -221,7 +221,7 @@ template <class T>
 mint count_multiple_partial_sum(const vector<T>& a, int m) {
 	int n = sz(a);
 
-	// dp[i + 1][j] : i ”Ô–Ú‚Ì”‚Ü‚Å‚ÅC˜a‚ª j mod m ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
+	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª j mod m ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
 	vvm dp(n + 1, vm(m));
 	dp[0][0] = 1; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 
@@ -252,7 +252,7 @@ mint count_unlimited_partial_sum(const vi& a, int v) {
 
 	int n = sz(a);
 
-	// dp[i + 1][j] : i ”Ô–Ú‚Ì”‚Ü‚Å‚ÅC˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
+	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
 	vvm dp(n + 1, vm(v + 1));
 	dp[0][0] = 1; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 
@@ -288,7 +288,7 @@ mint count_unlimited_partial_sum(const vi& a, int v) {
 int minimize_unlimited_partial_sum(const vi& a, int v) {
 	int n = sz(a);
 
-	// dp[i + 1][j] : i ”Ô–Ú‚Ì”‚Ü‚Å‚Å˜a‚ª j ‚Æ‚È‚éÅ¬ŒÂ”
+	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª j ‚Æ‚È‚éÅ¬ŒÂ”
 	vvi dp(n + 1, vi(v + 1, INF));
 	dp[0][0] = 0; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 
@@ -370,7 +370,7 @@ mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 
 	int n = sz(a);
 
-	// dp[i + 1][j] : i ”Ô–Ú‚Ì”‚Ü‚Å‚ÅC˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
+	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
 	vvm dp(n + 1, vm(v + 1));
 	dp[0][0] = 1; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 
@@ -428,12 +428,12 @@ mint count_limited_signed_partial_sum(const vi& a, const vi& m, int v) {
 		MAX = max(0, v);
 	}
 	else {
-		// ~‡‚É‚È‚ç‚×‚ê‚ÎC˜a‚ª min(0, v) ‚æ‚è¬‚³‚­‚È‚Á‚½}Š ‚è‚Å‚«‚éD
+		// ~‡‚É‚È‚ç‚×‚ê‚ÎC˜a‚ª min(0, v) ‚æ‚è¬‚³‚­‚È‚Á‚½‚ç}Š ‚è‚Å‚«‚éD
 		sort(all(a), greater<int>());
 		MIN = min(0, v);
 	}
 
-	// dp[i + 1][j - MIN] : i ”Ô–Ú‚Ì”‚Ü‚Å‚ÅC˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
+	// dp[i][j - MIN] : a[0..i) ‚Ì’†‚Å˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
 	vvm dp(n + 1, vm(MAX - MIN + 1));
 	dp[0][0 - MIN] = 1; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 

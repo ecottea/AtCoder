@@ -24,10 +24,8 @@ template <class T>
 struct Imos {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
-
 	int n;
 	vector<T> v;
-
 
 	// [0, N) 上の a を 0 で初期化する．
 	Imos(int n_tmp) : n(n_tmp), v((int)(n_tmp + 1)) {}
@@ -72,11 +70,9 @@ template <class T>
 struct Imos2d {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
-
 	int h;
 	int w;
 	vector<vector<T>> v;
-
 
 	// [0, H) * [0, W) を 0 で初期化する．
 	Imos2d(int h_tmp, int w_tmp) : h(h_tmp), w(w_tmp) {
@@ -138,11 +134,9 @@ template <class T>
 struct Imos2d_tri {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 	
-	
 	int h;
 	int w;
 	vector<vector<T>> v;
-
 
 	// [0, H) * [0, W) を 0 で初期化する．
 	Imos2d_tri(int h_tmp, int w_tmp) : h(h_tmp), w(w_tmp) {

@@ -105,9 +105,9 @@ T area_polygon(const Polygon<T>& poly) {
 }
 
 
-//【凸多角形の直径】O(n)
+//【凸多角形の直径／キャリパー法】O(n)
 /*
-* キャリパー法で凸 n 角形 poly の直径を求める．
+* 凸 n 角形 poly の直径を求める．
 *
 * 凸 n 角形は頂点を反時計回りに並べた列として表す．
 *
@@ -204,7 +204,7 @@ double minimum_bitonic_tour(vector<Point<T>>& p) {
 * x 軸以上かつ (x1, y1) と (x2, y2) を結ぶ線分以下にある格子点の個数を返す．
 * 条件：x1 != x2, y1 >= 0, y2 >= 0
 */
-ll count_lattice_point_ld(ll x1, ll y1, ll x2, ll y2) {
+ll count_lattice_point_le(ll x1, ll y1, ll x2, ll y2) {
 	if (x1 > x2) {
 		swap(x1, x2);
 	}

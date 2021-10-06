@@ -8,7 +8,7 @@
 /*
 * ノードの統合と連結判定を行う．
 *
-* union_find(n) : O(n)
+* Union_find(n) : O(n)
 *	非連結で大きさ n の Union-Find を構築する．
 * 
 * merge(a, b) : O(α(n))
@@ -23,7 +23,7 @@
 * size(a) : O(α(N))
 *	ノード a の属する連結成分の大きさを返す．
 */
-struct union_find {
+struct Union_find {
 	// ノードの個数
 	int n;
 
@@ -34,10 +34,10 @@ struct union_find {
 
 
 	// コンストラクタ（初期化なし）
-	union_find() : n(0) {}
+	Union_find() : n(0) {}
 
 	// コンストラクタ（大きさ n で初期化）
-	union_find(int n_) : n(n_), parent_or_size(n, -1) {}
+	Union_find(int n_) : n(n_), parent_or_size(n, -1) {}
 
 	// ノード a, b を結合する．
 	void merge(int a, int b) {
@@ -94,7 +94,7 @@ struct union_find {
 /*
 * ノード間の差の指定と差の計算を行う．
 *
-* weighted_union_find(n) : O(n)
+* Weighted_union_find(n) : O(n)
 *	非連結で大きさ n の重み付き Union-Find を構築する．
 * 
 * set_diff(a, b, d) : O(α(n))
@@ -113,7 +113,7 @@ struct union_find {
 *	ノード a の属する連結成分の大きさを返す．
 */
 template <class T>
-struct weighted_union_find {
+struct Weighted_union_find {
 	// ノードの個数
 	int n;
 
@@ -126,10 +126,10 @@ struct weighted_union_find {
 	vector<T> diff;
 
 	// コンストラクタ（初期化なし）
-	weighted_union_find() {}
+	Weighted_union_find() {}
 
 	// コンストラクタ（大きさ n で初期化）
-	weighted_union_find(int n_) : n(n_), parent_or_size(n, -1), diff(n) {}
+	Weighted_union_find(int n_) : n(n_), parent_or_size(n, -1), diff(n) {}
 
 	// ノード a, b 間の差 v[b] - v[a] を設定する．
 	bool set_diff(int a, int b, T d) {

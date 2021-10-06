@@ -4,65 +4,6 @@
 
 
 
-//【区間スコア和最大化】O((n + m) log n)
-/*
-* ビット列 [0, n) 上の m 個の区間 [l, r] とそのスコア a が与えられる．
-* 区間内に 1 があればスコア a が加算されるとき，スコアの最大値を返す．
-*
-*（遅延評価セグメント木で高速化したインライン DP）
-*/
-ll op2(ll x, ll y) { return max(x, y); } // 区間最大値を得たい
-ll e2() { return -INFL; }
-ll mapping2(ll f, ll x) { return f + x; } // 区間への加算を行いたい
-ll composition2(ll f, ll g) { return f + g; }
-ll id2() { return 0; }
-ll maximize_interval_score(int n, vi& l, vi& r, vl& a) {
-	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231106
-
-	int m = sz(l);
-
-	// 区間 [l, r] のスコアが a であることを r_to_la[r] ∋ {l, a} で記録する．
-	vector<vector<pil>> r_to_la(n);
-	rep(i, m) {
-		r_to_la[r[i]].push_back({ l[i], a[i] });
-	}
-
-	// dp : 区間最大値の計算と区間への加算ができる遅延評価セグメント木．
-	// dp[j + 1] : 今まで見てきた区間の中で考えたときの，
-	//   最も右の 1 の位置が j であるようなものの中での最高スコア
-	//   （j + 1 = 0 は 1 が全くないことを表す．）
-	lazy_segtree<ll, op2, e2, ll, mapping2, composition2, id2> dp(n + 1);
-
-	// 1 が全くないときのスコアは 0 である．
-	dp.set(0, 0);
-
-	// 区間の右端 r について昇順に見ていく．
-	rep(r, n) {
-		ll a_sum = 0;
-		repe(la, r_to_la[r]) {
-			a_sum += la.second;
-		}
-
-		// 位置 r を 1 にする場合
-		//   r を右端にもつ区間のスコアの和 A が加算される．
-		//   よって今までのスコアの最大値 + A が右端位置 r の最高スコアとなる．
-		//   区間最大値を必要とするので遅延評価セグメント木が有効．
-		dp.set(r + 1, dp.prod(0, r + 1) + a_sum);
-
-		// 位置 r を 0 にする場合
-		//   r を右端にもつ各区間 [l, r] とそのスコア a について，
-		//   最も右の 1 が [l, r) に含まれている場合は，a が加算される．
-		//   区間への加算を必要とするので遅延評価セグメント木が有効．
-		repe(la, r_to_la[r]) {
-			dp.apply(la.first + 1, r + 1, la.second);
-		}
-	}
-
-	// 右端の 1 の位置を任意としたときの最高スコアを返す．
-	return dp.all_prod();
-}
-
-
 //【連鎖行列積問題】O(n^3)
 /*
 * 行数 d[i]，列数 d[i + 1] の n 個の行列 M[i] の積を計算する場合の最小乗算回数を返す．
@@ -73,11 +14,13 @@ ll matrix_chain_multiplication_problem(vl& d) {
 	int n = sz(d) - 1;
 
 	// dp[i][j] : M[i..j] の積を計算する場合の最小乗算回数．
-	vvl dp(n, vl(n, (ll)1e18));
+	vvl dp(n, vl(n, INFL));
 	rep(i, n) {
 		dp[i][i] = 0;
 	}
-	repi(w, 1, n - 1) { // w = j - i について昇順に考えていく
+
+	// 区間幅 w = j - i について昇順に考えていく
+	repi(w, 1, n - 1) {
 		rep(i, n) {
 			int j = i + w;
 			if (j >= n) {
@@ -95,29 +38,123 @@ ll matrix_chain_multiplication_problem(vl& d) {
 }
 
 
-//【発電計画問題】O(n^2)
+//【スライム融合】O(n^3)
 /*
-* 時刻 [l..r) に発電機をオンにすると c[l][r] の電力が得られるときの最大電力を返す．
-* ただし [l..m) と [m..r) に同時に発電機をオンにすることはできない．
+* 大きさ c[i] のスライム n 匹が一列に並んでいる．
+* 合体時に大きさの和だけのコストを払うとき，全部を合体させるための最小コストを返す．
 */
-ll unit_commitment_problem(const vvl& c) {
+ll merge_slimes(const vl& c) {
 	int n = sz(c);
 
-	// dp[r] : 時刻 [0..r) に得られる最大電力
-	vl dp(n + 1);
+	// 累積和
+	vl acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + c[i];
 
-	repi(r, 1, n) {
-		// 時刻 [r-1..r) に発電機を動かさない場合
-		dp[r] = dp[r - 1];
+	// dp[l][r] : スライム [l..r) を合体させるための最小コスト
+	vvl dp(n, vl(n + 1, INFL));
+	rep(i, n) dp[i][i + 1] = 0;
 
-		// 時刻 [r-1..r) に発電機を動かす場合
-		chmax(dp[r], c[0][r]);
-		repi(l, 1, r - 1) {
-			chmax(dp[r], dp[l - 1] + c[l][r]);
+	// 区間幅 w の小さい順に貰う DP
+	repi(w, 2, n) {
+		repi(l, 0, n - w) {
+			int r = l + w;
+
+			// k : [l..k) と [k..r) を最後に合体する
+			repi(k, l, r - 1) {
+				// [l..k) および [k..r) それぞれの合体にかかる最小コスト
+				chmin(dp[l][r], dp[l][k] + dp[k][r]);
+			}
+
+			// [l..k) と [k..r) の合体にかかるコスト（k に依らない）を加算する．
+			dp[l][r] += acc[r] - acc[l];
 		}
 	}
 
-	return dp[n];
+	return dp[0][n];
+}
+
+
+//【ダルマ落とし】O(n^3)
+/*
+* 重さ w[i] のブロックが塔状に積まれている．重さの差が d 以下の 2 ブロックを
+* 同時に叩き出せるとき，取り除けるブロックの最大個数を返す．
+*/
+int daruma_otoshi(const vi& w, int d) {
+	int n = sz(w);
+
+	// dp[l][r] : ブロック [l..r) から叩き出せる最大ブロック数
+	vvi dp(n + 1, vi(n + 1));
+
+	// 区間幅 width の小さい順に貰う DP
+	repi(width, 2, n) {
+		repi(l, 0, n - width) {
+			int r = l + width;
+
+			// ブロック l を叩き出さない場合
+			dp[l][r] = dp[l + 1][r];
+
+			// ブロック l と l + (2 k + 1) を同時に叩き出す場合
+			for (int k = 0; l + (2 * k + 1) < r; k++) {
+				// w[l], w[l + (2 k + 1)] の差が d 以下でないといけない．
+				if (abs(w[l] - w[l + (2 * k + 1)]) > d) continue;
+
+				// ブロック l と l + (2 k + 1) の間が全て叩き出せないといけない．
+				if (dp[l + 1][l + (2 * k + 1)] != 2 * k) continue;
+
+				chmax(dp[l][r], (2 * k + 2) + dp[l + (2 * k + 2)][r]);
+			}
+		}
+	}
+
+	return dp[0][n];
+}
+
+
+//【iwi】O(n^3)
+/*
+* 'i' と 'w' からなる文字列 s に対し，連続する "iwi" を取り除くことを繰り返す．
+* 取り除ける最大文字数を返す．
+*/
+int iwi(const string& s) {
+	int n = sz(s);
+
+	// dp[l][r] : s[l..r) から取り除ける "iwi" の数
+	vvi dp(n + 1, vi(n + 1));
+
+	// 区間幅 w の小さい順に貰う DP
+	repi(w, 3, n) {
+		repi(l, 0, n - w) {
+			int r = l + w;
+
+			// s[l] を取り除かない場合
+			chmax(dp[l][r], dp[l + 1][r]);
+
+			// s[r - 1] を取り除かない場合
+			chmax(dp[l][r], dp[l][r - 1]);
+
+			// 以降は s[l], s[r - 1] を取り除く場合のみを考えるので，
+			// その文字が 'w' の場合は取り除けないから無視してよい．
+			if (s[l] == 'w' || s[r - 1] == 'w') continue;
+
+			// s[l] と s[r - 1] を別々に取り除く場合
+			// どこで分けるかを全通り試せば良い．
+			repi(k, l + 1, r - 1) {
+				chmax(dp[l][r], dp[l][k] + dp[k][r]);
+			}
+
+			// s[l] と s[r - 1] を同時に取り除く場合
+			// 同時に消される s[k] = 'w' の可能性を全通り試せば良い．
+			for (int k = l + 1; k < r; k += 3) {
+				if (s[k] == 'w'
+					&& dp[l + 1][k] == k - (l + 1)
+					&& dp[k + 1][r - 1] == (r - 1) - (k + 1)) {
+					chmax(dp[l][r], r - l);
+				}
+			}
+		}
+	}
+
+	return dp[0][n];
 }
 
 

@@ -2,7 +2,7 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "マッチング.h"
-#include "全探索.h"
+#include "ビット全探索.h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
 
 
@@ -436,43 +436,6 @@ ll shortest_hamiltonian_path(const WGraph& g) {
 		chmin(res, rf(i, (1 << n) - 1 - (1 << i)));
 	}
 	return (res == INFL ? -1 : res);
-}
-
-
-//【木の直径】O(|E| log|V|)
-/*
-* コスト付き木の直径を返す．
-* 直径の両端となる頂点の組を p に格納する．
-* 
-* 利用：【ダイクストラ法】
-*/
-ll tree_diameter(const WGraph& g, pii& p) {
-	int n = sz(g);
-
-	// 適当な頂点を始点にして最遠の点 s を求める．
-	vl dist;
-	dijkstra(g, 0, dist);
-
-	ll max_dist = -1;
-	int s;
-	rep(i, n) {
-		if (chmax(max_dist, dist[i])) {
-			s = i;
-		}
-	}
-
-	// s を始点にして最遠の点 t を求めれば，|s t| が木の直径である．
-	max_dist = -1;
-	int t;
-	dijkstra(g, s, dist);
-	rep(i, n) {
-		if (chmax(max_dist, dist[i])) {
-			t = i;
-		}
-	}
-
-	p = { s, t };
-	return max_dist;
 }
 
 

@@ -144,6 +144,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bitDP.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="クエリ.h" />
@@ -192,7 +193,7 @@
     <ClInclude Include="header.h" />
     <ClInclude Include="行列.h" />
     <ClInclude Include="数論.h" />
-    <ClInclude Include="全探索.h" />
+    <ClInclude Include="全列挙.h" />
     <ClInclude Include="ソート.h" />
     <ClInclude Include="文字列.h" />
     <ClInclude Include="ゲーム.h" />
@@ -200,6 +201,7 @@
     <ClInclude Include="辞書.h" />
     <ClInclude Include="部分列.h" />
     <ClInclude Include="部分和問題.h" />
+    <ClInclude Include="ビット全探索.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />

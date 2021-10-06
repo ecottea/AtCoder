@@ -167,12 +167,12 @@ void divisors(ll n, vl& divs) {
 }
 
 
-//【素数の列挙／エラトステネスの篩】O(n log(log n))
+//【素数の列挙／エラトステネスの篩】O(n + √n log(log n))
 /*
 * エラトステネスの篩を用いて n 以下の素数を列挙し，p に昇順に格納する．
 */
 void eratosthenes(int n, vi& p) {
-	p = vi();
+	p.clear();
 
 	// 素数かどうかを記録しておくためのテーブル
 	vb is_prime(n + 1, true);
@@ -180,7 +180,7 @@ void eratosthenes(int n, vi& p) {
 	int i;
 
 	// √n 以下の i の処理
-	// ここまでであれば O(√N log(log N)) で済んでいる．
+	// ここまでであれば O(√n log(log n)) で済んでいる．
 	for (i = 2; i <= n / i; i++) {
 		if (is_prime[i]) {
 			p.push_back(i);
@@ -193,11 +193,37 @@ void eratosthenes(int n, vi& p) {
 
 	// √n より大きい i の処理
 	// この時点で is_prime[] には素数か否かが記録されているが，
-	// それを読むために O(N) が必要になってしまう．
+	// それを読むために O(n) が必要になってしまう．
 	for (; i <= n; i++) {
 		if (is_prime[i]) {
 			p.push_back(i);
 		}
+	}
+}
+
+
+//【区間内の素数の列挙】O(√r + (r - l) √r / log r)
+/*
+* [l..r) に含まれる素数を ps に昇順に格納する．
+*
+* 利用：【素数の列挙／エラトステネスの篩】
+*/
+void eratosthenes_interval(ll l, ll r, vl& ps) {
+	ps.clear();
+
+	vi ps_sub;
+	eratosthenes((int)sqrt(r) + 3, ps_sub);
+
+	// 素数かどうかを記録しておくためのテーブル
+	vb is_prime(r - l, true);
+	repe(p, ps_sub) {
+		for (ll j = (l + p - 1) / p * p; j < r; j += p) {
+			if (j != p) is_prime[j - l] = false;
+		}
+	}
+
+	rep(i, r - l) {
+		if (is_prime[i]) ps.push_back(l + i);
 	}
 }
 
@@ -301,9 +327,9 @@ int integer_exponent(ll n, ll p) {
 }
 
 
-//【互いに素なものの個数】O(2^m)（m : a の素因数の種類数）
+//【互いに素な数の個数】O(2^m)（m : a の素因数の種類数）
 /*
-* l 以上 r 以下の整数のうち、a と互いに素なものの個数を返す．
+* l 以上 r 以下の整数のうち、a と互いに素な数の個数を返す．
 *
 * 利用：【素因数分解】
 */

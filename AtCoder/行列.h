@@ -68,6 +68,9 @@ struct Matrix {
 		return is;
 	}
 
+	// アクセス
+	vector<T>& operator[](int i) { return v[i]; }
+
 	// 比較
 	bool operator==(const Matrix& b) const {
 		return m == b.m && n == b.n && v == b.v;
@@ -128,7 +131,7 @@ struct Matrix {
 	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, const Matrix& a) {
 		rep(i, a.m) {
-			rep(j, a.n) os << a.v[i][j] << ' ';
+			rep(j, a.n) os << a.v[i][j] << " ";
 			os << endl;
 		}
 		return os;

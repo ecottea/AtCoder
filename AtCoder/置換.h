@@ -14,7 +14,7 @@
 template <class T> ll inversion_number(vector<T>& a) {
 	int n = sz(a);
 
-	// a ‚ğ [0, |a|) ‚ÉÀ•Wˆ³k‚µ‚½Œ‹‰Ê‚ğ a_cp ‚ÉŠi”[‚·‚éD
+	// a ‚ğ [0, |a|) ‚ÉÀ•Wˆ³k‚µ‚½Œ‹‰Ê‚ğ b ‚ÉŠi”[‚·‚éD
 	vi b;
 	vector<T> tmp;
 	int m = coordinate_compression(a, b, tmp);

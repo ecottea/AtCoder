@@ -4,23 +4,23 @@
 
 
 
-//【0-1 ナップサック問題（重さが小）】O(N W)
+//【0-1 ナップサック問題（重さが小）】O(n w_max)
 /*
-* 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ W 以下で
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
 * また各品物を選んだかどうかの一例を sel に格納する．
 *
 *（重さを状態とした状態 DP）
 */
-ll knapsack01_problem(const vl& v, const vi& w, int W, vb* sel = nullptr) {
+ll knapsack01_problem(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
 	int n = sz(v); // 品物の個数
 
 	// dp[i][j] : 品物 [0..i) の中で重さ j 以下で実現できる最大価値
-	vvl dp(n + 1, vl(W + 1));
+	vvl dp(n + 1, vl(w_max + 1));
 
 	// DP で 0-1 ナップサック問題を解く．
 	rep(i, n) {
-		repi(j, 0, W) {
+		repi(j, 0, w_max) {
 			// i 番目の品物を選ばない場合
 			dp[i + 1][j] = dp[i][j];
 
@@ -35,7 +35,7 @@ ll knapsack01_problem(const vl& v, const vi& w, int W, vb* sel = nullptr) {
 	// DP 復元を行う．
 	if (sel != nullptr) {
 		*sel = vb(n);
-		int j = W;
+		int j = w_max;
 		repir(i, n - 1, 0) {
 			// i 番目の品物を選んだ場合と選ばなかった場合で価値の差があれば選んだ証拠．
 			if (dp[i + 1][j] != dp[i][j]) {
@@ -45,39 +45,38 @@ ll knapsack01_problem(const vl& v, const vi& w, int W, vb* sel = nullptr) {
 		}
 	}
 
-	return dp[n][W];
+	return dp[n][w_max];
 }
 
 
-//【0-1 ナップサック問題（価値が小）】O(N Σv[i])
+//【0-1 ナップサック問題（価値が小）】O(n Σv[i])
 /*
-* 価値 v[i] と重さ w[i] の定まった N 個の品物から，重さ W 以下で
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
 * また各品物を選んだかどうかの一例を sel に格納する．
 *
 *（価値を状態とした状態 DP）
 */
-ll knapsack01_problem(const vi& v, vl& w, ll W, vb* sel = nullptr) {
-	int N = sz(v); // 品物の個数
+ll knapsack01_problem(const vi& v, vl& w, ll w_max, vb* sel = nullptr) {
+	int n = sz(v); // 品物の個数
 
-	// 重さを無視した合計価値 v の計算
-	int V = 0;
-	rep(i, N) {
-		V += v[i];
+	// 重さを無視した合計価値 v_max の計算
+	int v_max = 0;
+	rep(i, n) {
+		v_max += v[i];
 	}
 
-	// dp[i][j] : i 番目の品物までで価値ちょうど j を実現できる最小重さ
-	// v[i], w[i] は 0-indexed で dp[i] は 1-indexed なので注意．
-	vvl dp(N + 1, vl(V + 1, INFL));
+	// dp[i][j] : 品物 [0..i) で価値ちょうど j を実現できる最小重さ
+	vvl dp(n + 1, vl(v_max + 1, INFL));
 
-	// 価値 0 を実現できる最小重さは 0 である．
-	repi(i, 0, N) {
+	// 品物がなくても価値 0 は実現でき，その最小重さは 0 である．
+	repi(i, 0, n) {
 		dp[i][0] = 0;
 	}
 
 	// DP で 0-1 ナップサック問題を解く．
-	repi(i, 1, N) {
-		repi(j, 1, V) {
+	repi(i, 1, n) {
+		repi(j, 1, v_max) {
 			// i 番目の品物を選ばない場合
 			dp[i][j] = dp[i - 1][j];
 
@@ -91,17 +90,17 @@ ll knapsack01_problem(const vi& v, vl& w, ll W, vb* sel = nullptr) {
 		}
 	}
 
-	// 重さ W 以下で実現できた中での最大の合計価値を得る．
-	int j = V;
-	while (j >= 0 && dp[N][j] > W) {
+	// 重さ w_max 以下で実現できた中での最大の合計価値を得る．
+	int j = v_max;
+	while (j >= 0 && dp[n][j] > w_max) {
 		j--;
 	}
-	V = j;
+	v_max = j;
 
 	// DP 復元を行う．
 	if (sel != nullptr) {
-		*sel = vb(N);
-		repir(i, N, 1) {
+		*sel = vb(n);
+		repir(i, n, 1) {
 			// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
 			if (dp[i][j] != dp[i - 1][j]) {
 				(*sel)[i - 1] = true;
@@ -110,7 +109,7 @@ ll knapsack01_problem(const vi& v, vl& w, ll W, vb* sel = nullptr) {
 		}
 	}
 
-	return V;
+	return v_max;
 }
 
 
@@ -123,7 +122,6 @@ ll knapsack01_problem(const vi& v, vl& w, ll W, vb* sel = nullptr) {
 */
 ll knapsack01_problem(const vl& v, vl& w, ll W) {
 	// 参考：https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
-
 
 	int N = sz(v); // 品物の個数
 
@@ -143,7 +141,7 @@ ll knapsack01_problem(const vl& v, vl& w, ll W) {
 	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
 	repi(i, 1, (1 << N_a) - 1) {
 		// 差分更新が行われるのがどのビットか
-		int change_index = ctz(i);
+		int change_index = lsb(i);
 
 		// i 番目のグレイコード
 		int gray_code = i ^ (i >> 1);
@@ -180,7 +178,7 @@ ll knapsack01_problem(const vl& v, vl& w, ll W) {
 	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
 	repi(i, 1, (1 << N_b) - 1) {
 		// 差分更新が行われるのがどのビットか
-		int change_index = ctz(i);
+		int change_index = lsb(i);
 
 		// i 番目のグレイコード
 		int gray_code = i ^ (i >> 1);
@@ -658,6 +656,59 @@ ll knapsack_problem_minimize_weight_limited(const vi& v, const vl& w, const vl& 
 	}
 
 	return res;
+}
+
+
+//【色付き 0-1 ナップサック問題（重さが小）】O(n w_max c_max)
+/*
+* 価値 v[i] と重さ w[i] と色 c[i] の定まった n 個の品物から，重さ w_max 以下かつ
+* 色数 c_max 以下で価値が最大になるよう品物を選んだときの価値を返す．
+*
+*（重さと色数を状態としたインライン状態 DP）
+*/
+ll knapsack01_problem(const vl& v, const vi& w, const vi& c, int w_max, int c_max) {
+	int n = sz(v); // 品物の個数
+
+	const int m = *max_element(all(c)) + 1;
+	vector<vector<pli>> vws(m);
+	rep(i, n) {
+		vws[c[i]].push_back({ v[i], w[i] });
+	}
+
+	// dp_i[j][k] : 品物 [0..i) の中で重さ j 以下かつ k 色以下で実現できる最大価値
+	vvl dp(w_max + 1, vl(c_max + 1));
+
+	// インライン化した貰う DP
+	// c : 色
+	rep(c, m) {
+		// 色 c の品物を選ぶ場合の dp テーブル
+		auto ndp = dp;
+
+		// 色 c の品物それぞれについて
+		repe(vw, vws[c]) {
+			// 注目している品物の価値 v と重さ w を得る．
+			ll v; int w;
+			tie(v, w) = vw;
+
+			repir(j, w_max, 0) {
+				repi(k, 0, c_max) {
+					// 注目している品物を選ぶ場合
+					if (w <= j) {
+						chmax(ndp[j][k], ndp[j - w][k] + v);
+					}
+				}
+			}
+		}
+
+		// 色 c の品物を 1 つでも選ぶなら色数は 1 増える．
+		repi(j, 1, w_max) {
+			repi(k, 1, c_max) {
+				chmax(dp[j][k], ndp[j][k - 1]);
+			}
+		}
+	}
+
+	return dp[w_max][c_max];
 }
 
 

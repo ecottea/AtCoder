@@ -2,6 +2,7 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "構造(幾何).h"
+#include "ヒストグラム.h"
 // ■■■■■ 格子上の幾何 ■■■■■
 
 
@@ -189,7 +190,6 @@ bool simple_polygonQ(const vvc& c_) {
 int largest_square(const vvi& a) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-131.html
 
-
 	int h = sz(a), w = sz(a[0]);
 
 	// dp[i + 1][j + 1] : 
@@ -224,7 +224,6 @@ int largest_square(const vvi& a) {
 */
 ll largest_square(vvi& a) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-133.html
-
 
 	int h = sz(a), w = sz(a[0]);
 
