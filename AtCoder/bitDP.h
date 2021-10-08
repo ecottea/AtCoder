@@ -20,7 +20,7 @@ ll clustering(const vvl& dist, int k) {
 	// dp[set][c] : 点集合 set を c 個に分割するときの最小直径
 	vvl dp(1LL << n, vl(k + 1, INFL));
 
-	// 点集合 set の直径 dp[set][1] を前計算しておく．
+	// 点集合 set の直径 dp[set][1] を前計算しておく．O(2^n n^2)
 	repb(set, n) {
 		dp[set][1] = 0;
 

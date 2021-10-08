@@ -178,34 +178,127 @@ ll unit_commitment_problem(const vvl& c) {
 }
 
 
-//【区間スコア和最大化】O((n + m) log n)
+//【区間ネスト数最大化】O(n + m log n)
 /*
-* ビット列 [0, n) 上の m 個の区間 [l, r] とそのスコア a が与えられる．
-* 区間内に 1 があればスコア a が加算されるとき，スコアの最大値を返す．
+* [0..n) 上の m 個の区間 lr[i] = [l[i]..r[i]] のネストさせられる区間の最大個数を返す．
+*
+*（セグメント木で高速化したインライン DP）
+*/
+using S14 = int;
+S14 op14(S14 x, S14 y) { return max(x, y); }
+S14 e14() { return -INF; }
+int maximize_interval_nest(const vector<pii>& lr) {
+	int n = 0;
+	int m = sz(lr);
+
+	// 右端ごとに対応する区間の左端を昇順にソートして記録する．
+	map<int, set<int>> r_to_l;
+	rep(i, m) {
+		int l, r;
+		tie(l, r) = lr[i];
+
+		r_to_l[r].insert(l);
+		chmax(n, r);
+	}
+	n++;
+
+	// dp_r[l] : 区間 [l..r] を最大区間とする最大ネスト数
+	segtree<S14, op14, e14> dp(n);
+
+	// 区間の右端 r について昇順に見ていく．
+	repe(p, r_to_l) {
+		int r = p.first;
+
+		// 区間 [r..r] を最大区間とする最大ネスト数は 0 とする．
+		dp.set(r, 0);
+
+		repe(l, p.second) {
+			// 区間 [l..r] を採用する場合
+			//	左端が l より右である区間であればネストできる．
+			dp.set(l, max(dp.get(l), dp.prod(l + 1, r + 1) + 1));
+
+			// 区間 [l..r] を採用しない場合
+			//	インライン DP なので何も更新しなくてよい．
+		}
+	}
+
+	// 最大区間の左端の位置を任意としたときの最大ネスト数を返す．
+	return dp.all_prod();
+}
+
+
+//【区間のオーバーラップ】O(n^2)
+/*
+* n 個の幅 1 の区間を順に並べる．区間 i, j が重なるとスコア a[i][j] が
+* 得られるときの総スコアの最大値を返す．
+* 
+*（累積和，累積 max で高速化したインライン DP）
+*/
+ll interval_overlapping(const vvl& a) {
+	int n = sz(a);
+
+	// dp_r[l] : 区間 r までで，区間 r が区間 l 以降とのみ重なるときのスコア
+	vl dp(n);
+
+	repi(r, 1, n - 1) {
+		// acc[l] : 区間 r が区間 l 以降と重なることで得られるスコアの和
+		vl acc(r + 1);
+		repir(l, r - 1, 0) {
+			acc[l] = acc[l + 1] + a[l][r];
+		}
+
+		// s_max[l] : 区間 r - 1 が区間 l と重なる場合のスコアの最大値
+		vl s_max(r + 1);
+		s_max[0] = dp[0];
+		repi(i, 1, r) {
+			s_max[i] = max(s_max[i - 1], dp[i]);
+		}
+
+		repir(l, r, 0) {
+			// 区間 r - 1 が区間 l と重なっていれば，区間 r を区間 l 以降と重ねられる．
+			dp[l] = acc[l] + s_max[l];
+		}
+	}
+
+	return *max_element(all(dp));
+}
+
+
+//【区間のピン留め】O(n + m log n)
+/*
+* [0, n) 上の m 個の区間 lr[i] = [l[i], r[i]] とスコア a[i] が与えられる．
+* 自由にピンを配置するとき，ピン留めされた区間のスコアの和の最大値を返す．
 *
 *（遅延評価セグメント木で高速化したインライン DP）
 */
-ll op2(ll x, ll y) { return max(x, y); }
-ll e2() { return -INFL; }
-ll mapping2(ll f, ll x) { return f + x; }
-ll composition2(ll f, ll g) { return f + g; }
-ll id2() { return 0; }
-ll maximize_interval_score(int n, const vi& l, const vi& r, const vl& a) {
+using S2 = ll;
+S2 op2(S2 x, S2 y) { return max(x, y); }
+S2 e2() { return -INFL; }
+using F2 = ll;
+S2 mapping2(F2 f, S2 x) { return f + x; }
+F2 composition2(F2 f, F2 g) { return f + g; }
+F2 id2() { return 0; }
+ll interval_pinning(const vector<pii>& lr, const vl& a) {
 	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231106
 
-	int m = sz(l);
+	int n = 0;
+	int m = sz(lr);
 
 	// 区間 [l, r] のスコアが a であることを r_to_la[r] ∋ {l, a} で記録する．
-	vector<vector<pil>> r_to_la(n);
+	map<int, vector<pil>> r_to_la;
 	rep(i, m) {
-		r_to_la[r[i]].push_back({ l[i], a[i] });
-	}
+		int l, r;
+		tie(l, r) = lr[i];
 
-	// dp : 区間最大値の計算と区間への加算ができる遅延評価セグメント木．
-	// dp[j + 1] : 今まで見てきた区間の中で考えたときの，
-	//   最も右の 1 の位置が j であるようなものの中での最高スコア
-	//   （j + 1 = 0 は 1 が全くないことを表す．）
-	lazy_segtree<ll, op2, e2, ll, mapping2, composition2, id2> dp(n + 1);
+		r_to_la[r].push_back({ l, a[i] });
+		chmax(n, r);
+	}
+	n++;
+
+	// dp_i[j + 1] : 今まで見てきた区間の中で考えたときの，
+	//   最も右のピンの位置が j であるようなものの中での最高スコア
+	//  （j + 1 = 0 はピンが全くないことを表す．）
+	lazy_segtree<S2, op2, e2, F2, mapping2, composition2, id2> dp(n + 1);
 
 	// 1 が全くないときのスコアは 0 である．
 	dp.set(0, 0);
@@ -217,22 +310,22 @@ ll maximize_interval_score(int n, const vi& l, const vi& r, const vl& a) {
 			a_sum += la.second;
 		}
 
-		// 位置 r を 1 にする場合
+		// 位置 r にピンを打つ場合
 		//   r を右端にもつ区間のスコアの和 A が加算される．
 		//   よって今までのスコアの最大値 + A が右端位置 r の最高スコアとなる．
 		//   区間最大値を必要とするので遅延評価セグメント木が有効．
 		dp.set(r + 1, dp.prod(0, r + 1) + a_sum);
 
-		// 位置 r を 0 にする場合
+		// 位置 r にピンを打たない場合
 		//   r を右端にもつ各区間 [l, r] とそのスコア a について，
-		//   最も右の 1 が [l, r) に含まれている場合は，a が加算される．
+		//   最も右のピンが [l, r) に含まれている場合は，a が加算される．
 		//   区間への加算を必要とするので遅延評価セグメント木が有効．
 		repe(la, r_to_la[r]) {
 			dp.apply(la.first + 1, r + 1, la.second);
 		}
 	}
 
-	// 右端の 1 の位置を任意としたときの最高スコアを返す．
+	// 右端のピンの位置を任意としたときの最高スコアを返す．
 	return dp.all_prod();
 }
 

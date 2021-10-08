@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "構造(グラフ).h"
+#include "構造(木).h"
 #include "根付き木.h"
 // ■■■■■ 木のクエリ処理 ■■■■■
 

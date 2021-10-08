@@ -338,141 +338,124 @@ ll prim(const WGraph& g, int r, WGraph& mst) {
 }
 
 
-//【巡回セールスマン問題】O(|V|^2 2^|V|)
-/*
-* コスト付き有向グラフ g の最小コストハミルトン閉路のコストを返す．
-* ハミルトン閉路が存在しない場合は -1 を返す．
-*
-*（ビット全探索）
-*/
-ll traveling_salesman_problem(const WGraph& g) {
-	int n = sz(g);
-
-	// dp[i][set] : 頂点 i から set を通り頂点 n - 1 までのハミルトンパスの最小コスト
-	// i !∈ set だが，n - 1 ∈ set なので注意．
-	vvl dp(n, vl((int)(1 << n), INFL));
-	vvb seen(n, vb((int)(1 << n)));
-	dp[n - 1][0] = 0;
-	seen[n - 1][0] = true;
-
-	// メモ化再帰用の関数の定義
-	function<ll(int, int)> rf = [&](int s, int set) {
-		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][set]) {
-			return dp[s][set];
-		}
-
-		// s から出ている各辺 e について
-		repe(e, g[s]) {
-			auto t = e.to;
-			auto c = e.cost;
-
-			// e の行き先 t が set に含まれていなければ何もしない．
-			if (!(set & (1 << t))) {
-				continue;
-			}
-
-			// s → t と進む方がコストが小さければ更新する．
-			chmin(dp[s][set], rf(t, set - (1 << t)) + c);
-		}
-
-		seen[s][set] = true;
-		return dp[s][set];
-	};
-
-	// メモ化再帰を用いて bit DP を行う．
-	auto res = rf(n - 1, (1 << n) - 1);
-	return (res == INFL ? -1 : res);
-}
-
-
-//【最小コストハミルトンパス】O(|V|^2 2^|V|)
-/*
-* コスト付き有向グラフ g の最小コストハミルトンパスのコストを返す．
-* ハミルトンパスが存在しない場合は -1 を返す．
-*
-*（ビット全探索）
-*/
-ll shortest_hamiltonian_path(const WGraph& g) {
-	int n = sz(g);
-
-	// dp[i][set] : 頂点 i から出発し set を通るハミルトンパスの最小コスト
-	// i !∈ set とする．
-	vvl dp(n, vl((int)(1 << n), INFL));
-	vvb seen(n, vb((int)(1 << n)));
-	rep(i, n) {
-		dp[i][0] = 0;
-		seen[i][0] = true;
-	}
-
-	// メモ化再帰用の関数の定義
-	function<ll(int, int)> rf = [&](int s, int set) {
-		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][set]) {
-			return dp[s][set];
-		}
-		seen[s][set] = true;
-
-		// s から出ている各辺 e について
-		repe(e, g[s]) {
-			auto t = e.to;
-			auto c = e.cost;
-
-			// e の行き先 t が set に含まれていなければ何もしない．
-			if (!(set & (1 << t))) {
-				continue;
-			}
-
-			// s → t と進む方がコストが小さければ更新する．
-			chmin(dp[s][set], rf(t, set - (1 << t)) + c);
-		}
-
-		return dp[s][set];
-	};
-
-	// メモ化再帰を用いて bit DP を行う．
-	ll res = INFL;
-	rep(i, n) {
-		chmin(res, rf(i, (1 << n) - 1 - (1 << i)));
-	}
-	return (res == INFL ? -1 : res);
-}
-
-
 //【最長パス】O(|V| + |E|)
 /*
 * 有向非巡回グラフ g の最長パスの長さを返す．
-*
-* len[i] : 頂点 i からの最長パスの長さを格納する．
-* 戻り値 : g の最長パスの長さ
 * 
-*（グラフ上の DP）
+*（DAG 上の DP）
 */
-int longest_path(const Graph& g, vi& len) {
+int longest_path(const Graph& g) {
 	int n = sz(g);
 
+	// dp[s] : 頂点 s からの最長パスの長さ
+	vi dp(n);
 	vb seen(n);
-	len = vi(n);
 
 	function<int(int)> dfs = [&](int s) {
 		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) {
-			return len[s];
-		}
+		if (seen[s]) return dp[s];
 		seen[s] = true;
 
 		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		len[s] = 0;
-		for (auto t : g[s]) {
-			chmax(len[s], dfs(t) + 1);
+		dp[s] = 0;
+		repe(t, g[s]) {
+			chmax(dp[s], dfs(t) + 1);
 		}
-		return len[s];
+		return dp[s];
 	};
 
 	// 各頂点 s についての情報を計算する．
 	int res = 0;
 	rep(s, n) {
 		chmax(res, dfs(s));
+	}
+
+	return res;
+}
+
+
+//【コスト最大パス（頂点コスト）】O(|V| + |E|)
+/*
+* 頂点コスト w の与えられた有向非巡回グラフ g のパス（長さ 0 も可）で，
+* パスに属する頂点のコストの和の最大値を返す．
+*
+*（DAG 上の DP）
+*/
+ll highest_cost_path(const Graph& g, const vl& w) {
+	int n = sz(g);
+
+	// dp[s] : 頂点 s からの最大コスト
+	vl dp(n);
+	vb seen(n);
+
+	function<ll(int)> dfs = [&](int s) {
+		// s の情報を計算済だったらすぐに返す．
+		if (seen[s]) return dp[s];
+		seen[s] = true;
+
+		// s から行ける頂点 t の情報を元に s の情報を計算する．
+		dp[s] = 0;
+		repe(t, g[s]) {
+			chmax(dp[s], dfs(t));
+		}
+		dp[s] += w[s];
+
+		return dp[s];
+	};
+
+	// 各頂点 s についての情報を計算する．
+	ll res = 0;
+	rep(s, n) {
+		chmax(res, dfs(s));
+	}
+
+	return res;
+}
+
+
+//【コスト最大パス（頂点コスト）】O(|V| + |E|)
+/*
+* 頂点コスト w の与えられた有向非巡回グラフ g の r からのパス（長さ 0 も可）で，
+* パスに属する頂点のコストの和を最大とするパスの頂点列を path に格納する．
+* またそのパスのコストを返す．
+*
+*（DAG 上の DP）
+*/
+ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
+	int n = sz(g);
+
+	// dp[s] : 頂点 s からの最大コスト
+	vl dp(n);
+	vb seen(n);
+	vi next(n, -1);
+
+	function<ll(int)> dfs = [&](int s) {
+		// s の情報を計算済だったらすぐに返す．
+		if (seen[s]) return dp[s];
+		seen[s] = true;
+
+		// s から行ける頂点 t の情報を元に s の情報を計算する．
+		dp[s] = 0;
+		repe(t, g[s]) {
+			if (chmax(dp[s], dfs(t))) {
+				next[s] = t;
+			}
+		}
+		dp[s] += w[s];
+
+		return dp[s];
+	};
+
+	// r から探索
+	ll res = dfs(r);
+
+	// DP 復元
+	if (path != nullptr) {
+		path->clear();
+
+		for (int s = r; s != -1; s = next[s]) {
+			path->push_back(s);
+		}
 	}
 
 	return res;
@@ -617,7 +600,7 @@ int maximum_clique(const Graph& g) {
 }
 
 
-//【最大流問題／フォード－ファルカーソンのアルゴリズム】O(maxflow |E|)
+//【最大流問題／フォード－ファルカーソンのアルゴリズム】O(|E| maxflow)
 /*
 * コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */

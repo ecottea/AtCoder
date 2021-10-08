@@ -103,19 +103,351 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-//using mint = modint1000000007;
-using mint = modint998244353;
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
+template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
 istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
 
 
+//【幅優先探索】O(|E|)
+/*
+* グラフ g に対し，始点を start として幅優先探索を行い，
+* start から各頂点 i への最短経路長を dist[i] に格納する．
+* i が start から到達不能な頂点の場合は dist[i] = -1 となる．
+*/
+void breadth_first_search(const Graph& g, int start, vi& dist) {
+	int n = sz(g);
+	dist = vi(n, -1); // スタートからの最短距離を保持するテーブル
+	dist[start] = 0;
+	queue<int> que; // 次に探索する頂点を入れておくキュー
+	que.push(start);
+
+	while (!que.empty()) {
+		// 未探索の頂点を 1 つ得る．
+		auto s = que.front();
+		que.pop();
+
+		for (auto t : g[s]) {
+			if (dist[t] != -1) {
+				// 発見済みの頂点なので何もしない．
+				continue;
+			}
+
+			// スタートからの最短距離を確定する．
+			// 幅優先探索なので，最短だという保証がある．
+			dist[t] = dist[s] + 1;
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+}
+
+
+//【強連結成分分解】O(|V| + |E|)
+/*
+* 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を scc に返す．
+* scc[i] は i 番目の強連結成分の頂点からなるリストである．
+*/
+void strongly_connected_component_decomposition(Graph& g, vvi& scc) {
+	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
+
+	int n = sz(g);
+
+	// 辺の向きを逆にしたグラフを作成
+	Graph g_rev(n);
+	rep(s, n) {
+		repe(t, g[s]) {
+			g_rev[t].push_back(s);
+		}
+	}
+
+	// 各頂点の状態（0:未探索，1:順探索済かつ未逆探索，2:逆探索済）
+	vi status(n, 0);
+
+
+	// step1: まず順探索（深さ優先）を行い，結果をスタックに格納する．
+
+	// 深さ優先の順探索で見つかった順に頂点を記録するスタック
+	stack<int> stk;
+
+	// 順探索用の再帰関数
+	function<void(int)> trace = [&](int s) {
+		// 状態を順探索済かつ未逆探索（1）にする．
+		status[s] = 1;
+
+		repe(t, g[s]) {
+			// 未探索の頂点を探索しにいく．
+			if (status[t] == 0) {
+				trace(t);
+			}
+		}
+
+		// 先の探索が済んだら自身を記録する（深さ優先探索）
+		stk.push(s);
+	};
+
+	rep(i, n) {
+		// 未探索の頂点を見つけたら探索する．
+		if (status[i] == 0) {
+			trace(i);
+		}
+	}
+
+
+	// step2: 次に逆探索を行い，強連結成分を確定する．
+
+	// 逆探索用の再帰関数
+	function<void(int)> trace_rev = [&](int s) {
+		// 状態を逆探索済（2）にする．
+		status[s] = 2;
+
+		repe(t, g_rev[s]) {
+			// 未逆探索の頂点を探索しにいく．
+			if (status[t] == 1) {
+				trace_rev(t);
+			}
+		}
+
+		// 先の探索が済んだら自身を強連結成分の一員として記録する．
+		scc.rbegin()->push_back(s);
+	};
+
+	while (!stk.empty()) {
+		auto v = stk.top();
+		stk.pop();
+
+		// 新しい強連結成分を見つけたらそれをなぞりに行く．
+		if (status[v] == 1) {
+			scc.push_back(vi());
+			trace_rev(v);
+		}
+	}
+}
+
+
+//【頂点の縮約】O(|V| + |E| log |V|)
+/*
+* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として
+* 縮約したグラフを gc に格納する．
+*/
+void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
+	int n = sz(g);
+	int m = sz(p);
+
+	// id[v] : 頂点 v の属する成分
+	vi id(n);
+	rep(i, m) {
+		repe(v, p[i]) {
+			id[v] = i;
+		}
+	}
+
+	// 多重辺や自己ループを防ぐため一旦辺の集合を set でもつ．
+	vector<set<int>> gc_set(m);
+	rep(s, n) {
+		repe(t, g[s]) {
+			gc_set[id[s]].insert(id[t]);
+		}
+		gc_set[id[s]].erase(id[s]);
+	}
+
+	// 結果の格納
+	gc = Graph(m);
+	rep(s, m) {
+		repe(t, gc_set[s]) {
+			gc[s].push_back(t);
+		}
+	}
+}
+
+
+//【コスト最大パス（頂点コスト）】O(|V| + |E|)
+/*
+* 頂点コスト w の与えられた有向非巡回グラフ g のパス（長さ 0 も可）で，
+* パスに属する頂点のコストの和の最大値を返す．
+*
+*（DAG 上の DP）
+*/
+ll highest_cost_path(const Graph& g, const vl& w) {
+	int n = sz(g);
+
+	// dp[s] : 頂点 s からの最大コスト
+	vl dp(n);
+	vb seen(n);
+
+	function<ll(int)> dfs = [&](int s) {
+		// s の情報を計算済だったらすぐに返す．
+		if (seen[s]) return dp[s];
+		seen[s] = true;
+
+		// s から行ける頂点 t の情報を元に s の情報を計算する．
+		dp[s] = 0;
+		repe(t, g[s]) {
+			chmax(dp[s], dfs(t));
+		}
+		dp[s] += w[s];
+
+		return dp[s];
+	};
+
+	// 各頂点 s についての情報を計算する．
+	ll res = 0;
+	rep(s, n) {
+		chmax(res, dfs(s));
+	}
+
+	return res;
+}
+
+
+//【コスト最大パス（頂点コスト）】O(|V| + |E|)
+/*
+* 頂点コスト w の与えられた有向非巡回グラフ g の r からのパス（長さ 0 も可）で，
+* パスに属する頂点のコストの和を最大とするパスの頂点列を path に格納する．
+* またそのパスのコストを返す．
+*
+*（DAG 上の DP）
+*/
+ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
+	int n = sz(g);
+
+	// dp[s] : 頂点 s からの最大コスト
+	vl dp(n);
+	vb seen(n);
+	vi next(n, -1);
+
+	function<ll(int)> dfs = [&](int s) {
+		// s の情報を計算済だったらすぐに返す．
+		if (seen[s]) return dp[s];
+		seen[s] = true;
+
+		// s から行ける頂点 t の情報を元に s の情報を計算する．
+		dp[s] = 0;
+		repe(t, g[s]) {
+			if (chmax(dp[s], dfs(t))) {
+				next[s] = t;
+			}
+		}
+		dp[s] += w[s];
+
+		return dp[s];
+	};
+
+	// r から探索
+	ll res = dfs(r);
+
+	// DP 復元
+	if (path != nullptr) {
+		path->clear();
+
+		for (int s = r; s != -1; s = next[s]) {
+			path->push_back(s);
+		}
+	}
+
+	return res;
+}
+
+
+//【コスト最大パスの組（頂点コスト）】O(|V| + |E|)
+/*
+* 頂点コスト w の与えられた有向非巡回グラフ g のパスの組で，
+* いずれかのパスに属している頂点のコストの和の最大値を返す．
+*
+*（グラフ上の DP）
+* 
+* 利用：【コスト最大パス（頂点コスト）】
+*/
+ll highest_cost_twinpath(const Graph& g, const vl& w) {
+	int n = sz(g);
+
+	ll res = 0;
+
+	rep(s, n) {
+		vi path;
+		ll sum = highest_cost_path(g, w, s, &path);
+		dump("------------------------");
+		dump(s);
+		dump(path);
+		dump(sum);
+		
+		vl nw = w;
+		repe(v, path) {
+			nw[v] = 0;
+		}
+
+		sum += highest_cost_path(g, nw);
+		dump(sum);
+
+		chmax(res, sum);
+	}
+
+	return res;
+}
+
+
 int main() {
 	cout << fixed << setprecision(12);
-//	input_from_file("input.txt");
+	input_from_file("input.txt");
 
-	
+	int n;
+	cin >> n;
+
+	Graph g(n);
+	rep(s, n) {
+		rep(t, n) {
+			int e;
+			cin >> e;
+
+			if (e) g[s].push_back(t);
+//			if (e) g[t].push_back(s); // 逆グラフ入力用
+		}
+	}
+	dumpel(g);
+
+	////テストケース作成用
+	//int n = 10;
+	//Graph g(n);
+	//srand(time(0));
+	//rep(s, n) {
+	//	rep(t, n) {
+	//		int e = !(rand() % 13);
+	//		cout << e << " ";
+	//		if (e) g[s].push_back(t);
+	//	}
+	//	cout << endl;
+	//}
+
+	vvi scc;
+	strongly_connected_component_decomposition(g, scc);
+	dumpel(scc);
+
+	Graph gc;
+	vertex_contraction(g, scc, gc);
+	dumpel(gc);
+
+	int m = sz(gc);
+	vl w(m);
+	rep(i, m) w[i] = sz(scc[i]);
+	dump(w);
+
+	ll res = highest_cost_twinpath(gc, w);
+
+	//Graph gc_rev(m);
+	//rep(s, m) {
+	//	repe(t, gc[s]) {
+	//		gc_rev[t].push_back(s);
+	//	}
+	//}
+	//ll res2 = highest_cost_twinpath(gc_rev, w);
+	//dumps(res); dump(res2);
+
+	cout << res << endl;
 }

@@ -16,8 +16,7 @@ template <class T> ll inversion_number(vector<T>& a) {
 
 	// a を [0, |a|) に座標圧縮した結果を b に格納する．
 	vi b;
-	vector<T> tmp;
-	int m = coordinate_compression(a, b, tmp);
+	int m = coordinate_compression(a, b);
 
 	// fw[i] : 今まで見てきた範囲に値 i が何個あったか．
 	fenwick_tree<int> fw(m);
@@ -64,13 +63,12 @@ int permutation_decomposition(const vi& p, vvi& cycles) {
 }
 
 
-
 //【順列の数え上げ（大小関係指定）】O(n^2)
 /*
 * '<', '>', '?' からなる長さ n-1 の文字列 s で指定される
 * 大小関係を満たすような長さ n の順列の個数を返す．
 *
-*（順列 DP）
+*（挿入 DP）
 */
 mint count_permutations(const string& s) {
 	int n = sz(s) + 1;

@@ -144,19 +144,25 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bitDP(グラフ).h" />
     <ClInclude Include="bitDP.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="ヒストグラム.h" />
+    <ClInclude Include="二乗の木DP.h" />
     <ClInclude Include="二重和.h" />
+    <ClInclude Include="全方位木DP.h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="期待値.h" />
+    <ClInclude Include="木DP.h" />
     <ClInclude Include="桁DP.h" />
+    <ClInclude Include="構造(木).h" />
     <ClInclude Include="確率.h" />
     <ClInclude Include="組合せゲーム.h" />
-    <ClInclude Include="置換.h" />
+    <ClInclude Include="部分列DP.h" />
+    <ClInclude Include="順列.h" />
     <ClInclude Include="場合の数.h" />
     <ClInclude Include="数列.h" />
     <ClInclude Include="特殊化.h" />
@@ -173,7 +179,7 @@
     <ClInclude Include="作図.h" />
     <ClInclude Include="列挙(グラフ).h" />
     <ClInclude Include="判定%28幾何%29.h" />
-    <ClInclude Include="判定(グラフ).h" />
+    <ClInclude Include="分析%28グラフ%29.h" />
     <ClInclude Include="多項式.h" />
     <ClInclude Include="座標圧縮.h" />
     <ClInclude Include="探索.h" />
@@ -189,7 +195,7 @@
     <ClInclude Include="格子.h" />
     <ClInclude Include="組合せ論.h" />
     <ClInclude Include="構造%28幾何%29.h" />
-    <ClInclude Include="グラフ.h" />
+    <ClInclude Include="探索%28グラフ%29.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="行列.h" />
     <ClInclude Include="数論.h" />

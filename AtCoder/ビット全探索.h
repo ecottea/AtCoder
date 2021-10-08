@@ -9,7 +9,7 @@
 * 大きさ d の全体集合 Ω とその部分集合 A ⊂ Ω について，
 * A ⊂ set ⊂ Ω なる set を昇順に全探索する．
 */
-#define repbm(set, A, d) for(int set = A; set < (1 << int(d)); set = (set + 1) | A)
+#define repbu(set, A, d) for(int set = A; set < (1 << int(d)); set = (set + 1) | A)
 
 
 //【下位集合の全探索】

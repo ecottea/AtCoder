@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "二分木.h"
+#include "組合せ論.h"
 // ■■■■■ 文字列 ■■■■■
 
 
@@ -495,6 +496,138 @@ ll huffman_encoding(string& s) {
 		// ただし文字が 1 種類のみのときは例外処理．
 		int len = max(ht[(int)s[i]].depth, 1);
 		res += len;
+	}
+
+	return res;
+}
+
+
+//【同じ文字の連続しない文字列の数え上げ】O(n Σcnt[i])
+/*
+* n 種の各文字 i を cnt[i] 個ずつ含む文字列で，同じ文字が隣り合わないものの個数を返す．
+*/
+mint count_noncontinuous_sequence(const vi& cnt_) {
+	// 0 個の文字は無視する．
+	vi cnt;
+	repe(c, cnt_) {
+		if (c > 0) cnt.push_back(c);
+	}
+	int n = sz(cnt);
+	factorial_mint fm(accumulate(all(cnt), 0));
+
+	// dp[i][j] : 文字 [0..i) で同じ文字の隣接が j 箇所ある文字列の個数
+	vvm dp(n + 1LL);
+	dp[0] = vm({ 1, 0 });
+
+	int len = 2; // 文字列の長さ（両端の番兵含む）
+
+	// i : 次に挿入する文字の種類
+	rep(i, n) {
+		dp[i + 1LL] = vm((ll)len + cnt[i]);
+
+		// j : 同じ文字の隣接箇所の個数
+		rep(j, len - 1) {
+			// k : 文字 i をいくつの固まりに分けるか
+			repi(k, 1, cnt[i]) {
+				// l : 同じ文字の間にいくつ固まりを挿入するか
+				repi(l, 0, min(k, j)) {
+					int nj = j + (cnt[i] - k) - l;
+
+					mint add = dp[i][j];
+
+					// cnt[i] 個の文字を順序込みで k 個に分ける方法の数
+					//	まず文字を k 個減らしておき，重複組合せの考え方を用いて
+					//	○ cnt[i] - k 個と ｜ k - 1 個の並べ方を数えれば良い．
+					add *= fm.binomial(cnt[i] - 1, k - 1);
+
+					// k 個の固まりをどこに挿入するか
+					//	順序は先に定めたので，後は挿入位置だけを考えれば良い．
+					//	同じ文字の間が j 箇所中 l 箇所，
+					//	異なる文字の間が残り len - 1 - j 箇所中 k - l 箇所．
+					add *= fm.binomial(j, l) * fm.binomial(len - 1 - j, k - l);
+
+					dp[i + 1LL][nj] += add;
+				}
+			}
+		}
+		len += cnt[i];
+	}
+
+	return dp[n][0];
+}
+
+
+//【ビット列の連結】O(4^S S k log(n))（ただし S = max(|s[i]|)）
+/*
+* n 個の 0-1 文字列 s[i] を好きに並べて得られる長さ k の文字列の個数を返す．
+*/
+mint count_string_join(const vector<string>& s_, int k) {
+	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/27/181249
+
+	int n = sz(s_);
+
+	// m : 文字の長さの最大値
+	int m = 0;
+	rep(i, n) chmax(m, sz(s_[i]));
+
+	// 扱いやすいようにビット列に変換し，長さごとに記録しておく．
+	vector<set<int>> s(m + 1LL);
+	rep(i, n) {
+		int seq = 0, len = sz(s_[i]);
+		rep(j, len) {
+			seq = seq * 2 + (s_[i][j] - '0');
+		}
+		s[len].insert(seq);
+	}
+	dumpel(s);
+
+	// dp[i][seq][set] : 長さ i で直前の m 文字が seq であるもので，
+	//	文字列 [0..i-j) が s を並べて得られるような j の集合が set であるものの個数
+	vvvm dp(k + 1LL, vvm(1LL << m, vm(1LL << m)));
+	dp[0][0][1] = 1;
+	int mask = (1 << m) - 1;
+
+	// i : 文字列の長さ
+	rep(i, k) {
+		// seq : 文字列（直前 m 文字のみ）
+		repb(seq, m) {
+			// b : seq に追加する文字
+			repi(b, 0, 1) {
+				// nseq : seq の末尾に b を追加した文字列
+				int nseq = ((seq << 1) & mask) + b;
+
+				// set : 文字列 [0..i-j) が s を並べて得られるような j の集合
+				repb(set, m) {
+					// cut_flag : 文字列 [0..i+1) が s を並べて得られるか
+					int cut_flag = 0;
+
+					// j : 文字列 [0..i-j) が s を並べて得られる
+					rep(j, m) {
+						if (!(set & (1 << j))) continue;
+
+						// 文字列 nseq[i-j..i+1) が s に含まれるか
+						if (s[j + 1LL].count(nseq & ((1 << (j + 1)) - 1))) {
+							cut_flag = 1;
+							break;
+						}
+					}
+
+					// nset : 文字列 [0..i+1-j) が s を並べて得られるような j の集合
+					int nset = ((set << 1) & mask) + cut_flag;
+
+					dp[i + 1LL][nseq][nset] += dp[i][seq][set];
+				}
+			}
+		}
+	}
+
+	mint res = 0;
+	repb(seq, m) {
+		repb(set, m) {
+			if (set & 1) {
+				res += dp[k][seq][set];
+			}
+		}
 	}
 
 	return res;
