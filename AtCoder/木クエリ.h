@@ -2,6 +2,7 @@
 #include "header.h"
 #include "構造(木).h"
 #include "根付き木.h"
+#include "セグメント木.h"
 // ■■■■■ 木のクエリ処理 ■■■■■
 
 
@@ -139,10 +140,15 @@ struct Path_sum_query {
 *
 * 利用：
 *	【根付き木の HL 分解】
-*	【遅延評価セグメント木：区間加算／区間総和クエリ】
+*	【遅延評価セグメント木（比例作用）】
 */
-template <class TREE, class T>
-struct Path_add_sum_query {
+template <class T> T op15(T x, T y) { return x + y; }
+template <class T> T e15() { return T(0); }
+template <class T> T mapping15(T f, T x) { return f + x; }
+template <class T> T composition15(T f, T g) { return f + g; }
+template <class T> T id15() { return T(0); }
+template <class T> T pow15(T f, int i) { return f * i; }
+template <class TREE, class T> struct Path_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
 	// 根付き木
@@ -156,15 +162,15 @@ struct Path_add_sum_query {
 
 	// in 順に並べた頂点の列 pos に対する区間加算／区間総和クエリを処理する．
 	// rasq[i] : i 番目になぞる頂点に入る辺の値（rasq[0] は使わない）
-	range_add_sum_query<T> rasq;
-
+	using RASQ = Proportional_lazy_segtree<T, op15, e15, T, mapping15, composition15, id15, pow15>;
+	RASQ rasq;
 
 	// コンストラクタ（根付き木で初期化）
 	Path_add_sum_query(TREE& rt_) : rt(rt_) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, pos, top);
 
-		rasq = range_add_sum_query<T>(sz(rt.v));
+		rasq = RASQ(sz(rt.v));
 	}
 
 	// 頂点 v1 から v2 までの辺に val を加算する．
@@ -172,13 +178,13 @@ struct Path_add_sum_query {
 		// v1 と v2 が異なる連結成分に属している限りループを回す．
 		while (top[v1] != top[v2]) {
 			// v1 の方が浅い連結成分に属しているとする．
-			if (top[v1] > top[v2]) {
+			if (in[top[v1]] > in[top[v2]]) {
 				swap(v1, v2);
 			}
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
-			rasq.add(in[top[v2]], in[v2] + 1, val);
+			rasq.apply(in[top[v2]], in[v2] + 1, val);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt.v[top[v2]].parent;
@@ -186,10 +192,10 @@ struct Path_add_sum_query {
 
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
 		// その間の辺のみに対して val を加算する．
-		if (v1 > v2) {
+		if (in[v1] > in[v2]) {
 			swap(v1, v2);
 		}
-		rasq.add(in[v1] + 1, in[v2] + 1, val);
+		rasq.apply(in[v1] + 1, in[v2] + 1, val);
 	}
 
 	// 頂点 v1 から v2 までの辺の値の和を返す．
@@ -199,13 +205,13 @@ struct Path_add_sum_query {
 		// v1 と v2 が異なる連結成分に属している限りループを回す．
 		while (top[v1] != top[v2]) {
 			// v1 の方が浅い連結成分に属しているとする．
-			if (top[v1] > top[v2]) {
+			if (in[top[v1]] > in[top[v2]]) {
 				swap(v1, v2);
 			}
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲の和を求める．
-			res += rasq.sum(in[top[v2]], in[v2] + 1);
+			res += rasq.prod(in[top[v2]], in[v2] + 1);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt.v[top[v2]].parent;
@@ -213,10 +219,10 @@ struct Path_add_sum_query {
 
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
 		// その間の辺のみの和を res に加算する．
-		if (v1 > v2) {
+		if (in[v1] > in[v2]) {
 			swap(v1, v2);
 		}
-		res += rasq.sum(in[v1] + 1, in[v2] + 1);
+		res += rasq.prod(in[v1] + 1, in[v2] + 1);
 
 		return res;
 	}
@@ -245,8 +251,13 @@ struct Path_add_sum_query {
 *	【根付き木の HL 分解／オイラーツアー】
 *	【遅延評価セグメント木：区間加算／区間総和クエリ】
 */
-template <class TREE>
-struct Subtree_add_path_sum_query {
+ll op16(ll x, ll y) { return x + y; }
+ll e16() { return 0; }
+ll mapping16(ll f, ll x) { return f + x; }
+ll composition16(ll f, ll g) { return f + g; }
+ll id16() { return 0; }
+ll pow16(ll f, int i) { return f * i; }
+template <class TREE> struct Subtree_add_path_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
 	// 根付き木
@@ -261,8 +272,8 @@ struct Subtree_add_path_sum_query {
 
 	// オイラーツアーで得られた列 pos に対する区間加算／区間総和クエリを処理する．
 	// rasq[t] : 時刻 t で居る頂点に入る辺の値（rasq[0] は使わない）
-	range_add_sum_query<ll> rasq;
-
+	using RASQ = Proportional_lazy_segtree<ll, op16, e16, ll, mapping16, composition16, id16, pow16>;
+	RASQ rasq;
 
 	// コンストラクタ（根付き木で初期化）
 	Subtree_add_path_sum_query(TREE& rt_) : rt(rt_) {
@@ -278,12 +289,12 @@ struct Subtree_add_path_sum_query {
 			}
 		}
 
-		rasq = range_add_sum_query<ll>(val);
+		rasq = RASQ(val);
 	}
 
 	// 頂点 v の部分木の辺に val を加算する．
 	void add(int v, ll val) {
-		rasq.add(in[v] + 1, out[v], val);
+		rasq.apply(in[v] + 1, out[v], val);
 	}
 
 	// 頂点 v1 から v2 までの辺に val を加算する．
@@ -297,7 +308,7 @@ struct Subtree_add_path_sum_query {
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
-			rasq.add(in[top[v2]], in[v2] + 1, val);
+			rasq.apply(in[top[v2]], in[v2] + 1, val);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt.v[top[v2]].parent;
@@ -308,7 +319,7 @@ struct Subtree_add_path_sum_query {
 		if (in[v1] > in[v2]) {
 			swap(v1, v2);
 		}
-		rasq.add(in[v1] + 1, in[v2] + 1, val);
+		rasq.apply(in[v1] + 1, in[v2] + 1, val);
 	}
 
 	// 頂点 v1 から v2 までの辺の値の和を返す．
@@ -324,7 +335,7 @@ struct Subtree_add_path_sum_query {
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲の和を求める．
-			res += rasq.sum(in[top[v2]], in[v2] + 1);
+			res += rasq.prod(in[top[v2]], in[v2] + 1);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt.v[top[v2]].parent;
@@ -335,7 +346,7 @@ struct Subtree_add_path_sum_query {
 		if (in[v1] > in[v2]) {
 			swap(v1, v2);
 		}
-		res += rasq.sum(in[v1] + 1, in[v2] + 1);
+		res += rasq.prod(in[v1] + 1, in[v2] + 1);
 
 		return res;
 	}

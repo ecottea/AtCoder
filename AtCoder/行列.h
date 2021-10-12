@@ -69,6 +69,7 @@ struct Matrix {
 	}
 
 	// アクセス
+	vector<T> const& operator[](int i) const { return v[i]; }
 	vector<T>& operator[](int i) { return v[i]; }
 
 	// 比較

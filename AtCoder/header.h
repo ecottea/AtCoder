@@ -103,12 +103,12 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-template <class S, S(*op)(S, S), S(*e)(), class F, S(*mapping)(F, S), F(*composition)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mapping, composition, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
 istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;

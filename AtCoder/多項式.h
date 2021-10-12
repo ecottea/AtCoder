@@ -1,11 +1,12 @@
 #pragma once
 #include "header.h"
 #include "組合せ論.h"
+#include "合同式.h"
 // ■■■■■ 多項式（形式的べき級数を含む） ■■■■■
 
 
 
-//【多項式】
+//【多項式，形式的冪級数】
 /*
 * 多項式を表す構造体
 *
@@ -52,13 +53,13 @@
 *
 * f.inv(d) : O((n + d) log(n + d)) ?
 *	多項式 f の x^d を法とする乗法逆元を返す．
-*	制約：T = modint998244353
+*	制約：f(0) ≠ 0, T = modint998244353
 *
-* f / g : O(n log n) ?
+* f / g : O(n log n)
 *	多項式 f を g で割った商を返す．
 *	制約：T = modint998244353
 *
-* f % g : O(n log n) ?
+* f % g : O(n log n)
 *	多項式 f を g で割った余りを返す．
 *	制約：T = modint998244353
 *
@@ -66,17 +67,19 @@
 *	多項式 x^d を f で割った余りを返す．
 *	制約：T = modint998244353
 *
-* assign(x) : O(n)
-*	多項式 f の不定元に x を代入した値を返す．
+* assign(v) : O(n)
+*	多項式 f の不定元 x に v を代入した値を返す．
 *
 * deg() : O(1)
 *	多項式 f の次数を返す．
+*
+* shift(d) : O(n)
+*	係数列を d だけシフトした多項式を返す．
+*	（d >= 0 なら x^d の乗算，d < 0 なら x^(-d) で割った商と等価）
 */
-template <class T>
-struct Polynomial {
+template <class T> struct Polynomial {
 	int n; // 多項式の係数の個数（次数 + 1）
 	vector<T> c; // 多項式の係数列
-
 
 	// コンストラクタ（零多項式，定数多項式，係数列で初期化）
 	Polynomial() : n(0) {}
@@ -89,6 +92,7 @@ struct Polynomial {
 	Polynomial& operator=(const T& c0) { n = 1; c = { c0 }; return *this; }
 
 	// アクセス
+	T const& operator[](int i) const { return c[i]; }
 	T& operator[](int i) { return c[i]; }
 
 	// 加算
@@ -220,6 +224,27 @@ struct Polynomial {
 	// 次数
 	int deg() const { return n - 1; }
 
+	// 係数のシフト
+	Polynomial shift(int d) const {
+		Polynomial f = *this;
+		if (d > 0) {
+			f.n += d;
+			vector<T> zeros(d);
+			f.c.insert(f.c.begin(), zeros.begin(), zeros.end());
+		}
+		else if (d < 0) {
+			f.n -= d;
+			if (f.n <= 0) {
+				f.c.clear();
+				f.n = 0;
+			}
+			else {
+				f.c.erase(f.c.begin(), f.c.begin() - d);
+			}
+		}
+		return f;
+	}
+
 	// デバッグ出力
 	friend ostream& operator<<(ostream& os, const Polynomial& f) {
 		if (f.n == 0)
@@ -235,22 +260,19 @@ struct Polynomial {
 };
 
 // 積
-template <>
-inline Polynomial<ll>& Polynomial<ll>::operator*=(const Polynomial<ll>& g) {
+template <> inline Polynomial<ll>& Polynomial<ll>::operator*=(const Polynomial<ll>& g) {
 	c = convolution_ll(c, g.c);
 	n = sz(c);
 	return *this;
 }
-template <>
-inline Polynomial<modint998244353>& Polynomial<modint998244353>::operator*=(const Polynomial<modint998244353>& g) {
+template <> inline Polynomial<modint998244353>& Polynomial<modint998244353>::operator*=(const Polynomial<modint998244353>& g) {
 	c = convolution(c, g.c);
 	n = sz(c);
 	return *this;
 }
 
 // 乗法逆元
-template <>
-Polynomial<modint998244353> Polynomial<modint998244353>::inv(int d) const {
+template <> Polynomial<modint998244353> Polynomial<modint998244353>::inv(int d) const {
 	// 参考：https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
 
 	//【方法】
@@ -281,14 +303,14 @@ Polynomial<modint998244353> Polynomial<modint998244353>::inv(int d) const {
 	Polynomial<modint998244353> g(c[0].inv());
 	for (int k = 1; k < d; k *= 2) {
 		g = (modint998244353(2) - *this * g) * g;
+		g.resize(2 * k);
 	}
 
 	return g.resize(d);
 }
 
 // 商
-template <>
-Polynomial<modint998244353> Polynomial<modint998244353>::operator/(const Polynomial<modint998244353>& g) const {
+template <> Polynomial<modint998244353> Polynomial<modint998244353>::operator/(const Polynomial<modint998244353>& g) const {
 	// 参考 : https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
 
 	//【方法】
@@ -333,9 +355,12 @@ Polynomial<modint998244353> operator%(ll d, const Polynomial<modint998244353>& f
 	return res;
 }
 
-// 単項式 f = x^d を返す．
-template <class T>
-Polynomial<T> monomial(int d) {
+
+//【単項式】O(d)
+/*
+* 単項式 f = x^d を返す．
+*/
+template <class T> Polynomial<T> monomial(int d) {
 	vector<T> coef(d + 1);
 	coef[d] = 1;
 	Polynomial<T> mono(coef);
@@ -411,6 +436,76 @@ modint998244353 coef(const Polynomial<modint998244353>& f, const Polynomial<modi
 }
 
 
+//【平方根】O(n log n)
+/*
+* √f(x) mod x^d を返す．（なければ find = false を格納する）
+*
+* 利用：【平方剰余／トネリ－シャンクスのアルゴリズム】
+*/
+Polynomial<modint998244353> sqrt(const Polynomial<modint998244353>& f, int d, bool& find) {
+	// 参考 : https://nyaannyaan.github.io/library/fps/fps-sqrt.hpp
+
+	//【方法】
+	// √(x^2 f(x)) = x √f(x) なので f(0) が平方剰余として一般性を失わない．
+	// f(0) は平方剰余なので，c0^2 = f(0) なる t が存在する．よって mod x^1 では
+	//		c0^2 ≡ f(x) mod x^1
+	// が成り立つ．
+	//
+	// mod x^k で
+	//		h(x)^2 ≡ f(x) mod x^k
+	// が成り立っていると仮定すると，ニュートン法より
+	//		g = h - (h^2 - f) / (h^2)'
+	//   ⇔ g = (h + f / h) / 2
+	// と置くと
+	//		g(x)^2 ≡ f(x) mod x^(2 k)
+	// が成り立つ．
+	//
+	// これを繰り返せば所望の g が求まる．
+
+	// 最低次の項を見つける．
+	int i0 = 0;
+	while (i0 <= f.deg() && f[i0] == 0) i0++;
+
+	// 零多項式なら平方根も零多項式である．
+	if (i0 == f.deg() + 1) {
+		find = true;
+		Polynomial<modint998244353> g;
+		g.resize(d);
+		return g;
+	}
+
+	// 最低次の項が奇数次の項なら平方根は存在しない．
+	if (i0 % 2 == 1) {
+		find = false;
+		return modint998244353(0);
+	}
+
+	// 最低次の項の係数が平方剰余でなければ平方根は存在しない．
+	int c0 = (f[i0] == 1 ? 1 : sqrt(f[i0])); // 1 のことが多いので高速化
+	if (c0 == -1) {
+		find = false;
+		return modint998244353(0);
+	}
+
+	// 定数項が 0 でないようにシフトした多項式を得る．
+	Polynomial<modint998244353> fs = f.shift(-i0);
+
+	// ニュートン法で g = √f を見つける．
+	Polynomial<modint998244353> gs(c0);
+	for (int k = 1; k < d; k *= 2) {
+		gs = (gs + fs * gs.inv(2 * k)) / 2;
+		gs.resize(2 * k);
+	}
+
+	// シフトした分を元に戻す．
+	Polynomial<modint998244353> g = gs.shift(i0 / 2);
+	g.resize(d);
+
+	find = true;
+	return g;
+}
+
+
 //【ラグランジュ補間】O(d)
 /*
 * ラグランジュ補間を用いて d 次多項式 f の 0, ..., d における値から f(x) を求める．
@@ -422,7 +517,7 @@ modint998244353 coef(const Polynomial<modint998244353>& f, const Polynomial<modi
 * 
 * 利用：【階乗と二項係数（mint利用）】
 */
-mint lagrange_interpolation(const vector<mint>& fval, mint x) {
+mint lagrange_interpolation(const vm& fval, mint x) {
 	int d = sz(fval) - 1; // 多項式 f の次数
 	factorial_mint fm(d);
 

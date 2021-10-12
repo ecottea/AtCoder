@@ -462,6 +462,89 @@ ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 }
 
 
+//【コスト最大パスの組（頂点コスト）】O(|V|^3)
+/*
+* 頂点コスト w の与えられた有向非巡回グラフ g（トポロジカルソート済）のパスの組で，
+* いずれかのパスに属している頂点のコストの和の最大値を返す．
+*
+*（DAG 上の二次元 DP）
+*
+* 利用：【幅優先探索】
+*/
+ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
+	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/26/172626
+
+	int n = sz(g_);
+
+	// 全頂点への有向辺をもちコストが 0 の頂点 0 を追加する．
+	Graph g(n + 1LL);
+	repi(t, 1, n) {
+		g[0].push_back(t);
+	}
+	rep(s, n) {
+		repe(t, g_[s]) {
+			g[s + 1LL].push_back(t + 1);
+		}
+	}
+
+	vl w(n + 1LL);
+	w[0] = 0;
+	rep(s, n) {
+		w[s + 1LL] = w_[s];
+	}
+
+	n++;
+
+	// downQ[s][t] : パス s → t が存在するか（いくつかの頂点を飛び越えて移動できるか）
+	vvb downQ(n, vb(n));
+	rep(s, n) {
+		vi dist;
+		breadth_first_search(g, s, dist);
+
+		rep(t, n) {
+			downQ[s][t] = (dist[t] >= 0);
+		}
+	}
+
+	// dp[s1][s2] : 頂点 s1 < s2 からのパスの組の最大コスト
+	vvl dp(n, vl(n));
+	vvb seen(n, vb(n));
+
+	function<ll(int, int)> dfs = [&](int s1, int s2) {
+		// (s1, s2) の情報を計算済だったらすぐに返す．
+		if (seen[s1][s2]) return dp[s1][s2];
+		seen[s1][s2] = true;
+
+		dp[s1][s2] = w[s1] + w[s2];
+
+		// s2 から行ける頂点 t2 の情報を元に (s1, s2) の情報を計算する．
+		repe(t2, g[s2]) {
+			chmax(dp[s1][s2], dfs(s1, t2) + w[s2]);
+		}
+
+		// s1 から行ける頂点 t1 の情報を元に (s1, s2) の情報を計算する．
+		// ただし s1 からは s2 を飛び越えるような移動しか認めないこととする．
+		repi(t1, s2 + 1, n - 1) {
+			if (downQ[s1][t1]) {
+				chmax(dp[s1][s2], dfs(s2, t1) + w[s1]);
+			}
+		}
+
+		return dp[s1][s2];
+	};
+
+	dfs(0, 0);
+
+	ll res = 0;
+	rep(s2, n) {
+		rep(s1, s2) {
+			chmax(res, dp[s1][s2]);
+		}
+	}
+	return res;
+}
+
+
 //【最大クリーク問題】O(2^√(2|E|) |V|)
 /*
 * 無向グラフ g の最大クリークの大きさを返す．

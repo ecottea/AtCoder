@@ -10,7 +10,7 @@
 * 有向グラフ g をトポロジカルソートした結果を seq に返す．
 * g が閉路を持っている場合は失敗し，seq.size() < g.size() となる．
 */
-void topological_sort(Graph& g, vi& seq) {
+void topological_sort(const Graph& g, vi& seq) {
 	int n = sz(g);
 
 	// 入次数を求めておく．
@@ -55,7 +55,7 @@ void topological_sort(Graph& g, vi& seq) {
 * 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を scc に返す．
 * scc[i] は i 番目の強連結成分の頂点からなるリストである．
 */
-void strongly_connected_component_decomposition(Graph& g, vvi& scc) {
+void strongly_connected_component_decomposition(const Graph& g, vvi& scc) {
 	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
 
 	int n = sz(g);

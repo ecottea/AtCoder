@@ -103,8 +103,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
@@ -115,339 +115,422 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
 
 
-//【幅優先探索】O(|E|)
+//【多項式，形式的冪級数】
 /*
-* グラフ g に対し，始点を start として幅優先探索を行い，
-* start から各頂点 i への最短経路長を dist[i] に格納する．
-* i が start から到達不能な頂点の場合は dist[i] = -1 となる．
-*/
-void breadth_first_search(const Graph& g, int start, vi& dist) {
-	int n = sz(g);
-	dist = vi(n, -1); // スタートからの最短距離を保持するテーブル
-	dist[start] = 0;
-	queue<int> que; // 次に探索する頂点を入れておくキュー
-	que.push(start);
-
-	while (!que.empty()) {
-		// 未探索の頂点を 1 つ得る．
-		auto s = que.front();
-		que.pop();
-
-		for (auto t : g[s]) {
-			if (dist[t] != -1) {
-				// 発見済みの頂点なので何もしない．
-				continue;
-			}
-
-			// スタートからの最短距離を確定する．
-			// 幅優先探索なので，最短だという保証がある．
-			dist[t] = dist[s] + 1;
-
-			// 未探索の頂点として t を追加する．
-			que.push(t);
-		}
-	}
-}
-
-
-//【強連結成分分解】O(|V| + |E|)
-/*
-* 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を scc に返す．
-* scc[i] は i 番目の強連結成分の頂点からなるリストである．
-*/
-void strongly_connected_component_decomposition(Graph& g, vvi& scc) {
-	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
-
-	int n = sz(g);
-
-	// 辺の向きを逆にしたグラフを作成
-	Graph g_rev(n);
-	rep(s, n) {
-		repe(t, g[s]) {
-			g_rev[t].push_back(s);
-		}
-	}
-
-	// 各頂点の状態（0:未探索，1:順探索済かつ未逆探索，2:逆探索済）
-	vi status(n, 0);
-
-
-	// step1: まず順探索（深さ優先）を行い，結果をスタックに格納する．
-
-	// 深さ優先の順探索で見つかった順に頂点を記録するスタック
-	stack<int> stk;
-
-	// 順探索用の再帰関数
-	function<void(int)> trace = [&](int s) {
-		// 状態を順探索済かつ未逆探索（1）にする．
-		status[s] = 1;
-
-		repe(t, g[s]) {
-			// 未探索の頂点を探索しにいく．
-			if (status[t] == 0) {
-				trace(t);
-			}
-		}
-
-		// 先の探索が済んだら自身を記録する（深さ優先探索）
-		stk.push(s);
-	};
-
-	rep(i, n) {
-		// 未探索の頂点を見つけたら探索する．
-		if (status[i] == 0) {
-			trace(i);
-		}
-	}
-
-
-	// step2: 次に逆探索を行い，強連結成分を確定する．
-
-	// 逆探索用の再帰関数
-	function<void(int)> trace_rev = [&](int s) {
-		// 状態を逆探索済（2）にする．
-		status[s] = 2;
-
-		repe(t, g_rev[s]) {
-			// 未逆探索の頂点を探索しにいく．
-			if (status[t] == 1) {
-				trace_rev(t);
-			}
-		}
-
-		// 先の探索が済んだら自身を強連結成分の一員として記録する．
-		scc.rbegin()->push_back(s);
-	};
-
-	while (!stk.empty()) {
-		auto v = stk.top();
-		stk.pop();
-
-		// 新しい強連結成分を見つけたらそれをなぞりに行く．
-		if (status[v] == 1) {
-			scc.push_back(vi());
-			trace_rev(v);
-		}
-	}
-}
-
-
-//【頂点の縮約】O(|V| + |E| log |V|)
-/*
-* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として
-* 縮約したグラフを gc に格納する．
-*/
-void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
-	int n = sz(g);
-	int m = sz(p);
-
-	// id[v] : 頂点 v の属する成分
-	vi id(n);
-	rep(i, m) {
-		repe(v, p[i]) {
-			id[v] = i;
-		}
-	}
-
-	// 多重辺や自己ループを防ぐため一旦辺の集合を set でもつ．
-	vector<set<int>> gc_set(m);
-	rep(s, n) {
-		repe(t, g[s]) {
-			gc_set[id[s]].insert(id[t]);
-		}
-		gc_set[id[s]].erase(id[s]);
-	}
-
-	// 結果の格納
-	gc = Graph(m);
-	rep(s, m) {
-		repe(t, gc_set[s]) {
-			gc[s].push_back(t);
-		}
-	}
-}
-
-
-//【コスト最大パス（頂点コスト）】O(|V| + |E|)
-/*
-* 頂点コスト w の与えられた有向非巡回グラフ g のパス（長さ 0 も可）で，
-* パスに属する頂点のコストの和の最大値を返す．
+* 多項式を表す構造体
 *
-*（DAG 上の DP）
-*/
-ll highest_cost_path(const Graph& g, const vl& w) {
-	int n = sz(g);
-
-	// dp[s] : 頂点 s からの最大コスト
-	vl dp(n);
-	vb seen(n);
-
-	function<ll(int)> dfs = [&](int s) {
-		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) return dp[s];
-		seen[s] = true;
-
-		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		dp[s] = 0;
-		repe(t, g[s]) {
-			chmax(dp[s], dfs(t));
-		}
-		dp[s] += w[s];
-
-		return dp[s];
-	};
-
-	// 各頂点 s についての情報を計算する．
-	ll res = 0;
-	rep(s, n) {
-		chmax(res, dfs(s));
-	}
-
-	return res;
-}
-
-
-//【コスト最大パス（頂点コスト）】O(|V| + |E|)
-/*
-* 頂点コスト w の与えられた有向非巡回グラフ g の r からのパス（長さ 0 も可）で，
-* パスに属する頂点のコストの和を最大とするパスの頂点列を path に格納する．
-* またそのパスのコストを返す．
+* Polynomial() : O(1)
+*	零多項式 f = 0 で初期化する．
 *
-*（DAG 上の DP）
-*/
-ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
-	int n = sz(g);
-
-	// dp[s] : 頂点 s からの最大コスト
-	vl dp(n);
-	vb seen(n);
-	vi next(n, -1);
-
-	function<ll(int)> dfs = [&](int s) {
-		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) return dp[s];
-		seen[s] = true;
-
-		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		dp[s] = 0;
-		repe(t, g[s]) {
-			if (chmax(dp[s], dfs(t))) {
-				next[s] = t;
-			}
-		}
-		dp[s] += w[s];
-
-		return dp[s];
-	};
-
-	// r から探索
-	ll res = dfs(r);
-
-	// DP 復元
-	if (path != nullptr) {
-		path->clear();
-
-		for (int s = r; s != -1; s = next[s]) {
-			path->push_back(s);
-		}
-	}
-
-	return res;
-}
-
-
-//【コスト最大パスの組（頂点コスト）】O(|V| + |E|)
-/*
-* 頂点コスト w の与えられた有向非巡回グラフ g のパスの組で，
-* いずれかのパスに属している頂点のコストの和の最大値を返す．
+* Polynomial(c0) : O(1)
+*	定数多項式 f = c0 で初期化する．
 *
-*（グラフ上の DP）
+* Polynomial(c) : O(|c|)
+*	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
+*
+* c + f ／ f + c : O(1)
+*	多項式 f と定数 c の和を返す．+= も使用可．
+*
+* f - c : O(1)
+*	多項式 f と定数 c の差を返す．-= も使用可．
+*
+* c - f : O(n)
+*	定数 c と多項式 f の差を返す．
+*
+* f + g : O(n)
+*	多項式 f, g の和を返す．+= も使用可．
+*
+* -f : O(n)
+*	多項式 f の加法逆元を返す．
+*
+* f - g : O(n)
+*	多項式 f, g の差を返す．-= も使用可．
+*
+* c * f ／ f * c : O(n)
+*	多項式 f と定数 c の積を返す．*= も使用可．
+*
+* f / c : O(n)
+*	多項式 f を定数 c で割った多項式を返す．/= も使用可．
+*
+* f * g : O((n + m) log(n + m))
+*	多項式 f, g の積を返す．*= も使用可．（deg g = m）
+*	制約：T = ll, modint998244353
+*
+* f.pow(k) : O(n k log n log k) ?
+*	多項式 f の k 乗を返す．
+*	制約：T = ll, modint998244353
+*
+* f.inv(d) : O(n log n)
+*	多項式 f の x^d を法とする乗法逆元を返す．
+*	制約：f(0) ≠ 0, T = modint998244353
+*
+* f / g : O(n log n) 
+*	多項式 f を g で割った商を返す．
+*	制約：T = modint998244353
+*
+* f % g : O(n log n) 
+*	多項式 f を g で割った余りを返す．
+*	制約：T = modint998244353
+*
+* d % f : O(n log n log d) ?
+*	多項式 x^d を f で割った余りを返す．
+*	制約：T = modint998244353
+*
+* assign(v) : O(n)
+*	多項式 f の不定元 x に v を代入した値を返す．
+*
+* deg() : O(1)
+*	多項式 f の次数を返す．
 * 
-* 利用：【コスト最大パス（頂点コスト）】
+* shift(d) : O(n)
+*	係数列を d だけシフトした多項式を返す．
+*	（d >= 0 なら x^d の乗算，d < 0 なら x^(-d) で割った商と等価）
 */
-ll highest_cost_twinpath(const Graph& g, const vl& w) {
-	int n = sz(g);
+template <class T> struct Polynomial {
+	int n; // 多項式の係数の個数（次数 + 1）
+	vector<T> c; // 多項式の係数列
 
-	ll res = 0;
+	// コンストラクタ（零多項式，定数多項式，係数列で初期化）
+	Polynomial() : n(0) {}
+	Polynomial(const T& c0) : n(1), c({ c0 }) {}
+	Polynomial(const vector<T>& c_) : n(sz(c_)), c(c_) {}
 
-	rep(s, n) {
-		vi path;
-		ll sum = highest_cost_path(g, w, s, &path);
-		dump("------------------------");
-		dump(s);
-		dump(path);
-		dump(sum);
-		
-		vl nw = w;
-		repe(v, path) {
-			nw[v] = 0;
+	// 代入
+	Polynomial(const Polynomial& f) = default;
+	Polynomial& operator=(const Polynomial& f) = default;
+	Polynomial& operator=(const T& c0) { n = 1; c = { c0 }; return *this; }
+
+	// アクセス
+	T const& operator[](int i) const { return c[i]; }
+	T& operator[](int i) { return c[i]; }
+
+	// 加算
+	Polynomial& operator+=(const Polynomial& g) {
+		if (n >= g.n) {
+			rep(i, g.n) c[i] += g.c[i];
 		}
+		else {
+			rep(i, n) c[i] += g.c[i];
+			repi(i, n, g.n - 1)	c.push_back(g.c[i]);
+			n = g.n;
+		}
+		return *this;
+	}
+	Polynomial operator+(const Polynomial& g) const { Polynomial h = *this; h += g; return h; }
 
-		sum += highest_cost_path(g, nw);
-		dump(sum);
+	// 定数加算
+	Polynomial& operator+=(const T& sc) {
+		if (n == 0) { n = 1; c = { sc }; }
+		else { c[0] += sc; }
+		return *this;
+	}
+	Polynomial operator+(const T& sc) const { Polynomial h = *this; h += sc; return h; }
+	friend Polynomial operator+(const T& sc, const Polynomial& f) { return f + sc; }
 
-		chmax(res, sum);
+	// 加法逆元
+	Polynomial operator-() { Polynomial h = *this; h *= -1; return h; }
+
+	// 減算
+	Polynomial& operator-=(const Polynomial& g) {
+		if (n >= g.n) {
+			rep(i, g.n) c[i] -= g.c[i];
+		}
+		else {
+			rep(i, n) c[i] -= g.c[i];
+			repi(i, n, g.n - 1) c.push_back(-g.c[i]);
+			n = g.n;
+		}
+		return *this;
+	}
+	Polynomial operator-(const Polynomial& g) const { Polynomial h = *this; h -= g; return h; }
+
+	// 定数減算
+	Polynomial& operator-=(const T& sc) {
+		if (n == 0) { n = 1; c = { sc }; }
+		else { c[0] -= sc; }
+		return *this;
+	}
+	Polynomial operator-(const T& sc) const { Polynomial h = *this; h -= sc; return h; }
+	friend Polynomial operator-(const T& sc, const Polynomial& f) { return -(f - sc); }
+
+	// 定数倍
+	Polynomial& operator*=(const T& sc) {
+		rep(i, n) c[i] *= sc;
+		return *this;
+	}
+	Polynomial operator*(const T& sc) const { Polynomial h = *this; h *= sc; return h; }
+	friend Polynomial operator*(const T& sc, const Polynomial& f) { return f * sc; }
+
+	// 右からの定数除算
+	Polynomial& operator/=(const T& sc) {
+		rep(i, n) c[i] /= sc;
+		return *this;
+	}
+	Polynomial operator/(const T& sc) const { Polynomial h = *this; h /= sc; return h; }
+
+	// 積
+	Polynomial& operator*=(const Polynomial& g);
+	Polynomial operator*(const Polynomial& g) const { Polynomial h = *this; h *= g; return h; }
+
+	// 累乗
+	Polynomial pow(ll k) const {
+		Polynomial res(1), pow2 = *this;
+		while (k > 0) {
+			if ((k & 1) != 0) res *= pow2;
+			pow2 *= pow2;
+			k /= 2;
+		}
+		return res;
 	}
 
+	// 乗法逆元
+	Polynomial inv(int d) const;
+
+	// 商
+	Polynomial operator/(const Polynomial& g) const;
+	Polynomial& operator/=(const Polynomial& g) { return *this = *this / g; }
+
+	// 余り
+	Polynomial operator%(const Polynomial& g) const {
+		return (*this - (*this / g) * g).resize(g.n - 1);
+	}
+	Polynomial& operator%=(const Polynomial& g) { return *this = *this % g; }
+
+	// 係数反転
+	Polynomial rev() const {
+		Polynomial h = *this;
+		reverse(all(h.c));
+		return h;
+	}
+
+	// 不要な高次項の除去
+	Polynomial& resize() {
+		// 最高次の係数が非 0 になるまで削る．
+		while (n > 0 && c[n - 1] == 0) {
+			c.pop_back();
+			n--;
+		}
+		return *this;
+	}
+
+	// 高次項の除去
+	Polynomial& resize(int d) {
+		// x^d 以上の項を除去する．
+		n = d;
+		c.resize(d);
+		return *this;
+	}
+
+	// 不定元への代入
+	T assign(const T& x) const {
+		T val = 0;
+		repir(i, n - 1, 0) {
+			val = val * x + c[i];
+		}
+		return val;
+	}
+
+	// 次数
+	int deg() const { return n - 1; }
+
+	// 係数のシフト
+	Polynomial shift(int d) const {
+		Polynomial f = *this;
+		if (d > 0) {
+			f.n += d;
+			vector<T> zeros(d);
+			f.c.insert(f.c.begin(), zeros.begin(), zeros.end());
+		}
+		else if (d < 0) {
+			f.n -= d;
+			if (f.n <= 0) {
+				f.c.clear();
+				f.n = 0;
+			}
+			else {
+				f.c.erase(f.c.begin(), f.c.begin() - d);
+			}
+		}
+		return f;
+	}
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Polynomial& f) {
+		if (f.n == 0)
+			os << 0;
+		else {
+			rep(i, f.n) {
+				os << f.c[i] << "x^" << i;
+				if (i < f.n - 1) os << " + ";
+			}
+		}
+		return os;
+	}
+};
+
+// 積
+template <> inline Polynomial<ll>& Polynomial<ll>::operator*=(const Polynomial<ll>& g) {
+	c = convolution_ll(c, g.c);
+	n = sz(c);
+	return *this;
+}
+template <> inline Polynomial<modint998244353>& Polynomial<modint998244353>::operator*=(const Polynomial<modint998244353>& g) {
+	c = convolution(c, g.c);
+	n = sz(c);
+	return *this;
+}
+
+// 乗法逆元
+template <> Polynomial<modint998244353> Polynomial<modint998244353>::inv(int d) const {
+	// 参考：https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
+
+	//【方法】
+	// f^(-1) mod x^d を求めることは，
+	//		f g = 1 (mod x^d)
+	// なる g を求めることである．
+	// この d の部分を 1, 2, 4, ..., 2^i と倍々にして求めていく．
+	//
+	// d = 1 のときについては
+	//		g = f[0]^(-1) (mod x^1)
+	// である．
+	//
+	// 次に，
+	//		g = h (mod x^k)
+	// が求まっているとして
+	//		g mod x^(2 k)
+	// を求める．最初の式を変形していくことで
+	//		g - h = 0 (mod x^k)
+	//		⇒ (g - h)^2 = 0 (mod x^(2 k))
+	//		⇔ g^2 - 2 g h + h^2 = 0 (mod x^(2 k))
+	//		⇒ f g^2 - 2 f g h + f h^2 = 0 (mod x^(2 k))
+	//		⇔ g - 2 h + f h^2 = 0 (mod x^(2 k)) (f g = 1 (mod x^d) より)
+	//		⇔ g = (2 - f h) h (mod x^(2 k))
+	// を得る．
+	//
+	// この手順を d <= 2^i となる i まで繰り返し，d 次以上の項を削除すればよい．
+
+	Polynomial<modint998244353> g(c[0].inv());
+	for (int k = 1; k < d; k *= 2) {
+		g = (modint998244353(2) - *this * g) * g;
+		g.resize(2 * k);
+	}
+
+	return g.resize(d);
+}
+
+// 商
+template <> Polynomial<modint998244353> Polynomial<modint998244353>::operator/(const Polynomial<modint998244353>& g) const {
+	// 参考 : https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
+
+	//【方法】
+	// f(x) = g(x) q(x) + r(x) となる q(x) を求める．
+	// f の次数は n - 1, g の次数は m - 1 とする．(n >= m)
+	// 従って q の次数は n - m，r の次数は m - 2 となる．
+	// 
+	// f^R で f の係数列を逆順にした多項式を表す．すなわち
+	//		f^R(x) := f(1/x) x^(n-1)
+	// である．他の多項式も同様とする．
+	//
+	// 最初の式で x → 1/x と置き換えると，
+	//		f(1/x) = g(1/x) q(1/x) + r(1/x)
+	//		⇔ f(1/x) x^(n-1) = g(1/x) q(1/x) x^(n-1) + r(1/x) x^(n-1)
+	//		⇔ f(1/x) x^(n-1) = g(1/x) x^(m-1) q(1/x) x^(n-m) + r(1/x) x^(m-2) x^(n-m+1)
+	//		⇔ f^R(x) = g^R(x) q^R(x) + r^R(x) x^(n-m+1)
+	//		⇒ f^R(x) = g^R(x) q^R(x) (mod x^(n-m+1))
+	// 	    ⇒ q^R(x) = f^R(x) / g^R(x)  (mod x^(n-m+1))
+	// を得る．
+	// 	   
+	// これで q を mod x^(n-m+1) で正しく求めることができることになるが，
+	// q の次数は n - m であったから，q 自身を正しく求めることができた．
+
+	if (n >= g.n) {
+		return ((this->rev() * g.rev().inv(n - g.n + 1)).resize(n - g.n + 1)).rev();
+	}
+	else {
+		return Polynomial<modint998244353>();
+	}
+}
+
+// x^d % f を返す．
+Polynomial<modint998244353> operator%(ll d, const Polynomial<modint998244353>& f) {
+	Polynomial<modint998244353> res(1), pow2({ 0, 1 });
+	while (d > 0) {
+		if (d & 1) {
+			res = (res * pow2) % f;
+		}
+		pow2 = (pow2 * pow2) % f;
+		d /= 2;
+	}
 	return res;
 }
 
+
+//【微分】O(n)
+/*
+* f'(x) を返す．
+*/
+
+
+//【指数関数】O(n log n)
+/*
+* exp(f(x)) mod x^d を返す．
+* 
+* 制約：f(0) = 0
+*/
+Polynomial<modint998244353> exp(const Polynomial<modint998244353>& f, int d) {
+	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+
+	//【方法】
+	// g(x) = exp(f(x)) とおき，方程式
+	//		log g(x) = f(x)
+	// に対してニュートン法を用いる．
+	// 
+	// f(0) = 0 なので，mod x^1 では
+	//		log(1) ≡ f(x) mod x^1
+	// が成り立つ．
+	//
+	// mod x^k で
+	//		log h(x) ≡ f(x) mod x^k
+	// が成り立っていると仮定すると，ニュートン法より
+	//		g = h - (log h - f) / (log h)'
+	//   ⇔ g = h (f + 1 - log h)
+	// と置くと
+	//		log g(x) ≡ f(x) mod x^(2 k)
+	// が成り立つ．
+	//
+	// これを繰り返せば所望の g が求まる．
+
+	// ニュートン法で log g = f なる g を見つける．
+	Polynomial<modint998244353> g(1);
+	for (int k = 1; k < d; k *= 2) {
+		g = g * (f + 1 - log(g, 2 * k));
+		g.resize(2 * k);
+	}
+
+	return g;
+}
 
 int main() {
 	cout << fixed << setprecision(12);
-	input_from_file("input.txt");
+//	input_from_file("input.txt");
+//	output_to_file("output.txt");
 
-	int n;
-	cin >> n;
+	int n, m;
+	cin >> n >> m;
 
-	Graph g(n);
-	rep(s, n) {
-		rep(t, n) {
-			int e;
-			cin >> e;
+	vm a(n);
+	cin >> a;
 
-			if (e) g[s].push_back(t);
-//			if (e) g[t].push_back(s); // 逆グラフ入力用
-		}
+	Polynomial<mint> A(a);
+	bool find;
+	auto B = sqrt(A, n, find);
+	if (!find) {
+		cout << -1 << endl;
+		return 0;
 	}
-	dumpel(g);
 
-	////テストケース作成用
-	//int n = 10;
-	//Graph g(n);
-	//srand(time(0));
-	//rep(s, n) {
-	//	rep(t, n) {
-	//		int e = !(rand() % 13);
-	//		cout << e << " ";
-	//		if (e) g[s].push_back(t);
-	//	}
-	//	cout << endl;
-	//}
-
-	vvi scc;
-	strongly_connected_component_decomposition(g, scc);
-	dumpel(scc);
-
-	Graph gc;
-	vertex_contraction(g, scc, gc);
-	dumpel(gc);
-
-	int m = sz(gc);
-	vl w(m);
-	rep(i, m) w[i] = sz(scc[i]);
-	dump(w);
-
-	ll res = highest_cost_twinpath(gc, w);
-
-	//Graph gc_rev(m);
-	//rep(s, m) {
-	//	repe(t, gc[s]) {
-	//		gc_rev[t].push_back(s);
-	//	}
-	//}
-	//ll res2 = highest_cost_twinpath(gc_rev, w);
-	//dumps(res); dump(res2);
-
-	cout << res << endl;
+	rep(i, n) {
+		cout << B[i];
+		cout << (i < n - 1 ? " " : "\n");
+	}
 }

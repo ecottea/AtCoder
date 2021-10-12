@@ -4,6 +4,112 @@
 
 
 
+//y”˜_•ÏŠ·z
+/*
+* NTT() : O(1)
+*	‰Šú‰»‚ğs‚¤D
+*
+* ntt(const vi& a, vi& A) : O(n log n log n) ?
+*	’·‚³‚ª 2 ™p‚Ì—ñ a ‚É‘Î‚µ mod 998244353 ‚Å”˜_•ÏŠ·‚ğs‚Á‚½Œ‹‰Ê‚ğ A ‚ÉŠi”[‚·‚éD
+*
+* intt(const vi& A, vi& a) : O(n log n log n) ?
+*	’·‚³‚ª 2 ™p‚Ì—ñ A ‚É‘Î‚µ mod 998244353 ‚Å‹t”˜_•ÏŠ·‚ğs‚Á‚½Œ‹‰Ê‚ğ a ‚ÉŠi”[‚·‚éD
+*/
+struct NTT {
+	// Ql : https://qiita.com/Sen_comp/items/9401382df736e51564c1
+
+	using mint = modint998244353;
+	using vm = vector<mint>;
+
+	// root[i] : 1 ‚ÌŒ´n 2^i æªii … 23j
+	vm r, r_inv;
+
+	NTT() : r(24), r_inv(24) {
+		// 1 ‚ÌŒ´n 2^23 æª
+		// 998244353 = 2^23 * 119 + 1 ‚È‚Ì‚ÅCŒ´nª 3 ‚Ì 119 æ‚ğŒvZ‚·‚é‚±‚Æ‚Å‹‚Ü‚éD
+		r[23] = mint(3).pow(119);
+		r_inv[23] = r[23].inv();
+
+		repir(i, 22, 0) {
+			r[i] = r[i + 1LL] * r[i + 1LL];
+			r_inv[i] = r_inv[i + 1LL] * r_inv[i + 1LL];
+		}
+	}
+
+	// x ‚ğ (y, z) ‚É•ªŠ„‚·‚é
+	void butterfly(const vm& x, vm& y, vm& z) {
+		int n = sz(x) / 2;
+		y = z = vm(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[(ll)i + n];
+			z[i] = (x[i] - x[(ll)i + n]) * r[msb(n) + 1LL].pow(i); // ‚±‚±‚ª’x‚¢
+		}
+	}
+
+	// x ‚ğ (y, z) ‚É•ªŠ„‚·‚éi‹t•ÏŠ·—pj
+	void butterfly_inv(const vm& x, vm& y, vm& z) {
+		int n = sz(x) / 2;
+		y = z = vm(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[(ll)i + n];
+			z[i] = (x[i] - x[(ll)i + n]) * r_inv[msb(n) + 1LL].pow(i); // ‚±‚±‚ª’x‚¢
+		}
+	}
+
+	// (y, z) ‚ğ x ‚É“‡‚·‚é
+	void riffle(const vm& y, const vm& z, vm& x) {
+		int n = sz(y);
+		x = vm(2LL * n);
+
+		rep(i, n) {
+			x[2LL * i] = y[i];
+			x[2LL * i + 1] = z[i];
+		}
+	}
+
+	// ’·‚³‚ª 2 ™p‚Ì—ñ a ‚É‘Î‚µ mod 998244353 ‚Å”˜_•ÏŠ·‚ğs‚Á‚½Œ‹‰Ê‚ğ A ‚ÉŠi”[‚·‚éD
+	void ntt(const vm& a, vm& A) {
+		int n = sz(a);
+		if (n == 1) {
+			A = a;
+			return;
+		}
+
+		vm b, c, B, C;
+		butterfly(a, b, c);
+		ntt(b, B);
+		ntt(c, C);
+		riffle(B, C, A);
+	}
+
+	// ’·‚³‚ª 2 ™p‚Ì—ñ A ‚É‘Î‚µ mod 998244353 ‚Å‹t”˜_•ÏŠ·‚ğs‚Á‚½Œ‹‰Ê‚ğ a ‚ÉŠi”[‚·‚éD
+	void intt(const vm& A, vm& a) {
+		intt_sub(A, a);
+
+		// ’è””{‚Ì’²®
+		mint n_inv = mint(sz(A)).inv();
+		rep(i, sz(A)) {
+			a[i] *= n_inv;
+		}
+	}
+	void intt_sub(const vm& A, vm& a) {
+		int n = sz(A);
+		if (n == 1) {
+			a = A;
+			return;
+		}
+
+		vm b, c, B, C;
+		butterfly_inv(A, B, C);
+		intt_sub(B, b);
+		intt_sub(C, c);
+		riffle(b, c, a);
+	}
+};
+
+
 //y“Yš xor ‚Å‚Ìô‚İz
 /*
 * convolution_xor(a, b) : O(n log n)
