@@ -87,8 +87,8 @@ struct WTNode {
 
 	// o—Í
 	friend ostream& operator<<(ostream& os, const WTNode& v) {
-		os << "(p:" << v.parent << ", c:" << v.child << ", d:" << v.depth
-			<< ", d:" << v.dist << ", w:" << v.weight << ")";
+		os << "(par:" << v.parent << ", cld:" << v.child << ", dep:" << v.depth
+			<< ", dist:" << v.dist << ", wgt:" << v.weight << ")";
 		return os;
 	}
 };

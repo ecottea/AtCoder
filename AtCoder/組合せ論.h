@@ -16,7 +16,10 @@
 *	n! を返す．
 *
 * factorial_inv(n) : O(1)
-*	n! の逆元を返す．
+*	1 / n! を返す．
+* 
+* inv(n) : O(1)
+*	1 / n を返す．
 *
 * permutation(n, r) : O(1)
 *	順列の数 nPr を返す．
@@ -28,50 +31,43 @@
 *	多項係数 nC[r] を返す．（n = Σr）
 */
 struct factorial_mint {
-	// 階乗とその逆数の値を保持するテーブル
-	vm fac;
-	vm fac_inv;
+	// 階乗，階乗の逆数，逆数の値を保持するテーブル
+	vm fac, fac_inv, inv;
 
 	// n! までの階乗とその逆数を前計算しておく．O(n)
 	factorial_mint(int n) {
-		fac = vector<mint>(n + 1);
+		fac = vm(n + 1LL);
 		fac[0] = 1;
-		repi(i, 1, n) {
-			fac[i] = fac[i - 1] * i;
-		}
-
-		fac_inv = vector<mint>(n + 1);
+		repi(i, 1, n) fac[i] = fac[i - 1LL] * i;
+		
+		fac_inv = vm(n + 1LL);
 		fac_inv[n] = fac[n].inv();
-		repir(i, n - 1, 1) {
-			fac_inv[i] = fac_inv[i + 1] * (i + 1);
-		}
+		repir(i, n - 1, 1) fac_inv[i] = fac_inv[i + 1LL] * (i + 1);
 		fac_inv[0] = 1;
+
+		inv = vm(n + 1LL);
+		repi(i, 1, n) inv[i] = fac[i - 1LL] * fac_inv[i];
 	}
 
 	// n! を返す．O(1)
-	mint factorial(int n) {
-		return fac[n];
-	}
+	mint factorial(int n) { return fac[n]; }
 
-	// (n!)^(-1) を返す．O(1)
-	mint factorial_inv(int n) {
-		return fac_inv[n];
-	}
+	// 1 / n! を返す．O(1)
+	mint factorial_inv(int n) { return fac_inv[n]; }
+
+	// 1 / n を返す．O(1)
+	mint inv(int n) { return inv[n]; }
 
 	// 順列の数 nPr を返す．O(1)
 	mint permutation(int n, int r) {
-		if (r < 0 || n - r < 0) {
-			return 0;
-		}
-		return fac[n] * fac_inv[n - r];
+		if (r < 0 || n - r < 0) return 0;
+		return fac[n] * fac_inv[(ll)n - r];
 	}
 
 	// 二項係数 nCr を返す．O(1)
 	mint binomial(int n, int r) {
-		if (r < 0 || n - r < 0) {
-			return 0;
-		}
-		return fac[n] * fac_inv[r] * fac_inv[n - r];
+		if (r < 0 || n - r < 0) return 0;
+		return fac[n] * fac_inv[r] * fac_inv[(ll)n - r];
 	}
 
 	// 多項係数 nC[r] を返す．O(|r|)
@@ -79,15 +75,11 @@ struct factorial_mint {
 		int len = sz(r);
 
 		int sum = 0;
-		rep(i, len) {
-			sum += r[i];
-		}
-
+		rep(i, len) sum += r[i];
+		
 		mint res = fac[sum];
-		repe(ri, r) {
-			res *= fac_inv[ri];
-		}
-
+		repe(ri, r) res *= fac_inv[ri];
+		
 		return res;
 	}
 };

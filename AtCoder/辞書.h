@@ -96,7 +96,7 @@ struct Dynamic_dictionary {
 //【ウェーブレット行列】
 /*
 * Wavelet_matrix(a) : O(n)
-*	辞書を非負整数の多重集合 a で初期化する．
+*	辞書を非負整数列 a で初期化する．
 *
 * get(i) : O(log(max a))
 *	昇順で i 番目の要素を返す．

@@ -9,7 +9,7 @@
 /*
 * 二部グラフ (S, T) の最大マッチングを求める．
 *
-* bipartite_matching(n, m) : O(n + m)
+* Bipartite_matching(n, m) : O(n + m)
 *	S, T の要素数を n, m で初期化する．
 *
 * add_edge(s, t) : O(1)
@@ -29,13 +29,13 @@
 *	flow() の後に呼び出すこと．
 * 	es : 最小辺被覆に含まれる辺 {s, t} ∈ S×T のリスト
 */
-struct bipartite_matching {
+struct Bipartite_matching {
 	int n, m;
 	mf_graph<int> g;
 	int ST, GL;
 
 	// |S|, |T| を渡して初期化する．
-	bipartite_matching(int n_, int m_) : n(n_), m(m_) {
+	Bipartite_matching(int n_, int m_) : n(n_), m(m_) {
 		g = mf_graph<int>(n + m + 2);
 
 		// スタートとゴールおよびそれらとの間の辺を先に作っておく．

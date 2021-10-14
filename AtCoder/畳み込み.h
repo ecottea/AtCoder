@@ -10,10 +10,12 @@
 *	初期化を行う．
 *
 * ntt(const vi& a, vi& A) : O(n log n log n) ?
-*	長さが 2 冪の列 a に対し mod 998244353 で数論変換を行った結果を A に格納する．
+*	a に対し mod 998244353 で数論変換を行った結果を A に格納する．
 *
 * intt(const vi& A, vi& a) : O(n log n log n) ?
-*	長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
+*	A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
+* 
+* 制約 : n は 2 の冪乗
 */
 struct NTT {
 	// 参考 : https://qiita.com/Sen_comp/items/9401382df736e51564c1
@@ -120,6 +122,8 @@ struct NTT {
 *
 * ifwt_xor(A) : O(n log n)
 *   A を逆高速アダマール変換する．
+* 
+* 制約 : n は 2 の冪乗
 */
 template <typename T> void fwt_xor(vector<T>& f) {
     int n = sz(f);
@@ -166,6 +170,8 @@ template <typename T> vector<T> convolution_xor(vector<T> a, vector<T> b) {
 * ifwt_and(A) : O(n log n)
 *   a[j] = Σ_(i ⊃ j) (-1)^(i - j) A[i] なる a を返す．
 *  （上位集合での高速メビウス変換）
+* 
+* 制約 : n は 2 の冪乗
 */
 template <typename T> void fwt_and(vector<T>& f) {
     int n = sz(f);
@@ -210,6 +216,8 @@ template <typename T> vector<T> convolution_and(vector<T> a, vector<T> b) {
 * ifwt_or(A) : O(n log n)
 *   a[j] = Σ_(i ⊂ j) (-1)^(i - j) A[i] なる a を返す．
 *  （下位集合での高速メビウス変換）
+* 
+* 制約 : n は 2 の冪乗
 */
 template <typename T> void fwt_or(vector<T>& f) {
     int n = sz(f);

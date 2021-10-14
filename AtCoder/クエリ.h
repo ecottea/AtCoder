@@ -9,8 +9,11 @@
 * Mod_sum_query(a) : O(n)
 *	配列 a で初期化する．
 *
-* sum(m) : O(max(a) log(n) / m)
+* sum_mod(m) : O(max(a) log(n) / m)
 *	a[0..n) mod m の和を返す．
+* 
+* sum_lack(m) : O(max(a) log(n) / m)
+*	a[0..n) を m で割った不足の和を返す．
 */
 struct Mod_sum_query {
 	vi a;    // ★ a でなくバケツで累積和を持てば O(log n) を落とせる．
@@ -335,6 +338,7 @@ struct KDTree {
 /*
 * KDTrie(ps) : O(n log n)
 *	点と値の組の集合 ps[i] = {{x[i], y[i]}, val[i]} で初期化する．
+*	制約 : 点の座標は互いに異なる．
 *
 * sum(p1, p2) : O(log n)
 *	半開長方形 R = [p1, p2) 内の点の値の和を返す．
@@ -382,11 +386,17 @@ struct KDTrie {
 		}
 
 		// 要素をランダムに 2 k + 1 個選択し，それらの座標の中央値 median を得る．
-		const int k = 10;
-		vl cands(2 * k + 1);
-		rep(i, 2 * k + 1) { cands[i] = at(a, rnd() % (i1 - i0) + i0, d); }
-		sort(all(cands));
-		ll median = cands[k];
+		//const int k = 10;
+		//vl cands(2 * k + 1);
+		//rep(i, 2 * k + 1) { cands[i] = at(a, rnd() % (i1 - i0) + i0, d); }
+		//sort(all(cands));
+		//ll median = cands[k];
+
+		// 中央値を得る．
+		vl dat;
+		repi(i, i0, i1 - 1) dat.push_back(at(a, i, d));
+		sort(all(dat));
+		ll median = dat[(i1 - i0) / 2];
 
 		// median を閾値として用い，それ未満のものを左，以上のものを右に移動する．
 		int i = i0; // i : a[i0, i) が median 未満の要素と確定
@@ -403,9 +413,9 @@ struct KDTrie {
 		t = new Node(p1, p2, 0);
 		vl pm(2);
 		pm[d] = median;
-		pm[1 - d] = p2[1 - d];
+		pm[1LL - d] = p2[1LL - d];
 		t->val += split(t->left, p1, pm, a, i0, i, 1 - d);
-		pm[1 - d] = p1[1 - d];
+		pm[1LL - d] = p1[1LL - d];
 		t->val += split(t->right, pm, p2, a, i, i1, 1 - d);
 
 		return t->val;

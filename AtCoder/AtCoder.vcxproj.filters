@@ -61,7 +61,7 @@
     <Filter Include="ヘッダー ファイル\集合">
       <UniqueIdentifier>{4cbbb6b1-b0b0-4a8a-a58d-468e172956ee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\木">
+    <Filter Include="ヘッダー ファイル\グラフ%28木%29">
       <UniqueIdentifier>{f8544b87-ea9e-4cc5-9ac6-5603bbad8379}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -237,31 +237,34 @@
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="木.h">
-      <Filter>ヘッダー ファイル\木</Filter>
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="二分木.h">
-      <Filter>ヘッダー ファイル\木</Filter>
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="根付き木.h">
-      <Filter>ヘッダー ファイル\木</Filter>
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="構造(木).h">
-      <Filter>ヘッダー ファイル\木</Filter>
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="木DP.h">
-      <Filter>ヘッダー ファイル\木</Filter>
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="全方位木DP.h">
-      <Filter>ヘッダー ファイル\木</Filter>
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="bitDP(グラフ).h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
     <ClInclude Include="二乗の木DP.h">
-      <Filter>ヘッダー ファイル\木</Filter>
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="部分列DP.h">
       <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

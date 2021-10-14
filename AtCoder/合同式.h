@@ -29,7 +29,7 @@ int ord(const mint& a) {
 }
 
 
-//【原始根】O(√mod)
+//【原始根】O(√p)
 /*
 * 素数の法 p における原始根を 1 つ返す．
 * 
@@ -60,9 +60,11 @@ int find_primitive_root() {
 }
 
 
-//【離散対数問題／baby-step giant-step】O(√mod)
+//【離散対数問題／baby-step giant-step】O(√p)
 /*
-* a^x = b の解 x >= 0 を 1 つ返す．（なければ -1）
+* a^x = b mod p の最小解 x >= 0 を返す．（なければ -1）
+*
+* 制約 : p = mint::mod() は素数
 *
 *（平方分割）
 */
@@ -70,7 +72,7 @@ int log(const mint& a, mint b) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/baby-step-giant-step.html
 
 	//【方法】
-	// m = ceil(√mod)，r = a^(-m) とおく．
+	// m = ceil(√p)，r = a^(-m) とおく．
 	// 
 	// まず 0 <= x < m の範囲の x について a^x を計算した集合 S を得る．
 	// S の中に b に一致するものがあればそれでよい．
@@ -92,24 +94,20 @@ int log(const mint& a, mint b) {
 
 	// a = 0 の場合の例外処理
 	if (a == 0) {
-		if (b == 0) {
-			return 1;
-		}
-		else {
-			return -1;
-		}
+		if (b == 0) return 1; // 0^0 = 1 とする．
+		else return -1;
 	}
 
 	// loga[a^i] = i を計算しておく．
-	unordered_map<int, int> loga = { {1, 0} };
-	mint p = 1;
-	repi(i, 1, m - 1) {
-		p *= a;
+	unordered_map<int, int> loga;
+	mint p = a.pow(m), a_inv = a.inv();
+	repir(i, m - 1, 0) {
+		p *= a_inv;
 		loga[p.val()] = i;
 	}
 
 	// r = a^(-m)
-	mint r = a.pow(m).inv();
+	mint r = a_inv.pow(m);
 
 	// 方程式の両辺に r = a^(-m) を掛けながら解を探していく．
 	rep(i, m) {
@@ -124,9 +122,11 @@ int log(const mint& a, mint b) {
 }
 
 
-//【平方剰余／トネリ－シャンクスのアルゴリズム】O(√mod)
+//【平方剰余／トネリ－シャンクスのアルゴリズム】O(√p)
 /*
-* x^2 = a の解 x の一方を返す．（なければ -1）
+* x^2 = a mod p の解 x の一方を返す．（なければ -1）
+*
+* 制約 : p = mint::mod() は素数
 */
 int sqrt(const mint& a) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/tonelli-shanks.html
@@ -134,7 +134,7 @@ int sqrt(const mint& a) {
 	//【方法】
 	// p = mod, p - 1 = 2^d q（q : 奇数）と表しておく．
 	// 
-	// 乱数を用いて適当な平方非剰余 z を見つける．
+	// 適当な平方非剰余 z を見つける．
 	// オイラーの基準より，
 	//		z が平方非剰余 ⇔ z^((p-1)/2) = -1
 	// である．
@@ -155,16 +155,13 @@ int sqrt(const mint& a) {
 	// と表されるから，2 のべきを 1 つ小さくしながら途中計算することにより，
 	// 先の計算と同時に x を得ることができる．
 
+	// 法 p を得る．
+	const int p = mint::mod();
 
-	// 初回は乱数のシードを時刻で初期化する．
-	static bool fc = true;
-	if (fc) {
-		srand((unsigned)time(NULL));
-		fc = false;
-	}
+	// p = 2 の場合の例外処理
+	if (p == 2) return a.val();
 
 	// a が平方非剰余なら -1 を返す．
-	const int p = mint::mod();
 	if (a.pow((p - 1) / 2) == -1) {
 		return -1;
 	}
@@ -177,9 +174,9 @@ int sqrt(const mint& a) {
 	}
 
 	// 適当な平方非剰余 z を見つける．
-	mint z = rand();
+	mint z = 2;
 	while (z.pow((p - 1) / 2) == 1) {
-		z = rand();
+		z += 1;
 	}
 
 	// t を更新しつつ結果を得る．

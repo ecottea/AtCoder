@@ -5,10 +5,46 @@
 
 
 
+//【連結成分分解】O(|V| + |E|)
+/*
+* 無向グラフ g を連結成分分解し，結果を cc に返す．
+* cc[i] は i 番目の連結成分の頂点からなるリストである．
+*/
+void connected_component(const Graph& g, vvi& cc) {
+	int n = sz(g);
+	cc.clear();
+
+	vb seen(n);
+
+	function<void(int, int)> dfs = [&](int s, int p) {
+		if (seen[s]) return;
+		seen[s] = true;
+
+		cc.rbegin()->push_back(s);
+
+		for (auto t : g[s]) {
+			if (t == p) continue;
+
+			dfs(t, s);
+		}
+	};
+
+	// 適当な点を始点として DFS を行う．
+	rep(s, n) {
+		if (seen[s]) continue;
+
+		cc.push_back(vi());
+		dfs(s, -1);
+	}
+}
+
+
 //【トポロジカルソート】O(|V| + |E|)
 /*
 * 有向グラフ g をトポロジカルソートした結果を seq に返す．
 * g が閉路を持っている場合は失敗し，seq.size() < g.size() となる．
+* 
+*（葉からの幅優先探索）
 */
 void topological_sort(const Graph& g, vi& seq) {
 	int n = sz(g);
@@ -31,14 +67,14 @@ void topological_sort(const Graph& g, vi& seq) {
 
 	seq.clear();
 	while (!q.empty()) {
-		auto v = q.front();
+		auto s = q.front();
 		q.pop();
 
 		// 入次数が 0 の頂点を見つけ結果に格納する．
-		seq.push_back(v);
+		seq.push_back(s);
 
-		repe(t, g[v]) {
-			// 頂点 t を取り除き，入次数を更新する．
+		repe(t, g[s]) {
+			// 頂点 s を取り除き，t の入次数を更新する．
 			in_degree[t]--;
 
 			// 新たに入次数 0 の頂点が生まれたらキューに追加する．
@@ -50,12 +86,64 @@ void topological_sort(const Graph& g, vi& seq) {
 }
 
 
+//【葉の削除回数】O(|V|)
+/*
+* 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納する．
+*
+*（葉からの幅優先探索）
+*/
+void leaf_remove_level(const Graph& g, vi& lv) {
+	int n = sz(g);
+	lv = vi(n);
+
+	// 木が 1 頂点のみで次数 1 の頂点が存在しない場合の例外処理
+	if (n == 1) {
+		lv[0] = 0;
+		return;
+	}
+
+	// 次数を求めておく．
+	vi degree(n);
+	rep(i, n) {
+		repe(t, g[i]) {
+			degree[t]++;
+		}
+	}
+
+	// 次数が 1 の頂点から順に取り除いていく．
+	queue<pii> q;
+	rep(i, n) {
+		if (degree[i] == 1) {
+			q.push({ i, 0 });
+		}
+	}
+
+	while (!q.empty()) {
+		int s, d;
+		tie(s, d) = q.front();
+		q.pop();
+
+		lv[s] = d;
+
+		repe(t, g[s]) {
+			// 頂点 s を取り除き，t の次数を更新する．
+			degree[t]--;
+
+			// 新たに次数 1 の頂点が生まれたらキューに追加する．
+			if (degree[t] == 1) {
+				q.push({ t, d + 1 });
+			}
+		}
+	}
+}
+
+
 //【強連結成分分解】O(|V| + |E|)
 /*
 * 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を scc に返す．
 * scc[i] は i 番目の強連結成分の頂点からなるリストである．
 */
-void strongly_connected_component_decomposition(const Graph& g, vvi& scc) {
+void strongly_connected_component(const Graph& g, vvi& scc) {
 	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
 
 	int n = sz(g);
@@ -175,7 +263,7 @@ void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
 * g : 有向グラフ
 * cycles[i] : 検出した i 番目の閉路の頂点番号を順に格納したリスト
 */
-bool cycle_partition(const Graph& g_, vvi& cycles) {
+bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
 	int n = sz(g_);
 	cycles.clear();
 
@@ -251,15 +339,14 @@ bool cycle_partition(const Graph& g_, vvi& cycles) {
 }
 
 
-//【無向グラフの閉路検出】O(|V| + |E|)
+//【無向グラフの閉路抽出】O(|V| + |E|)
 /*
 * 無向グラフ g の閉路を何か 1 つ見つける．
 *
 * g : 無向グラフ
 * cycle : 検出した閉路の頂点番号を順に格納したリスト（閉路なしなら空リスト）
 */
-template <class G>
-void cycle_detection(const G& g, vi& cycle) {
+template <class G> void cycle_detection(const G& g, vi& cycle) {
 	int n = sz(g);
 
 	vb seen(n);
@@ -325,6 +412,106 @@ void cycle_detection(const G& g, vi& cycle) {
 }
 
 
+//【有向グラフの閉路抽出】O(|V| + |E|)
+/*
+* 有向グラフ g の閉路を何か 1 つ見つける．
+*
+* g : 有向グラフ
+* cycle : 検出した閉路の頂点番号を順に格納したリスト（閉路なしなら空リスト）
+*
+* 利用：【強連結成分分解】
+*/
+template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
+	int n = sz(g);
+	cycle.clear();
+
+	// 注目している強連結成分に含まれる頂点の集合
+	set<int> valid;
+
+	function<void(void)> ikiatari_battari = [&]() {
+		vb seen(n);
+
+		// 深さ優先探索用の関数
+		// s : 注目頂点
+		// 戻り値 : 逆順に検出した閉路の末端（-1: 未検出，-2: 抽出完了）
+		function<int(int)> dfs = [&](int s) {
+			// 注目している強連結成分に含まれる頂点でなければすぐに帰る．
+			if (!valid.count(s)) return -1;
+
+			// 既に訪れたことのある頂点に辿り着いたら閉路を検出したことになる．
+			if (seen[s]) {
+				cycle.push_back(s);
+				return s;
+			}
+			seen[s] = true;
+
+			// s から辿れる頂点 t それぞれについて
+			repe(t, g[s]) {
+				// t に対して深さ優先探索を行う．
+				auto end = dfs(t);
+
+				// 閉路が検出できなかったなら何もせず次の t を考える．
+				if (end == -1) {
+					continue;
+				}
+
+				// s が検出した閉路の末端であれば，閉路の記録をここで終わる．
+				if (end == s || end == -2) {
+					return -2;
+				}
+
+				// 検出した閉路を逆順に記録していく．
+				if (end >= 0) {
+					cycle.push_back(s);
+				}
+
+				return end;
+			}
+
+			return -1;
+		};
+
+		// 各頂点 v について
+		rep(v, n) {
+			// 既になぞった連結成分に属する頂点なら何もしない．
+			if (seen[v]) {
+				continue;
+			}
+
+			// v から深さ優先探索を始める．
+			int end = dfs(v);
+
+			// 閉路を検出していたら終了．
+			if (end != -1) {
+				// 逆順に検出しているので正順に戻す．
+				reverse(all(cycle));
+
+				return;
+			}
+		}
+	};
+
+	// まず強連結成分分解する．
+	vvi scc;
+	strongly_connected_component(g, scc);
+
+	// 各強連結成分 vs について
+	repe(vs, scc) {
+		// 大きさ 2 以上の強連結成分 vs があれば閉路がある．
+		if (sz(vs) > 1) {
+			// 通っても良い頂点の集合に vs の頂点を記録する．
+			repe(v, vs) {
+				valid.insert(v);
+			}
+
+			// vs 内なら行き止まりがないので，行きあたりばったりで閉路検出ができる．
+			ikiatari_battari();
+			return;
+		}
+	}
+}
+
+
 //【二部グラフ判定】O(|E|)
 /*
 * 連結無向グラフが二部グラフかどうか判定する．
@@ -367,7 +554,11 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 
 //【グラフの関節点と橋】O(|V| + |E|)
 /*
-* グラフ g の関節点のリストを a に，橋のリストを b に格納する．
+* 無向グラフ g の関節点のリストを a に，橋のリストを b に格納する．
+*	関節点：その頂点を取り除くとグラフの連結成分が 1 つ増える頂点
+*	橋：その辺を取り除くとグラフの連結成分が 1 つ増える辺
+*
+* 制約：多重辺なし
 *
 * a[i] : i 番目に見つけた関節点の頂点番号
 * b[i] = {s, e} : i 番目に見つけた橋の始点が s，終点への辺が e
@@ -387,6 +578,7 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 	a.clear();
 	b.clear();
 	int time = 0;
+	int r; // 暫定的な根
 
 	// in, low を定める再帰用の関数
 	function<void(int, int)> dfs = [&](int s, int p) {
@@ -395,13 +587,13 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 		low[s] = in[s];
 		seen[s] = true;
 
-		bool ap = false;
-		int ccnt = 0;
+		bool ap = false; // 関節点か
+		int ccnt = 0; // 子の個数
+
 		for (auto t : g[s]) {
-			// 親には戻らない．
-			if (t == p) {
-				continue;
-			}
+			// 親に戻る辺と自己ループは通らない．
+			// （自己ループは連結性に影響を与えないので無視できる）
+			if (t == p || t == s) continue;
 
 			// t を既に訪れていた場合
 			if (seen[t]) {
@@ -428,7 +620,7 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 		}
 
 		// 根の場合の例外処理
-		if (s == 0) {
+		if (s == r) {
 			ap = (ccnt >= 2);
 		}
 
@@ -438,8 +630,49 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 		}
 	};
 
-	// 適当な点を始点として DFS を行う．
-	dfs(0, -1);
+	// 適当な点を根（始点）として DFS を行う．
+	rep(s, n) {
+		if (seen[s]) continue;
+
+		r = s;
+		dfs(r, -1);
+	}
+}
+
+
+//【二辺連結成分分解】O(|V| + |E| log|V|)
+/*
+* 無向グラフ g を二辺連結成分分解し，結果を tecc に返す．
+* tecc[i] は i 番目の二辺連結成分の頂点からなるリストである．
+*
+* 利用：【グラフの関節点と橋】，【連結成分分解】
+*/
+void two_edge_connected_component(const Graph& g, vvi& tecc) {
+	int n = sz(g);
+
+	vi a;
+	vector<pii> b;
+	lowlink(g, a, b);
+
+	vector<set<int>> bridges(n);
+	repe(e, b) {
+		bridges[e.first].insert(e.second);
+		bridges[e.second].insert(e.first);
+	}
+
+	Graph g2(n);
+	rep(s, n) {
+		repe(t, g[s]) {
+			if (bridges[s].count(t)) {
+				bridges[s].erase(t);
+			}
+			else {
+				g2[s].push_back(t);
+			}
+		}
+	}
+
+	connected_component(g2, tecc);
 }
 
 

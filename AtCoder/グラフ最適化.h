@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "探索(グラフ).h"
 #include "マッチング.h"
 #include "ビット全探索.h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
@@ -72,6 +73,76 @@ LOOP_END:;
 		} while (t != st);
 
 		(*path)[0] = st;
+	}
+
+	return d;
+}
+
+
+//【コスト最小パス】O(|E| log|V|)
+/*
+* 非負のコスト付きグラフ g の始点 st から終点 gl までのコスト最小パスのコストを返す．
+* gl = st ならコスト最小サイクルのコストを返す．到達不能なら INFL を返す．
+* 必要なら path にコスト最小パス上の頂点の列を格納する．
+*
+*（ダイクストラ法）
+*/
+ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
+	int n = sz(g);
+
+	vl cost(n, INFL); // st からの最小コストを保持するテーブル
+	vi parent(n); // 1 つ手前の頂点を記録しておくテーブル（復元用）
+
+	// 組 (スタートからのコスト, 頂点番号, 直前の頂点) を入れる優先度付きキューを用意する．
+	// スタートからのコストがより小さいものを優先的に取り出す．
+	priority_queue_rev<tuple<ll, int, int>> que;
+	que.push({ 0, st, -1 });
+
+	while (!que.empty()) {
+		ll c; int s, p;
+		tie(c, s, p) = que.top();
+		que.pop();
+
+		// もし既に最小コストが求まっているなら何もしない．
+		if (c >= cost[s]) {
+			continue;
+		}
+
+		// 最小コストの決定
+		// 優先度付きキューでコストの小さい順に取り出しており，
+		// かつコストが非負より三角不等式が成立するので最短の保証がある．
+		cost[s] = (s == st && st == gl && p == -1) ? INFL : c;
+		parent[s] = p;
+
+		// ゴールに辿り着いたなら終了
+		if (s == gl && !(st == gl && p == -1)) goto LOOP_END;
+
+		// そこから移動できるノードについての情報をキューに追加する．
+		for (auto e : g[s]) {
+			que.push({ c + e.cost, e.to, s });
+		}
+	}
+LOOP_END:;
+
+	// st から gl まで到達不能の場合
+	ll d = cost[gl];
+	if (d == INFL) {
+		return INFL;
+	}
+
+	// 必要なら経路復元を行う．
+	if (path != nullptr) {
+		path->clear();
+
+		int t = gl;
+
+		do {
+			path->push_back(t);
+			t = parent[t];
+		} while (t != st);
+
+		path->push_back(st);
+		reverse(all(*path));
 	}
 
 	return d;

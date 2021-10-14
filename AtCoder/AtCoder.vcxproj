@@ -146,6 +146,7 @@
   <ItemGroup>
     <ClInclude Include="bitDP(グラフ).h" />
     <ClInclude Include="bitDP.h" />
+    <ClInclude Include="FPS.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="クエリ.h" />

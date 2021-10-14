@@ -24,8 +24,7 @@
 */
 pli op1(pli a, pli b) { return min(a, b); } // segtree用
 pli e1() { return { INFL, -1 }; }
-template <class TREE>
-struct Lowest_common_ancestor {
+template <class TREE> struct Lowest_common_ancestor {
 	TREE rt;
 
 	// オイラーツアーの結果の記録用
@@ -87,11 +86,9 @@ struct Lowest_common_ancestor {
 * sum(v) : O(log |V|)
 *	根 r から v までの辺の値の和を返す．
 *
-* 利用：
-*	【木のオイラーツアー】
+* 利用：【木のオイラーツアー】
 */
-template <class T>
-struct Path_sum_query {
+template <class T> struct Path_sum_query {
 	// 参考：https://perogram.hateblo.jp/entry/2020/10/01/034136
 
 	// オイラーツアーの結果の記録用

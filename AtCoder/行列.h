@@ -145,8 +145,7 @@ struct Matrix {
 * 行基本変形で mat を階段行列に変形する．
 * 最も右下のピボットの位置 (i, j) を返す．零行列なら (-1, -1) を返す．
 */
-template <class T>
-pii row_echelon_form(Matrix<T>& mat) {
+template <class T> pii row_echelon_form(Matrix<T>& mat) {
 	auto m = mat.m;
 	auto n = mat.n;
 	auto& v = mat.v;
@@ -160,9 +159,7 @@ pii row_echelon_form(Matrix<T>& mat) {
 	while (i < m && j < n) {
 		// 同じ列の下方の行から非 0 成分を見つける．
 		int k = i;
-		while (k < m && v[k][j] == 0) {
-			k++;
-		}
+		while (k < m && v[k][j] == 0) k++;
 
 		// 見つからなかったら注目位置を右に移す．
 		if (k == m) {
@@ -173,26 +170,22 @@ pii row_echelon_form(Matrix<T>& mat) {
 		// 見つかったら i 行目とその行を入れ替える．
 		pi = i;
 		pj = j;
-		swap(v[i], v[k]);
+		if (i != k) swap(v[i], v[k]);
 
 		// v[i][j] が 1 になるよう行全体を v[i][j] で割る．
 		T div = v[i][j];
-		repi(t, j, n - 1) {
-			v[i][t] /= div;
-		}
-
+		repi(t, j, n - 1) v[i][t] /= div;
+		
 		// v[i][j] より下方の行の成分が全て 0 になるよう i 行目を定数倍して減じる．
 		repi(k, i + 1, m - 1) {
 			T mul = v[k][j];
-			repi(t, j, n - 1) {
-				v[k][t] -= v[i][t] * mul;
-			}
+			repi(t, j, n - 1) v[k][t] -= v[i][t] * mul;
 		}
 
 		// 注目位置を右下に移す．
-		i++;
-		j++;
+		i++; j++;
 	}
+
 	return { pi, pj };
 }
 
@@ -201,14 +194,9 @@ pii row_echelon_form(Matrix<T>& mat) {
 /*
 * 正方行列 mat の行列式を返す．
 */
-template <class T>
-T determinant(Matrix<T>& mat) {
-	auto m = mat.m;
+template <class T> T determinant(Matrix<T>& mat) {
 	auto n = mat.n;
 	auto& v = mat.v;
-
-	// 直前に見つけたピボットの位置
-	int pi = -1, pj = -1;
 
 	// 注目位置を (i, j)（i 行目かつ j 列目）とする．
 	int i = 0, j = 0;
@@ -216,47 +204,36 @@ T determinant(Matrix<T>& mat) {
 	// 行列式の値
 	T res = 1;
 
-	while (i < m && j < n) {
+	while (i < n && j < n) {
 		// 同じ列の下方の行から非 0 成分を見つける．
 		int k = i;
-		while (k < m && v[k][j] == 0) {
-			k++;
-		}
+		while (k < n && v[k][j] == 0) k++;
 
 		// 見つからなかったら零列ベクトルを含むので行列式は 0 である．
-		if (k == m) {
-			return T(0);
-		}
+		if (k == n) return T(0);
 
 		// 見つかったら i 行目とその行を入れ替える．
-		// パリティの異なる行の入れ替えをすると行列式の値が -1 倍になる．
-		pi = i;
-		pj = j;
-		swap(v[i], v[k]);
-		if (i % 2 != k % 2) {
+		// 行列式の値は -1 倍しておく．
+		if (k != i) {
+			swap(v[i], v[k]);
 			res *= T(-1);
 		}
 
 		// v[i][j] が 1 になるよう行全体を v[i][j] で割る．
 		// 行列式の値は v[i][j] 倍しておく．
 		T div = v[i][j];
-		repi(t, j, n - 1) {
-			v[i][t] /= div;
-		}
+		repi(t, j, n - 1) v[i][t] /= div;
 		res *= div;
 
 		// v[i][j] より下方の行の成分が全て 0 になるよう i 行目を定数倍して減じる．
 		// 行列式の値は変化しない．
-		repi(k, i + 1, m - 1) {
+		repi(k, i + 1, n - 1) {
 			T mul = v[k][j];
-			repi(t, j, n - 1) {
-				v[k][t] -= v[i][t] * mul;
-			}
+			repi(t, j, n - 1) v[k][t] -= v[i][t] * mul;
 		}
 
 		// 注目位置を右下に移す．
-		i++;
-		j++;
+		i++; j++;
 	}
 
 	return res;
@@ -268,8 +245,7 @@ T determinant(Matrix<T>& mat) {
 * 正方行列 mat の逆行列が存在すればそれを mat_inv に格納する．
 * また存在する場合は true，存在しない場合は false を返す．
 */
-template <class T>
-bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
+template <class T> bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
 	int m = mat.m;
 
 	// 元の行列 mat と単位行列を繋げた拡大行列を作る．
@@ -294,9 +270,7 @@ bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
 	while (i < m && j < n) {
 		// 同じ列の下方の行から非 0 成分を見つける．
 		int k = i;
-		while (k < m && v[k][j] == 0) {
-			k++;
-		}
+		while (k < m && v[k][j] == 0) k++;
 
 		// 見つからなかったら注目位置を右に移す．
 		if (k == m) {
@@ -307,37 +281,28 @@ bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
 		// 見つかったら i 行目とその行を入れ替える．
 		pi = i;
 		pj = j;
-		swap(v[i], v[k]);
+		if(i != k) swap(v[i], v[k]);
 
 		// v[i][j] が 1 になるよう行全体を v[i][j] で割る
 		T div = v[i][j];
-		repi(t, j, n - 1) {
-			v[i][t] /= div;
-		}
-
+		repi(t, j, n - 1) v[i][t] /= div;
+		
 		// v[i][j] と同じ列の成分が全て 0 になるよう i 行目を定数倍して減じる．
 		rep(k, m) {
 			// i 行目だけは引かない．
-			if (k == i) {
-				continue;
-			}
-
+			if (k == i) continue;
+			
 			T mul = v[k][j];
-			repi(t, j, n - 1) {
-				v[k][t] -= v[i][t] * mul;
-			}
+			repi(t, j, n - 1) v[k][t] -= v[i][t] * mul;
 		}
 
 		// 注目位置を右下に移す．
-		i++;
-		j++;
+		i++; j++;
 	}
 
 	// mat が単位行列になっていれば，最後に発見したピボットの位置は (n-1, n-1)．
 	// そうなっていなければ mat は正則ではないので false を返す．
-	if (pi != m - 1 || pj != m - 1) {
-		return false;
-	}
+	if (pi != m - 1 || pj != m - 1) return false;
 
 	// 拡大行列の右半分が mat の逆行列なのでコピーする．
 	mat_inv = Matrix<T>(m, m);
