@@ -103,8 +103,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-//using mint = modint1000000007;
-using mint = modint998244353;
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
@@ -115,7 +115,7 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
 
 
-//【形式的冪級数（mod 998244353）】
+//【形式的冪級数（mint）】
 /*
 * FPS() : O(1)
 *	零多項式 f = 0 で初期化する．
@@ -131,22 +131,22 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 *
 * c + f, f + c : O(1)	f + g : O(n)
 * f - c : O(1)			c - f, f - g, -f : O(n)
-* c * f, f * c : O(n)	f * g : O(n log n)		f * g_sp : O(n k)（k : g の項数）
-* f / c : O(n)			f / g : O(n log n)		f / g_sp : O(n k)（k : g の項数）
+* c * f, f * c : O(n)	f * g : O(n^2)		f * g_sp : O(n k)（k : g の項数）
+* f / c : O(n)			f / g : O(n^2)		f / g_sp : O(n k)（k : g の項数）
 *	形式的冪級数としての和，差，積，商の結果を返す．
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *	制約 : 商では g(0) ≠ 0
 *
-* f.inv(d) : O(n log n)
+* f.inv(d) : O(n^2)
 *	1 / f mod x^d を返す．
 *	制約 : f(0) ≠ 0
 *
-* f.quotient(g) : O(n log n)
-* f.reminder(g) : O(n log n)
-* f.quotient_remainder(g) : O(n log n)
+* f.quotient(g) : O(n^2)
+* f.reminder(g) : O(n^2)
+* f.quotient_remainder(g) : O(n^2)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
 *
-* f.pow(k, d) : O(n log n)
+* f.pow(k, d) : O(n^2)
 *	f(x)^k mod x^d を返す．
 *
 * f.deg(), f.size() : O(1)
@@ -168,7 +168,7 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 *	係数列を d だけ右[左]シフトした多項式を返す．
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
-* power_mod(f, d, g) : O(m log m log d)　（m = deg g）
+* power_mod(f, d, g) : O(m^2 log d)　（m = deg g）
 *	f(x)^d % g(x) を返す．
 *
 * derivative(f) : O(n)
@@ -177,16 +177,15 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 * integral(f) : O(n)
 *	∫ f(x) dx を返す．（定数項は 0 とする）
 *
-* log(f, d) : O(n log n)
+* log(f, d) : O(n^2)
 *	log f(x) mod x^d を返す．
 *	制約 : f(0) = 1
 *
-* exp(f, d) : O(n log n)
+* exp(f, d) : O(n^2)
 *	exp f(x) mod x^d を返す．
 *	制約 : f(0) = 0;
 */
 struct FPS {
-	using mint = modint998244353;
 	using vm = vector<mint>;
 	using SFPS = vector<pair<int, mint>>;
 
@@ -277,7 +276,26 @@ struct FPS {
 	FPS operator/(const int& sc) const { return FPS(*this) /= sc; }
 
 	// 積
-	FPS& operator*=(const FPS& g) { c = convolution(c, g.c); n = sz(c); return *this; }
+	FPS& operator*=(const FPS& g) {
+		int m = g.deg();
+		resize(n + m);
+
+		// 後ろからインライン配る DP
+		repir(i, n - 1, 0) {
+			// 上位項に係数倍して配っていく．
+			repi(j, 1, m) {
+				
+				if (i + j >= n) break;
+
+				c[(ll)i + j] += c[i] * g[j];
+			}
+
+			// 定数項は最後に配るか消去しないといけない．
+			c[i] *= g[0];
+		}
+
+		return *this;
+	}
 	FPS operator*(const FPS& g) const { return FPS(*this) *= g; }
 
 	// 除算
@@ -346,12 +364,12 @@ struct FPS {
 		// q の次数は n - m であったから，q 自身を正しく求めることができた．
 
 		if (n < g.n) return FPS();
-		return ((this->rev() * g.rev().inv(n - g.n + 1)).resize(n - g.n + 1)).rev();
+		return ((this->rev() / g.rev()).resize(n - g.n + 1)).rev();
 	}
-	FPS reminder(const FPS& g) const { return (*this - (*this / g) * g).resize(g.n - 1); }
+	FPS reminder(const FPS& g) const { return (*this - this->quotient(g) * g).resize(g.n - 1); }
 	pair<FPS, FPS> quotient_remainder(const FPS& g) const {
 		pair<FPS, FPS> res;
-		res.first = *this / g;
+		res.first = this->quotient(g);
 		res.second = (*this - res.first * g).resize(g.n - 1);
 		return res;
 	}
@@ -381,7 +399,7 @@ struct FPS {
 			// 定数項は最後に配るか消去しないといけない．
 			c[i] *= g0;
 		}
-		
+
 		return *this;
 	}
 	FPS operator*(const SFPS& g) const { return FPS(*this) *= g; }
@@ -393,10 +411,10 @@ struct FPS {
 		assert(it0->first == 0 && it0->second != 0);
 		mint g0_inv = it0->second.inv();
 		it0++;
-		
+
 		// 前からインライン配る DP（後ろに累積効果あり）
 		rep(i, n) {
-		
+
 			// 定数項は最初に配らないといけない．
 			c[i] *= g0_inv;
 
@@ -443,37 +461,20 @@ struct FPS {
 		return val;
 	}
 
-	// 単項式
-	friend FPS monomial(int d) {
-		FPS mono(0, d + 1);
-		mono[d] = 1;
-		return mono;
-	}
-
 	// 係数のシフト
-	FPS operator>>(int d) const {
-		FPS f = *this;
-		f.n += d;
-
-		vm zeros(d);
-		f.c.insert(f.c.begin(), zeros.begin(), zeros.end());
-
-		return f;
+	FPS& operator>>=(int d) {
+		n += d;
+		c.insert(c.begin(), d, 0);
+		return *this;
 	}
-	FPS operator<<(int d) const {
-		FPS f = *this;
-		f.n -= d;
-
-		if (f.n <= 0) {
-			f.c.clear();
-			f.n = 0;
-		}
-		else {
-			f.c.erase(f.c.begin(), f.c.begin() + d);
-		}
-
-		return f;
+	FPS& operator<<=(int d) {
+		n -= d;
+		if (n <= 0) { c.clear(); n = 0; }
+		else c.erase(c.begin(), c.begin() + d);
+		return *this;
 	}
+	FPS operator>>(int d) const { return FPS(*this) >>= d; }
+	FPS operator<<(int d) const { return FPS(*this) <<= d; }
 
 	// 累乗の剰余
 	friend FPS power_mod(const FPS& f, ll d, const FPS& g) {
@@ -553,7 +554,7 @@ struct FPS {
 
 		// f = 0 なら f^k = 0 である．
 		if (i0 == n) return FPS(0, d);
-		
+
 		// 最低次の項の係数を記録する．
 		mint c0 = c[i0];
 
@@ -587,23 +588,91 @@ struct FPS {
 };
 
 
+//【展開係数／ボスタン－森法】O(n log n log d)
+/*
+* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
+*
+* 制約 : deg f < deg g,
+*/
+mint coef(const FPS& f, const FPS& g, ll d) {
+	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
+
+	//【方法】
+	// 分母分子に g(-x) を掛けることにより
+	//		f(x) / g(x) = f(x) g(-x) / g(x) g(-x)
+	// を得る．ここで g(x) g(-x) は偶多項式なので
+	//		g(x) g(-x) = e(x^2)
+	// と表すことができる．
+	// 
+	// 分子について
+	//		f(x) g(-x) = E(x^2) + x O(x^2)
+	// というように偶多項式部分と奇多項式部分に分けると，d が偶数のときは
+	//		[x^d] f(x) g(-x) / g(x) g(-x)
+	//		= [x^d] E(x^2) / e(x^2)
+	//		= [x^(d/2)] E(x) / e(x)
+	// となり，d が奇数のときは
+	//		[x^d] f(x) g(-x) / g(x) g(-x)
+	//		= [x^d] x O(x^2) / e(x^2)
+	//		= [x^((d-1)/2)] O(x) / e(x)
+	// となる．
+	//
+	// これを繰り返せば d を半分ずつに減らしていくことができる．
+
+	// d = 0 のときは定数項を返す．
+	if (d == 0) {
+		return f[0] / g[0];
+	}
+
+	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
+	FPS f2, g2 = g;
+	rep(i, g2.n) {
+		if (i % 2) {
+			g2.c[i] *= -1;
+		}
+	}
+	f2 = f * g2;
+	g2 *= g;
+
+	// f3(x) = E(x) or O(x), g3(x) = e(x) を求める．
+	FPS f3, g3;
+	if (d % 2 == 0) {
+		for (int i = 0; 2 * i < f2.n; i++) {
+			f3.c.push_back(f2.c[2 * i]);
+		}
+	}
+	else {
+		for (int i = 0; 2 * i + 1 < f2.n; i++) {
+			f3.c.push_back(f2.c[2 * i + 1]);
+		}
+	}
+	f3.n = sz(f3.c);
+	rep(i, g.n) {
+		g3.c.push_back(g2.c[2 * i]);
+	}
+	g3.n = sz(g3.c);
+
+	// d を半分にして再帰を回す．
+	return coef(f3, g3, d / 2);
+}
+
+
 int main() {
 	cout << fixed << setprecision(12);
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	int n;
-	cin >> n;
+	int k, n;
+	cin >> k >> n;
 
-	vi a(n);
-	cin >> a;
+	FPS f(0, k + 1);
+	f[1] = 1;
+	repi(i, 3, k) f[i] = -(i - 2);
+	dump(f);
 
-	FPS A(a);
-	dump(A);
-	vector<pair<int, mint>> B = { {0, 10}, {1, 2} };
-	dump(B);
-	auto C = A * B;
-	dump(C);
-	C /= B;
-	dump(C);
+	FPS g(0, k + 1);
+	g[0] = 1;
+	repi(i, 1, k) g[i] = -1;
+	dump(g);
+
+	cout << coef(f, g, n) << endl;
 }

@@ -2,12 +2,14 @@
 #include "header.h"
 #include "合同式.h"
 #include "組合せ論.h"
-// ■■■■■ 形式的冪級数（mod 998244353） ■■■■■
+// ■■■■■ 形式的冪級数（mod 1000000007 等） ■■■■■
 
 
 
-//【形式的冪級数（mod 998244353）】
+//【形式的冪級数（mod 1000000007 等）】
 /*
+* 積が遅いこと以外は mod 998244353 と同じ
+* 
 * FPS() : O(1)
 *	零多項式 f = 0 で初期化する．
 *
@@ -22,26 +24,29 @@
 *
 * c + f, f + c : O(1)	f + g : O(n)
 * f - c : O(1)			c - f, f - g, -f : O(n)
-* c * f, f * c : O(n)	f * g : O(n log n)		f * g_sp : O(n k)（k : g の項数）
-* f / c : O(n)			f / g : O(n log n)		f / g_sp : O(n k)（k : g の項数）
+* c * f, f * c : O(n)	f * g : O(n^2)		f * g_sp : O(n k)（k : g の項数）
+* f / c : O(n)			f / g : O(n^2)		f / g_sp : O(n k)（k : g の項数）
 *	形式的冪級数としての和，差，積，商の結果を返す．
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *	制約 : 商では g(0) ≠ 0
 *
-* f.inv(d) : O(n log n)
+* f.inv(d) : O(n^2)
 *	1 / f mod x^d を返す．
 *	制約 : f(0) ≠ 0
 *
-* f.quotient(g) : O(n log n)
-* f.reminder(g) : O(n log n)
-* f.quotient_remainder(g) : O(n log n)
+* f.quotient(g) : O(n^2)
+* f.reminder(g) : O(n^2)
+* f.quotient_remainder(g) : O(n^2)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
 *
-* f.pow(k, d) : O(n log n)
+* f.pow(k, d) : O(n^2)
 *	f(x)^k mod x^d を返す．
 *
 * f.deg(), f.size() : O(1)
 *	多項式 f の次数[+1]を返す．
+*
+* monomial(d) : O(d)
+*	単項式 x^d を返す．
 *
 * f.assign(v) : O(n)
 *	多項式 f の不定元 x に v を代入した値を返す．
@@ -56,7 +61,7 @@
 *	係数列を d だけ右[左]シフトした多項式を返す．
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
-* power_mod(f, d, g) : O(m log m log d)　（m = deg g）
+* power_mod(f, d, g) : O(m^2 log d)　（m = deg g）
 *	f(x)^d % g(x) を返す．
 *
 * derivative(f) : O(n)
@@ -65,16 +70,15 @@
 * integral(f) : O(n)
 *	∫ f(x) dx を返す．（定数項は 0 とする）
 *
-* log(f, d) : O(n log n)
+* log(f, d) : O(n^2)
 *	log f(x) mod x^d を返す．
 *	制約 : f(0) = 1
 *
-* exp(f, d) : O(n log n)
+* exp(f, d) : O(n^2)
 *	exp f(x) mod x^d を返す．
 *	制約 : f(0) = 0;
 */
 struct FPS {
-	using mint = modint998244353;
 	using vm = vector<mint>;
 	using SFPS = vector<pair<int, mint>>;
 
@@ -165,7 +169,26 @@ struct FPS {
 	FPS operator/(const int& sc) const { return FPS(*this) /= sc; }
 
 	// 積
-	FPS& operator*=(const FPS& g) { c = convolution(c, g.c); n = sz(c); return *this; }
+	FPS& operator*=(const FPS& g) {
+		int m = g.deg();
+		resize(n + m);
+
+		// 後ろからインライン配る DP
+		repir(i, n - 1, 0) {
+			// 上位項に係数倍して配っていく．
+			repi(j, 1, m) {
+
+				if (i + j >= n) break;
+
+				c[(ll)i + j] += c[i] * g[j];
+			}
+
+			// 定数項は最後に配るか消去しないといけない．
+			c[i] *= g[0];
+		}
+
+		return *this;
+	}
 	FPS operator*(const FPS& g) const { return FPS(*this) *= g; }
 
 	// 除算
@@ -456,361 +479,5 @@ struct FPS {
 		return os;
 	}
 };
-
-
-//【平方根】O(n log n)
-/*
-* √f(x) mod x^d の 1 つを返す．（なければ find = false を格納する）
-*
-* 利用：【平方剰余／トネリ－シャンクスのアルゴリズム】
-*/
-FPS sqrt(const FPS& f, int d, bool& find) {
-	// 参考 : https://nyaannyaan.github.io/library/fps/fps-sqrt.hpp
-
-	//【方法】
-	// √(x^2 f(x)) = x √f(x) なので f(0) が平方剰余として一般性を失わない．
-	// f(0) は平方剰余なので，c0^2 = f(0) なる t が存在する．よって mod x^1 では
-	//		c0^2 ≡ f(x) mod x^1
-	// が成り立つ．
-	//
-	// mod x^k で
-	//		h(x)^2 ≡ f(x) mod x^k
-	// が成り立っていると仮定すると，ニュートン法より
-	//		g = h - (h^2 - f) / (h^2)'
-	//   ⇔ g = (h + f / h) / 2
-	// と置くと
-	//		g(x)^2 ≡ f(x) mod x^(2 k)
-	// が成り立つ．
-	//
-	// これを繰り返せば所望の g が求まる．
-
-	// 最低次の項を見つける．
-	int i0 = 0;
-	while (i0 <= f.deg() && f[i0] == 0) i0++;
-
-	// 零多項式なら平方根も零多項式である．
-	if (i0 == f.deg() + 1) {
-		find = true;
-		FPS g;
-		g.resize(d);
-		return g;
-	}
-
-	// 最低次の項が奇数次の項なら平方根は存在しない．
-	if (i0 % 2 == 1) {
-		find = false;
-		return FPS();
-	}
-
-	// 最低次の項の係数が平方剰余でなければ平方根は存在しない．
-	int c0 = (f[i0] == 1 ? 1 : sqrt(f[i0])); // 1 のことが多いので高速化
-	if (c0 == -1) {
-		find = false;
-		return FPS();
-	}
-
-	// 定数項が 0 でないようにシフトした多項式を得る．
-	FPS fs = f << i0;
-
-	// ニュートン法で g = √f を見つける．
-	FPS gs(c0);
-	for (int k = 1; k < d; k *= 2) {
-		gs = (gs + fs * gs.inv(2 * k)) / 2;
-		gs.resize(2 * k);
-	}
-
-	// シフトした分を元に戻す．
-	FPS g = gs >> (i0 / 2);
-	g.resize(d);
-
-	find = true;
-	return g;
-}
-
-
-//【展開係数／ボスタン－森法】O(n log n log d)
-/*
-* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
-*
-* 制約 : deg f < deg g,
-*/
-modint998244353 coef(const FPS& f, const FPS& g, ll d) {
-	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
-
-	//【方法】
-	// 分母分子に g(-x) を掛けることにより
-	//		f(x) / g(x) = f(x) g(-x) / g(x) g(-x)
-	// を得る．ここで g(x) g(-x) は偶多項式なので
-	//		g(x) g(-x) = e(x^2)
-	// と表すことができる．
-	// 
-	// 分子について
-	//		f(x) g(-x) = E(x^2) + x O(x^2)
-	// というように偶多項式部分と奇多項式部分に分けると，d が偶数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] E(x^2) / e(x^2)
-	//		= [x^(d/2)] E(x) / e(x)
-	// となり，d が奇数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] x O(x^2) / e(x^2)
-	//		= [x^((d-1)/2)] O(x) / e(x)
-	// となる．
-	//
-	// これを繰り返せば d を半分ずつに減らしていくことができる．
-
-	// d = 0 のときは定数項を返す．
-	if (d == 0) {
-		return f[0] / g[0];
-	}
-
-	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
-	FPS f2, g2 = g;
-	rep(i, g2.n) {
-		if (i % 2) {
-			g2[i] *= -1;
-		}
-	}
-	f2 = f * g2;
-	g2 *= g;
-
-	// f3(x) = E(x) or O(x), g3(x) = e(x) を求める．
-	FPS f3, g3;
-	if (d % 2 == 0) {
-		for (int i = 0; 2 * i < f2.n; i++) {
-			f3.c.push_back(f2[2 * i]);
-		}
-	}
-	else {
-		for (int i = 0; 2 * i + 1 < f2.n; i++) {
-			f3.c.push_back(f2[2 * i + 1]);
-		}
-	}
-	f3.n = sz(f3.c);
-	rep(i, g.n) {
-		g3.c.push_back(g2[2 * i]);
-	}
-	g3.n = sz(g3.c);
-
-	// d を半分にして再帰を回す．
-	return coef(f3, g3, d / 2);
-}
-
-
-//【線形漸化式】O(d log d log n)
-/*
-* 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
-* 数列 a について，a[n] の値を返す．
-*
-* 制約 : c[d-1] ≠ 0
-*
-* 利用：【展開係数／ボスタン－森法】
-*/
-modint998244353 linearly_recurrent_sequence(const vi& a, const vi& c, ll n) {
-	int d = sz(a);
-	assert(c[d - 1] != 0);
-
-	FPS A(a), C(c);
-	FPS Dnm = 1 - (C >> 1);
-	FPS Num = (Dnm * A).resize(d);
-	return coef(Num, Dnm, n);
-}
-
-
-//【平行移動】O(n log n)
-/*
-* f(x + c) を返す．
-*/
-FPS taylor_shift(const FPS& f, int c) {
-	// 参考 : https://nyaannyaan.github.io/library/fps/taylor-shift.hpp.html
-
-	//【方法】
-	//	f(x) = Σn=[0..N] f[n] x^n
-	// と表されるとすると，
-	//	f(x + c)
-	//	= Σn=[0..N] f[n] (x + c)^n
-	//	= Σn=[0..N] f[n] Σr=[0..n] nCr c^(n-r) x^r　（二項定理）
-	//	= Σn=[0..N] Σr=[0..n] f[n] n! / ((n-r)! r!) c^(n-r) x^r
-	//	= Σr=[0..N] Σn=[r..N] f[n] n! / ((n-r)! r!) c^(n-r) x^r　（和の順序交換）
-	//	= Σr=[0..N] x^r / r! Σn=[r..N] (c^(n-r) / (n-r)!) n! f[n]
-	//	= Σr=[0..N] x^r / r! Σm=[0..N-r] (c^(N-m-r) / (N-m-r)!) (N-m)! f[N-m]　（m = N - n）
-	//	= Σj=[0..N] x^(N-j) / (N-j)! Σm=[0..j] (c^(j-m) / (j-m)!) (N-m)! f[N-m]　（j = N - r）
-	// と書き直せる．
-	//
-	// よって
-	//	g(x) = Σn=[0..N] (c^n / n!) x^n
-	//	h(x) = Σn=[0..N] (N-n)! f[N-n] x^n
-	// とおくと，
-	//	f(x + c)
-	//  = Σj=[0..N] x^(N-j) / (N-j)! (g*h)[j]
-	//	= Σj=[0..N] x^j / j! (g*h)[N-j]
-	// と表される．
-
-	int n = f.deg() + 1;
-
-	// 階乗，階乗の逆数，逆数の値を保持するテーブル
-	using mint = modint998244353;
-	using vm = vector<mint>;
-	static vm fac, fac_inv, inv;
-	static bool fc = true;
-
-	// 前計算（最初に渡された多項式の次数分までしか計算しないので注意）
-	if (fc) {
-		fac = vm(n + 1LL);
-		fac[0] = 1;
-		repi(i, 1, n) fac[i] = fac[i - 1LL] * i;
-
-		fac_inv = vm(n + 1LL);
-		fac_inv[n] = fac[n].inv();
-		repir(i, n - 1, 1) fac_inv[i] = fac_inv[i + 1LL] * (i + 1);
-		fac_inv[0] = 1;
-
-		inv = vm(n + 1LL);
-		repi(i, 1, n) inv[i] = fac[i - 1LL] * fac_inv[i];
-
-		fc = false;
-	}
-
-	FPS g(1);
-	g.resize(n);
-	repi(i, 1, n - 1) g[i] = g[i - 1] * c * inv[i];
-
-	FPS h(f);
-	rep(i, n) h[i] *= fac[i];
-	h = h.rev();
-
-	FPS fs = (g * h).resize(n);
-	fs = fs.rev();
-	rep(i, n) fs[i] *= fac_inv[i];
-
-	return fs;
-}
-
-
-//【ラグランジュ補間】O(d)
-/*
-* ラグランジュ補間を用いて d 次多項式 f の 0, ..., d における値から f(x) を求める．
-*
-* fval[i] : 多項式 f の点 i における値 f(i)
-* x : 多項式の値を求めたい点
-*
-* 戻り値 : 多項式 f の点 x における値 f(x)
-*
-* 利用：【階乗と二項係数（mint利用）】
-*/
-mint lagrange_interpolation(const vm& fval, mint x) {
-	int d = sz(fval) - 1; // 多項式 f の次数
-	factorial_mint fm(d);
-
-	// (x - i) の左からの累積積
-	// mul_l[i] = (x - 0)(x - 1) ... (x - (i - 1))
-	vm mul_l(d + 1);
-	mul_l[0] = 1;
-	repi(i, 1, d) {
-		mul_l[i] = mul_l[i - 1] * (x - (i - 1));
-	}
-
-	// (x - i) の右からの累積積
-	// mul_r[i] = (x - (i + 1)) ... (x - (d - 1))(x - d)
-	vm mul_r(d + 1);
-	mul_r[d] = 1;
-	repir(i, d - 1, 0) {
-		mul_r[i] = (x - (i + 1)) * mul_r[i + 1];
-	}
-
-	// ラグランジュ基底の線形結合を計算する．
-	mint res = 0;
-	repi(i, 0, d) {
-		mint sign = ((d - i) % 2 ? -1 : 1);
-		res += fval[i] * mul_l[i] * mul_r[i]
-			* fm.factorial_inv(i) * sign * fm.factorial_inv(d - i);
-	}
-	return res;
-}
-
-
-//【ラグランジュ補間】O(n^2)
-/*
-* n 点での値 f(x[i]) = y[i] から定まる n - 1 次多項式 f(x) について f(c) を返す．
-*/
-mint lagrange_interpolation(const vi& x, const vm& y, int c) {
-	// 参考 : https://ferin-tech.hatenablog.com/entry/2019/08/11/%E3%83%A9%E3%82%B0%E3%83%A9%E3%83%B3%E3%82%B8%E3%83%A5%E8%A3%9C%E9%96%93
-
-	//【方法】
-	// ラグランジュ基底関数を
-	//		f_i(x) = Πj≠i (x - x[j])/(x[i] - x[j])
-	// と定めると，
-	//		f(x) = Σi=[0..n) y[i] f_i(x)
-	// と表されるので
-	//		f(c) = Σi=[0..n) y[i] Πj≠i (c - x[j])/(x[i] - x[j])
-	// である．
-
-	int n = sz(x);
-
-	mint res = 0;
-	rep(i, n) {
-		mint num = y[i], dnm = 1;
-		rep(j, n) {
-			if (j == i) continue;
-
-			num *= c - x[j];
-			dnm *= x[i] - x[j];
-		}
-		res += num / dnm;
-	}
-
-	return res;
-}
-
-
-//【ラグランジュ補間】O(n^2)
-/*
-* n 点での値 f(x[i]) = y[i] から定まる n - 1 次多項式 f(x) を返す．
-*/
-FPS lagrange_interpolation(const vi& x, const vm& y) {
-	// 参考 : https://ferin-tech.hatenablog.com/entry/2019/08/11/%E3%83%A9%E3%82%B0%E3%83%A9%E3%83%B3%E3%82%B8%E3%83%A5%E8%A3%9C%E9%96%93
-
-	//【方法】
-	// ラグランジュ基底関数を
-	//		f_i(x) = Πj≠i (x - x[j])/(x[i] - x[j])
-	// と定めると，
-	//		f(x) = Σi=[0..n) y[i] f_i(x)
-	// と表される．
-	//
-	// 基底関数の分子については，まず
-	//		g(x) = Πj=[0..n) (x - x[j])
-	// を O(n^2) で計算しておき，それぞれの i について
-	//		g_i(x) = g(x) / (x - x[i])
-	// を戻す DP で O(n)（全体で O(n^2)）で計算すれば良い．
-	//
-	// 基底関数の分母については，それぞれの i について
-	// 愚直に計算しても全体で O(n^2) で計算できる．
-
-	int n = sz(x);
-
-	FPS g(1);
-	rep(j, n) {
-		g.resize(j + 2);
-		g *= { {0, -x[j]}, { 1, 1 } };
-	}
-
-	FPS res(0);
-	rep(i, n) {
-		FPS num = g * y[i];
-		if (x[i] != 0) num /= { {0, -x[i]}, { 1, 1 } };
-		else num <<= 1;
-		g.resize(n);
-
-		mint dnm = 1;
-		rep(j, n) {
-			if (j == i) continue;
-
-			dnm *= x[i] - x[j];
-		}
-
-		res += num / dnm;
-	}
-
-	return res;
-}
 
 

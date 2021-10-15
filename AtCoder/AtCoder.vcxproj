@@ -181,7 +181,7 @@
     <ClInclude Include="列挙(グラフ).h" />
     <ClInclude Include="判定%28幾何%29.h" />
     <ClInclude Include="分析%28グラフ%29.h" />
-    <ClInclude Include="多項式.h" />
+    <ClInclude Include="FPS%28一般%29.h" />
     <ClInclude Include="座標圧縮.h" />
     <ClInclude Include="探索.h" />
     <ClInclude Include="木.h" />

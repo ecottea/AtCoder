@@ -233,7 +233,7 @@
     <ClInclude Include="順列.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
-    <ClInclude Include="多項式.h">
+    <ClInclude Include="FPS%28一般%29.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="木.h">
