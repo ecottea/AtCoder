@@ -16,9 +16,10 @@ struct TNode {
 	int parent = -1; // 親（なければ -1）
 	vi child; // 子（なければ空リスト）
 	int depth = -1; // 深さ（根からのパスの長さ）
+	int& dist = depth; // 深さを距離ともみなす（パスのコストを 1 とみなす）
 	int weight = -1; // 重さ（部分木のもつ辺の数）
 
-	// 出力
+	// デバッグ出力
 	friend ostream& operator<<(ostream& os, const TNode& v) {
 		os << "(p:" << v.parent << ", c:" << v.child << ", d:" << v.depth
 			<< ", w:" << v.weight << ")";
@@ -50,9 +51,7 @@ struct RTree {
 			v[s].weight = 0;
 
 			repe(t, g[s]) {
-				if (t == p) {
-					continue;
-				}
+				if (t == p) continue;
 
 				v[t].depth = v[s].depth + 1;
 
@@ -66,6 +65,19 @@ struct RTree {
 		// 根 r を始点として再帰関数を呼び出す．
 		v[r].depth = 0;
 		dfs(r, -1);
+	}
+
+	// アクセス
+	TNode const& operator[](int i) const { return v[i]; }
+	TNode& operator[](int i) { return v[i]; }
+
+	// 大きさ
+	int size() const { return n; }
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const RTree& rt) {
+		rep(i, rt.n) os << rt[i] << endl;
+		return os;
 	}
 };
 
@@ -85,7 +97,7 @@ struct WTNode {
 	ll dist = -1;
 	int weight = -1;
 
-	// 出力
+	// デバッグ出力
 	friend ostream& operator<<(ostream& os, const WTNode& v) {
 		os << "(par:" << v.parent << ", cld:" << v.child << ", dep:" << v.depth
 			<< ", dist:" << v.dist << ", wgt:" << v.weight << ")";
@@ -107,7 +119,6 @@ struct WRTree {
 	vector<WTNode> v;
 	int r;
 
-
 	// コンストラクタ（木と根で初期化）
 	WRTree(WGraph& g, int r_) : n(sz(g)), v(n), r(r_) {
 		// 再帰用の関数
@@ -119,9 +130,7 @@ struct WRTree {
 			v[s].weight = 0;
 
 			repe(t, g[s]) {
-				if (t == p) {
-					continue;
-				}
+				if (t == p) continue;
 
 				v[t].depth = v[s].depth + 1;
 				dfs(t, s, d + t.cost);
@@ -134,6 +143,19 @@ struct WRTree {
 		// 根 r を始点として再帰関数を呼び出す．
 		v[r].depth = 0;
 		dfs(r, -1, 0);
+	}
+
+	// アクセス
+	WTNode const& operator[](int i) const { return v[i]; }
+	WTNode& operator[](int i) { return v[i]; }
+
+	// 大きさ
+	int size() const { return n; }
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const WRTree& rt) {
+		rep(i, rt.n) os << rt[i] << endl;
+		return os;
 	}
 };
 

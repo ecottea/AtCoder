@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "二分木.h"
-#include "組合せ論.h"
+#include "二項係数.h"
 // ■■■■■ 文字列 ■■■■■
 
 
@@ -158,7 +158,7 @@ struct rolling_hash_2d {
 
 //【クヌース・モリス・プラット法】O(|s| + |w|)
 /*
-* s の連続部分列として w が含まれているかどうか調べ，
+* s の部分文字列として w が含まれているかどうか調べ，
 * 最初に見つかった場所の先頭位置を返す．（見つからなかったら -1 を返す．）
 */
 template <class STR> // STR は例えば string, vector<int>
@@ -538,13 +538,13 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 					// cnt[i] 個の文字を順序込みで k 個に分ける方法の数
 					//	まず文字を k 個減らしておき，重複組合せの考え方を用いて
 					//	○ cnt[i] - k 個と ｜ k - 1 個の並べ方を数えれば良い．
-					add *= fm.binomial(cnt[i] - 1, k - 1);
+					add *= fm.nCr(cnt[i] - 1, k - 1);
 
 					// k 個の固まりをどこに挿入するか
 					//	順序は先に定めたので，後は挿入位置だけを考えれば良い．
 					//	同じ文字の間が j 箇所中 l 箇所，
 					//	異なる文字の間が残り len - 1 - j 箇所中 k - l 箇所．
-					add *= fm.binomial(j, l) * fm.binomial(len - 1 - j, k - l);
+					add *= fm.nCr(j, l) * fm.nCr(len - 1 - j, k - l);
 
 					dp[i + 1LL][nj] += add;
 				}
@@ -579,7 +579,6 @@ mint count_string_join(const vector<string>& s_, int k) {
 		}
 		s[len].insert(seq);
 	}
-	dumpel(s);
 
 	// dp[i][seq][set] : 長さ i で直前の m 文字が seq であるもので，
 	//	文字列 [0..i-j) が s を並べて得られるような j の集合が set であるものの個数
@@ -629,6 +628,23 @@ mint count_string_join(const vector<string>& s_, int k) {
 			}
 		}
 	}
+
+	return res;
+}
+
+
+//【部分文字列の数え上げ】O(|s|)
+/*
+* 文字列 s の部分文字列の個数を返す（空文字列も s の部分文字列とみなす）
+*/
+ll count_substring(const string& s) {
+	int n = sz(s);
+
+	auto sa = suffix_array(s);
+	auto la = lcp_array(s, sa);
+
+	ll res = (ll)n - sa[0];
+	repi(i, 1, n - 1) res += (ll)n - sa[i] - la[i - 1LL];
 
 	return res;
 }

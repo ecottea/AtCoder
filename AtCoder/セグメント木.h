@@ -794,19 +794,6 @@ F7 pow7(F7 f, int i) { return f == INFL ? INFL : f * i; }
 using RUSQ = Proportional_lazy_segtree<S7, op7, e7, F7, mapping7, composition7, id7, pow7>;
 
 
-//y‹æŠÔ‰ÁZ^‹æŠÔ‘˜aƒNƒGƒŠz
-/*
-* —˜—pFy’x‰„•]‰¿ƒZƒOƒƒ“ƒg–Øi”ä—áì—pjz
-*/
-ll op8(ll x, ll y) { return x + y; }
-ll e8() { return 0; }
-ll mapping8(ll f, ll x) { return f + x; }
-ll composition8(ll f, ll g) { return f + g; }
-ll id8() { return 0; }
-ll pow8(ll f, int i) { return f * i; }
-using RASQ = Proportional_lazy_segtree<ll, op8, e8, ll, mapping8, composition8, id8, pow8>;
-
-
 //y‹æŠÔ‚Ö‚ÌˆêŸ®‚Æ‚ÌÅ¬’l^ˆê“_æ“¾ƒNƒGƒŠz
 /*
 * Range_minimize1d_query(n) : O(1)

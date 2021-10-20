@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-#include "組合せ論.h"
+#include "二項係数.h"
 // ■■■■■ 全方位木 DP ■■■■■
 
 
@@ -276,7 +276,7 @@ mint continuous_tree_construction(Graph& g) {
 		}
 
 		// 各回でどの子の部分木の構築を進めるか
-		dp[p * n + s] *= fm.multinomial(ws);
+		dp[p * n + s] *= fm.nCr(ws);
 
 		w[p * n + s] = accumulate(all(ws), 1);
 		return dp[p * n + s];
@@ -314,14 +314,14 @@ mint continuous_tree_construction(Graph& g) {
 
 			int wi = ws[i];
 			ws[i] = 0;
-			dp[t * n + s] *= fm.multinomial(ws);
+			dp[t * n + s] *= fm.nCr(ws);
 			w[t * n + s] = accumulate(all(ws), 1);
 			ws[i] = wi;
 		}
 
 		// 総積も記録しておく．
 		dp[s * n + s] = acc_l[m];
-		dp[s * n + s] *= fm.multinomial(ws);
+		dp[s * n + s] *= fm.nCr(ws);
 
 		// これで子から自身への情報が計算できたので，
 		// 子に対して同様の計算を行っていく．

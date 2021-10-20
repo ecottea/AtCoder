@@ -30,15 +30,10 @@ void read_graph(int n, int m, Graph& g,
 		int a, b;
 		cin >> a >> b;
 
-		if (one_indexed) {
-			a--;
-			b--;
-		}
+		if (one_indexed) { a--; b--; }
 
 		g[a].push_back(b);
-		if (!directed) {
-			g[b].push_back(a);
-		}
+		if (!directed) g[b].push_back(a);
 	}
 }
 
@@ -54,16 +49,14 @@ struct Edge {
 	int to; // 行き先の頂点番号
 	ll cost; // 辺のコスト
 
-	// 出力
+	// デバッグ出力
 	friend ostream& operator<<(ostream& os, const Edge& e) {
 		os << '(' << e.to << ',' << e.cost << ')';
 		return os;
 	}
 
 	// コストなしグラフで呼ばれたとき用
-	operator int() const {
-		return to;
-	}
+	operator int() const { return to; }
 };
 
 
@@ -93,15 +86,10 @@ void read_graph(int n, int m, WGraph& g,
 		ll c;
 		cin >> a >> b >> c;
 
-		if (one_indexed) {
-			a--;
-			b--;
-		}
+		if (one_indexed) { a--; b--; }
 
 		g[a].push_back({ b, c });
-		if (!directed) {
-			g[b].push_back({ a, c });
-		}
+		if (!directed) g[b].push_back({ a, c });
 	}
 }
 
@@ -111,11 +99,7 @@ void read_graph(int n, int m, WGraph& g,
 * コスト付きグラフの辺なら辺のコストを返す．
 * さもなくば INFL を返す．
 */
-inline ll get_cost(const Edge& e) {
-	return e.cost;
-}
-inline ll get_cost(const int& t) {
-	return INFL;
-}
+inline ll get_cost(const Edge& e) { return e.cost; }
+inline ll get_cost(const int& t) { return INFL; }
 
 

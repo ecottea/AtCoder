@@ -1,7 +1,8 @@
 #pragma once
 #include "header.h"
 #include "行列.h"
-#include "組合せ論.h"
+#include "二項係数.h"
+#include "FPS.h"
 // ■■■■■ 場合の数 ■■■■■
 
 
@@ -67,7 +68,7 @@ void count_surjections(int n, int m, vvm& c) {
 }
 
 
-//【全射の数】O(m)
+//【全射の数】O(m log n)
 /*
 * n 点集合から m 点集合への全射の数を返す．
 *
@@ -92,7 +93,7 @@ mint count_surjections(int n, int m) {
 
 	mint res = 0;
 	repi(j, 0, m) {
-		res += ((m - j) % 2 == 0 ? 1 : -1) * fm.binomial(m, j) * mint(j).pow(n);
+		res += ((m - j) % 2 == 0 ? 1 : -1) * fm.nCr(m, j) * mint(j).pow(n);
 	}
 
 	return res;
@@ -130,9 +131,9 @@ void stirling_S2(int n, vvm& c) {
 }
 
 
-//【集合の分割の数（第 2 種スターリング数）】O(k)
+//【集合の分割の数（第 2 種スターリング数）】O(k log n)
 /*
-* n 点集合をちょうど k 個に分割する方法の数を返す．
+* n 点集合をちょうど k 個に分割する方法の数 s(n, k) を返す．
 *
 * 利用：【階乗と二項係数（mint利用）】
 */
@@ -148,15 +149,44 @@ mint stirling_S2(int n, int k) {
 
 	mint res = 0;
 	repi(j, 1, k) {
-		res += ((k - j) % 2 == 0 ? 1 : -1) * fm.binomial(k, j) * mint(j).pow(n);
+		res += ((k - j) % 2 == 0 ? 1 : -1) * fm.nCr(k, j) * mint(j).pow(n);
 	}
-	res *= fm.factorial_inv(k);
+	res *= fm.fac_inv(k);
 
 	return res;
 }
 
 
-//【自然数の分割の数】O(n^2)
+//【集合の分割の数（第 2 種スターリング数）】O(n log n)
+/*
+* n 点集合をちょうど k 個に分割する方法の数 s(n, k) を s[k] に格納する．
+*
+* 利用：【階乗と二項係数（mint利用）】
+*/
+void stirling_S2(int n, vm& s) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E6%95%B0
+
+	//【方法】
+	// 第 2 種スターリング数の一般項は
+	//		s(n, k)
+	//		= (1/k!) Σm=[1..k] (-1)^(k-m) binomial(k, m) m^n
+	//		= Σm=[1..k] ((-1)^(k-m) / (k-m)!) (m^n / m!)
+	// と書け，これは畳み込みの形である．
+
+	vm f(n + 1), g(n + 1);
+	factorial_mint fm(n);
+
+	repi(i, 0, n) {
+		f[i] = (i & 1 ? -1 : 1) * fm.fac_inv(i);
+		g[i] = mint(i).pow(n) * fm.fac_inv(i);
+	}
+
+	s = convolution(f, g);
+	s.resize(n + 1);
+}
+
+
+//【自然数の分割の数（分割数の補助関数）】O(n^2)
 /*
 * 各 i ∈ [0..n], j ∈ [0..n] について，
 * 自然数 i を j 個以下に分割する方法の数を c[i][j] に格納する．
@@ -234,6 +264,83 @@ void count_limited_integer_partitions(int n, int m, vvm& c) {
 				}
 			}
 		}
+	}
+}
+
+
+//【分割数】O(n√n)
+/*
+* 各 i ∈ [0..n] について自然数 i を分割する方法の数を p[i] に格納する．
+*/
+void partition_function(int n, vm& p) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E5%88%86%E5%89%B2%E6%95%B0
+
+	// pen : 一般五角数の昇順列
+	vi pen;
+	repi(i, 1, n) {
+		pen.push_back(i * (3 * i - 1) / 2);
+		pen.push_back(i * (3 * i + 1) / 2);
+		if (*pen.rbegin() > n) break;
+	}
+	int m = sz(pen);
+
+	// 漸化式により計算する．
+	p = vm(n + 1);
+	p[0] = 1;
+	repi(i, 1, n) {
+		rep(j, m) {
+			if (i - pen[j] < 0) break;
+
+			p[i] += (j & 2 ? -1 : 1) * p[i - pen[j]];
+		}
+	}
+}
+
+
+//【攪乱順列の数（モンモール数）】O(n)
+/*
+* i=[0..n] について，i 番目のモンモール数を m[i] に格納する．
+* m[i] は長さ i の攪乱順列の数と解釈できる．
+*/
+void montmort_number(int n, vm& m) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E5%AE%8C%E5%85%A8%E9%A0%86%E5%88%97
+
+	//【方法】
+	// モンモール数は，2 項間漸化式
+	//		m[n] = n m[n - 1] + (-1)^n
+	// を満たす．
+
+	m = vm(n + 1);
+
+	m[0] = 1;
+	repi(i, 1, n) m[i] = m[i - 1] * i + (i & 1 ? -1 : 1);
+}
+
+
+//【ベルヌーイ数】O(n log n)
+/*
+* i=[0..n) についてベルヌーイ数 B(i) を b[i] に格納する．
+*
+* 利用：【形式的冪級数】
+*/
+void bernoulli(int n, vm& b) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%99%E3%83%AB%E3%83%8C%E3%83%BC%E3%82%A4%E6%95%B0
+
+	//【方法】
+	// ベルヌーイ数 B(n) はそもそも
+	//		x / (exp(x) - 1) = Σn=[0..∞) B(n) / n! x^n
+	// で定義される．
+
+	FPS f = exp(FPS(vm({ 0, 1 })), n + 1);
+	f <<= 1;
+	f = f.inv(n);
+
+	mint fac = 1;
+	b = vm(n);
+	b[0] = 1;
+	repi(i, 1, n - 1) {
+		fac *= i;
+		b[i] = f[i] * fac;
 	}
 }
 

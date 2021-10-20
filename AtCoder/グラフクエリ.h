@@ -43,21 +43,17 @@ struct Neighbor_prod_query {
 	// グラフ g と単位元 e で初期化
 	Neighbor_prod_query(const Graph& g_)
 		: g(g_), n(sz(g)), gl(n), v(n, e()), spread(n, e()), last(n, -1), q(0) {
-		// m : g の 辺の数
+		// m : g の辺の数
 		int m = 0;
-		rep(s, n) {
-			m += sz(g[s]);
-		}
-
+		rep(s, n) m += sz(g[s]);
+		
 		// 頂点の次数が大きいか小さいかの閾値 th を決定
 		th = (int)sqrt(m);
 
 		// 隣接する大きい頂点だけを記録したグラフ gl を作成
 		rep(s, n) {
 			repe(t, g[s]) {
-				if (sz(g[t]) > th) {
-					gl[s].push_back(t);
-				}
+				if (sz(g[t]) > th) gl[s].push_back(t);
 			}
 		}
 	}
@@ -68,9 +64,7 @@ struct Neighbor_prod_query {
 	}
 
 	// v[i] = x とする．
-	void set(int i, S x) {
-		v[i] = x;
-	}
+	void set(int i, S x) { v[i] = x; }
 
 	// v[i] を返す．
 	S get(int i) {
@@ -92,10 +86,8 @@ struct Neighbor_prod_query {
 				}
 			}
 			// 撒かれた数を v[i] にクエリ昇順に作用させ正しい値を得る．
-			repe(p, fs) {
-				res = op(p.second, res);
-			}
-			// -------------------------------------------------
+			repe(p, fs) res = op(p.second, res);
+			// ---------------------------------------------------
 
 			//// update など，最左優先で良い場合はこちらにすると O(n) で済む．
 			//repe(t, g[i]) {
@@ -114,10 +106,8 @@ struct Neighbor_prod_query {
 	// s の隣接頂点 t 全てに対して v[t] = op(x, v[t]) とする．
 	void apply(int s, S x) {
 		// 隣接する次数が大きい頂点の値の更新
-		repe(t, gl[s]) {
-			v[t] = x;
-		}
-
+		repe(t, gl[s]) v[t] = x;
+		
 		// 隣接頂点に数を撒いたことを記録
 		spread[s] = x;
 		last[s] = q++;
@@ -125,9 +115,7 @@ struct Neighbor_prod_query {
 
 	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, Neighbor_prod_query npq) {
-		rep(i, npq.n) {
-			os << npq.get(i) << " ";
-		}
+		rep(i, npq.n) os << npq.get(i) << " ";
 		return os;
 	}
 };

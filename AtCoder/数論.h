@@ -3,21 +3,20 @@
 // ■■■■■ 数論 ■■■■■
 
 
+
 //【最大公約数（複数）】O(n log a)
 /*
-* 長さ n の配列に格納された数の最大公約数を返す．
+* 長さ n の配列 a に格納された数の最大公約数を返す．
 */
 ll gcd(vl& a) {
-	int n = (int)a.size();
+	int n = sz(a);
 	ll g;
 
-	if (n == 0) {
-		return 0;
-	}
-	g = a.at(0);
-	for (int i = 1; i < n; i++) {
-		g = gcd(g, a.at(i));
-	}
+	if (n == 0) return 0;
+
+	g = a[0];
+	rep (i, n) g = gcd(g, a.at(i));
+	
 	return g;
 }
 
@@ -26,9 +25,7 @@ ll gcd(vl& a) {
 /*
 * 2 数 a, b の最小公倍数を返す．
 */
-ll lcm(ll a, ll b) {
-	return a / gcd(a, b) * b;
-}
+ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
 
 
 //【最小公倍数（複数）】O(n log a)
@@ -41,13 +38,11 @@ ll lcm(vl& a) {
 	int n = sz(a);
 	ll l;
 
-	if (n == 0) {
-		return 0;
-	}
+	if (n == 0) return 0;
+	
 	l = a[0];
-	repi(i, 1, n - 1) {
-		l = lcm(l, a[i]);
-	}
+	repi(i, 1, n - 1) l = lcm(l, a[i]);
+	
 	return l;
 }
 
@@ -104,10 +99,8 @@ ll ext_gcd(ll a, ll b, ll& x, ll& y) {
 ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
 	ll g = ext_gcd(a, b, x, y);
 
-	if (c % g != 0) {
-		return -1;
-	}
-
+	if (c % g != 0) return -1;
+	
 	x *= c / g;
 	y *= c / g;
 
@@ -121,21 +114,17 @@ ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和を返す．
 */
 ll divisor_sigma(int k, ll n) {
-	if (n == 1) {
-		return 1;
-	}
-
-	ll res = 0;
-	ll i;
-	for (i = 1; i * i < n; i++) {
+	if (n == 1) return 1;
+	
+	ll res = 0, i = 1;
+	for (; i * i < n; i++) {
 		if (n % i == 0) {
 			res += pow(i, k);
 			res += pow(n / i, k);
 		}
 	}
-	if (i * i == n) {
-		res += pow(i, k);
-	}
+	if (i * i == n) res += pow(i, k);
+	
 	return res;
 }
 
@@ -152,16 +141,14 @@ void divisors(ll n, vl& divs) {
 		return;
 	}
 
-	ll i;
-	for (i = 1; i * i < n; i++) {
+	ll i = 1;
+	for (; i * i < n; i++) {
 		if (n % i == 0) {
 			divs.push_back(i);
 			divs.push_back(n / i);
 		}
 	}
-	if (i * i == n) {
-		divs.push_back(i);
-	}
+	if (i * i == n) divs.push_back(i);
 
 	sort(all(divs));
 }
@@ -169,13 +156,13 @@ void divisors(ll n, vl& divs) {
 
 //【素数の列挙／エラトステネスの篩】O(n + √n log(log n))
 /*
-* エラトステネスの篩を用いて n 以下の素数を列挙し，p に昇順に格納する．
+* エラトステネスの篩を用いて n 以下の素数を列挙し，ps に昇順に格納する．
 */
-void eratosthenes(int n, vi& p) {
-	p.clear();
+void eratosthenes(int n, vi& ps) {
+	ps.clear();
 
 	// 素数かどうかを記録しておくためのテーブル
-	vb is_prime(n + 1, true);
+	vb is_prime(n + 1LL, true);
 
 	int i;
 
@@ -183,7 +170,7 @@ void eratosthenes(int n, vi& p) {
 	// ここまでであれば O(√n log(log n)) で済んでいる．
 	for (i = 2; i <= n / i; i++) {
 		if (is_prime[i]) {
-			p.push_back(i);
+			ps.push_back(i);
 
 			for (int j = 2 * i; j <= n; j += i) {
 				is_prime[j] = false;
@@ -195,9 +182,7 @@ void eratosthenes(int n, vi& p) {
 	// この時点で is_prime[] には素数か否かが記録されているが，
 	// それを読むために O(n) が必要になってしまう．
 	for (; i <= n; i++) {
-		if (is_prime[i]) {
-			p.push_back(i);
-		}
+		if (is_prime[i]) ps.push_back(i);
 	}
 }
 
@@ -230,7 +215,7 @@ void eratosthenes_interval(ll l, ll r, vl& ps) {
 
 //【素因数分解／試し割り法】O(√n)
 /*
-* n を素因数分解する．
+* n を素因数分解した結果を pps に格納する．
 * 
 * pps[p] = d : n に素因数 p が d 個含まれていることを表す．
 */
@@ -243,30 +228,22 @@ void factor_integer(ll n, map<ll, int>& pps) {
 			d++;
 			n /= i;
 		}
-		if (d > 0) {
-			pps[i] = d;
-		}
+		if (d > 0) pps[i] = d;
 	}
-	if (n > 1) {
-		pps[n] = 1;
-	}
+	if (n > 1) pps[n] = 1;
 }
 
 
 //【素数判定／試し割り法】O(√n)
 /*
-* n が素数なら true，さもなくば false を返す．
+* n が素数かを返す．
 */
 bool primeQ(ll n) {
-	if (n == 1) {
-		return false;
-	}
-
+	if (n == 1) return false;
+	
 	// i = (合成数) もループを回ってしまうが気にしない
 	for (ll i = 2; i * i <= n; i++) {
-		if (n % i == 0) {
-			return false;
-		}
+		if (n % i == 0) return false;
 	}
 	return true;
 }
@@ -295,19 +272,20 @@ ll euler_phi(ll n) {
 //【メービウス関数 μ(n)】O(√n)
 /*
 * メービウス関数の値 μ(n) を返す．
+* μ(n) = (-1)^k (n が相異なる k 個の素数の積) or 0 （n が平方因子を含む）
 */
 int mobius_mu(ll n) {
 	int res = 1;
 
 	for (ll i = 2; i * i <= n; i++) {
-		if (n % (i * i) == 0) {
-			return 0;
-		}
-		else if (n % i == 0) {
+		if (n % (i * i) == 0) return 0;
+
+		if (n % i == 0) {
 			n /= i;
 			res *= -1;
 		}
 	}
+	if (n > 1) res *= -1;
 
 	return res;
 }
@@ -315,13 +293,29 @@ int mobius_mu(ll n) {
 
 //【p-進付値 ord_p(n)】O(log n)
 /*
-* n を割る p の最大べきを返す．（p は素数でなくてもよい）
+* n を割る p の最大べきを返す．（p は素数でなくても動作する）
 */
 int integer_exponent(ll n, ll p) {
 	int res = 0;
 	while (n % p == 0) {
 		n /= p;
 		res++;
+	}
+	return res;
+}
+
+
+//【階乗のもつ素因数／ルジャンドルの公式】O(log n)
+/*
+* n! がもつ素因数 p の個数を返す．
+*
+* 制約 : p は素数
+*/
+ll legendre(ll n, ll p) {
+	ll res = 0;
+	while (n > 0) {
+		res += n / p;
+		n /= p;
 	}
 	return res;
 }
@@ -340,9 +334,7 @@ ll count_coprime(ll a, ll l, ll r) {
 
 	// a の素因数だけのリスト p を作る．（個数は使わない）
 	vl p;
-	repe(s, pps) {
-		p.push_back(s.first);
-	}
+	repe(s, pps) p.push_back(s.first);
 	int m = sz(p);
 
 	// 包除原理を用いて数え上げる．

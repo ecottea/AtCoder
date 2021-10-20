@@ -1,10 +1,46 @@
 #pragma once
 #include "header.h"
 #include "構造(木).h"
-#include "根付き木.h"
-#include "セグメント木.h"
+#include "フェニック木.h"
 // ■■■■■ 木のクエリ処理 ■■■■■
 
+
+
+//【根付き木のオイラーツアー】O(|V|)
+/*
+* 根付き木 rt のオイラーツアーを求める．
+*
+* in[s] : 最初に頂点 s を訪れた時刻（根なら 0）
+* out[s] : 最後に頂点 s から離れた時刻（根なら 2 |V| - 1）
+* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 |V| - 1）
+*/
+template <class TREE>
+void euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
+	int n = sz(rt);
+
+	int time = 0;
+	in = vi(n);
+	out = vi(n);
+	pos = vi(2 * n - 1);
+
+	// 再帰用の関数
+	function<void(int)> rf = [&](int s) {
+		// s を最初に訪れた
+		in[s] = time;
+		pos[time++] = s;
+
+		repe(t, rt[s].child) {
+			rf(t);
+			pos[time++] = s;
+		}
+
+		// s から最後に離れる
+		out[s] = time;
+	};
+
+	// 根から順に探索する．
+	rf(rt.r);
+}
 
 
 //【最小共通祖先】
@@ -22,7 +58,7 @@
 *
 * 利用：【根付き木のオイラーツアー】
 */
-pli op1(pli a, pli b) { return min(a, b); } // segtree用
+pli op1(pli a, pli b) { return min(a, b); }
 pli e1() { return { INFL, -1 }; }
 template <class TREE> struct Lowest_common_ancestor {
 	TREE rt;
@@ -37,7 +73,6 @@ template <class TREE> struct Lowest_common_ancestor {
 	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
 	segtree<pli, op1, e1> seg;
 
-
 	// コンストラクタ（根付き木で初期化）：O(|V|)
 	Lowest_common_ancestor(TREE& rt_) : rt(rt_) {
 		// オイラーツアーを求めておく．
@@ -48,7 +83,7 @@ template <class TREE> struct Lowest_common_ancestor {
 		int n = sz(rt.v);
 		vector<pli> depth(2 * n - 1);
 		rep(t, 2 * n - 1) {
-			depth[t] = { rt.v[pos[t]].depth, pos[t] };
+			depth[t] = { rt[pos[t]].depth, pos[t] };
 		}
 		seg = segtree<pli, op1, e1>(depth);
 	}
@@ -70,9 +105,50 @@ template <class TREE> struct Lowest_common_ancestor {
 		int r = lca(u, v);
 
 		// 根からの距離の和を求め，ダブっている分を引く．
-		return rt.v[u].dist + rt.v[v].dist - 2 * rt.v[r].dist;
+		return rt[u].dist + rt[v].dist - 2 * rt[r].dist;
 	}
 };
+
+
+//【木のオイラーツアー】O(|V|)
+/*
+* 頂点 r を始点とする木 g のオイラーツアーを求める．
+*
+* in[v] : 最初に頂点 v を訪れた時刻（r なら 0）
+* out[v] : 最後に頂点 v から離れた時刻（r なら 2 |V| - 1）
+* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 |V| - 1）
+*/
+template <class G>
+void euler_tour(G& g, int r, vi& in, vi& out, vi& pos) {
+	// 参考 : https://qiita.com/recuraki/items/72e37eb9be9f71bc623a
+
+	int n = sz(g);
+
+	int time = 0;
+	in = vi(n);
+	out = vi(n);
+	pos = vi(2 * n - 1);
+
+	// 再帰用の関数
+	function<void(int, int)> rf = [&](int s, int p) {
+		// s を最初に訪れた
+		in[s] = time;
+		pos[time++] = s;
+
+		for (auto t : g[s]) {
+			if (t == p) continue;
+
+			rf(t, s);
+			pos[time++] = s;
+		}
+
+		// s から最後に離れる
+		out[s] = time;
+	};
+
+	// 根から順に探索する．
+	rf(r, -1);
+}
 
 
 //【辺加算／根からのパス総和クエリ】
@@ -80,10 +156,10 @@ template <class TREE> struct Lowest_common_ancestor {
 * Path_sum_query(g, r) : O(|V|)
 *	木 g を根を r とみなして初期化する．
 *
-* add(v, val) : O(1)
+* add(v, val) : O(log|V|)
 *	頂点 v を子とする辺に val を加算する．
 *
-* sum(v) : O(log |V|)
+* sum(v) : O(log|V|)
 *	根 r から v までの辺の値の和を返す．
 *
 * 利用：【木のオイラーツアー】
@@ -99,7 +175,6 @@ template <class T> struct Path_sum_query {
 	// オイラーツアーに対する区間和クエリを処理するためのフェニック木
 	// ft[t] : 時刻 t-1 から時刻 t に変わることで増加する値
 	fenwick_tree<T> ft;
-
 
 	// コンストラクタ（木と根で初期化）
 	Path_sum_query(Graph& g, int r) {
@@ -118,10 +193,60 @@ template <class T> struct Path_sum_query {
 	}
 
 	// 根 r から v までの辺の値の和を返す．
-	T sum(int v) {
-		return ft.sum(0, in[v] + 1);
-	}
+	T sum(int v) { return ft.sum(0, in[v] + 1); }
 };
+
+
+//【根付き木の HL 分解】O(|V|)
+/*
+* 根付き木 rt の HL 分解を行う．
+*
+* in[s] : 最重頂点優先の行きがけ順で頂点 s を何番目になぞるか
+* pos[i] : 最重頂点優先の行きがけ順で i 番目になぞる頂点
+* top[s] : 頂点 s を含む連結成分の最も浅い頂点
+*/
+template <class TREE>
+void heavy_light_decomposition(TREE& rt, vi& in, vi& pos, vi& top) {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
+
+	int n = sz(rt);
+
+	int step = 0;
+	in = vi(n);
+	pos = vi(n);
+	top = vi(n);
+
+	// 再帰用の関数
+	// s : 注目している頂点
+	// p : s を含む連結成分の最も浅い頂点
+	function<void(int, int)> rf = [&](int s, int p) {
+		in[s] = step;
+		pos[step++] = s;
+		top[s] = p;
+
+		// 重さ最大の頂点を得る．
+		int w_max = -INF, v_max = -1;
+		repe(t, rt[s].child) {
+			if (chmax(w_max, rt[t].weight)) {
+				v_max = t;
+			}
+		}
+
+		// 重さ最大の頂点を優先的になぞる．
+		if (v_max != -1) rf(v_max, p);
+
+		// 残りの頂点をなぞる．
+		repe(t, rt[s].child) {
+			if (t == v_max) continue;
+			rf(t, t);
+		}
+
+		return;
+	};
+
+	// 根から順に探索する．
+	rf(rt.r, rt.r);
+}
 
 
 //【パス加算／パス総和クエリ】
@@ -137,19 +262,13 @@ template <class T> struct Path_sum_query {
 *
 * 利用：
 *	【根付き木の HL 分解】
-*	【遅延評価セグメント木（比例作用）】
+*	【区間加算／区間総和クエリ】
 */
-template <class T> T op15(T x, T y) { return x + y; }
-template <class T> T e15() { return T(0); }
-template <class T> T mapping15(T f, T x) { return f + x; }
-template <class T> T composition15(T f, T g) { return f + g; }
-template <class T> T id15() { return T(0); }
-template <class T> T pow15(T f, int i) { return f * i; }
-template <class TREE, class T> struct Path_add_sum_query {
+template <class T> struct Path_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
 	// 根付き木
-	TREE rt;
+	RTree rt;
 
 	// HL 分解の結果の記録用
 	// in[v] : 頂点 v が最重頂点優先の行きがけ順で何番目になぞられるか
@@ -159,15 +278,12 @@ template <class TREE, class T> struct Path_add_sum_query {
 
 	// in 順に並べた頂点の列 pos に対する区間加算／区間総和クエリを処理する．
 	// rasq[i] : i 番目になぞる頂点に入る辺の値（rasq[0] は使わない）
-	using RASQ = Proportional_lazy_segtree<T, op15, e15, T, mapping15, composition15, id15, pow15>;
-	RASQ rasq;
+	RASQ<T> rasq;
 
 	// コンストラクタ（根付き木で初期化）
-	Path_add_sum_query(TREE& rt_) : rt(rt_) {
+	Path_add_sum_query(RTree& rt_) : rt(rt_), rasq(sz(rt)) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, pos, top);
-
-		rasq = RASQ(sz(rt.v));
 	}
 
 	// 頂点 v1 から v2 までの辺に val を加算する．
@@ -226,11 +342,70 @@ template <class TREE, class T> struct Path_add_sum_query {
 };
 
 
+//【根付き木の HL 分解／オイラーツアー】O(|V|)
+/*
+* 根付き木 rt の HL 分解を行いつつオイラーツアーを得る．
+*
+* in[s] : 最重頂点優先で頂点 s に初めて入る時刻（根なら 0）
+* out[s] : 最重頂点優先で頂点 s から最後にでる時刻（根なら 2 |V| - 1）
+* pos[t] : 最重頂点優先で時刻 t で居る頂点（長さ 2 |V| - 1）
+* top[s] : 頂点 s を含む連結成分の最も浅い頂点
+*/
+template <class TREE>
+void hld_and_et(TREE& rt, vi& in, vi& out, vi& pos, vi& top) {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
+
+	int n = sz(rt);
+
+	int time = 0;
+	in = vi(n);
+	out = vi(n);
+	pos = vi(2LL * n - 1);
+	top = vi(n);
+
+	// 再帰用の関数
+	// s : 注目している頂点
+	// p : s を含む連結成分の最も浅い頂点
+	function<void(int, int)> rf = [&](int s, int p) {
+		in[s] = time;
+		pos[time++] = s;
+		top[s] = p;
+
+		// 重さ最大の頂点を得る．
+		int w_max = -INF, v_max = -1;
+		repe(t, rt[s].child) {
+			if (chmax(w_max, rt[t].weight)) {
+				v_max = t;
+			}
+		}
+
+		// 重さ最大の頂点を優先的になぞる．
+		if (v_max != -1) {
+			rf(v_max, p);
+			pos[time++] = s;
+		}
+
+		// 残りの頂点をなぞる．
+		repe(t, rt[s].child) {
+			if (t == v_max) continue;
+
+			rf(t, t);
+			pos[time++] = s;
+		}
+
+		// s から最後に離れる
+		out[s] = time;
+	};
+
+	// 根から順に探索する．
+	rf(rt.r, rt.r);
+}
+
+
 //【部分木加算／パス総和クエリ】
 /*
 * Subtree_add_path_sum_query(rt) : O(|V|)
-*	根付き木 rt で初期化する．
-*	rt がコスト付き木ならそのコストで，さもなくば 0 で初期化する．
+*	コスト付き根付き木 rt で初期化する．
 *
 * add(v, val) : O(log |V|)
 *	頂点 v の部分木の辺に val を加算する．
@@ -246,19 +421,13 @@ template <class TREE, class T> struct Path_add_sum_query {
 *
 * 利用：
 *	【根付き木の HL 分解／オイラーツアー】
-*	【遅延評価セグメント木：区間加算／区間総和クエリ】
+*	【区間加算／区間総和クエリ】
 */
-ll op16(ll x, ll y) { return x + y; }
-ll e16() { return 0; }
-ll mapping16(ll f, ll x) { return f + x; }
-ll composition16(ll f, ll g) { return f + g; }
-ll id16() { return 0; }
-ll pow16(ll f, int i) { return f * i; }
-template <class TREE> struct Subtree_add_path_sum_query {
+template <class T> struct Subtree_add_path_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
 	// 根付き木
-	TREE rt;
+	WRTree rt;
 
 	// HL 分解とオイラーツアーの結果の記録用
 	// in[s] : 最重頂点優先で頂点 s に初めて入る時刻（根なら 0）
@@ -269,24 +438,21 @@ template <class TREE> struct Subtree_add_path_sum_query {
 
 	// オイラーツアーで得られた列 pos に対する区間加算／区間総和クエリを処理する．
 	// rasq[t] : 時刻 t で居る頂点に入る辺の値（rasq[0] は使わない）
-	using RASQ = Proportional_lazy_segtree<ll, op16, e16, ll, mapping16, composition16, id16, pow16>;
-	RASQ rasq;
+	RASQ<T> rasq;
 
 	// コンストラクタ（根付き木で初期化）
-	Subtree_add_path_sum_query(TREE& rt_) : rt(rt_) {
+	Subtree_add_path_sum_query(WRTree& rt_) : rt(rt_) {
 		// rt を HL 分解しつつオイラーツアーを得る．
 		hld_and_et(rt, in, out, pos, top);
 
-		vl val(2 * rt.n - 1);
+		vl val(2LL * rt.n - 1);
 		rep(s, rt.n) {
-			repe(t, rt.v[s].child) {
-				if (get_cost(t) != INFL) {
-					val[in[t]] += get_cost(t);
-				}
+			repe(e, rt[s].child) {
+				val[in[e.to]] += e.cost;
 			}
 		}
 
-		rasq = RASQ(val);
+		rasq = RASQ<T>(val);
 	}
 
 	// 頂点 v の部分木の辺に val を加算する．
@@ -308,7 +474,7 @@ template <class TREE> struct Subtree_add_path_sum_query {
 			rasq.apply(in[top[v2]], in[v2] + 1, val);
 
 			// 一つ浅い連結成分に移動する．
-			v2 = rt.v[top[v2]].parent;
+			v2 = rt[top[v2]].parent;
 		}
 
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
@@ -335,7 +501,7 @@ template <class TREE> struct Subtree_add_path_sum_query {
 			res += rasq.prod(in[top[v2]], in[v2] + 1);
 
 			// 一つ浅い連結成分に移動する．
-			v2 = rt.v[top[v2]].parent;
+			v2 = rt[top[v2]].parent;
 		}
 
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
@@ -349,7 +515,7 @@ template <class TREE> struct Subtree_add_path_sum_query {
 	}
 
 	// 頂点 v への v の親からの辺の値を返す．
-	ll get(int v) { return sum(rt.v[v].parent, v); }
+	ll get(int v) { return sum(rt[v].parent, v); }
 };
 
 

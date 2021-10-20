@@ -80,7 +80,7 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define dumpel(a) { int i = 0; cout << "\033[1;36m"; repe(x, a) {cout << i++ << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream isTMP(f); cin.rdbuf(isTMP.rdbuf());
 #define output_to_file(f) ofstream osTMP(f); cout.rdbuf(osTMP.rdbuf());
-// 提出用（GCC）
+// 提出用（gcc）
 #else
 #define popcount (int)__builtin_popcount
 #define popcountll (int)__builtin_popcountll
@@ -103,8 +103,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
@@ -115,564 +115,525 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
 
 
-//【形式的冪級数（mint）】
+//【コスト付きグラフの辺】
 /*
-* FPS() : O(1)
-*	零多項式 f = 0 で初期化する．
-*
-* FPS(c0) : O(1)
-*	定数多項式 f = c0 で初期化する．
-*
-* FPS(c0, d) : O(d)
-*	d 次未満の項をもつ定数多項式 f = c0 で初期化する．
-*
-* FPS(c) : O(|c|)
-*	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
-*
-* c + f, f + c : O(1)	f + g : O(n)
-* f - c : O(1)			c - f, f - g, -f : O(n)
-* c * f, f * c : O(n)	f * g : O(n^2)		f * g_sp : O(n k)（k : g の項数）
-* f / c : O(n)			f / g : O(n^2)		f / g_sp : O(n k)（k : g の項数）
-*	形式的冪級数としての和，差，積，商の結果を返す．
-*	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
-*	制約 : 商では g(0) ≠ 0
-*
-* f.inv(d) : O(n^2)
-*	1 / f mod x^d を返す．
-*	制約 : f(0) ≠ 0
-*
-* f.quotient(g) : O(n^2)
-* f.reminder(g) : O(n^2)
-* f.quotient_remainder(g) : O(n^2)
-*	多項式としての f を g で割った商，余り，商と余りの組を返す．
-*
-* f.pow(k, d) : O(n^2)
-*	f(x)^k mod x^d を返す．
-*
-* f.deg(), f.size() : O(1)
-*	多項式 f の次数[+1]を返す．
-*
-* monomial(d) : O(d)
-*	単項式 x^d を返す．
-*
-* f.assign(v) : O(n)
-*	多項式 f の不定元 x に v を代入した値を返す．
-*
-* f.resize() : O(n)
-*	不要な高次の項を削る．
-*
-* f.resize(d) : O(1)
-*	mod x^d をとる．
-*
-* f >> d, f << d : O(n)
-*	係数列を d だけ右[左]シフトした多項式を返す．
-*  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
-*
-* power_mod(f, d, g) : O(m^2 log d)　（m = deg g）
-*	f(x)^d % g(x) を返す．
-*
-* derivative(f) : O(n)
-*	f'(x) を返す．
-*
-* integral(f) : O(n)
-*	∫ f(x) dx を返す．（定数項は 0 とする）
-*
-* log(f, d) : O(n^2)
-*	log f(x) mod x^d を返す．
-*	制約 : f(0) = 1
-*
-* exp(f, d) : O(n^2)
-*	exp f(x) mod x^d を返す．
-*	制約 : f(0) = 0;
+* to : 行き先の頂点番号
+* cost : 辺のコスト
 */
-struct FPS {
-	using vm = vector<mint>;
-	using SFPS = vector<pair<int, mint>>;
+struct Edge {
+	// 参考：https://nyaannyaan.github.io/library/graph/graph-template.hpp
 
-	int n; // 係数の個数（次数 + 1）
-	vm c; // 係数列
+	int to; // 行き先の頂点番号
+	ll cost; // 辺のコスト
 
-	// コンストラクタ（0，定数，係数列で初期化）
-	FPS() : n(0) {}
-	FPS(const mint& c0) : n(1), c({ c0 }) {}
-	FPS(const int& c0) : n(1), c({ mint(c0) }) {}
-	FPS(const mint& c0, int d) : n(d), c(n) { c[0] = c0; }
-	FPS(const int& c0, int d) : n(d), c(n) { c[0] = c0; }
-	FPS(const vm& c_) : n(sz(c_)), c(c_) {}
-	FPS(const vi& c_) : n(sz(c_)), c(n) { rep(i, n) c[i] = c_[i]; }
+	// 出力
+	friend ostream& operator<<(ostream& os, const Edge& e) {
+		os << '(' << e.to << ',' << e.cost << ')';
+		return os;
+	}
 
-	// 代入
-	FPS(const FPS& f) = default;
-	FPS& operator=(const FPS& f) = default;
-	FPS& operator=(const mint& c0) { n = 1; c = { c0 }; return *this; }
+	// コストなしグラフで呼ばれたとき用
+	operator int() const { return to; }
+};
+
+
+//【コスト付きグラフ】
+/*
+* WGraph g
+* g[v] : 頂点 v から出る辺を並べたリスト
+*/
+using WGraph = vector<vector<Edge>>;
+
+
+//【コスト付きグラフの入力】O(|E|)
+/*
+* 入力を受け取り n 頂点 m 辺のコスト付きグラフを構成する．
+*
+* n : グラフの頂点の数
+* m : グラフの辺の数
+* g : ここにグラフを構築して返す
+* directed : 有向グラフなら true
+* one_indexed : 入力が 1-indexed で与えられるなら true
+*/
+void read_graph(int n, int m, WGraph& g,
+	bool directed = false, bool one_indexed = true) {
+	g = WGraph(n);
+	rep(i, m) {
+		int a, b;
+		ll c;
+		cin >> a >> b >> c;
+
+		if (one_indexed) {
+			a--;
+			b--;
+		}
+
+		g[a].push_back({ b, c });
+		if (!directed) {
+			g[b].push_back({ a, c });
+		}
+	}
+}
+
+
+//【コスト付き根付き木のノード】
+/*
+* parent : 親の頂点（なければ -1）
+* child : 子への辺のリスト（なければ空リスト）
+* depth : 深さ（根からのパスの長さ）
+* dist : 根からの距離（根からのパスのコスト）
+* weight : 重さ（部分木のもつ辺の数）
+*/
+struct WTNode {
+	int parent = -1;
+	vector<Edge> child;
+	int depth = -1;
+	ll dist = -1;
+	int weight = -1;
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const WTNode& v) {
+		os << "(par:" << v.parent << ", cld:" << v.child << ", dep:" << v.depth
+			<< ", dist:" << v.dist << ", wgt:" << v.weight << ")";
+		return os;
+	}
+};
+
+
+//【コスト付き根付き木】
+/*
+* rt[i] : 根付き木の i 番目のノードの情報
+* r : 根の頂点番号
+*
+* WRTree(g, r) : O(|V|)
+*	コスト付き木 g を r を根とみなしたコスト付き根付き木として受け取る．
+*/
+struct WRTree {
+	int n;
+	vector<WTNode> v;
+	int r;
+
+	// コンストラクタ（木と根で初期化）
+	WRTree(WGraph& g, int r_) : n(sz(g)), v(n), r(r_) {
+		// 再帰用の関数
+		// s : 注目ノード，p : s の親
+		function<void(int, int, ll)> dfs = [&](int s, int p, ll d) {
+			v[s].parent = p;
+			v[s].dist = d;
+			v[s].child.clear();
+			v[s].weight = 0;
+
+			repe(t, g[s]) {
+				if (t == p) continue;
+
+				v[t].depth = v[s].depth + 1;
+				dfs(t, s, d + t.cost);
+
+				v[s].child.push_back(t);
+				v[s].weight += v[t].weight + 1;
+			}
+		};
+
+		// 根 r を始点として再帰関数を呼び出す．
+		v[r].depth = 0;
+		dfs(r, -1, 0);
+	}
 
 	// アクセス
-	mint const& operator[](int i) const { return c[i]; }
-	mint& operator[](int i) { return c[i]; }
+	WTNode const& operator[](int i) const { return v[i]; }
+	WTNode& operator[](int i) { return v[i]; }
 
-	// 次数
-	int deg() const { return n - 1; }
+	// 大きさ
 	int size() const { return n; }
 
-	// 加算
-	FPS& operator+=(const FPS& g) {
-		if (n >= g.n) rep(i, g.n) c[i] += g.c[i];
-		else {
-			rep(i, n) c[i] += g.c[i];
-			repi(i, n, g.n - 1)	c.push_back(g.c[i]);
-			n = g.n;
-		}
-		return *this;
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const WRTree& rt) {
+		rep(i, rt.n) os << rt[i] << endl;
+		return os;
 	}
-	FPS operator+(const FPS& g) const { return FPS(*this) += g; }
+};
 
-	// 定数加算
-	FPS& operator+=(const mint& sc) {
-		if (n == 0) { n = 1; c = { sc }; }
-		else { c[0] += sc; }
-		return *this;
-	}
-	FPS operator+(const mint& sc) const { return FPS(*this) += sc; }
-	friend FPS operator+(const mint& sc, const FPS& f) { return f + sc; }
-	FPS& operator+=(const int& sc) { *this += mint(sc); return *this; }
-	FPS operator+(const int& sc) const { return FPS(*this) += sc; }
-	friend FPS operator+(const int& sc, const FPS& f) { return f + sc; }
 
-	// 減算
-	FPS& operator-=(const FPS& g) {
-		if (n >= g.n) rep(i, g.n) c[i] -= g.c[i];
-		else {
-			rep(i, n) c[i] -= g.c[i];
-			repi(i, n, g.n - 1) c.push_back(-g.c[i]);
-			n = g.n;
-		}
-		return *this;
-	}
-	FPS operator-(const FPS& g) const { return FPS(*this) -= g; }
+//【根付き木の HL 分解】O(|V|)
+/*
+* 根付き木 rt の HL 分解を行う．
+*
+* in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
+* out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら |V|）
+* pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ |V|）
+* top[s] : 頂点 s を含む連結成分の最も浅い頂点
+*/
+template <class TREE>
+void heavy_light_decomposition(TREE& rt, vi& in, vi& out, vi& pos, vi& top) {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
-	// 定数減算
-	FPS& operator-=(const mint& sc) { *this += -sc; return *this; }
-	FPS operator-(const mint& sc) const { return FPS(*this) -= sc; }
-	friend FPS operator-(const mint& sc, const FPS& f) { return -(f - sc); }
-	FPS& operator-=(const int& sc) { *this += -sc; return *this; }
-	FPS operator-(const int& sc) const { return FPS(*this) -= sc; }
-	friend FPS operator-(const int& sc, const FPS& f) { return -(f - sc); }
+	int n = sz(rt);
 
-	// 加法逆元
-	FPS operator-() const { return FPS(*this) *= -1; }
+	int time = 0;
+	in = vi(n);
+	out = vi(n);
+	pos = vi(n);
+	top = vi(n);
 
-	// 定数倍
-	FPS& operator*=(const mint& sc) { rep(i, n) c[i] *= sc; return *this; }
-	FPS operator*(const mint& sc) const { return FPS(*this) *= sc; }
-	friend FPS operator*(const mint& sc, const FPS& f) { return f * sc; }
-	FPS& operator*=(const int& sc) { *this *= mint(sc); return *this; }
-	FPS operator*(const int& sc) const { return FPS(*this) *= sc; }
-	friend FPS operator*(const int& sc, const FPS& f) { return f * sc; }
+	// 再帰用の関数
+	// s : 注目している頂点
+	// p : s を含む連結成分の最も浅い頂点
+	function<void(int, int)> rf = [&](int s, int p) {
+		in[s] = time;
+		pos[time++] = s;
+		top[s] = p;
 
-	// 右からの定数除算
-	FPS& operator/=(const mint& sc) { *this *= sc.inv(); return *this; }
-	FPS operator/(const mint& sc) const { return FPS(*this) /= sc; }
-	FPS& operator/=(const int& sc) { *this /= mint(sc); return *this; }
-	FPS operator/(const int& sc) const { return FPS(*this) /= sc; }
-
-	// 積
-	FPS& operator*=(const FPS& g) {
-		int m = g.deg();
-		resize(n + m);
-
-		// 後ろからインライン配る DP
-		repir(i, n - 1, 0) {
-			// 上位項に係数倍して配っていく．
-			repi(j, 1, m) {
-				
-				if (i + j >= n) break;
-
-				c[(ll)i + j] += c[i] * g[j];
-			}
-
-			// 定数項は最後に配るか消去しないといけない．
-			c[i] *= g[0];
-		}
-
-		return *this;
-	}
-	FPS operator*(const FPS& g) const { return FPS(*this) *= g; }
-
-	// 除算
-	FPS inv(int d) const {
-		// 参考：https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
-
-		//【方法】
-		// 1 / f mod x^d を求めることは，
-		//		f g = 1 (mod x^d)
-		// なる g を求めることである．
-		// この d の部分を 1, 2, 4, ..., 2^i と倍々にして求めていく．
-		//
-		// d = 1 のときについては
-		//		g = 1 / f[0] (mod x^1)
-		// である．
-		//
-		// 次に，
-		//		g = h (mod x^k)
-		// が求まっているとして
-		//		g mod x^(2 k)
-		// を求める．最初の式を変形していくことで
-		//		g - h = 0 (mod x^k)
-		//		⇒ (g - h)^2 = 0 (mod x^(2 k))
-		//		⇔ g^2 - 2 g h + h^2 = 0 (mod x^(2 k))
-		//		⇒ f g^2 - 2 f g h + f h^2 = 0 (mod x^(2 k))
-		//		⇔ g - 2 h + f h^2 = 0 (mod x^(2 k)) 　(f g = 1 (mod x^d) より)
-		//		⇔ g = (2 - f h) h (mod x^(2 k))
-		// を得る．
-		//
-		// この手順を d <= 2^i となる i まで繰り返し，d 次以上の項を削除すればよい．
-
-		FPS g(c[0].inv());
-		for (int k = 1; k < d; k *= 2) {
-			g = (2 - *this * g) * g;
-			g.resize(2 * k);
-		}
-
-		return g.resize(d);
-	}
-	FPS& operator/=(const FPS& g) { return *this *= g.inv(n); }
-	FPS operator/(const FPS& g) const { return FPS(*this) /= g; }
-
-	// 余り付き除算
-	FPS quotient(const FPS& g) const {
-		// 参考 : https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
-
-		//【方法】
-		// f(x) = g(x) q(x) + r(x) となる q(x) を求める．
-		// f の次数は n - 1, g の次数は m - 1 とする．(n >= m)
-		// 従って q の次数は n - m，r の次数は m - 2 となる．
-		// 
-		// f^R で f の係数列を逆順にした多項式を表す．すなわち
-		//		f^R(x) := f(1/x) x^(n-1)
-		// である．他の多項式も同様とする．
-		//
-		// 最初の式で x → 1/x と置き換えると，
-		//		f(1/x) = g(1/x) q(1/x) + r(1/x)
-		//		⇔ f(1/x) x^(n-1) = g(1/x) q(1/x) x^(n-1) + r(1/x) x^(n-1)
-		//		⇔ f(1/x) x^(n-1) = g(1/x) x^(m-1) q(1/x) x^(n-m) + r(1/x) x^(m-2) x^(n-m+1)
-		//		⇔ f^R(x) = g^R(x) q^R(x) + r^R(x) x^(n-m+1)
-		//		⇒ f^R(x) = g^R(x) q^R(x) (mod x^(n-m+1))
-		// 	    ⇒ q^R(x) = f^R(x) / g^R(x)  (mod x^(n-m+1))
-		// を得る．
-		// 	   
-		// これで q を mod x^(n-m+1) で正しく求めることができることになるが，
-		// q の次数は n - m であったから，q 自身を正しく求めることができた．
-
-		if (n < g.n) return FPS();
-		return ((this->rev() / g.rev()).resize(n - g.n + 1)).rev();
-	}
-	FPS reminder(const FPS& g) const { return (*this - this->quotient(g) * g).resize(g.n - 1); }
-	pair<FPS, FPS> quotient_remainder(const FPS& g) const {
-		pair<FPS, FPS> res;
-		res.first = this->quotient(g);
-		res.second = (*this - res.first * g).resize(g.n - 1);
-		return res;
-	}
-
-	// スパース積
-	FPS& operator*=(const SFPS& g) {
-		// g の定数項だけ例外処理
-		auto it0 = g.begin();
-		mint g0 = 0;
-		if (it0->first == 0) {
-			g0 = it0->second;
-			it0++;
-		}
-
-		// 後ろからインライン配る DP
-		repir(i, n - 1, 0) {
-			// 上位項に係数倍して配っていく．
-			for (auto it = it0; it != g.end(); it++) {
-				int j; mint gj;
-				tie(j, gj) = *it;
-
-				if (i + j >= n) break;
-
-				c[(ll)i + j] += c[i] * gj;
-			}
-
-			// 定数項は最後に配るか消去しないといけない．
-			c[i] *= g0;
-		}
-
-		return *this;
-	}
-	FPS operator*(const SFPS& g) const { return FPS(*this) *= g; }
-
-	// スパース商
-	FPS& operator/=(const SFPS& g) {
-		// g の定数項だけ例外処理
-		auto it0 = g.begin();
-		assert(it0->first == 0 && it0->second != 0);
-		mint g0_inv = it0->second.inv();
-		it0++;
-
-		// 前からインライン配る DP（後ろに累積効果あり）
-		rep(i, n) {
-
-			// 定数項は最初に配らないといけない．
-			c[i] *= g0_inv;
-
-			// 上位項に係数倍して配っていく．
-			for (auto it = it0; it != g.end(); it++) {
-				int j; mint gj;
-				tie(j, gj) = *it;
-
-				if (i + j >= n) break;
-
-				c[(ll)i + j] -= c[i] * gj;
+		// 重さ最大の頂点を得る．
+		int w_max = -INF, v_max = -1;
+		repe(t, rt[s].child) {
+			if (chmax(w_max, rt.v[t].weight)) {
+				v_max = t;
 			}
 		}
 
-		return *this;
-	}
-	FPS operator/(const SFPS& g) const { return FPS(*this) /= g; }
-
-	// 係数反転
-	FPS rev() const { FPS h = *this; reverse(all(h.c)); return h; }
-
-	// 不要な高次項の除去
-	FPS& resize() {
-		// 最高次の係数が非 0 になるまで削る．
-		while (n > 0 && c[n - 1LL] == 0) {
-			c.pop_back();
-			n--;
+		// 重さ最大の頂点を優先的になぞる．
+		if (v_max != -1) {
+			rf(v_max, p);
 		}
-		return *this;
+
+		// 残りの頂点をなぞる．
+		repe(t, rt[s].child) {
+			if (t == v_max) continue;
+
+			rf(t, t);
+		}
+
+		// s から最後に離れる
+		out[s] = time;
+	};
+
+	// 根から順に探索する．
+	rf(rt.r, rt.r);
+}
+
+
+//【遅延評価フェニック木】
+/*
+* Lazy_fenwick_tree(n) : O(n)
+*	要素数 n かつ初期値 e で初期化する．
+*	要素は Z 加群 (S, op, e, inv) の元とする．
+*	x ∈ S を k 個 op() したものを mul(x, k) とする．
+*
+* Lazy_fenwick_tree(a) : O(n)
+*	配列 a で初期化する．
+*
+* set(i, x) : O(log n) // 遅いので apply が使えるならそちらを使うべき
+*	v[i] = x とする．
+*
+* get(i) : O(log n)
+*	v[i] を返す．
+*
+* prod(l, r) : O(log n)
+*	op( v[l..r) ) を返す．空なら e() を返す．
+*
+* apply(i, x) : O(log n)
+*	v[i] = op(v[i], x) とする．
+*
+* apply(l, r, x) : O(log n)
+*	v[l..r) = op(v[l..r), x) とする．
+*/
+template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S), S(*mul)(S, int)>
+struct Lazy_fenwick_tree {
+	// 参考：https://algo-logic.info/binary-indexed-tree/
+
+	// ノードの個数（要素数 + 1）
+	int n;
+
+	// op( [1..i] ) を acc0[i] op mul(acc1[i], i) と分解する．
+	// さらに accd[i] = op( rawd[1..i] ) と表されるような rawd を導入する．
+	// v[d] : op( rawd[*..i] ) の値（i ： 1-indexed，v[d][0] は使わない）
+	vector<vector<S>> v;
+
+	// コンストラクタ（初期化なし）
+	Lazy_fenwick_tree() : n(0) {}
+
+	// 要素数 n かつ初期値 e で初期化
+	Lazy_fenwick_tree(int n_) : n(n_ + 1), v(2, vector<S>(n, e())) {}
+
+	// 配列 a で初期化
+	Lazy_fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(2, vector<S>(n, e())) {
+		// 配列の値を仮登録する．
+		rep(i, n - 1) v[0][i + 1LL] = v_[i];
+		
+		// 正しい値になるよう根に向かって累積 op() をとっていく．
+		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
+			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
+				v[0][i] = op(v[0][i], v[0][(ll)i - pow2]);
+			}
+		}
 	}
 
-	// 高次項の除去
-	FPS& resize(int d) {
-		// x^d 以上の項を除去する．
-		n = d;
-		c.resize(d);
-		return *this;
+	// v[i] = x とする．（i : 0-indexed）
+	void set(int i, S x) {
+		// 差分を求める．
+		S d = op(x, inv(get(i)));
+
+		apply(i, d);
 	}
 
-	// 不定元への代入
-	mint assign(const mint& x) const {
-		mint val = 0;
-		repir(i, n - 1, 0) val = val * x + c[i];
-		return val;
+	// v[i] を返す．（i : 0-indexed）
+	S get(int i) const {
+		return prod(i, i + 1);
 	}
 
-	// 係数のシフト
-	FPS& operator>>=(int d) {
-		n += d;
-		c.insert(c.begin(), d, 0);
-		return *this;
+	// op( v[l..r) ) を返す．空なら e を返す．（l, r : 0-indexed）
+	S prod(int l, int r) const {
+		// 0-indexed での半開区間 [l, r) は，
+		// 1-indexed での閉区間 [l + 1, r] に対応する．
+		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
+		return prod_sub(r) - prod_sub(l);
 	}
-	FPS& operator<<=(int d) {
-		n -= d;
-		if (n <= 0) { c.clear(); n = 0; }
-		else c.erase(c.begin(), c.begin() + d);
-		return *this;
-	}
-	FPS operator>>(int d) const { return FPS(*this) >>= d; }
-	FPS operator<<(int d) const { return FPS(*this) <<= d; }
 
-	// 累乗の剰余
-	friend FPS power_mod(const FPS& f, ll d, const FPS& g) {
-		FPS res(1), pow2(f);
-		while (d > 0) {
-			if (d & 1) res = (res * pow2).reminder(g);
-			pow2 = (pow2 * pow2).reminder(g);
-			d /= 2;
+	// op( v[1..r] ) を返す．空なら e を返す．（r : 1-indexed）
+	S prod_sub(int r) const {
+		return prod_sub(r, 0) + mul(prod_sub(r, 1), r);
+	}
+
+	// op( v[d][1..r] ) を返す．空なら e を返す．（r : 1-indexed）
+	S prod_sub(int r, int d) const {
+		S res = e();
+
+		// 子に向かって累積 op() をとっていく．
+		while (r > 0) {
+			res = op(res, v[d][r]);
+
+			// r の最下位ビットから 1 を減算することで次の位置を得る．
+			r -= r & -r;
 		}
 		return res;
 	}
 
-	// 微分
-	friend FPS derivative(const FPS& f) {
-		FPS res;
-		repi(i, 1, f.n - 1) res.c.push_back(f[i] * i);
-		res.n = sz(res.c);
-		return res;
+	// v[i] = op(v[i], x) とする．（i : 0-indexed）
+	void apply(int i, S x) {
+		// i を 1-indexed に直す．
+		i++;
+
+		apply_sub(i, x, 0);
 	}
 
-	// 不定積分
-	friend FPS integral(const FPS& f) {
-		FPS res(0);
-		repi(i, 0, f.n - 1) res.c.push_back(f[i] / (i + 1));
-		res.n = sz(res.c);
-		return res;
+	// v[l..r) = op(v[l..r), x) とする．（l, r : 0-indexed） 
+	void apply(int l, int r, S x) {
+		// 0-indexed での半開区間 [l, r) は，
+		// 1-indexed での閉区間 [l + 1, r] に対応する．
+		l++;
+
+		// 区間の端の値を調整する．
+		apply_sub(l, mul(inv(x), l - 1), 0);
+		apply_sub(r + 1, mul(x, r), 0);
+		apply_sub(l, x, 1);
+		apply_sub(r + 1, inv(x), 1);
 	}
 
-	// 対数関数
-	friend FPS log(const FPS& f, int d) {
-		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+	// v[d][i] = op(v[d][i], x) とする．（i : 1-indexed）
+	void apply_sub(int i, S x, int d) {
+		// 根に向かって値を op() していく．
+		while (i < n) {
+			v[d][i] = op(v[d][i], x);
 
-		return integral((derivative(f) * f.inv(d - 1)).resize(d - 1));
-	}
-
-	// 指数関数
-	friend FPS exp(const FPS& f, int d) {
-		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
-
-		//【方法】
-		// g(x) = exp(f(x)) とおき，方程式
-		//		log g(x) = f(x)
-		// に対してニュートン法を用いる．
-		// 
-		// f(0) = 0 なので，mod x^1 では
-		//		log(1) ≡ f(x) mod x^1
-		// が成り立つ．
-		//
-		// mod x^k で
-		//		log h(x) ≡ f(x) mod x^k
-		// が成り立っていると仮定すると，ニュートン法より
-		//		g = h - (log h - f) / (log h)'
-		//   ⇔ g = h (f + 1 - log h)
-		// と置くと
-		//		log g(x) ≡ f(x) mod x^(2 k)
-		// が成り立つ．
-		//
-		// これを繰り返せば所望の g が求まる．
-
-		// ニュートン法で log g = f なる g を見つける．
-		FPS g(1);
-		for (int k = 1; k < d; k *= 2) {
-			g = g * (f + 1 - log(g, 2 * k));
-			g.resize(2 * k);
+			// i の最下位ビットに 1 を加算することで次の位置を得る．
+			i += i & -i;
 		}
-
-		return g;
-	}
-
-	// 累乗
-	FPS pow(ll k, int d) const {
-		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
-
-		// 最低次の項を見つける．
-		int i0 = 0;
-		while (i0 < n && c[i0] == 0) i0++;
-
-		// f = 0 なら f^k = 0 である．
-		if (i0 == n) return FPS(0, d);
-
-		// 最低次の項の係数を記録する．
-		mint c0 = c[i0];
-
-		// 定数項が 1 になるようシフトかつ定数除算した多項式を得る．
-		FPS fs = (*this << i0) / c0;
-		ll ds = d - k * i0;
-
-		// 最終的に k * i0 次以上の項しか残らないことに注意し，0 になるケースを処理する．
-		if (ds <= 0) return FPS(0, d);
-
-		// f^k = exp(k log f(x)) を用いて f^k を計算する．
-		FPS gs = exp(mint(k) * log(fs, (int)ds), (int)ds);
-
-		// シフトと定数除算した分を元に戻す．
-		FPS g = (gs * c0.pow(k)) >> ((int)k * i0);
-
-		return g;
 	}
 
 	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const FPS& f) {
-		if (f.n == 0) os << 0;
-		else {
-			rep(i, f.n) {
-				os << f.c[i] << "x^" << i;
-				if (i < f.n - 1) os << " + ";
-			}
+	friend ostream& operator<<(ostream& os, const Lazy_fenwick_tree& ft) {
+		rep(i, ft.n - 1) {
+			os << ft.get(i) << " ";
 		}
 		return os;
 	}
 };
 
 
-//【展開係数／ボスタン－森法】O(n log n log d)
+//【区間加算／区間総和クエリ】
 /*
-* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
-*
-* 制約 : deg f < deg g,
+* 利用：【遅延評価フェニック木】
 */
-mint coef(const FPS& f, const FPS& g, ll d) {
-	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
+template <class T> T op8(T x, T y) { return x + y; }
+template <class T> T e8() { return T(0); }
+template <class T> T inv8(T x) { return -x; }
+template <class T> T mul8(T f, int i) { return f * i; }
+template <class T> using RASQ = Lazy_fenwick_tree<T, op8<T>, e8<T>, inv8<T>, mul8<T>>;
 
-	//【方法】
-	// 分母分子に g(-x) を掛けることにより
-	//		f(x) / g(x) = f(x) g(-x) / g(x) g(-x)
-	// を得る．ここで g(x) g(-x) は偶多項式なので
-	//		g(x) g(-x) = e(x^2)
-	// と表すことができる．
-	// 
-	// 分子について
-	//		f(x) g(-x) = E(x^2) + x O(x^2)
-	// というように偶多項式部分と奇多項式部分に分けると，d が偶数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] E(x^2) / e(x^2)
-	//		= [x^(d/2)] E(x) / e(x)
-	// となり，d が奇数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] x O(x^2) / e(x^2)
-	//		= [x^((d-1)/2)] O(x) / e(x)
-	// となる．
-	//
-	// これを繰り返せば d を半分ずつに減らしていくことができる．
 
-	// d = 0 のときは定数項を返す．
-	if (d == 0) {
-		return f[0] / g[0];
-	}
+//【木の辺への加算／木の辺の総和クエリ】
+/*
+* Tree_edge_add_sum_query(rt) : O(|V|)
+*	コスト付き根付き木 rt で初期化する．
+*
+* set(v, val) : O(log |V|)
+*	頂点 v への v の親からの辺の値を val にする．
+* 
+* get(v) : O(log |V|)
+*	頂点 v への v の親からの辺の値を返す．
+*
+* add(v, val) : O(log |V|)
+*	頂点 v の部分木の辺に val を加算する．
+*
+* add(v1, v2, val) : O((log |V|)^2)
+*	頂点 v1 から v2 までの辺に val を加算する．
+*
+* sum(v) : O(log |V|)
+*	頂点 v の部分木の辺の値の和を返す．
+*
+* sum(v1, v2) : O((log |V|)^2)
+*	頂点 v1 から v2 までの辺の値の和を返す．
+*
+* 利用：
+*	【根付き木の HL 分解／オイラーツアー】
+*	【区間加算／区間総和クエリ】
+*/
+struct Tree_edge_add_sum_query {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
-	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
-	FPS f2, g2 = g;
-	rep(i, g2.n) {
-		if (i % 2) {
-			g2.c[i] *= -1;
+	// 根付き木
+	WRTree rt;
+
+	// HL 分解の結果の記録用
+	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
+	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら |V|）
+	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ |V|）
+	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
+	vi in, out, pos, top;
+
+	// 列 pos に対する区間加算／区間総和クエリを処理する．
+	// rasq[i] : i 番目になぞる頂点に入る辺の値（rasq[0] は使わない）
+	RASQ<ll> rasq;
+
+	// コンストラクタ（根付き木で初期化）
+	Tree_edge_add_sum_query(WRTree& rt_) : rt(rt_) {
+		// rt を HL 分解する．
+		heavy_light_decomposition(rt, in, out, pos, top);
+
+		vl val(rt.n);
+		rep(s, rt.n) {
+			repe(e, rt[s].child) {
+				val[in[e.to]] += e.cost;
+			}
 		}
-	}
-	f2 = f * g2;
-	g2 *= g;
 
-	// f3(x) = E(x) or O(x), g3(x) = e(x) を求める．
-	FPS f3, g3;
-	if (d % 2 == 0) {
-		for (int i = 0; 2 * i < f2.n; i++) {
-			f3.c.push_back(f2.c[2 * i]);
-		}
+		rasq = RASQ<ll>(val);
 	}
-	else {
-		for (int i = 0; 2 * i + 1 < f2.n; i++) {
-			f3.c.push_back(f2.c[2 * i + 1]);
-		}
-	}
-	f3.n = sz(f3.c);
-	rep(i, g.n) {
-		g3.c.push_back(g2.c[2 * i]);
-	}
-	g3.n = sz(g3.c);
 
-	// d を半分にして再帰を回す．
-	return coef(f3, g3, d / 2);
-}
+	// 頂点 v への v の親からの辺の値を val にする．
+	void set(int v, ll val) { rasq.set(in[v], val); }
+
+	// 頂点 v への v の親からの辺の値を返す．
+	ll get(int v) { return rasq.get(in[v]); }
+
+	// 頂点 v の部分木の辺に val を加算する．
+	void add(int v, ll val) { rasq.apply(in[v] + 1, out[v], val); }
+
+	// 頂点 v1 から v2 までの辺に val を加算する．
+	void add(int v1, int v2, ll val) {
+		// v1 と v2 が異なる連結成分に属している限りループを回す．
+		while (top[v1] != top[v2]) {
+			// v1 の方が浅い連結成分に属しているとする．
+			if (in[top[v1]] > in[top[v2]]) {
+				swap(v1, v2);
+			}
+
+			// v2 を含む連結成分は pos で並んで配置されているので，
+			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
+			rasq.apply(in[top[v2]], in[v2] + 1, val);
+
+			// 一つ浅い連結成分に移動する．
+			v2 = rt[top[v2]].parent;
+		}
+
+		// ここまできたら v1 と v2 は同じ連結成分に属するので，
+		// その間の辺のみに対して val を加算する．
+		if (in[v1] > in[v2]) {
+			swap(v1, v2);
+		}
+		rasq.apply(in[v1] + 1, in[v2] + 1, val);
+	}
+
+	// 頂点 v の部分木の辺の値の和を返す．
+	ll sum(int v) { return rasq.prod(in[v] + 1, out[v]); }
+
+	// 頂点 v1 から v2 までの辺の値の和を返す．
+	ll sum(int v1, int v2) {
+		ll res = 0;
+
+		// v1 と v2 が異なる連結成分に属している限りループを回す．
+		while (top[v1] != top[v2]) {
+			// v1 の方が浅い連結成分に属しているとする．
+			if (in[top[v1]] > in[top[v2]]) {
+				swap(v1, v2);
+			}
+
+			// v2 を含む連結成分は pos で並んで配置されているので，
+			// 最も浅い頂点 top[v2] から v2 までの範囲の和を求める．
+			res += rasq.prod(in[top[v2]], in[v2] + 1);
+
+			// 一つ浅い連結成分に移動する．
+			v2 = rt[top[v2]].parent;
+		}
+
+		// ここまできたら v1 と v2 は同じ連結成分に属するので，
+		// その間の辺のみの和を res に加算する．
+		if (in[v1] > in[v2]) {
+			swap(v1, v2);
+		}
+		res += rasq.prod(in[v1] + 1, in[v2] + 1);
+
+		return res;
+	}
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, Tree_edge_add_sum_query q) {
+		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
+			<< q.top << endl << q.rasq << endl;
+		return os;
+	}
+};
 
 
 int main() {
-	cout << fixed << setprecision(12);
-//	input_from_file("input.txt");
-//	output_to_file("output.txt");
+	cout << fixed << setprecision(15);
+	//	input_from_file("input.txt");
+	//	output_to_file("output.txt");
 
-	int k, n;
-	cin >> k >> n;
+	int n;
+	cin >> n;
 
-	FPS f(0, k + 1);
-	f[1] = 1;
-	repi(i, 3, k) f[i] = -(i - 2);
-	dump(f);
+	WGraph g(n);
+	read_graph(n, n - 1, g, false, false);
 
-	FPS g(0, k + 1);
-	g[0] = 1;
-	repi(i, 1, k) g[i] = -1;
-	dump(g);
+	WRTree rt(g, 0);
 
-	cout << coef(f, g, n) << endl;
+	Tree_edge_add_sum_query tq(rt);
+
+	int q;
+	cin >> q;
+
+	rep(i, q) {
+		int type;
+		cin >> type;
+
+		if (type == 1) {
+			int a; ll x;
+			cin >> a >> x;
+
+			tq.add(a, x);
+		}
+		else {
+			int b;
+			cin >> b;
+
+			cout << tq.sum(0, b) << endl;
+		}
+	}
+
+	dump(tq);
+	dump(tq.sum(3, 2));
+	dump(tq.sum(5));
+	dump(tq.get(6));
+	dump(tq.sum(1));
 }

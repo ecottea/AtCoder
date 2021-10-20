@@ -23,7 +23,7 @@ mint count_subseq(const string& s) {
 		rep(c, k) {
 			nx[i][c] = nx[i + 1LL][c];
 		}
-		nx[i][s[i] - 'a'] = i;
+		nx[i][(ll)s[i] - 'a'] = i;
 	}
 
 	// dp[i + 1] : 部分文字列 s[0..i] から得られる s[i] を含む部分列の個数．
@@ -73,12 +73,12 @@ mint count_subseq_palindrome(const string& s) {
 	const int k = 26;
 
 	// nx[i][c] : 部分文字列 s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
-	vvi nx(n + 1, vi(k, n));
+	vvi nx(n + 1LL, vi(k, n));
 	repir(i, n - 1, 0) {
 		rep(c, k) {
 			nx[i][c] = nx[i + 1LL][c];
 		}
-		nx[i][s[i] - 'a'] = i;
+		nx[i][(ll)s[i] - 'a'] = i;
 	}
 
 	// pv[i + 1][c] : 部分文字列 s[0..i] で最後に文字 c が現れる位置（無いなら -1）
@@ -87,7 +87,7 @@ mint count_subseq_palindrome(const string& s) {
 		rep(c, k) {
 			pv[i + 1LL][c] = pv[i][c];
 		}
-		pv[i + 1LL][s[i] - 'a'] = i;
+		pv[i + 1LL][(ll)s[i] - 'a'] = i;
 	}
 
 	// dp[i + 1][j] : 
@@ -116,7 +116,7 @@ mint count_subseq_palindrome(const string& s) {
 				}
 
 				// 課した制約のため選べる c が一意に限定される．
-				dp[l + 1][r] += dp[i][j];
+				dp[l + 1LL][r] += dp[i][j];
 			}
 		}
 	}
@@ -162,7 +162,7 @@ bool lex_order_subseq(const string& s, ll d, string& res) {
 	// ただし同じ部分列については選択する位置の組が辞書順最小になるもののみを認める．
 	// この制約を設けることにより同じ部分列を重複して数えてしまわないようにする．
 	vvl dp(n, vl(k));
-	dp[n - 1LL][s[n - 1LL] - 'a'] = 1;
+	dp[n - 1LL][(ll)s[n - 1LL] - 'a'] = 1;
 
 	// オーバーフローしないように注意した足し算
 	auto add = [](ll& tgt, ll val) {
@@ -190,7 +190,7 @@ bool lex_order_subseq(const string& s, ll d, string& res) {
 		// c = s[i] のとき
 		// 課した制約のため，必ず s[i] を選ばなければならない．
 		// s[i] を選べば c で始まるので，s[i+1] 以降は何でも良い．
-		dp[i][s[i] - 'a'] = sum;
+		dp[i][(ll)s[i] - 'a'] = sum;
 	}
 
 	// DP 復元

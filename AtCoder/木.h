@@ -6,51 +6,7 @@
 
 
 
-//【木のオイラーツアー】O(|V|)
-/*
-* 頂点 r を始点とする木 g のオイラーツアーを求める．
-*
-* in[v] : 最初に頂点 v を訪れた時刻（r なら 0）
-* out[v] : 最後に頂点 v から離れた時刻（r なら 2 |V| - 1）
-* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 |V| - 1）
-*/
-template <class G>
-void euler_tour(G& g, int r, vi& in, vi& out, vi& pos) {
-	// 参考 : https://qiita.com/recuraki/items/72e37eb9be9f71bc623a
-
-	int n = sz(g);
-
-	int time = 0;
-	in = vi(n);
-	out = vi(n);
-	pos = vi(2 * n - 1);
-
-	// 再帰用の関数
-	function<void(int, int)> rf = [&](int s, int p) {
-		// s を最初に訪れた
-		in[s] = time;
-		pos[time++] = s;
-
-		for (auto t : g[s]) {
-			// 親には戻らない．
-			if (t == p) {
-				continue;
-			}
-
-			rf(t, s);
-			pos[time++] = s;
-		}
-
-		// s から最後に離れる
-		out[s] = time;
-	};
-
-	// 根から順に探索する．
-	rf(r, -1);
-}
-
-
-//【木の直径】O(|E| log|V|)
+//【木の直径】O(|V| log|V|)
 /*
 * コスト付き木の直径の長さを返す．また直径の両端となる頂点の組を p に格納する．
 *
@@ -86,7 +42,7 @@ ll tree_diameter(const WGraph& g, pii& p) {
 }
 
 
-//【直径とその中点】O(n)
+//【直径とその中点】O(|V|)
 /*
 * 木の直径の両端点を ep = {s, t} に，経路 s → t の中点を ctr に格納する．
 * 中点が頂点 v のときは ctr = {v, v}，辺 es → et 上のときは ctr = {es, et} とする．

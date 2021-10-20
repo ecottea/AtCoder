@@ -9,10 +9,10 @@
 * NTT() : O(1)
 *	初期化を行う．
 *
-* ntt(const vi& a, vi& A) : O(n log n log n) ?
+* ntt(const vi& a, vi& A) : O(n (log n)^2) ?
 *	a に対し mod 998244353 で数論変換を行った結果を A に格納する．
 *
-* intt(const vi& A, vi& a) : O(n log n log n) ?
+* intt(const vi& A, vi& a) : O(n (log n)^2) ?
 *	A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
 * 
 * 制約 : n は 2 の冪乗

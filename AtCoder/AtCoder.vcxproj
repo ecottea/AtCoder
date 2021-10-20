@@ -144,9 +144,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitDP(グラフ).h" />
     <ClInclude Include="bitDP.h" />
     <ClInclude Include="FPS.h" />
+    <ClInclude Include="mint.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="クエリ.h" />
@@ -156,6 +156,7 @@
     <ClInclude Include="二重和.h" />
     <ClInclude Include="全方位木DP.h" />
     <ClInclude Include="区間DP.h" />
+    <ClInclude Include="最短路.h" />
     <ClInclude Include="期待値.h" />
     <ClInclude Include="木DP.h" />
     <ClInclude Include="桁DP.h" />
@@ -164,7 +165,7 @@
     <ClInclude Include="組合せゲーム.h" />
     <ClInclude Include="部分列DP.h" />
     <ClInclude Include="順列.h" />
-    <ClInclude Include="場合の数.h" />
+    <ClInclude Include="有名数列.h" />
     <ClInclude Include="数列.h" />
     <ClInclude Include="特殊化.h" />
     <ClInclude Include="ビット行列.h" />
@@ -181,12 +182,10 @@
     <ClInclude Include="列挙(グラフ).h" />
     <ClInclude Include="判定%28幾何%29.h" />
     <ClInclude Include="分析%28グラフ%29.h" />
-    <ClInclude Include="FPS%28一般%29.h" />
     <ClInclude Include="座標圧縮.h" />
     <ClInclude Include="探索.h" />
     <ClInclude Include="木.h" />
     <ClInclude Include="木クエリ.h" />
-    <ClInclude Include="根付き木.h" />
     <ClInclude Include="構造(グラフ).h" />
     <ClInclude Include="畳み込み.h" />
     <ClInclude Include="疎行列.h" />
@@ -194,7 +193,7 @@
     <ClInclude Include="線形計画問題.h" />
     <ClInclude Include="計量.h" />
     <ClInclude Include="格子.h" />
-    <ClInclude Include="組合せ論.h" />
+    <ClInclude Include="二項係数.h" />
     <ClInclude Include="構造%28幾何%29.h" />
     <ClInclude Include="探索%28グラフ%29.h" />
     <ClInclude Include="header.h" />
@@ -209,6 +208,7 @@
     <ClInclude Include="部分列.h" />
     <ClInclude Include="部分和問題.h" />
     <ClInclude Include="ビット全探索.h" />
+    <ClInclude Include="高速素因数分解.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />

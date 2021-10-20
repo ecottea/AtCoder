@@ -175,9 +175,8 @@ struct Lazy_fenwick_tree {
 	// v[d] : op( rawd[*..i] ) の値（i ： 1-indexed，v[d][0] は使わない）
 	vector<vector<S>> v;
 
-
 	// コンストラクタ（初期化なし）
-	Lazy_fenwick_tree() {}
+	Lazy_fenwick_tree() : n(0) {}
 
 	// 要素数 n かつ初期値 e で初期化
 	Lazy_fenwick_tree(int n_) : n(n_ + 1), v(2, vector<S>(n, e())) {}
@@ -185,18 +184,15 @@ struct Lazy_fenwick_tree {
 	// 配列 a で初期化
 	Lazy_fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(2, vector<S>(n, e())) {
 		// 配列の値を仮登録する．
-		rep(i, n - 1) {
-			v[0][i + 1] = v_[i];
-		}
+		rep(i, n - 1) v[0][i + 1LL] = v_[i];
 
 		// 正しい値になるよう根に向かって累積 op() をとっていく．
 		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
 			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
-				v[i][0] = op(v[i][0], v[0][i - pow2]);
+				v[0][i] = op(v[0][i], v[0][(ll)i - pow2]);
 			}
 		}
 	}
-
 
 	// v[i] = x とする．（i : 0-indexed）
 	void set(int i, S x) {
@@ -272,12 +268,21 @@ struct Lazy_fenwick_tree {
 
 	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, const Lazy_fenwick_tree& ft) {
-		rep(i, ft.n - 1) {
-			os << ft.get(i) << " ";
-		}
+		rep(i, ft.n - 1) os << ft.get(i) << " ";
 		return os;
 	}
 };
+
+
+//【区間加算／区間総和クエリ】
+/*
+* 利用：【遅延評価フェニック木】
+*/
+template <class T> T op8(T x, T y) { return x + y; }
+template <class T> T e8() { return T(0); }
+template <class T> T inv8(T x) { return -x; }
+template <class T> T mul8(T f, int i) { return f * i; }
+template <class T> using RASQ = Lazy_fenwick_tree<T, op8<T>, e8<T>, inv8<T>, mul8<T>>;
 
 
 //【二次元フェニック木】

@@ -3,6 +3,7 @@
 #include "構造(グラフ).h"
 #include "構造(幾何).h"
 #include "ヒストグラム.h"
+#include "二項係数.h"
 // ■■■■■ 格子上の幾何 ■■■■■
 
 
@@ -401,6 +402,51 @@ void defect_repair_2d(vector<vector<T>>& c, T defect) {
 	14 15 18 18 -1 -1 18 18
 	13 13 13 13 13 13 13 13
 	*/
+}
+
+
+//【最短経路数（禁止点あり）】O(n^2)
+/*
+* h × w の格子路の (0, 0) から (h-1, w-1) までの最短路のうち，
+* n 個の禁止点 fb[i] = {r[i], c[i]} を 1 つも通らないものの個数を返す．
+*
+* 利用：【階乗と二項係数（mint利用）】
+*/
+mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
+	int n = sz(fb);
+
+	factorial_mint fm(h + w);
+
+	// s, t : 対応する始点と終点の列
+	// 番号の小さい方へ戻るパスは存在してはいけない．
+	vector<pii> s = { {0,0} }, t = { {h - 1, w - 1} };
+	rep(i, n) {
+		s.push_back(fb[i]);
+	}
+	sort(next(s.begin()), s.end());
+	repi(i, 1, n) {
+		t.push_back(s[i]);
+	}
+
+	// DPL 用の行列を作成する．
+	vvm dpl(n + 1, vm(n + 1));
+	repi(i, 0, n) {
+		repi(j, 0, n) {
+			int h = t[j].first - s[i].first;
+			int w = t[j].second - s[i].second;
+			dpl[i][j] = fm.nCr(h + w, h);
+		}
+	}
+
+	// 列基本変形で第 1 列の 2 行目以降を消去する．
+	repir(j, n, 1) {
+		rep(i, j) {
+			dpl[i][0] -= dpl[j][0] * dpl[i][j];
+		}
+	}
+
+	// DPL 行列の行列式，すなわち (0,0) 成分が答え．
+	return dpl[0][0];
 }
 
 
