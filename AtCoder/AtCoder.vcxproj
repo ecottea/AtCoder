@@ -144,6 +144,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="01計画問題.h" />
     <ClInclude Include="bitDP.h" />
     <ClInclude Include="FPS.h" />
     <ClInclude Include="mint.h" />
@@ -155,6 +156,7 @@
     <ClInclude Include="二乗の木DP.h" />
     <ClInclude Include="二重和.h" />
     <ClInclude Include="全方位木DP.h" />
+    <ClInclude Include="分析(文字列).h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="最短路.h" />
     <ClInclude Include="期待値.h" />
@@ -171,7 +173,7 @@
     <ClInclude Include="ビット行列.h" />
     <ClInclude Include="フェニック木.h" />
     <ClInclude Include="マッチング.h" />
-    <ClInclude Include="マンハッタン.h" />
+    <ClInclude Include="マンハッタン幾何.h" />
     <ClInclude Include="二分木.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />
@@ -208,7 +210,7 @@
     <ClInclude Include="部分列.h" />
     <ClInclude Include="部分和問題.h" />
     <ClInclude Include="ビット全探索.h" />
-    <ClInclude Include="高速素因数分解.h" />
+    <ClInclude Include="数論%28高速%29.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />

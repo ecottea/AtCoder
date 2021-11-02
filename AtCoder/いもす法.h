@@ -3,7 +3,6 @@
 // ■■■■■ いもす法 ■■■■■
 
 
-
 //【いもす法】
 /*
 * [0, n) 内の半開区間に一定の値を加算する．
@@ -20,23 +19,26 @@
 * v[i] : O(1)
 *	加算後の位置 i の値を得る．
 */
-template <class T>
-struct Imos {
+template <class T> struct Imos {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
 	int n;
 	vector<T> v;
 
-	// [0, N) 上の a を 0 で初期化する．
-	Imos(int n_tmp) : n(n_tmp), v((int)(n_tmp + 1)) {}
+	// [0, n) 上の a を 0 で初期化する．
+	Imos(int n_) : n(n_), v(n + 1)) {}
 
+	// アクセス
+	T const& operator[](int i) const { return v[i]; }
+	T& operator[](int i) { return v[i]; }
+	
 	// 半開区間 [l, r) に val を加算する準備を行う．O(1)
 	void set(int l, int r, T val) {
 		v[l] += val;
 		v[r] -= val;
 	}
 
-	// 実際の加算を行う．O(N)
+	// 実際の加算を行う．O(n)
 	vector<T>& sum() {
 		rep(i, n) {
 			v[i + 1] += v[i];
@@ -66,18 +68,18 @@ struct Imos {
 * v[i][j] : O(1)
 *	加算後の位置 (i, j) の値を得る．
 */
-template <class T>
-struct Imos2d {
+template <class T> struct Imos2d {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
-	int h;
-	int w;
+	int h, w;
 	vector<vector<T>> v;
 
-	// [0, H) * [0, W) を 0 で初期化する．
-	Imos2d(int h_tmp, int w_tmp) : h(h_tmp), w(w_tmp) {
-		v = vector<vector<T>>((int)(h_tmp + 1), vector<T>((int)(w_tmp + 1)));
-	}
+	// [0, h) * [0, w) を 0 で初期化する．
+	Imos2d(int h_, int w_) : h(h_), w(w_), v(h + 1, vector<T>(w + 1)) {}
+
+	// アクセス
+	vector<T> const& operator[](int i) const { return v[i]; }
+	vector<T>& operator[](int i) { return v[i]; }
 
 	// [x1, x2) * [y1, y2) に val を加算する準備を行う．O(1)
 	void set(int x1, int y1, int x2, int y2, T val) {
@@ -87,8 +89,8 @@ struct Imos2d {
 		v[x2][y2] += val;
 	}
 
-	// 実際の加算を行う．O(H W)
-	vector<vector<T>>& sum() {
+	// 実際の加算を行う．O(h w)
+	void sum() {
 		repi(i, 1, h) {
 			repi(j, 0, w) {
 				v[i][j] += v[i - 1][j];
@@ -99,14 +101,23 @@ struct Imos2d {
 				v[i][j] += v[i][j - 1];
 			}
 		}
+		dumpel(v);
 
 		// 不要な部分の削除
 		v.pop_back();
 		rep(i, h) {
 			v[i].pop_back();
 		}
+		dumpel(v);
+	}
 
-		return v;
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Imos2d& imos) {
+		rep(i, sz(imos.v)) {
+			rep(j, sz(imos.v[0])) os << imos[i][j] << " ";
+			os << endl;
+		}
+		return os;
 	}
 };
 
@@ -130,18 +141,19 @@ struct Imos2d {
 * v[i][j] : O(1)
 *	加算後の位置 (i, j) の値を得る．
 */
-template <class T>
-struct Imos2d_tri {
+template <class T> struct Imos2d_tri {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 	
 	int h;
 	int w;
 	vector<vector<T>> v;
 
-	// [0, H) * [0, W) を 0 で初期化する．
-	Imos2d_tri(int h_tmp, int w_tmp) : h(h_tmp), w(w_tmp) {
-		v = vector<vector<T>>((int)(h_tmp + 2), vector<T>((int)(w_tmp + 2)));
-	}
+	// [0, h) * [0, w) を 0 で初期化する．
+	Imos2d_tri(int h_, int w_) : h(h_), w(w_), v(h + 2, vector<T>(w + 2)) {}
+	
+	// アクセス
+	vector<T> const& operator[](int i) const { return v[i]; }
+	vector<T>& operator[](int i) { return v[i]; }
 
 	// [x1, x2] * [y1, y2] に val を加算する準備を行う．O(1)
 	void set_rect(int x1, int y1, int x2, int y2, T val) {
@@ -177,7 +189,7 @@ struct Imos2d_tri {
 		v[x + d + 2][y + d + 2] -= val;
 	}
 
-	// 実際の加算を行う．O(H W)
+	// 実際の加算を行う．O(h w)
 	vector<vector<T>>& sum() {
 		// 縦方向の累積和
 		repi(i, 1, h) {
@@ -210,6 +222,15 @@ struct Imos2d_tri {
 
 		return v;
 	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Imos2d& imos) {
+		rep(i, sz(imos.v)) {
+			rep(j, sz(imos.v[0])) os << imos[i][j] << " ";
+			os << endl;
+		}
+		return os;
+	}
 };
 
 
@@ -232,8 +253,7 @@ struct Imos2d_tri {
 * get(v) : O(1)
 *	加算後の頂点 v の値を得る．
 */
-template <class T>
-struct Imos_tree {
+template <class T> struct Imos_tree {
 	RTree rt;
 	vector<T> v_anc, v_dsc;
 

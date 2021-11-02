@@ -4,8 +4,7 @@
 #include "構造(幾何).h"
 #include "ヒストグラム.h"
 #include "二項係数.h"
-// ■■■■■ 格子上の幾何 ■■■■■
-
+// ■■■■■ 格子上の問題 ■■■■■
 
 
 //【グリッド → グラフ】O(h w)
@@ -66,6 +65,55 @@ void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
 	// q : 未探索のマスを記録しておくキュー
 	queue<pii> q;
 	q.push(s);
+
+	while (!q.empty()) {
+		int x, y;
+		tie(x, y) = q.front();
+		q.pop();
+
+		// マス (x, y) の 4 近傍を調べる．
+		rep(k, 4) {
+			// (nx, ny) : (x, y) の近傍の座標
+			int nx = x + dx4[k];
+			int ny = y + dy4[k];
+
+			// 範囲外または壁マスなら何もしない．
+			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
+				continue;
+			}
+
+			// 既に最短経路長が確定済みなら何もしない．
+			if (dist[nx][ny] != -1) {
+				continue;
+			}
+
+			// 最短経路長の確定
+			dist[nx][ny] = dist[x][y] + 1;
+
+			q.push({ nx, ny });
+		}
+	}
+}
+
+
+//【迷路（複数始点）】O(h w)
+/*
+* 壁が wall で表された h * w の迷路 c について，スタートの集合 s[i] = (sx, sy) から
+* 各マス c[i][j] への最短経路長の最小値を dist[i][j] に格納する．（到達不能なら -1）
+*
+*（幅優先探索）
+*/
+void solve_maze(const vvc& c, const vector<pii>& s, vvi& dist, const char wall = '#') {
+	int h = sz(c);
+	int w = sz(c[0]);
+	dist = vvi(h, vi(w, -1));
+
+	// q : 未探索のマスを記録しておくキュー
+	queue<pii> q;
+	repe(p, s) {
+		q.push(p);
+		dist[p.first][p.second] = 0;
+	}
 
 	while (!q.empty()) {
 		int x, y;
@@ -324,7 +372,7 @@ mint king_problem(vvb& hall) {
 * 欠損値は defect で表されているとする．
 */
 template <class T>
-void defect_repair_2d(vector<vector<T>>& c, T defect) {
+void defect_repair(vector<vector<T>>& c, T defect) {
 	int h = sz(c);
 	int w = sz(c[0]);
 

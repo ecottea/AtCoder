@@ -106,39 +106,36 @@ ll prim(const WGraph& g, int r, WGraph& mst) {
 }
 
 
-//【最長パス（始点任意）】O(|V| + |E|)
+//【最長パス】O(|V| + |E|)
 /*
-* 有向非巡回グラフ g の最長パスの長さを返す．
-* 
+* 有向非巡回グラフ g の頂点 s からの最長パスの長さを len[s] に格納する．
+*
 *（DAG 上の DP）
 */
-int longest_path(const Graph& g) {
+void longest_path(const Graph& g, vi& len) {
 	int n = sz(g);
 
-	// dp[s] : 頂点 s からの最長パスの長さ
-	vi dp(n);
+	// len[s] : 頂点 s からの最長パスの長さ
+	len.resize(n);
 	vb seen(n);
 
 	function<int(int)> dfs = [&](int s) {
 		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) return dp[s];
+		if (seen[s]) return len[s];
 		seen[s] = true;
 
 		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		dp[s] = 0;
+		len[s] = 0;
 		repe(t, g[s]) {
-			chmax(dp[s], dfs(t) + 1);
+			chmax(len[s], dfs(t) + 1);
 		}
-		return dp[s];
+		return len[s];
 	};
 
 	// 各頂点 s についての情報を計算する．
-	int res = 0;
 	rep(s, n) {
-		chmax(res, dfs(s));
+		if (!seen[s]) dfs(s);
 	}
-
-	return res;
 }
 
 

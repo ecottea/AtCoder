@@ -344,3 +344,37 @@ bool warshall_floyd(const WGraph& g, vvl& cost) {
 }
 
 
+//【最近傍探索】
+/*
+* 無向グラフ g とその頂点集合 v について，頂点 i と最も近い v の頂点の 1 つを nn[i] に，
+* i と nn[i] との距離を dist[i] にそれぞれ格納する．（なければそれぞれ -1, INF）
+*/
+void nearest_neighbor(const Graph& g, const vi& v, vi& nn, vi& dist) {
+	int n = sz(g);
+
+	nn.resize(n, -1);
+	dist.resize(n, INF);
+	queue<int> q;
+
+	repe(s, v) {
+		q.push(s);
+		nn[s] = s;
+		dist[s] = 0;
+	}
+
+	while (!q.empty()) {
+		int s = q.front();
+		q.pop();
+
+		repe(t, g[s]) {
+			if (dist[t] != INF) continue;
+
+			dist[t] = dist[s] + 1;
+			nn[t] = nn[s];
+
+			q.push(t);
+		}
+	}
+}
+
+

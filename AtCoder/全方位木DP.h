@@ -14,15 +14,15 @@
 *
 *（全方位木 DP）
 */
-void height_of_undirected_tree(Graph& g, vl& h) {
-	ll n = sz(g);
+void height_of_undirected_tree(Graph& g, vi& h) {
+	ll n = sz(g); // unordered_map<ll, int> を使うので ll にキャストしておく．
 
 	// 辺 (p, s) を切断したときの s を根とする部分木を部分木 (p, s) と呼ぶ．
 	// dp[p * n + s] : 部分木 (p, s) の高さ
-	unordered_map<ll, ll> dp;
+	unordered_map<ll, int> dp;
 
 	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	function<ll(int, int)> dfs_to_leaf = [&](int p, int s) {
+	function<int(int, int)> dfs_to_leaf = [&](int p, int s) {
 		// 子の情報を集めてその最大値をとり，自身の情報を計算する．
 		for (auto t : g[s]) {
 			if (t != p) {
@@ -40,7 +40,7 @@ void height_of_undirected_tree(Graph& g, vl& h) {
 		int m = sz(g[s]);
 
 		// 左右からの累積最大値を計算する．
-		vl acc_l(m + 1), acc_r(m + 1);
+		vi acc_l(m + 1), acc_r(m + 1);
 		for (int i = 0; i < m; i++) {
 			auto t = g[s][i];
 			acc_l[i + 1] = max(acc_l[i], dp[s * n + t] + 1);
@@ -62,9 +62,7 @@ void height_of_undirected_tree(Graph& g, vl& h) {
 		// これで子から自身への情報が計算できたので，
 		// 子に対して同様の計算を行っていく．
 		for (auto t : g[s]) {
-			if (t != p) {
-				dfs_to_root(s, t);
-			}
+			if (t != p) dfs_to_root(s, t);
 		}
 	};
 
@@ -77,10 +75,8 @@ void height_of_undirected_tree(Graph& g, vl& h) {
 	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
 	dfs_to_root(0, 0);
 
-	h = vl(n);
-	rep(s, n) {
-		h[s] = dp[s * n + s];
-	}
+	h.resize(n);
+	rep(s, n) h[s] = dp[s * n + s];
 }
 
 

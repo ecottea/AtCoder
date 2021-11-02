@@ -3,7 +3,6 @@
 // ■■■■■ 行列 ■■■■■
 
 
-
 //【行列】
 /*
 * 行列を表す構造体
@@ -42,7 +41,6 @@ template <class T>
 struct Matrix {
 	int m, n; // 行列のサイズ（m 行 n 列）
 	vector<vector<T>> v; // 行列の成分
-
 
 	// コンストラクタ（初期化なし）
 	Matrix() {}

@@ -169,10 +169,9 @@ struct FPS {
 
 	// 積
 	FPS& operator*=(const FPS& g) {
-		if (mint::mod() == 998244353) return mul998244353(g);
-		else return mul_other(g);
+		c = convolution(c, g.c); n = sz(c); return *this; // mod 998244353 用
+//		return mul_other(g);
 	}
-	FPS& mul998244353(const FPS& g) { c = convolution(c, g.c); n = sz(c); return *this; }
 	FPS& mul_other(const FPS& g) {
 		int m = g.deg();
 		resize(n + m);
@@ -636,13 +635,10 @@ mint coef(const FPS& f, const FPS& g, ll d) {
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 数列 a について，a[n] の値を返す．
 *
-* 制約 : c[d-1] ≠ 0
-*
 * 利用：【展開係数／ボスタン－森法】
 */
 mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 	int d = sz(a);
-	assert(c[d - 1] != 0);
 
 	FPS A(a), C(c);
 	FPS Dnm = 1 - (C >> 1);
@@ -854,7 +850,7 @@ FPS lagrange_interpolation(const vm& x, const vm& y) {
 }
 
 
-//【下降階乗冪】O(n log n)
+//【下降階乗冪（第 1 種スターリング数）】O(n log n)
 /*
 * x(x-1)(x-2)...(x-(n-1)) を返す（係数は第 1 種スターリング数）
 *

@@ -3,7 +3,6 @@
 // ■■■■■ 座標圧縮 ■■■■■
 
 
-
 //【座標圧縮】O(n log n)
 /*
 * 大きさ n の集合 a を 0 以上 |a| 未満の範囲に座標圧縮した結果を a_cp に格納する．
@@ -84,12 +83,12 @@ int coordinate_compression_interval(vector<pll>& a, vector<pii>& a_cp, vl* x = n
 /*
 * n 個の半開長方形 [x1, x2) * [y1, y2) の集合 a を
 * 座標圧縮した結果を a_cp に格納する．
-* 各長方形 a[i] は，(x1, y1, x2, y2) を順に並べて表す．
+* 各長方形 a[i] は，{x1, y1, x2, y2} を順に並べて表す．
 * また x[i], y[j] に圧縮された座標 i, j に対応する元の座標を格納する．
 * 戻り値として，(x 座標の数, y 座標の数) を返す．
 */
 pii coordinate_compression_rectangle(vector<tuple<ll, ll, ll, ll>>& a,
-	vector<tuple<int, int, int, int>>& a_cp, vl* x, vl* y) {
+	vector<tuple<int, int, int, int>>& a_cp, vl* x = nullptr, vl* y = nullptr) {
 	int n = sz(a);
 	if (x == nullptr) x = new vl;
 	if (y == nullptr) y = new vl;

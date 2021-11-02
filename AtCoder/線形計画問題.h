@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "グラフ最適化.h"
+#include "最短路.h"
 // ■■■■■ 線形計画問題 ■■■■■
 
 

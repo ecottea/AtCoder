@@ -3,7 +3,6 @@
 // ■■■■■ 区間 ■■■■■
 
 
-
 //【区間の結合】O(n log n)
 /*
 * n 個の半開区間 lr[i] = [l, r) を結合した半開区間の列を res に格納する．
@@ -74,11 +73,11 @@ void slide_minimum(const vector<T>& a, int w, vector<T>& a_min) {
 }
 
 
-//【区間スケジューリング問題】O(n)
+//【区間スケジューリング問題】O(n log n)
 /*
-* 期間 [l[i], r[i]) に着手すべき n 個の仕事について，
-* 最も多くの仕事をこなす場合のこなした仕事の個数を返す．
-* 
+* 期間 [l[i], r[i]) に着手すべき n 個の仕事を請け負える最大個数を返す．
+* 全ての区間 [l[i], r[i]) を切断するための最小切断回数にも一致する．
+*
 *（貪欲法）
 */
 int interval_scheduling(const vl& l, const vl& r) {
@@ -91,11 +90,11 @@ int interval_scheduling(const vl& l, const vl& r) {
 
 	int res = 0;
 
-	ll t = 0; // 現在
+	ll t = -INFL; // 現在
 
 	// 締め切りの早い順に仕事を見ていく．
 	rep(i, n) {
-		int l, r;
+		ll l, r;
 		tie(r, l) = rl[i];
 
 		// 仕事の開始日が現在以降の場合はその仕事を請ける．
@@ -109,7 +108,7 @@ int interval_scheduling(const vl& l, const vl& r) {
 }
 
 
-//【区間スケジューリング問題（期間自由，報酬最大化）】O(n max(r))
+//【区間スケジューリング問題（期間自由，報酬最大化）】O(n log n + n max(r))
 /*
 * 締め切りが r[i]，所要日数が w[i]，報酬が a[i] の n 個の仕事について，
 * 得られる最大報酬を返す．

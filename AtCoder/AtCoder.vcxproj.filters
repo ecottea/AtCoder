@@ -40,9 +40,6 @@
     <Filter Include="ヘッダー ファイル\計算">
       <UniqueIdentifier>{59318c8d-7ef2-4194-b058-dabafd79dab4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\整数">
-      <UniqueIdentifier>{bfa2e7c8-eb39-4a41-ba8f-1845a0d9c0c3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\確率">
       <UniqueIdentifier>{36597baf-90fc-48c6-a94a-085803720106}</UniqueIdentifier>
     </Filter>
@@ -57,6 +54,12 @@
     </Filter>
     <Filter Include="ヘッダー ファイル\列,格子">
       <UniqueIdentifier>{9624464e-a2c8-4e1a-b285-83292d7c1f9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\文字列">
+      <UniqueIdentifier>{4ab017ff-67b5-4897-b871-957943fd7976}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\計算%28整数%29">
+      <UniqueIdentifier>{bfa2e7c8-eb39-4a41-ba8f-1845a0d9c0c3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -122,9 +125,6 @@
     <ClInclude Include="部分列.h">
       <Filter>ヘッダー ファイル\列,格子</Filter>
     </ClInclude>
-    <ClInclude Include="文字列.h">
-      <Filter>ヘッダー ファイル\列,格子</Filter>
-    </ClInclude>
     <ClInclude Include="座標圧縮.h">
       <Filter>ヘッダー ファイル\列,格子</Filter>
     </ClInclude>
@@ -143,7 +143,7 @@
     <ClInclude Include="探索.h">
       <Filter>ヘッダー ファイル\探索,列挙</Filter>
     </ClInclude>
-    <ClInclude Include="マンハッタン.h">
+    <ClInclude Include="マンハッタン幾何.h">
       <Filter>ヘッダー ファイル\幾何</Filter>
     </ClInclude>
     <ClInclude Include="線形計画問題.h">
@@ -180,13 +180,13 @@
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
     <ClInclude Include="合同式.h">
-      <Filter>ヘッダー ファイル\整数</Filter>
+      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
     <ClInclude Include="数論.h">
-      <Filter>ヘッダー ファイル\整数</Filter>
+      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
     <ClInclude Include="数の表示.h">
-      <Filter>ヘッダー ファイル\整数</Filter>
+      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
     <ClInclude Include="畳み込み.h">
       <Filter>ヘッダー ファイル\計算</Filter>
@@ -201,7 +201,7 @@
       <Filter>ヘッダー ファイル\ゲーム</Filter>
     </ClInclude>
     <ClInclude Include="桁DP.h">
-      <Filter>ヘッダー ファイル\整数</Filter>
+      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
     <ClInclude Include="区間DP.h">
       <Filter>ヘッダー ファイル\区間</Filter>
@@ -249,7 +249,7 @@
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="mint.h">
-      <Filter>ヘッダー ファイル\整数</Filter>
+      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
     <ClInclude Include="格子.h">
       <Filter>ヘッダー ファイル\列,格子</Filter>
@@ -257,8 +257,17 @@
     <ClInclude Include="最短路.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
-    <ClInclude Include="高速素因数分解.h">
-      <Filter>ヘッダー ファイル\整数</Filter>
+    <ClInclude Include="数論%28高速%29.h">
+      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="文字列.h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="分析(文字列).h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="01計画問題.h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

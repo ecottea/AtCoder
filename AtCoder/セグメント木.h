@@ -3,7 +3,6 @@
 // ■■■■■ セグメント木（遅延評価含む） ■■■■■
 
 
-
 //【セグメント木】
 /*
 * Segtree<S, op, e>(n) : O(n)
@@ -42,7 +41,6 @@ struct Segtree {
 	// 0-indexed での i 番目のデータは葉である v[i + n] に入っている．
 	// v[0] は使用しない．
 	vector<S> v;
-
 
 	// コンストラクタ（初期化なし）
 	Segtree() : n(0), actual_n(0) {}
@@ -89,14 +87,10 @@ struct Segtree {
 	}
 
 	// v[i] を返す．
-	S get(int i) const {
-		return v[i + n];
-	}
+	S get(int i) const { return v[i + n]; }
 
 	// op( v[l..r) ) を返す．空なら e() を返す．
-	S prod(int l, int r) const {
-		return prod_rf(l, r, 1, 0, n);
-	}
+	S prod(int l, int r) const { return prod_rf(l, r, 1, 0, n); }
 
 	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
 	S prod_rf(int l, int r, int k, int kl, int kr) const {
@@ -115,6 +109,9 @@ struct Segtree {
 		S vr = prod_rf(l, r, k * 2 + 1, (kl + kr) / 2, kr);
 		return op(vl, vr);
 	}
+
+	// op( v[0..n) ) を返す．
+	S all_prod() const { return prod_rf(0, n, 1, 0, n); }
 
 	// f( op( v[l, r) ) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& f) const {

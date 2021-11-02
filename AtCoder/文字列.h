@@ -299,42 +299,6 @@ ll levenshtein_distance(const vector<T>& s, const vector<T>& t,
 }
 
 
-//【ランレングス符号】
-/*
-* s をランレングス符号化し，結果を rlc に格納する．
-* rlc[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
-*/
-template <class T>
-void run_length_encodeing(vector<T>& a, vector<pair<T, int>>& rlc) {
-	int n = sz(a);
-	if (n == 0) {
-		rlc = {};
-		return;
-	}
-
-	rlc = { {a[0], 1} };
-
-	// 今読んでいる文字の種類を記憶する．
-	T c = a[0];
-
-	repi(i, 1, n - 1) {
-		// 記憶している文字と同じ文字の場合
-		if (c == a[i]) {
-			// 列の長さを増やす．
-			rlc.rbegin()->second++;
-		}
-		// 記憶している文字と異なる文字の場合
-		else {
-			// 新しい文字を記憶しておく．
-			c = a[i];
-
-			// 新たな列を追加する．
-			rlc.push_back({ c, 1 });
-		}
-	}
-}
-
-
 //【トライ木】
 /*
 * Trie_tree() : O(1)
@@ -450,7 +414,7 @@ ll huffman_encoding(string& s) {
 	priority_queue_rev<pii> q;
 
 	// ハフマン木
-	vector<BTNode> ht(2 * K - 1);
+	vector<BTNode> ht(2LL * K - 1);
 
 	// ハフマン木の葉となる文字たちをキューに追加する．
 	rep(j, K) {
@@ -561,7 +525,7 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 /*
 * n 個の 0-1 文字列 s[i] を好きに並べて得られる長さ k の文字列の個数を返す．
 */
-mint count_string_join(const vector<string>& s_, int k) {
+mint count_string_concat(const vector<string>& s_, int k) {
 	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/27/181249
 
 	int n = sz(s_);
@@ -633,20 +597,48 @@ mint count_string_join(const vector<string>& s_, int k) {
 }
 
 
-//【部分文字列の数え上げ】O(|s|)
+//【辞書順最小の連結文字列】O(n k^2 max|s[i]|)
 /*
-* 文字列 s の部分文字列の個数を返す（空文字列も s の部分文字列とみなす）
+* n 個の文字列 s から k 個を選び連結して作られる辞書順最小の文字列を返す．
 */
-ll count_substring(const string& s) {
+string minimum_string_concat(vector<string> s, int k) {
+	// 参考 : https://atcoder.jp/contests/abc225/editorial/2833
+
 	int n = sz(s);
 
-	auto sa = suffix_array(s);
-	auto la = lcp_array(s, sa);
+	// 連結した時どっち向きの方が辞書順で小さいかで半順序を定義する．
+	auto compare = [&](const string& a, const string& b) {
+		return a + b < b + a;
+	};
 
-	ll res = (ll)n - sa[0];
-	repi(i, 1, n - 1) res += (ll)n - sa[i] - la[i - 1LL];
+	// 先の半順序で s をソートする．
+	// 半順序が推移律を満たすことにより
+	//		∀i < j, s[i] + s[j] <= s[j] + s[i]
+	// が成り立つので，この順での連結のみを考えれば良い．
+	sort(all(s), compare);
 
-	return res;
+	// dp_i[j] : s[i..n) から j 個選んだ場合の最小（s[0..i) としてはいけない！）
+	string str_max = "z"; str_max[0]++;
+	vector<string> dp(k + 1LL, str_max);
+	dp[0] = "";
+
+	repir(i, n - 1, 0) {
+		repir(j, min(n - i, k), 1) {
+			// s[i] を使う方が小さくなるなら更新する．
+			chmin(dp[j], s[i] + dp[j - 1LL]);
+
+			// この更新式で大丈夫なのは，文字列の連結 "+" と辞書順比較 "<" の間に
+			//		A + B < A + C ⇔ B < C
+			// なる関係がある（"+" と "<" が左両立する）からである．
+			//
+			// なお，
+			//		A + C < B + C ⇔ A < B
+			// は成り立たないので dp テーブルの持ち方には要注意！
+			// 反例： bac < bc かつ ba > b
+		}
+	}
+
+	return dp[k];
 }
 
 

@@ -86,58 +86,6 @@ void topological_sort(const Graph& g, vi& seq) {
 }
 
 
-//【葉の削除回数】O(|V|)
-/*
-* 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納する．
-*
-*（葉からの幅優先探索）
-*/
-void leaf_remove_level(const Graph& g, vi& lv) {
-	int n = sz(g);
-	lv = vi(n);
-
-	// 木が 1 頂点のみで次数 1 の頂点が存在しない場合の例外処理
-	if (n == 1) {
-		lv[0] = 0;
-		return;
-	}
-
-	// 次数を求めておく．
-	vi degree(n);
-	rep(i, n) {
-		repe(t, g[i]) {
-			degree[t]++;
-		}
-	}
-
-	// 次数が 1 の頂点から順に取り除いていく．
-	queue<pii> q;
-	rep(i, n) {
-		if (degree[i] == 1) {
-			q.push({ i, 0 });
-		}
-	}
-
-	while (!q.empty()) {
-		int s, d;
-		tie(s, d) = q.front();
-		q.pop();
-
-		lv[s] = d;
-
-		repe(t, g[s]) {
-			// 頂点 s を取り除き，t の次数を更新する．
-			degree[t]--;
-
-			// 新たに次数 1 の頂点が生まれたらキューに追加する．
-			if (degree[t] == 1) {
-				q.push({ t, d + 1 });
-			}
-		}
-	}
-}
-
-
 //【強連結成分分解】O(|V| + |E|)
 /*
 * 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を scc に返す．
@@ -673,6 +621,58 @@ void two_edge_connected_component(const Graph& g, vvi& tecc) {
 	}
 
 	connected_component(g2, tecc);
+}
+
+
+//【葉の削除回数】O(|V|)
+/*
+* 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納する．
+*
+*（葉からの幅優先探索）
+*/
+void leaf_remove_level(const Graph& g, vi& lv) {
+	int n = sz(g);
+	lv = vi(n);
+
+	// 木が 1 頂点のみで次数 1 の頂点が存在しない場合の例外処理
+	if (n == 1) {
+		lv[0] = 0;
+		return;
+	}
+
+	// 次数を求めておく．
+	vi degree(n);
+	rep(i, n) {
+		repe(t, g[i]) {
+			degree[t]++;
+		}
+	}
+
+	// 次数が 1 の頂点から順に取り除いていく．
+	queue<pii> q;
+	rep(i, n) {
+		if (degree[i] == 1) {
+			q.push({ i, 0 });
+		}
+	}
+
+	while (!q.empty()) {
+		int s, d;
+		tie(s, d) = q.front();
+		q.pop();
+
+		lv[s] = d;
+
+		repe(t, g[s]) {
+			// 頂点 s を取り除き，t の次数を更新する．
+			degree[t]--;
+
+			// 新たに次数 1 の頂点が生まれたらキューに追加する．
+			if (degree[t] == 1) {
+				q.push({ t, d + 1 });
+			}
+		}
+	}
 }
 
 

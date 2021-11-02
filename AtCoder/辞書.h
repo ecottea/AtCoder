@@ -26,10 +26,10 @@
 *	要素 v を挿入する．
 *
 * erase(v) : O(log n)
-*	要素 v を削除する．
+*	要素 v を削除する．個数は負数にもなる．
 *
 * get(i) : O(log n)
-*	昇順で i 番目の要素を返す．（i : 0-indexed）
+*	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
 *
 * lower_bound(v) : O(log n)
 *	v が昇順で何番目の要素かを返す．（0-indexed）
@@ -46,7 +46,6 @@ struct Dynamic_dictionary {
 	// ft[v] : 要素 v の個数
 	using RSQ = Fenwick_tree<S12, op12, e12, inv12>;
 	RSQ ft;
-
 
 	// コンストラクタ（何もしない）
 	Dynamic_dictionary() : n(0) {}
@@ -407,6 +406,66 @@ struct Wavelet_matrix {
 		}
 
 		return res;
+	}
+};
+
+
+//【部分文字列辞書】
+/*
+* Substring_dictionary(s) : O(|s|)
+*	文字列 s の部分文字列（空文字列は除く）で初期化する．
+*
+* size() : O(1)
+*	部分文字列の個数を返す．
+*
+* get(i) : O(|s|)
+*	i 番目の部分文字列を返す．（0-indexed, なければ "" を返す）
+*/
+struct Substring_dictionary {
+	int n;
+	string s;
+
+	// sa[i] : s の接尾辞 s[j..n) のうち辞書順 i 番目のものの先頭位置 j（0-indexed）
+	// la[i] : s[sa[i]..n) と s[sa[i+1]..n) の最長共通接頭辞の長さ
+	vi sa, la;
+
+	// cnt[i] : s の部分文字列のうち，s[sa[i]..n) 以下のものの個数
+	vl cnt;
+
+	// コンストラクタ
+	Substring_dictionary() : n(0) {}
+	Substring_dictionary(const string& s_) : n(sz(s_)), s(s_), cnt(n) {
+		sa = suffix_array(s);
+		la = lcp_array(s, sa);
+
+		cnt[0] = (ll)n - sa[0];
+		repi(i, 1, n - 1) {
+			cnt[i] = cnt[i - 1LL] + ((ll)n - sa[i]) - la[i - 1LL];
+		}
+	}
+
+	// 部分文字列の個数を返す．
+	ll size() { return cnt[n - 1LL]; }
+
+	// i 番目の部分文字列を返す．
+	string get(ll i) {
+		i++; // 1-indexed に直す
+
+		// i 番目の部分文字列がどの接尾辞 s[sa[k]..n) の接頭辞かを探す．O(log n)
+		auto it = lower_bound(all(cnt), i);
+		if (it == cnt.end()) return "";
+		int k = distance(cnt.begin(), it);
+
+		// i から cnt[k] に足りない分だけ後ろの文字を削ったものが求める部分文字列．
+		// s.substr(i, w) : s[i..i+w) なので注意．
+		return s.substr(sa[k], n - (*it - i) - sa[k]);
+	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Substring_dictionary& sd) {
+		cout << sd.n << endl << sd.s << endl << sd.sa << endl << sd.la << endl
+			<< sd.cnt << endl;
+		return os;
 	}
 };
 

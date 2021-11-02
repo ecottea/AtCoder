@@ -91,8 +91,8 @@ struct factorial_mint {
 /*
 * 小さな素数 p を法とし，階乗と二項係数を計算する．
 *
-* factorial_mod(n, p) : O(p)
-*	n! までの階乗を法を p として前計算する．
+* factorial_mod(p) : O(p)
+*	(p-1)! までの階乗を法を p として前計算する．
 *
 * fac(n) : O(n log n)
 *	n! mod p を返す．

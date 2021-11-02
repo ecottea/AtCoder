@@ -154,7 +154,7 @@ void divisors(ll n, vl& divs) {
 }
 
 
-//【素数の列挙／エラトステネスの篩】O(n + √n log(log n))
+//【素数の列挙／エラトステネスの篩】O(n log(log n))
 /*
 * エラトステネスの篩を用いて n 以下の素数を列挙し，ps に昇順に格納する．
 */
@@ -167,20 +167,17 @@ void eratosthenes(int n, vi& ps) {
 	int i;
 
 	// √n 以下の i の処理
-	// ここまでであれば O(√n log(log n)) で済んでいる．
 	for (i = 2; i <= n / i; i++) {
 		if (is_prime[i]) {
 			ps.push_back(i);
 
-			for (int j = 2 * i; j <= n; j += i) {
+			for (int j = i * i; j <= n; j += i) {
 				is_prime[j] = false;
 			}
 		}
 	}
 
 	// √n より大きい i の処理
-	// この時点で is_prime[] には素数か否かが記録されているが，
-	// それを読むために O(n) が必要になってしまう．
 	for (; i <= n; i++) {
 		if (is_prime[i]) ps.push_back(i);
 	}
@@ -362,4 +359,29 @@ ll count_coprime(ll a, ll l, ll r) {
 	}
 	return res;
 }
+
+
+//【位数[gcd]ごとの数え上げ】O(√n + d(n)^2 log d(n))　（d(n) : n の約数の個数）
+/*
+* Z/nZ に位数 i の元が何個あるかを cnt[i] に昇順に格納する．
+* cnt[i] は Z/nZ に gcd(n, x) = n / i の元が何個あるかともみなせる．
+*
+* 利用：【約数列挙】
+*/
+void order_distribution(ll n, map<ll, ll>& cnt) {
+	vl divs;
+	divisors(n, divs);
+
+	cnt.clear();
+	repe(d, divs) {
+		cnt[d] = d;
+
+		repe(d2, divs) {
+			if (d == d2) break;
+
+			if (d % d2 == 0) cnt[d] -= cnt[d2];
+		}
+	}
+}
+
 

@@ -1,3 +1,6 @@
+#pragma once
+
+
 #ifndef HIDDEN_IN_VISUAL_STUDIO // 折りたたみ用
 
 // 警告の抑制
@@ -25,8 +28,11 @@ const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi dy4 = { 0, 1, 0, -1 };
 const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
 const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
-const ll INFL = (ll)2e18;	const int INF = (int)1e9;
+const int INF = 1001001001; const ll INFL = 2002002002002002002LL;
 const double EPS = 1e-10; // 許容誤差に応じて調整
+
+// 入出力高速化
+struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(15); } } fast_io_tmp;
 
 // 汎用マクロの定義
 #define all(a) (a).begin(), (a).end()
@@ -80,7 +86,7 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define dumpel(a) { int i = 0; cout << "\033[1;36m"; repe(x, a) {cout << i++ << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream isTMP(f); cin.rdbuf(isTMP.rdbuf());
 #define output_to_file(f) ofstream osTMP(f); cout.rdbuf(osTMP.rdbuf());
-// 提出用（GCC）
+// 提出用（gcc）
 #else
 #define popcount (int)__builtin_popcount
 #define popcountll (int)__builtin_popcountll
@@ -113,6 +119,7 @@ istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is;
 ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
+
 
 
 
