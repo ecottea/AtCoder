@@ -20,13 +20,13 @@
 * inv(n) : O(1)
 *	1 / n を返す．
 *
-* nPr(n, r) : O(1)
-*	順列の数 nPr を返す．
+* permutation(n, r) : O(1)
+*	順列の数 permutation を返す．
 *
-* nCr(n, r) : O(1)
+* binomial(n, r) : O(1)
 *	二項係数 nCr を返す．
 *
-* nCr(r) : O(|r|)
+* multinomial(r) : O(|r|)
 *	多項係数 nC[r] を返す．（n = Σr）
 */
 struct factorial_mint {
@@ -58,8 +58,8 @@ struct factorial_mint {
 	// 1 / n を返す．O(1)
 	mint inv(int n) const { assert(n != 0 && n <= n_); return inv_[n]; }
 
-	// 順列の数 nPr を返す．O(1)
-	mint nPr(int n, int r) const {
+	// 順列の数 permutation を返す．O(1)
+	mint permutation(int n, int r) const {
 		assert(n <= n_);
 
 		if (r < 0 || n - r < 0) return 0;
@@ -67,7 +67,7 @@ struct factorial_mint {
 	}
 
 	// 二項係数 nCr を返す．O(1)
-	mint nCr(int n, int r) const {
+	mint binomial(int n, int r) const {
 		assert(n <= n_);
 
 		if (r < 0 || n - r < 0) return 0;
@@ -75,7 +75,7 @@ struct factorial_mint {
 	}
 
 	// 多項係数 nC[r] を返す．O(|r|)
-	mint nCr(const vi& r) const {
+	mint multinomial(const vi& r) const {
 		int n = accumulate(all(r), 0);
 		assert(n <= n_);
 
@@ -100,7 +100,7 @@ struct factorial_mint {
 * factorial_qr(n) : O(n log n)
 *	n! が p で割り切れる回数と p で割った余りを返す．
 *
-* nCr(n, r) : O(n log n log p)
+* binomial(n, r) : O(n log n log p)
 *	nCr mod p を返す．
 */
 struct factorial_mod {
@@ -155,7 +155,7 @@ struct factorial_mod {
 	}
 
 	// 二項係数 nCr mod p を返す．
-	int nCr(ll n, ll r) {
+	int binomial(ll n, ll r) {
 		if (r < 0 || n - r < 0) {
 			return 0;
 		}
@@ -178,7 +178,7 @@ struct factorial_mod {
 /*
 * 愚直に二項係数 nCr を計算する．
 */
-template <class T> T nCr(ll n, ll r) {
+template <class T> T binomial(ll n, ll r) {
 	T val = 1;
 	chmin(r, n - r);
 

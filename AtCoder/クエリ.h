@@ -3,7 +3,6 @@
 // ■■■■■ クエリ処理 ■■■■■
 
 
-
 //【法を m とした和クエリ】
 /*
 * Mod_sum_query(a) : O(n)
@@ -19,7 +18,6 @@ struct Mod_sum_query {
 	vi a;    // ★ a でなくバケツで累積和を持てば O(log n) を落とせる．
 	int n;
 	ll asum; // a[0..n) の和
-
 
 	// コンストラクタ（何もしない）
 	Mod_sum_query() : n(0), asum(0) {}
@@ -158,7 +156,6 @@ struct Slope_trick {
 	ll add_l; // 最小値より左側の平行移動量
 	ll add_r; // 最小値より右側の平行移動量
 
-
 	// f(x) = 0 で初期化する．
 	Slope_trick() : y_min(0), add_l(0), add_r(0) {
 		l.push(-INFL);
@@ -237,14 +234,11 @@ struct Slope_trick {
 * insert(p) : O(log n) // TODO 点の分布によっては木の形が悪くなるので作り直す
 *	点 p を挿入する．
 *
-* search(p0, p1, res) : O(log n + cnt)
+* search(p0, p1, res) : O(n^(1 - 1 / dim) + |res|)
 *	半開長方形 R = [p0, p1) 内の点を res に格納する．
 *	p0 = {x0, y0}, p1 = {x1, y1} としたとき，R = [x0, x1) × [y0, y1) である．
 */
-template <class T, class S>
-struct KDTree {
-	// 参考 : http://www.prefield.com/algorithm/geometry/kdtree.html
-
+template <class T, class S> struct KDTree {
 	using Pnt = pair<T, T>;
 
 	// kd-木のノード
@@ -261,7 +255,6 @@ struct KDTree {
 
 	int n; // 要素数
 	Node* root; // 根へのポインタ
-
 
 	// 空で初期化
 	KDTree() : n(0), root(nullptr) {}
@@ -340,7 +333,7 @@ struct KDTree {
 *	点と値の組の集合 ps[i] = {{x[i], y[i]}, val[i]} で初期化する．
 *	制約 : 点の座標は互いに異なる．
 *
-* sum(p1, p2) : O(log n)
+* sum(p1, p2) : O(n^(1 - 1 / dim))
 *	半開長方形 R = [p1, p2) 内の点の値の和を返す．
 *	p1 = {x1, y1}, p2 = {x2, y2} としたとき，R = [x1, x2) × [y1, y2) である．
 */
@@ -357,26 +350,21 @@ struct KDTrie {
 	};
 
 	Node* root; // 根へのポインタ
-	mt19937 rnd; // 乱数生成器
 
 	// 空で初期化
 	KDTrie() : root(nullptr) {}
 
 	// 点と値の集合で初期化
-	KDTrie(vector<pair<vl, ll>>& a) : root(nullptr), rnd((int)time(0)) {
+	KDTrie(vector<pair<vl, ll>>& a) : root(nullptr) {
 		split(root, { -INFL, -INFL }, { INFL, INFL }, a, 0, sz(a), 0);
 	}
 
-	ll at(vector<pair<vl, ll>>& a, int i, int d) {
-		return a[i].first[d];
-	}
+	ll at(vector<pair<vl, ll>>& a, int i, int d) { return a[i].first[d]; }
 
 	// ノード *t に a[i0..i1) を割り当て分割する．
 	ll split(Node*& t, vl p1, vl p2, vector<pair<vl, ll>>& a, int i0, int i1, int d) {
 		// 空なら何もしない．
-		if (i0 == i1) {
-			return 0;
-		}
+		if (i0 == i1) return 0;
 
 		// 要素が一つだけなら葉として格納して帰る．
 		if (i0 + 1 == i1) {
@@ -385,19 +373,12 @@ struct KDTrie {
 			return a[i0].second;
 		}
 
-		// 要素をランダムに 2 k + 1 個選択し，それらの座標の中央値 median を得る．
-		//const int k = 10;
-		//vl cands(2 * k + 1);
-		//rep(i, 2 * k + 1) { cands[i] = at(a, rnd() % (i1 - i0) + i0, d); }
-		//sort(all(cands));
-		//ll median = cands[k];
-
 		// 中央値を得る．
 		vl dat;
 		repi(i, i0, i1 - 1) dat.push_back(at(a, i, d));
-		sort(all(dat));
-		ll median = dat[(i1 - i0) / 2];
-
+		uniq(dat);
+		ll median = dat[sz(dat) / 2];
+		
 		// median を閾値として用い，それ未満のものを左，以上のものを右に移動する．
 		int i = i0; // i : a[i0, i) が median 未満の要素と確定
 		repi(j, i0, i1 - 1) { // j : a[i, j) が median 以上の要素と確定
@@ -422,9 +403,7 @@ struct KDTrie {
 	}
 
 	// 半開長方形 R = [p1, p2) 内の点の値の和を返す．
-	ll sum(const vl& p1, const vl& p2) {
-		return sum_rf(root, p1, p2, 0);
-	}
+	ll sum(const vl& p1, const vl& p2) { return sum_rf(root, p1, p2, 0); }
 
 	ll sum_rf(Node* t, const vl& p1, const vl& p2, int d) {
 		// 木が空の場合

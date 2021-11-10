@@ -1,15 +1,15 @@
 #pragma once
 #include "header.h"
+#include "畳み込み.h"
+#include "二項係数.h"
 // ■■■■■ 二重和 ■■■■■
-
 
 
 //【差の総和】O(n log n)
 /*
 * ΣΣi<j |a[j] - a[i]| の値を返す．
 */
-template <class T> mint difference_sum(const vector<T>& a_) {
-	auto a = a_;
+template <class T> mint difference_sum(vector<T> a) {
 	int n = sz(a);
 
 	// a を昇順ソートしておく．
@@ -94,6 +94,78 @@ int sum_xor(const vi& a, const vi& b) {
 		// これらの和の偶奇に応じて xor 結果のビットが求まる．
 		res += (cnt % 2) << k;
 	}
+
+	return res;
+}
+
+
+//【gcd の総和】O(n + K log(log K))（K = max(a[i], b[j])）
+/*
+* Σi=[0..n) Σj=[0..m) gcd(a[i], b[j]) の値を返す．
+*
+* 利用：【添字 gcd での畳込み】
+*/
+mint gcd_sum(const vi& a, const vi& b) {
+	//【方法】
+	// a[i] に含まれる x の個数を a_cnt[x] などとおき，a, b の最大値を K とおくと，
+	//		Σi=[0.n) Σj=[0..m) gcd(a[i], b[j])
+	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] gcd(x, y)
+	//		= Σk=[1..K] ΣΣgcd(x,y)=k a_cnt[x] b_cnt[y] k
+	// となる．この
+	//		ΣΣgcd(x,y)=k a_cnt[x] b_cnt[y]
+	// は gcd 畳み込みであるから高速に求まる．
+	//
+	// これは gcd 加重和を高速に計算する方法にもなる．
+
+	int n = sz(a), m = sz(b);
+
+	int K = max(*max_element(all(a)), *max_element(all(b)));
+	vm a_cnt(K + 1LL), b_cnt(K + 1LL);
+	rep(i, n) a_cnt[a[i]]++;
+	rep(j, m) b_cnt[b[j]]++;
+
+	GCD_convolution<mint> g(K);
+	auto c = g.convolution_gcd(a_cnt, b_cnt);
+
+	mint res = 0;
+	repi(k, 1, K) res += c[k] * k;
+
+	return res;
+}
+
+
+//【lcm の総和】O(n + m + K log(log K))（K = max(a[i], b[j])）
+/*
+* Σi=[0..n) Σj=[0..m) lcm(a[i], b[j]) の値を返す．
+*
+* 利用：【添字 gcd での畳込み】，【階乗と二項係数（mint利用）】
+*/
+mint lcm_sum(const vi& a, const vi& b) {
+	//【方法】
+	// a[i] に含まれる x の個数を a_cnt[x] などとおき，a, b の最大値を K とおくと，
+	//		Σi=[0.n) Σj=[0..m) lcm(a[i], b[j])
+	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] lcm(x, y)
+	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] x y / gcd(x, y)
+	//		= Σk=[1..K] ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y]) / k
+	// となる．この
+	//		ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y])
+	// は gcd 畳み込みであるから高速に求まる．
+	//
+	// これは lcm 加重和を高速に計算する方法にもなる．
+
+	int n = sz(a), m = sz(b);
+
+	int K = max(*max_element(all(a)), *max_element(all(b)));
+	vm a_cnt(K + 1LL), b_cnt(K + 1LL);
+	rep(i, n) a_cnt[a[i]] += a[i];
+	rep(j, m) b_cnt[b[j]] += b[j];
+
+	GCD_convolution<mint> g(K);
+	auto c = g.convolution_gcd(a_cnt, b_cnt);
+
+	factorial_mint fm(K);
+	mint res = 0;
+	repi(k, 1, K) res += c[k] * fm.inv(k);
 
 	return res;
 }

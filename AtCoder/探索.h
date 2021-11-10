@@ -3,26 +3,20 @@
 // ¡¡¡¡¡ ’Tõ ¡¡¡¡¡
 
 
-
 //y‚ß‚®‚é®“ñ•ª’TõzO(log|ok - ng|)
 /*
 * ğŒ okQ() ‚ğ–‚½‚·—v‘f ok ‚Æ–‚½‚³‚È‚¢—v‘f ng ‚Æ‚Ì‹«ŠE‚ğ“ñ•ª’Tõ‚·‚éD
 * ‹«ŠE‚É—×‚è‡‚¤‚æ‚¤‚ÈğŒ‚ğ–‚½‚·—v‘fiok ‘¤j‚ÌˆÊ’u‚ğ•Ô‚·D
 */
-template <typename T> // T ‚Í int, ll ‚È‚Ç
-T binary_search(T ok, T ng, function<bool(T)>& okQ) {
+template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 	// ‹«ŠE‚ªŒˆ’è‚·‚é‚Ü‚Å
 	while (abs(ok - ng) > 1) {
 		// ‹æŠÔ‚Ì’†ŠÔ
 		T mid = (ok + ng) / 2;
 
 		// ’†ŠÔ‚ª OK ‚©‚Ç‚¤‚©‚É‰‚¶‚Ä‹æŠÔ‚ğk¬‚·‚éD
-		if (okQ(mid)) {
-			ok = mid;
-		}
-		else {
-			ng = mid;
-		}
+		if (okQ(mid)) ok = mid;
+		else ng = mid;
 	}
 	return ok;
 }

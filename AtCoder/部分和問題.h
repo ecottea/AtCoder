@@ -5,7 +5,6 @@
 // ■■■■■ 部分和問題 ■■■■■
 
 
-
 //【部分和問題（数え上げ）】O(n v)
 /*
 * 長さ n の非負整数の列 a の部分和として v を作る方法が何通りあるかを返す．
@@ -239,7 +238,7 @@ bool multiple_partial_sum(const vector<T>& a, int m, int r) {
 			dp[i + 1][j] = dp[i][j];
 
 			// i 番目の数を選ぶ場合
-			dp[i + 1][j] = dp[i + 1][j] | dp[i][((j - a[i]) % m + m) % m];
+			dp[i + 1][j] = dp[i + 1][j] | dp[i][smod(j - a[i], m)];
 		}
 	}
 

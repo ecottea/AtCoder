@@ -93,7 +93,7 @@ mint count_surjections(int n, int m) {
 
 	mint res = 0;
 	repi(j, 0, m) {
-		res += ((m - j) % 2 == 0 ? 1 : -1) * fm.nCr(m, j) * mint(j).pow(n);
+		res += ((m - j) % 2 == 0 ? 1 : -1) * fm.binomial(m, j) * mint(j).pow(n);
 	}
 
 	return res;
@@ -149,7 +149,7 @@ mint stirling_S2(int n, int k) {
 
 	mint res = 0;
 	repi(j, 1, k) {
-		res += ((k - j) % 2 == 0 ? 1 : -1) * fm.nCr(k, j) * mint(j).pow(n);
+		res += ((k - j) % 2 == 0 ? 1 : -1) * fm.binomial(k, j) * mint(j).pow(n);
 	}
 	res *= fm.fac_inv(k);
 

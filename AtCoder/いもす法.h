@@ -26,7 +26,7 @@ template <class T> struct Imos {
 	vector<T> v;
 
 	// [0, n) 上の a を 0 で初期化する．
-	Imos(int n_) : n(n_), v(n + 1)) {}
+	Imos(int n_) : n(n_), v(n + 1) {}
 
 	// アクセス
 	T const& operator[](int i) const { return v[i]; }

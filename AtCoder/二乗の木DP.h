@@ -33,7 +33,7 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			vm ndps(ws + wt + 1);
+			vm ndps(ws + wt + 1LL);
 			repi(i, 1, ws) {
 				repi(j, 0, wt) {
 					ndps[(ll)i + j] += dp[s][i] * dp[t][j];
@@ -81,7 +81,7 @@ mint count_subtree(const Graph& g, int r, int k) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			vm ndps(min(ws + wt, k) + 1);
+			vm ndps(min(ws + wt, k) + 1LL);
 			repi(i, 1, min(ws, k)) {
 				repi(j, 0, min(wt, k - i)) {
 					ndps[(ll)i + j] += dp[s][i] * dp[t][j];

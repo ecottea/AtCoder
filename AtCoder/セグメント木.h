@@ -484,6 +484,10 @@ using RUMQ = lazy_segtree<S9, op9, e9, F9, mapping9, composition9, id9>;
 
 
 //【区間アフィン変換／区間総和クエリ】
+/*
+* 値 x に対する x <- a x + b のタイプのクエリを一括で処理する．
+* cnt は座標を斉次化した副産物で，和をとった個数を表す．
+*/
 template <class T> using S10 = pair<T, T>; // ベクトル (x, cnt)
 template <class T> using F10 = pair<T, T>; // 行列 (a, b; 0, 1)
 template <class T> S10<T> op10(S10<T> x, S10<T> y) {

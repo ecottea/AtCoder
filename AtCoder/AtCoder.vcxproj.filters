@@ -269,6 +269,9 @@
     <ClInclude Include="01計画問題.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
+    <ClInclude Include="数論(一括).h">
+      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">

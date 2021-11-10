@@ -76,7 +76,8 @@ void slide_minimum(const vector<T>& a, int w, vector<T>& a_min) {
 //【区間スケジューリング問題】O(n log n)
 /*
 * 期間 [l[i], r[i]) に着手すべき n 個の仕事を請け負える最大個数を返す．
-* 全ての区間 [l[i], r[i]) を切断するための最小切断回数にも一致する．
+* 
+* なお戻り値は「全ての区間 [l[i], r[i]) を切断するための最小切断回数」にも一致する．
 *
 *（貪欲法）
 */
@@ -126,21 +127,21 @@ ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) 
 	int m = *max_element(all(r));
 
 	// dp[i][j] : i 日目までに仕事 [0..j) で得られる最大報酬
-	vvl dp(m + 1, vl(n + 1));
+	vvl dp(m + 1LL, vl(n + 1LL));
 
 	repi(i, 1, m) {
 		repi(j, 1, n) {
 			// i 日目には何もしない場合
-			dp[i][j] = dp[i - 1][j];
+			dp[i][j] = dp[i - 1LL][j];
 
 			// 仕事 j - 1 には手を付けない場合
-			chmax(dp[i][j], dp[i][j - 1]);
+			chmax(dp[i][j], dp[i][j - 1LL]);
 
 			// 仕事 j - 1 を受ける場合
 			int r, w; ll a;
-			tie(r, w, a) = rwa[j - 1];
+			tie(r, w, a) = rwa[j - 1LL];
 			if (w <= i && i <= r) {
-				chmax(dp[i][j], dp[i - w][j - 1] + a);
+				chmax(dp[i][j], dp[(ll)i - w][j - 1LL] + a);
 			}
 		}
 	}
@@ -160,16 +161,16 @@ ll unit_commitment_problem(const vvl& c) {
 	int n = sz(c);
 
 	// dp[r] : 時刻 [0..r) に得られる最大電力
-	vl dp(n + 1);
+	vl dp(n + 1LL);
 
 	repi(r, 1, n) {
 		// 時刻 [r-1..r) に発電機を動かさない場合
-		dp[r] = dp[r - 1];
+		dp[r] = dp[r - 1LL];
 
 		// 時刻 [r-1..r) に発電機を動かす場合
 		chmax(dp[r], c[0][r]);
 		repi(l, 1, r - 1) {
-			chmax(dp[r], dp[l - 1] + c[l][r]);
+			chmax(dp[r], dp[l - 1LL] + c[l][r]);
 		}
 	}
 
@@ -177,51 +178,56 @@ ll unit_commitment_problem(const vvl& c) {
 }
 
 
-//【区間ネスト数最大化】O(n + m log n)
+//【区間ネスト数最大化】O(n log n)
 /*
-* [0..n) 上の m 個の区間 lr[i] = [l[i]..r[i]] のネストさせられる区間の最大個数を返す．
+* n 個の閉区間 [l[i]..r[i]] の最大ネスト数を返す．
 *
-*（セグメント木で高速化したインライン DP）
+*（最長増加部分列）
 */
 using S14 = int;
 S14 op14(S14 x, S14 y) { return max(x, y); }
-S14 e14() { return -INF; }
-int maximize_interval_nest(const vector<pii>& lr) {
-	int n = 0;
-	int m = sz(lr);
+S14 e14() { return 0; }
+using RMQ = segtree<S14, op14, e14>;
+int maximize_interval_nest(const vl& l, vl r) {
+	int n = sz(l);
 
-	// 右端ごとに対応する区間の左端を昇順にソートして記録する．
-	map<int, set<int>> r_to_l;
-	rep(i, m) {
-		int l, r;
-		tie(l, r) = lr[i];
+	//【方法】
+	// 左端について昇順にソートすれば，右端が真に減少しているときネストできる．
+	// すなわち右端のみについての最長減少部分列問題に帰着する．
+	// 
+	// ただし左端が揃っているときネストできないようにするため，
+	// 左端が等しいものの右端については昇順にソートしておく．
+	//
+	// さらに範囲が広いと困るので座標圧縮も並行して行う．
 
-		r_to_l[r].insert(l);
-		chmax(n, r);
-	}
-	n++;
+	// 左端昇順，次いで右端昇順にソートする
+	vector<pll> lr(n);
+	rep(i, n) lr[i] = { l[i], r[i] };
+	sort(all(lr));
 
-	// dp_r[l] : 区間 [l..r] を最大区間とする最大ネスト数
-	segtree<S14, op14, e14> dp(n);
+	// 右端を座標圧縮する準備
+	uniq(r);
+	int m = sz(r);
 
-	// 区間の右端 r について昇順に見ていく．
-	repe(p, r_to_l) {
-		int r = p.first;
+	// dp_i[j] : r[0..i) までで右端が j である最長減少部分列の長さ
+	RMQ dp(m);
 
-		// 区間 [r..r] を最大区間とする最大ネスト数は 0 とする．
-		dp.set(r, 0);
+	rep(i, n) {
+		int j = distance(r.begin(), lower_bound(all(r), lr[i].second));
 
-		repe(l, p.second) {
-			// 区間 [l..r] を採用する場合
-			//	左端が l より右である区間であればネストできる．
-			dp.set(l, max(dp.get(l), dp.prod(l + 1, r + 1) + 1));
+		// j を右端にもてるのは，それまでの右端が j より大きいもののみ．
+		// よってその中での最長減少部分列の長さを求め，それに 1 を加える．
+		int len = dp.prod(j + 1, m) + 1;
 
-			// 区間 [l..r] を採用しない場合
-			//	インライン DP なので何も更新しなくてよい．
+		// j を右端とするより長いものが作れれば更新する．
+		// dp[j] 以外は更新されることはないので，更新は O(log n) で終わる．
+		// この性質が dp テーブルのインライン化と相性が良い．
+		if (len > dp.get(j)) {
+			dp.set(j, len);
 		}
 	}
 
-	// 最大区間の左端の位置を任意としたときの最大ネスト数を返す．
+	// 右端の値を任意としたときの最長減少部分列の長さを得る．
 	return dp.all_prod();
 }
 
@@ -241,16 +247,16 @@ ll interval_overlapping(const vvl& a) {
 
 	repi(r, 1, n - 1) {
 		// acc[l] : 区間 r が区間 l 以降と重なることで得られるスコアの和
-		vl acc(r + 1);
+		vl acc(r + 1LL);
 		repir(l, r - 1, 0) {
-			acc[l] = acc[l + 1] + a[l][r];
+			acc[l] = acc[l + 1LL] + a[l][r];
 		}
 
 		// s_max[l] : 区間 r - 1 が区間 l と重なる場合のスコアの最大値
-		vl s_max(r + 1);
+		vl s_max(r + 1LL);
 		s_max[0] = dp[0];
 		repi(i, 1, r) {
-			s_max[i] = max(s_max[i - 1], dp[i]);
+			s_max[i] = max(s_max[i - 1LL], dp[i]);
 		}
 
 		repir(l, r, 0) {

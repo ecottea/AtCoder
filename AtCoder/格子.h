@@ -482,7 +482,7 @@ mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
 		repi(j, 0, n) {
 			int h = t[j].first - s[i].first;
 			int w = t[j].second - s[i].second;
-			dpl[i][j] = fm.nCr(h + w, h);
+			dpl[i][j] = fm.binomial(h + w, h);
 		}
 	}
 

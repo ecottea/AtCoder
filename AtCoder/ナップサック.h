@@ -3,7 +3,6 @@
 // ■■■■■ ナップサック問題 ■■■■■
 
 
-
 //【0-1 ナップサック問題（重さが小）】O(n w_max)
 /*
 * 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
@@ -460,7 +459,7 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
 /*
 * 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V で
 * 重さが最小になるよう品物を選んだときの個数を返す（不可能なら -1 を返す．）
-* （価値を状態とした状態 DP のインライン化）
+* （価値を状態としたインライン状態 DP）
 */
 ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
 	int N = sz(v); // 品物の個数
@@ -587,7 +586,7 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll W, vi& sel
 
 	// セットに対して 0-1 ナップサック問題を解く．
 	vb chosen2;
-	auto res = knapsack01_problem(v2, w2, W, chosen2);
+	auto res = knapsack01_problem(v2, w2, W, &chosen2);
 
 	// 個数の情報を復元する．
 	sel = vi(N);

@@ -111,7 +111,7 @@ ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
 //【約数関数 σ_k(n)】O(√n)
 /*
 * 約数関数 σ_k(n) = (n の約数それぞれを k 乗した和) を返す．
-* 特に k = 0 なら約数の個数，k = 1 なら約数の総和を返す．
+* 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
 */
 ll divisor_sigma(int k, ll n) {
 	if (n == 1) return 1;
@@ -318,7 +318,7 @@ ll legendre(ll n, ll p) {
 }
 
 
-//【互いに素な数の個数】O(2^m)（m : a の素因数の種類数）
+//【互いに素な数の個数】O(√a + 2^m)（m : a の素因数の種類数）
 /*
 * l 以上 r 以下の整数のうち、a と互いに素な数の個数を返す．
 *
@@ -358,30 +358,6 @@ ll count_coprime(ll a, ll l, ll r) {
 		res += ((ones % 2) ? -1 : 1) * (r / mul - (l - 1) / mul);
 	}
 	return res;
-}
-
-
-//【位数[gcd]ごとの数え上げ】O(√n + d(n)^2 log d(n))　（d(n) : n の約数の個数）
-/*
-* Z/nZ に位数 i の元が何個あるかを cnt[i] に昇順に格納する．
-* cnt[i] は Z/nZ に gcd(n, x) = n / i の元が何個あるかともみなせる．
-*
-* 利用：【約数列挙】
-*/
-void order_distribution(ll n, map<ll, ll>& cnt) {
-	vl divs;
-	divisors(n, divs);
-
-	cnt.clear();
-	repe(d, divs) {
-		cnt[d] = d;
-
-		repe(d2, divs) {
-			if (d == d2) break;
-
-			if (d % d2 == 0) cnt[d] -= cnt[d2];
-		}
-	}
 }
 
 

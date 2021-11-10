@@ -28,11 +28,11 @@ const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi dy4 = { 0, 1, 0, -1 };
 const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
 const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
-const int INF = 1001001001; const ll INFL = 2002002002002002002LL;
+const int INF = 1001001001; const ll INFL = 4004004004004004004LL;
 const double EPS = 1e-10; // 許容誤差に応じて調整
 
 // 入出力高速化
-struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(15); } } fast_io_tmp;
+struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(15); } } fastIOtmp;
 
 // 汎用マクロの定義
 #define all(a) (a).begin(), (a).end()
@@ -48,6 +48,8 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repp(a) sort(all(a)); for(bool a##_perm = true; a##_perm; a##_perm = next_permutation(all(a))) // a の順列全て（昇順）
 #define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
+#define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
+#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複削除
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -71,6 +73,7 @@ template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while 
 template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop_front(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
+template <class T> inline ostream& operator<< (ostream& os, priority_queue_rev<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -125,12 +128,6 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 
 // C++ の便利な機能
 /*
-* // 小数点以下の桁数の指定
-* cout << fixed << setprecision(12);
-* 
-* // 入出力の高速化（これに加えて endl を使わず "\n" を出力するようにする）
-* cin.tie(nullptr); ios::sync_with_stdio(false);
-* 
 * // 0 埋め出力（d : 桁数，res : 出力したい数値）
 * cout << setfill('0') << right << setw(d) << res << endl;
 * 

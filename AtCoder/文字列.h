@@ -502,13 +502,13 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 					// cnt[i] 個の文字を順序込みで k 個に分ける方法の数
 					//	まず文字を k 個減らしておき，重複組合せの考え方を用いて
 					//	○ cnt[i] - k 個と ｜ k - 1 個の並べ方を数えれば良い．
-					add *= fm.nCr(cnt[i] - 1, k - 1);
+					add *= fm.binomial(cnt[i] - 1, k - 1);
 
 					// k 個の固まりをどこに挿入するか
 					//	順序は先に定めたので，後は挿入位置だけを考えれば良い．
 					//	同じ文字の間が j 箇所中 l 箇所，
 					//	異なる文字の間が残り len - 1 - j 箇所中 k - l 箇所．
-					add *= fm.nCr(j, l) * fm.nCr(len - 1 - j, k - l);
+					add *= fm.binomial(j, l) * fm.binomial(len - 1 - j, k - l);
 
 					dp[i + 1LL][nj] += add;
 				}

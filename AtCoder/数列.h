@@ -104,7 +104,7 @@ mint powered_geometric_series(mint r, int d) {
 
 	factorial_mint fm(d + 1);
 	vm g(d + 1);
-	repi(i, 0, d) g[i] = (i & 1 ? -1 : 1) * fm.nCr(d + 1, i);
+	repi(i, 0, d) g[i] = (i & 1 ? -1 : 1) * fm.binomial(d + 1, i);
 
 	f = convolution(f, g);
 

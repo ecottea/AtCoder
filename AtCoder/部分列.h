@@ -30,6 +30,8 @@ bool subsequenceQ(const vector<T>& seq, const vector<T>& sub) {
 /*
 * 長さ n の配列 a の最長増加部分列の長さを返す．
 * また最長増加部分列の一例を lis に構成する．
+* 
+* なお戻り値は「広義減少部分列への分割の最小個数」とも解釈できる．
 *
 *（セグメント木で高速化したインライン DP）
 *
@@ -44,7 +46,7 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 	// a を座標圧縮した結果を b に格納する．
 	vi b;
 	vector<T> x;
-	int m = coordinate_compression(a, b, x);
+	int m = coordinate_compression(a, b, &x);
 
 	// dp : 区間最大値を計算できるセグメント木
 	// dp[j] : 今まで見てきた中での，右端の値が j であるような最長増加部分列の長さ

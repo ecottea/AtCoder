@@ -108,7 +108,7 @@ void parenthesis_sequence(int n, vector<string>& seqs) {
 }
 
 
-//【自然数の分割の列挙】O(?)（k = n なら分割数）
+//【自然数の分割の列挙】O(n の分割数)（n = 50 くらいまで動く）
 /*
 * 自然数 n を k 以下の数に分割する方法を ips に格納する．
 */

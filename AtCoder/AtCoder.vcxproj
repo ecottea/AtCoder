@@ -158,6 +158,7 @@
     <ClInclude Include="全方位木DP.h" />
     <ClInclude Include="分析(文字列).h" />
     <ClInclude Include="区間DP.h" />
+    <ClInclude Include="数論(一括).h" />
     <ClInclude Include="最短路.h" />
     <ClInclude Include="期待値.h" />
     <ClInclude Include="木DP.h" />

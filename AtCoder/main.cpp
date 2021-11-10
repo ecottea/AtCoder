@@ -25,11 +25,11 @@ const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi dy4 = { 0, 1, 0, -1 };
 const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
 const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
-const int INF = 1001001001; const ll INFL = 2002002002002002002LL;
+const int INF = 1001001001; const ll INFL = 4004004004004004004LL;
 const double EPS = 1e-10; // 許容誤差に応じて調整
 
 // 入出力高速化
-struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(15); } } fast_io_tmp;
+struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(15); } } fastIOtmp;
 
 // 汎用マクロの定義
 #define all(a) (a).begin(), (a).end()
@@ -46,6 +46,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
+#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複削除
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -69,6 +70,7 @@ template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while 
 template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop_front(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
+template <class T> inline ostream& operator<< (ostream& os, priority_queue_rev<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -103,25 +105,59 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-////-----------------AtCoder 専用-----------------
-//#include <atcoder/all>
-//using namespace atcoder;
-//
-//using mint = modint1000000007;
-////using mint = modint998244353;
-////using mint = modint; // mint::set_mod(m);
-//
-//template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-//ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
-//using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-////----------------------------------------------
+//-----------------AtCoder 専用-----------------
+#include <atcoder/all>
+using namespace atcoder;
+
+using mint = modint1000000007;
+//using mint = modint998244353;
+//using mint = modint; // mint::set_mod(m);
+
+template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+//----------------------------------------------
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	
+	int n;
+	cin >> n;
+
+	vi a(1LL << n);
+	cin >> a;
+	dump(a);
+
+	vi b(1LL << n);
+	repb(set, n) {
+		int m = lsb(~set);
+		repi(sub, 1, (1LL << m) - 1) {
+			chmax(b[set], a[set - sub]);
+		}
+	}
+	dump(b);
+
+	vi c(1LL << n);
+	repb(set, n) {
+		c[set] = a[set] + b[set];
+	}
+	dump(c);
+
+	vi res(1LL << n);
+
+	repi(i, 1, (1LL << n) - 1) {
+		int set = i;
+		while (set > 0) {
+			chmax(res[i], c[set]);
+			set -= (~set) & -(~set);
+		}
+	}
+
+	repi(i, 1, (1LL << n) - 1) {
+		cout << res[i] << "\n";
+	}
 }
