@@ -6,7 +6,7 @@
 // 警告の抑制
 #define _CRT_SECURE_NO_WARNINGS
 
-// 使えるライブラリの読み込み
+// ライブラリの読み込み
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -49,7 +49,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
-#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複削除
+#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複除去
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -108,6 +108,7 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
+
 //-----------------AtCoder 専用-----------------
 #include <atcoder/all>
 using namespace atcoder;
@@ -148,5 +149,8 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 * Ctrl + R → Ctrl + R：リネーム
 * Ctrl + M → Ctrl + L：一括折りたたみ／展開
 * Ctrl + M → Ctrl + M：折りたたみ／展開（ドラッグ後ならその部分のみ一括）
+* 
+* AtCoder → プロパティ → 構成プロパティ → C/C++ → 詳細設定 → 指定の警告を無効にする
+*	に 26451 を追加することで，配列の添字内での加算などへの警告を抑制できる．
 */
 

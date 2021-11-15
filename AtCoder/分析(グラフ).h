@@ -468,7 +468,7 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 	int n = sz(g);
 
 	// 頂点の色（0,1 は色を，-1 は未探索を表す）
-	col = vector<int>(n, -1);
+	col = vi(n, -1);
 
 	// 再帰用の関数
 	function<bool(int)> dfs = [&](int s) {
@@ -478,23 +478,22 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 				// s と異なる色で t を彩色する．
 				col[t] = 1 - col[s];
 
-				// t から先を彩色しにいく．
-				if (!dfs(t)) {
-					return false;
-				}
+				// t から先を彩色しにいき，二部グラフでないならすぐに帰る．
+				if (!dfs(t)) return false;
 			}
 			// 彩色済の頂点の場合
 			else {
-				// s と t が同色だったら二部グラフではない．
-				if (col[t] == col[s]) {
-					return false;
-				}
+				// s と t が同色だったら二部グラフではないのですぐに帰る．
+				if (col[t] == col[s]) return false;
 			}
 		}
+
+		// ここまで来たなら見た範囲は二部グラフである．
 		return true;
 	};
 
 	// 0 を始点として再帰関数を呼び出す．
+	col[0] = 0;
 	return dfs(0);
 }
 

@@ -3,7 +3,6 @@
 // ■■■■■ Union-Find ■■■■■
 
 
-
 //【Union-Find】
 /*
 * ノードの統合と連結判定を行う．
@@ -112,8 +111,7 @@ struct Union_find {
 * size(a) : O(α(n))
 *	ノード a の属する連結成分の大きさを返す．
 */
-template <class T>
-struct Weighted_union_find {
+template <class T> struct Weighted_union_find {
 	// ノードの個数
 	int n;
 

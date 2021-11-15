@@ -5,7 +5,6 @@
 // ■■■■■ 順列，対称群 ■■■■■
 
 
-
 //【転倒数】O(n log n)
 /*
 * 長さ n の配列 a の転倒数を返す．
@@ -54,7 +53,7 @@ int permutation_decomposition(const vi& p, vvi& cycles) {
 		// サイクルを順に格納していく．
 		int s = i;
 		do {
-			cycles[m - 1].push_back(s);
+			cycles[m - 1LL].push_back(s);
 			seen[s] = true;
 			s = p[s];
 		} while (s != i);
@@ -150,34 +149,34 @@ mint count_permutations(const string& s) {
 	//	 i : 直前の桁より小さい数が何個使えるか
 	//	 j : 直前の桁より大きい数が何個使えるか
 	vvm dp(n, vm(n));
-	rep(i, n) dp[i][n - 1 - i] = 1;
+	rep(i, n) dp[i][n - 1LL - i] = 1;
 
 	// k = i + j
 	repir(k, n - 2, 0) {
 		// 直前より大きい数字を使う場合
-		if (s[n - 2 - k] == '<') {
+		if (s[n - 2LL - k] == '<') {
 			// 右からの累積和を計算する
-			dp[0][k] += dp[0][k + 1];
+			dp[0][k] += dp[0][k + 1LL];
 			repi(i, 1, k) {
 				int j = k - i;
-				dp[i][j] += dp[i][j + 1] + dp[i - 1][j + 1];
+				dp[i][j] += dp[i][j + 1LL] + dp[i - 1LL][j + 1LL];
 			}
 		}
 		// 直前より小さい数字を使う場合
-		else if (s[n - 2 - k] == '>') {
+		else if (s[n - 2LL - k] == '>') {
 			// 左からの累積和を計算する
-			dp[k][0] += dp[k + 1][0];
+			dp[k][0] += dp[k + 1LL][0];
 			repi(j, 1, k) {
 				int i = k - j;
-				dp[i][j] += dp[i + 1][j] + dp[i + 1][j - 1];
+				dp[i][j] += dp[i + 1LL][j] + dp[i + 1LL][j - 1LL];
 			}
 		}
 		// 自由に数字を使える場合
 		else {
 			// 総和を計算する．
 			mint sum = 0;
-			repi(i, 0, k + 1) sum += dp[i][k + 1 - i];
-			repi(i, 0, k) dp[i][k - i] = sum;
+			repi(i, 0, k + 1) sum += dp[i][k + 1LL - i];
+			repi(i, 0, k) dp[i][(ll)k - i] = sum;
 		}
 	}
 

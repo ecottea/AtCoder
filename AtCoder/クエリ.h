@@ -223,6 +223,73 @@ struct Slope_trick {
 };
 
 
+//【区間への一次式との最小値／一点取得クエリ】
+/*
+* Range_minimize1d_query(n) : O(1)
+*	要素数 n かつ初期値 INF で初期化する．
+*
+* Range_minimize1d_query(v) : O(n)
+*	配列 v で初期化する．
+*
+* set(l, r, a, b) : O(log n)
+*	半開区間 [l, r) の要素 v[i] を a i + b との最小値に変更する．
+*
+* get(i) : O(m log n)（m : 一次の項の係数の種類）
+*	v[i] 番目の要素を返す．
+*/
+ll op5(ll x, ll y) { return min(x, y); }
+ll e5() { return INFL; }
+ll mapping5(ll f, ll x) { return min(f, x); }
+ll composition5(ll f, ll g) { return min(f, g); }
+ll id5() { return INFL; }
+ll op6(ll x, ll y) { return max(x, y); }
+ll e6() { return -INFL; }
+ll mapping6(ll f, ll x) { return max(f, x); }
+ll composition6(ll f, ll g) { return max(f, g); }
+ll id6() { return -INFL; }
+struct Range_minimize1d_query {
+	// 内部では値 v[i] を一次の項の係数 a で分けて
+	//		min(a[1] i + b[1], a[2] i + b[2], ...)
+	// の形で保持する．
+	// a が同じであればその符号に応じて b の min や max に帰着できる．
+
+	int n;
+	using rmq = lazy_segtree<ll, op5, e5, ll, mapping5, composition5, id5>;
+	using rMq = lazy_segtree<ll, op6, e6, ll, mapping6, composition6, id6>;
+	unordered_map<ll, rmq> pos_segs;
+	unordered_map<ll, rMq> neg_segs;
+
+	Range_minimize1d_query(int n_) : n(n_) {}
+	Range_minimize1d_query(const vl& v) : n(sz(v)) { pos_segs[0] = rmq(v); }
+
+	void set(int l, int r, ll a, ll b) {
+		if (a >= 0) {
+			if (!pos_segs.count(a)) {
+				pos_segs[a] = rmq(n);
+			}
+			pos_segs[a].apply(l, r, b);
+		}
+		else {
+			if (!neg_segs.count(a)) {
+				neg_segs[a] = rMq(n);
+			}
+			neg_segs[a].apply(l, r, b);
+		}
+	}
+
+	ll get(int i) {
+		ll res = INFL;
+		repea(p, pos_segs) {
+			chmin(res, p.first * i + p.second.get(i));
+		}
+		repea(p, neg_segs) {
+			chmin(res, p.first * i + p.second.get(i));
+		}
+		return res;
+	}
+};
+
+
 //【kd 木】
 /*
 * KDTree() : O(1)

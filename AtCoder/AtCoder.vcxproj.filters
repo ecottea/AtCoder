@@ -61,6 +61,9 @@
     <Filter Include="ヘッダー ファイル\計算%28整数%29">
       <UniqueIdentifier>{bfa2e7c8-eb39-4a41-ba8f-1845a0d9c0c3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\代数構造">
+      <UniqueIdentifier>{56f5b44a-7edc-4f7f-835f-e9b5763fd635}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -86,7 +89,7 @@
     <ClInclude Include="探索%28グラフ%29.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
-    <ClInclude Include="セグメント木.h">
+    <ClInclude Include="セグメント木%28モノイド%29.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
     <ClInclude Include="Union-Find.h">
@@ -119,7 +122,7 @@
     <ClInclude Include="構造(グラフ).h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
-    <ClInclude Include="フェニック木.h">
+    <ClInclude Include="フェニック木%28アーベル群%29.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
     <ClInclude Include="部分列.h">
@@ -236,7 +239,7 @@
     <ClInclude Include="部分列DP.h">
       <Filter>ヘッダー ファイル\列,格子</Filter>
     </ClInclude>
-    <ClInclude Include="FPS.h">
+    <ClInclude Include="FPS%28mint%29.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="有名数列.h">
@@ -271,6 +274,36 @@
     </ClInclude>
     <ClInclude Include="数論(一括).h">
       <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="セグ木(ACL).h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="モノイド.h">
+      <Filter>ヘッダー ファイル\代数構造</Filter>
+    </ClInclude>
+    <ClInclude Include="モノイド作用付きモノイド.h">
+      <Filter>ヘッダー ファイル\代数構造</Filter>
+    </ClInclude>
+    <ClInclude Include="アーベル群.h">
+      <Filter>ヘッダー ファイル\代数構造</Filter>
+    </ClInclude>
+    <ClInclude Include="フェニ木(ACL).h">
+      <Filter>ヘッダー ファイル\クエリ処理</Filter>
+    </ClInclude>
+    <ClInclude Include="Z-加群.h">
+      <Filter>ヘッダー ファイル\代数構造</Filter>
+    </ClInclude>
+    <ClInclude Include="半環.h">
+      <Filter>ヘッダー ファイル\代数構造</Filter>
+    </ClInclude>
+    <ClInclude Include="行列(半環).h">
+      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS(可換環).h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="可換環.h">
+      <Filter>ヘッダー ファイル\代数構造</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -4,114 +4,6 @@
 // ■■■■■ 畳み込み ■■■■■
 
 
-//【数論変換】
-/*
-* NTT() : O(1)
-*	1 の原始 2^i 乗根（i ≦ 23）を持って初期化を行う．
-*
-* ntt(const vi& a, vi& A) : O(n (log n)^2) ?
-*	a に対し mod 998244353 で数論変換を行った結果を A に格納する．
-*
-* intt(const vi& A, vi& a) : O(n (log n)^2) ?
-*	A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
-* 
-* 制約 : n は 2 の冪乗
-*/
-struct NTT {
-	// 参考 : https://qiita.com/Sen_comp/items/9401382df736e51564c1
-
-	using mint = modint998244353;
-	using vm = vector<mint>;
-
-	// root[i] : 1 の原始 2^i 乗根（i ≦ 23）
-	vm r, r_inv;
-
-	NTT() : r(24), r_inv(24) {
-		// 1 の原始 2^23 乗根
-		// 998244353 = 2^23 * 119 + 1 なので，原始根 3 の 119 乗を計算することで求まる．
-		r[23] = mint(3).pow(119);
-		r_inv[23] = r[23].inv();
-
-		repir(i, 22, 0) {
-			r[i] = r[i + 1LL] * r[i + 1LL];
-			r_inv[i] = r_inv[i + 1LL] * r_inv[i + 1LL];
-		}
-	}
-
-	// x を (y, z) に分割する
-	void butterfly(const vm& x, vm& y, vm& z) {
-		int n = sz(x) / 2;
-		y = z = vm(n);
-
-		rep(i, n) {
-			y[i] = x[i] + x[(ll)i + n];
-			z[i] = (x[i] - x[(ll)i + n]) * r[msb(n) + 1LL].pow(i); // ここが遅い
-		}
-	}
-
-	// x を (y, z) に分割する（逆変換用）
-	void butterfly_inv(const vm& x, vm& y, vm& z) {
-		int n = sz(x) / 2;
-		y = z = vm(n);
-
-		rep(i, n) {
-			y[i] = x[i] + x[(ll)i + n];
-			z[i] = (x[i] - x[(ll)i + n]) * r_inv[msb(n) + 1LL].pow(i); // ここが遅い
-		}
-	}
-
-	// (y, z) を x に統合する
-	void riffle(const vm& y, const vm& z, vm& x) {
-		int n = sz(y);
-		x = vm(2LL * n);
-
-		rep(i, n) {
-			x[2LL * i] = y[i];
-			x[2LL * i + 1] = z[i];
-		}
-	}
-
-	// 長さが 2 冪の列 a に対し mod 998244353 で数論変換を行った結果を A に格納する．
-	void ntt(const vm& a, vm& A) {
-		int n = sz(a);
-		if (n == 1) {
-			A = a;
-			return;
-		}
-
-		vm b, c, B, C;
-		butterfly(a, b, c);
-		ntt(b, B);
-		ntt(c, C);
-		riffle(B, C, A);
-	}
-
-	// 長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
-	void intt(const vm& A, vm& a) {
-		intt_sub(A, a);
-
-		// 定数倍の調整
-		mint n_inv = mint(sz(A)).inv();
-		rep(i, sz(A)) {
-			a[i] *= n_inv;
-		}
-	}
-	void intt_sub(const vm& A, vm& a) {
-		int n = sz(A);
-		if (n == 1) {
-			a = A;
-			return;
-		}
-
-		vm b, c, B, C;
-		butterfly_inv(A, B, C);
-		intt_sub(B, b);
-		intt_sub(C, c);
-		riffle(b, c, a);
-	}
-};
-
-
 //【添字 xor での畳込み】
 /*
 * convolution_xor(a, b) : O(n log n)
@@ -419,6 +311,114 @@ template <typename T> struct LCM_convolution {
 		rep(i, n) a[i] *= b[i];
 		mobius(a);
 		return a;
+	}
+};
+
+
+//【数論変換】
+/*
+* NTT() : O(1)
+*	1 の原始 2^i 乗根（i ≦ 23）を持って初期化を行う．
+*
+* ntt(const vi& a, vi& A) : O(n (log n)^2) ?
+*	a に対し mod 998244353 で数論変換を行った結果を A に格納する．
+*
+* intt(const vi& A, vi& a) : O(n (log n)^2) ?
+*	A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
+*
+* 制約 : n は 2 の冪乗
+*/
+struct NTT {
+	// 参考 : https://qiita.com/Sen_comp/items/9401382df736e51564c1
+
+	using mint = modint998244353;
+	using vm = vector<mint>;
+
+	// root[i] : 1 の原始 2^i 乗根（i ≦ 23）
+	vm r, r_inv;
+
+	NTT() : r(24), r_inv(24) {
+		// 1 の原始 2^23 乗根
+		// 998244353 = 2^23 * 119 + 1 なので，原始根 3 の 119 乗を計算することで求まる．
+		r[23] = mint(3).pow(119);
+		r_inv[23] = r[23].inv();
+
+		repir(i, 22, 0) {
+			r[i] = r[i + 1LL] * r[i + 1LL];
+			r_inv[i] = r_inv[i + 1LL] * r_inv[i + 1LL];
+		}
+	}
+
+	// x を (y, z) に分割する
+	void butterfly(const vm& x, vm& y, vm& z) {
+		int n = sz(x) / 2;
+		y = z = vm(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[(ll)i + n];
+			z[i] = (x[i] - x[(ll)i + n]) * r[msb(n) + 1LL].pow(i); // ここが遅い
+		}
+	}
+
+	// x を (y, z) に分割する（逆変換用）
+	void butterfly_inv(const vm& x, vm& y, vm& z) {
+		int n = sz(x) / 2;
+		y = z = vm(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[(ll)i + n];
+			z[i] = (x[i] - x[(ll)i + n]) * r_inv[msb(n) + 1LL].pow(i); // ここが遅い
+		}
+	}
+
+	// (y, z) を x に統合する
+	void riffle(const vm& y, const vm& z, vm& x) {
+		int n = sz(y);
+		x = vm(2LL * n);
+
+		rep(i, n) {
+			x[2LL * i] = y[i];
+			x[2LL * i + 1] = z[i];
+		}
+	}
+
+	// 長さが 2 冪の列 a に対し mod 998244353 で数論変換を行った結果を A に格納する．
+	void ntt(const vm& a, vm& A) {
+		int n = sz(a);
+		if (n == 1) {
+			A = a;
+			return;
+		}
+
+		vm b, c, B, C;
+		butterfly(a, b, c);
+		ntt(b, B);
+		ntt(c, C);
+		riffle(B, C, A);
+	}
+
+	// 長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
+	void intt(const vm& A, vm& a) {
+		intt_sub(A, a);
+
+		// 定数倍の調整
+		mint n_inv = mint(sz(A)).inv();
+		rep(i, sz(A)) {
+			a[i] *= n_inv;
+		}
+	}
+	void intt_sub(const vm& A, vm& a) {
+		int n = sz(A);
+		if (n == 1) {
+			a = A;
+			return;
+		}
+
+		vm b, c, B, C;
+		butterfly_inv(A, B, C);
+		intt_sub(B, b);
+		intt_sub(C, c);
+		riffle(b, c, a);
 	}
 };
 

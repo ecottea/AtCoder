@@ -4,7 +4,6 @@
 // ■■■■■ ゲーム ■■■■■
 
 
-
 // 【点取りゲーム】O(|V| + |E|)　
 /*
 * ゲームのルール：
@@ -22,9 +21,7 @@ void score_game(const WGraph& g, vector<pll>& res) {
 
 	function<void(int)> dfs = [&](int s) {
 		// s の情報を計算済だったら何もしない．
-		if (seen[s]) {
-			return;
-		}
+		if (seen[s]) return;
 		seen[s] = true;
 
 		// コマが移動不能になったら終了．
@@ -35,7 +32,7 @@ void score_game(const WGraph& g, vector<pll>& res) {
 
 		// s から出ている辺 e の情報を元に s の情報を得る．
 		res[s] = { -INFL, INFL };
-		for (auto e : g[s]) {
+		repe(e, g[s]) {
 			// e を辿った場合の結果を求める．
 			dfs(e.to);
 
@@ -48,8 +45,6 @@ void score_game(const WGraph& g, vector<pll>& res) {
 	};
 
 	// 各頂点 s についての情報を計算する．
-	rep(s, n) {
-		dfs(s);
-	}
+	rep(s, n) dfs(s);
 }
 

@@ -118,6 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>26451</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,6 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>26451</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,18 +148,27 @@
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
     <ClInclude Include="bitDP.h" />
-    <ClInclude Include="FPS.h" />
+    <ClInclude Include="FPS%28mint%29.h" />
+    <ClInclude Include="FPS(可換環).h" />
     <ClInclude Include="mint.h" />
+    <ClInclude Include="Z-加群.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
+    <ClInclude Include="アーベル群.h" />
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
+    <ClInclude Include="セグ木(ACL).h" />
     <ClInclude Include="ヒストグラム.h" />
+    <ClInclude Include="フェニ木(ACL).h" />
+    <ClInclude Include="モノイド.h" />
+    <ClInclude Include="モノイド作用付きモノイド.h" />
     <ClInclude Include="二乗の木DP.h" />
     <ClInclude Include="二重和.h" />
     <ClInclude Include="全方位木DP.h" />
     <ClInclude Include="分析(文字列).h" />
     <ClInclude Include="区間DP.h" />
+    <ClInclude Include="半環.h" />
+    <ClInclude Include="可換環.h" />
     <ClInclude Include="数論(一括).h" />
     <ClInclude Include="最短路.h" />
     <ClInclude Include="期待値.h" />
@@ -166,20 +177,21 @@
     <ClInclude Include="構造(木).h" />
     <ClInclude Include="確率.h" />
     <ClInclude Include="組合せゲーム.h" />
+    <ClInclude Include="行列(半環).h" />
     <ClInclude Include="部分列DP.h" />
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />
     <ClInclude Include="数列.h" />
     <ClInclude Include="特殊化.h" />
     <ClInclude Include="ビット行列.h" />
-    <ClInclude Include="フェニック木.h" />
+    <ClInclude Include="フェニック木%28アーベル群%29.h" />
     <ClInclude Include="マッチング.h" />
     <ClInclude Include="マンハッタン幾何.h" />
     <ClInclude Include="二分木.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />
     <ClInclude Include="グラフ最適化.h" />
-    <ClInclude Include="セグメント木.h" />
+    <ClInclude Include="セグメント木%28モノイド%29.h" />
     <ClInclude Include="ベクトル.h" />
     <ClInclude Include="作図.h" />
     <ClInclude Include="列挙(グラフ).h" />

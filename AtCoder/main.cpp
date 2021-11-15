@@ -3,7 +3,7 @@
 // 警告の抑制
 #define _CRT_SECURE_NO_WARNINGS
 
-// 使えるライブラリの読み込み
+// ライブラリの読み込み
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -46,7 +46,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
-#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複削除
+#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複除去
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -109,8 +109,8 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
@@ -121,43 +121,69 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
 
 
+
+
+
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	int n;
-	cin >> n;
+	int h, w, K;
+	cin >> h >> w >> K;
 
-	vi a(1LL << n);
+	vvi a(h, vi(w));
 	cin >> a;
-	dump(a);
 
-	vi b(1LL << n);
-	repb(set, n) {
-		int m = lsb(~set);
-		repi(sub, 1, (1LL << m) - 1) {
-			chmax(b[set], a[set - sub]);
+	//【解説 AC】
+
+	// th より大きい[小さい]ときは必ずコストがかかる[かからない]ことにした場合の
+	// コストをちょうど K 回払う場合の最小コストを返す．
+	auto func = [&](int th) {
+		// dp[i][j][k] : マス (i,j) までで k 回コストがかかった場合の最小コスト
+		vvvl dp(h, vvl(w, vl(K + 1, INFL)));
+		if (a[0][0] <= th) dp[0][0][0] = 0;
+		if (a[0][0] >= th) dp[0][0][1] = a[0][0];
+
+		rep(i, h) {
+			rep(j, w) {
+				repi(k, 0, K) {
+					// 下への移動
+					if (i < h - 1) {
+						if (a[i + 1][j] <= th) {
+							chmin(dp[i + 1][j][k], dp[i][j][k]);
+						}
+						if (a[i + 1][j] >= th) {
+							if (k < K)
+								chmin(dp[i + 1][j][k + 1], dp[i][j][k] + a[i + 1][j]);
+						}
+					}
+
+					// 右への移動
+					if (j < w - 1) {
+						if (a[i][j + 1] <= th) {
+							chmin(dp[i][j + 1][k], dp[i][j][k]);
+						}
+						if (a[i][j + 1] >= th) {
+							if (k < K)
+								chmin(dp[i][j + 1][k + 1], dp[i][j][k] + a[i][j + 1]);
+						}
+					}
+				}
+			}
+		}
+		dumpel(dp);
+
+		return dp[h - 1][w - 1][K];
+	};
+
+	ll res = INFL;
+
+	// 閾値として意味があるのは盤面の数のみなので，全探索する．
+	rep(i, h) {
+		rep(j, w) {
+			chmin(res, func(a[i][j]));
 		}
 	}
-	dump(b);
 
-	vi c(1LL << n);
-	repb(set, n) {
-		c[set] = a[set] + b[set];
-	}
-	dump(c);
-
-	vi res(1LL << n);
-
-	repi(i, 1, (1LL << n) - 1) {
-		int set = i;
-		while (set > 0) {
-			chmax(res[i], c[set]);
-			set -= (~set) & -(~set);
-		}
-	}
-
-	repi(i, 1, (1LL << n) - 1) {
-		cout << res[i] << "\n";
-	}
+	cout << res << endl;
 }

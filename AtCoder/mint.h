@@ -81,7 +81,9 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 *
 * 制約 : p は素数，コンパイラは gcc
 */
-//using a__int128 = ll; // デバッグ用
+#ifdef _MSC_VER
+#define __int128 ll // デバッグ用
+#endif
 struct mll {
 	__int128 v;
 	static __int128 MOD;

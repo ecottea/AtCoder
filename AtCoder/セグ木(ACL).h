@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-// ■■■■■ セグメント木（遅延評価含む） ■■■■■
+// ■■■■■ [遅延評価]セグメント木（ACL の模倣） ■■■■■
 
 
 //【セグメント木】
@@ -202,7 +202,7 @@ using RMQ = segtree<S11, op11, e11>;
 /*
 * Lazy_segtree<S, op, e, F, mapping, composition, id>(n) : O(n)
 *	v[0..n) = e() で初期化する．
-*	要素は作用付きモノイド (S, op, e, F, mapping, composition, id) の元とする．
+*	要素は左作用付きモノイド (S, op, e, F, mapping, composition, id) の元とする．
 *
 * Lazy_segtree<S, op, e, F, mapping, composition, id>(v) : O(n)
 *	配列 v の要素で初期化する．
@@ -251,7 +251,7 @@ struct Lazy_segtree {
 	// コンストラクタ（初期化なし）
 	Lazy_segtree() : n(0), actual_n(0) {}
 
-	// コンストラクタ（最大値で初期化）：O(N)
+	// コンストラクタ（単位元で初期化）：O(N)
 	Lazy_segtree(int n_) : actual_n(n_) {
 		// 要素数以上となる最小の 2 冪を求め，n とする．
 		int pow2 = 1;
@@ -287,6 +287,7 @@ struct Lazy_segtree {
 
 		// 葉でなければ子に伝搬する．
 		if (k < n) {
+			// 左作用を考えているのでこの向きに合成する．
 			lazy[k * 2] = composition(lazy[k], lazy[k * 2]);
 			lazy[k * 2 + 1] = composition(lazy[k], lazy[k * 2 + 1]);
 		}
@@ -376,6 +377,7 @@ struct Lazy_segtree {
 
 		// 完全に範囲内なら自身の値を更新する．
 		if (l <= kl && kr <= r) {
+			// 左作用を考えているのでこの向きに合成する．
 			lazy[k] = composition(f, lazy[k]);
 			eval(k);
 
@@ -485,7 +487,7 @@ using RUMQ = lazy_segtree<S9, op9, e9, F9, mapping9, composition9, id9>;
 
 //【区間アフィン変換／区間総和クエリ】
 /*
-* 値 x に対する x <- a x + b のタイプのクエリを一括で処理する．
+* 値 x に対する x ← a x + b のタイプのクエリを一括で処理する．
 * cnt は座標を斉次化した副産物で，和をとった個数を表す．
 */
 template <class T> using S10 = pair<T, T>; // ベクトル (x, cnt)
@@ -793,76 +795,6 @@ F7 composition7(F7 f, F7 g) { return f == INFL ? g : f; }
 F7 id7() { return INFL; }
 F7 pow7(F7 f, int i) { return f == INFL ? INFL : f * i; }
 using RUSQ = Proportional_lazy_segtree<S7, op7, e7, F7, mapping7, composition7, id7, pow7>;
-
-
-//【区間への一次式との最小値／一点取得クエリ】
-/*
-* Range_minimize1d_query(n) : O(1)
-*	要素数 n かつ初期値 INF で初期化する．
-*
-* Range_minimize1d_query(v) : O(n)
-*	配列 v で初期化する．
-*
-* set(l, r, a, b) : O(log n)
-*	半開区間 [l, r) の要素 v[i] を a i + b との最小値に変更する．
-*
-* get(i) : O(m log n)（m : 一次の項の係数の種類）
-*	v[i] 番目の要素を返す．
-*/
-ll op5(ll x, ll y) { return min(x, y); }
-ll e5() { return INFL; }
-ll mapping5(ll f, ll x) { return min(f, x); }
-ll composition5(ll f, ll g) { return min(f, g); }
-ll id5() { return INFL; }
-ll op6(ll x, ll y) { return max(x, y); }
-ll e6() { return -INFL; }
-ll mapping6(ll f, ll x) { return max(f, x); }
-ll composition6(ll f, ll g) { return max(f, g); }
-ll id6() { return -INFL; }
-struct Range_minimize1d_query {
-	// 内部では値 v[i] を一次の項の係数 a で分けて
-	//		min(a[1] i + b[1], a[2] i + b[2], ...)
-	// の形で保持する．
-	// a が同じであればその符号に応じて b の min や max に帰着できる．
-
-	int n;
-	using rmq = lazy_segtree<ll, op5, e5, ll, mapping5, composition5, id5>;
-	using rMq = lazy_segtree<ll, op6, e6, ll, mapping6, composition6, id6>;
-	unordered_map<ll, rmq> pos_segs;
-	unordered_map<ll, rMq> neg_segs;
-
-	Range_minimize1d_query(int n_) : n(n_) {}
-
-	Range_minimize1d_query(const vl& v) : n(sz(v)) {
-		pos_segs[0] = rmq(v);
-	}
-
-	void set(int l, int r, ll a, ll b) {
-		if (a >= 0) {
-			if (!pos_segs.count(a)) {
-				pos_segs[a] = rmq(n);
-			}
-			pos_segs[a].apply(l, r, b);
-		}
-		else {
-			if (!neg_segs.count(a)) {
-				neg_segs[a] = rMq(n);
-			}
-			neg_segs[a].apply(l, r, b);
-		}
-	}
-
-	ll get(int i) {
-		ll res = INFL;
-		repea(p, pos_segs) {
-			chmin(res, p.first * i + p.second.get(i));
-		}
-		repea(p, neg_segs) {
-			chmin(res, p.first * i + p.second.get(i));
-		}
-		return res;
-	}
-};
 
 
 //【連想セグメント木】
@@ -1277,7 +1209,6 @@ struct Lazy_segtree_map {
 	Node* root; // 根へのポインタ
 	mt19937 rnd; // 乱数生成器
 	uniform_int_distribution<int> unirnd; // 一様乱数生成器
-
 
 	// コンストラクタ（空で初期化）
 	Lazy_segtree_map() : root(nullptr), rnd((int)time(0)), unirnd(-INF + 1, INF) {}

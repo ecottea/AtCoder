@@ -3,7 +3,6 @@
 // ■■■■■ 数論 ■■■■■
 
 
-
 //【最大公約数（複数）】O(n log a)
 /*
 * 長さ n の配列 a に格納された数の最大公約数を返す．
@@ -126,87 +125,6 @@ ll divisor_sigma(int k, ll n) {
 	if (i * i == n) res += pow(i, k);
 	
 	return res;
-}
-
-
-//【約数列挙】O(√n)
-/*
-* n の約数全てをリスト divs に昇順に格納する．
-*/
-void divisors(ll n, vl& divs) {
-	divs.clear();
-
-	if (n == 1) {
-		divs.push_back(1);
-		return;
-	}
-
-	ll i = 1;
-	for (; i * i < n; i++) {
-		if (n % i == 0) {
-			divs.push_back(i);
-			divs.push_back(n / i);
-		}
-	}
-	if (i * i == n) divs.push_back(i);
-
-	sort(all(divs));
-}
-
-
-//【素数の列挙／エラトステネスの篩】O(n log(log n))
-/*
-* エラトステネスの篩を用いて n 以下の素数を列挙し，ps に昇順に格納する．
-*/
-void eratosthenes(int n, vi& ps) {
-	ps.clear();
-
-	// 素数かどうかを記録しておくためのテーブル
-	vb is_prime(n + 1LL, true);
-
-	int i;
-
-	// √n 以下の i の処理
-	for (i = 2; i <= n / i; i++) {
-		if (is_prime[i]) {
-			ps.push_back(i);
-
-			for (int j = i * i; j <= n; j += i) {
-				is_prime[j] = false;
-			}
-		}
-	}
-
-	// √n より大きい i の処理
-	for (; i <= n; i++) {
-		if (is_prime[i]) ps.push_back(i);
-	}
-}
-
-
-//【区間内の素数の列挙】O(√r + (r - l) √r / log r)
-/*
-* [l..r) に含まれる素数を ps に昇順に格納する．
-*
-* 利用：【素数の列挙／エラトステネスの篩】
-*/
-void eratosthenes_interval(ll l, ll r, vl& ps) {
-	ps.clear();
-
-	vi ps_sub;
-	eratosthenes((int)sqrt(r) + 3, ps_sub);
-
-	// 素数かどうかを記録しておくためのテーブル
-	vb is_prime(r - l, true);
-	repe(p, ps_sub) {
-		for (ll j = (l + p - 1) / p * p; j < r; j += p) {
-			if (j != p) is_prime[j - l] = false;
-		}
-	}
-
-	rep(i, r - l) {
-		if (is_prime[i]) ps.push_back(l + i);
-	}
 }
 
 
@@ -358,6 +276,58 @@ ll count_coprime(ll a, ll l, ll r) {
 		res += ((ones % 2) ? -1 : 1) * (r / mul - (l - 1) / mul);
 	}
 	return res;
+}
+
+
+//【素数計数関数】O(n^(3/4))
+/*
+* n 以下の素数の個数 π(n) を返す．
+*
+*（Lucy DP）
+*/
+ll prime_pi(ll n) {
+	// 参考 : https://rsk0315.hatenablog.com/entry/2021/05/18/015511
+
+	if (n <= 1) return 0;
+
+	int m = (int)(sqrt(n) + EPS);
+
+	// S(v, p) を [1..v] で "素数または p 以下の素因数をもたない合成数" の個数とする．
+	// dp_p[0][v] : S(v, p)，dp_p[1][v] : S(n/v, p)
+	vvl dp(2, vl(m + 1LL));
+	repi(v, 1, m) {
+		dp[0][v] = v - 1;
+		dp[1][v] = n / v - 1;
+	}
+
+	repi(p, 2, m) {
+		// S(p - 1, p - 1)
+		ll s = dp[0][p - 1LL];
+
+		// p が素数でなければ次の p へ
+		if (dp[0][p] == s) continue;
+
+		// dp[1][v] = S(n/v, p) の更新
+		repi(v, 1, m) {
+			// p^2 > n/v なら次の p へ
+			if (p > n / v / p) break;
+
+			if (v <= m / p)
+				dp[1][v] -= dp[1][(ll)v * p] - s;
+			else
+				dp[1][v] -= dp[0][n / v / p] - s;
+		}
+
+		// dp[0][v] = S(v, p) の更新
+		repir(v, m, 1) {
+			// p^2 > v なら次の p へ
+			if (p > v / p) break;
+
+			dp[0][v] -= dp[0][v / p] - s;
+		}
+	}
+
+	return dp[1][1];
 }
 
 

@@ -131,9 +131,7 @@ void range_mex(const vi& c, vi& nimber) {
 
 	repi(i, 1, n - 1) {
 		// [i-c[i]..i) よりも前にしか現れていない最小のニム値 v を得る．
-		int v = seg.max_right(0, [&](int x) {
-			return x >= i - c[i];
-			});
+		int v = seg.max_right(0, [&](int x) { return x >= i - c[i]; });
 
 		// 最小除外数規則より v が局面 i のニム値である．
 		nimber[i] = v;
@@ -163,25 +161,19 @@ void impartial_game(Graph& g, vi& nimber) {
 
 	function<int(int)> dfs = [&](int s) {
 		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) {
-			return nimber[s];
-		}
+		if (seen[s]) return nimber[s];
 		seen[s] = true;
 
 		// s から行ける頂点 t の情報を元に s の情報を計算する．
 		Nimber nx;
-		for (auto t : g[s]) {
-			nx.insert(dfs(t));
-		}
+		repe(t, g[s]) nx.insert(dfs(t));
 		nimber[s] = nx.mex();
 
 		return nimber[s];
 	};
 
 	// 各頂点 s についての情報を計算する．
-	rep(s, n) {
-		dfs(s);
-	}
+	rep(s, n) dfs(s);
 }
 
 
@@ -202,7 +194,7 @@ void cyclic_impartial_game(Graph& g, vi& res) {
 	// 辺の向きを逆にしたグラフを作成
 	Graph g_rev(n);
 	rep(s, n) {
-		for (auto t : g[s]) {
+		repe(t, g[s]) {
 			g_rev[t].push_back(s);
 		}
 	}

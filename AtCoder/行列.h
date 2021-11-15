@@ -37,8 +37,7 @@
 * pow(d) : O(n^3 log d)
 *	自身を d 乗した行列を返す．
 */
-template <class T>
-struct Matrix {
+template <class T> struct Matrix {
 	int m, n; // 行列のサイズ（m 行 n 列）
 	vector<vector<T>> v; // 行列の成分
 

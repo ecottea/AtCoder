@@ -5,6 +5,160 @@
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
+//【約数の列挙】O(√n)
+/*
+* n の約数全てをリスト divs に昇順に格納する．
+*/
+void divisors(ll n, vl& divs) {
+	divs.clear();
+
+	if (n == 1) {
+		divs.push_back(1);
+		return;
+	}
+
+	ll i = 1;
+	for (; i * i < n; i++) {
+		if (n % i == 0) {
+			divs.push_back(i);
+			divs.push_back(n / i);
+		}
+	}
+	if (i * i == n) divs.push_back(i);
+
+	sort(all(divs));
+}
+
+
+//【素数の列挙】O(n log(log n))
+/*
+* n 以下の素数を列挙し，ps に昇順に格納する．
+* 
+*（エラトステネスの篩）
+*/
+void eratosthenes(int n, vi& ps) {
+	ps.clear();
+
+	// 素数かどうかを記録しておくためのテーブル
+	vb is_prime(n + 1LL, true);
+
+	int i;
+
+	// √n 以下の i の処理
+	for (i = 2; i <= n / i; i++) {
+		if (is_prime[i]) {
+			ps.push_back(i);
+
+			for (int j = i * i; j <= n; j += i) {
+				is_prime[j] = false;
+			}
+		}
+	}
+
+	// √n より大きい i の処理
+	for (; i <= n; i++) {
+		if (is_prime[i]) ps.push_back(i);
+	}
+}
+
+
+//【素数の列挙（区間）】O((√r + (r - l))log(log r))
+/*
+* [l..r) に含まれる素数を ps に昇順に格納する．
+* 
+*（エラトステネスの区間篩）
+*
+* 利用：【素数の列挙】
+*/
+void eratosthenes_interval(ll l, ll r, vl& ps) {
+	ps.clear();
+
+	vi ps_sub;
+	eratosthenes(int(sqrt(r) + EPS), ps_sub);
+
+	// 素数かどうかを記録しておくためのテーブル
+	vb is_prime(r - l, true);
+	repe(p, ps_sub) {
+		for (ll j = (l + p - 1) / p * p; j < r; j += p) {
+			if (j != p) is_prime[j - l] = false;
+		}
+	}
+
+	rep(i, r - l) {
+		if (is_prime[i]) ps.push_back(l + i);
+	}
+}
+
+
+//【一括素因数分解】O(n log(log n))
+/*
+* n 以下の自然数 i の素因数分解を pps[i] に格納する．（pps[0] は使わない）
+*
+*（エラトステネスの篩）
+*/
+void factor_integer_all(int n, vector<map<int, int>>& pps) {
+	pps = vector<map<int, int>>(n + 1);
+
+	// 順に素数で割っていった残りの値を記録しておくためのテーブル
+	vi a(n + 1LL);
+	iota(all(a), 0);
+
+	int p = 2;
+
+	// √n 以下の p の処理（continue されない場合は p は素数）
+	for (; p * p <= n; p++) {
+		if (a[p] == 1) continue;
+
+		for (int i = p; i <= n; i += p) {
+			while (a[i] % p == 0) {
+				pps[i][p]++;
+				a[i] /= p;
+			}
+		}
+	}
+
+	// √n より大きい p の処理（この p は素数とは限らないので注意）
+	for (; p <= n; p++) {
+		if (a[p] != 1) pps[p][a[p]]++;
+	}
+}
+
+
+
+//【一括素因数分解（区間）】O((√r + (r - l))log(log r))
+/*
+* [l..r) に含まれる自然数 i の素因数分解を pps[i - l] に格納する．
+*
+*（エラトステネスの区間篩）
+*
+* 利用：【素数の列挙】
+*/
+void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
+	pps = vector<map<ll, int>>(r - l);
+
+	// ps : √r 以下の素数のリスト
+	vi ps;
+	eratosthenes(int(sqrt(r) + EPS), ps);
+
+	// 順に素数で割っていった残りの値を記録しておくためのテーブル
+	vl a((ll)r - l);
+	iota(all(a), l);
+
+	repe(p, ps) {
+		for (ll j = (l + p - 1) / p * p; j < r; j += p) {
+			while (a[j - l] % p == 0) {
+				pps[j - l][p]++;
+				a[j - l] /= p;
+			}
+		}
+	}
+
+	for (ll j = l; j < r; j++) {
+		if (a[j - l] != 1) pps[j - l][a[j - l]]++;
+	}
+}
+
+
 //【約数関数 σ_k(n)】O(n log(log n))
 /*
 * i = [1..n] について約数関数 σ_k(i) = (i の約数の k 乗和) を s[i] に格納する．

@@ -11,7 +11,7 @@
 //internal::is_prime_constexpr(int n);
 
 
-//y‘f””»’è^ƒ~ƒ‰[ - ƒ‰ƒrƒ“–@z
+//y‘f””»’è^ƒ~ƒ‰[ - ƒ‰ƒrƒ“–@zO((log n)^3)
 /*
 * n ‚ª‘f”‚©‚ğ•Ô‚·D
 *
@@ -273,56 +273,6 @@ ll divisors_sum(ll n) {
 	}
 
 	return res;
-}
-
-
-//y‘f”Œv”ŠÖ”zO(n^(3/4))
-/*
-* n ˆÈ‰º‚Ì‘f”‚ÌŒÂ” ƒÎ(n) ‚ğ•Ô‚·D
-*/
-ll prime_pi(ll n) {
-	// Ql : https://rsk0315.hatenablog.com/entry/2021/05/18/015511#fn-bab5992c
-
-	if (n <= 1) return 0;
-
-	int m = (int)(sqrt(n) + EPS);
-
-	// S(v, p) ‚ğ [1..v] ‚Å "‘f”‚Ü‚½‚Í p ˆÈ‰º‚Ì‘fˆö”‚ğ‚à‚½‚È‚¢‡¬”" ‚ÌŒÂ”‚Æ‚·‚éD
-	// dp_p[0][v] : S(v, p)Cdp_p[1][v] : S(n/v, p)
-	vvl dp(2, vl(m + 1LL));
-	repi(v, 1, m) {
-		dp[0][v] = v - 1;
-		dp[1][v] = n / v - 1;
-	}
-
-	repi(p, 2, m) {
-		// S(p - 1, p - 1)
-		ll s = dp[0][p - 1LL];
-
-		// p ‚ª‘f”‚Å‚È‚¯‚ê‚ÎŸ‚Ì p ‚Ö
-		if (dp[0][p] == s) continue;
-
-		// dp[1][v] = S(n/v, p) ‚ÌXV
-		repi(v, 1, m) {
-			// p^2 > n/v ‚È‚çŸ‚Ì p ‚Ö
-			if (p > n / v / p) break;
-
-			if (v <= m / p)
-				dp[1][v] -= dp[1][(ll)v * p] - s;
-			else
-				dp[1][v] -= dp[0][n / v / p] - s;
-		}
-
-		// dp[0][v] = S(v, p) ‚ÌXV
-		repir(v, m, 1) {
-			// p^2 > v ‚È‚çŸ‚Ì p ‚Ö
-			if (p > v / p) break;
-
-			dp[0][v] -= dp[0][v / p] - s;
-		}
-	}
-
-	return dp[1][1];
 }
 
 
