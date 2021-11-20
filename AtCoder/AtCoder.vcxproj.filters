@@ -28,9 +28,6 @@
     <Filter Include="ヘッダー ファイル\行列ベクトル">
       <UniqueIdentifier>{123631c0-bf2a-494d-8537-b924053d4f00}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\区間">
-      <UniqueIdentifier>{29392755-fd06-423f-a2da-fbaaed974ab3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\最適化">
       <UniqueIdentifier>{10924012-fe11-45fb-985f-2db4efb5c97f}</UniqueIdentifier>
     </Filter>
@@ -52,9 +49,6 @@
     <Filter Include="ヘッダー ファイル\探索,列挙">
       <UniqueIdentifier>{1a49ddbb-8e29-412b-98db-3a1a3a0c7386}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\列,格子">
-      <UniqueIdentifier>{9624464e-a2c8-4e1a-b285-83292d7c1f9b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\文字列">
       <UniqueIdentifier>{4ab017ff-67b5-4897-b871-957943fd7976}</UniqueIdentifier>
     </Filter>
@@ -63,6 +57,18 @@
     </Filter>
     <Filter Include="ヘッダー ファイル\代数構造">
       <UniqueIdentifier>{56f5b44a-7edc-4f7f-835f-e9b5763fd635}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\列%28区間%29">
+      <UniqueIdentifier>{29392755-fd06-423f-a2da-fbaaed974ab3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\データ構造">
+      <UniqueIdentifier>{a5a6c0dd-c4f8-45cc-b08b-33f93f3b6563}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\格子">
+      <UniqueIdentifier>{513a9a48-7189-4661-903b-331e9487f8e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\列">
+      <UniqueIdentifier>{9624464e-a2c8-4e1a-b285-83292d7c1f9b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -88,12 +94,6 @@
     </ClInclude>
     <ClInclude Include="探索%28グラフ%29.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
-    </ClInclude>
-    <ClInclude Include="セグメント木%28モノイド%29.h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
-    </ClInclude>
-    <ClInclude Include="Union-Find.h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
     <ClInclude Include="ナップサック.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
@@ -122,23 +122,20 @@
     <ClInclude Include="構造(グラフ).h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
-    <ClInclude Include="フェニック木%28アーベル群%29.h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
-    </ClInclude>
     <ClInclude Include="部分列.h">
-      <Filter>ヘッダー ファイル\列,格子</Filter>
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="座標圧縮.h">
-      <Filter>ヘッダー ファイル\列,格子</Filter>
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="部分和問題.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
     <ClInclude Include="区間.h">
-      <Filter>ヘッダー ファイル\区間</Filter>
+      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
     <ClInclude Include="いもす法.h">
-      <Filter>ヘッダー ファイル\区間</Filter>
+      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
     <ClInclude Include="マッチング.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
@@ -164,9 +161,6 @@
     <ClInclude Include="グラフクエリ.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
-    <ClInclude Include="辞書.h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
-    </ClInclude>
     <ClInclude Include="ゲーム.h">
       <Filter>ヘッダー ファイル\ゲーム</Filter>
     </ClInclude>
@@ -177,7 +171,7 @@
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="ヒストグラム.h">
-      <Filter>ヘッダー ファイル\列,格子</Filter>
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="グラフ最適化.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
@@ -207,7 +201,7 @@
       <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
     <ClInclude Include="区間DP.h">
-      <Filter>ヘッダー ファイル\区間</Filter>
+      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
     <ClInclude Include="bitDP.h">
       <Filter>ヘッダー ファイル\集合</Filter>
@@ -216,7 +210,7 @@
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
     <ClInclude Include="順列.h">
-      <Filter>ヘッダー ファイル\列,格子</Filter>
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="木.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
@@ -237,7 +231,7 @@
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="部分列DP.h">
-      <Filter>ヘッダー ファイル\列,格子</Filter>
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="FPS%28mint%29.h">
       <Filter>ヘッダー ファイル\計算</Filter>
@@ -253,9 +247,6 @@
     </ClInclude>
     <ClInclude Include="mint.h">
       <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
-    </ClInclude>
-    <ClInclude Include="格子.h">
-      <Filter>ヘッダー ファイル\列,格子</Filter>
     </ClInclude>
     <ClInclude Include="最短路.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
@@ -275,9 +266,6 @@
     <ClInclude Include="数論(一括).h">
       <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
-    <ClInclude Include="セグ木(ACL).h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
-    </ClInclude>
     <ClInclude Include="モノイド.h">
       <Filter>ヘッダー ファイル\代数構造</Filter>
     </ClInclude>
@@ -286,9 +274,6 @@
     </ClInclude>
     <ClInclude Include="アーベル群.h">
       <Filter>ヘッダー ファイル\代数構造</Filter>
-    </ClInclude>
-    <ClInclude Include="フェニ木(ACL).h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
     <ClInclude Include="Z-加群.h">
       <Filter>ヘッダー ファイル\代数構造</Filter>
@@ -304,6 +289,36 @@
     </ClInclude>
     <ClInclude Include="可換環.h">
       <Filter>ヘッダー ファイル\代数構造</Filter>
+    </ClInclude>
+    <ClInclude Include="ヒープ.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="辞書.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="Union-Find.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="セグメント木%28モノイド%29.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="セグ木(ACL).h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="フェニ木(ACL).h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="フェニック木%28アーベル群%29.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="格子.h">
+      <Filter>ヘッダー ファイル\格子</Filter>
+    </ClInclude>
+    <ClInclude Include="DAG.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="格子路.h">
+      <Filter>ヘッダー ファイル\格子</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

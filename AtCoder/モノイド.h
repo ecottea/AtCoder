@@ -36,7 +36,12 @@ struct Monoid {
 
 	// “üo—Í
 	friend istream& operator>>(istream& is, Monoid& a) { is >> a.v; return is; }
-	friend ostream& operator<<(ostream& os, const Monoid& a) { return os << a.v; }
+	friend ostream& operator<<(ostream& os, const Monoid& a) {
+#ifdef _MSC_VER
+		if (a.v == e()) return os << "e";
+#endif
+		return os << a.v;
+	}
 };
 
 

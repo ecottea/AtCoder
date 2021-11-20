@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "“ñ€ŒW”.h"
-#include "FPS.h"
+#include "FPS(mint).h"
 // ¡¡¡¡¡ •”•ª˜a–â‘è ¡¡¡¡¡
 
 
@@ -67,7 +67,7 @@ void count_partial_sum(const vi& a, int v, vm& cnt) {
 	FPS f(0, v + 1);
 	repe(p, c) {
 		for (int k = 1; k * p.first <= v; k++) {
-			f[(ll)k * p.first] += p.second * (k & 1 ? 1 : -1) * fm.inv(k);
+			f[k * p.first] += p.second * (k & 1 ? 1 : -1) * fm.inv(k);
 		}
 	}
 	f = exp(f, v + 1);
@@ -132,7 +132,7 @@ int minimize_partial_sum(const vi& a, int v) {
 }
 
 
-//y•”•ª˜a–â‘èzO(2^(n/2))
+//y•”•ª˜a–â‘èi‘¶İ”»’èjzO(2^(n/2))
 /*
 * ’·‚³ n ‚Ì”ñ•‰®”‚Ì—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ªì‚ê‚é‚©‚ğ•Ô‚·D
 *
@@ -518,6 +518,51 @@ mint count_limited_signed_partial_sum(const vi& a, const vi& m, int v) {
 	}
 
 	return dp[n][v - MIN];
+}
+
+
+//y•”•ª˜a–â‘èi”‚¦ã‚°C—]—T‹Ö~jzO(n v)
+/*
+* ’·‚³ n ‚Ì®”—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ˆÈ‰º‚Ì”‚ğì‚é•û–@‚ª‰½’Ê‚è‚ ‚é‚©‚ğ•Ô‚·D
+* ‚½‚¾‚µC‚Ü‚¾‰Á‚¦‚ç‚ê‚é a[i] ‚ªc‚Á‚½ó‘Ô‚Å‰Á‚¦‚é‚Ì‚ğ‚â‚ß‚Ä‚Í‚¢‚¯‚È‚¢D
+*
+*i˜a‚ğó‘Ô‚É‚à‚Âó‘Ô DPj
+*/
+mint count_greedy_partial_sum(vi a, int v) {
+	int n = sz(a);
+
+	// d‚³‚É‚Â‚¢‚Ä~‡ƒ\[ƒg‚µ‚Ä‚¨‚­
+	sort(all(a), greater<int>());
+
+	// ‘S•”‘«‚¹‚éê‡
+	if (accumulate(all(a), 0) <= v) return 1;
+
+	// dp[i][j] : a[0..i) ‚Ì’†‚©‚ç˜a‚ª j ˆÈ‰º‚Å‰^‚Ô•û–@‚Ì”
+	vvm dp(n + 1, vm(v + 1));
+	repi(j, 0, v) dp[0][j] = 1;
+
+	repi(i, 1, n) {
+		repi(j, 0, v) {
+			dp[i][j] += dp[i - 1][j];
+
+			if (j - a[i - 1] >= 0) {
+				dp[i][j] += dp[i - 1][j - a[i - 1]];
+			}
+		}
+	}
+
+	// a[n-1] ‚ğg‚í‚È‚¢ê‡‚ÍCa[0..n-1) ‚Ì’†‚©‚ç˜a‚ª (v-a[n-1]..v] “à‚É‚È‚é‚æ‚¤‘I‚ÑC
+	// ˆÈ~‚Í a[n-1] ‚ğ“ü‚ê‚éê‡‚Ì‚İ‚ğ”‚¦ã‚°‚éD
+	// “¯—l‚Ì‚±‚Æ‚ğŒã‚ë‚©‚ç‡”Ô‚És‚Á‚Ä‚¢‚­D
+	mint res = 0; int s = 0;
+	repir(i, n - 1, 0) {
+		if (v - s >= 0) res += dp[i][v - s];
+		if (v - s - a[i] >= 0) res -= dp[i][v - s - a[i]];
+
+		s += a[i];
+	}
+
+	return res;
 }
 
 

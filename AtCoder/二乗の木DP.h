@@ -4,7 +4,6 @@
 // ■■■■■ 二乗の木 DP ■■■■■
 
 
-
 //【部分木の数え上げ】O(|V|^2)
 /*
 * 木 g の頂点 r を含む大きさ i の部分木の個数を cnt[i] に格納する．
@@ -23,7 +22,7 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 	// s : 注目頂点，p : s の親，戻り値 : 部分木 s の大きさ
 	function<int(int, int)> dfs = [&](int s, int p) {
 		int ws = 1; // 部分木 s の大きさ
-		dp[s] = vm(ws + 1LL, 1);
+		dp[s] = vm(ws + 1, 1);
 
 		// s の子 t それぞれについて
 		repe(t, g[s]) {
@@ -33,10 +32,10 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			vm ndps(ws + wt + 1LL);
+			vm ndps(ws + wt + 1);
 			repi(i, 1, ws) {
 				repi(j, 0, wt) {
-					ndps[(ll)i + j] += dp[s][i] * dp[t][j];
+					ndps[i + j] += dp[s][i] * dp[t][j];
 				}
 			}
 
@@ -71,7 +70,7 @@ mint count_subtree(const Graph& g, int r, int k) {
 	// s : 注目頂点，p : s の親，戻り値 : 部分木 s の大きさ
 	function<int(int, int)> dfs = [&](int s, int p) {
 		int ws = 1; // 部分木 s の大きさ
-		dp[s] = vm(ws + 1LL, 1);
+		dp[s] = vm(ws + 1, 1);
 
 		// s の子 t それぞれについて
 		repe(t, g[s]) {
@@ -81,10 +80,10 @@ mint count_subtree(const Graph& g, int r, int k) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			vm ndps(min(ws + wt, k) + 1LL);
+			vm ndps(min(ws + wt, k) + 1);
 			repi(i, 1, min(ws, k)) {
 				repi(j, 0, min(wt, k - i)) {
-					ndps[(ll)i + j] += dp[s][i] * dp[t][j];
+					ndps[i + j] += dp[s][i] * dp[t][j];
 				}
 			}
 
@@ -109,6 +108,8 @@ mint count_subtree(const Graph& g, int r, int k) {
 *（二乗の木 DP）
 */
 mint count_coprime_path(Graph& g, int k) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_eel
+
 	int n = sz(g);
 
 	// 便宜上 g を 0 を根とする根付き木とみなす．
@@ -132,26 +133,26 @@ mint count_coprime_path(Graph& g, int k) {
 			int wt = dfs(t, s);
 
 			// ndps : 部分木 s に部分木 t をマージした後の部分木の個数
-			vvm ndps(3, vm(min((ws + wt) / 2, k) + 1LL));
+			vvm ndps(3, vm(min((ws + wt) / 2, k) + 1));
 
 			repi(i, 0, min(ws / 2, k)) {
 				repi(j, 0, min(wt / 2, k - i + 1)) {
 					// 辺 (s, t) がパスに属さない場合
 					mint sum = dp[t][0][j] + dp[t][1][j] + dp[t][2][j];
 					rep(c, 3) {
-						ndps[c][(ll)i + j] += dp[s][c][i] * sum;
+						ndps[c][i + j] += dp[s][c][i] * sum;
 					}
 
 					// 辺 (s, t) がパスに属する場合
 					if (i + j < sz(ndps[0]) - 1) {
-						ndps[1][(ll)i + j + 1] += dp[s][0][i] * dp[t][0][j];
+						ndps[1][i + j + 1] += dp[s][0][i] * dp[t][0][j];
 					}
 					if (i + j < sz(ndps[0])) {
-						ndps[1][(ll)i + j] += dp[s][0][i] * dp[t][1][j];
-						ndps[2][(ll)i + j] += dp[s][1][i] * dp[t][0][j];
+						ndps[1][i + j] += dp[s][0][i] * dp[t][1][j];
+						ndps[2][i + j] += dp[s][1][i] * dp[t][0][j];
 					}
 					if (i + j > 0) {
-						ndps[2][(ll)i + j - 1] += dp[s][1][i] * dp[t][1][j];
+						ndps[2][i + j - 1] += dp[s][1][i] * dp[t][1][j];
 					}
 				}
 			}

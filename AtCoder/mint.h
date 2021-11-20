@@ -3,7 +3,6 @@
 // ¡¡¡¡¡ Ž©ì‚ÌŠÈˆÕ mint ¡¡¡¡¡
 
 
-
 //y—LŒÀ‘Ì F_p ã‚ÌŒvŽZi32 bitjz
 struct mint {
 	ll v;
@@ -56,7 +55,7 @@ struct mint {
 	mint pow(ll d) const {
 		mint res(1), pow2 = *this;
 		while (d > 0) {
-			if (d & 1LL) res *= pow2;
+			if (d & 1) res *= pow2;
 			pow2 *= pow2;
 			d /= 2;
 		}
@@ -156,7 +155,7 @@ struct mll {
 	mll pow(ll d) const {
 		mll res(1), pow2 = *this;
 		while (d > 0) {
-			if (d & 1LL) res *= pow2;
+			if (d & 1) res *= pow2;
 			pow2 *= pow2;
 			d /= 2;
 		}

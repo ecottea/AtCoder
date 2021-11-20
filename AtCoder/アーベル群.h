@@ -46,7 +46,12 @@ struct Abel_group {
 
 	// “üo—Í
 	friend istream& operator>>(istream& is, Abel_group& a) { is >> a.v; return is; }
-	friend ostream& operator<<(ostream& os, const Abel_group& a) { return os << a.v; }
+	friend ostream& operator<<(ostream& os, const Abel_group& a) {
+#ifdef _MSC_VER
+		if (a.v == o()) return os << "o";
+#endif
+		return os << a.v;
+	}
 };
 
 

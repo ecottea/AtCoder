@@ -186,7 +186,7 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 	int m = sz(c[0]);
 
 	// dp[i][j] : S[0..i) と T[0..j) の弾性マッチングの最小コスト
-	vvl dp(n + 1LL, vl(m + 1LL, INFL));
+	vvl dp(n + 1, vl(m + 1, INFL));
 	dp[0][0] = 0;
 
 	// 貰う DP
@@ -198,8 +198,8 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 			//		T[j] に S[i - 1] が繋がる
 			//		S[i], T[j] 共に他に繋がる頂点はなし
 			// の 3 通りの場合が考えられるので，そのうち最小のものを選ぶ．
-			dp[i + 1LL][j + 1LL]
-				= min({ dp[i + 1LL][j], dp[i][j + 1LL], dp[i][j] }) + c[i][j];
+			dp[i + 1][j + 1]
+				= min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] }) + c[i][j];
 		}
 	}
 
@@ -210,12 +210,12 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 		while (i >= 0 && j >= 0) {
 			match->push_back({ i, j });
 
-			auto dp_min = min({ dp[i + 1LL][j], dp[i][j + 1LL], dp[i][j] });
+			auto dp_min = min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] });
 
-			if (dp_min == dp[i + 1LL][j]) {
+			if (dp_min == dp[i + 1][j]) {
 				j--;
 			}
-			else if (dp_min == dp[i][j + 1LL]) {
+			else if (dp_min == dp[i][j + 1]) {
 				i--;
 			}
 			else {
@@ -245,8 +245,8 @@ mint count_perfect_matching(vvb& e) {
 	int n = sz(e);
 
 	// dp[set] : set ⊂ T と，[0..|set|) ⊂ S との完全マッチングの個数
-	vm dp(1LL << n);
-	vb seen(1LL << n);
+	vm dp(1 << n);
+	vb seen(1 << n);
 
 	// メモ化再帰用の関数
 	function<mint(int)> rf = [&](int set) {

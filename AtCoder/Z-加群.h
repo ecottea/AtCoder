@@ -53,7 +53,12 @@ struct Z_module {
 
 	// “üo—Í
 	friend istream& operator>>(istream& is, Z_module& x) { is >> x.v; return is; }
-	friend ostream& operator<<(ostream& os, const Z_module& x) { return os << x.v; }
+	friend ostream& operator<<(ostream& os, const Z_module& x) {
+#ifdef _MSC_VER
+		if (x.v == o()) return os << "o";
+#endif
+		return os << x.v;
+	}
 };
 
 

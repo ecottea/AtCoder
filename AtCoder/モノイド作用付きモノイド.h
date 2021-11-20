@@ -41,7 +41,12 @@ struct MLop_Monoid {
 
 		// “üo—Í
 		friend istream& operator>>(istream& is, S& a) { is >> a.v; return is; }
-		friend ostream& operator<<(ostream& os, const S& a) { return os << a.v; }
+		friend ostream& operator<<(ostream& os, const S& a) {
+#ifdef _MSC_VER
+			if (a.v == e()) return os << "e";
+#endif
+			return os << a.v;
+		}
 	};
 
 	struct F {
@@ -67,7 +72,12 @@ struct MLop_Monoid {
 
 		// “üo—Í
 		friend istream& operator>>(istream& is, F& a) { is >> a.v; return is; }
-		friend ostream& operator<<(ostream& os, const F& a) { return os << a.v; }
+		friend ostream& operator<<(ostream& os, const F& a) {
+#ifdef _MSC_VER
+			if (a.v == id()) return os << "id";
+#endif
+			return os << a.v;
+		}
 	};
 
 	// ’PˆÊŒ³

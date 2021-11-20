@@ -104,8 +104,8 @@ double blurred_shooting(const vi& x) {
 	}
 
 	// dp[set] : set ‚É“I‚ª‚ ‚éê‡‚ÌËŒ‚‰ñ”‚ÌŠú‘Ò’l
-	vd dp(1LL << n, INFL);
-	vb seen(1LL << n);
+	vd dp(1 << n, INFL);
+	vb seen(1 << n);
 	dp[0] = 0;
 	seen[0] = true;
 

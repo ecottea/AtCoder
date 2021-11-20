@@ -182,7 +182,7 @@ struct FPS {
 
 				if (i + j >= n) break;
 
-				c[(ll)i + j] += c[i] * g[j];
+				c[i + j] += c[i] * g[j];
 			}
 
 			// 定数項は最後に配るか消去しないといけない．
@@ -288,7 +288,7 @@ struct FPS {
 
 				if (i + j >= n) break;
 
-				c[(ll)i + j] += c[i] * gj;
+				c[i + j] += c[i] * gj;
 			}
 
 			// 定数項は最後に配るか消去しないといけない．
@@ -320,7 +320,7 @@ struct FPS {
 
 				if (i + j >= n) break;
 
-				c[(ll)i + j] -= c[i] * gj;
+				c[i + j] -= c[i] * gj;
 			}
 		}
 
@@ -341,7 +341,7 @@ struct FPS {
 	// 不要な高次項の除去
 	FPS& resize() {
 		// 最高次の係数が非 0 になるまで削る．
-		while (n > 0 && c[n - 1LL] == 0) {
+		while (n > 0 && c[n - 1] == 0) {
 			c.pop_back();
 			n--;
 		}
@@ -710,7 +710,7 @@ FPS expand(const vm& x) {
 	// 2 冪個ずつ掛けていく（分割統治法）
 	for (int k = 1; k < n; k *= 2) {
 		for (int i = 0; i + k < n; i += 2 * k) {
-			f[i] *= f[(ll)i + k];
+			f[i] *= f[i + k];
 		}
 	}
 
@@ -730,18 +730,18 @@ void multipoint_evaluation(const FPS& f, const vm& x, vm& y) {
 	int m2 = 1 << (msb(m - 1) + 1);
 
 	// sp : (x - x[i]) の連続する 2 冪個の積からなる完全二分木
-	vector<FPS> sp(m2 * 2LL);
-	repi(i, m2, m2 + m - 1) sp[i] = FPS(vm({ -x[(ll)i - m2], 1 }));
+	vector<FPS> sp(m2 * 2);
+	repi(i, m2, m2 + m - 1) sp[i] = FPS(vm({ -x[i - m2], 1 }));
 	repi(i, m2 + m, 2 * m2 - 1) sp[i] = FPS(1);
-	repir(i, m2 - 1, 1) sp[i] = sp[2LL * i] * sp[2LL * i + 1];
+	repir(i, m2 - 1, 1) sp[i] = sp[2 * i] * sp[2 * i + 1];
 
 	// sr : f を sp[i] で割った余りからなる完全二分木
-	vector<FPS> sr(m2 * 2LL);
+	vector<FPS> sr(m2 * 2);
 	sr[1] = f.reminder(sp[1]);
-	repi(i, 2, m2 + m - 1) sr[i] = sr[i / 2LL].reminder(sp[i]);
+	repi(i, 2, m2 + m - 1) sr[i] = sr[i / 2].reminder(sp[i]);
 
 	// sr の葉は (x - x[i]) で割った余りなので，因数定理よりこれが f(x[i]) に等しい．
-	rep(i, m) y[i] = sr[(ll)m2 + i][0];
+	rep(i, m) y[i] = sr[m2 + i][0];
 }
 
 
@@ -777,12 +777,12 @@ mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 	// acc_l[i] = (c - x[0])(c - x[1]) ... (c - x[i - 1])
 	vm acc_l(n);
 	acc_l[0] = 1;
-	repi(i, 1, n - 1) acc_l[i] = acc_l[i - 1LL] * (c - (mint(a) * (i - 1) - b));
+	repi(i, 1, n - 1) acc_l[i] = acc_l[i - 1] * (c - (mint(a) * (i - 1) - b));
 
 	// acc_r[i] = (c - x[i + 1]) ... (c - x[n - 2])(c - x[n - 1])
 	vm acc_r(n);
-	acc_r[n - 1LL] = 1;
-	repir(i, n - 2, 0) acc_r[i] = (c - (mint(a) * (i + 1) - b)) * acc_r[i + 1LL];
+	acc_r[n - 1] = 1;
+	repir(i, n - 2, 0) acc_r[i] = (c - (mint(a) * (i + 1) - b)) * acc_r[i + 1];
 
 	// ラグランジュ基底の線形結合を計算する．
 	factorial_mint fm(n);
@@ -791,7 +791,7 @@ mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 		res += y[i] * acc_l[i] * acc_r[i] * ((n - 1 - i) & 1 ? -1 : 1)
 			* fm.fac_inv(i) * fm.fac_inv(n - 1 - i);
 	}
-	return res * mint(a).pow(n - 1LL);
+	return res * mint(a).pow(n - 1);
 }
 
 
@@ -840,8 +840,8 @@ FPS lagrange_interpolation(const vm& x, const vm& y) {
 	// 2 冪個ずつ足していく（分割統治法）
 	for (int k = 1; k < n; k *= 2) {
 		for (int i = 0; i + k < n; i += 2 * k) {
-			num[i] = num[i] * dnm[(ll)i + k] + num[(ll)i + k] * dnm[i];
-			dnm[i] *= dnm[(ll)i + k];
+			num[i] = num[i] * dnm[i + k] + num[i + k] * dnm[i];
+			dnm[i] *= dnm[i + k];
 		}
 	}
 

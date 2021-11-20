@@ -139,7 +139,7 @@ template <class T> struct FPS {
 			repi(j, 1, m) {
 				if (i + j >= n) break;
 
-				c[(ll)i + j] += c[i] * g[j];
+				c[i + j] += c[i] * g[j];
 			}
 
 			// 定数項は最後に配るか消去しないといけない．
@@ -247,7 +247,7 @@ template <class T> struct FPS {
 
 				if (i + j >= n) break;
 
-				c[(ll)i + j] += c[i] * gj;
+				c[i + j] += c[i] * gj;
 			}
 
 			// 定数項は最後に配るか消去しないといけない．
@@ -274,7 +274,7 @@ template <class T> struct FPS {
 
 				if (i + j >= n) break;
 
-				c[(ll)i + j] -= c[i] * gj;
+				c[i + j] -= c[i] * gj;
 			}
 		}
 
@@ -295,7 +295,7 @@ template <class T> struct FPS {
 	// 不要な高次項の除去
 	FPS& resize() {
 		// 最高次の係数が非 0 になるまで削る．
-		while (n > 0 && c[n - 1LL] == T::o()) {
+		while (n > 0 && c[n - 1] == T::o()) {
 			c.pop_back();
 			n--;
 		}

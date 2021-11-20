@@ -5,7 +5,6 @@
 // ■■■■■ 全方位木 DP ■■■■■
 
 
-
 //【木の高さ】O(|V|)
 /*
 * 木 g の頂点 i を根にしたときの高さを h[i] に格納する．
@@ -247,14 +246,16 @@ void count_subtree(Graph& g, vm& cnt) {
 * 利用：【階乗と二項係数（mint利用）】
 */
 mint continuous_tree_construction(Graph& g) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tree
+
 	ll n = sz(g);
-	factorial_mint fm(n);
+	factorial_mint fm((int)n);
 
 	// 辺 (p, s) を切断したときの s を含む部分木を部分木 (p, s) と呼ぶ．
 	// dp[p * n + s] : s からの連結性を保ったまま部分木 (p, s) を構築する方法の数 
-	//	頂点 s は最初から存在しているものとする．
+	//				   頂点 s は最初から存在しているものとする．
 	unordered_map<ll, mint> dp;
-	unordered_map<ll, int> w; // w[p * n + s] : 部分木 (p, s) の大きさ
+	unordered_map<ll, int> w; // w[p * n + s] : 部分木 (p, s) の大きさ（頂点数）
 
 	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
 	function<mint(int, int)> dfs_to_leaf = [&](int p, int s) {
@@ -262,7 +263,7 @@ mint continuous_tree_construction(Graph& g) {
 		vi ws;
 
 		// 子の情報を集めて自身の情報を計算する．
-		for (auto t : g[s]) {
+		repe(t, g[s]) {
 			if (t == p) continue;
 
 			// それぞれの子の部分木を構築する方法の数
@@ -286,10 +287,8 @@ mint continuous_tree_construction(Graph& g) {
 
 		// 部分木の大きさ
 		vi ws(m);
-		rep(i, m) {
-			ws[i] += w[s * n + g[s][i]];
-		}
-
+		rep(i, m) ws[i] = w[s * n + g[s][i]];
+		
 		// 左右からの累積積を計算する．
 		vector<mint> acc_l(m + 1), acc_r(m + 1);
 		acc_l[0] = 1;
@@ -309,10 +308,13 @@ mint continuous_tree_construction(Graph& g) {
 			dp[t * n + s] = acc_l[i] * acc_r[i + 1];
 
 			int wi = ws[i];
-			ws[i] = 0;
+			ws[i] = 0; // 一旦部分木 i の大きさを 0 にしておく
+
+			// 各回でどの子の部分木の構築を進めるか
 			dp[t * n + s] *= fm.multinomial(ws);
 			w[t * n + s] = accumulate(all(ws), 1);
-			ws[i] = wi;
+			
+			ws[i] = wi; // 元に戻しておく
 		}
 
 		// 総積も記録しておく．
@@ -339,7 +341,8 @@ mint continuous_tree_construction(Graph& g) {
 
 	mint res = 0;
 
-	// 深さ偶数の頂点から部分木の構築を始めた場合のみを加算する．
+	// 深さ偶数の頂点から部分木の構築を始めた場合のみを加算することで二重カウントを防ぐ．
+	// 総和 / 2 でも良いが，MOD が偶数であるとまずい．
 	function<void(int, int, int)> dfs = [&](int s, int p, int d) {
 		if (d % 2 == 0) res += dp[s * n + s];
 
@@ -349,7 +352,6 @@ mint continuous_tree_construction(Graph& g) {
 			dfs(t, s, d + 1);
 		}
 	};
-
 	dfs(0, -1, 0);
 
 	return res;

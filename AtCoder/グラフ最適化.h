@@ -1,8 +1,6 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-#include "探索(グラフ).h"
-#include "最短路.h"
 #include "マッチング.h"
 #include "ビット全探索.h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
@@ -101,210 +99,6 @@ ll prim(const WGraph& g, int r, WGraph& mst) {
 		}
 	}
 
-	return res;
-}
-
-
-//【最長パス】O(|V| + |E|)
-/*
-* 有向非巡回グラフ g の頂点 s からの最長パスの長さを len[s] に格納する．
-*
-*（DAG 上の DP）
-*/
-void longest_path(const Graph& g, vi& len) {
-	int n = sz(g);
-
-	// len[s] : 頂点 s からの最長パスの長さ
-	len.resize(n);
-	vb seen(n);
-
-	function<int(int)> dfs = [&](int s) {
-		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) return len[s];
-		seen[s] = true;
-
-		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		len[s] = 0;
-		repe(t, g[s]) {
-			chmax(len[s], dfs(t) + 1);
-		}
-		return len[s];
-	};
-
-	// 各頂点 s についての情報を計算する．
-	rep(s, n) {
-		if (!seen[s]) dfs(s);
-	}
-}
-
-
-//【コスト最大パス（頂点コスト，始点任意）】O(|V| + |E|)
-/*
-* 頂点コスト w の与えられた有向非巡回グラフ g のパス（長さ 0 も可）で，
-* パスに属する頂点のコストの和の最大値を返す．
-*
-*（DAG 上の DP）
-*/
-ll highest_cost_path(const Graph& g, const vl& w) {
-	int n = sz(g);
-
-	// dp[s] : 頂点 s からの最大コスト
-	vl dp(n);
-	vb seen(n);
-
-	function<ll(int)> dfs = [&](int s) {
-		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) return dp[s];
-		seen[s] = true;
-
-		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		dp[s] = 0;
-		repe(t, g[s]) {
-			chmax(dp[s], dfs(t));
-		}
-		dp[s] += w[s];
-
-		return dp[s];
-	};
-
-	// 各頂点 s についての情報を計算する．
-	ll res = 0;
-	rep(s, n) {
-		chmax(res, dfs(s));
-	}
-
-	return res;
-}
-
-
-//【コスト最大パス（頂点コスト，始点固定）】O(|V| + |E|)
-/*
-* 頂点コスト w の与えられた有向非巡回グラフ g の r からのパス（長さ 0 も可）で，
-* パスに属する頂点のコストの和を最大とするパスの頂点列を path に格納する．
-* またそのパスのコストを返す．
-*
-*（DAG 上の DP）
-*/
-ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
-	int n = sz(g);
-
-	// dp[s] : 頂点 s からの最大コスト
-	vl dp(n);
-	vb seen(n);
-	vi next(n, -1);
-
-	function<ll(int)> dfs = [&](int s) {
-		// s の情報を計算済だったらすぐに返す．
-		if (seen[s]) return dp[s];
-		seen[s] = true;
-
-		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		dp[s] = 0;
-		repe(t, g[s]) {
-			if (chmax(dp[s], dfs(t))) {
-				next[s] = t;
-			}
-		}
-		dp[s] += w[s];
-
-		return dp[s];
-	};
-
-	// r から探索
-	ll res = dfs(r);
-
-	// DP 復元
-	if (path != nullptr) {
-		path->clear();
-
-		for (int s = r; s != -1; s = next[s]) {
-			path->push_back(s);
-		}
-	}
-
-	return res;
-}
-
-
-//【コスト最大パスの組（頂点コスト，始点任意）】O(|V|^3)
-/*
-* 頂点コスト w の与えられた有向非巡回グラフ g（トポロジカルソート済）のパスの組で，
-* いずれかのパスに属している頂点のコストの和の最大値を返す．
-*
-*（DAG 上の二次元 DP）
-*
-* 利用：【幅優先探索】
-*/
-ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
-	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/26/172626
-
-	int n = sz(g_);
-
-	// 全頂点への有向辺をもちコストが 0 の頂点 0 を追加する．
-	Graph g(n + 1LL);
-	repi(t, 1, n) {
-		g[0].push_back(t);
-	}
-	rep(s, n) {
-		repe(t, g_[s]) {
-			g[s + 1LL].push_back(t + 1);
-		}
-	}
-
-	vl w(n + 1LL);
-	w[0] = 0;
-	rep(s, n) {
-		w[s + 1LL] = w_[s];
-	}
-
-	n++;
-
-	// downQ[s][t] : パス s → t が存在するか（いくつかの頂点を飛び越えて移動できるか）
-	vvb downQ(n, vb(n));
-	rep(s, n) {
-		vi dist;
-		breadth_first_search(g, s, dist);
-
-		rep(t, n) {
-			downQ[s][t] = (dist[t] >= 0);
-		}
-	}
-
-	// dp[s1][s2] : 頂点 s1 < s2 からのパスの組の最大コスト
-	vvl dp(n, vl(n));
-	vvb seen(n, vb(n));
-
-	function<ll(int, int)> dfs = [&](int s1, int s2) {
-		// (s1, s2) の情報を計算済だったらすぐに返す．
-		if (seen[s1][s2]) return dp[s1][s2];
-		seen[s1][s2] = true;
-
-		dp[s1][s2] = w[s1] + w[s2];
-
-		// s2 から行ける頂点 t2 の情報を元に (s1, s2) の情報を計算する．
-		repe(t2, g[s2]) {
-			chmax(dp[s1][s2], dfs(s1, t2) + w[s2]);
-		}
-
-		// s1 から行ける頂点 t1 の情報を元に (s1, s2) の情報を計算する．
-		// ただし s1 からは s2 を飛び越えるような移動しか認めないこととする．
-		repi(t1, s2 + 1, n - 1) {
-			if (downQ[s1][t1]) {
-				chmax(dp[s1][s2], dfs(s2, t1) + w[s1]);
-			}
-		}
-
-		return dp[s1][s2];
-	};
-
-	dfs(0, 0);
-
-	ll res = 0;
-	rep(s2, n) {
-		rep(s1, s2) {
-			chmax(res, dp[s1][s2]);
-		}
-	}
 	return res;
 }
 
@@ -540,8 +334,8 @@ ll traveling_salesman_problem(const WGraph& g) {
 
 	// dp[i][set] : 頂点 i から set を通り頂点 n - 1 までのハミルトンパスの最小コスト
 	//	i !∈ set だが，n - 1 ∈ set なので注意．
-	vvl dp(n, vl(1LL << n, INFL));
-	vvb seen(n, vb(1LL << n));
+	vvl dp(n, vl(1 << n, INFL));
+	vvb seen(n, vb(1 << n));
 	dp[n - 1][0] = 0;
 	seen[n - 1][0] = true;
 
@@ -588,8 +382,8 @@ ll shortest_hamiltonian_path(const WGraph& g) {
 
 	// dp[s][set] : 頂点 s から出発し set を通るハミルトンパスの最小コスト
 	//	s !∈ set とする．
-	vvl dp(n, vl(1LL << n, INFL));
-	vvb seen(n, vb(1LL << n));
+	vvl dp(n, vl(1 << n, INFL));
+	vvb seen(n, vb(1 << n));
 	rep(s, n) {
 		dp[s][0] = 0;
 		seen[s][0] = true;

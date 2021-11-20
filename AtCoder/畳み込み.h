@@ -149,11 +149,11 @@ template <typename T> vector<T> convolution_or(vector<T> a, vector<T> b) {
 */
 template <typename T> void zeta_max(vector<T>& f) {
 	int n = sz(f);
-	repi(i, 1, n - 1) f[i] += f[i - 1LL];
+	repi(i, 1, n - 1) f[i] += f[i - 1];
 }
 template <typename T> void mobius_max(vector<T>& f) {
 	int n = sz(f);
-	repir(i, n - 1, 1) f[i] -= f[i - 1LL];
+	repir(i, n - 1, 1) f[i] -= f[i - 1];
 }
 template <typename T> vector<T> convolution_max(vector<T> a, vector<T> b) {
 	// Ql : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
@@ -181,11 +181,11 @@ template <typename T> vector<T> convolution_max(vector<T> a, vector<T> b) {
 */
 template <typename T> void zeta_min(vector<T>& f) {
 	int n = sz(f);
-	repir(i, n - 2, 0) f[i] += f[i + 1LL];
+	repir(i, n - 2, 0) f[i] += f[i + 1];
 }
 template <typename T> void mobius_min(vector<T>& f) {
 	int n = sz(f);
-	repi(i, 0, n - 2) f[i] -= f[i + 1LL];
+	repi(i, 0, n - 2) f[i] -= f[i + 1];
 }
 template <typename T> vector<T> convolution_min(vector<T> a, vector<T> b) {
 	// Ql : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
@@ -231,7 +231,7 @@ template <typename T> struct GCD_convolution {
 
 		// Še‘fˆö”‚²‚Æ‚Éã‚©‚ç‚Ì—İÏ˜a‚ğ‚Æ‚é
 		repe(p, ps) {
-			repir(i, (n - 1) / p, 1) f[i] += f[(ll)p * i];
+			repir(i, (n - 1) / p, 1) f[i] += f[p * i];
 		}
 	}
 
@@ -240,7 +240,7 @@ template <typename T> struct GCD_convolution {
 
 		// Še‘fˆö”‚²‚Æ‚É‰º‚©‚ç‚Ì·•ª‚ğ‚Æ‚é
 		repe(p, ps) {
-			repi(i, 1, (n - 1) / p) f[i] -= f[(ll)p * i];
+			repi(i, 1, (n - 1) / p) f[i] -= f[p * i];
 		}
 	}
 
@@ -290,7 +290,7 @@ template <typename T> struct LCM_convolution {
 
 		// Še‘fˆö”‚²‚Æ‚É‰º‚©‚ç‚Ì—İÏ˜a‚ğ‚Æ‚é
 		repe(p, ps) {
-			repi(i, 1, (n - 1) / p) f[(ll)p * i] += f[i];
+			repi(i, 1, (n - 1) / p) f[p * i] += f[i];
 		}
 	}
 
@@ -299,7 +299,7 @@ template <typename T> struct LCM_convolution {
 
 		// Še‘fˆö”‚²‚Æ‚Éã‚©‚ç‚Ì·•ª‚ğ‚Æ‚é
 		repe(p, ps) {
-			repir(i, (n - 1) / p, 1) f[(ll)p * i] -= f[i];
+			repir(i, (n - 1) / p, 1) f[p * i] -= f[i];
 		}
 	}
 
@@ -344,8 +344,8 @@ struct NTT {
 		r_inv[23] = r[23].inv();
 
 		repir(i, 22, 0) {
-			r[i] = r[i + 1LL] * r[i + 1LL];
-			r_inv[i] = r_inv[i + 1LL] * r_inv[i + 1LL];
+			r[i] = r[i + 1] * r[i + 1];
+			r_inv[i] = r_inv[i + 1] * r_inv[i + 1];
 		}
 	}
 
@@ -355,8 +355,8 @@ struct NTT {
 		y = z = vm(n);
 
 		rep(i, n) {
-			y[i] = x[i] + x[(ll)i + n];
-			z[i] = (x[i] - x[(ll)i + n]) * r[msb(n) + 1LL].pow(i); // ‚±‚±‚ª’x‚¢
+			y[i] = x[i] + x[i + n];
+			z[i] = (x[i] - x[i + n]) * r[msb(n) + 1].pow(i); // ‚±‚±‚ª’x‚¢
 		}
 	}
 
@@ -366,19 +366,19 @@ struct NTT {
 		y = z = vm(n);
 
 		rep(i, n) {
-			y[i] = x[i] + x[(ll)i + n];
-			z[i] = (x[i] - x[(ll)i + n]) * r_inv[msb(n) + 1LL].pow(i); // ‚±‚±‚ª’x‚¢
+			y[i] = x[i] + x[i + n];
+			z[i] = (x[i] - x[i + n]) * r_inv[msb(n) + 1].pow(i); // ‚±‚±‚ª’x‚¢
 		}
 	}
 
 	// (y, z) ‚ğ x ‚É“‡‚·‚é
 	void riffle(const vm& y, const vm& z, vm& x) {
 		int n = sz(y);
-		x = vm(2LL * n);
+		x = vm(2 * n);
 
 		rep(i, n) {
-			x[2LL * i] = y[i];
-			x[2LL * i + 1] = z[i];
+			x[2 * i] = y[i];
+			x[2 * i + 1] = z[i];
 		}
 	}
 

@@ -1,8 +1,7 @@
 #pragma once
 #include "header.h"
-#include "フェニック木.h"
+#include "フェニ木(ACL).h"
 // ■■■■■ 辞書 ■■■■■
-
 
 
 //【動的辞書】
@@ -438,14 +437,14 @@ struct Substring_dictionary {
 		sa = suffix_array(s);
 		la = lcp_array(s, sa);
 
-		cnt[0] = (ll)n - sa[0];
+		cnt[0] = n - sa[0];
 		repi(i, 1, n - 1) {
-			cnt[i] = cnt[i - 1LL] + ((ll)n - sa[i]) - la[i - 1LL];
+			cnt[i] = cnt[i - 1] + (n - sa[i]) - la[i - 1];
 		}
 	}
 
 	// 部分文字列の個数を返す．
-	ll size() { return cnt[n - 1LL]; }
+	ll size() { return cnt[n - 1]; }
 
 	// i 番目の部分文字列を返す．
 	string get(ll i) {

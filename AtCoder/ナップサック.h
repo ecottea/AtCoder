@@ -515,7 +515,7 @@ ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& se
 		ll c = 1;
 		while (c < m_i) {
 			// 重さが W を超えたセットは無意味なので追加しない．
-			if ((ll)w[i] * c > (ll)W) {
+			if (w[i] * c > (ll)W) {
 				goto LOOP_END;
 			}
 			v2.push_back(v[i] * c);
@@ -621,7 +621,7 @@ ll knapsack_problem_minimize_weight_limited(const vi& v, const vl& w, const vl& 
 		ll c = 1;
 		while (c < m_i) {
 			// 価値が V を超えたセットは無意味なので追加しない．
-			if ((ll)v[i] * c > (ll)V) {
+			if (v[i] * c > (ll)V) {
 				goto LOOP_END;
 			}
 			v2.push_back(v[i] * (int)c);

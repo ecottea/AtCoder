@@ -223,8 +223,8 @@ template <class T> struct Lazy_segtree {
 		n = pow2;
 
 		// 完全二分木を実現する大きさ 2 * n の配列を確保する．
-		v = vector<typename T::S>(2LL * n);
-		lazy = vector<typename T::F>(2LL * n);
+		v = vector<typename T::S>(2 * n);
+		lazy = vector<typename T::F>(2 * n);
 	}
 
 	// コンストラクタ（配列で初期化）
@@ -233,7 +233,7 @@ template <class T> struct Lazy_segtree {
 		rep(i, sz(v_)) v[i + n] = v_[i];
 
 		// 全てのノードに正しい値を設定する．
-		repir(i, n - 1, 1) v[i] = v[i * 2LL] * v[i * 2LL + 1];
+		repir(i, n - 1, 1) v[i] = v[i * 2] * v[i * 2 + 1];
 	}
 
 	// 遅延させていた評価を行う．：O(1)
@@ -244,8 +244,8 @@ template <class T> struct Lazy_segtree {
 		// 葉でなければ子に伝搬する．
 		if (k < n) {
 			// 左作用を考えているのでこの向きに合成する．
-			lazy[k * 2LL] = lazy[k] * lazy[k * 2LL];
-			lazy[k * 2LL + 1] = lazy[k] * lazy[k * 2LL + 1];
+			lazy[k * 2] = lazy[k] * lazy[k * 2];
+			lazy[k * 2 + 1] = lazy[k] * lazy[k * 2 + 1];
 		}
 
 		// 自身を評価する．
@@ -273,7 +273,7 @@ template <class T> struct Lazy_segtree {
 		// 左右の子を見に行く．
 		set_rf(i, x, k * 2, kl, (kl + kr) / 2);
 		set_rf(i, x, k * 2 + 1, (kl + kr) / 2, kr);
-		v[k] = v[k * 2LL] * v[k * 2LL + 1];
+		v[k] = v[k * 2] * v[k * 2 + 1];
 	}
 
 	// v[i] を返す．
@@ -325,7 +325,7 @@ template <class T> struct Lazy_segtree {
 		// 一部の範囲のみを含むなら子を見に行く．
 		apply_rf(l, r, f, k * 2, kl, (kl + kr) / 2);
 		apply_rf(l, r, f, k * 2 + 1, (kl + kr) / 2, kr);
-		v[k] = v[k * 2LL] * v[k * 2LL + 1];
+		v[k] = v[k * 2] * v[k * 2 + 1];
 	}
 
 	// g( op( v[l, r) ) ) = true となる最大の r を返す．

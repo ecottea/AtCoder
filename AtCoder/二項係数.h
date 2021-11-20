@@ -35,17 +35,17 @@ struct factorial_mint {
 
 	// n! ‚Ü‚Å‚ÌŠKæ‚Æ‚»‚Ì‹t”‚ğ‘OŒvZ‚µ‚Ä‚¨‚­DO(n)
 	factorial_mint(int n) : n_(n) {
-		fac_ = vm(n + 1LL);
+		fac_ = vm(n + 1);
 		fac_[0] = 1;
-		repi(i, 1, n) fac_[i] = fac_[i - 1LL] * i;
+		repi(i, 1, n) fac_[i] = fac_[i - 1] * i;
 
-		fac_inv_ = vm(n + 1LL);
+		fac_inv_ = vm(n + 1);
 		fac_inv_[n] = fac_[n].inv();
-		repir(i, n - 1, 1) fac_inv_[i] = fac_inv_[i + 1LL] * (i + 1);
+		repir(i, n - 1, 1) fac_inv_[i] = fac_inv_[i + 1] * (i + 1);
 		fac_inv_[0] = 1;
 
-		inv_ = vm(n + 1LL);
-		repi(i, 1, n) inv_[i] = fac_[i - 1LL] * fac_inv_[i];
+		inv_ = vm(n + 1);
+		repi(i, 1, n) inv_[i] = fac_[i - 1] * fac_inv_[i];
 	}
 
 	// n! ‚ğ•Ô‚·DO(1)
@@ -62,7 +62,7 @@ struct factorial_mint {
 		assert(n <= n_);
 
 		if (r < 0 || n - r < 0) return 0;
-		return fac_[n] * fac_inv_[(ll)n - r];
+		return fac_[n] * fac_inv_[n - r];
 	}
 
 	// “ñ€ŒW” nCr ‚ğ•Ô‚·DO(1)
@@ -70,7 +70,7 @@ struct factorial_mint {
 		assert(n <= n_);
 
 		if (r < 0 || n - r < 0) return 0;
-		return fac_[n] * fac_inv_[r] * fac_inv_[(ll)n - r];
+		return fac_[n] * fac_inv_[r] * fac_inv_[n - r];
 	}
 
 	// ‘½€ŒW” nC[r] ‚ğ•Ô‚·DO(|r|)

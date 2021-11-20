@@ -56,12 +56,12 @@ void count_surjections(int n, int m, vvm& c) {
 	// を得る．
 
 	// c[i][j] : [0, i) から [0, j) への全射の数
-	c = vvm(n + 1LL, vm(m + 1LL));
+	c = vvm(n + 1, vm(m + 1));
 	c[0][0] = 1;
 
 	repi(i, 1, n) {
 		repi(j, 1, m) {
-			c[i][j] = (c[i - 1LL][j] + c[i - 1LL][j - 1LL]) * j;
+			c[i][j] = (c[i - 1][j] + c[i - 1][j - 1]) * j;
 		}
 	}
 }
@@ -119,12 +119,12 @@ void stirling_S2(int n, vvm& c) {
 	// を得る．
 
 	// c[i][j] : [0..i) をちょうど j 個に分割する方法の数
-	c = vvm(n + 1LL, vm(n + 1LL));
+	c = vvm(n + 1, vm(n + 1));
 	c[0][0] = 1;
 
 	repi(i, 1, n) {
 		repi(j, 1, n) {
-			c[i][j] = c[i - 1LL][j] * j + c[i - 1LL][j - 1LL];
+			c[i][j] = c[i - 1][j] * j + c[i - 1][j - 1];
 		}
 	}
 }
@@ -172,7 +172,7 @@ void stirling_S2(int n, vm& s) {
 	//		= Σm=[1..k] ((-1)^(k-m) / (k-m)!) (m^n / m!)
 	// と書け，これは畳み込みの形である．
 
-	vm f(n + 1LL), g(n + 1LL);
+	vm f(n + 1), g(n + 1);
 	factorial_mint fm(n);
 
 	repi(i, 0, n) {
@@ -181,7 +181,7 @@ void stirling_S2(int n, vm& s) {
 	}
 
 	s = convolution(f, g);
-	s.resize(n + 1LL);
+	s.resize(n + 1);
 }
 
 
@@ -225,14 +225,14 @@ void count_integer_partitions(int n, int m, vvm& c) {
 	// なお，添字 j については直前しか必要ないので必要ならインライン化できる．
 
 	// c[i][j] : 自然数 i を j 以下の自然数に分割する方法の数
-	c = vvm(n + 1LL, vm(m + 1LL));
+	c = vvm(n + 1, vm(m + 1));
 	repi(j, 0, m) {
 		c[0][j] = 1;
 	}
 
 	repi(j, 1, m) {
 		repi(i, 1, n) {
-			c[i][j] = c[i][j - 1LL] + (i >= j ? c[(ll)i - j][j] : 0);
+			c[i][j] = c[i][j - 1] + (i >= j ? c[i - j][j] : 0);
 		}
 	}
 }
@@ -262,7 +262,7 @@ void count_limited_integer_partitions(int n, int m, int k, vvm& c) {
 	// を得る．（ただし無効な添字の値は 0 とする）
 
 	// c[i][j] : 自然数 i を j 個以下に分割する方法の数
-	c = vvm(n + 1LL, vm(m + 1LL));
+	c = vvm(n + 1, vm(m + 1));
 	repi(j, 0, m) {
 		c[0][j] = 1;
 	}
@@ -270,13 +270,13 @@ void count_limited_integer_partitions(int n, int m, int k, vvm& c) {
 	// 貰う DP
 	repi(j, 1, m) {
 		repi(i, 1, n) {
-			c[i][j] = c[i][j - 1LL];
+			c[i][j] = c[i][j - 1];
 
 			if (i - j >= 0) {
-				c[i][j] += c[(ll)i - j][j];
+				c[i][j] += c[i - j][j];
 
 				if (j - k - 1 >= 0) {
-					c[i][j] -= c[(ll)i - j][(ll)j - k - 1];
+					c[i][j] -= c[i - j][j - k - 1];
 				}
 			}
 		}
@@ -305,7 +305,7 @@ void count_maxlimited_integer_partitions(int n, int m, int d, vvvm& c) {
 	// なお，添字 j については直前しか必要ないので必要ならインライン化できる．
 
 	// c[i][j][k] : 自然数 i を j 以下の自然数 k 個以下に分割する方法の数
-	c = vvvm(n + 1LL, vvm(m + 1LL, vm(d + 1LL)));
+	c = vvvm(n + 1, vvm(m + 1, vm(d + 1)));
 	repi(j, 0, m) repi(k, 0, d) c[0][j][k] = 1;
 
 	repi(j, 1, m) {
@@ -335,7 +335,7 @@ void partition_function(int n, vm& p) {
 	int m = sz(pen);
 
 	// 漸化式により計算する．
-	p = vm(n + 1LL);
+	p = vm(n + 1);
 	p[0] = 1;
 
 	repi(i, 1, n) {
@@ -343,7 +343,7 @@ void partition_function(int n, vm& p) {
 			if (i - pen[j] < 0) break;
 
 			// 符号は 4 で割った余りで場合分けされる．
-			p[i] += (j & 2 ? -1 : 1) * p[(ll)i - pen[j]];
+			p[i] += (j & 2 ? -1 : 1) * p[i - pen[j]];
 		}
 	}
 }
@@ -362,10 +362,10 @@ void montmort_number(int n, vm& m) {
 	//		m[n] = n m[n - 1] + (-1)^n
 	// を満たす．
 
-	m = vm(n + 1LL);
+	m = vm(n + 1);
 
 	m[0] = 1;
-	repi(i, 1, n) m[i] = m[i - 1LL] * i + (i & 1 ? -1 : 1);
+	repi(i, 1, n) m[i] = m[i - 1] * i + (i & 1 ? -1 : 1);
 }
 
 

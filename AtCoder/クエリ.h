@@ -23,7 +23,7 @@ struct Mod_sum_query {
 	Mod_sum_query() : n(0), asum(0) {}
 
 	// ”z—ñ a ‚Å‰Šú‰»
-	Mod_sum_query(const vi& a_) : a(a_), n(sz(a)), asum(0LL) {
+	Mod_sum_query(const vi& a_) : a(a_), n(sz(a)), asum(0) {
 		sort(all(a));
 		rep(i, n) asum += a[i];
 	}
@@ -461,9 +461,9 @@ struct KDTrie {
 		t = new Node(p1, p2, 0);
 		vl pm(2);
 		pm[d] = median;
-		pm[1LL - d] = p2[1LL - d];
+		pm[1 - d] = p2[1 - d];
 		t->val += split(t->left, p1, pm, a, i0, i, 1 - d);
-		pm[1LL - d] = p1[1LL - d];
+		pm[1 - d] = p1[1 - d];
 		t->val += split(t->right, pm, p2, a, i, i1, 1 - d);
 
 		return t->val;

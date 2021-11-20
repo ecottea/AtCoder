@@ -5,7 +5,6 @@
 // ■■■■■ 文字列 ■■■■■
 
 
-
 //【ローリングハッシュ】
 /*
 * 文字列 s の部分文字列 s[l, r) のハッシュ値を計算する．
@@ -407,14 +406,14 @@ ll huffman_encoding(string& s) {
 	// 各文字の出現頻度を得る．
 	vi cnt(K);
 	rep(i, n) {
-		cnt[(int)s[i]]++;
+		cnt[s[i]]++;
 	}
 
 	// 出現頻度の低い順に文字を取り出す優先度付きキュー
 	priority_queue_rev<pii> q;
 
 	// ハフマン木
-	vector<BTNode> ht(2LL * K - 1);
+	vector<BTNode> ht(2 * K - 1);
 
 	// ハフマン木の葉となる文字たちをキューに追加する．
 	rep(j, K) {
@@ -458,7 +457,7 @@ ll huffman_encoding(string& s) {
 	rep(i, n) {
 		// 葉の深さが対応する文字の符号語の長さである．
 		// ただし文字が 1 種類のみのときは例外処理．
-		int len = max(ht[(int)s[i]].depth, 1);
+		int len = max(ht[s[i]].depth, 1);
 		res += len;
 	}
 
@@ -480,14 +479,14 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 	factorial_mint fm(accumulate(all(cnt), 0));
 
 	// dp[i][j] : 文字 [0..i) で同じ文字の隣接が j 箇所ある文字列の個数
-	vvm dp(n + 1LL);
+	vvm dp(n + 1);
 	dp[0] = vm({ 1, 0 });
 
 	int len = 2; // 文字列の長さ（両端の番兵含む）
 
 	// i : 次に挿入する文字の種類
 	rep(i, n) {
-		dp[i + 1LL] = vm((ll)len + cnt[i]);
+		dp[i + 1] = vm(len + cnt[i]);
 
 		// j : 同じ文字の隣接箇所の個数
 		rep(j, len - 1) {
@@ -510,7 +509,7 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 					//	異なる文字の間が残り len - 1 - j 箇所中 k - l 箇所．
 					add *= fm.binomial(j, l) * fm.binomial(len - 1 - j, k - l);
 
-					dp[i + 1LL][nj] += add;
+					dp[i + 1][nj] += add;
 				}
 			}
 		}
@@ -535,7 +534,7 @@ mint count_string_concat(const vector<string>& s_, int k) {
 	rep(i, n) chmax(m, sz(s_[i]));
 
 	// 扱いやすいようにビット列に変換し，長さごとに記録しておく．
-	vector<set<int>> s(m + 1LL);
+	vector<set<int>> s(m + 1);
 	rep(i, n) {
 		int seq = 0, len = sz(s_[i]);
 		rep(j, len) {
@@ -546,7 +545,7 @@ mint count_string_concat(const vector<string>& s_, int k) {
 
 	// dp[i][seq][set] : 長さ i で直前の m 文字が seq であるもので，
 	//	文字列 [0..i-j) が s を並べて得られるような j の集合が set であるものの個数
-	vvvm dp(k + 1LL, vvm(1LL << m, vm(1LL << m)));
+	vvvm dp(k + 1, vvm(1 << m, vm(1 << m)));
 	dp[0][0][1] = 1;
 	int mask = (1 << m) - 1;
 
@@ -569,7 +568,7 @@ mint count_string_concat(const vector<string>& s_, int k) {
 						if (!(set & (1 << j))) continue;
 
 						// 文字列 nseq[i-j..i+1) が s に含まれるか
-						if (s[j + 1LL].count(nseq & ((1 << (j + 1)) - 1))) {
+						if (s[j + 1].count(nseq & ((1 << (j + 1)) - 1))) {
 							cut_flag = 1;
 							break;
 						}
@@ -578,7 +577,7 @@ mint count_string_concat(const vector<string>& s_, int k) {
 					// nset : 文字列 [0..i+1-j) が s を並べて得られるような j の集合
 					int nset = ((set << 1) & mask) + cut_flag;
 
-					dp[i + 1LL][nseq][nset] += dp[i][seq][set];
+					dp[i + 1][nseq][nset] += dp[i][seq][set];
 				}
 			}
 		}
@@ -619,13 +618,13 @@ string minimum_string_concat(vector<string> s, int k) {
 
 	// dp_i[j] : s[i..n) から j 個選んだ場合の最小（s[0..i) としてはいけない！）
 	string str_max = "z"; str_max[0]++;
-	vector<string> dp(k + 1LL, str_max);
+	vector<string> dp(k + 1, str_max);
 	dp[0] = "";
 
 	repir(i, n - 1, 0) {
 		repir(j, min(n - i, k), 1) {
 			// s[i] を使う方が小さくなるなら更新する．
-			chmin(dp[j], s[i] + dp[j - 1LL]);
+			chmin(dp[j], s[i] + dp[j - 1]);
 
 			// この更新式で大丈夫なのは，文字列の連結 "+" と辞書順比較 "<" の間に
 			//		A + B < A + C ⇔ B < C

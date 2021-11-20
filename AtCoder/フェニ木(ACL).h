@@ -183,12 +183,12 @@ struct Lazy_fenwick_tree {
 	// 配列 a で初期化
 	Lazy_fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(2, vector<S>(n, e())) {
 		// 配列の値を仮登録する．
-		rep(i, n - 1) v[0][i + 1LL] = v_[i];
+		rep(i, n - 1) v[0][i + 1] = v_[i];
 
 		// 正しい値になるよう根に向かって累積 op() をとっていく．
 		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
 			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
-				v[0][i] = op(v[0][i], v[0][(ll)i - pow2]);
+				v[0][i] = op(v[0][i], v[0][i - pow2]);
 			}
 		}
 	}

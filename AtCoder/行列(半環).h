@@ -151,13 +151,13 @@ T linearly_recurrent_sequence(vector<T> a, const vector<T>& c, ll n) {
 	// 係数行列を作成する．
 	Matrix<T> mat(d, d);
 	rep(j, d) mat[0][j] = c[j];
-	repi(i, 1, d - 1) mat[i][i - 1LL] = T::e();
+	repi(i, 1, d - 1) mat[i][i - 1] = T::e();
 
 	// 初項は逆順にしてベクトル化する．
 	reverse(all(a));
 
 	// 行列累乗をし，初項ベクトルに掛けて結果を得る．
-	return (mat.pow(n - 1) * a)[d - 1LL];
+	return (mat.pow(n - 1) * a)[d - 1];
 }
 
 

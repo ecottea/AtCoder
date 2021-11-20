@@ -41,18 +41,10 @@ template <class T> struct Matrix {
 	int m, n; // 行列のサイズ（m 行 n 列）
 	vector<vector<T>> v; // 行列の成分
 
-	// コンストラクタ（初期化なし）
+	// コンストラクタ（初期化なし，零行列，単位行列，二次元配列）
 	Matrix() {}
-
-	// 零行列で初期化
 	Matrix(const int& m_, const int& n_) : m(m_), n(n_), v(m_, vector<T>(n_)) {}
-
-	// 単位行列で初期化
-	Matrix(const int& n_) : m(n_), n(n_), v(n_, vector<T>(n_)) {
-		rep(i, n) v[i][i] = 1;
-	}
-
-	// 二次元配列で初期化
+	Matrix(const int& n_) : m(n_), n(n_), v(n_, vector<T>(n_)) { rep(i, n) v[i][i] = 1; }
 	Matrix(const vector<vector<T>>& a) : m(sz(a)), n(sz(a[0])), v(a) {}
 
 	// 代入

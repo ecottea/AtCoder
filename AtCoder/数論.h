@@ -294,7 +294,7 @@ ll prime_pi(ll n) {
 
 	// S(v, p) ‚ð [1..v] ‚Å "‘f”‚Ü‚½‚Í p ˆÈ‰º‚Ì‘fˆö”‚ð‚à‚½‚È‚¢‡¬”" ‚ÌŒÂ”‚Æ‚·‚éD
 	// dp_p[0][v] : S(v, p)Cdp_p[1][v] : S(n/v, p)
-	vvl dp(2, vl(m + 1LL));
+	vvl dp(2, vl(m + 1));
 	repi(v, 1, m) {
 		dp[0][v] = v - 1;
 		dp[1][v] = n / v - 1;
@@ -302,7 +302,7 @@ ll prime_pi(ll n) {
 
 	repi(p, 2, m) {
 		// S(p - 1, p - 1)
-		ll s = dp[0][p - 1LL];
+		ll s = dp[0][p - 1];
 
 		// p ‚ª‘f”‚Å‚È‚¯‚ê‚ÎŽŸ‚Ì p ‚Ö
 		if (dp[0][p] == s) continue;
@@ -313,7 +313,7 @@ ll prime_pi(ll n) {
 			if (p > n / v / p) break;
 
 			if (v <= m / p)
-				dp[1][v] -= dp[1][(ll)v * p] - s;
+				dp[1][v] -= dp[1][v * p] - s;
 			else
 				dp[1][v] -= dp[0][n / v / p] - s;
 		}

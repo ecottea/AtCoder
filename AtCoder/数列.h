@@ -109,7 +109,7 @@ mint powered_geometric_series(mint r, int d) {
 
 	mint res = 0;
 	repir(i, d, 0) res = res * r + f[i];
-	res /= mint(1 - r).pow(d + 1LL);
+	res /= mint(1 - r).pow(d + 1);
 
 	return res;
 }

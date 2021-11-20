@@ -1,9 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-#include "構造(幾何).h"
 #include "ヒストグラム.h"
-#include "二項係数.h"
 // ■■■■■ 格子上の問題 ■■■■■
 
 
@@ -43,103 +41,6 @@ void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb_ty
 				// 近傍に空きマスがあったら辺を追加する．
 				g[i * w + j].push_back(ni * w + nj);
 			}
-		}
-	}
-}
-
-
-//【迷路】O(h w)
-/*
-* 壁が wall で表された h * w の迷路 c について，スタート s = (sx, sy) から
-* 各マス c[i][j] への最短経路長を dist[i][j] に格納する．（到達不能なら -1）
-*
-*（幅優先探索）
-*/
-void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
-	int h = sz(c);
-	int w = sz(c[0]);
-
-	dist = vvi(h, vi(w, -1));
-	dist[s.first][s.second] = 0;
-
-	// q : 未探索のマスを記録しておくキュー
-	queue<pii> q;
-	q.push(s);
-
-	while (!q.empty()) {
-		int x, y;
-		tie(x, y) = q.front();
-		q.pop();
-
-		// マス (x, y) の 4 近傍を調べる．
-		rep(k, 4) {
-			// (nx, ny) : (x, y) の近傍の座標
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
-
-			// 範囲外または壁マスなら何もしない．
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
-				continue;
-			}
-
-			// 既に最短経路長が確定済みなら何もしない．
-			if (dist[nx][ny] != -1) {
-				continue;
-			}
-
-			// 最短経路長の確定
-			dist[nx][ny] = dist[x][y] + 1;
-
-			q.push({ nx, ny });
-		}
-	}
-}
-
-
-//【迷路（複数始点）】O(h w)
-/*
-* 壁が wall で表された h * w の迷路 c について，スタートの集合 s[i] = (sx, sy) から
-* 各マス c[i][j] への最短経路長の最小値を dist[i][j] に格納する．（到達不能なら -1）
-*
-*（幅優先探索）
-*/
-void solve_maze(const vvc& c, const vector<pii>& s, vvi& dist, const char wall = '#') {
-	int h = sz(c);
-	int w = sz(c[0]);
-	dist = vvi(h, vi(w, -1));
-
-	// q : 未探索のマスを記録しておくキュー
-	queue<pii> q;
-	repe(p, s) {
-		q.push(p);
-		dist[p.first][p.second] = 0;
-	}
-
-	while (!q.empty()) {
-		int x, y;
-		tie(x, y) = q.front();
-		q.pop();
-
-		// マス (x, y) の 4 近傍を調べる．
-		rep(k, 4) {
-			// (nx, ny) : (x, y) の近傍の座標
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
-
-			// 範囲外または壁マスなら何もしない．
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
-				continue;
-			}
-
-			// 既に最短経路長が確定済みなら何もしない．
-			if (dist[nx][ny] != -1) {
-				continue;
-			}
-
-			// 最短経路長の確定
-			dist[nx][ny] = dist[x][y] + 1;
-
-			q.push({ nx, ny });
 		}
 	}
 }
@@ -309,7 +210,7 @@ mint king_problem(vvb& hall) {
 	int w = sz(hall[0]);
 
 	// 直前の m + 1 マスだけ切り出すマスク
-	const ll mask_full = (1LL << (w + 1)) - 1;
+	const ll mask_full = (1 << (w + 1)) - 1;
 
 	// マスの位置が左端，中央，右端それぞれの場合に応じて
 	// キングが配置されていてはいけない場所だけを切り出すマスク
@@ -450,51 +351,6 @@ void defect_repair(vector<vector<T>>& c, T defect) {
 	14 15 18 18 -1 -1 18 18
 	13 13 13 13 13 13 13 13
 	*/
-}
-
-
-//【最短経路数（禁止点あり）】O(n^2)
-/*
-* h × w の格子路の (0, 0) から (h-1, w-1) までの最短路のうち，
-* n 個の禁止点 fb[i] = {r[i], c[i]} を 1 つも通らないものの個数を返す．
-*
-* 利用：【階乗と二項係数（mint利用）】
-*/
-mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
-	int n = sz(fb);
-
-	factorial_mint fm(h + w);
-
-	// s, t : 対応する始点と終点の列
-	// 番号の小さい方へ戻るパスは存在してはいけない．
-	vector<pii> s = { {0,0} }, t = { {h - 1, w - 1} };
-	rep(i, n) {
-		s.push_back(fb[i]);
-	}
-	sort(next(s.begin()), s.end());
-	repi(i, 1, n) {
-		t.push_back(s[i]);
-	}
-
-	// DPL 用の行列を作成する．
-	vvm dpl(n + 1, vm(n + 1));
-	repi(i, 0, n) {
-		repi(j, 0, n) {
-			int h = t[j].first - s[i].first;
-			int w = t[j].second - s[i].second;
-			dpl[i][j] = fm.binomial(h + w, h);
-		}
-	}
-
-	// 列基本変形で第 1 列の 2 行目以降を消去する．
-	repir(j, n, 1) {
-		rep(i, j) {
-			dpl[i][0] -= dpl[j][0] * dpl[i][j];
-		}
-	}
-
-	// DPL 行列の行列式，すなわち (0,0) 成分が答え．
-	return dpl[0][0];
 }
 
 

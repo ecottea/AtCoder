@@ -121,69 +121,9 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------------
 
 
-
-
-
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
-
-	int h, w, K;
-	cin >> h >> w >> K;
-
-	vvi a(h, vi(w));
-	cin >> a;
-
-	//【解説 AC】
-
-	// th より大きい[小さい]ときは必ずコストがかかる[かからない]ことにした場合の
-	// コストをちょうど K 回払う場合の最小コストを返す．
-	auto func = [&](int th) {
-		// dp[i][j][k] : マス (i,j) までで k 回コストがかかった場合の最小コスト
-		vvvl dp(h, vvl(w, vl(K + 1, INFL)));
-		if (a[0][0] <= th) dp[0][0][0] = 0;
-		if (a[0][0] >= th) dp[0][0][1] = a[0][0];
-
-		rep(i, h) {
-			rep(j, w) {
-				repi(k, 0, K) {
-					// 下への移動
-					if (i < h - 1) {
-						if (a[i + 1][j] <= th) {
-							chmin(dp[i + 1][j][k], dp[i][j][k]);
-						}
-						if (a[i + 1][j] >= th) {
-							if (k < K)
-								chmin(dp[i + 1][j][k + 1], dp[i][j][k] + a[i + 1][j]);
-						}
-					}
-
-					// 右への移動
-					if (j < w - 1) {
-						if (a[i][j + 1] <= th) {
-							chmin(dp[i][j + 1][k], dp[i][j][k]);
-						}
-						if (a[i][j + 1] >= th) {
-							if (k < K)
-								chmin(dp[i][j + 1][k + 1], dp[i][j][k] + a[i][j + 1]);
-						}
-					}
-				}
-			}
-		}
-		dumpel(dp);
-
-		return dp[h - 1][w - 1][K];
-	};
-
-	ll res = INFL;
-
-	// 閾値として意味があるのは盤面の数のみなので，全探索する．
-	rep(i, h) {
-		rep(j, w) {
-			chmin(res, func(a[i][j]));
-		}
-	}
-
-	cout << res << endl;
+	
+	
 }

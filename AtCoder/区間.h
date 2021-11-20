@@ -127,21 +127,21 @@ ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) 
 	int m = *max_element(all(r));
 
 	// dp[i][j] : i 日目までに仕事 [0..j) で得られる最大報酬
-	vvl dp(m + 1LL, vl(n + 1LL));
+	vvl dp(m + 1, vl(n + 1));
 
 	repi(i, 1, m) {
 		repi(j, 1, n) {
 			// i 日目には何もしない場合
-			dp[i][j] = dp[i - 1LL][j];
+			dp[i][j] = dp[i - 1][j];
 
 			// 仕事 j - 1 には手を付けない場合
-			chmax(dp[i][j], dp[i][j - 1LL]);
+			chmax(dp[i][j], dp[i][j - 1]);
 
 			// 仕事 j - 1 を受ける場合
 			int r, w; ll a;
-			tie(r, w, a) = rwa[j - 1LL];
+			tie(r, w, a) = rwa[j - 1];
 			if (w <= i && i <= r) {
-				chmax(dp[i][j], dp[(ll)i - w][j - 1LL] + a);
+				chmax(dp[i][j], dp[i - w][j - 1] + a);
 			}
 		}
 	}
@@ -161,16 +161,16 @@ ll unit_commitment_problem(const vvl& c) {
 	int n = sz(c);
 
 	// dp[r] : 時刻 [0..r) に得られる最大電力
-	vl dp(n + 1LL);
+	vl dp(n + 1);
 
 	repi(r, 1, n) {
 		// 時刻 [r-1..r) に発電機を動かさない場合
-		dp[r] = dp[r - 1LL];
+		dp[r] = dp[r - 1];
 
 		// 時刻 [r-1..r) に発電機を動かす場合
 		chmax(dp[r], c[0][r]);
 		repi(l, 1, r - 1) {
-			chmax(dp[r], dp[l - 1LL] + c[l][r]);
+			chmax(dp[r], dp[l - 1] + c[l][r]);
 		}
 	}
 
@@ -247,16 +247,16 @@ ll interval_overlapping(const vvl& a) {
 
 	repi(r, 1, n - 1) {
 		// acc[l] : 区間 r が区間 l 以降と重なることで得られるスコアの和
-		vl acc(r + 1LL);
+		vl acc(r + 1);
 		repir(l, r - 1, 0) {
-			acc[l] = acc[l + 1LL] + a[l][r];
+			acc[l] = acc[l + 1] + a[l][r];
 		}
 
 		// s_max[l] : 区間 r - 1 が区間 l と重なる場合のスコアの最大値
-		vl s_max(r + 1LL);
+		vl s_max(r + 1);
 		s_max[0] = dp[0];
 		repi(i, 1, r) {
-			s_max[i] = max(s_max[i - 1LL], dp[i]);
+			s_max[i] = max(s_max[i - 1], dp[i]);
 		}
 
 		repir(l, r, 0) {

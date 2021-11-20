@@ -3,7 +3,6 @@
 // ■■■■■ ヒストグラム ■■■■■
 
 
-
 //【ヒストグラムの横切り】
 /*
 * ヒストグラム hist を横切りしたときの (高さ, 長さ) の組を hls に格納する．
@@ -46,7 +45,6 @@ int cut_histogram_horizontal(const vl& hist, vector<pli>& hls) {
 template <class T>
 ll largest_rectangle_in_histogram(vector<T>& hist) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-132.html
-
 
 	int n = sz(hist);
 

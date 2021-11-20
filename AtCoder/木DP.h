@@ -4,7 +4,6 @@
 // ■■■■■ 木 DP ■■■■■
 
 
-
 //【独立集合の数え上げ】O(|V|)
 /*
 * 木 g の独立集合（辺を共有しない頂点の集合）の個数を返す．
@@ -14,30 +13,37 @@
 mint count_independent_set(Graph& g) {
 	int n = sz(g);
 
-	// s : 注目頂点，c : s が独立集合に含まれるか，p : 親頂点
-	// 戻り値 : 部分木 s に含まれる独立集合の個数（便宜上 0 を根とした根付き木とみなす）
-	function<mint(int, int, int)> dfs = [&](int s, int c, int p) {
+	// 便宜上 g を 0 を根とした根付き木とみなす．
+	// dp[s][b] : 部分木 s の独立集合で，
+	//			  s が独立集合に b=1:含まれる[b=0:含まれない] ものの個数
+	vvm dp(n, vm(2));
+	vvb seen(n, vb(2));
+
+	// p : s の親頂点
+	function<mint(int, int, int)> dfs = [&](int s, int b, int p) {
+		if (seen[s][b]) return dp[s][b];
+		seen[s][b] = true;
+
 		// 積についての単位元で初期化しておく．
-		mint res = 1;
+		dp[s][b] = 1;
 
 		// s のそれぞれの子 t について処理を行う．
-		for (auto t : g[s]) {
-			// 親には戻らない
+		repe(t, g[s]) {
 			if (t == p) continue;
 
 			// t が独立集合に含まれないような部分木は候補になる．
 			mint mul = dfs(t, 0, s);
-			if (!c) {
+			if (b == 0) {
 				// s が独立集合に含まれないならば，
 				// t が独立集合に含まれるような部分木も候補になる．
 				mul += dfs(t, 1, s);
 			}
 
 			// s の部分木については独立なので，積の法則で数え上げる．
-			res *= mul;
+			dp[s][b] *= mul;
 		}
 
-		return res;
+		return dp[s][b];
 	};
 
 	return dfs(0, 0, -1) + dfs(0, 1, -1);

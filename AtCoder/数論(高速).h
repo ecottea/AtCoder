@@ -39,7 +39,7 @@ bool miller_rabin(ll n) {
 	if (n == 1 || n % 2 == 0) return false;
 
 	mll::set_mod(n);
-	int s = 0; ll d = n - 1LL;
+	int s = 0; ll d = n - 1;
 	while (d % 2 == 0) {
 		s++;
 		d /= 2;
@@ -263,7 +263,7 @@ ll divisors_sum(ll n) {
 		ll sum = 0, pow = p, sumpow = 1;
 		d++;
 		while (d > 0) {
-			if (d & 1LL) sum = sum * pow + sumpow;
+			if (d & 1) sum = sum * pow + sumpow;
 			sumpow += sumpow * pow;
 			pow *= pow;
 			d /= 2;

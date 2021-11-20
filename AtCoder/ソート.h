@@ -3,13 +3,11 @@
 // ■■■■■ ソート ■■■■■
 
 
-
 //【クイックソート】O(n log n)
 /*
 * 長さ n の配列 a に対してクイックソートを行う．
 */
-template <class T>
-void quick_sort(vector<T>& a) {
+template <class T> void quick_sort(vector<T>& a) {
 	int n = sz(a);
 
 	// a[p, r] を a[r] をピボットとして分割する．
@@ -56,14 +54,14 @@ void quick_sort(vector<T>& a) {
 /*
 * 各要素が k 未満の非負整数である長さ n の配列 a に対して計数ソートを行う．
 */
-void counting_sort(vector<int>& a, int k) {
+void counting_sort(vi& a, int k) {
 	int n = sz(a);
 
 	// 結果の格納用
-	vector<int> res(n);
+	vi res(n);
 
 	// 各要素の出現数の記録用
-	vector<int> cnt(k);
+	vi cnt(k);
 
 	// cnt[j] : 要素 j の出現数
 	rep(i, n) {
@@ -89,8 +87,7 @@ void counting_sort(vector<int>& a, int k) {
 /*
 * 長さ n の配列 a に対してマージソートを行う．
 */
-template <class T>
-void merge_sort(vector<T>& a) {
+template <class T> void merge_sort(vector<T>& a) {
 	// 型 T における最大値
 	const T T_INF = numeric_limits<T>::max();
 
@@ -134,12 +131,11 @@ void merge_sort(vector<T>& a) {
 /*
 * 長さ n の配列 a に対してシェルソートを行う．
 */
-template <class T>
-void shell_sort(vector<T>& a) {
+template <class T> void shell_sort(vector<T>& a) {
 	int n = sz(a);
 
 	// 適切な増分の列を得る．
-	vector<int> gap;
+	vi gap;
 	int g = 1;
 	do {
 		gap.push_back(g);
@@ -174,8 +170,7 @@ void shell_sort(vector<T>& a) {
 /*
 * 長さ n の配列 a に対して選択ソートを行う．
 */
-template <class T>
-void selection_sort(vector<T>& a) {
+template <class T> void selection_sort(vector<T>& a) {
 	int n = sz(a);
 
 	// 左から順にそこに居るべき要素を決定していく．
@@ -201,8 +196,7 @@ void selection_sort(vector<T>& a) {
 /*
 * 長さ n の配列 a に対して挿入ソートを行う．
 */
-template <class T>
-void insertion_sort(vector<T>& a) {
+template <class T> void insertion_sort(vector<T>& a) {
 	int n = sz(a);
 
 	// 未ソートの要素を昇順に見ていく．
@@ -229,8 +223,7 @@ void insertion_sort(vector<T>& a) {
 * 長さ n の配列 a に対してバブルソートを行う．
 * 要素の交換を行った回数（a の転倒数）を返す．
 */
-template <class T>
-int bubble_sort(vector<T>& a) {
+template <class T> int bubble_sort(vector<T>& a) {
 	int n = sz(a);
 
 	int cnt = 0;
@@ -255,4 +248,5 @@ int bubble_sort(vector<T>& a) {
 
 	return cnt;
 }
+
 

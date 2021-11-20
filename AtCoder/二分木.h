@@ -120,10 +120,8 @@ struct binary_search_tree {
 	// 根へのポインタ
 	bst_node* root;
 
-
 	// コンストラクタ（空の二分探索木で初期化）：O(1)
 	binary_search_tree() : n(0), root(nullptr) {}
-
 
 	// 要素の挿入：平均 O(log n)／最悪 O(n)
 	void insert(T& key) {
@@ -269,7 +267,6 @@ struct Treap {
 	int n; // ツリープのノード数
 	Node* root; // 根へのポインタ
 	mt19937 rnd; // 乱数生成器
-
 
 	// コンストラクタ（空のツリープで初期化）
 	Treap() : n(0), root(nullptr), rnd((int)time(0)) {}

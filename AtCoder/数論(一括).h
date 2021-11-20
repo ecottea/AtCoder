@@ -40,7 +40,7 @@ void eratosthenes(int n, vi& ps) {
 	ps.clear();
 
 	// 素数かどうかを記録しておくためのテーブル
-	vb is_prime(n + 1LL, true);
+	vb is_prime(n + 1, true);
 
 	int i;
 
@@ -100,7 +100,7 @@ void factor_integer_all(int n, vector<map<int, int>>& pps) {
 	pps = vector<map<int, int>>(n + 1);
 
 	// 順に素数で割っていった残りの値を記録しておくためのテーブル
-	vi a(n + 1LL);
+	vi a(n + 1);
 	iota(all(a), 0);
 
 	int p = 2;
@@ -141,7 +141,7 @@ void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
 	eratosthenes(int(sqrt(r) + EPS), ps);
 
 	// 順に素数で割っていった残りの値を記録しておくためのテーブル
-	vl a((ll)r - l);
+	vl a(r - l);
 	iota(all(a), l);
 
 	repe(p, ps) {
@@ -169,7 +169,7 @@ void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
 template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
 
-	s.resize(n + 1LL);
+	s.resize(n + 1);
 	s[0] = 0;
 	repi(i, 1, n) s[i] = T(pow(i, k));
 
@@ -187,7 +187,7 @@ template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 void euler_phi(int n, vi& phi) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
 
-	phi.resize(n + 1LL);
+	phi.resize(n + 1);
 	phi[0] = 0;
 	repi(i, 1, n) phi[i] = i;
 
@@ -205,7 +205,7 @@ void euler_phi(int n, vi& phi) {
 void mobius_mu(int n, vi& mu) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
 
-	mu = vi(n + 1LL, 0);
+	mu = vi(n + 1, 0);
 	mu[1] = 1;
 
 	LCM_convolution<int> l(n);

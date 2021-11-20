@@ -8,8 +8,7 @@
 /*
 * 長さ n の列 seq が部分列として sub を含むかを返す．
 */
-template <class T>
-bool subsequenceQ(const vector<T>& seq, const vector<T>& sub) {
+template <class T> bool subsequenceQ(const vector<T>& seq, const vector<T>& sub) {
 	int n = sz(seq);
 	int m = sz(sub);
 
@@ -90,8 +89,7 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 
 //【最長共通部分列】O(|s| |t|)
 /*
-* 2 つの文字列 s, t の最長共通部分列の長さを返す．
-* またその一例を lcs に格納する．
+* 2 つの文字列 s, t の最長共通部分列の長さを返す．またその一例を lcs に格納する．
 *
 *（二次元 DP）
 */
@@ -102,18 +100,18 @@ int longest_common_subsequence(const vector<T>& s, const vector<T>& t, vector<T>
 	int m = sz(t);
 
 	// dp[i][j] : s[0..i) と t[0..j) の最長共通部分列の長さ
-	vvi dp(n + 1LL, vi(m + 1LL));
+	vvi dp(n + 1, vi(m + 1));
 	rep(i, n) {
 		rep(j, m) {
 			// s の i 文字目と t の j 文字目が等しい場合
 			if (s[i] == t[j]) {
 				// その文字は採用し，1 つ短い文字列に帰着する．
-				dp[i + 1LL][j + 1LL] = dp[i][j] + 1;
+				dp[i + 1][j + 1] = dp[i][j] + 1;
 			}
 			// s の i 文字目と t の j 文字目が異なる場合
 			else {
 				// どちらかを 1 文字削った文字列に帰着する．
-				dp[i + 1LL][j + 1LL] = max(dp[i][j + 1LL], dp[i + 1LL][j]);
+				dp[i + 1][j + 1] = max(dp[i][j + 1], dp[i + 1][j]);
 			}
 		}
 	}
@@ -133,7 +131,7 @@ int longest_common_subsequence(const vector<T>& s, const vector<T>& t, vector<T>
 			// s の i 文字目と t の j 文字目が異なる場合
 			else {
 				// どちらを 1 文字削る方が長い文字列が得られるかを調べて短い文字列に帰着する．
-				if (dp[i][j + 1LL] > dp[i + 1LL][j]) {
+				if (dp[i][j + 1] > dp[i + 1][j]) {
 					i--;
 				}
 				else {

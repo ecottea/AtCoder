@@ -50,8 +50,8 @@ ll count_substring(const string& s) {
 	auto sa = suffix_array(s);
 	auto la = lcp_array(s, sa);
 
-	ll res = (ll)n - sa[0];
-	repi(i, 1, n - 1) res += (ll)n - sa[i] - la[i - 1LL];
+	ll res = n - sa[0];
+	repi(i, 1, n - 1) res += n - sa[i] - la[i - 1];
 
 	return res;
 }
@@ -86,13 +86,13 @@ template <class STR> void morris_pratt(const STR& s, vi& len) {
 	// j ← len[j] として同じ操作を繰り返せば良い．
 
 	int n = sz(s);
-	len.resize(n + 1LL);
+	len.resize(n + 1);
 	len[0] = -1;
 
 	int j = -1;
 	rep(i, n) {
 		while (j >= 0 && s[i] != s[j]) j = len[j];
-		len[i + 1LL] = ++j;
+		len[i + 1] = ++j;
 	}
 }
 
@@ -129,12 +129,12 @@ template <class STR> void manacher(const STR& s, vi& r) {
 
 	int i = 0, j = 0;
 	while (i < n) {
-		while (i - j >= 0 && i + j < n && s[(ll)i - j] == s[(ll)i + j]) j++;
+		while (i - j >= 0 && i + j < n && s[i - j] == s[i + j]) j++;
 		r[i] = j;
 
 		int k = 1;
-		while (i - k >= 0 && k + r[(ll)i - k] < j) {
-			r[(ll)i + k] = r[(ll)i - k];
+		while (i - k >= 0 && k + r[i - k] < j) {
+			r[i + k] = r[i - k];
 			k++;
 		}
 		i += k;
@@ -147,26 +147,26 @@ template <class STR> void manacher(const STR& s, vi& r) {
 /*
 * s[i] を中心とする最長回文の長さを lo[i] に格納し，
 * s[i..i+1] を中心とする最長回文の長さを le[i] に格納する．
-* 使用時には s に表れない文字を dmy に渡すこと．
 *
 * 利用：【最長回文長（文字中心）】
 */
-template <class T> void manacher(const vector<T>& s, T dmy, vi& lo, vi& le) {
+template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/02/235837
 
 	int n = sz(s);
 	lo.resize(n);
-	le.resize(n - 1LL);
+	le.resize(n - 1);
 
-	vector<T> s_riffled(2LL * n + 1);
-	rep(i, n) s_riffled[2LL * i + 1] = s[i];
-	rep(i, n + 1) s_riffled[2LL * i] = dmy;
+	STR s_riffled;
+	s_riffled.resize(2 * n + 1);
+	rep(i, n) s_riffled[2 * i + 1] = s[i];
+	rep(i, n + 1) s_riffled[2 * i] = '0'; // '0' は s に含まれない文字
 
 	vi r;
 	manacher(s_riffled, r);
 
-	rep(i, n) lo[i] = r[2LL * i + 1] - 1;
-	rep(i, n - 1) le[i] = r[2LL * (i + 1LL)] - 1;
+	rep(i, n) lo[i] = r[2 * i + 1] - 1;
+	rep(i, n - 1) le[i] = r[2 * (i + 1)] - 1;
 }
 
 
@@ -202,7 +202,7 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 
 	int i = 1, j = 0;
 	while (i < n) {
-		while (i + j < n && s[j] == s[(ll)i + j]) j++;
+		while (i + j < n && s[j] == s[i + j]) j++;
 		z[i] = j;
 
 		if (j == 0) {
@@ -212,7 +212,7 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 
 		int k = 1;
 		while (i + k < n && k + z[k] < j) {
-			z[(ll)i + k] = z[k];
+			z[i + k] = z[k];
 			k++;
 		}
 		i += k;

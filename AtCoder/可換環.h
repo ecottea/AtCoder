@@ -55,8 +55,10 @@ struct CRing {
 	// “üo—Í
 	friend istream& operator>>(istream& is, CRing& a) { is >> a.v; return is; }
 	friend ostream& operator<<(ostream& os, const CRing& a) {
+#ifdef _MSC_VER
 		if (a.v == o()) return os << "o";
 		if (a.v == e()) return os << "e";
+#endif
 		return os << a.v;
 	}
 };

@@ -236,7 +236,7 @@ struct Sort_outer_sum {
 		ll cnt = 0;
 		rep(i, n) {
 			auto it = std::lower_bound(all(b), v - a[i]);
-			cnt += (ll)distance(b.begin(), it);
+			cnt += distance(b.begin(), it);
 		}
 		return cnt;
 	}
@@ -246,7 +246,7 @@ struct Sort_outer_sum {
 		ll cnt = 0;
 		rep(i, n) {
 			auto it = std::upper_bound(all(b), v - a[i]);
-			cnt += (ll)distance(b.begin(), it);
+			cnt += distance(b.begin(), it);
 		}
 		return cnt;
 	}
@@ -355,21 +355,21 @@ struct sort_outer_mul {
 			cnt += (ll)m * n - (ll)np * mp - (ll)nn * mn;
 			repe(x, ap) {
 				auto it = std::lower_bound(all(bp), (v + x - 1) / x);
-				cnt += (ll)distance(bp.begin(), it);
+				cnt += distance(bp.begin(), it);
 			}
 			repe(x, an) {
 				auto it = std::lower_bound(all(bn), (v + x - 1) / x);
-				cnt += (ll)distance(bn.begin(), it);
+				cnt += distance(bn.begin(), it);
 			}
 		}
 		else if (v < 0) {
 			repe(x, ap) {
 				auto it = std::upper_bound(all(bn), -v / x);
-				cnt += (ll)distance(it, bn.end());
+				cnt += distance(it, bn.end());
 			}
 			repe(x, an) {
 				auto it = std::upper_bound(all(bp), -v / x);
-				cnt += (ll)distance(it, bp.end());
+				cnt += distance(it, bp.end());
 			}
 		}
 		else {

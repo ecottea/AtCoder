@@ -118,7 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <DisableSpecificWarnings>26451</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26451;6297</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,7 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <DisableSpecificWarnings>26451</DisableSpecificWarnings>
+      <DisableSpecificWarnings>26451;6297</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
     <ClInclude Include="bitDP.h" />
+    <ClInclude Include="DAG.h" />
     <ClInclude Include="FPS%28mint%29.h" />
     <ClInclude Include="FPS(可換環).h" />
     <ClInclude Include="mint.h" />
@@ -159,6 +160,7 @@
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="セグ木(ACL).h" />
     <ClInclude Include="ヒストグラム.h" />
+    <ClInclude Include="ヒープ.h" />
     <ClInclude Include="フェニ木(ACL).h" />
     <ClInclude Include="モノイド.h" />
     <ClInclude Include="モノイド作用付きモノイド.h" />
@@ -173,6 +175,7 @@
     <ClInclude Include="最短路.h" />
     <ClInclude Include="期待値.h" />
     <ClInclude Include="木DP.h" />
+    <ClInclude Include="格子路.h" />
     <ClInclude Include="桁DP.h" />
     <ClInclude Include="構造(木).h" />
     <ClInclude Include="確率.h" />

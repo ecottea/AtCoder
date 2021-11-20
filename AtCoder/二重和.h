@@ -120,7 +120,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 	int n = sz(a), m = sz(b);
 
 	int K = max(*max_element(all(a)), *max_element(all(b)));
-	vm a_cnt(K + 1LL), b_cnt(K + 1LL);
+	vm a_cnt(K + 1), b_cnt(K + 1);
 	rep(i, n) a_cnt[a[i]]++;
 	rep(j, m) b_cnt[b[j]]++;
 
@@ -156,7 +156,7 @@ mint lcm_sum(const vi& a, const vi& b) {
 	int n = sz(a), m = sz(b);
 
 	int K = max(*max_element(all(a)), *max_element(all(b)));
-	vm a_cnt(K + 1LL), b_cnt(K + 1LL);
+	vm a_cnt(K + 1), b_cnt(K + 1);
 	rep(i, n) a_cnt[a[i]] += a[i];
 	rep(j, m) b_cnt[b[j]] += b[j];
 

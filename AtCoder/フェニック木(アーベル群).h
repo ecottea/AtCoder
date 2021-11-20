@@ -46,12 +46,12 @@ template <class T> struct Fenwick_tree {
 	// 配列 a で初期化
 	Fenwick_tree(const vector<T>& v_) : n(sz(v_) + 1), v(n) {
 		// 配列の値を仮登録する．
-		rep(i, n - 1) v[i + 1LL] = v_[i];
+		rep(i, n - 1) v[i + 1] = v_[i];
 
 		// 正しい値になるよう根に向かって累積和をとっていく．
 		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
 			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
-				v[i] += v[(ll)i - pow2];
+				v[i] += v[i - pow2];
 			}
 		}
 	}
@@ -167,12 +167,12 @@ template <class T> struct Lazy_fenwick_tree {
 	// 配列 a で初期化
 	Lazy_fenwick_tree(const vector<T>& v_) : n(sz(v_) + 1), v(2, vector<T>(n)) {
 		// 配列の値を仮登録する．
-		rep(i, n - 1) v[0][i + 1LL] = v_[i];
+		rep(i, n - 1) v[0][i + 1] = v_[i];
 
 		// 正しい値になるよう根に向かって累積和をとっていく．
 		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
 			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
-				v[0][i] += v[0][(ll)i - pow2];
+				v[0][i] += v[0][i - pow2];
 			}
 		}
 	}
