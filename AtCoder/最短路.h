@@ -153,6 +153,8 @@ LOOP_END:;
 * i が start から到達不能な頂点の場合は dist[i] = -1 となる．
 */
 void breadth_first_search(const Graph& g, int start, vi& dist) {
+	// verify : https://algo-method.com/tasks/414
+
 	int n = sz(g);
 	dist = vi(n, -1); // スタートからの最短距離を保持するテーブル
 	dist[start] = 0;

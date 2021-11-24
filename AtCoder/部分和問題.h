@@ -85,6 +85,8 @@ void count_partial_sum(const vi& a, int v, vm& cnt) {
 */
 template <size_t A>
 void enumerate_partial_sum(const vi& a, bitset<A>& res) {
+	// verify : https://algo-method.com/tasks/337
+
 	int n = sz(a);
 
 	// res_i[j] : i 番目までの数で，和をちょうど j にできるかどうか
@@ -106,6 +108,8 @@ void enumerate_partial_sum(const vi& a, bitset<A>& res) {
 *（和を状態にもつ状態 DP）
 */
 int minimize_partial_sum(const vi& a, int v) {
+	// verify : https://algo-method.com/tasks/350
+
 	int n = sz(a);
 
 	// dp[i][j] : a[0..i) の中で和がちょうど j を実現できる最小個数
@@ -138,8 +142,7 @@ int minimize_partial_sum(const vi& a, int v) {
 *
 *（半分全列挙）
 */
-template <class T>
-bool partial_sum(const vector<T>& a, T v) {
+template <class T> bool partial_sum(const vector<T>& a, T v) {
 	// 参考：https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
 
 	int n = sz(a);
@@ -223,8 +226,9 @@ bool partial_sum(const vector<T>& a, T v) {
 *
 *（mod m で和を状態にもつ状態 DP）
 */
-template <class T>
-bool multiple_partial_sum(const vector<T>& a, int m, int r) {
+template <class T> bool multiple_partial_sum(const vector<T>& a, int m, int r) {
+	// varify : https://algo-method.com/tasks/352
+
 	int n = sz(a);
 
 	// dp[i][j] : a[0..i) の中で和が j mod m にできるか

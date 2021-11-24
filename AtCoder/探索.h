@@ -9,6 +9,8 @@
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
 template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
+	// verify : https://algo-method.com/tasks/366
+
 	// 境界が決定するまで
 	while (abs(ok - ng) > 1) {
 		// 区間の中間
@@ -27,6 +29,8 @@ template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 */
 double binary_search(double ok, double ng, function<bool(double)>& okQ) {
+	// verify : https://algo-method.com/tasks/368
+
 	// 絶対誤差 EPS で境界が決定するまで
 	while (abs(ok - ng) > EPS) {
 		// 区間の中間
@@ -51,7 +55,7 @@ double binary_search(double ok, double ng, function<bool(double)>& okQ) {
 
 //【フィボナッチ探索】
 /*
-* fibonacci_search(w) : O(log w)
+* Fibonacci_search(w) : O(log w)
 *	最大で幅 w の開区間まで扱えるよう初期化する．
 *
 * search(left, right, f, up) : O(log(right - left))
@@ -59,11 +63,11 @@ double binary_search(double ok, double ng, function<bool(double)>& okQ) {
 *	up = true なら f の階差の符号変化は + → 0 → - で，返すのは最大値となる．
 *	up = false なら f の階差の符号変化は - → 0 → + で，返すのは最小値となる．
 */
-struct fibonacci_search {
+struct Fibonacci_search {
 	int n;
 	vl fib;
 
-	fibonacci_search(ll w) : n(1), fib({ 1, 1 }) {
+	Fibonacci_search(ll w) : n(1), fib({ 1, 1 }) {
 		// 利用する範囲のフィボナッチ数列を準備する．
 		while (fib[n] < w) {
 			fib.push_back(fib[n] + fib[n - 1]);
@@ -192,199 +196,5 @@ double golden_search(double left, double right, function<double(double)>& f) {
 	// 最後の候補を比較し，大きかった方の x を返す．
 	return (v1 > v2) ? m1 : m2;
 }
-
-
-//【組の和の探索】
-/*
-* Sort_outer_sum(a, b) : O(n log n + m log m)
-*	S = { a[i] + b[j] | i∈[0..n), j∈[0..m) } で初期化する．
-*
-* lower_bound(v) : O(n log m)
-*	S の v 未満の要素の個数を返す．
-*
-* upper_bound(v) : O(n log m)
-*	S の v 以下の要素の個数を返す．
-*
-* get(i) : O(n log m log(max(a+b) - min(a+b)))
-*	S の i 番目の要素を返す．
-*
-* sum(i) : O(n log m log(max(a+b) - min(a+b)))
-*	S の i 番目未満の要素の和を返す．
-*
-* 利用：【めぐる式二分探索】
-*/
-struct Sort_outer_sum {
-	int n, m;
-	vl a, b, acc_b;
-
-	Sort_outer_sum() {}
-
-	// S = { a[i] + b[j] | i∈[0..n), j∈[0..m) } で初期化する．
-	Sort_outer_sum(const vl& a_, const vl& b_)
-		: n(sz(a_)), m(sz(b_)), a(a_), b(b_) {
-		sort(all(a));
-		sort(all(b));
-
-		acc_b = vl(m + 1);
-		rep(j, m) {
-			acc_b[j + 1] = acc_b[j] + b[j];
-		}
-	}
-
-	// S の v 未満の要素の個数を返す．
-	ll lower_bound(ll v) {
-		ll cnt = 0;
-		rep(i, n) {
-			auto it = std::lower_bound(all(b), v - a[i]);
-			cnt += distance(b.begin(), it);
-		}
-		return cnt;
-	}
-
-	// S の v 以下の要素の個数を返す．
-	ll upper_bound(ll v) {
-		ll cnt = 0;
-		rep(i, n) {
-			auto it = std::upper_bound(all(b), v - a[i]);
-			cnt += distance(b.begin(), it);
-		}
-		return cnt;
-	}
-
-	// S の i 番目の要素を返す．
-	ll get(ll i) {
-		function<bool(ll)> okQ = [&](ll v) {
-			return lower_bound(v) <= i;
-		};
-		return binary_search(a[0] + b[0] - 1, a[n - 1] + b[m - 1] + 1, okQ);
-	}
-
-	// S の i 番目未満の要素の和を返す．
-	ll sum(ll i) {
-		// v : i 番目の要素 
-		ll v = get(i);
-
-		// sum : v 未満の要素の和
-		// cnt : v 未満の要素の個数
-		ll sum = 0, cnt = 0;
-		rep(i, n) {
-			auto it = std::lower_bound(all(b), v - a[i]);
-			int d = (int)distance(b.begin(), it);
-			sum += a[i] * d + acc_b[d];
-			cnt += d;
-		}
-
-		// 残り i - cnt 個の要素はちょうど v であるからその分を加算する．
-		sum += v * (i - cnt);
-
-		return sum;
-	}
-};
-
-
-//【組の積の探索】
-/*
-* sort_outer_mul(a, b) : O(n log n + m log m)
-*	S = { a[i] b[j] | i∈[0..n), j∈[0..m) } で初期化する．
-*
-* lower_bound(v) : O(n log m)
-*	S の v 未満の要素の個数を返す．
-*
-* get(i) : O(n log m log(INFL))
-*	S の i 番目の要素を返す．
-*
-* 利用：【めぐる式二分探索】
-*/
-struct sort_outer_mul {
-	// n, m : a, b の要素数
-	// np, mp : a, b の正の要素数
-	// nz, mz : a, b の 0 の要素数
-	// nn, mn : a, b の負の要素数
-	int n, np, nz, nn, m, mp, mz, mn;
-
-	// ap, bp : a, b の正の要素を昇順に格納したリスト
-	// an, bn : a, b の負の要素の 絶対値 を昇順に格納したリスト
-	vl ap, an, bp, bn;
-
-
-	sort_outer_mul() {}
-
-	// S = { a[i] b[j] | i∈[0..n), j∈[0..m) } で初期化する．
-	sort_outer_mul(const vl& a, const vl& b) {
-		np = nz = nn = 0;
-		repe(x, a) {
-			if (x > 0) {
-				ap.push_back(x);
-				np++;
-			}
-			else if (x < 0) {
-				an.push_back(-x);
-				nn++;
-			}
-			else {
-				nz++;
-			}
-		}
-		sort(all(ap));
-		sort(all(an));
-		n = np + nz + nn;
-
-		mp = mz = mn = 0;
-		repe(x, b) {
-			if (x > 0) {
-				bp.push_back(x);
-				mp++;
-			}
-			else if (x < 0) {
-				bn.push_back(-x);
-				mn++;
-			}
-			else {
-				mz++;
-			}
-		}
-		sort(all(bp));
-		sort(all(bn));
-		m = mp + mz + mn;
-	}
-
-	// S の v 未満の要素の個数を返す．
-	ll lower_bound(ll v) {
-		ll cnt = 0;
-		if (v > 0) {
-			cnt += (ll)m * n - (ll)np * mp - (ll)nn * mn;
-			repe(x, ap) {
-				auto it = std::lower_bound(all(bp), (v + x - 1) / x);
-				cnt += distance(bp.begin(), it);
-			}
-			repe(x, an) {
-				auto it = std::lower_bound(all(bn), (v + x - 1) / x);
-				cnt += distance(bn.begin(), it);
-			}
-		}
-		else if (v < 0) {
-			repe(x, ap) {
-				auto it = std::upper_bound(all(bn), -v / x);
-				cnt += distance(it, bn.end());
-			}
-			repe(x, an) {
-				auto it = std::upper_bound(all(bp), -v / x);
-				cnt += distance(it, bp.end());
-			}
-		}
-		else {
-			cnt += (ll)np * mn + (ll)nn * mp;
-		}
-		return cnt;
-	}
-
-	// S の i 番目の要素を返す．
-	ll get(ll i) {
-		function<bool(ll)> okQ = [&](ll v) {
-			return lower_bound(v) <= i;
-		};
-		return binary_search(-INFL, INFL, okQ);
-	}
-};
 
 

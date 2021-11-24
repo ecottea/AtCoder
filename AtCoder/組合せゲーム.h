@@ -4,7 +4,6 @@
 // ■■■■■ 組合せゲーム ■■■■■
 
 
-
 //【最小除外数（mex）】
 /*
 * Nimber() : O(1)
@@ -25,7 +24,6 @@ struct Nimber {
 
 	// cnt[v] : ニム値 v をもつ局面の数
 	map<int, int> cnt;
-
 
 	Nimber() {}
 

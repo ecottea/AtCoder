@@ -198,9 +198,11 @@ mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
 * 壁が wall で表された h * w の迷路 c について，スタート s = (sx, sy) から
 * 各マス c[i][j] への最短経路長を dist[i][j] に格納する．（到達不能なら -1）
 *
-*（幅優先探索）
+*（格子上の幅優先探索）
 */
 void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
+	// verify : https://algo-method.com/tasks/424
+
 	int h = sz(c), w = sz(c[0]);
 
 	dist = vvi(h, vi(w, -1));

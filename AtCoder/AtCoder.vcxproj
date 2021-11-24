@@ -179,8 +179,10 @@
     <ClInclude Include="桁DP.h" />
     <ClInclude Include="構造(木).h" />
     <ClInclude Include="確率.h" />
+    <ClInclude Include="累積演算.h" />
     <ClInclude Include="組合せゲーム.h" />
     <ClInclude Include="行列(半環).h" />
+    <ClInclude Include="辞書順.h" />
     <ClInclude Include="部分列DP.h" />
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />
@@ -202,7 +204,7 @@
     <ClInclude Include="分析%28グラフ%29.h" />
     <ClInclude Include="座標圧縮.h" />
     <ClInclude Include="探索.h" />
-    <ClInclude Include="木.h" />
+    <ClInclude Include="分析%28木%29.h" />
     <ClInclude Include="木クエリ.h" />
     <ClInclude Include="構造(グラフ).h" />
     <ClInclude Include="畳み込み.h" />

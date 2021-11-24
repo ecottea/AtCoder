@@ -12,6 +12,8 @@
 * —˜—pFyÀ•Wˆ³kz
 */
 template <class T> ll inversion_number(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_D
+
 	int n = sz(a);
 
 	// a ‚ğ [0, |a|) ‚ÉÀ•Wˆ³k‚µ‚½Œ‹‰Ê‚ğ b ‚ÉŠi”[‚·‚éD

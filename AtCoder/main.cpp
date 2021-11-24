@@ -46,7 +46,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
-#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複除去
+#define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -105,25 +105,116 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-//-----------------AtCoder 専用-----------------
-#include <atcoder/all>
-using namespace atcoder;
-
-//using mint = modint1000000007;
-using mint = modint998244353;
+////-----------------AtCoder 専用-----------------
+//#include <atcoder/all>
+//using namespace atcoder;
+//
+////using mint = modint1000000007;
+////using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
+//
+//template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+//template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+//istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+//ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+//using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+////----------------------------------------------
 
-template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
-using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-//----------------------------------------------
+
+//【根付き木のノード】
+/*
+* parent : 親の頂点（なければ -1）
+* child : 子のリスト（なければ空リスト）
+* depth : 深さ（根からのパスの長さ）
+* weight : 重さ（部分木のもつ辺の数）
+*/
+
+
+
+//【根付き木】
+/*
+* rt[i] : 根付き木の i 番目のノードの情報
+* r : 根の頂点番号
+*
+* Rooted_tree(g, r) : O(|V|)
+*	木 g を r を根とみなした根付き木として受け取る．
+*/
+struct Rooted_tree {
+
+	struct Node {
+		int parent = -1; // 親（なければ -1）
+		vi child; // 子（なければ空リスト）
+		int depth = -1; // 深さ（根からのパスの長さ）
+		int& dist = depth; // 深さを距離ともみなす（パスのコストを 1 とみなす）
+		int weight = -1; // 重さ（部分木のもつ辺の数）
+
+		// デバッグ出力
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "(p:" << v.parent << ", c:" << v.child << ", d:" << v.depth
+				<< ", w:" << v.weight << ")";
+			return os;
+		}
+	};
+
+	int n;
+	vector<Node> v;
+	int r;
+
+	// コンストラクタ（木と根で初期化）
+	Rooted_tree(Graph& g, int r_) : n(sz(g)), v(n), r(r_) {
+		// 再帰用の関数
+		// s : 注目ノード，p : s の親
+		function<void(int, int)> dfs = [&](int s, int p) {
+			v[s].parent = p;
+			v[s].child.clear();
+			v[s].weight = 0;
+
+			repe(t, g[s]) {
+				if (t == p) continue;
+
+				v[t].depth = v[s].depth + 1;
+
+				dfs(t, s);
+
+				v[s].child.push_back(t);
+				v[s].weight += v[t].weight + 1;
+			}
+		};
+
+		// 根 r を始点として再帰関数を呼び出す．
+		v[r].depth = 0;
+		dfs(r, -1);
+	}
+
+	// アクセス
+	Node const& operator[](int i) const { return v[i]; }
+	Node& operator[](int i) { return v[i]; }
+
+	// 大きさ
+	int size() const { return n; }
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Rooted_tree& rt) {
+		rep(i, rt.n) os << rt[i] << endl;
+		return os;
+	}
+};
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
-	
-	
+
+	int n;
+	cin >> n;
+
+	vl w(n);
+	cin >> w;
+
+	vi p;
+	coordinate_compression(w, p);
+
+	auto res = minimum_cost_sort(p, w);
+
+	cout << res << endl;
 }

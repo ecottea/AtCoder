@@ -3,97 +3,336 @@
 // ■■■■■ 二分木 ■■■■■
 
 
-//【二分木のノード】
-struct BTNode {
-	int parent = -1; // 親（なければ -1）
-	int left = -1; // 左の子（なければ -1）
-	int right = -1; // 右の子（なければ -1）
-	int depth = -1; // 深さ（根からのパスの長さ）
-	int height = -1; // 高さ（最も遠い葉へのパスの長さ）
+//【二分木】
+/*
+* Binary_Tree() : O(1)
+*	空で初期化する．
+*
+* Binary_Tree(s, l, r) : O(n)
+*	s[i] の左の子が l[i]，右の子が r[i] であるような二分木で初期化する．
+*	存在しない場合は -1 を与える．
+*/
+struct Binary_Tree {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_B
 
-	// 出力
-	friend ostream& operator<<(ostream& os, const BTNode& v) {
-		os << '(' << v.parent << ',' << v.left << ',' << v.right << ',' << v.depth << ',' << v.height << ')';
+	struct Node {
+		int parent = -1; // 親（なければ -1）
+		int left = -1; // 左の子（なければ -1）
+		int right = -1; // 右の子（なければ -1）
+		int depth = -1; // 深さ（根からのパスの長さ）
+		int height = -1; // 高さ（最も遠い葉へのパスの長さ）
+		int weight = -1; // 重さ（自身を根とする部分木の頂点の数）
+
+		// 出力
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "(p:" << v.parent << ", l:" << v.left << ", r:" << v.right <<
+				", d:" << v.depth << ", h:" << v.height << ", w:" << v.weight << ')';
+			return os;
+		}
+	};
+
+	int n; // 頂点の数
+	int root; // 根
+	vector<Node> v; // 頂点
+
+	// コンストラクタ（初期化なし，木と根で初期化）
+	Binary_Tree() : n(0), root(-1) {}
+	Binary_Tree(const vi& s, const vi& l, const vi& r) : n(sz(s)), v(n) {
+		// 親子関係を設定する．
+		rep(i, n) {
+			v[s[i]].left = l[i];
+			v[s[i]].right = r[i];
+			if (l[i] != -1) v[l[i]].parent = s[i];
+			if (r[i] != -1) v[r[i]].parent = s[i];
+		}
+
+		// 親が設定されていないノードが根である．
+		rep(i, n) {
+			if (v[i].parent == -1) {
+				root = i;
+				break;
+			}
+		}
+
+		// 頂点の各種情報を決定する（s : 注目ノード，p : s の親）
+		function<void(int)> dfs = [&](int s) {
+			v[s].weight = 1;
+			v[s].height = 0;
+
+			int t = v[s].left;
+			if (t != -1) {
+				v[t].depth = v[s].depth + 1;
+				dfs(t);
+				v[s].weight += v[t].weight;
+				chmax(v[s].height, v[t].height + 1);
+			}
+
+			t = v[s].right;
+			if (t != -1) {
+				v[t].depth = v[s].depth + 1;
+				dfs(t);
+				v[s].weight += v[t].weight;
+				chmax(v[s].height, v[t].height + 1);
+			}
+		};
+
+		// 根 root を始点として再帰関数を呼び出す．
+		v[root].depth = 0;
+		dfs(root);
+	}
+
+	// アクセス
+	Node const& operator[](int i) const { return v[i]; }
+	Node& operator[](int i) { return v[i]; }
+
+	// 大きさ
+	int size() const { return n; }
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Binary_Tree& rt) {
+		rep(i, sz(rt)) os << rt[i] << endl;
 		return os;
 	}
 };
 
 
-
-//【二分木の深さ，高さ】O(|V|)
+//【二分木の入力】O(n)
 /*
-* 二分木 rt の親と子の情報を元に，各ノードに深さと高さを設定する．
-* また根の番号を返す．
+* 自身 左の子 右の子を並べた入力を受け取り，n 頂点の二分木 bt を構築する．
+* 非存在を表す入力を nval に与える．
+*
+* one_indexed : 入力が 1-indexed で与えられるなら true
 */
-int decide_depth(vector<BTNode>& bt) {
-	int n = (int)bt.size();
+void read_binary_tree(int n, Binary_Tree& bt, bool one_indexed = true, int nval = -1) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_B
 
-	// 親が設定されていないノードが根である．
-	int r = -1;
+	vi s(n), l(n), r(n);
 	rep(i, n) {
-		if (bt[i].parent == -1) {
-			r = i;
-			break;
+		cin >> s[i] >> l[i] >> r[i];
+
+		if (s[i] == nval) s[i] = -1;
+		if (l[i] == nval) l[i] = -1;
+		if (r[i] == nval) r[i] = -1;
+
+		if (one_indexed) {
+			if (s[i] != -1) s[i]--;
+			if (l[i] != -1) l[i]--;
+			if (r[i] != -1) r[i]--;
 		}
 	}
-
-	// 再帰用の関数
-	// s : 注目ノード，d : s の深さ，戻り値：s の高さ
-	function<int(int, int)> dfs = [&](int s, int d) {
-		if (s == -1) {
-			return -1;
-		}
-
-		// 行きがけに深さを求める．
-		bt[s].depth = d;
-
-		int hl = dfs(bt[s].left, d + 1);
-		int hr = dfs(bt[s].right, d + 1);
-
-		// 帰りがけに高さを求める．
-		bt[s].height = max(hl, hr) + 1;
-
-		return bt[s].height;
-	};
-
-	// 根 r を始点として再帰関数を呼び出す．
-	dfs(r, 0);
-
-	return r;
+	bt = Binary_Tree(s, l, r);
 }
 
 
-//【二分木の深さ優先探索】O(|V|)
+//【二分木の深さ優先探索】O(n)
 /*
-* 根を s とする二分木 bt を深さ優先でなぞりながら，
+* 二分木 bt を深さ優先でなぞりながら，
 * 行きがけ順に pre(i)，通りがけ順に in(i)，帰りがけ順に post(i) を実行する．
+* 
+*（再帰呼び出し）
 */
-void traverse_dfs_binary_tree(vector<BTNode>& bt, int r,
+void traverse_binary_tree(Binary_Tree& bt,
 	function<void(int)>& pre, function<void(int)>& in, function<void(int)>& post) {
-	// 行きがけ順の処理
-	pre(r);
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_C
 
-	// 左の子があれば左の子をなぞりにいく．
-	if (bt[r].left != -1) {
-		traverse_dfs_binary_tree(bt, bt[r].left, pre, in, post);
+	function<void(int)> dfs = [&](int s) {
+		// 行きがけ順の処理
+		pre(s);
+
+		// 左の子があれば左の子をなぞりにいく．
+		if (bt[s].left != -1) {
+			dfs(bt[s].left);
+		}
+
+		// 通りがけ順の処理
+		in(s);
+
+		// 右の子があれば右の子をなぞりにいく．
+		if (bt[s].right != -1) {
+			dfs(bt[s].right);
+		}
+
+		// 帰りがけ順の処理
+		post(s);
+	};
+
+	dfs(bt.root);
+}
+
+
+//【二分木の深さ優先探索】O(n)
+/*
+* 二分木 bt を深さ優先でなぞりながら，
+* 行きがけ順に pre(i)，通りがけ順に in(i) を実行する．
+*
+*（スタック）
+*/
+void traverse_binary_tree(Binary_Tree& bt, function<void(int)>& pre, function<void(int)>& in) {
+	stack<int> st;
+	int v = 0;
+
+	while (v != -1) {
+		pre(v); // 行きがけ順の処理
+
+		// 左の子が居る場合
+		if (bt[v].left != -1) {
+			st.push(v);
+			v = bt[v].left;
+		}
+		// 左の子が居ない場合
+		else {
+			in(v); // 通りがけ順の処理
+
+			v = bt[v].right;
+			while (!st.empty() && v == -1) {
+				// anc : まだ通りがけ順の処理を行っていない最小祖先
+				// anc まで一気に戻ってしまうので帰りがけ順の処理は不可能．
+				int anc = st.top(); st.pop();
+
+				in(anc); // 通りがけ順の処理
+
+				v = bt[anc].right;
+			}
+		}
+	}
+}
+
+
+//【構文解析（逆ポーランド記法）】O(n)
+/*
+* 逆ポーランド記法の数式 str を構文解析して数式の木を bt に構築する．
+* str の項は空白区切りになっており，順に term に格納される．
+*
+* 利用：【二分木】
+*/
+void reverse_polish_notation_tree(const string& str, Binary_Tree& bt, vector<string>& term) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_3_A
+
+	stringstream ss{ str };
+	term.clear();
+	vi v, l, r; // v[i] の左の子が l[i], 右の子が r[i] であることを記録する．
+
+	string s;
+	int i = 0;
+	stack<int> stk;
+	while (getline(ss, s, ' ')) {
+		term.push_back(s);
+		v.push_back(i);
+
+		// 演算子の場合
+		if (!isdigit(s[0])) {
+			r.push_back(stk.top()); stk.pop();
+			l.push_back(stk.top()); stk.pop();
+		}
+		// 数値の場合
+		else {
+			r.push_back(-1);
+			l.push_back(-1);
+		}
+
+		stk.push(i++);
 	}
 
-	// 通りがけ順の処理
-	in(r);
+	bt = Binary_Tree(v, l, r);
+}
 
-	// 右の子があれば右の子をなぞりにいく．
-	if (bt[r].right != -1) {
-		traverse_dfs_binary_tree(bt, bt[r].right, pre, in, post);
+
+//【構文解析（ポーランド記法）】O(n)
+/*
+* ポーランド記法の数式 str を構文解析して数式の木を bt に構築する．
+* str の項は空白区切りになっており，順に term に格納される．
+*
+* 利用：【二分木】
+*/
+void polish_notation_tree(const string& str, Binary_Tree& bt, vector<string>& term) {
+	stringstream ss{ str };
+	term.clear();
+	vi v, l, r; // v[i] の左の子が l[i], 右の子が r[i] であることを記録する．
+
+	string s;
+	int i = -1;
+	function<int()> rf = [&]() {
+		i++;
+		getline(ss, s, ' ');
+
+		term.push_back(s);
+		v.push_back(i);
+		l.push_back(-1);
+		r.push_back(-1);
+
+		// 演算子の場合
+		int pt = i;
+		if (!isdigit(s[0])) {
+			l[pt] = rf();
+			r[pt] = rf();
+		}
+
+		return pt;
+	};
+
+	rf();
+
+	bt = Binary_Tree(v, l, r);
+}
+
+
+//【ハフマン符号木】O(n)
+/*
+* n 種類の文字 i の出現頻度が p[i] > 0 であるときのハフマン符号木を bt に構築する．
+*
+*（頻度が低い順に貪欲法）
+*
+* 利用：【二分木】
+*/
+void huffman_tree(const vi& p, Binary_Tree& bt) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_15_D
+
+	int n = sz(p);
+
+	// 出現頻度の低い順に文字を取り出す優先度付きキュー
+	priority_queue_rev<pii> q;
+
+	// s[i] の左の子が l[i]，右の子が r[i] であることの記録用
+	vi s, l, r;
+
+	// ハフマン木の葉となる文字たちをキューに追加する．
+	rep(i, n) {
+		q.push({ p[i], i });
+
+		// 葉であることを記録する．
+		s.push_back(i);
+		l.push_back(-1);
+		r.push_back(-1);
 	}
 
-	// 帰りがけ順の処理
-	post(r);
+	// 出現頻度の低い文字 2 つを組にして部分木を作り，
+	// それらを合わせた分の出現頻度をもつ新たな文字とみなすことを繰り返す．
+	int i = n;
+	while (sz(q) > 1) {
+		// 出現頻度の低い文字 2 つを得る．
+		int p1, p2, i1, i2;
+		tie(p1, i1) = q.top(); q.pop();
+		tie(p2, i2) = q.top(); q.pop();
+
+		// それらを合わせた文字を表すノードを作り，キューに追加する．
+		q.push({ p1 + p2, i });
+
+		// 親子関係を記録する．
+		s.push_back(i);
+		l.push_back(i1);
+		r.push_back(i2);
+
+		i++;
+	}
+
+	// ハフマン木を構築する．
+	bt = Binary_Tree(s, l, r);
 }
 
 
 //【二分探索木】
 /*
-* binary_search_tree() : O(1)
+* Binary_search_tree() : O(1)
 *	空の二分探索木で初期化する．
 *
 * insert(key) : 平均 O(log n)／最悪 O(n)
@@ -105,28 +344,26 @@ void traverse_dfs_binary_tree(vector<BTNode>& bt, int r,
 * erase(key) : 平均 O(log n)／最悪 O(n)
 *	key を削除する．
 */
-template <class T>
-struct binary_search_tree {
+template <class T> struct Binary_search_tree {
+	verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_C
+
 	// 二分探索木のノード
-	struct bst_node {
+	struct Node {
 		T key;
-		bst_node* left;
-		bst_node* right;
+		Node* left;
+		Node* right;
 	};
 
-	// 二分探索木のノード数
-	int n;
-
-	// 根へのポインタ
-	bst_node* root;
+	int n; // ノード数
+	Node* root; // 根へのポインタ
 
 	// コンストラクタ（空の二分探索木で初期化）：O(1)
-	binary_search_tree() : n(0), root(nullptr) {}
+	Binary_search_tree() : n(0), root(nullptr) {}
 
 	// 要素の挿入：平均 O(log n)／最悪 O(n)
 	void insert(T& key) {
 		// 挿入すべき位置を二分探索する．
-		bst_node** p = &root;
+		Node** p = &root;
 		while (*p != nullptr) {
 			if (key < (*p)->key) {
 				p = &((*p)->left);
@@ -137,7 +374,7 @@ struct binary_search_tree {
 		}
 
 		// 新しいノードの作成
-		bst_node* node = new bst_node;
+		Node* node = new Node;
 		node->key = key;
 		node->left = nullptr;
 		node->right = nullptr;
@@ -148,7 +385,7 @@ struct binary_search_tree {
 	// 要素の探索：平均 O(log n)／最悪 O(n)
 	bool find(T& key) {
 		// key を二分探索する．
-		bst_node* x = root;
+		Node* x = root;
 		while (x != nullptr) {
 			if (key == x->key) {
 				return true;
@@ -168,12 +405,12 @@ struct binary_search_tree {
 	// 要素の削除：平均 O(log n)／最悪 O(n)
 	void erase(T& key) {
 		// 挿入すべき位置を二分探索する．
-		bst_node** p = &root;
+		Node** p = &root;
 		while (*p != nullptr) {
 			// 見つかった場合
 			if (key == (*p)->key) {
 				// 見つかったノードを x とする．
-				bst_node* x = *p;
+				Node* x = *p;
 
 				// x が子をもたない場合
 				if (x->left == nullptr && x->right == nullptr) {
@@ -217,7 +454,7 @@ struct binary_search_tree {
 	}
 
 	// *p が指す部分木の最小の要素を削除し，その要素へのポインタを返す．
-	bst_node* delete_min(bst_node** p) {
+	Node* delete_min(Node** p) {
 		// 最小の要素は左の子をずっと辿った先にある．
 		while ((*p)->left != nullptr) {
 			p = &((*p)->left);
@@ -225,7 +462,7 @@ struct binary_search_tree {
 
 		// 最小の要素には左の子は居ないので，
 		// 親からのポインタに右の子を繋いで短絡しておく．
-		bst_node* x = *p;
+		Node* x = *p;
 		*p = (*p)->right;
 
 		return x;
@@ -247,9 +484,8 @@ struct binary_search_tree {
 * erase(key) : O(log n)
 *	key を削除する．
 */
-template <class T>
-struct Treap {
-	// 参考 : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
+template <class T> struct Treap {
+	// varify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
 
 	// ツリープのノード
 	struct Node {
@@ -387,75 +623,5 @@ struct Treap {
 		}
 	}
 };
-
-
-//【構文解析（逆ポーランド記法）】
-/*
-* 逆ポーランド記法の数式 str を構文解析して数式の木を bt に構築する．
-* str の項は空白区切りになっており，順に term に格納される．
-*
-* 利用：【二分木のノード】
-*/
-int rpn_tree(const string& str, vector<BTNode>& bt, vector<string>& term) {
-	stringstream ss{ str };
-	bt.clear();
-	term.clear();
-
-	string s;
-	int i = 0;
-	stack<int> stk;
-	while (getline(ss, s, ' ')) {
-		bt.push_back(BTNode());
-		term.push_back(s);
-
-		// 演算子の場合
-		if (!isdigit(s[0])) {
-			bt[i].right = stk.top();
-			stk.pop();
-			bt[i].left = stk.top();
-			stk.pop();
-		}
-
-		stk.push(i++);
-	}
-
-	return i;
-}
-
-
-//【構文解析（ポーランド記法）】
-/*
-* ポーランド記法の数式 str を構文解析して数式の木を bt に構築する．
-* str の項は空白区切りになっており，順に term に格納される．
-*
-* 利用：【二分木のノード】
-*/
-int pn_tree(const string& str, vector<BTNode>& bt, vector<string>& term) {
-	stringstream ss{ str };
-	bt.clear();
-	term.clear();
-
-	string s;
-	int i = -1;
-	function<int()> rf = [&]() {
-		getline(ss, s, ' ');
-		bt.push_back(BTNode());
-		term.push_back(s);
-		i++;
-		int pt = i;
-
-		// 演算子の場合
-		if (!isdigit(s[0])) {
-			bt[pt].left = rf();
-			bt[pt].right = rf();
-		}
-
-		return pt;
-	};
-
-	rf();
-
-	return i;
-}
 
 

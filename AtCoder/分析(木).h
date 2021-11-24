@@ -1,13 +1,11 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-#include "グラフ最適化.h"
 #include "最短路.h"
-// ■■■■■ 木 ■■■■■
+// ■■■■■ 木の性質の分析 ■■■■■
 
 
-
-//【木の直径】O(|V| log|V|)
+//【木の直径】O(n log n)
 /*
 * コスト付き木の直径の長さを返す．また直径の両端となる頂点の組を p に格納する．
 *
@@ -43,7 +41,7 @@ ll tree_diameter(const WGraph& g, pii& p) {
 }
 
 
-//【直径とその中点】O(|V|)
+//【直径とその中点】O(n)
 /*
 * 木の直径の両端点を ep = {s, t} に，経路 s → t の中点を ctr に格納し，直径の長さを返す．
 * 中点が頂点 v のときは ctr = {v, v}，辺 es → et 上のときは ctr = {es, et} とする．
@@ -104,7 +102,7 @@ int tree_diameter_and_midpoint(const Graph& g, pii& ep, pii& ctr) {
 }
 
 
-//【木上のシュタイナー木】O(|V|)
+//【木上のシュタイナー木】O(n)
 /*
 * 無向木 g の頂点集合 v を含む最小の木を st に構築し，その大きさを返す．
 * また st の頂点 i が g のどの頂点と対応するかを id[i] に格納する．

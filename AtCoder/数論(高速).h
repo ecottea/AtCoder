@@ -19,6 +19,7 @@
 */
 bool miller_rabin(ll n) {
 	// 参考 : https://nyaannyaan.github.io/library/prime/fast-factorize.hpp.html
+	// verify : https://algo-method.com/tasks/513
 
 	//【方法】
 	// p を奇素数とすると，任意の a=[1..p) についてフェルマーの小定理より
@@ -164,6 +165,8 @@ ll pollard_rho(ll n) {
 * 利用：【素数判定／ミラー - ラビン法】，【約数検出／ポラードのρ法】
 */
 void factor_integer(ll n, map<ll, int>& pps) {
+	// verify : https://algo-method.com/tasks/553
+
 	pps.clear();
 	if (n == 1) return;
 

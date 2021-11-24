@@ -3,44 +3,42 @@
 // ■■■■■ 数論 ■■■■■
 
 
-//【最大公約数（複数）】O(n log a)
+//【最大公約数（複数）】O(n log(max a))
 /*
-* 長さ n の配列 a に格納された数の最大公約数を返す．
+* gcd a[0..n) を返す．（空列の gcd は 0 とする）
 */
 ll gcd(vl& a) {
+	// verify : https://algo-method.com/tasks/496
+
 	int n = sz(a);
-	ll g;
 
-	if (n == 0) return 0;
+	ll g = 0;
+	rep(i, n) g = gcd(g, a[i]);
 
-	g = a[0];
-	rep (i, n) g = gcd(g, a.at(i));
-	
 	return g;
 }
 
 
-//【最小公倍数】O(log a)
+//【最小公倍数】O(log max(a, b))
 /*
-* 2 数 a, b の最小公倍数を返す．
+* lcm(a, b) を返す．
 */
-ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
+ll lcm(ll a, ll b) {
+	// verify : https://algo-method.com/tasks/475
+
+	return a / gcd(a, b) * b;
+}
 
 
-//【最小公倍数（複数）】O(n log a)
+//【最小公倍数（複数）】O(n log(max a))
 /*
-* 長さ n の配列 a に格納された数の最小公倍数を返す．
-* 
-* 利用：【最小公倍数】
+* lcm a[0..n) を返す．（空列の lcm は 1 とする）
 */
 ll lcm(vl& a) {
 	int n = sz(a);
-	ll l;
-
-	if (n == 0) return 0;
 	
-	l = a[0];
-	repi(i, 1, n - 1) l = lcm(l, a[i]);
+	ll l = 1;
+	rep(i, n) l = l / gcd(l, a[i]) * a[i];
 	
 	return l;
 }
@@ -57,7 +55,7 @@ ll ext_gcd(ll a, ll b, ll& x, ll& y) {
 	//【方法】
 	// b = 0 の場合は，明らかに g = a で，(x, y) = (1, 0) が解である．
 	// 
-	// b ≠ 0 の場合を考える．a を b で割り
+	// b != 0 の場合を考える．a を b で割り
 	//		a = q b + r (0 <= r < b)
 	// なる q, r を得ておく．これを元の式に代入すると
 	//		(q b + r) x + b y = g
@@ -107,12 +105,41 @@ ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
 }
 
 
+//【約数の列挙】O(√n)
+/*
+* n の約数全てをリスト divs に昇順に格納する．
+*/
+void divisors(ll n, vl& divs) {
+	// verify : https://algo-method.com/tasks/346
+
+	divs.clear();
+
+	if (n == 1) {
+		divs.push_back(1);
+		return;
+	}
+
+	ll i = 1;
+	for (; i * i < n; i++) {
+		if (n % i == 0) {
+			divs.push_back(i);
+			divs.push_back(n / i);
+		}
+	}
+	if (i * i == n) divs.push_back(i);
+
+	sort(all(divs));
+}
+
+
 //【約数関数 σ_k(n)】O(√n)
 /*
 * 約数関数 σ_k(n) = (n の約数それぞれを k 乗した和) を返す．
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
 */
 ll divisor_sigma(int k, ll n) {
+	// verify(k=0) : https://algo-method.com/tasks/344
+
 	if (n == 1) return 1;
 	
 	ll res = 0, i = 1;
@@ -135,6 +162,8 @@ ll divisor_sigma(int k, ll n) {
 * pps[p] = d : n に素因数 p が d 個含まれていることを表す．
 */
 void factor_integer(ll n, map<ll, int>& pps) {
+	// verify : https://algo-method.com/tasks/457
+
 	pps.clear();
 
 	for (ll i = 2; i * i <= n; i++) {
@@ -154,6 +183,8 @@ void factor_integer(ll n, map<ll, int>& pps) {
 * n が素数かを返す．
 */
 bool primeQ(ll n) {
+	// verify : https://algo-method.com/tasks/319
+
 	if (n == 1) return false;
 	
 	// i = (合成数) もループを回ってしまうが気にしない
@@ -190,6 +221,8 @@ ll euler_phi(ll n) {
 * μ(n) = (-1)^k (n が相異なる k 個の素数の積) or 0 （n が平方因子を含む）
 */
 int mobius_mu(ll n) {
+	// verify : https://algo-method.com/tasks/494
+
 	int res = 1;
 
 	for (ll i = 2; i * i <= n; i++) {
@@ -227,6 +260,8 @@ int integer_exponent(ll n, ll p) {
 * 制約 : p は素数
 */
 ll legendre(ll n, ll p) {
+	// verify : https://algo-method.com/tasks/452
+
 	ll res = 0;
 	while (n > 0) {
 		res += n / p;

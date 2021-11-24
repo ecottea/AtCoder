@@ -12,6 +12,8 @@
 *（重さを状態とした状態 DP）
 */
 ll knapsack01_problem(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
+	// verify : https://algo-method.com/tasks/342
+
 	int n = sz(v); // 品物の個数
 
 	// dp[i][j] : 品物 [0..i) の中で重さ j 以下で実現できる最大価値

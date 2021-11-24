@@ -5,31 +5,6 @@
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
-//【約数の列挙】O(√n)
-/*
-* n の約数全てをリスト divs に昇順に格納する．
-*/
-void divisors(ll n, vl& divs) {
-	divs.clear();
-
-	if (n == 1) {
-		divs.push_back(1);
-		return;
-	}
-
-	ll i = 1;
-	for (; i * i < n; i++) {
-		if (n % i == 0) {
-			divs.push_back(i);
-			divs.push_back(n / i);
-		}
-	}
-	if (i * i == n) divs.push_back(i);
-
-	sort(all(divs));
-}
-
-
 //【素数の列挙】O(n log(log n))
 /*
 * n 以下の素数を列挙し，ps に昇順に格納する．
@@ -37,6 +12,8 @@ void divisors(ll n, vl& divs) {
 *（エラトステネスの篩）
 */
 void eratosthenes(int n, vi& ps) {
+	// verify : https://algo-method.com/tasks/330
+
 	ps.clear();
 
 	// 素数かどうかを記録しておくためのテーブル
@@ -71,6 +48,8 @@ void eratosthenes(int n, vi& ps) {
 * 利用：【素数の列挙】
 */
 void eratosthenes_interval(ll l, ll r, vl& ps) {
+	// verify : https://algo-method.com/tasks/332
+
 	ps.clear();
 
 	vi ps_sub;
@@ -122,7 +101,6 @@ void factor_integer_all(int n, vector<map<int, int>>& pps) {
 		if (a[p] != 1) pps[p][a[p]]++;
 	}
 }
-
 
 
 //【一括素因数分解（区間）】O((√r + (r - l))log(log r))
@@ -242,7 +220,7 @@ void gcd_distribution(ll K, ll n, map<ll, ll>& cnt) {
 
 //【添字 gcd の和】O(√n + d(n)^2 log d(n))　（d(n) : n の約数の個数）
 /*
-* gcd(i, n) = g になるような i∈[1..K] について，Σ i を val[g] に昇順に格納する．
+* gcd(i, n) = g になるような i∈[1..K] について，Σi を val[g] に昇順に格納する．
 *
 * 利用：【約数列挙】
 */

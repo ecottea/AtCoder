@@ -35,44 +35,6 @@ int interval_union(vector<pair<T, T>>& lr, vector<pair<T, T>>& res) {
 }
 
 
-//【スライド最小値】O(n)
-/*
-* 長さ n の配列 a に対し a[i] からの w 個の最小値を a_min[i] に返す．
-*/
-template <class T>
-void slide_minimum(const vector<T>& a, int w, vector<T>& a_min) {
-	// 参考：https://qiita.com/kuuso1/items/318d42cd089a49eeb332
-
-	int n = sz(a);
-	a_min = vector<T>(n + 1 - w);
-
-	// 現在の最小値の位置と，今後最小値になりうる数の位置を入れておくデック
-	deque<int> q;
-
-	rep(i, n) {
-		// 現在の最小値が注目区間の外に出たらデックの先頭から除去する．
-		if (!q.empty() && q.front() <= i - w) {
-			q.pop_front();
-		}
-
-		// 新しく区間に入る数より大きい数は最小値とはなりえないので
-		// デックの末尾から除去する．
-		while (!q.empty() && a[q.back()] > a[i]) {
-			q.pop_back();
-		}
-
-		// 新しく区間に入る数は，今後最小値となる可能性があるので
-		// デックの末尾に追加する．
-		q.push_back(i);
-
-		// 注目区間の幅が w になっていれば結果を記録する．
-		if (i >= w - 1) {
-			a_min[i - w + 1] = a[q.front()];
-		}
-	}
-}
-
-
 //【区間スケジューリング問題】O(n log n)
 /*
 * 期間 [l[i], r[i]) に着手すべき n 個の仕事を請け負える最大個数を返す．
@@ -82,6 +44,8 @@ void slide_minimum(const vector<T>& a, int w, vector<T>& a_min) {
 *（貪欲法）
 */
 int interval_scheduling(const vl& l, const vl& r) {
+	// varify : https://algo-method.com/tasks/363
+
 	int n = sz(l);
 
 	// 締め切りの早い順にソートする．

@@ -5,71 +5,106 @@
 
 //【有限体 F_p 上の計算（32 bit）】
 struct mint {
+	// verify : https://codeforces.com/contest/1279/problem/D
+
 	ll v;
-	static const ll MOD = (ll)1e9 + 7; // 適切な法（素数）に書き換えてから用いる．
+
+	// 適切な法（素数）に書き換えてから用いる．
+//	static const ll MOD = (ll)1e9 + 7;
+	static const ll MOD = 998244353;
 
 	// コンストラクタ
 	mint() : v(0) {};
 	mint(const mint& a) = default;
-	mint(const int& a) : v(a% MOD) {};
+	mint(int a) : v(safe_mod(a)) {};
+	mint(ll a) : v(safe_mod(a)) {};
 
 	// 代入
 	mint& operator=(const mint& a) { v = a.v; return *this; }
-	mint& operator=(const int& a) { v = ((a % MOD) + MOD) % MOD; return *this; }
+	mint& operator=(int a) { v = safe_mod(a); return *this; }
+	mint& operator=(ll a) { v = safe_mod(a); return *this; }
 
 	// 入出力
-	friend istream& operator>> (istream& is, mint& x) { is >> x.v; x.v = ((x.v % MOD) + MOD) % MOD; return is; } // mint の入力用
-	friend ostream& operator<< (ostream& os, const mint& x) { os << x.v; return os; } // mint の出力用
+	friend istream& operator>> (istream& is, mint& x) { is >> x.v; x.v = safe_mod(x.v); return is; }
+	friend ostream& operator<< (ostream& os, const mint& x) { os << x.v; return os; }
+
+	// 非負 mod
+	template <class T> static ll safe_mod(T a) { return (((ll)a % MOD) + MOD) % MOD; }
 
 	// 比較
 	bool operator==(const mint& b) const { return v == b.v; }
-	bool operator==(const int& b) const { return v == ((b % MOD) + MOD) % MOD; }
-	friend bool operator==(const int& a, const mint& b) { return b == a; }
+	bool operator==(int b) const { return v == safe_mod(b); }
+	bool operator==(ll b) const { return v == safe_mod(b); }
+	friend bool operator==(int a, const mint& b) { return b == a; }
+	friend bool operator==(ll a, const mint& b) { return b == a; }
 
-	// 演算
-	mint& operator+=(const mint& b) { v = ((v + b.v) % MOD + MOD) % MOD; return *this; }
-	mint& operator-=(const mint& b) { v = ((v - b.v) % MOD + MOD) % MOD; return *this; }
-	mint& operator*=(const mint& b) { v = ((v * b.v) % MOD + MOD) % MOD; return *this; }
+	// 単項演算
+	mint operator-() const { mint a = *this; return a *= -1; }
+	mint& operator++() { v = safe_mod(v + 1); return *this; }
+	mint operator++(int) { mint tmp = *this; ++(*this); return tmp; }
+	mint& operator--() { v = safe_mod(v - 1); return *this; }
+	mint operator--(int) { mint tmp = *this; --(*this); return tmp; }
+
+	// 二項演算
+	mint& operator+=(const mint& b) { v = safe_mod(v + b.v); return *this; }
+	mint& operator-=(const mint& b) { v = safe_mod(v - b.v); return *this; }
+	mint& operator*=(const mint& b) { v = safe_mod(v * b.v); return *this; }
 	mint& operator/=(const mint& b) { *this *= b.inv(); return *this; }
 	mint operator+(const mint& b) const { mint a = *this; return a += b; }
 	mint operator-(const mint& b) const { mint a = *this; return a -= b; }
 	mint operator*(const mint& b) const { mint a = *this; return a *= b; }
 	mint operator/(const mint& b) const { mint a = *this; return a /= b; }
-	mint operator-() const { mint a = *this; return a *= -1; }
 
 	// int との演算
-	mint& operator+=(const int& b) { v = ((v + b % MOD) % MOD + MOD) % MOD; return *this; }
-	mint& operator-=(const int& b) { v = ((v - b % MOD) % MOD + MOD) % MOD; return *this; }
-	mint& operator*=(const int& b) { v = ((v * b % MOD) % MOD + MOD) % MOD; return *this; }
-	mint& operator/=(const int& b) { *this *= mint(b).inv(); return *this; }
-	mint operator+(const int& b) const { mint a = *this; return a += b; }
-	mint operator-(const int& b) const { mint a = *this; return a -= b; }
-	mint operator*(const int& b) const { mint a = *this; return a *= b; }
-	mint operator/(const int& b) const { mint a = *this; return a /= b; }
-	friend mint operator+(const int& a, const mint& b) { return b + a; }
-	friend mint operator-(const int& a, const mint& b) { return -(b - a); }
-	friend mint operator*(const int& a, const mint& b) { return b * a; }
-	friend mint operator/(const int& a, const mint& b) { return mint(a) * b.inv(); }
+	mint& operator+=(int b) { v = safe_mod(v + b); return *this; }
+	mint& operator-=(int b) { v = safe_mod(v - b); return *this; }
+	mint& operator*=(int b) { v = safe_mod(v * b); return *this; }
+	mint& operator/=(int b) { *this *= mint(b).inv(); return *this; }
+	mint operator+(int b) const { mint a = *this; return a += b; }
+	mint operator-(int b) const { mint a = *this; return a -= b; }
+	mint operator*(int b) const { mint a = *this; return a *= b; }
+	mint operator/(int b) const { mint a = *this; return a /= b; }
+	friend mint operator+(int a, const mint& b) { return b + a; }
+	friend mint operator-(int a, const mint& b) { return -(b - a); }
+	friend mint operator*(int a, const mint& b) { return b * a; }
+	friend mint operator/(int a, const mint& b) { return b.inv() * a; }
 
-	// 累乗
+	// ll との演算
+	mint& operator+=(ll b) { v = safe_mod(v + (b % MOD)); return *this; }
+	mint& operator-=(ll b) { v = safe_mod(v - (b % MOD)); return *this; }
+	mint& operator*=(ll b) { v = safe_mod(v * (b % MOD)); return *this; }
+	mint& operator/=(ll b) { *this *= mint(b).inv(); return *this; }
+	mint operator+(ll b) const { mint a = *this; return a += b; }
+	mint operator-(ll b) const { mint a = *this; return a -= b; }
+	mint operator*(ll b) const { mint a = *this; return a *= b; }
+	mint operator/(ll b) const { mint a = *this; return a /= b; }
+	friend mint operator+(ll a, const mint& b) { return b + a; }
+	friend mint operator-(ll a, const mint& b) { return -(b - a); }
+	friend mint operator*(ll a, const mint& b) { return b * a; }
+	friend mint operator/(ll a, const mint& b) { return b.inv() * a; }
+
+	// 累乗（0^0 := 1）
 	mint pow(ll d) const {
 		mint res(1), pow2 = *this;
 		while (d > 0) {
-			if (d & 1) res *= pow2;
+			if (d & 1LL) res *= pow2;
 			pow2 *= pow2;
 			d /= 2;
 		}
 		return res;
 	}
 
-	// 逆元
-	mint inv() const { return pow(MOD - 2); }
+	// 逆元（1/0 は未定義）
+	mint inv() const {
+		assert(v != 0);
+		return pow(MOD - 2);
+	}
 
 	// 法の確認
 	static int mod() { return MOD; }
 
 	// 値の確認
-	int val() const { return int(v % MOD); }
+	int val() const { return int(v); }
 };
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 

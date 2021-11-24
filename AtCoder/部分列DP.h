@@ -16,13 +16,13 @@ mint count_subseq(const string& s) {
 	int n = sz(s);
 	const int k = 26;
 
-	// nx[i][c] : 部分文字列 s[i..n) で最初に文字 c が現れる位置（無いなら -1）
-	vvi nx(n + 1, vi(k, -1));
+	// nxt[i][c] : 部分文字列 s[i..n) で最初に文字 c が現れる位置（無いなら -1）
+	vvi nxt(n + 1, vi(k, -1));
 	repir(i, n - 1, 0) {
 		rep(c, k) {
-			nx[i][c] = nx[i + 1][c];
+			nxt[i][c] = nxt[i + 1][c];
 		}
-		nx[i][s[i] - 'a'] = i;
+		nxt[i][s[i] - 'a'] = i;
 	}
 
 	// dp[i + 1] : 部分文字列 s[0..i] から得られる s[i] を含む部分列の個数．
@@ -36,7 +36,7 @@ mint count_subseq(const string& s) {
 		// 次に選ぶ文字 c について
 		rep(c, k) {
 			// 部分文字列 s[i..n) で最初に文字 c が現れる位置
-			int j = nx[i][c];
+			int j = nxt[i][c];
 
 			// もう c が現れないなら c を選ぶことはできない．
 			if (j == -1) {
@@ -67,26 +67,27 @@ mint count_subseq(const string& s) {
 */
 mint count_subseq_palindrome(const string& s) {
 	// 参考 : https://qiita.com/drken/items/a207e5ae3ea2cf17f4bd
+	// verify : https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=2895
 
 	int n = sz(s);
 	const int k = 26;
 
-	// nx[i][c] : 部分文字列 s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
-	vvi nx(n + 1, vi(k, n));
+	// nxt[i][c] : 部分文字列 s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
+	vvi nxt(n + 1, vi(k, n));
 	repir(i, n - 1, 0) {
 		rep(c, k) {
-			nx[i][c] = nx[i + 1][c];
+			nxt[i][c] = nxt[i + 1][c];
 		}
-		nx[i][s[i] - 'a'] = i;
+		nxt[i][s[i] - 'a'] = i;
 	}
 
-	// pv[i + 1][c] : 部分文字列 s[0..i] で最後に文字 c が現れる位置（無いなら -1）
-	vvi pv(n + 1, vi(k, -1));
+	// prv[i + 1][c] : 部分文字列 s[0..i] で最後に文字 c が現れる位置（無いなら -1）
+	vvi prv(n + 1, vi(k, -1));
 	rep(i, n) {
 		rep(c, k) {
-			pv[i + 1][c] = pv[i][c];
+			prv[i + 1][c] = prv[i][c];
 		}
-		pv[i + 1][s[i] - 'a'] = i;
+		prv[i + 1][s[i] - 'a'] = i;
 	}
 
 	// dp[i + 1][j] : 
@@ -104,10 +105,10 @@ mint count_subseq_palindrome(const string& s) {
 			// 次に選ぶ文字 c について
 			rep(c, k) {
 				// 部分文字列 s[i..n-1] で最初に文字 c が現れる位置
-				int l = nx[i][c];
+				int l = nxt[i][c];
 
 				// 部分文字列 s[0..j] で最後に文字 c が現れる位置
-				int r = pv[j][c];
+				int r = prv[j][c];
 
 				// もう c が現れないか前後が逆転するなら c を選ぶことはできない．
 				if (l > r) {
@@ -138,98 +139,6 @@ mint count_subseq_palindrome(const string& s) {
 
 	// 空文字列の分を加算する．
 	return res + 1;
-}
-
-
-//【i 番目の部分列】O(k |s|)
-/*
-* k = 26 種類の英小文字からなる文字列 s[0..n) の辞書順 d 番目の部分列を res に格納する．
-* そのようなものがなければ false を返す．
-* 空文字列も s の部分列とみなし，辞書順で 0 番目に現れるとする．
-*
-*（部分列 DP）
-*/
-bool lex_order_subseq(const string& s, ll d, string& res) {
-	// 参考 : https://qiita.com/drken/items/a207e5ae3ea2cf17f4bd
-	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_lexicographical
-
-	int n = sz(s);
-	const int k = 26;
-
-	// dp[i][c] : 部分文字列 s[i..n) の文字 c から始まる部分列の個数
-	//	ただし同じ部分列については選択する位置の組が辞書順最小になるもののみを認める．
-	//	この制約を設けることにより同じ部分列を重複して数えてしまわないようにする．
-	vvl dp(n, vl(k));
-	dp[n - 1][s[n - 1] - 'a'] = 1;
-
-	// オーバーフローしないように注意した足し算
-	auto add = [](ll& tgt, ll val) {
-		tgt = min(tgt + val, INFL);
-	};
-
-	// 後ろから順に貰う DP
-	repir(i, n - 2, 0) {
-		// sum : s[i+1..n) の部分列の総数（初期値の 1 は空文字列に相当する）
-		ll sum = 1;
-
-		rep(c, k) {
-			// c != s[i] のとき
-			if (c != s[i] - 'a') {
-				// s[i] は選べないので，s[i+1..n) のときと個数は同じ
-				dp[i][c] = dp[i + 1][c];
-			}
-
-			// s[i+1..n) の部分列の総数に加算する．
-			add(sum, dp[i + 1][c]);
-		}
-
-		// c = s[i] のとき
-		// 課した制約のため，必ず s[i] を選ばなければならない．
-		// s[i] を選べば c で始まるので，s[i+1] 以降は何でも良い．
-		dp[i][s[i] - 'a'] = sum;
-	}
-
-	// DP 復元
-	res.clear();
-	rep(i, n) {
-		// 求める部分列が見つかったら終了する．
-		if (d == 0) {
-			return true;
-		}
-
-		rep(c, k) {
-			// s[i..n) の c で始まる部分列が d 個未満の場合
-			if (dp[i][c] < d) {
-				// 求める部分列は c では始まらないので次の c に進む．
-				// d は c で始まる部分列の個数分だけ減らしておく．
-				d -= dp[i][c];
-			}
-			// s[i..n) の c で始まる部分列が d 個以上の場合
-			else {
-				// 求める部分列の最初の文字は c に確定する．
-				res.push_back(c + 'a');
-
-				// 文字 c のある位置の次まで進める．
-				//（ちょうどのところで止めているが，rep 文があるので 1 つ進む）
-				while (s[i] != c + 'a') {
-					i++;
-				}
-
-				// c のみで終わる部分列の分を引いておく．
-				d--;
-
-				goto LOOP_END;
-			}
-		}
-
-		// 全ての文字を調べきったなら，部分列の総数が d 未満だったことになる．
-		return false;
-
-	LOOP_END:;
-	}
-
-	// ちょうど最後の文字を使った場合はここにくる．
-	return true;
 }
 
 

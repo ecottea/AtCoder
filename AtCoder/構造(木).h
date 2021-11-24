@@ -4,6 +4,30 @@
 // ■■■■■ 木（構造） ■■■■■
 
 
+//【木の入力】O(|V|)
+/*
+* 親を並べた入力を受け取り，n 頂点の木を構成する．
+*
+* n : グラフの頂点の数
+* g : ここにグラフを構築して返す
+* directed : 有向グラフなら true
+* one_indexed : 入力が 1-indexed で与えられるなら true
+*/
+void read_tree(int n, Graph& g, bool directed = false, bool one_indexed = true) {
+	// verify : https://algo-method.com/tasks/525
+
+	g = Graph(n);
+	repi(i, 1, n - 1) {
+		int p;
+		cin >> p;
+
+		if (one_indexed) p--;
+
+		g[p].push_back(i);
+		if (!directed) g[i].push_back(p);
+	}
+}
+
 
 //【根付き木のノード】
 /*
@@ -33,16 +57,16 @@ struct TNode {
 * rt[i] : 根付き木の i 番目のノードの情報
 * r : 根の頂点番号
 *
-* RTree(g, r) : O(|V|)
+* Rooted_tree(g, r) : O(|V|)
 *	木 g を r を根とみなした根付き木として受け取る．
 */
-struct RTree {
+struct Rooted_tree {
 	int n;
 	vector<TNode> v;
 	int r;
 
 	// コンストラクタ（木と根で初期化）
-	RTree(Graph& g, int r_) : n(sz(g)), v(n), r(r_) {
+	Rooted_tree(Graph& g, int r_) : n(sz(g)), v(n), r(r_) {
 		// 再帰用の関数
 		// s : 注目ノード，p : s の親
 		function<void(int, int)> dfs = [&](int s, int p) {
@@ -75,7 +99,7 @@ struct RTree {
 	int size() const { return n; }
 
 	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const RTree& rt) {
+	friend ostream& operator<<(ostream& os, const Rooted_tree& rt) {
 		rep(i, rt.n) os << rt[i] << endl;
 		return os;
 	}

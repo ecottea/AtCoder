@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "フェニ木(ACL).h"
+#include "探索.h"
 // ■■■■■ 辞書 ■■■■■
 
 
@@ -31,7 +32,7 @@
 *	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
 *
 * lower_bound(v) : O(log n)
-*	v が昇順で何番目の要素かを返す．（0-indexed）
+*	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
 *
 * 利用：【フェニック木】
 */
@@ -91,6 +92,226 @@ struct Dynamic_dictionary {
 };
 
 
+//【区間の動的辞書】
+/*
+* Interval_dictionary() : O(1)
+*	空で初期化する．
+*
+* size() : O(1)
+*	区間の数を返す．
+*
+* get(x) : O(log n)
+*	x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
+*
+* get_right(x) : O(log n)
+*	x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+*
+* get_left(x) : O(log n)
+*	x の 1 つ左にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+*
+* insert(l, r) : ならし O(log n)
+*	区間 [l, r) を追加する．
+*
+* erase(l, r) : ならし O(log n)
+*	区間 [l, r) を削除する．
+*/
+struct Interval_dictionary {
+	// verify(get, insert) : https://atcoder.jp/contests/abc228/tasks/abc228_d
+
+	set<pll> lr; // 区間 [l[i], r[i]) の昇順列
+
+	// コンストラクタ（空で初期化）
+	Interval_dictionary() {}
+
+	// 区間の数を返す．
+	int size() { return sz(lr); }
+
+	// x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
+	pll get(ll x) {
+		auto it = get_iter(x);
+		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+	}
+
+	// x が含まれる区間を指すイテレータを返す（なければ lr.end() を返す）
+	typename set<pll>::iterator get_iter(ll x) {
+		auto it = lr.lower_bound({ x, INFL });
+		if (it == lr.begin()) return lr.end();
+		it--;
+		if (it->first <= x && x < it->second) return it;
+		else return lr.end();
+	}
+
+	// x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+	pll get_right(ll x) {
+		auto it = get_right_iter(x);
+		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+	}
+
+	// x の 1 つ右にある区間を指すイテレータを返す（なければ lr.end() を返す）
+	typename set<pll>::iterator get_right_iter(ll x) {
+		return lr.lower_bound({ x, INFL });
+	}
+
+	// x の 1 つ左にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+	pll get_left(ll x) {
+		auto it = get_left_iter(x);
+		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+	}
+
+	// x の 1 つ左にある区間を指すイテレータを返す（なければ lr.end() を返す）
+	typename set<pll>::iterator get_left_iter(ll x) {
+		auto it = lr.lower_bound({ x, INFL });
+		if (it == lr.begin()) return lr.end();
+		it--;
+		if (it->first <= x && x < it->second) {
+			if (it == lr.begin()) return lr.end();
+			it--;
+		}
+		return it;
+	}
+
+	// 区間 [l, r) を追加する．
+	void insert(ll l, ll r) {
+		auto it_l = get_iter(l - 1);
+		if (it_l == lr.end()) it_l = get_right_iter(l - 1);
+
+		auto it_r = get_iter(r);
+		if (it_r == lr.end()) it_r = get_left_iter(r);
+
+		if (it_l != lr.end() && it_r != lr.end()) {
+			chmin(l, it_l->first);
+			chmax(r, it_r->second);
+			lr.erase(it_l, ++it_r);
+		}
+		lr.insert({ l, r });
+	}
+
+	// 区間 [l, r) を削除する．
+	void erase(ll l, ll r) {
+		ll l2 = l, r2 = r;
+
+		auto it_l = get_iter(l);
+		if (it_l != lr.end()) l2 = it_l->first;
+		else it_l = get_right_iter(l - 1);
+
+		auto it_r = get_iter(r);
+		if (it_r != lr.end()) r2 = it_r->second;
+		else it_r = get_left_iter(r);
+
+		if (it_l != lr.end() && it_r != lr.end()) {
+			lr.erase(it_l, ++it_r);
+		}
+
+		if (l2 < l) lr.insert({ l2, l });
+		if (r2 > r) lr.insert({ r, r2 });
+	}
+
+	typename set<pll>::iterator begin() { return lr.begin(); }
+	typename set<pll>::iterator end() { return lr.end(); }
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Interval_dictionary& d) {
+		repe(p, d.lr) os << p << " ";
+		return os;
+	}
+};
+
+
+//【トライ木】
+/*
+* Trie_tree() : O(1)
+*   空文字列のみで初期化する．
+*
+* insert(str) : O(|str|)
+*   文字列 str を登録する．
+*
+* find(str) : O(|str|)
+*   文字列 str が登録されているかを返す．
+*
+* find_prefix(str) : O(|str|)
+*   文字列 str を接頭辞にもつ文字列が登録されているかを返す．
+*
+* count() : O(1)
+*   登録されている文字列の個数を返す．
+*/
+struct Trie_tree {
+	// 参考 : https://algo-logic.info/trie-tree/
+
+	const int K = 26; // 文字数
+
+	int n; // g のノード数
+	Graph g; // トライ木
+	vc chars; // 頂点 g[i] に対応する文字
+	vb end; // g[i] で終わる文字があるか
+	vi cnt; // g[i] を含む文字列の個数
+
+	Trie_tree() : n(1), g(1, vi(K, -1)), chars(1), end(1), cnt(1) {}
+
+	void insert(const string& str) {
+		int v = 0;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// str は頂点 v を含む文字列なので個数に加算する．
+			cnt[v]++;
+
+			// 登録済みの文字だった場合
+			if (g[v][c - 'a'] != -1) {
+				// そのノードへ移動
+				v = g[v][c - 'a'];
+			}
+			// 未登録の文字だった場合
+			else {
+				// 新たにノード n を追加
+				g.push_back(vi(K, -1));
+				chars.push_back(c);
+				end.push_back(false);
+				cnt.push_back(0);
+
+				// 新たなノードへのパスを追加
+				g[v][c - 'a'] = n;
+
+				// 新たなノードへ移動
+				v = n++;
+			}
+		}
+
+		end[v] = true;
+	}
+
+	bool find(const string& str) const {
+		return find_sub(str, false);
+	}
+
+	bool find_prefix(const string& str) const {
+		return find_sub(str, true);
+	}
+
+	bool find_sub(const string& str, bool prefix_flag) const {
+		int v = 0;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// 登録済みの文字だった場合
+			if (g[v][c - 'a'] != -1) {
+				// そのノードへ移動
+				v = g[v][c - 'a'];
+			}
+			// 未登録の文字だった場合
+			else {
+				return false;
+			}
+		}
+
+		return end[v] | prefix_flag;
+	}
+
+	int count() const {
+		return cnt[0];
+	}
+};
+
+
 //【ウェーブレット行列】
 /*
 * Wavelet_matrix(a) : O(n)
@@ -138,7 +359,7 @@ struct Wavelet_matrix {
 	// コンストラクタ（何もしない）
 	Wavelet_matrix() : n(0) {}
 
-	// 辞書を多重集合 a で初期化する．
+	// 辞書を多重集合 t で初期化する．
 	Wavelet_matrix(const vl& t)
 		: n(sz(t)), k(msbll(*max_element(all(t))) + 1),
 		bs(k, vb(n)), bs_acc(2, vvi(k, vi(n + 1))), num_zeros(k), acc(k + 1, vl(n + 1))
@@ -311,12 +532,10 @@ struct Wavelet_matrix {
 	//ll sum(int l, int r) {
 	//	vector<pli> freq;
 	//	frequency(l, r, INF, freq);
-
 	//	ll res = 0;
 	//	repe(p, freq) {
 	//		res += p.first * p.second;
 	//	}
-
 	//	return res;
 	//}
 
@@ -418,7 +637,7 @@ struct Wavelet_matrix {
 *	部分文字列の個数を返す．
 *
 * get(i) : O(|s|)
-*	i 番目の部分文字列を返す．（0-indexed, なければ "" を返す）
+*	辞書順で i 番目の部分文字列を返す．（0-indexed, なければ "" を返す）
 */
 struct Substring_dictionary {
 	int n;
@@ -456,7 +675,7 @@ struct Substring_dictionary {
 		int k = distance(cnt.begin(), it);
 
 		// i から cnt[k] に足りない分だけ後ろの文字を削ったものが求める部分文字列．
-		// s.substr(i, w) : s[i..i+w) なので注意．
+		// c++ は s.substr(i, w) : s[i..i+w) なので注意．
 		return s.substr(sa[k], n - (*it - i) - sa[k]);
 	}
 
@@ -465,6 +684,201 @@ struct Substring_dictionary {
 		cout << sd.n << endl << sd.s << endl << sd.sa << endl << sd.la << endl
 			<< sd.cnt << endl;
 		return os;
+	}
+};
+
+
+//【組の和の辞書】
+/*
+* Outer_sum_dictionary(a, b) : O(n log n + m log m)
+*	S = { a[i] + b[j] | i∈[0..n), j∈[0..m) } で初期化する．
+*
+* lower_bound(v) : O(n log m)
+*	S の v 未満の要素の個数を返す．
+*
+* upper_bound(v) : O(n log m)
+*	S の v 以下の要素の個数を返す．
+*
+* get(i) : O(n log m log(max(a+b) - min(a+b)))
+*	S の i 番目の要素を返す．
+*
+* sum(i) : O(n log m log(max(a+b) - min(a+b)))
+*	S の i 番目未満の要素の和を返す．
+*
+* 利用：【めぐる式二分探索】
+*/
+struct Outer_sum_dictionary {
+	// varify(lower_bound) : https://algo-method.com/tasks/381
+
+	int n, m;
+	vl a, b, acc_b;
+
+	Outer_sum_dictionary() {}
+
+	// S = { a[i] + b[j] | i∈[0..n), j∈[0..m) } で初期化する．
+	Outer_sum_dictionary(const vl& a_, const vl& b_)
+		: n(sz(a_)), m(sz(b_)), a(a_), b(b_) {
+		sort(all(a));
+		sort(all(b));
+
+		acc_b = vl(m + 1);
+		rep(j, m) {
+			acc_b[j + 1] = acc_b[j] + b[j];
+		}
+	}
+
+	// S の v 未満の要素の個数を返す．
+	ll lower_bound(ll v) {
+		ll cnt = 0;
+		rep(i, n) {
+			auto it = std::lower_bound(all(b), v - a[i]);
+			cnt += distance(b.begin(), it);
+		}
+		return cnt;
+	}
+
+	// S の v 以下の要素の個数を返す．
+	ll upper_bound(ll v) {
+		ll cnt = 0;
+		rep(i, n) {
+			auto it = std::upper_bound(all(b), v - a[i]);
+			cnt += distance(b.begin(), it);
+		}
+		return cnt;
+	}
+
+	// S の i 番目の要素を返す．
+	ll get(ll i) {
+		function<bool(ll)> okQ = [&](ll v) {
+			return lower_bound(v) <= i;
+		};
+		return meguru_search(a[0] + b[0] - 1, a[n - 1] + b[m - 1] + 1, okQ);
+	}
+
+	// S の i 番目未満の要素の和を返す．
+	ll sum(ll i) {
+		// v : i 番目の要素 
+		ll v = get(i);
+
+		// sum : v 未満の要素の和
+		// cnt : v 未満の要素の個数
+		ll sum = 0, cnt = 0;
+		rep(i, n) {
+			auto it = std::lower_bound(all(b), v - a[i]);
+			int d = (int)distance(b.begin(), it);
+			sum += a[i] * d + acc_b[d];
+			cnt += d;
+		}
+
+		// 残り i - cnt 個の要素はちょうど v であるからその分を加算する．
+		sum += v * (i - cnt);
+
+		return sum;
+	}
+};
+
+
+//【組の積の辞書】
+/*
+* Outer_mul_dictionary(a, b) : O(n log n + m log m)
+*	S = { a[i] b[j] | i∈[0..n), j∈[0..m) } で初期化する．
+*
+* lower_bound(v) : O(n log m)
+*	S の v 未満の要素の個数を返す．
+*
+* get(i) : O(n log m log(INFL))
+*	S の i 番目の要素を返す．
+*
+* 利用：【めぐる式二分探索】
+*/
+struct Outer_mul_dictionary {
+	// n, m : a, b の要素数
+	// np, mp : a, b の正の要素数
+	// nz, mz : a, b の 0 の要素数
+	// nn, mn : a, b の負の要素数
+	int n, np, nz, nn, m, mp, mz, mn;
+
+	// ap, bp : a, b の正の要素を昇順に格納したリスト
+	// an, bn : a, b の負の要素の 絶対値 を昇順に格納したリスト
+	vl ap, an, bp, bn;
+
+	Outer_mul_dictionary() {}
+
+	// S = { a[i] b[j] | i∈[0..n), j∈[0..m) } で初期化する．
+	Outer_mul_dictionary(const vl& a, const vl& b) {
+		np = nz = nn = 0;
+		repe(x, a) {
+			if (x > 0) {
+				ap.push_back(x);
+				np++;
+			}
+			else if (x < 0) {
+				an.push_back(-x);
+				nn++;
+			}
+			else {
+				nz++;
+			}
+		}
+		sort(all(ap));
+		sort(all(an));
+		n = np + nz + nn;
+
+		mp = mz = mn = 0;
+		repe(x, b) {
+			if (x > 0) {
+				bp.push_back(x);
+				mp++;
+			}
+			else if (x < 0) {
+				bn.push_back(-x);
+				mn++;
+			}
+			else {
+				mz++;
+			}
+		}
+		sort(all(bp));
+		sort(all(bn));
+		m = mp + mz + mn;
+	}
+
+	// S の v 未満の要素の個数を返す．
+	ll lower_bound(ll v) {
+		ll cnt = 0;
+		if (v > 0) {
+			cnt += (ll)m * n - (ll)np * mp - (ll)nn * mn;
+			repe(x, ap) {
+				auto it = std::lower_bound(all(bp), (v + x - 1) / x);
+				cnt += distance(bp.begin(), it);
+			}
+			repe(x, an) {
+				auto it = std::lower_bound(all(bn), (v + x - 1) / x);
+				cnt += distance(bn.begin(), it);
+			}
+		}
+		else if (v < 0) {
+			repe(x, ap) {
+				auto it = std::upper_bound(all(bn), -v / x);
+				cnt += distance(it, bn.end());
+			}
+			repe(x, an) {
+				auto it = std::upper_bound(all(bp), -v / x);
+				cnt += distance(it, bp.end());
+			}
+		}
+		else {
+			cnt += (ll)np * mn + (ll)nn * mp;
+		}
+		return cnt;
+	}
+
+	// S の i 番目の要素を返す．
+	ll get(ll i) {
+		function<bool(ll)> okQ = [&](ll v) {
+			return lower_bound(v) <= i;
+		};
+		return meguru_search(-INFL, INFL, okQ);
 	}
 };
 

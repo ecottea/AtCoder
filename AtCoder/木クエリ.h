@@ -422,7 +422,7 @@ struct Tree_vertex_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
 	// 根付き木
-	RTree rt;
+	Rooted_tree rt;
 	int n;
 
 	// HL 分解の結果の記録用
@@ -437,7 +437,7 @@ struct Tree_vertex_add_sum_query {
 	RASQ<ll> rasq;
 
 	// コンストラクタ（根付き木で初期化）
-	Tree_vertex_add_sum_query(RTree& rt_) : rt(rt_), n(rt.n) {
+	Tree_vertex_add_sum_query(Rooted_tree& rt_) : rt(rt_), n(rt.n) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
 
@@ -445,7 +445,7 @@ struct Tree_vertex_add_sum_query {
 	}
 
 	// コンストラクタ（根付き木と初期値で初期化）
-	Tree_vertex_add_sum_query(RTree& rt_, vl& a) : rt(rt_), n(rt.n) {
+	Tree_vertex_add_sum_query(Rooted_tree& rt_, vl& a) : rt(rt_), n(rt.n) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
 
@@ -551,7 +551,7 @@ struct Tree_vertex_add_sum_query {
 template <class S, S(*op)(S, S), S(*e)()>
 struct Segtree_ontree {
 	// 根付き木
-	RTree rt;
+	Rooted_tree rt;
 	int n;
 
 	// HL 分解の結果の記録用
@@ -567,7 +567,7 @@ struct Segtree_ontree {
 	SEG seg, seg_rev;
 
 	// コンストラクタ（根付き木で初期化）
-	Segtree_ontree(RTree& rt_) : rt(rt_), n(rt.n) {
+	Segtree_ontree(Rooted_tree& rt_) : rt(rt_), n(rt.n) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
 
@@ -575,7 +575,7 @@ struct Segtree_ontree {
 	}
 
 	// コンストラクタ（根付き木と初期値で初期化）
-	Segtree_ontree(RTree& rt_, vector<S>& a) : rt(rt_), n(rt.n) {
+	Segtree_ontree(Rooted_tree& rt_, vector<S>& a) : rt(rt_), n(rt.n) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
 

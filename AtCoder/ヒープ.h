@@ -125,6 +125,7 @@ template <typename T> struct Skew_heap {
 */
 template <typename T> struct Skew_heap_rev {
 	// éQçl : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
+	// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
 
 	struct Node {
 		Node* l, * r;

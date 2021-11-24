@@ -11,6 +11,8 @@
 *（区間 DP）
 */
 ll matrix_chain_multiplication_problem(vl& d) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_10_B
+
 	int n = sz(d) - 1;
 
 	// dp[i][j] : M[i..j] の積を計算する場合の最小乗算回数．
@@ -151,8 +153,8 @@ ll monge_intervalDP(const vl& p) {
 * 利用：【併合可能ヒープ（昇順）】
 */
 ll hu_tucker(vl p) {
-	// 参考 : https://atcoder.jp/contests/atc002/tasks/atc002_c
 	// 参考 : https://ei1333.github.io/luzhiled/snippets/dp/hu-tucker.html
+	// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
 
 	//【方法】
 	// 発想はハフマン符号と同じで，和の小さい葉を優先的にマージしていく．

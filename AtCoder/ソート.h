@@ -3,11 +3,53 @@
 // ■■■■■ ソート ■■■■■
 
 
+//【コスト最小ソート】O(n log n)
+/*
+* 順列 p[0..n) を 2 つの要素の交換を繰り返して昇順にソートするときの最小コストを返す．
+* 一度の操作ではコスト c[i] + c[j] を払っての p[i] と p[j] の交換が可能である．
+*/
+ll minimum_cost_sort(const vi& p, const vl& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_D
+
+	int n = sz(p);
+	ll c_min = *min_element(all(c));
+
+	ll res = 0;
+	vb seen(n);
+
+	// サイクルごとに独立に見ていく．
+	rep(i, n) {
+		if (seen[i] || p[i] == i) continue;
+		seen[i] = true;
+
+		// サイクルの長さ，合計値，最小値を得る．
+		int l = 1;
+		ll loop_sum = c[i], loop_min = INFL;
+		for (int j = p[i]; j != i; j = p[j]) {
+			seen[j] = true;
+
+			l++;
+			loop_sum += c[j];
+			chmin(loop_min, c[j]);
+		}
+
+		// サイクル内で要素の交換をする場合と，
+		// サイクル外の最小要素を利用して交換をする場合のうち，
+		// コストの小さい方を総コストに加える．
+		res += loop_sum + min((l - 2) * loop_min, loop_min + (l + 1) * c_min);
+	}
+
+	return res;
+}
+
+
 //【クイックソート】O(n log n)
 /*
 * 長さ n の配列 a に対してクイックソートを行う．
 */
 template <class T> void quick_sort(vector<T>& a) {
+	// varify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_C
+
 	int n = sz(a);
 
 	// a[p, r] を a[r] をピボットとして分割する．
@@ -55,6 +97,8 @@ template <class T> void quick_sort(vector<T>& a) {
 * 各要素が k 未満の非負整数である長さ n の配列 a に対して計数ソートを行う．
 */
 void counting_sort(vi& a, int k) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_A
+
 	int n = sz(a);
 
 	// 結果の格納用
@@ -88,6 +132,8 @@ void counting_sort(vi& a, int k) {
 * 長さ n の配列 a に対してマージソートを行う．
 */
 template <class T> void merge_sort(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_B
+
 	// 型 T における最大値
 	const T T_INF = numeric_limits<T>::max();
 
@@ -132,6 +178,8 @@ template <class T> void merge_sort(vector<T>& a) {
 * 長さ n の配列 a に対してシェルソートを行う．
 */
 template <class T> void shell_sort(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_D
+
 	int n = sz(a);
 
 	// 適切な増分の列を得る．
@@ -171,6 +219,8 @@ template <class T> void shell_sort(vector<T>& a) {
 * 長さ n の配列 a に対して選択ソートを行う．
 */
 template <class T> void selection_sort(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_B
+
 	int n = sz(a);
 
 	// 左から順にそこに居るべき要素を決定していく．
@@ -224,6 +274,8 @@ template <class T> void insertion_sort(vector<T>& a) {
 * 要素の交換を行った回数（a の転倒数）を返す．
 */
 template <class T> int bubble_sort(vector<T>& a) {
+	verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_A
+
 	int n = sz(a);
 
 	int cnt = 0;

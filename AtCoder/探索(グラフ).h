@@ -34,7 +34,7 @@ void depth_first_search(G& g, int s, function<void(int)>& pre, function<void(int
 		// 帰りがけ順の処理
 		post(s);
 
-		//visited[s] = false; // これをつけるとバックトラッキングになる．
+		//seen[s] = false; // これをつけるとバックトラッキングになる．
 	};
 
 	// s を始点として再帰関数を呼び出す．

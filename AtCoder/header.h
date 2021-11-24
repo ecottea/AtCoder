@@ -49,7 +49,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repit(it, a) for(auto it = (a).begin(); it != (a).end(); ++it) // イテレータを回す（昇順）
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
-#define uniq(a) {sort(all(a)); a.erase(unique(all(a)), a.end());} // 重複除去
+#define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -154,3 +154,23 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 *	に 26451 を追加することで，配列の添字内での加算などへの警告を抑制できる．
 */
 
+
+// Codeforces 用の雛形
+/*
+void solve() {
+	
+}
+
+int main() {
+//	input_from_file("input.txt");
+//	output_to_file("output.txt");
+
+	int t;
+	cin >> t;
+
+	while (t--) {
+		solve();
+		dump("------------------------------");
+	}
+}
+*/
