@@ -41,6 +41,7 @@ template <typename T> void ifwt_xor(vector<T>& f) {
 }
 template <typename T> vector<T> convolution_xor(vector<T> a, vector<T> b) {
     // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
+	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
 
     int n = sz(a);
     fwt_xor(a); fwt_xor(b); // A = fwt_xor(a), B = fwt_xor(b) を計算 : O(n log n)
@@ -83,6 +84,7 @@ template <typename T> void ifwt_and(vector<T>& f) {
 }
 template <typename T> vector<T> convolution_and(vector<T> a, vector<T> b) {
     // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
     int n = sz(a);
     fwt_and(a); fwt_and(b);

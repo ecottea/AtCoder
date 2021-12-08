@@ -11,6 +11,8 @@
 *（期待値 DP）
 */
 double coupon_collectors_problem(const vi& a) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_j
+
 	int n = sz(a);
 
 	vector<int> cnt(4);
@@ -87,14 +89,16 @@ double coupon_collectors_problem(const vi& a) {
 }
 
 
-//【不正確な射撃】
+//【不正確な射撃】O(2^n)
 /*
-* 位置 x[i] に n 個の的がある．左右それぞれに確率 1/3 でぶれる射撃を行うとき，
+* 位置 x[0..n) それぞれに的がある．左右それぞれに確率 1/3 でぶれる射撃を行うとき，
 * 全ての的に命中するまでの射撃回数の期待値を返す．
 *
 *（bit DP）
 */
 double blurred_shooting(const vi& x) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_ball
+
 	int n = *max_element(all(x)) + 1;
 
 	// 初期状態の的の集合

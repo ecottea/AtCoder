@@ -14,6 +14,8 @@
 */
 template <class S, S(*op)(S, S), S(*e_)()>
 struct Monoid {
+	// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
 	S v;
 
 	// 単位元
@@ -67,6 +69,7 @@ using T = Monoid<S3, op, e3>;
 
 
 //【min モノイド】
+// verify : https://judge.yosupo.jp/problem/staticrmq
 using S4 = int;
 S4 op(S4 a, S4 b) { return min(a, b); }
 S4 e4() { return INF; }
@@ -75,14 +78,14 @@ using T = Monoid<S4, op, e4>;
 
 //【左変更 モノイド】
 using S5 = int;
-S5 op(S5 a, S5 b) { return a; }
+S5 op(S5 a, S5 b) { return a == e5() ? b : a; }
 S5 e5() { return INF; } // 使わない値なら何でも OK
 using T = Monoid<S5, op, e5>;
 
 
 //【右変更 モノイド】
 using S6 = int;
-S6 op(S6 a, S6 b) { return b; }
+S6 op(S6 a, S6 b) { return b == e6() ? a : b; }
 S6 e6() { return INF; } // 使わない値なら何でも OK
 using T = Monoid<S6, op, e6>;
 
@@ -119,6 +122,7 @@ using T = Monoid<S8, op, e8>;
 * S ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．
 * f op g : 逆向きに合成した一次関数 g o f を返す．
 */
+// verify : https://judge.yosupo.jp/problem/point_set_range_composite
 using S9 = pair<mint, mint>;
 S9 op(S9 f, S9 g) {
 	mint a, b, c, d;
@@ -180,5 +184,28 @@ S13 op(S13 f, S13 g) {
 }
 S13 e13() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
 using T = Monoid<S13, op, e13>;
+
+
+//【ビット列上 転倒数 モノイド】
+/*
+* S ∋ x = {inv, c0, c1} : 列 x の転倒数，0 の個数，1 の個数の組
+* x op y : 列 x, y を連結した列
+*/
+using S14 = tuple<ll, ll, ll>;
+S14 op(S14 x, S14 y) {
+	ll x_inv, y_inv, x_c0, x_c1, y_c0, y_c1;
+	tie(x_inv, x_c0, x_c1) = x;
+	tie(y_inv, y_c0, y_c1) = y;
+
+	// まず x, y それぞれをソートするのに x_inv + y_inv 回の隣接互換が必要．
+	// その後 x の右側に寄った x_c1 個の 1 と y の左側に寄った y_c0 個の 0 を
+	// 交換するのに x_c1 * y_c0 回の隣接互換が必要．
+	ll inv = x_inv + y_inv + x_c1 * y_c0;
+	ll c0 = x_c0 + y_c0, c1 = x_c1 + y_c1;
+
+	return { inv, c0, c1 };
+}
+S14 e14() { return { 0LL, 0, 0 }; }
+using T = Monoid<S14, op, e14>;
 
 

@@ -191,7 +191,7 @@ void mobius_mu(int n, vi& mu) {
 }
 
 
-//【gcd の分布】O(√n + d(n)^2 log d(n))　（d(n) : n の約数の個数）
+//【定数との gcd の分布】O(√n + d(n)^2)　（d(n) : n の約数の個数）
 /*
 * gcd(i, n) = g になるような i∈[1..K] の個数を cnt[g] に昇順に格納する．
 *
@@ -199,18 +199,20 @@ void mobius_mu(int n, vi& mu) {
 * 
 * 利用：【約数列挙】
 */
-void gcd_distribution(ll K, ll n, map<ll, ll>& cnt) {
+void gcd_distribution(ll K, ll n, unordered_map<ll, ll>& cnt) {
 	// ds : n の約数の集合（昇順）
 	vl ds;
 	divisors(n, ds);
 	int m = sz(ds);
 
+	// cnt[d] : gcd(i, n) = d になるような i∈[1..K] の個数
 	cnt.clear();
+
 	repir(j, m - 1, 0) {
 		// gcd(i, n) が d の倍数になるような i∈[1..K] の個数
 		cnt[ds[j]] = K / ds[j];
 
-		// gcd(i, n) = 2d, 3d, ... になるような i∈[1..K] の個数を引く
+		// gcd(i, n) = 2d, 3d, ... になるような i∈[1..K] の個数を引く．
 		repi(j2, j + 1, m - 1) {
 			if (ds[j2] % ds[j] == 0) cnt[ds[j]] -= cnt[ds[j2]];
 		}
@@ -218,26 +220,31 @@ void gcd_distribution(ll K, ll n, map<ll, ll>& cnt) {
 }
 
 
-//【添字 gcd の和】O(√n + d(n)^2 log d(n))　（d(n) : n の約数の個数）
+//【定数との添字 gcd の和】O(√n + d(n)^2)　（d(n) : n の約数の個数）
 /*
 * gcd(i, n) = g になるような i∈[1..K] について，Σi を val[g] に昇順に格納する．
 *
 * 利用：【約数列挙】
 */
-void gcd_indexed_sum(ll K, ll n, map<ll, mint>& val) {
+void gcd_indexed_sum(ll K, ll n, unordered_map<ll, mint>& val) {
+	// verify : https://atcoder.jp/contests/abc020/tasks/abc020_d
+
 	// ds : n の約数の集合（昇順）
 	vl ds;
 	divisors(n, ds);
 	int m = sz(ds);
 
 	mint inv2 = mint(2).inv();
+
+	// val[d] : gcd(i, n) = d になるような i∈[1..K] についての Σi
 	val.clear();
+
 	repir(j, m - 1, 0) {
-		// gcd(i, n) が d の倍数になるような i∈[1..K] について Σ i を求める．
+		// gcd(i, n) が d の倍数になるような i∈[1..K] について Σi を求める．
 		// これは等差数列の和で，初項は d，末項は K / d * d，項数は K / d である．
 		val[ds[j]] = mint(ds[j] + K / ds[j] * ds[j]) * (K / ds[j]) * inv2;
 
-		// gcd(i, n) = 2d, 3d, ... になるような i∈[1..K] の Σ i を引く
+		// gcd(i, n) = 2d, 3d, ... になるような i∈[1..K] の Σi を引く
 		repi(j2, j + 1, m - 1) {
 			if (ds[j2] % ds[j] == 0) val[ds[j]] -= val[ds[j2]];
 		}

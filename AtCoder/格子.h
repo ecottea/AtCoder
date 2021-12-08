@@ -1,61 +1,18 @@
 #pragma once
 #include "header.h"
-#include "構造(グラフ).h"
-#include "ヒストグラム.h"
 // ■■■■■ 格子上の問題 ■■■■■
-
-
-//【グリッド → グラフ】O(h w)
-/*
-* h 行 w 列のグリッドから nb_type 近傍を連結としたグラフ g を構築する．
-* 壁マスは wall，空きマスはその他とする．
-* i 行目の j 列目にあるマス (i, j) はグラフ頂点 i * w + j に対応する．
-*/
-template <class T>
-void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb_type = 4) {
-	int h = sz(c);
-	int w = sz(c[0]);
-
-	const vi& dx = (nb_type == 4 ? dx4 : dx8);
-	const vi& dy = (nb_type == 4 ? dy4 : dy8);
-
-	g = Graph(h * w);
-	rep(i, h) {
-		rep(j, w) {
-			// 空きマスでなかったら辺は追加しない．
-			if (c[i][j] == wall) {
-				continue;
-			}
-
-			// 今考えている近傍それぞれについて
-			rep(k, nb_type) {
-				// 近傍のマスの座標
-				int ni = i + dx[k];
-				int nj = j + dy[k];
-
-				// 範囲外だったり空きマスでなかったら辺は追加しない．
-				if (ni < 0 || ni >= h || nj < 0 || nj >= w || c[ni][nj] == wall) {
-					continue;
-				}
-
-				// 近傍に空きマスがあったら辺を追加する．
-				g[i * w + j].push_back(ni * w + nj);
-			}
-		}
-	}
-}
 
 
 //【単純多角形判定】O(h w)
 /*
-* h × w の盤面で，外部が '.'，内部がそれ以外で表された多角形が単純であるかを返す．
+* 盤面 c[0..h)[0..w) で，外部が o，内部がそれ以外で表された多角形が単純であるかを返す．
 */
-bool simple_polygonQ(const vvc& c_) {
+bool simple_polygonQ(const vvc& c_, char o = '.') {
 	int h = sz(c_) + 2;
 	int w = sz(c_[0]) + 2;
 
 	// 外周に空マスを追加しておく．
-	vvc c(h, vc(w, '.'));
+	vvc c(h, vc(w, o));
 	rep(i, h - 2) {
 		rep(j, w - 2) {
 			c[i + 1][j + 1] = c_[i][j];
@@ -65,20 +22,16 @@ bool simple_polygonQ(const vvc& c_) {
 	// 探索済みかどうか
 	vvb seen(h, vb(w));
 
-	// 多角形内[外]のマスの 1 つ
+	// 多角形内[外] のマスの 1 つを得る
 	pii in = { -1, -1 }, out = { -1, -1 };
 	rep(i, h) {
 		rep(j, w) {
-			if (c[i][j] == '.') {
-				out = { i, j };
-			}
-			else {
-				in = { i, j };
-			}
+			if (c[i][j] == o) out = { i, j };
+			else in = { i, j };
 		}
 	}
 
-	// 多角形内[外]のマスそれぞれをキューに登録する．
+	// 多角形内[外] のマスそれぞれ 1 つずつをキューに登録する．
 	queue<pii> q;
 	if (in != make_pair(-1, -1)) {
 		q.push(in);
@@ -105,9 +58,7 @@ bool simple_polygonQ(const vvc& c_) {
 			}
 
 			// 探索したことを記録しておく．
-			if (seen[nx][ny]) {
-				continue;
-			}
+			if (seen[nx][ny]) continue;
 			seen[nx][ny] = true;
 
 			// 後で探索するためキューに追加する．
@@ -120,9 +71,7 @@ bool simple_polygonQ(const vvc& c_) {
 	// どちらにせよ単純多角形ではないので false を返す．
 	rep(i, h) {
 		rep(j, w) {
-			if (!seen[i][j]) {
-				return false;
-			}
+			if (!seen[i][j]) return false;
 		}
 	}
 
@@ -132,65 +81,110 @@ bool simple_polygonQ(const vvc& c_) {
 
 //【最大正方形】O(h w)
 /*
-* a[i][j] = 1[0] はマス (i, j) を使える[使えない]ことを意味するとき，
-* 使えるマスのみを使って作られる最大正方形の面積を返す．
+* a[0..h)[0..w) の able のマスのみを使って作られる，
+* マス (i, j) を右下隅とする最大正方形の一辺の長さを len[i][j] に格納する．
 *
 *（二次元 DP）
 */
-int largest_square(const vvi& a) {
+template <class T>
+void largest_square(const vector<vector<T>>& a, vvi& len, T able = 1) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-131.html
+	// verify : https://codeforces.com/problemset/problem/713/D
 
 	int h = sz(a), w = sz(a[0]);
 
-	// dp[i + 1][j + 1] : 
-	//  (i, j) を右下端とする最大正方形の一辺の長さ
-	vvi dp(h + 1, vi(w + 1));
+	// len[i][j] : (i, j) を右下端とする最大正方形の一辺の長さ
+	len = vvi(h, vi(w));
 
 	int res = 0;
 	rep(i, h) {
 		rep(j, w) {
 			// (i, j) が使えない場合面積は 0 のまま
-			if (!a[i][j]) {
+			if (a[i][j] != able) continue;
+
+			// 上辺または左辺では明らかに一辺の長さは 1 が限界
+			if (i == 0 || j == 0) {
+				len[i][j] = 1;
 				continue;
 			}
 
 			// 上，左，左上を見れば自身の値を計算できる．
-			dp[i + 1][j + 1] = min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] }) + 1;
-			chmax(res, dp[i + 1][j + 1]);
+			len[i][j] = min({ len[i - 1][j], len[i][j - 1], len[i - 1][j - 1] }) + 1;
 		}
 	}
+}
 
-	// 2 乗して面積にして返す．
-	return res * res;
+
+//【ヒストグラム内最大長方形】O(n)
+/*
+* ヒストグラム hist[0..n) に包まれる長方形の面積の最大値を返す．
+*/
+template <class T>
+ll largest_rectangle_in_histogram(vector<T>& hist) {
+	// 参考：http://algorithms.blog55.fc2.com/blog-entry-132.html
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
+
+	int n = sz(hist);
+
+	ll res = 0;
+
+	// 面積未確定の長方形を記憶しておくためのスタック
+	// 要素 (l, h) は，左端位置が l，高さが h であることを表す．
+	stack<pair<int, T>> st;
+
+	// hist の末尾に番兵を仕込んでおき，左から順に見ていく．
+	hist.push_back(0);
+	rep(i, n + 1) {
+		// 位置 i で高さ hist[i] を実現する長方形の左端位置
+		int left = i;
+
+		// スタックに記録されている長方形を順に見ていく．
+		while (!st.empty()) {
+			int l;
+			T h;
+			tie(l, h) = st.top();
+
+			// 注目位置以下の高さをもつ長方形についてはまだ面積を増やせる．
+			if (h <= hist[i]) break;
+
+			// 注目位置より高い左端をもつ長方形はこれ以上伸ばせないので面積確定．
+			chmax(res, (ll)h * (i - l));
+			left = l;
+			st.pop();
+		}
+
+		// 面積未確定の長方形として高さ hist[i] をもつものを追加する．
+		st.push({ left, hist[i] });
+	}
+	hist.pop_back();
+
+	return res;
 }
 
 
 //【最大長方形】O(h w)
 /*
 * a[i][j] = 1[0] はマス (i, j) を使える[使えない]ことを意味するとき，
-* 使えるマスのみを使って作られる最大長方形の面積を返す．
+* a[0..h)[0..w) の使えるマスのみを使って作られる最大長方形の面積を返す．
 *
 * 利用：【ヒストグラム内最大長方形】
 */
 ll largest_square(vvi& a) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-133.html
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_B
 
 	int h = sz(a), w = sz(a[0]);
 
 	// a[i][j] を i 行目より上の使えるマスからなるヒストグラムとする．
 	repi(i, 1, h - 1) {
 		rep(j, w) {
-			if (a[i][j]) {
-				a[i][j] += a[i - 1][j];
-			}
+			if (a[i][j]) a[i][j] += a[i - 1][j];
 		}
 	}
 
 	// それぞれのヒストグラム a[i] に対してヒストグラム内最大長方形を求める．
 	ll res = 0;
-	rep(i, h) {
-		chmax(res, largest_rectangle_in_histogram(a[i]));
-	}
+	rep(i, h) chmax(res, largest_rectangle_in_histogram(a[i]));
 
 	return res;
 }
@@ -220,7 +214,7 @@ mint king_problem(vvb& hall) {
 	const ll mask_r = (3LL << (w - 1)) + 1;				// 1100..01
 
 	// dp[i * w + j][pat] : 以下の条件を満たす配置の数
-	//	マス (i, j) の直前の w + 1 マスの配置パターンが pat
+	//		マス (i, j) の直前の w + 1 マスの配置パターンが pat
 	vector<map<ll, mint>> dp(w * h + 1);
 	dp[0][0LL] = 1;
 
@@ -236,21 +230,13 @@ mint king_problem(vvb& hall) {
 
 				// 左端，中央，右端に応じて使うマスクを切り替える．
 				ll mask;
-				if (j == 0) {
-					mask = mask_l;
-				}
-				else if (j == w - 1) {
-					mask = mask_r;
-				}
-				else {
-					mask = mask_m;
-				}
+				if (j == 0) mask = mask_l;
+				else if (j == w - 1) mask = mask_r;
+				else mask = mask_m;
 
 				// マスクをかけた位置にコマがあるか，
 				// マス (i, j) が配置不能マスであれば (i, j) にコマを置けない．
-				if ((pat & mask) || hall[i][j]) {
-					continue;
-				}
+				if ((pat & mask) || hall[i][j]) continue;
 
 				// (i, j) にコマを置く場合
 				dp[i * w + j + 1][(2 * pat + 1) & mask_full] += cnt;
@@ -259,9 +245,7 @@ mint king_problem(vvb& hall) {
 	}
 
 	mint res = 0;
-	repe(v, dp[h * w]) {
-		res += v.second;
-	}
+	repe(v, dp[h * w]) res += v.second;
 
 	return res;
 }
@@ -272,18 +256,14 @@ mint king_problem(vvb& hall) {
 * 二次元配列 c の欠損領域を周囲の値の平均で塗りつぶす．
 * 欠損値は defect で表されているとする．
 */
-template <class T>
-void defect_repair(vector<vector<T>>& c, T defect) {
-	int h = sz(c);
-	int w = sz(c[0]);
+template <class T> void defect_repair(vector<vector<T>>& c, T defect) {
+	int h = sz(c), w = sz(c[0]);
 
-	vector<vector<int>> seen(h, vector<int>(w));
+	vvi seen(h, vi(w));
 
 	rep(i, h) {
 		rep(j, w) {
-			if (c[i][j] > 0 || seen[i][j]) {
-				continue;
-			}
+			if (c[i][j] > 0 || seen[i][j]) continue;
 
 			// 周辺マスや欠損マスの位置を記録する連想配列
 			set<pii> around, hole;
@@ -295,8 +275,7 @@ void defect_repair(vector<vector<T>>& c, T defect) {
 			q.push({ i, j });
 			while (!q.empty()) {
 				int x, y;
-				tie(x, y) = q.front();
-				q.pop();
+				tie(x, y) = q.front(); q.pop();
 				seen[x][y] = true;
 				hole.insert({ x, y });
 
@@ -309,12 +288,8 @@ void defect_repair(vector<vector<T>>& c, T defect) {
 						continue;
 					}
 
-					if (c[nx][ny] > 0) {
-						around.insert({ nx, ny });
-					}
-					else {
-						q.push({ nx, ny });
-					}
+					if (c[nx][ny] > 0) around.insert({ nx, ny });
+					else q.push({ nx, ny });
 				}
 			}
 

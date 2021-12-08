@@ -48,6 +48,8 @@ ll matrix_chain_multiplication_problem(vl& d) {
 *（区間 DP）
 */
 ll merge_slimes(const vl& c) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_n
+
 	int n = sz(c);
 
 	// acc[i] : 累積和 Σc[0..i)
@@ -301,6 +303,8 @@ int daruma_otoshi(const vi& w, int d) {
 *（区間 DP）
 */
 int iwi(const string& s) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_iwi
+
 	int n = sz(s);
 
 	// dp[l][r] : s[l..r) から取り除ける文字数

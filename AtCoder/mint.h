@@ -94,7 +94,7 @@ struct mint {
 		return res;
 	}
 
-	// 逆元（1/0 は未定義）
+	// 逆元（0^(-1) は未定義）
 	mint inv() const {
 		assert(v != 0);
 		return pow(MOD - 2);

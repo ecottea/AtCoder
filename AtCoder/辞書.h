@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "フェニ木(ACL).h"
+#include "フェニック木(抽象).h"
 #include "探索.h"
 // ■■■■■ 辞書 ■■■■■
 
@@ -55,6 +55,8 @@ struct Dynamic_dictionary {
 
 	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
 	Dynamic_dictionary(int n_, const vi& a) : n(n_) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
 		vi cnt(n);
 		repe(v, a) cnt[v]++;
 		ft = RSQ(cnt);
@@ -64,25 +66,43 @@ struct Dynamic_dictionary {
 	int size() { return ft.prod(0, n); }
 
 	// 要素 v の個数を返す．
-	int count(int v) { return ft.get(v); }
+	int count(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		return ft.get(v);
+	}
 
 	// 値[l..r) をもつ要素の個数を返す．
 	int count(int l, int r) { return ft.prod(l, r); }
 
 	// 要素 v を挿入する．
-	void insert(int v) { ft.apply(v, 1); }
+	void insert(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+	
+		ft.apply(v, 1);
+	}
 
 	// 要素 v を削除する．
-	void erase(int v) { ft.apply(v, -1); }
+	void erase(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+		
+		ft.apply(v, -1);
+	}
 
 	// 昇順で i 番目の要素を返す．
 	int get(int i) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
 		auto f = [&](ll x) { return x <= i; };
 		return ft.max_right(f);
 	}
 
 	// v が昇順で何番目の要素かを返す．
-	int lower_bound(int v) { return ft.prod(0, v); }
+	int lower_bound(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+		
+		return ft.prod(0, v);
+	}
 
 	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, const Dynamic_dictionary& dd) {
@@ -116,8 +136,6 @@ struct Dynamic_dictionary {
 *	区間 [l, r) を削除する．
 */
 struct Interval_dictionary {
-	// verify(get, insert) : https://atcoder.jp/contests/abc228/tasks/abc228_d
-
 	set<pll> lr; // 区間 [l[i], r[i]) の昇順列
 
 	// コンストラクタ（空で初期化）
@@ -128,6 +146,8 @@ struct Interval_dictionary {
 
 	// x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
 	pll get(ll x) {
+		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_d
+
 		auto it = get_iter(x);
 		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
 	}
@@ -356,14 +376,14 @@ struct Wavelet_matrix {
 	unordered_map<ll, int> id; // 値 → 安定ソートが終わったときの最左位置
 	vvl acc; // acc[j] : 第 j ビットについての安定ソート後の a の累積和
 
-	// コンストラクタ（何もしない）
+	// コンストラクタ（初期化なし，多重集合 t で初期化）
 	Wavelet_matrix() : n(0) {}
-
-	// 辞書を多重集合 t で初期化する．
 	Wavelet_matrix(const vl& t)
 		: n(sz(t)), k(msbll(*max_element(all(t))) + 1),
 		bs(k, vb(n)), bs_acc(2, vvi(k, vi(n + 1))), num_zeros(k), acc(k + 1, vl(n + 1))
 	{
+		// verify : https://judge.yosupo.jp/problem/static_range_frequency
+
 		// ビットと組にして安定ソートするためのリスト
 		vector<pair<bool, ll>> bt(n);
 		rep(i, n) {
@@ -430,6 +450,8 @@ struct Wavelet_matrix {
 
 	// a[l..r) に v が何個あるかを返す．
 	int count(int l, int r, ll v) {
+		// verify : https://judge.yosupo.jp/problem/static_range_frequency
+
 		return count_sub(r, v) - count_sub(l, v);
 	}
 
@@ -708,8 +730,6 @@ struct Substring_dictionary {
 * 利用：【めぐる式二分探索】
 */
 struct Outer_sum_dictionary {
-	// varify(lower_bound) : https://algo-method.com/tasks/381
-
 	int n, m;
 	vl a, b, acc_b;
 
@@ -729,6 +749,8 @@ struct Outer_sum_dictionary {
 
 	// S の v 未満の要素の個数を返す．
 	ll lower_bound(ll v) {
+		// varify : https://algo-method.com/tasks/381
+
 		ll cnt = 0;
 		rep(i, n) {
 			auto it = std::lower_bound(all(b), v - a[i]);

@@ -1,0 +1,158 @@
+#pragma once
+#include "header.h"
+// ■■■■■ 行列（抽象代数上） ■■■■■
+
+
+//【行列（半環）】
+/*
+* 半環上の行列を表す構造体
+*
+* Matrix<S, add, o, mul, e>(m, n) : O(m n)
+*	m * n 零行列で初期化する．
+*   成分は半環 <S, add, o, mul, e> の元とする．
+*
+* Matrix<S, add, o, mul, e>(n) : O(n^2)
+*	n * n 単位行列で初期化する．
+*
+* Matrix<S, add, o, mul, e>(a) : O(m n)
+*	配列 a の要素で初期化する．
+*
+* A + B : O(m n)
+*	m * n 行列 A, B の和を返す．+= も使用可．
+*
+* c * A ／ A * c : O(m n)
+*	m * n 行列 A とスカラー c のスカラー積を返す．
+*
+* A * x ／ x * A : O(m n)
+*	行列ベクトル積[ベクトル行列積]を返す．
+*
+* A * B : O(l m n)
+*	l * m 行列 A と m * n 行列 B の積を返す．
+*
+* pow(d) : O(n^3 log d)
+*	自身を d 乗した行列を返す．
+*/
+template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
+struct Matrix {
+	int m, n; // 行列のサイズ（m 行 n 列）
+	vector<vector<S>> v; // 行列の成分
+
+	// コンストラクタ（初期化なし，零行列，単位行列，二次元配列）
+	Matrix() {}
+	Matrix(const int& m_, const int& n_) : m(m_), n(n_), v(m_, vector<S>(n_, o())) {}
+	Matrix(const int& n_) : m(n_), n(n_), v(n_, vector<S>(n_, o())) {
+		rep(i, n) v[i][i] = e();
+	}
+	Matrix(const vector<vector<S>>& a) : m(sz(a)), n(sz(a[0])), v(a) {}
+
+	// 代入
+	Matrix(const Matrix& b) = default;
+	Matrix& operator=(const Matrix& b) = default;
+
+	// 入力
+	friend istream& operator>>(istream& is, Matrix& a) {
+		rep(i, a.m) rep(j, a.n) is >> a.v[i][j];
+		return is;
+	}
+
+	// アクセス
+	vector<S> const& operator[](int i) const { return v[i]; }
+	vector<S>& operator[](int i) { return v[i]; }
+
+	// 比較
+	bool operator==(const Matrix& b) const {
+		return m == b.m && n == b.n && v == b.v;
+	}
+	bool operator!=(const Matrix& b) const { return !(*this == b); }
+
+	// 加算
+	Matrix& operator+=(const Matrix& b) {
+		rep(i, m) rep(j, n) v[i][j] = add(v[i][j], b.v[i][j]);
+		return *this;
+	}
+	Matrix operator+(const Matrix& b) const { Matrix a = *this; return a += b; }
+
+	// 左右からのスカラー倍
+	Matrix operator*(const S& c) const {
+		Matrix res(*this);
+		rep(i, m) rep(j, n) res.v[i][j] = mul(res.v[i][j], c);
+		return res;
+	}
+	friend Matrix operator*(const S& c, const Matrix& a) {
+		Matrix res(a);
+		rep(i, a.m) rep(j, a.n) res.v[i][j] = mul(c, res.v[i][j]);
+		return res;
+	}
+
+	// 行列ベクトル積 : O(m n)
+	vector<S> operator*(const vector<S>& x) const {
+		vector<S> y(m);
+		rep(i, m) rep(j, n)	y[i] = add(y[i], mul(v[i][j], x[j]));
+		return y;
+	}
+
+	// ベクトル行列積 : O(m n)
+	friend vector<S> operator*(const vector<S>& x, const Matrix& a) {
+		vector<S> y(a.n);
+		rep(i, a.m) rep(j, a.n) y[j] = add(y[j], mul(x[i], a.v[i][j]));
+		return y;
+	}
+
+	// 積：O(n^3)
+	Matrix operator*(const Matrix& b) const {
+		Matrix res(m, b.n);
+		rep(i, res.m) rep(j, res.n) rep(k, n)
+			res.v[i][j] = add(res.v[i][j], mul(v[i][k], b.v[k][j]));
+		return res;
+	}
+
+	// 累乗：O(n^3 log d)
+	Matrix pow(ll d) const {
+		// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
+
+		Matrix res(n), pow2(*this);
+		while (d > 0) {
+			if ((d & 1) != 0) res = res * pow2;
+			pow2 = pow2 * pow2;
+			d /= 2;
+		}
+		return res;
+	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Matrix& a) {
+		rep(i, a.m) {
+			rep(j, a.n) os << a.v[i][j] << " ";
+			os << endl;
+		}
+		return os;
+	}
+};
+
+
+//【線形漸化式】O(d^3 log n)
+/*
+* 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
+* 半環 <S, add, o, mul, e> 上の数列 a について，a[n] の値を返す．
+*
+* 利用：【半環上の行列】
+*/
+template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
+S linearly_recurrent_sequence(vector<S> a, const vector<S>& c, ll n) {
+	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
+
+	int d = sz(a);
+
+	// 係数行列を作成する．
+	Matrix<S, add, o, mul, e> mat(d, d);
+	rep(j, d) mat[0][j] = c[j];
+	repi(i, 1, d - 1) mat[i][i - 1] = e();
+
+	// 初項は逆順にしてベクトル化する．
+	reverse(all(a));
+
+	// 行列累乗をし，初項ベクトルに掛けて結果を得る．
+	return (mat.pow(n - 1) * a)[d - 1];
+}
+
+

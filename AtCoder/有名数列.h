@@ -41,6 +41,8 @@ mint fibonacci(ll n) {
 * i 点集合から j 点集合への全射の数を c[i][j] に格納する．
 */
 void count_surjections(int n, int m, vvm& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_C
+
 	//【方法】
 	// c[i][j] : [0, i) から [0, j) への全射の数，についての漸化式を作る．
 	//
@@ -74,6 +76,8 @@ void count_surjections(int n, int m, vvm& c) {
 * 利用：【階乗と二項係数（mint利用）】
 */
 mint count_surjections(int n, int m) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_C
+	
 	//【方法】
 	// 包除原理を用いて数え上げる．
 	//
@@ -88,7 +92,7 @@ mint count_surjections(int n, int m) {
 	//		Σj=0..m (-1)^(m-j) binomial(m, j) j^n 通り
 	// である．
 
-	factorial_mint fm(m);
+	Factorial_mint fm(m);
 
 	mint res = 0;
 	repi(j, 0, m) {
@@ -105,6 +109,8 @@ mint count_surjections(int n, int m) {
 * i 点集合をちょうど j 個に分割する方法の数を c[i][j] に格納する．
 */
 void stirling_S2(int n, vvm& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
+
 	//【方法】
 	// c[i][j] : [0..i) をちょうど j 個に分割する方法の数，についての漸化式を作る．
 	//
@@ -137,6 +143,8 @@ void stirling_S2(int n, vvm& c) {
 * 利用：【階乗と二項係数（mint利用）】
 */
 mint stirling_S2(int n, int k) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
+
 	//【方法】
 	// n 点集合から k 点集合への全射をとれば，
 	// k 点集合の各元の逆像を集めたものが n 点集合の分割となる．
@@ -144,7 +152,7 @@ mint stirling_S2(int n, int k) {
 	// 
 	// なお全射の数は包除原理を用いれば数え上げられる．
 
-	factorial_mint fm(k);
+	Factorial_mint fm(k);
 
 	mint res = 0;
 	repi(j, 1, k) {
@@ -164,6 +172,7 @@ mint stirling_S2(int n, int k) {
 */
 void stirling_S2(int n, vm& s) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E6%95%B0
+	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_second_kind
 
 	//【方法】
 	// 第 2 種スターリング数の一般項は
@@ -173,7 +182,7 @@ void stirling_S2(int n, vm& s) {
 	// と書け，これは畳み込みの形である．
 
 	vm f(n + 1), g(n + 1);
-	factorial_mint fm(n);
+	Factorial_mint fm(n);
 
 	repi(i, 0, n) {
 		f[i] = (i & 1 ? -1 : 1) * fm.fac_inv(i);
@@ -193,6 +202,8 @@ void stirling_S2(int n, vm& s) {
 * c[i][j] は，自然数 i を j 以下の自然数に分割する方法の数とも解釈できる．
 */
 void count_integer_partitions(int n, int m, vvm& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_J
+
 	//【方法 1】
 	// case 1. ちょうど j 個に分割する場合：
 	// j 個の自然数は 1 以上なので，それぞれから 1 を引くことで
@@ -247,6 +258,8 @@ void count_integer_partitions(int n, int m, vvm& c) {
 * 自然数 i を j 以下の自然数に分割する方法の数とも解釈できる．
 */
 void count_limited_integer_partitions(int n, int m, int k, vvm& c) {
+	// verify : https://atcoder.jp/contests/abc221/tasks/abc221_h
+
 	//【方法】
 	// case 1. j 個に分割する場合：
 	// j 個の自然数それぞれから 1 を引くことで，
@@ -324,6 +337,7 @@ void count_maxlimited_integer_partitions(int n, int m, int d, vvvm& c) {
 */
 void partition_function(int n, vm& p) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E5%88%86%E5%89%B2%E6%95%B0
+	// verify : https://judge.yosupo.jp/problem/partition_function
 
 	// pen : 一般五角数の昇順列
 	vi pen;
@@ -356,6 +370,7 @@ void partition_function(int n, vm& p) {
 */
 void montmort_number(int n, vm& m) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E5%AE%8C%E5%85%A8%E9%A0%86%E5%88%97
+	// verify : https://judge.yosupo.jp/problem/montmort_number_mod
 
 	//【方法】
 	// モンモール数は，2 項間漸化式
@@ -377,6 +392,7 @@ void montmort_number(int n, vm& m) {
 */
 void bernoulli(int n, vm& b) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%99%E3%83%AB%E3%83%8C%E3%83%BC%E3%82%A4%E6%95%B0
+	// verify : https://judge.yosupo.jp/problem/bernoulli_number
 
 	//【方法】
 	// ベルヌーイ数 B(n) はそもそも

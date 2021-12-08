@@ -95,6 +95,8 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 */
 template <class T>
 int longest_common_subsequence(const vector<T>& s, const vector<T>& t, vector<T>* lcs = nullptr) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_f
+	
 	// 文字列の長さ
 	int n = sz(s);
 	int m = sz(t);
@@ -117,6 +119,7 @@ int longest_common_subsequence(const vector<T>& s, const vector<T>& t, vector<T>
 	}
 
 	// DP 復元を行い最長共通部分列 lcs を求める．
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_f
 	if (lcs != nullptr) {
 		*lcs = vector<T>(dp[n][m]);
 		int i = n - 1, j = m - 1, pt = dp[n][m] - 1;
@@ -139,6 +142,80 @@ int longest_common_subsequence(const vector<T>& s, const vector<T>& t, vector<T>
 				}
 			}
 		}
+	}
+
+	return dp[n][m];
+}
+
+
+//【レーベンシュタイン距離】O(|s| |t|)
+/*
+* 文字列 s から文字列 t へのレーベンシュタイン距離を返す．
+* また必要なら削除や挿入の位置を '-' で表した文字列を s2, t2 に格納する．
+*
+* dist = {fit, ins, del, sub} :
+*	順に，一致，挿入，削除，置換 1 回あたりの距離
+*
+*（二次元 DP）
+*/
+template <class T>
+ll levenshtein_distance(const vector<T>& s, const vector<T>& t,
+	const tuple<ll, ll, ll, ll>& dist = { 0, 1, 1, 1 },
+	vector<T>* s2 = nullptr, vector<T>* t2 = nullptr)
+{
+	// verify : https://atcoder.jp/contests/genocon2021/tasks/genocon2021_b
+
+	int n = sz(s);
+	int m = sz(t);
+
+	ll fit, ins, del, sub;
+	tie(fit, ins, del, sub) = dist;
+
+	// dp[i][j] : s[0..i) から t[0..j) への距離
+	vvl dp(n + 1, vl(m + 1, INF));
+	dp[0][0] = 0;
+
+	// 貰う DP
+	repi(i, 0, n) {
+		repi(j, 0, m) {
+			// 以下の 3 通りのうちの最大のものを選ぶ：
+			//   s[i - 1] と t[j - 1] を対にする．
+			//   s[i - 1] を削除する．
+			//   t[j - 1] を挿入する．
+			if (i > 0 && j > 0) {
+				chmin(dp[i][j], dp[i - 1][j - 1] + (s[i - 1] == t[j - 1] ? fit : sub));
+			}
+			if (i > 0) {
+				chmin(dp[i][j], dp[i - 1][j] + del);
+			}
+			if (j > 0) {
+				chmin(dp[i][j], dp[i][j - 1] + ins);
+			}
+		}
+	}
+
+	// DP 復元を行う
+	if (s2 != nullptr) {
+		s2->clear();
+		t2->clear();
+
+		int i = n, j = m;
+		while (i > 0 || j > 0) {
+			if (i > 0 && j > 0 && dp[i][j] == dp[i - 1][j - 1] + (s[i - 1] == t[j - 1] ? fit : sub)) {
+				s2->push_back(s[--i]);
+				t2->push_back(t[--j]);
+			}
+			else if (i > 0 && dp[i][j] == dp[i - 1][j] + del) {
+				s2->push_back(s[--i]);
+				t2->push_back('-');
+			}
+			else {
+				s2->push_back('-');
+				t2->push_back(t[--j]);
+			}
+		}
+		reverse(all(*s2));
+		reverse(all(*t2));
 	}
 
 	return dp[n][m];

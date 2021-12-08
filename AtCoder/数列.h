@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "“ñ€ŒW”.h"
-// ¡¡¡¡¡ ”—ñ ¡¡¡¡¡
+// ¡¡¡¡¡ ”—ñC‘Q‰»® ¡¡¡¡¡
 
 
 //y“™·”—ñ‚Ì˜azO(1)
@@ -91,7 +91,7 @@ mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
 /*
 * ƒ°i=[0..‡) i^d r^i ‚Ì’l‚ğ•Ô‚·D
 *
-* §–ñ : r ‚ 1, d < 4 ~ 10^6
+* §–ñ : r ‚ 1, d < 4 * 10^6
 *
 * —˜—pFyŠKæ‚Æ“ñ€ŒW”imint—˜—pjz
 */
@@ -101,7 +101,7 @@ mint powered_geometric_series(mint r, int d) {
 	vm f(d + 1);
 	repi(i, 0, d) f[i] = mint(i).pow(d);
 
-	factorial_mint fm(d + 1);
+	Factorial_mint fm(d + 1);
 	vm g(d + 1);
 	repi(i, 0, d) g[i] = (i & 1 ? -1 : 1) * fm.binomial(d + 1, i);
 

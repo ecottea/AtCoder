@@ -5,14 +5,14 @@
 
 //【可換環】
 /*
-* 可換環 (S, add, o, mins, mul, e) を表す．
+* 可換環 (S, add, o, mi, mul, e) を表す．
 * （add は + を，mins は - を，mul は * をオーバーロードする）
 *
-* すなわち，(S, add, o, mins) がアーベル群，(S, mul, e) が可換モノイドで，
+* すなわち，(S, add, o, mi) がアーベル群，(S, mul, e) が可換モノイドで，
 *	分配律 : ∀a, b, c ∈ S， a(b + c) = a b + a c, (a + b)c = a c + b c
 * を満たすものとする．
 */
-template <class S, S(*add)(S, S), S(*o_)(), S(*mins)(S), S(*mul)(S, S), S(*e_)()>
+template <class S, S(*add)(S, S), S(*o_)(), S(*mi)(S), S(*mul)(S, S), S(*e_)()>
 struct CRing {
 	S v;
 
@@ -37,7 +37,7 @@ struct CRing {
 	CRing operator+(const CRing& a) const { return CRing(*this) += a; }
 
 	// マイナス元
-	CRing operator-() const { return mins(v); }
+	CRing operator-() const { return mi(v); }
 
 	// 差
 	CRing& operator-=(const CRing& a) { return *this += -a; }
@@ -68,19 +68,19 @@ struct CRing {
 using S1 = ll;
 S1 add(S1 x, S1 y) { return x + y; }
 S1 o1() { return 0; }
-S1 mins(S1 x) { return -x; }
+S1 mi(S1 x) { return -x; }
 S1 mul(S1 x, S1 y) { return x * y; }
 S1 e1() { return 1; }
-using T = CRing<S1, add, o1, mins, mul, e1>;
+using T = CRing<S1, add, o1, mi, mul, e1>;
 
 
 //【xor - and 可換環】
 using S2 = unsigned int;
 S2 add(S2 x, S2 y) { return x ^ y; }
 S2 o2() { return 0; }
-S2 mins(S2 x) { return x; }
+S2 mi(S2 x) { return x; }
 S2 mul(S2 x, S2 y) { return x & y; }
 S2 e2() { return ~0; }
-using T = CRing<S2, add, o2, mins, mul, e2>;
+using T = CRing<S2, add, o2, mi, mul, e2>;
 
 

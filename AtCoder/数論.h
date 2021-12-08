@@ -271,49 +271,6 @@ ll legendre(ll n, ll p) {
 }
 
 
-//【互いに素な数の個数】O(√a + 2^m)（m : a の素因数の種類数）
-/*
-* l 以上 r 以下の整数のうち、a と互いに素な数の個数を返す．
-*
-* 利用：【素因数分解】
-*/
-ll count_coprime(ll a, ll l, ll r) {
-	// a と互いに素 ⇔ a の各素因数で割り切れない，なので a を素因数分解する．
-	map<ll, int> pps;
-	factor_integer(a, pps);
-
-	// a の素因数だけのリスト p を作る．（個数は使わない）
-	vl p;
-	repe(s, pps) p.push_back(s.first);
-	int m = sz(p);
-
-	// 包除原理を用いて数え上げる．
-	// 例えば，6 と互いに素な数の個数は，
-	//		1 の倍数を全て数え，そこから 2 の倍数の個数を引き，
-	//		さらに 3 の倍数の個数を引き，引きすぎた 6 の倍数の個数を足す
-	// ことにより数えることができる．
-	ll res = 0;
-	rep(bit, 1 << m) {
-		// mul の倍数を考える．
-		ll mul = 1;
-
-		// mul が何個の素因数の積か．
-		int ones = 0;
-
-		rep(i, m) {
-			if (bit & (1 << i)) {
-				mul *= p[i];
-				ones++;
-			}
-		}
-
-		// 素因数の個数の偶奇で加減を切り替えつつ個数を数えていく．
-		res += ((ones % 2) ? -1 : 1) * (r / mul - (l - 1) / mul);
-	}
-	return res;
-}
-
-
 //【素数計数関数】O(n^(3/4))
 /*
 * n 以下の素数の個数 π(n) を返す．
@@ -322,6 +279,7 @@ ll count_coprime(ll a, ll l, ll r) {
 */
 ll prime_pi(ll n) {
 	// 参考 : https://rsk0315.hatenablog.com/entry/2021/05/18/015511
+	// verify : https://judge.yosupo.jp/problem/counting_primes
 
 	if (n <= 1) return 0;
 

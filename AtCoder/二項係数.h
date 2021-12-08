@@ -7,7 +7,7 @@
 /*
 * 十分大きな素数を法として，階乗，その逆数，二項係数を計算する．
 *
-* factorial_mint(n) : O(n)
+* Factorial_mint(n) : O(n)
 *	n! までの階乗とその逆数を前計算する．
 *
 * fac(n) : O(1)
@@ -20,7 +20,7 @@
 *	1 / n を返す．
 *
 * permutation(n, r) : O(1)
-*	順列の数 permutation を返す．
+*	順列の数 nPr を返す．
 *
 * binomial(n, r) : O(1)
 *	二項係数 nCr を返す．
@@ -28,13 +28,13 @@
 * multinomial(r) : O(|r|)
 *	多項係数 nC[r] を返す．（n = Σr）
 */
-struct factorial_mint {
+struct Factorial_mint {
 	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_;
 	vm fac_, fac_inv_, inv_;
 
 	// n! までの階乗とその逆数を前計算しておく．O(n)
-	factorial_mint(int n) : n_(n) {
+	Factorial_mint(int n) : n_(n) {
 		fac_ = vm(n + 1);
 		fac_[0] = 1;
 		repi(i, 1, n) fac_[i] = fac_[i - 1] * i;
@@ -57,7 +57,7 @@ struct factorial_mint {
 	// 1 / n を返す．O(1)
 	mint inv(int n) const { assert(n != 0 && n <= n_); return inv_[n]; }
 
-	// 順列の数 permutation を返す．O(1)
+	// 順列の数 nPr を返す．O(1)
 	mint permutation(int n, int r) const {
 		assert(n <= n_);
 
@@ -90,7 +90,7 @@ struct factorial_mint {
 /*
 * 小さな素数 p を法とし，階乗と二項係数を計算する．
 *
-* factorial_mod(p) : O(p)
+* Factorial_mod(p) : O(p)
 *	(p-1)! までの階乗を法を p として前計算する．
 *
 * fac(n) : O(n log n)
@@ -102,7 +102,7 @@ struct factorial_mint {
 * binomial(n, r) : O(n log n log p)
 *	nCr mod p を返す．
 */
-struct factorial_mod {
+struct Factorial_mod {
 	int p; // 利用する法（素数）
 
 	// 階乗とその逆数の値を保持するテーブル
@@ -113,7 +113,7 @@ struct factorial_mod {
 	vector<mint_p> fac_;
 
 	// (p-1)! までの階乗を法を p として前計算しておく．
-	factorial_mod(int p_) : p(p_) {
+	Factorial_mod(int p_) : p(p_) {
 		mint_p::set_mod(p);
 
 		fac_ = vector<mint_p>(p);
@@ -173,6 +173,21 @@ struct factorial_mod {
 };
 
 
+//【階乗】O(n)
+/*
+* 愚直に階乗 n! を計算する．
+*/
+ll fac(int n) {
+	ll val = 1;
+
+	repi(i, 1, n) {
+		val *= i;
+	}
+
+	return val;
+}
+
+
 //【二項係数】O(min(r, n-r))
 /*
 * 愚直に二項係数 nCr を計算する．
@@ -189,21 +204,6 @@ template <class T> T binomial(ll n, ll r) {
 		val *= n - i;
 		val /= i + 1;
 	}
-	return val;
-}
-
-
-//【階乗】O(n)
-/*
-* 愚直に階乗 n! を計算する．
-*/
-ll fac(int n) {
-	ll val = 1;
-
-	repi(i, 1, n) {
-		val *= i;
-	}
-
 	return val;
 }
 

@@ -25,6 +25,7 @@ struct Nimber {
 	// cnt[v] : ニム値 v をもつ局面の数
 	map<int, int> cnt;
 
+	// コンストラクタ（空で初期化）
 	Nimber() {}
 
 	// ニム値 v をもつ局面を 1 つ追加する．
@@ -33,19 +34,13 @@ struct Nimber {
 		cnt[v]++;
 
 		// 既にニム値 v の局面があったならば区間に変更はない．
-		if (cnt[v] > 1) {
-			return;
-		}
+		if (cnt[v] > 1) return;
 
 		// v がその左右の区間と結合するかを調べる．
 		bool ljoin = false, rjoin = false;
 		auto it = lrs.upper_bound({ v, v });
-		if (it != lrs.begin() && prev(it)->second == v - 1) {
-			ljoin = true;
-		}
-		if (it != lrs.end() && it->first == v + 1) {
-			rjoin = true;
-		}
+		if (it != lrs.begin() && prev(it)->second == v - 1) ljoin = true;
+		if (it != lrs.end() && it->first == v + 1) rjoin = true;
 
 		// 区間の結合の仕方に応じて区間を削除，追加する．
 		if (ljoin) {
@@ -76,36 +71,26 @@ struct Nimber {
 	// ニム値 v をもつ局面を 1 つ削除する．
 	void erase(int v) {
 		// ニム値 v をもつ局面がなければ何もしない．
-		if (cnt[v] == 0) {
-			return;
-		}
+		if (cnt[v] == 0) return;
 
 		// ニム値 v の局面数を 1 減らす．
 		cnt[v]--;
 
 		// まだニム値 v の局面があるならば区間に変更はない．
-		if (cnt[v] >= 1) {
-			return;
-		}
+		if (cnt[v] >= 1) return;
 
 		// v でその左右の区間が分断されるかに応じて区間を削除，追加する．
 		auto it = prev(lrs.upper_bound({ v, INF }));
 		int l, r;
 		tie(l, r) = *it;
 		lrs.erase(it);
-		if (l < v) {
-			lrs.insert({ l, v - 1 });
-		}
-		if (r > v) {
-			lrs.insert({ v + 1, r });
-		}
+		if (l < v) lrs.insert({ l, v - 1 });
+		if (r > v) lrs.insert({ v + 1, r });
 	}
 
 	// 現在記録されている局面のニム値の最小除外数を返す．
 	int mex() {
-		if (lrs.empty() || lrs.begin()->first > 0) {
-			return 0;
-		}
+		if (lrs.empty() || lrs.begin()->first > 0) return 0;
 		return lrs.begin()->second + 1;
 	}
 };
@@ -140,10 +125,38 @@ void range_mex(const vi& c, vi& nimber) {
 }
 
 
+//【個数制限付きニム】O(n m)
+/*
+* 山から取り除ける石の個数が c[0..m) に限られるルールのニムについて，
+* i（<= n）個の石からなる山のニム値を nimber[i] に格納する．
+*/
+void selection_nim(const vi& c, int n, vi& nimber) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_k
+
+	int m = sz(c);
+	nimber.resize(n + 1);
+
+	nimber[0] = 0;
+	repi(i, 1, n) {
+		// bucket[i] : ニム値 i をもつ局面に遷移可能か
+		vb bucket(m + 1);
+
+		// 局面 i から遷移可能な局面のニム値を記録する．
+		rep(j, m) {
+			if (i - c[j] >= 0) bucket[nimber[i - c[j]]] = true;
+		}
+
+		// 記録された局面のニム値の mex を求める．
+		nimber[i] = 0;
+		while (bucket[nimber[i]]) nimber[i]++;
+	}
+}
+
+	
 // 【正規型不偏ゲーム】O((|V| + |E|) log|V|)　
 /*
 * ゲームのルール：
-* 有向非巡回グラフ g のある頂点 v にコマが置かれている．
+* DAG g のある頂点 v にコマが置かれている．
 * 先手と後手は交互にコマを辺で繋がれた頂点のいずれかへ動かす．
 * 先に移動不可能になった方が負けとする．
 *
@@ -182,11 +195,13 @@ void impartial_game(Graph& g, vi& nimber) {
 * 先手と後手は交互にコマを辺で繋がれた頂点のいずれかへ動かす．
 * 先に移動不可能になった方が負けとする．
 *
-* res[v] : v にコマがある状態からの結果（1:先手勝ち，0:先手負け，-1:引き分け）
+* res[v] : v にコマがある状態からの結果（1:先手勝ち，0:後手勝ち，-1:引き分け）
 *
 *（後退解析）
 */
 void cyclic_impartial_game(Graph& g, vi& res) {
+	// verify : https://atcoder.jp/contests/abc209/tasks/abc209_e
+
 	int n = sz(g);
 
 	// 辺の向きを逆にしたグラフを作成
@@ -197,7 +212,7 @@ void cyclic_impartial_game(Graph& g, vi& res) {
 		}
 	}
 
-	// res[i] : 局面 i の勝敗（1:勝ち，0:負け，-1:引き分け）
+	// res[i] : 先手番で局面 i のときの勝敗（1:勝ち，0:負け，-1:引き分け）
 	const int WIN = 1, LOSE = 0, DRAW = -1;
 	res = vi(n, DRAW);
 
@@ -218,19 +233,15 @@ void cyclic_impartial_game(Graph& g, vi& res) {
 		}
 	}
 
-	// 後退解析を行う．
-	// 勝敗が確定する局面がある限り処理を行う．
+	// 後退解析を行う．勝敗が確定する局面がある限り処理を行う．
 	while (!q.empty()) {
 		// 勝敗が確定している局面 t を得る．
-		auto t = q.front();
-		q.pop();
+		auto t = q.front(); q.pop();
 
 		// t に遷移できる各局面 s について処理を行う．
 		repe(s, g_rev[t]) {
 			// 既に勝ちが決まっている局面なら何もしない．
-			if (res[s] == WIN) {
-				continue;
-			}
+			if (res[s] == WIN) continue;
 
 			// 相手に負け局面を押し付けられるなら他の局面を調べるまでもなく勝ち．
 			if (res[t] == LOSE) {
@@ -249,7 +260,6 @@ void cyclic_impartial_game(Graph& g, vi& res) {
 			}
 		}
 	}
-
 	// 後退解析が終わっても勝敗が決定されていない局面は全て引き分け．
 }
 

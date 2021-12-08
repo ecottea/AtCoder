@@ -14,6 +14,8 @@
 *（平面走査）
 */
 ll count_intersection(vector<tuple<ll, ll, ll, ll>>& segs) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_6_A
+
 	int n = sz(segs);
 
 	// 各線分が x1 <= x2, y1 <= y2 を満たすようにしつつ，x1 ごとに昇順に記録する．

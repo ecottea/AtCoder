@@ -163,7 +163,7 @@ mint lcm_sum(const vi& a, const vi& b) {
 	GCD_convolution<mint> g(K);
 	auto c = g.convolution_gcd(a_cnt, b_cnt);
 
-	factorial_mint fm(K);
+	Factorial_mint fm(K);
 	mint res = 0;
 	repi(k, 1, K) res += c[k] * fm.inv(k);
 

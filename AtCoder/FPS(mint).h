@@ -196,6 +196,7 @@ struct FPS {
 	// 除算
 	FPS inv(int d) const {
 		// 参考：https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
+		// verify : https://judge.yosupo.jp/problem/inv_of_formal_power_series
 
 		//【方法】
 		// 1 / f mod x^d を求めることは，
@@ -263,6 +264,8 @@ struct FPS {
 	}
 	FPS reminder(const FPS& g) const { return (*this - this->quotient(g) * g).resize(g.n - 1); }
 	pair<FPS, FPS> quotient_remainder(const FPS& g) const {
+		// verify : https://judge.yosupo.jp/problem/division_of_polynomials
+
 		pair<FPS, FPS> res;
 		res.first = this->quotient(g);
 		res.second = (*this - res.first * g).resize(g.n - 1);
@@ -408,6 +411,7 @@ struct FPS {
 	// 対数関数
 	friend FPS log(const FPS& f, int d) {
 		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+		// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
 
 		return integral((derivative(f) * f.inv(d - 1)).resize(d - 1));
 	}
@@ -415,6 +419,7 @@ struct FPS {
 	// 指数関数
 	friend FPS exp(const FPS& f, int d) {
 		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+		// verify : https://judge.yosupo.jp/problem/exp_of_formal_power_series
 
 		//【方法】
 		// g(x) = exp(f(x)) とおき，方程式
@@ -450,6 +455,7 @@ struct FPS {
 	// 累乗
 	FPS pow(ll k, int d) const {
 		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+		// verify : https://judge.yosupo.jp/problem/pow_of_formal_power_series
 
 		// 最低次の項を見つける．
 		int i0 = 0;
@@ -499,6 +505,7 @@ struct FPS {
 */
 FPS sqrt(const FPS& f, int d, bool& find) {
 	// 参考 : https://nyaannyaan.github.io/library/fps/fps-sqrt.hpp
+	// verify : https://judge.yosupo.jp/problem/sqrt_of_formal_power_series
 
 	//【方法】
 	// √(x^2 f(x)) = x √f(x) なので f(0) が平方剰余として一般性を失わない．
@@ -569,6 +576,7 @@ FPS sqrt(const FPS& f, int d, bool& find) {
 */
 mint coef(const FPS& f, const FPS& g, ll d) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_fibonacci
 
 	//【方法】
 	// 分母分子に g(-x) を掛けることにより
@@ -637,6 +645,8 @@ mint coef(const FPS& f, const FPS& g, ll d) {
 * 利用：【展開係数／ボスタン－森法】
 */
 mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
+	// verify : https://judge.yosupo.jp/problem/kth_term_of_linearly_recurrent_sequence
+
 	int d = sz(a);
 
 	FPS A(a), C(c);
@@ -654,8 +664,9 @@ mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 *
 * 利用：【階乗と二項係数（mint利用）】
 */
-FPS taylor_shift(const FPS& f, mint c, const factorial_mint& fm) {
+FPS taylor_shift(const FPS& f, mint c, const Factorial_mint& fm) {
 	// 参考 : https://nyaannyaan.github.io/library/fps/taylor-shift.hpp.html
+	// verify : https://judge.yosupo.jp/problem/polynomial_taylor_shift
 
 	//【方法】
 	//	f(x) = Σn=[0..N] f[n] x^n
@@ -724,6 +735,7 @@ FPS expand(const vm& x) {
 */
 void multipoint_evaluation(const FPS& f, const vm& x, vm& y) {
 	// 参考 : https://37zigen.com/multipoint-evaluation/
+	// verify : https://judge.yosupo.jp/problem/multipoint_evaluation
 
 	int m = sz(x);
 	y = vm(m);
@@ -785,7 +797,7 @@ mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 	repir(i, n - 2, 0) acc_r[i] = (c - (mint(a) * (i + 1) - b)) * acc_r[i + 1];
 
 	// ラグランジュ基底の線形結合を計算する．
-	factorial_mint fm(n);
+	Factorial_mint fm(n);
 	mint res = 0;
 	rep(i, n) {
 		res += y[i] * acc_l[i] * acc_r[i] * ((n - 1 - i) & 1 ? -1 : 1)
@@ -803,6 +815,7 @@ mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 */
 FPS lagrange_interpolation(const vm& x, const vm& y) {
 	// 参考 : https://37zigen.com/lagrange-interpolation/
+	// verify : https://judge.yosupo.jp/problem/polynomial_interpolation
 
 	//【方法】
 	// ラグランジュ補間の通常の式は，基底関数の線形和の形をした
@@ -857,7 +870,9 @@ FPS lagrange_interpolation(const vm& x, const vm& y) {
 *
 * 利用：【階乗と二項係数（mint利用）】，【平行移動】
 */
-FPS falling_factorial(int n, const factorial_mint& fm) {
+FPS falling_factorial(int n, const Factorial_mint& fm) {
+	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind
+
 	//【方法】
 	// 累乗をダブリングで計算するのと同様．
 	// ただし同じものを掛けるのではなく平行移動したものを掛ける．

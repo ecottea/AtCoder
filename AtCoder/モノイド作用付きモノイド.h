@@ -18,6 +18,8 @@
 template <class S_, S_(*op)(S_, S_), S_(*e_)(),
 	class F_, S_(*mapping)(F_, S_), F_(*composition)(F_, F_), F_(*id_)()>
 struct MLop_Monoid {
+	// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+
 	struct S {
 		S_ v;
 
@@ -105,11 +107,11 @@ using T = MLop_Monoid<S1, op, e1, F1, mapping, composition, id1>;
 
 //【変更 作用付き 左変更 モノイド】
 using S2 = int;
-S2 op(S2 x, S2 y) { return x; }
+S2 op(S2 x, S2 y) { return x == e2() ? y : x; }
 S2 e2() { return INF; } // 使わない値なら何でも OK
 using F2 = int;
-S2 mapping(F2 f, S2 x) { return f; }
-F2 composition(F2 f, F2 g) { return f; }
+S2 mapping(F2 f, S2 x) { return f == id2() ? x : f; }
+F2 composition(F2 f, F2 g) { return f == id2() ? g : f; }
 F2 id2() { return INF; } // 使わない値なら何でも OK
 using T = MLop_Monoid<S2, op, e2, F2, mapping, composition, id2>;
 
@@ -119,8 +121,8 @@ using S3 = int;
 S3 op(S3 x, S3 y) { return max(x, y); }
 S3 e3() { return -INF; }
 using F3 = int;
-S3 mapping(F3 f, S3 x) { return f; }
-F3 composition(F3 f, F3 g) { return f; }
+S3 mapping(F3 f, S3 x) { return f == id3() ? x : f; }
+F3 composition(F3 f, F3 g) { return f == id3() ? g : f; }
 F3 id3() { return INF; } // 使わない値なら何でも OK
 using T = MLop_Monoid<S3, op, e3, F3, mapping, composition, id3>;
 
@@ -130,13 +132,14 @@ using S4 = int;
 S4 op(S4 x, S4 y) { return min(x, y); }
 S4 e4() { return INF; }
 using F4 = int;
-S4 mapping(F4 f, S4 x) { return f; }
-F4 composition(F4 f, F4 g) { return f; }
+S4 mapping(F4 f, S4 x) { return f == id4() ? x : f; }
+F4 composition(F4 f, F4 g) { return f == id4() ? g : f; }
 F4 id4() { return INF; } // 使わない値なら何でも OK
 using T = MLop_Monoid<S4, op, e4, F4, mapping, composition, id4>;
 
 
 //【加算 作用付き max モノイド】
+// verify : https://atcoder.jp/contests/joi2010ho/tasks/joi2010ho_e
 using S5 = int;
 S5 op(S5 x, S5 y) { return max(x, y); }
 S5 e5() { return -INF; }
@@ -166,6 +169,7 @@ using T = MLop_Monoid<S6, op, e6, F6, mapping, composition, id6>;
 * f mapping x : c 個の元の和で値 f(v) をとっている状態にする．
 * f composition g : 合成した一次関数 f o g を返す．
 */
+// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 using S7 = pair<mint, mint>; // 斉次ベクトル (v, c)
 using F7 = pair<mint, mint>; // 斉次行列 (a, b; 0, 1)
 S7 op(S7 x, S7 y) {
@@ -305,5 +309,50 @@ F11 composition(F11 f, F11 g) {
 }
 F11 id11() { return { 0, -INFL }; }
 using T = MLop_Monoid<S11, op, e11, F11, mapping, composition, id11>;
+
+
+//【ビット列上 xor 作用付き 転倒数 モノイド】
+/*
+* S ∋ x = {inv, c0, c1} : 列 x の転倒数，0 の個数，1 の個数の組
+* F ∋ f : f との xor をとる作用を表す
+* x op y : 列 x, y を連結した列
+* f mapping x : 列 x の各要素と f との xor をとった列
+* f composition g : f xor g
+*/
+// verify : https://atcoder.jp/contests/practice2/tasks/practice2_l
+using S12 = tuple<ll, ll, ll>;
+using F12 = bool;
+S12 op(S12 x, S12 y) {
+	ll x_inv, y_inv, x_c0, x_c1, y_c0, y_c1;
+	tie(x_inv, x_c0, x_c1) = x;
+	tie(y_inv, y_c0, y_c1) = y;
+
+	// まず x, y それぞれをソートするのに x_inv + y_inv 回の隣接互換が必要．
+	// その後 x の右側に寄った x_c1 個の 1 と y の左側に寄った y_c0 個の 0 を
+	// 交換するのに x_c1 * y_c0 回の隣接互換が必要．
+	ll inv = x_inv + y_inv + x_c1 * y_c0;
+	ll c0 = x_c0 + y_c0, c1 = x_c1 + y_c1;
+
+	return { inv, c0, c1 };
+}
+S12 e12() { return { 0LL, 0, 0 }; }
+S12 mapping(F12 f, S12 x) {
+	if (!f) return x;
+
+	ll inv, c0, c1;
+	tie(inv, c0, c1) = x;
+
+	// 0 と 1 の組は全部で c0 * c1 個存在する．
+	// そのうち inv 個が転倒していたのだから，転倒していないのは c0 * c1 - inv 個である．
+	// ビット反転するとこれらが入れ替わるので，転倒数は c0 * c1 - inv になる．
+	inv = c0 * c1 - inv;
+
+	return { inv, c1, c0 };
+}
+F12 composition(F12 f, F12 g) {
+	return f ^ g;
+}
+F12 id12() { return false; }
+using T = MLop_Monoid<S12, op, e12, F12, mapping, composition, id12>;
 
 

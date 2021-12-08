@@ -1,9 +1,9 @@
 #pragma once
 #include "header.h"
-// ■■■■■ [遅延評価]フェニック木（ACL の模倣） ■■■■■
+// ■■■■■ [遅延評価]フェニック木（抽象代数上） ■■■■■
 
 
-//【フェニック木】
+//【フェニック木（アーベル群）】
 /*
 * Fenwick_tree(n) : O(n)
 *	要素数 n かつ初期値 e で初期化する．
@@ -38,7 +38,6 @@ struct Fenwick_tree {
 	// v[i] : op( [*..i] ) の値（i ： 1-indexed，v[0] は使わない）
 	vector<S> v;
 
-
 	// コンストラクタ（初期化なし）
 	Fenwick_tree() {}
 
@@ -47,6 +46,8 @@ struct Fenwick_tree {
 
 	// 配列 a で初期化
 	Fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(n) {
+		//verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
 		// 配列の値を仮登録する．
 		rep(i, n - 1) {
 			v[i + 1] = v_[i];
@@ -59,7 +60,6 @@ struct Fenwick_tree {
 			}
 		}
 	}
-
 
 	// v[i] = x とする．（i : 0-indexed）
 	void set(int i, S x) {
@@ -76,6 +76,8 @@ struct Fenwick_tree {
 
 	// op( v[l..r) ) を返す．空なら e を返す．（l, r : 0-indexed）
 	S prod(int l, int r) const {
+		//verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
 		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
@@ -98,6 +100,8 @@ struct Fenwick_tree {
 
 	// v[i] = op(v[i], x) とする．（i : 0-indexed）
 	void apply(int i, S x) {
+		//verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
 		// i を 1-indexed に直す．
 		i++;
 
@@ -137,7 +141,7 @@ struct Fenwick_tree {
 };
 
 
-//【遅延評価フェニック木】
+//【遅延評価フェニック木（Z 加群）】
 /*
 * Lazy_fenwick_tree(n) : O(n)
 *	要素数 n かつ初期値 e で初期化する．
@@ -284,7 +288,7 @@ template <class T> T mul8(T f, int i) { return f * i; }
 template <class T> using RASQ = Lazy_fenwick_tree<T, op8<T>, e8<T>, inv8<T>, mul8<T>>;
 
 
-//【二次元フェニック木】
+//【二次元フェニック木（アーベル群）】
 /*
 * Fenwick_tree_2d(n) : O(h w)
 *	要素数 h * w かつ初期値 e で初期化する．
@@ -414,6 +418,45 @@ struct Fenwick_tree_2d {
 			cout << "\n";
 		}
 		return os;
+	}
+};
+
+
+//【フェニック木（ACL 仕様）】
+/*
+* fenwick_tree(n) : O(n)
+*	要素数 n かつ初期値 0 で初期化する．
+*
+* add(p, val) : O(log n)
+*	v[p] に val を加算する．
+*
+* sum(l, r) : O(log n)
+*	半開区間 [l, r) の要素の総和を返す．
+*/
+template <class T> struct fenwick_tree {
+	int n;
+	vector<T> v;
+
+	fenwick_tree() {}
+	fenwick_tree(int n_) : n(n_ + 1), v(n) {}
+	void add(int p, T val) {
+		p++;
+		while (p < n) {
+			v[p] += val;
+			p += p & -p;
+		}
+	}
+	T sum(int r) {
+		T res = 0;
+		while (r > 0) {
+			res += v[r];
+			r -= r & -r;
+		}
+		return res;
+	}
+
+	T sum(int l, int r) {
+		return sum(r) - sum(l);
 	}
 };
 

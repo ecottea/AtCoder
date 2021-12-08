@@ -1,21 +1,21 @@
 #pragma once
 #include "header.h"
 #include "構造(木).h"
-#include "フェニック木.h"
+#include "フェニック木(抽象).h"
 // ■■■■■ 木のクエリ処理 ■■■■■
 
 
-
-//【根付き木のオイラーツアー】O(|V|)
+//【根付き木のオイラーツアー】O(n)
 /*
 * 根付き木 rt のオイラーツアーを求める．
 *
 * in[s] : 最初に頂点 s を訪れた時刻（根なら 0）
-* out[s] : 最後に頂点 s から離れた時刻（根なら 2 |V| - 1）
-* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 |V| - 1）
+* out[s] : 最後に頂点 s から離れた時刻（根なら 2 n - 1）
+* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 n - 1）
 */
-template <class TREE>
-void euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
+template <class TREE> void euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
+
 	int n = sz(rt);
 
 	int time = 0;
@@ -47,13 +47,13 @@ void euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
 /*
 * 与えられた根付き木について，頂点対の最小共通祖先を求める．
 *
-* Lowest_common_ancestor(rt) : O(|V|)
+* Lowest_common_ancestor(rt) : O(n)
 *	根付き木 rt で初期化する．
 *
-* lca(u, v) : O(log |V|)
+* lca(u, v) : O(log n)
 *	頂点 u, v の最小共通祖先を返す．
 *
-* dist(u, v) : O(log |V|)
+* dist(u, v) : O(log n)
 *	頂点 u, v の距離を返す．
 *
 * 利用：【根付き木のオイラーツアー】
@@ -61,6 +61,8 @@ void euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
 pli op1(pli a, pli b) { return min(a, b); }
 pli e1() { return { INFL, -1 }; }
 template <class TREE> struct Lowest_common_ancestor {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
+
 	TREE rt;
 
 	// オイラーツアーの結果の記録用
@@ -73,7 +75,7 @@ template <class TREE> struct Lowest_common_ancestor {
 	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
 	segtree<pli, op1, e1> seg;
 
-	// コンストラクタ（根付き木で初期化）：O(|V|)
+	// コンストラクタ（根付き木で初期化）：O(n)
 	Lowest_common_ancestor(TREE& rt_) : rt(rt_) {
 		// オイラーツアーを求めておく．
 		euler_tour(rt, in, out, pos);
@@ -110,62 +112,22 @@ template <class TREE> struct Lowest_common_ancestor {
 };
 
 
-//【木のオイラーツアー】O(|V|)
-/*
-* 頂点 r を始点とする木 g のオイラーツアーを求める．
-*
-* in[v] : 最初に頂点 v を訪れた時刻（r なら 0）
-* out[v] : 最後に頂点 v から離れた時刻（r なら 2 |V| - 1）
-* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 |V| - 1）
-*/
-template <class G>
-void euler_tour(G& g, int r, vi& in, vi& out, vi& pos) {
-	// 参考 : https://qiita.com/recuraki/items/72e37eb9be9f71bc623a
-
-	int n = sz(g);
-
-	int time = 0;
-	in = vi(n);
-	out = vi(n);
-	pos = vi(2 * n - 1);
-
-	// 再帰用の関数
-	function<void(int, int)> rf = [&](int s, int p) {
-		// s を最初に訪れた
-		in[s] = time;
-		pos[time++] = s;
-
-		for (auto t : g[s]) {
-			if (t == p) continue;
-
-			rf(t, s);
-			pos[time++] = s;
-		}
-
-		// s から最後に離れる
-		out[s] = time;
-	};
-
-	// 根から順に探索する．
-	rf(r, -1);
-}
-
-
 //【辺加算／根からのパス総和クエリ】
 /*
-* Path_sum_query(g, r) : O(|V|)
-*	木 g を根を r とみなして初期化する．
+* Path_sum_query(rt) : O(n)
+*	根付き木 rt と辺の重みの初期値 0 で初期化する．
 *
-* add(v, val) : O(log|V|)
+* add(v, val) : O(log n)
 *	頂点 v を子とする辺に val を加算する．
 *
-* sum(v) : O(log|V|)
+* sum(v) : O(log n)
 *	根 r から v までの辺の値の和を返す．
 *
 * 利用：【木のオイラーツアー】
 */
 template <class T> struct Path_sum_query {
 	// 参考：https://perogram.hateblo.jp/entry/2020/10/01/034136
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
 
 	// オイラーツアーの結果の記録用
 	// in[v] : v に最初に入った時刻
@@ -177,12 +139,12 @@ template <class T> struct Path_sum_query {
 	fenwick_tree<T> ft;
 
 	// コンストラクタ（木と根で初期化）
-	Path_sum_query(Graph& g, int r) {
+	Path_sum_query(const Rooted_tree& rt) {
 		// オイラーツアーを求めておく．
 		vi pos;
-		euler_tour(g, r, in, out, pos);
+		euler_tour(rt, in, out, pos);
 
-		ft = fenwick_tree<T>(2 * sz(g));
+		ft = fenwick_tree<T>(2 * sz(rt));
 	}
 
 	// 頂点 v を子とする辺に val を加算する．
@@ -197,13 +159,13 @@ template <class T> struct Path_sum_query {
 };
 
 
-//【根付き木の HL 分解】O(|V|)
+//【根付き木の HL 分解】O(n)
 /*
 * 根付き木 rt の HL 分解を行う．
 *
 * in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-* out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら |V|）
-* pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ |V|）
+* out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
+* pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
 * top[s] : 頂点 s を含む連結成分の最も浅い頂点
 */
 template <class TREE>
@@ -251,43 +213,45 @@ void heavy_light_decomposition(TREE& rt, vi& in, vi& out, vi& pos, vi& top) {
 }
 
 
-//【木の辺への加算／木の辺の総和クエリ】
+//【辺加算／総和クエリ】
 /*
-* Tree_edge_add_sum_query(rt) : O(|V|)
+* Tree_edge_add_sum_query(rt) : O(n)
 *	コスト付き根付き木 rt で初期化する．
 *
-* set(v, val) : O(log |V|)
+* Tree_edge_add_sum_query(rt, c) : O(n)
+*	根付き木 rt と初期コスト c で初期化する．
+*
+* set(v, val) : O(log n)
 *	頂点 v への v の親からの辺の値を val にする．
 *
-* get(v) : O(log |V|)
+* get(v) : O(log n)
 *	頂点 v への v の親からの辺の値を返す．
 *
-* add(v, val) : O(log |V|)
+* add(v, val) : O(log n)
 *	頂点 v の部分木の辺に val を加算する．
 *
-* add(v1, v2, val) : O((log |V|)^2)
+* add(v1, v2, val) : O((log n)^2)
 *	頂点 v1 から v2 までの辺に val を加算する．
 *
-* sum(v) : O(log |V|)
+* sum(v) : O(log n)
 *	頂点 v の部分木の辺の値の和を返す．
 *
-* sum(v1, v2) : O((log |V|)^2)
+* sum(v1, v2) : O((log n)^2)
 *	頂点 v1 から v2 までの辺の値の和を返す．
 *
-* 利用：
-*	【根付き木の HL 分解】
-*	【区間加算／区間総和クエリ】
+* 利用：【根付き木の HL 分解】，【区間加算／区間総和クエリ】
 */
-struct Tree_edge_add_sum_query {
+template <class TREE> struct Tree_edge_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
 
 	// 根付き木
-	WRTree rt;
+	TREE rt;
 
 	// HL 分解の結果の記録用
 	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら |V|）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ |V|）
+	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
+	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
 	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
 	vi in, out, pos, top;
 
@@ -296,7 +260,7 @@ struct Tree_edge_add_sum_query {
 	RASQ<ll> rasq;
 
 	// コンストラクタ（コスト付き根付き木で初期化）
-	Tree_edge_add_sum_query(WRTree& rt_) : rt(rt_) {
+	Tree_edge_add_sum_query(TREE& rt_) : rt(rt_) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
 
@@ -304,6 +268,21 @@ struct Tree_edge_add_sum_query {
 		rep(s, rt.n) {
 			repe(e, rt[s].child) {
 				val[in[e.to]] += e.cost;
+			}
+		}
+
+		rasq = RASQ<ll>(val);
+	}
+
+	// コンストラクタ（根付き木と初期コストで初期化）
+	Tree_edge_add_sum_query(TREE& rt_, ll c) : rt(rt_) {
+		// rt を HL 分解する．
+		heavy_light_decomposition(rt, in, out, pos, top);
+
+		vl val(rt.n);
+		rep(s, rt.n) {
+			repe(t, rt[s].child) {
+				val[in[t]] += c;
 			}
 		}
 
@@ -385,50 +364,48 @@ struct Tree_edge_add_sum_query {
 };
 
 
-//【木の頂点への加算／木の頂点の総和クエリ】
+//【頂点加算／総和クエリ】
 /*
-* Tree_vertex_add_sum_query(rt) : O(|V|)
+* Tree_vertex_add_sum_query(rt) : O(n)
 *	根付き木 rt と初期値 0 で初期化する．
 *
-* Tree_vertex_add_sum_query(rt, a) : O(|V|)
+* Tree_vertex_add_sum_query(rt, a) : O(n)
 *	根付き木 rt と初期値 a で初期化する．
 *
-* set(v, val) : O(log |V|)
+* set(v, val) : O(log n)
 *	頂点 v の値を val にする．
 *
-* add(v, val) : O(log |V|)
+* add(v, val) : O(log n)
 *	頂点 v に val を加算する．
 *
-* get(v) : O(log |V|)
+* get(v) : O(log n)
 *	頂点 v の値を返す．
 *
-* add_subtree(v, val) : O(log |V|)
+* add_subtree(v, val) : O(log n)
 *	頂点 v の部分木の頂点に val を加算する．
 *
-* add(v1, v2, val) : O((log |V|)^2)
+* add(v1, v2, val) : O((log n)^2)
 *	頂点 v1 から v2 までの頂点（両端含む）に val を加算する．
 *
-* sum_subtree(v) : O(log |V|)
+* sum_subtree(v) : O(log n)
 *	頂点 v の部分木の頂点の値の和を返す．
 *
-* sum(v1, v2) : O((log |V|)^2)
+* sum(v1, v2) : O((log n)^2)
 *	頂点 v1 から v2 までの頂点（両端含む）の値の和を返す．
 *
-* 利用：
-*	【根付き木の HL 分解／オイラーツアー】
-*	【区間加算／区間総和クエリ】
+* 利用：【根付き木の HL 分解】，【区間加算／区間総和クエリ】
 */
 struct Tree_vertex_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
-
+	
 	// 根付き木
 	Rooted_tree rt;
 	int n;
 
 	// HL 分解の結果の記録用
 	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら |V|）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ |V|）
+	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
+	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
 	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
 	vi in, out, pos, top;
 
@@ -489,10 +466,16 @@ struct Tree_vertex_add_sum_query {
 	}
 
 	// 頂点 v の部分木の頂点の値の和を返す．
-	ll sum_subtree(int v) { return rasq.prod(in[v], out[v]); }
+	ll sum_subtree(int v) {
+		// verify : https://judge.yosupo.jp/problem/vertex_add_subtree_sum
+		
+		return rasq.prod(in[v], out[v]);
+	}
 
 	// 頂点 v1 から v2 までの頂点（両端含む）の値の和を返す．
 	ll sum(int v1, int v2) {
+		// verify : https://judge.yosupo.jp/problem/vertex_add_path_sum
+
 		ll res = 0;
 
 		// v1 と v2 が異なる連結成分に属している限りループを回す．
@@ -525,39 +508,40 @@ struct Tree_vertex_add_sum_query {
 };
 
 
-//【木上セグメント木】
+//【木の頂点上のセグメント木】
 /*
-* Segtree_ontree(rt) : O(|V|)
-*	根付き木 rt と初期値 0 で初期化する．
+* Segtree_on_tree_vertex<S, op, e>(rt) : O(n)
+*	根付き木 rt と初期値 e() で初期化する．
 *
-* Segtree_ontree(rt, a) : O(|V|)
+* Segtree_on_tree_vertex<S, op, e>(rt, a) : O(n)
 *	根付き木 rt と初期値 a で初期化する．
 *
-* set(v, c) : O(log|V|)
+* set(v, c) : O(log n)
 *	val[v] = c とする．
 *
-* get(v) : O(log|V|)
+* get(v) : O(log n)
 *	val[v] を返す．
 *
-* prod(v1, v2) : O((log|V|)^2)
-*	op(val[v1], ..., val[v2]) を返す．
+* prod(v1, v2) : O((log n)^2)
+*	op(v1 から v2 までの順に並べた頂点の値) を返す．（両端含む）
 *
-* prod_subtree(v) : O(log|V|)
-*	op(行きがけ順にならべた v の部分木の頂点) を返す．
+* prod_subtree(v) : O(log n)
+*	op(行きがけ順に並べた v の部分木の頂点の値) を返す．
 *
-* 利用：
-*	【根付き木の HL 分解／オイラーツアー】
+* 利用：【根付き木の HL 分解】
 */
 template <class S, S(*op)(S, S), S(*e)()>
-struct Segtree_ontree {
+struct Segtree_on_tree_vertex {
+	// verify : https://judge.yosupo.jp/problem/vertex_set_path_composite
+
 	// 根付き木
 	Rooted_tree rt;
 	int n;
 
 	// HL 分解の結果の記録用
 	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら |V|）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ |V|）
+	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
+	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
 	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
 	vi in, out, pos, top;
 
@@ -567,7 +551,7 @@ struct Segtree_ontree {
 	SEG seg, seg_rev;
 
 	// コンストラクタ（根付き木で初期化）
-	Segtree_ontree(Rooted_tree& rt_) : rt(rt_), n(rt.n) {
+	Segtree_on_tree_vertex(Rooted_tree& rt_) : rt(rt_), n(rt.n) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
 
@@ -575,7 +559,7 @@ struct Segtree_ontree {
 	}
 
 	// コンストラクタ（根付き木と初期値で初期化）
-	Segtree_ontree(Rooted_tree& rt_, vector<S>& a) : rt(rt_), n(rt.n) {
+	Segtree_on_tree_vertex(Rooted_tree& rt_, vector<S>& a) : rt(rt_), n(rt.n) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
 
@@ -628,7 +612,7 @@ struct Segtree_ontree {
 	S prod_subtree(int v) { return seg.prod(in[v], out[v]); }
 
 	// デバッグ出力
-	friend ostream& operator<<(ostream& os, Segtree_ontree& q) {
+	friend ostream& operator<<(ostream& os, Segtree_on_tree_vertex& q) {
 		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
 			<< q.top << endl << q.seg << endl << q.seg_rev << endl;
 		return os;

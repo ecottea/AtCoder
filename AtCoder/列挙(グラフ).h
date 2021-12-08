@@ -1,16 +1,17 @@
 #pragma once
 #include "header.h"
-#include "構造(グラフ).h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
 
 //【連結成分の数え上げ】O(deg(v)^k)
 /*
-* グラフ g の大きさ k の連結成分の個数を返す．
+* 無向グラフ g の大きさ k の連結成分の個数を返す．
 * 
 *（道ではなく頂点集合に注目したバックトラッキング）
 */
 int count_connected_component(Graph& g, int k) {
+	// verify : https://atcoder.jp/contests/abc211/tasks/abc211_e
+
 	int n = sz(g);
 
 	// seen[v] : 頂点 v の探索状態
@@ -100,7 +101,7 @@ void count_simple_path(const Graph& g, vvl& cnt) {
 	int n = sz(g);
 
 	// dp[s][t][set] : 単純パス s → t で途中 set を通るものの個数
-	//	s !∈ set, t ∈ set とする．
+	//		s !∈ set, t ∈ set とする．
 	vvvl dp(n, vvl(n, vl(1 << n)));
 	vvvb seen(n, vvb(n, vb(1 << n)));
 	rep(s, n) {

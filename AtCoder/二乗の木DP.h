@@ -4,7 +4,7 @@
 // ■■■■■ 二乗の木 DP ■■■■■
 
 
-//【部分木の数え上げ】O(|V|^2)
+//【部分木の数え上げ】O(n^2)
 /*
 * 木 g の頂点 r を含む大きさ i の部分木の個数を cnt[i] に格納する．
 *
@@ -52,7 +52,7 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 }
 
 
-//【部分木の数え上げ】O(|V| k)
+//【部分木の数え上げ】O(n k)
 /*
 * 木 g の頂点 r を含む大きさ k の部分木の個数を返す．
 *
@@ -101,11 +101,66 @@ mint count_subtree(const Graph& g, int r, int k) {
 }
 
 
-//【互いに素なパスの数え上げ】O(|V| k)
+
+//【木の誘導部分グラフの数え上げ】O(n^2)
 /*
-* 木 g 上の k 本の互いに素なパスの組の個数を返す．
+* 木 g の k 本の辺からなる誘導部分グラフの個数を cnt[k] に格納する．
 *
-*（二乗の木 DP）
+*（二乗の木状態 DP）
+*/
+void count_induced_subtree(const Graph& g, vm& cnt) {
+	int n = sz(g);
+	cnt.resize(n);
+
+	// 便宜上 0 を根とした根付き木とみなす．
+	// dp[s][k][type] : 部分木 s の，k 本の辺からなる誘導部分グラフで，
+	//		s を type = 1:含む[0:含まない] ものの個数
+	vvvm dp(n);
+
+	// s : 注目頂点，p : s の親，戻り値 : 部分木 s の大きさ
+	function<int(int, int)> dfs = [&](int s, int p) {
+		// ws : 部分木 s の大きさ
+		int ws = 1;
+
+		// 根 s のみからなる木
+		dp[s] = vvm(ws, vm(2, 1));
+
+		// s の子 t を順に s にマージしていく．
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// wt : 部分木 t の大きさ
+			int wt = dfs(t, s);
+
+			// ndps[k][type] : 部分木 s に部分木 t をマージした後の個数
+			vvm ndps(ws + wt, vm(2));
+			rep(ks, ws) {
+				rep(kt, wt) {
+					ndps[ks + kt][0] += dp[s][ks][0] * dp[t][kt][0];
+					ndps[ks + kt][0] += dp[s][ks][0] * dp[t][kt][1];
+					ndps[ks + kt][1] += dp[s][ks][1] * dp[t][kt][0];
+					ndps[ks + kt + 1][1] += dp[s][ks][1] * dp[t][kt][1];
+				}
+			}
+
+			dp[s] = ndps;
+			ws += wt;
+		}
+
+		return ws;
+	};
+
+	dfs(0, -1);
+
+	rep(s, n) cnt[s] = dp[0][s][0] + dp[0][s][1];
+}
+
+
+//【互いに素なパスの数え上げ】O(n k)
+/*
+* 木 g 上の k 本の互いに素なパス（長さ 0 は不可）の組の個数を返す．
+*
+*（二乗の木状態 DP）
 */
 mint count_coprime_path(Graph& g, int k) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_eel

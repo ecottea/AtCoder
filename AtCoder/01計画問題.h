@@ -3,7 +3,6 @@
 // ■■■■■ 0-1 計画問題 ■■■■■
 
 
-
 //【燃やす埋める問題】O(n^2 (n + m))
 /*
 * n 個のゴミについて，ゴミ i を燃やすと非負コスト x[i], 埋めると非負コスト y[i] がかかる．
@@ -12,6 +11,7 @@
 */
 ll burn_bury_problem(const vl& x, const vl& y, const vector<tuple<int, int, ll>>& p) {
 	// 参考 :  https://github.com/E869120/kyopro_educational_90/blob/main/editorial/040.jpg
+	// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
 
 	//【方法】
 	// 頂点 S, T, [0..n) をもつ以下のグラフ G 上の最小カット問題に帰着させる：

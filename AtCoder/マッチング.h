@@ -4,7 +4,6 @@
 // ■■■■■ マッチング ■■■■■
 
 
-
 //【二部グラフの最大マッチング】
 /*
 * 二部グラフ (S, T) の最大マッチングを求める．
@@ -61,6 +60,8 @@ struct Bipartite_matching {
 
 	// 最大マッチングの例を具体的に求める．
 	void maximum_matching(vector<pii>& es) {
+		// verify : https://judge.yosupo.jp/problem/bipartitematching
+
 		es.clear();
 		repe(e, g.edges()) {
 			// フローが流れている S, T 間の辺がマッチングに対応する．
@@ -181,6 +182,8 @@ struct minimum_cost_bipartite_matching {
 *（二次元 DP）
 */
 ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
+	// verify : https://algo-method.com/tasks/316
+
 	// n = |S|, m = |T|
 	int n = sz(c);
 	int m = sz(c[0]);
@@ -241,6 +244,7 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 */
 mint count_perfect_matching(vvb& e) {
 	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231035
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_o
 
 	int n = sz(e);
 

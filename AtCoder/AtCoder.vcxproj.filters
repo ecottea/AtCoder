@@ -52,9 +52,6 @@
     <Filter Include="ヘッダー ファイル\計算%28整数%29">
       <UniqueIdentifier>{bfa2e7c8-eb39-4a41-ba8f-1845a0d9c0c3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\代数構造">
-      <UniqueIdentifier>{56f5b44a-7edc-4f7f-835f-e9b5763fd635}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\列%28区間%29">
       <UniqueIdentifier>{29392755-fd06-423f-a2da-fbaaed974ab3}</UniqueIdentifier>
     </Filter>
@@ -72,6 +69,12 @@
     </Filter>
     <Filter Include="ヘッダー ファイル\列挙">
       <UniqueIdentifier>{1a49ddbb-8e29-412b-98db-3a1a3a0c7386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\データ構造%28抽象代数%29">
+      <UniqueIdentifier>{56f5b44a-7edc-4f7f-835f-e9b5763fd635}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\old">
+      <UniqueIdentifier>{105e03a8-7561-4890-8b11-66c02a5a18b1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -146,9 +149,6 @@
     <ClInclude Include="ビット行列.h">
       <Filter>ヘッダー ファイル\行列ベクトル</Filter>
     </ClInclude>
-    <ClInclude Include="特殊化.h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
-    </ClInclude>
     <ClInclude Include="グラフクエリ.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
@@ -161,7 +161,7 @@
     <ClInclude Include="数列.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
-    <ClInclude Include="ヒストグラム.h">
+    <ClInclude Include="列.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="グラフ最適化.h">
@@ -252,28 +252,22 @@
       <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
     </ClInclude>
     <ClInclude Include="モノイド.h">
-      <Filter>ヘッダー ファイル\代数構造</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="モノイド作用付きモノイド.h">
-      <Filter>ヘッダー ファイル\代数構造</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="アーベル群.h">
-      <Filter>ヘッダー ファイル\代数構造</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="Z-加群.h">
-      <Filter>ヘッダー ファイル\代数構造</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="半環.h">
-      <Filter>ヘッダー ファイル\代数構造</Filter>
-    </ClInclude>
-    <ClInclude Include="行列(半環).h">
-      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
-    </ClInclude>
-    <ClInclude Include="FPS(可換環).h">
-      <Filter>ヘッダー ファイル\計算</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="可換環.h">
-      <Filter>ヘッダー ファイル\代数構造</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="ヒープ.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
@@ -284,16 +278,10 @@
     <ClInclude Include="Union-Find.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
-    <ClInclude Include="セグメント木%28モノイド%29.h">
+    <ClInclude Include="セグメント木%28抽象%29.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
-    <ClInclude Include="セグ木(ACL).h">
-      <Filter>ヘッダー ファイル\データ構造</Filter>
-    </ClInclude>
-    <ClInclude Include="フェニ木(ACL).h">
-      <Filter>ヘッダー ファイル\データ構造</Filter>
-    </ClInclude>
-    <ClInclude Include="フェニック木%28アーベル群%29.h">
+    <ClInclude Include="フェニック木%28抽象%29.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
     <ClInclude Include="格子.h">
@@ -311,9 +299,6 @@
     <ClInclude Include="座標圧縮.h">
       <Filter>ヘッダー ファイル\アルゴリズム</Filter>
     </ClInclude>
-    <ClInclude Include="累積演算.h">
-      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
-    </ClInclude>
     <ClInclude Include="いもす法.h">
       <Filter>ヘッダー ファイル\アルゴリズム</Filter>
     </ClInclude>
@@ -328,6 +313,63 @@
     </ClInclude>
     <ClInclude Include="桁DP.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="群.h">
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="計算.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="挿入DP.h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="セグメント木%28モノイド%29.h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="フェニック木%28アーベル群%29.h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="区間木%28特殊化%29.h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="行列(半環).h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS(可換環).h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="行列(抽象).h">
+      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS(抽象).h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="累積演算%28抽象%29.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="可換モノイド.h">
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="整列集合.h">
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="全順序.h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="累積演算.h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="ビット列.h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="一変数最小化.h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
+    </ClInclude>
+    <ClInclude Include="探索(old).h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="包除原理.h">
+      <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

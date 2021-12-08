@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "最短路.h"
 #include "マッチング.h"
 #include "ビット全探索.h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
@@ -14,6 +15,7 @@
 */
 ll kruskal(const WGraph& g, WGraph& msf, vi& mst) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%AB%E3%83%AB%E6%B3%95
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_A
 
 	int n = sz(g);
 	msf = WGraph(n);
@@ -61,6 +63,7 @@ ll kruskal(const WGraph& g, WGraph& msf, vi& mst) {
 */
 ll prim(const WGraph& g, int r, WGraph& mst) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_A
 
 	int n = sz(g);
 	mst = WGraph(n);
@@ -241,12 +244,13 @@ int maximum_clique(const Graph& g) {
 }
 
 
-//【最大流問題／フォード - ファルカーソンのアルゴリズム】O(|E| maxflow)
+//【最大流問題／フォード・ファルカーソンのアルゴリズム】O(|E| maxflow)
 /*
 * コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */
 ll ford_fullkerson(const WGraph& g, int s, int t) {
 	// 参考：https://algo-logic.info/ford-fullkerson/
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_6_A
 
 	int n = sz(g);
 
@@ -330,6 +334,8 @@ ll ford_fullkerson(const WGraph& g, int s, int t) {
 *（bit DP）
 */
 ll traveling_salesman_problem(const WGraph& g) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_2_A
+
 	int n = sz(g);
 
 	// dp[i][set] : 頂点 i から set を通り頂点 n - 1 までのハミルトンパスの最小コスト
@@ -431,6 +437,7 @@ ll shortest_hamiltonian_path(const WGraph& g) {
 */
 ll chinese_postman_problem(const WGraph& g) {
 	// 参考：https://perogram.hateblo.jp/entry/2020/09/30/101602
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_2_B
 
 	int n = sz(g);
 

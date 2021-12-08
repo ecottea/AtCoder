@@ -73,7 +73,6 @@ struct Fibonacci_search {
 			fib.push_back(fib[n] + fib[n - 1]);
 			n++;
 		}
-		dump(fib);
 	}
 
 	ll search(ll left, ll right, const function<ll(ll)>& f_, bool up = true) const {
@@ -93,9 +92,6 @@ struct Fibonacci_search {
 
 			return val;
 		};
-		repi(i, -2, 5) {
-			dump(f(i));
-		}
 
 		// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点を得る．
 		int i = n;
@@ -152,7 +148,7 @@ struct Fibonacci_search {
 * における最大値を与える x を返す．
 */
 double golden_search(double left, double right, function<double(double)>& f) {
-	const double phi = 1.618033988749894848204586834365638;
+	const double phi = 1.61803398875;
 	// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点
 	double l = left;
 	double r = right;
@@ -195,6 +191,57 @@ double golden_search(double left, double right, function<double(double)>& f) {
 
 	// 最後の候補を比較し，大きかった方の x を返す．
 	return (v1 > v2) ? m1 : m2;
+}
+
+
+//【並列二分探索】O(O(okQ) log max|ok[i] - ng[i]|)
+/*
+* i=[0..q) について，条件を満たす要素 ok[i] と満たさない要素 ng[i] の
+* 境界を二分探索し，ok[i] を境界に接する条件を満たす要素に変更する．
+* okQ は，okQ(mid, res) で呼び出すと mid[i] が条件を満たすかが res[i] に格納されるとする．
+*/
+template <typename T>
+void parallel_binary_search(vector<T>& ok, vector<T>& ng,
+	function<void(const vector<T>&, vb&)>& okQ)
+{
+	// 参考 : https://betrue12.hateblo.jp/entry/2019/08/14/152227
+	// verify : https://atcoder.jp/contests/code-thanks-festival-2017-open/tasks/code_thanks_festival_2017_h
+
+	int q = sz(ok); // クエリの数
+
+	vector<T> mid(q);
+	vb res(q);
+
+	while (true) {
+		bool update = false; // 更新が起こったか
+
+		// それぞれのクエリの ok と ng の中央値を mid に格納する．
+		rep(i, q) {
+			if (abs(ok[i] - ng[i]) <= 1) continue;
+			update = true;
+
+			mid[i] = (ok[i] + ng[i]) / 2;
+		}
+
+		// 更新が起こらなかったなら探索終了
+		if (!update) break;
+
+		// mid に対して一括で ok か ng かを判定する．
+		okQ(mid, res);
+
+		////【テンプレ】
+		//// mid の値ごとに処理するため，連想配列 mid → j を作る．
+		//unordered_map<int, vi> mid_to_j;
+		//rep(j, q) {
+		//	mid_to_j[mid[j]].push_back(j);
+		//}
+
+		// 判定結果に応じて ok または ng を更新する．
+		rep(i, q) {
+			if (res[i]) ok[i] = mid[i];
+			else ng[i] = mid[i];
+		}
+	}
 }
 
 

@@ -4,7 +4,7 @@
 // ■■■■■ 合同式 ■■■■■
 
 
-//【位数】O(√mod)
+//【位数】O(√p)
 /*
 * a^x = 1 となる最小の自然数 x を返す．（なければ -1）
 *
@@ -129,6 +129,7 @@ int log(const mint& a, mint b) {
 */
 int sqrt(const mint& a) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/tonelli-shanks.html
+	// verify : https://judge.yosupo.jp/problem/sqrt_mod
 
 	//【方法】
 	// p = mod, p - 1 = 2^d q（q : 奇数）と表しておく．

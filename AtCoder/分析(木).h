@@ -12,6 +12,8 @@
 * 利用：【単一始点最短路／ダイクストラ法】
 */
 ll tree_diameter(const WGraph& g, pii& p) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_A
+
 	int n = sz(g);
 
 	// 適当な頂点を始点にして最遠の点 s を求める．
@@ -49,6 +51,8 @@ ll tree_diameter(const WGraph& g, pii& p) {
 * 利用：【幅優先探索】
 */
 int tree_diameter_and_midpoint(const Graph& g, pii& ep, pii& ctr) {
+	// verify : https://atcoder.jp/contests/abc221/tasks/abc221_f
+
 	int n = sz(g);
 
 	// 頂点 0 から幅優先探索を行う．
@@ -58,7 +62,7 @@ int tree_diameter_and_midpoint(const Graph& g, pii& ep, pii& ctr) {
 	// 頂点 0 からの距離が最も遠い点 ep0 を見つける．
 	int d = 0, ep0;
 	rep(i, n) {
-		if (chmax(d, dist[i])) ep0 = i;
+		if (dist[i] < INF && chmax(d, dist[i])) ep0 = i;
 	}
 
 	dist = vi(n, -1); // スタートからの最短距離を保持するテーブル
@@ -73,7 +77,7 @@ int tree_diameter_and_midpoint(const Graph& g, pii& ep, pii& ctr) {
 		auto s = que.front();
 		que.pop();
 
-		for (auto t : g[s]) {
+		repe(t, g[s]) {
 			if (dist[t] != -1) continue;
 
 			dist[t] = dist[s] + 1;
@@ -84,7 +88,7 @@ int tree_diameter_and_midpoint(const Graph& g, pii& ep, pii& ctr) {
 	}
 
 	// 頂点 ep0 からの距離が最も遠い点 ep1 を見つける．
-	d = 0; int ep1;
+	d = 0; int ep1 = -1;
 	rep(i, n) {
 		if (chmax(d, dist[i])) ep1 = i;
 	}
@@ -168,6 +172,58 @@ int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
 	}
 
 	return m;
+}
+
+
+//【葉の削除回数】O(n)
+/*
+* 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納する．
+*
+*（葉からの幅優先探索）
+*/
+void leaf_remove_level(const Graph& g, vi& lv) {
+	int n = sz(g);
+	lv = vi(n);
+
+	// 木が 1 頂点のみで次数 1 の頂点が存在しない場合の例外処理
+	if (n == 1) {
+		lv[0] = 0;
+		return;
+	}
+
+	// 次数を求めておく．
+	vi degree(n);
+	rep(i, n) {
+		repe(t, g[i]) {
+			degree[t]++;
+		}
+	}
+
+	// 次数が 1 の頂点から順に取り除いていく．
+	queue<pii> q;
+	rep(i, n) {
+		if (degree[i] == 1) {
+			q.push({ i, 0 });
+		}
+	}
+
+	while (!q.empty()) {
+		int s, d;
+		tie(s, d) = q.front();
+		q.pop();
+
+		lv[s] = d;
+
+		repe(t, g[s]) {
+			// 頂点 s を取り除き，t の次数を更新する．
+			degree[t]--;
+
+			// 新たに次数 1 の頂点が生まれたらキューに追加する．
+			if (degree[t] == 1) {
+				q.push({ t, d + 1 });
+			}
+		}
+	}
 }
 
 

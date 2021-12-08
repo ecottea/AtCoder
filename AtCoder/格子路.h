@@ -12,7 +12,7 @@
 *（始点からの格子 DP）
 */
 mint count_lattice_path(const vvc& c) {
-	// verify : https://atcoder.jp/contests/joi2007yo/tasks/joi2007yo_f
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_h
 
 	int h = sz(c), w = sz(c[0]);
 
@@ -158,11 +158,11 @@ mint count_lattice_path_no_continuous_turns(int h, int w) {
 *（Dummy Path Lemma）
 */
 mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
-	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_grid
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_y
 
 	int n = sz(fb);
 
-	factorial_mint fm(h + w);
+	Factorial_mint fm(h + w);
 
 	// s, t : 対応する始点と終点の列
 	// 番号の小さい方へ戻るパスは存在してはいけない．

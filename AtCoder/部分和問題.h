@@ -42,13 +42,14 @@ mint count_partial_sum(const vi& a, int v) {
 
 //【部分和問題（数え上げ）】O(n + v log v)
 /*
-* 各 j=[0..v] について，長さ n の正整数の列 a の部分和として j を作る方法が
+* 各 j=[0..v] について，正整数の列 a[0..n) の部分和として j を作る方法が
 * 何通りあるかを cnt[j] に格納する．
 *
 * 利用：【形式的冪級数】，【階乗と二項係数（mint利用）】
 */
 void count_partial_sum(const vi& a, int v, vm& cnt) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+	// verify : https://judge.yosupo.jp/problem/sharp_p_subset_sum
 
 	//【方法】
 	// 母関数は
@@ -59,7 +60,7 @@ void count_partial_sum(const vi& a, int v, vm& cnt) {
 	//		log(1 + x^a[i]) = Σk=[1..∞) (-1)^(k-1) 1/k x^(k * a[i])
 	// であり，これはスパースなので高速に和が計算できる．
 
-	factorial_mint fm(v);
+	Factorial_mint fm(v);
 
 	unordered_map<int, int> c;
 	repe(x, a) c[x]++;
@@ -283,7 +284,7 @@ mint count_multiple_partial_sum(const vector<T>& a, int m) {
 //【部分和問題（個数制限なし，数え上げ）】O(n v)
 /*
 * 長さ n の正整数の列 a の部分和として v を作る方法が何通りあるかを返す．
-* 各 a[i] は 0 個以上の任意個用いることができる．
+* 各 a[i] は [0..∞) 個用いることができる．
 *
 *（和を状態にもつ状態 DP）
 */
@@ -525,7 +526,7 @@ mint count_limited_signed_partial_sum(const vi& a, const vi& m, int v) {
 }
 
 
-//【部分和問題（数え上げ，余裕禁止）】O(n v)
+//【部分和問題（貪欲，数え上げ）】O(n v)
 /*
 * 長さ n の整数列 a の部分和として v 以下の数を作る方法が何通りあるかを返す．
 * ただし，まだ加えられる a[i] が残った状態で加えるのをやめてはいけない．
@@ -533,6 +534,8 @@ mint count_limited_signed_partial_sum(const vi& a, const vi& m, int v) {
 *（和を状態にもつ状態 DP）
 */
 mint count_greedy_partial_sum(vi a, int v) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2333
+
 	int n = sz(a);
 
 	// 重さについて降順ソートしておく

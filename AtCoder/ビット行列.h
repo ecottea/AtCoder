@@ -3,15 +3,14 @@
 // ■■■■■ ビット行列 ■■■■■
 
 
-
 //【ビット行列】
 /*
 * ビット行列を表す構造体
 *
-* Matrix(m) : O(m n)
+* Matrix<n>(m) : O(m n)
 *	m * n 零行列で初期化する．
 *
-* Matrix(a) : O(m n)
+* Matrix<n>(a) : O(m n)
 *	配列 a の要素で初期化する．
 *
 * insert(col) : O(n)
@@ -22,7 +21,6 @@ struct BMatrix {
 	int m; // 行数（行列のサイズは m × n）
 	vector<bitset<n>> v; // 行列の成分
 
-
 	// コンストラクタ（初期化なし）
 	BMatrix() : m(0) {}
 
@@ -32,11 +30,8 @@ struct BMatrix {
 	// コンストラクタ（二次元配列で初期化）
 	BMatrix(const vector<bitset<n>>& a) : m(sz(a)), v(a) {}
 
-	// コピーコンストラクタ
-	BMatrix(const BMatrix& old) = default;
-
-
 	// 代入
+	BMatrix(const BMatrix& old) = default;
 	BMatrix& operator=(const BMatrix& other) = default;
 
 	// 出力
@@ -63,7 +58,7 @@ struct BMatrix {
 * 行基本変形で mat を階段行列に変形する．
 * 最も右下のピボットの位置 (i, j) を返す．零行列なら (-1, -1) を返す．
 *
-*（呼び出すとき priority_solve<n> としないと gcc でエラーになるので注意．）
+*（呼び出すとき row_echelon_form<n> としないと gcc でエラーになるので注意．）
 */
 template <int n>
 pii row_echelon_form(BMatrix<n>& mat) {
@@ -79,9 +74,7 @@ pii row_echelon_form(BMatrix<n>& mat) {
 	while (i < m && j < n) {
 		// 同じ列の下方の行から 1 を見つける．
 		int i2 = i;
-		while (i2 < m && !v[i2][j]) {
-			i2++;
-		}
+		while (i2 < m && !v[i2][j]) i2++;
 
 		// 見つからなかったら注目位置を右に移す．
 		if (i2 == m) {
@@ -100,8 +93,7 @@ pii row_echelon_form(BMatrix<n>& mat) {
 		}
 
 		// 注目位置を右下に移す．
-		i++;
-		j++;
+		i++; j++;
 	}
 	return { pi, pj };
 }
@@ -125,14 +117,10 @@ void priority_solve(BMatrix<N>& mat, int n, bitset<N>& sol) {
 	rep(i, m) {
 		// 同じ行の右の係数から 1 を見つける．
 		int j = 0;
-		while (j < n && !v[i][j]) {
-			j++;
-		}
+		while (j < n && !v[i][j]) j++;
 
 		// 見つからなかったら定数項は見ず次の行へ
-		if (j == n) {
-			continue;
-		}
+		if (j == n) continue;
 
 		// j 列目に見つかったら j 列目が 1 である他の行と xor をとる．
 		pivots.push_back({ i, j });

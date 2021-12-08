@@ -12,7 +12,7 @@
 using Graph = vvi;
 
 
-//【グラフの入力】O(|E|)
+//【グラフの入力】O(|V| + |E|)
 /*
 * 始点 終点の組からなる入力を受け取り，n 頂点 m 辺のグラフを構成する．
 *
@@ -48,14 +48,14 @@ struct Edge {
 	int to; // 行き先の頂点番号
 	ll cost; // 辺のコスト
 
+	// コストなしグラフで呼ばれたとき用
+	operator int() const { return to; }
+
 	// デバッグ出力
 	friend ostream& operator<<(ostream& os, const Edge& e) {
 		os << '(' << e.to << ',' << e.cost << ')';
 		return os;
 	}
-
-	// コストなしグラフで呼ばれたとき用
-	operator int() const { return to; }
 };
 
 
@@ -67,7 +67,7 @@ struct Edge {
 using WGraph = vector<vector<Edge>>;
 
 
-//【コスト付きグラフの入力】O(|E|)
+//【コスト付きグラフの入力】O(|V| + |E|)
 /*
 * 始点 終点 コストの組からなる入力を受け取り，n 頂点 m 辺のコスト付きグラフを構成する．
 *
@@ -81,8 +81,7 @@ void read_graph(int n, int m, WGraph& g,
 	bool directed = false, bool one_indexed = true) {
 	g = WGraph(n);
 	rep(i, m) {
-		int a, b;
-		ll c;
+		int a, b; ll c;
 		cin >> a >> b >> c;
 
 		if (one_indexed) { a--; b--; }
@@ -93,12 +92,41 @@ void read_graph(int n, int m, WGraph& g,
 }
 
 
-//【辺のコストの取得】
+//【グリッド → グラフ】O(h w)
 /*
-* コスト付きグラフの辺なら辺のコストを返す．
-* さもなくば INFL を返す．
+* h 行 w 列のグリッドから nb 近傍を連結としたグラフ g を構築する．
+* 壁マスは wall，空きマスはその他とする．
+* i 行目の j 列目にあるマス (i, j) はグラフ頂点 i * w + j に対応する．
 */
-inline ll get_cost(const Edge& e) { return e.cost; }
-inline ll get_cost(const int& t) { return INFL; }
+template <class T>
+void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb = 4) {
+	int h = sz(c), w = sz(c[0]);
+
+	const vi& dx = (nb == 4 ? dx4 : dx8);
+	const vi& dy = (nb == 4 ? dy4 : dy8);
+
+	g = Graph(h * w);
+	rep(x, h) {
+		rep(y, w) {
+			// 空きマスでなかったら辺は追加しない．
+			if (c[x][y] == wall) continue;
+
+			// 今考えている近傍それぞれについて
+			rep(k, nb) {
+				// 近傍のマスの座標
+				int nx = x + dx[k];
+				int ny = y + dy[k];
+
+				// 範囲外だったり空きマスでなかったら辺は追加しない．
+				if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
+					continue;
+				}
+
+				// 近傍に空きマスがあったら辺を追加する．
+				g[x * w + y].push_back(nx * w + ny);
+			}
+		}
+	}
+}
 
 

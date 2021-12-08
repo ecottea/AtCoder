@@ -101,6 +101,8 @@ template <class T> struct Matrix {
 
 	// 積：O(n^3)
 	Matrix operator*(const Matrix& b) const {
+		// verify : https://judge.yosupo.jp/problem/matrix_product
+
 		Matrix res(m, b.n);
 		rep(i, res.m) rep(j, res.n) rep(k, n) res.v[i][j] += v[i][k] * b.v[k][j];
 		return res;
@@ -184,6 +186,8 @@ template <class T> pii row_echelon_form(Matrix<T>& mat) {
 * 正方行列 mat の行列式を返す．
 */
 template <class T> T determinant(Matrix<T>& mat) {
+	// verify : https://judge.yosupo.jp/problem/matrix_det
+
 	auto n = mat.n;
 	auto& v = mat.v;
 
@@ -235,6 +239,8 @@ template <class T> T determinant(Matrix<T>& mat) {
 * また存在する場合は true，存在しない場合は false を返す．
 */
 template <class T> bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
+	// verify : https://judge.yosupo.jp/problem/inverse_matrix
+
 	int m = mat.m;
 
 	// 元の行列 mat と単位行列を繋げた拡大行列を作る．

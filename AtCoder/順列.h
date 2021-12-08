@@ -85,7 +85,7 @@ void permutation_order_distribution(int n, map<int, mint>& cnt) {
 
 	map<int, int> ip; // ip[i] : 分割に i を何個用いたか
 
-	factorial_mint fm(n);
+	Factorial_mint fm(n);
 
 	// n を k 以下の数で分割する．
 	function<void(int, int)> rf = [&](int n, int k) {
@@ -116,9 +116,7 @@ void permutation_order_distribution(int n, map<int, mint>& cnt) {
 		}
 
 		// 分割に使える数がもうない場合
-		if (k == 0) {
-			return;
-		}
+		if (k == 0) return;
 
 		// n が k 以上のときは，n を k と n-k に分割できる．
 		if (n >= k) {
@@ -145,6 +143,8 @@ void permutation_order_distribution(int n, map<int, mint>& cnt) {
 *（挿入 DP）
 */
 mint count_permutations(const string& s) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_t
+
 	int n = sz(s) + 1;
 
 	// dp[i][j] : 以下の条件を満たす長さ i + j の順列が何通りあるか．

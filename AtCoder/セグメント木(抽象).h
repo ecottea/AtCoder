@@ -1,9 +1,9 @@
 #pragma once
 #include "header.h"
-// ■■■■■ [遅延評価]セグメント木（ACL の模倣） ■■■■■
+// ■■■■■ [遅延評価]セグメント木（抽象代数上） ■■■■■
 
 
-//【セグメント木】
+//【セグメント木（モノイド）】
 /*
 * Segtree<S, op, e>(n) : O(n)
 *	v[0..n) = e() で初期化する．
@@ -60,6 +60,8 @@ struct Segtree {
 
 	// コンストラクタ（配列で初期化）
 	Segtree(vector<S>& v_) : Segtree(sz(v_)) {
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
 		// 全ての葉にデータを設定する．
 		rep(i, sz(v_)) {
 			v[i + n] = v_[i];
@@ -73,6 +75,8 @@ struct Segtree {
 
 	// v[i] = x とする．
 	void set(int i, S x) {
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
 		// 実際にデータを格納すべき葉の位置へ
 		i += n;
 
@@ -90,7 +94,11 @@ struct Segtree {
 	S get(int i) const { return v[i + n]; }
 
 	// op( v[l..r) ) を返す．空なら e() を返す．
-	S prod(int l, int r) const { return prod_rf(l, r, 1, 0, n); }
+	S prod(int l, int r) const {
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
+		return prod_rf(l, r, 1, 0, n);
+	}
 
 	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
 	S prod_rf(int l, int r, int k, int kl, int kr) const {
@@ -191,14 +199,7 @@ struct Segtree {
 };
 
 
-//【一点変更／区間最大値クエリ】
-using S11 = ll;
-S11 op11(S11 x, S11 y) { return max(x, y); }
-S11 e11() { return -INFL; }
-using RMQ = segtree<S11, op11, e11>;
-
-
-//【遅延評価セグメント木】
+//【遅延評価セグメント木（モノイド作用付きモノイド）】
 /*
 * Lazy_segtree<S, op, e, F, mapping, composition, id>(n) : O(n)
 *	v[0..n) = e() で初期化する．
@@ -247,7 +248,6 @@ struct Lazy_segtree {
 	// 遅延評価用の完全二分木
 	vector<F> lazy;
 
-
 	// コンストラクタ（初期化なし）
 	Lazy_segtree() : n(0), actual_n(0) {}
 
@@ -267,6 +267,8 @@ struct Lazy_segtree {
 
 	// コンストラクタ（配列で初期化）
 	Lazy_segtree(vector<S>& v_) : Lazy_segtree(sz(v_)) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+
 		// 全ての葉にデータを設定する．
 		rep(i, sz(v_)) {
 			v[i + n] = v_[i];
@@ -331,6 +333,8 @@ struct Lazy_segtree {
 
 	// op( v[l..r) ) を返す．空なら e() を返す．
 	S prod(int l, int r) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+
 		return prod_rf(l, r, 1, 0, n);
 	}
 
@@ -362,6 +366,8 @@ struct Lazy_segtree {
 
 	// v[l..r) = f( v[l..r) ) とする．
 	void apply(int l, int r, F f) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+
 		apply_rf(l, r, f, 1, 0, n);
 	}
 
@@ -474,40 +480,7 @@ struct Lazy_segtree {
 };
 
 
-//【区間変更／区間最小値クエリ】
-using S9 = int;
-using F9 = int;
-S9 op9(S9 x, S9 y) { return min(x, y); }
-S9 e9() { return INF; }
-S9 mapping9(F9 f, S9 x) { return f == -INF ? x : f; }
-F9 composition9(F9 f, F9 g) { return f == -INF ? g : f; }
-F9 id9() { return -INF; }
-using RUMQ = lazy_segtree<S9, op9, e9, F9, mapping9, composition9, id9>;
-
-
-//【区間アフィン変換／区間総和クエリ】
-/*
-* 値 x に対する x ← a x + b のタイプのクエリを一括で処理する．
-* cnt は座標を斉次化した副産物で，和をとった個数を表す．
-*/
-template <class T> using S10 = pair<T, T>; // ベクトル (x, cnt)
-template <class T> using F10 = pair<T, T>; // 行列 (a, b; 0, 1)
-template <class T> S10<T> op10(S10<T> x, S10<T> y) {
-	return { x.first + y.first, x.second + y.second };
-}
-template <class T> S10<T> e10() { return { 0, 0 }; }
-template <class T> S10<T> mapping10(F10<T> f, S10<T> x) {
-	return { f.first * x.first + f.second * x.second, x.second };
-}
-template <class T> F10<T> composition10(F10<T> f, F10<T> g) {
-	return { f.first * g.first, f.first * g.second + f.second };
-}
-template <class T> F10<T> id10() { return { 1, 0 }; }
-template <class T>
-using RAfSQ = lazy_segtree<S10<T>, op10, e10, F10<T>, mapping10, composition10, id10>;
-
-
-//【遅延評価セグメント木（比例作用）】
+//【遅延評価セグメント木（モノイド比例作用付きモノイド）】
 /*
 * Proportional_lazy_segtree<S, op, e, F, mapping, composition, id, pow>(n) : O(n)
 *	v[0..n) = e() で初期化する．
@@ -797,7 +770,7 @@ F7 pow7(F7 f, int i) { return f == INFL ? INFL : f * i; }
 using RUSQ = Proportional_lazy_segtree<S7, op7, e7, F7, mapping7, composition7, id7, pow7>;
 
 
-//【連想セグメント木】
+//【連想セグメント木（モノイド）】
 /*
 * Segtree_map<T, lb, ub, S, op, e>() : O(1)
 *	空のセグメント木で初期化する．
@@ -1150,7 +1123,7 @@ struct Segtree_map {
 };
 
 
-//【連想遅延評価セグメント木】
+//【連想遅延評価セグメント木（作用付きモノイド）】
 /*
 * Lazy_segtree_map<T, lb, ub, S, op, e, F, mapping, composition, id>() : O(1)
 *	空のセグメント木で初期化する．
@@ -1584,7 +1557,7 @@ struct Lazy_segtree_map {
 };
 
 
-//【連想遅延評価セグメント木（平行移動可能）】
+//【平行移動可能連想遅延評価セグメント木（作用付きモノイド）】
 /*
 * Lazy_segtree_map_shiftable<T, lb, ub, add, zero, S, op, e, F, mapping, composition, id>() : O(1)
 *	空のセグメント木で初期化する．

@@ -4,7 +4,7 @@
 // ■■■■■ bit DP ■■■■■
 
 
-//【クラスタリング】O(3^n k)
+//【直径最小化クラスタリング】O(3^n k)
 /*
 * 距離が dist で与えられる n 点をクラスタ直径の最大値が最小になるように
 * k 個のクラスタに分割したときの直径の大きさを返す．
@@ -13,7 +13,7 @@
 *
 * 利用：【下位集合の全探索】
 */
-ll clustering(const vvl& dist, int k) {
+ll minimize_diameter_clustering(const vvl& dist, int k) {
 	int n = sz(dist);
 
 	// dp[set][c] : 点集合 set を c 個に分割するときの最小直径
@@ -49,6 +49,44 @@ ll clustering(const vvl& dist, int k) {
 	}
 
 	return dp[(1 << n) - 1][k];
+}
+
+
+//【スコア和最大化クラスタリング】O(3^n)
+/*
+* i と j が同クラスタに居るとスコア sc[i][j] が得られる条件で，
+* n 点をいくつかのクラスタに分けて得られるスコアの最大値を返す．
+*
+*（bit DP）
+*
+* 利用：【下位集合の全探索】
+*/
+ll maximize_score_clustering(const vvl& sc) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_u
+
+	int n = sz(sc);
+
+	// dp[set] : 部分集合 set での得点の最大値
+	vector<ll> dp(1 << n);
+
+	rep(set, 1 << n) {
+		rep(i, n) {
+			if (!(set & (1 << i))) continue;
+
+			rep(j, i) {
+				if (set & (1 << j)) {
+					dp[set] += sc[i][j];
+				}
+			}
+		}
+
+		// set の部分集合 sub を全探索する．
+		repbs(sub, set) {
+			chmax(dp[set], dp[sub] + dp[set - sub]);
+		}
+	}
+
+	return dp[(1 << n) - 1];
 }
 
 

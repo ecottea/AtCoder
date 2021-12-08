@@ -122,6 +122,8 @@ ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) 
 *（左端を固定した DP）
 */
 ll unit_commitment_problem(const vvl& c) {
+	// verify : https://algo-method.com/tasks/317
+	
 	int n = sz(c);
 
 	// dp[r] : 時刻 [0..r) に得られる最大電力
@@ -144,7 +146,7 @@ ll unit_commitment_problem(const vvl& c) {
 
 //【区間ネスト数最大化】O(n log n)
 /*
-* n 個の閉区間 [l[i]..r[i]] の最大ネスト数を返す．
+* n 個の閉区間 [l[i]..r[i]] の最大狭義ネスト数を返す．
 *
 *（最長増加部分列）
 */
@@ -153,6 +155,8 @@ S14 op14(S14 x, S14 y) { return max(x, y); }
 S14 e14() { return 0; }
 using RMQ = segtree<S14, op14, e14>;
 int maximize_interval_nest(const vl& l, vl r) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_target
+
 	int n = sz(l);
 
 	//【方法】
@@ -204,6 +208,8 @@ int maximize_interval_nest(const vl& l, vl r) {
 *（累積和，累積 max で高速化したインライン DP）
 */
 ll interval_overlapping(const vvl& a) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_cat
+
 	int n = sz(a);
 
 	// dp_r[l] : 区間 r までで，区間 r が区間 l 以降とのみ重なるときのスコア
@@ -249,6 +255,7 @@ F2 composition2(F2 f, F2 g) { return f + g; }
 F2 id2() { return 0; }
 ll interval_pinning(const vector<pii>& lr, const vl& a) {
 	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231106
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_w
 
 	int n = 0;
 	int m = sz(lr);

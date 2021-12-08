@@ -4,7 +4,7 @@
 // ■■■■■ 木（構造） ■■■■■
 
 
-//【木の入力】O(|V|)
+//【木の入力】O(n)
 /*
 * 親を並べた入力を受け取り，n 頂点の木を構成する．
 *
@@ -29,45 +29,39 @@ void read_tree(int n, Graph& g, bool directed = false, bool one_indexed = true) 
 }
 
 
-//【根付き木のノード】
-/*
-* parent : 親の頂点（なければ -1）
-* child : 子のリスト（なければ空リスト）
-* depth : 深さ（根からのパスの長さ）
-* weight : 重さ（部分木のもつ辺の数）
-*/
-struct TNode {
-	int parent = -1; // 親（なければ -1）
-	vi child; // 子（なければ空リスト）
-	int depth = -1; // 深さ（根からのパスの長さ）
-	int& dist = depth; // 深さを距離ともみなす（パスのコストを 1 とみなす）
-	int weight = -1; // 重さ（部分木のもつ辺の数）
-
-	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const TNode& v) {
-		os << "(p:" << v.parent << ", c:" << v.child << ", d:" << v.depth
-			<< ", w:" << v.weight << ")";
-		return os;
-	}
-};
-
-
 //【根付き木】
 /*
-* rt[i] : 根付き木の i 番目のノードの情報
-* r : 根の頂点番号
+* Rooted_tree() : O(1)
+*	空で初期化する．
 *
-* Rooted_tree(g, r) : O(|V|)
+* Rooted_tree(g, r) : O(n)
 *	木 g を r を根とみなした根付き木として受け取る．
 */
 struct Rooted_tree {
-	int n;
-	vector<TNode> v;
-	int r;
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_A
 
-	// コンストラクタ（木と根で初期化）
+	struct Node {
+		int parent = -1; // 親（なければ -1）
+		vi child; // 子（なければ空リスト）
+		int depth = -1; // 深さ（根からのパスの長さ）
+		int& dist = depth; // 深さを距離ともみなす（パスのコストを 1 とみなす）
+		int weight = -1; // 重さ（部分木のもつ辺の数）
+
+		// デバッグ出力
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "(p:" << v.parent << ", c:[" << v.child << "], d:" << v.depth
+				<< ", w:" << v.weight << ")";
+			return os;
+		}
+	};
+
+	int n; // 頂点数
+	int r; // 根
+	vector<Node> v; // 頂点
+
+	// コンストラクタ（空で初期化，木と根で初期化）
+	Rooted_tree() : n(0), r(-1) {}
 	Rooted_tree(Graph& g, int r_) : n(sz(g)), v(n), r(r_) {
-		// 再帰用の関数
 		// s : 注目ノード，p : s の親
 		function<void(int, int)> dfs = [&](int s, int p) {
 			v[s].parent = p;
@@ -92,8 +86,8 @@ struct Rooted_tree {
 	}
 
 	// アクセス
-	TNode const& operator[](int i) const { return v[i]; }
-	TNode& operator[](int i) { return v[i]; }
+	Node const& operator[](int i) const { return v[i]; }
+	Node& operator[](int i) { return v[i]; }
 
 	// 大きさ
 	int size() const { return n; }
@@ -106,45 +100,88 @@ struct Rooted_tree {
 };
 
 
-//【コスト付き根付き木のノード】
+//【根付き木の入力】O(n)
 /*
-* parent : 親の頂点（なければ -1）
-* child : 子への辺のリスト（なければ空リスト）
-* depth : 深さ（根からのパスの長さ）
-* dist : 根からの距離（根からのパスのコスト）
-* weight : 重さ（部分木のもつ辺の数）
+* ([自身] 子の数 子のリスト) を並べた入力を受け取り，n 頂点の根付き木 rt を構築する．
+*
+* one_indexed : 入力が 1-indexed で与えられるなら true
+* shuffled : [自身] の指定があるなら true
 */
-struct WTNode {
-	int parent = -1;
-	vector<Edge> child;
-	int depth = -1;
-	ll dist = -1;
-	int weight = -1;
+void read_rooted_tree(int n, Rooted_tree& rt, bool one_indexed = true, bool shuffled = false) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_A
 
-	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const WTNode& v) {
-		os << "(par:" << v.parent << ", cld:" << v.child << ", dep:" << v.depth
-			<< ", dist:" << v.dist << ", wgt:" << v.weight << ")";
-		return os;
+	// is_root[v] : v は根か
+	vb is_root(n, true);
+
+	// 一旦無向グラフとして入力を受け取る
+	Graph g(n);
+	rep(i, n) {
+		int id, k;
+
+		if (shuffled) {
+			cin >> id;
+			if (one_indexed) id--;
+		}
+		else id = i;
+
+		cin >> k;
+		rep(j, k) {
+			int c;
+			cin >> c;
+			if (one_indexed) c--;
+
+			g[id].push_back(c);
+			g[c].push_back(id);
+
+			is_root[c] = false;
+		}
 	}
-};
+
+	// 根の決定
+	int r = -1;
+	rep(i, n) {
+		if (is_root[i]) {
+			r = i;
+			break;
+		}
+	}
+
+	// 根付き木の構築
+	rt = Rooted_tree(g, r);
+}
 
 
 //【コスト付き根付き木】
 /*
-* rt[i] : 根付き木の i 番目のノードの情報
-* r : 根の頂点番号
-*
-* WRTree(g, r) : O(|V|)
+* Weighted_rooted_tree() : O(1)
+*	空で初期化する．
+* 
+* Weighted_rooted_tree(g, r) : O(n)
 *	コスト付き木 g を r を根とみなしたコスト付き根付き木として受け取る．
 */
-struct WRTree {
-	int n;
-	vector<WTNode> v;
-	int r;
+struct Weighted_rooted_tree {
+	struct Node {
+		int parent = -1; // 親（なければ -1）
+		vector<Edge> child; // 子（なければ空リスト）
+		int depth = -1; // 深さ（根からのパスの長さ）
+		ll dist = -1; // 距離（根からのパスのコスト）
+		int weight = -1; // 重さ（部分木のもつ辺の数）
 
-	// コンストラクタ（木と根で初期化）
-	WRTree(WGraph& g, int r_) : n(sz(g)), v(n), r(r_) {
+		// デバッグ出力
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "(par:" << v.parent << ", cld:[" << v.child << "], dep:" << v.depth
+				<< ", dist:" << v.dist << ", wgt:" << v.weight << ")";
+			return os;
+		}
+	};
+
+	int n; // 頂点数
+	int r; // 根
+	vector<Node> v; // 頂点
+
+	// コンストラクタ（初期化なし，コスト付き木と根で初期化）
+	Weighted_rooted_tree() : n(0), r(-1) {}
+	Weighted_rooted_tree(WGraph& g, int r_) : n(sz(g)), v(n), r(r_) {
 		// 再帰用の関数
 		// s : 注目ノード，p : s の親
 		function<void(int, int, ll)> dfs = [&](int s, int p, ll d) {
@@ -170,14 +207,14 @@ struct WRTree {
 	}
 
 	// アクセス
-	WTNode const& operator[](int i) const { return v[i]; }
-	WTNode& operator[](int i) { return v[i]; }
+	Node const& operator[](int i) const { return v[i]; }
+	Node& operator[](int i) { return v[i]; }
 
 	// 大きさ
 	int size() const { return n; }
 
 	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const WRTree& rt) {
+	friend ostream& operator<<(ostream& os, const Weighted_rooted_tree& rt) {
 		rep(i, rt.n) os << rt[i] << endl;
 		return os;
 	}

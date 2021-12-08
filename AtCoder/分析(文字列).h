@@ -3,9 +3,9 @@
 // ■■■■■ 文字列の各種性質の分析 ■■■■■
 
 
-//【ランレングス符号】O(|s|)
+//【ランレングス符号】O(n)
 /*
-* s をランレングス符号化し，結果を rlc に格納する．
+* s[0..n) をランレングス符号化し，結果を rlc に格納する．
 * rlc[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
 */
 template <class T>
@@ -39,9 +39,9 @@ void run_length_encodeing(vector<T>& a, vector<pair<T, int>>& rlc) {
 }
 
 
-//【部分文字列の数え上げ】O(|s|)
+//【部分文字列の数え上げ】O(n)
 /*
-* 文字列 s の部分文字列の個数を返す（空文字列も s の部分文字列とみなす）
+* 文字列 s[0..n) の部分文字列の個数を返す（空文字列も s の部分文字列とみなす）
 */
 ll count_substring(const string& s) {
 	int n = sz(s);
@@ -56,9 +56,10 @@ ll count_substring(const string& s) {
 }
 
 
-//【最長共通接頭尾辞】O(|s|)
+//【最長共通接頭尾辞】O(n)
 /*
-* s[0..i) の接頭辞と接尾辞が最大何文字一致しているか（i 文字未満）を len[i] に格納する．
+* 文字列 s[0..n) について，s[0..i) の接頭辞と接尾辞が
+* 最大何文字一致しているか（i 文字未満）を len[i] に格納する．
 */
 template <class STR> void morris_pratt(const STR& s, vi& len) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/01/235807
@@ -96,9 +97,9 @@ template <class STR> void morris_pratt(const STR& s, vi& len) {
 }
 
 
-//【最長回文長（文字中心）】O(|s|)
+//【最長回文長（文字中心）】O(n)
 /*
-* s[i] を中心とする最長回文の半径（(文字数 + 1) / 2）を r[i] に格納する．
+* s[0..n) の s[i] を中心とする最長回文の半径（(文字数 + 1) / 2）を r[i] に格納する．
 * ここで回文の半径とは，(文字数 + 1) / 2 を意味する．
 */
 template <class STR> void manacher(const STR& s, vi& r) {
@@ -142,15 +143,16 @@ template <class STR> void manacher(const STR& s, vi& r) {
 }
 
 
-//【最長回文長】O(|s|)
+//【最長回文長】O(n)
 /*
-* s[i] を中心とする最長回文の長さを lo[i] に格納し，
+* s[0..n) の s[i] を中心とする最長回文の長さを lo[i] に格納し，
 * s[i..i+1] を中心とする最長回文の長さを le[i] に格納する．
 *
 * 利用：【最長回文長（文字中心）】
 */
 template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/02/235837
+	// verify : https://judge.yosupo.jp/problem/enumerate_palindromes
 
 	int n = sz(s);
 	lo.resize(n);
@@ -169,12 +171,13 @@ template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
 }
 
 
-//【Z アルゴリズム】O(|s|)
+//【Z アルゴリズム】O(n)
 /*
-* s = s[0..n) について，s[i..n) と s の最長共通接頭辞の長さを z[i] に格納する．
+* 文字列 s[0..n) について，s[i..n) と s の最長共通接頭辞の長さを z[i] に格納する．
 */
 template <class STR> void z_algorithm(const STR& s, vi& z) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/03/214243
+	// verify : https://judge.yosupo.jp/problem/zalgorithm
 
 	//【方法】
 	// j = z[i] > 0 が愚直に求まったとする．

@@ -12,7 +12,7 @@
 *（重さを状態とした状態 DP）
 */
 ll knapsack01_problem(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
-	// verify : https://algo-method.com/tasks/342
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_d
 
 	int n = sz(v); // 品物の個数
 
@@ -59,6 +59,8 @@ ll knapsack01_problem(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
 *（価値を状態とした状態 DP）
 */
 ll knapsack01_problem(const vi& v, vl& w, ll w_max, vb* sel = nullptr) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_e
+
 	int n = sz(v); // 品物の個数
 
 	// 重さを無視した合計価値 v_max の計算
@@ -123,6 +125,7 @@ ll knapsack01_problem(const vi& v, vl& w, ll w_max, vb* sel = nullptr) {
 */
 ll knapsack01_problem(const vl& v, vl& w, ll W) {
 	// 参考：https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_H
 
 	int N = sz(v); // 品物の個数
 
@@ -505,6 +508,8 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
 * 利用：【0-1 ナップサック問題（重さが小）】
 */
 ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& sel) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_G
+
 	int N = sz(v); // 品物の個数
 
 	// 品物を 1, 2, 4, 8, ... 個ずつセットにして 1 つの品物とみなす．
@@ -518,7 +523,7 @@ ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& se
 		while (c < m_i) {
 			// 重さが W を超えたセットは無意味なので追加しない．
 			if (w[i] * c > (ll)W) {
-				goto LOOP_END;
+				goto NEXT_LOOP;
 			}
 			v2.push_back(v[i] * c);
 			w2.push_back(w[i] * (int)c);
@@ -530,7 +535,7 @@ ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& se
 		v2.push_back(v[i] * m_i);
 		w2.push_back(w[i] * (int)m_i);
 		kind.push_back(i);
-	LOOP_END:;
+	NEXT_LOOP:;
 	}
 
 	// セットに対して 0-1 ナップサック問題を解く．
@@ -571,7 +576,7 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll W, vi& sel
 		while (c < m_i) {
 			// 重さが W を超えたセットは無意味なので追加しない．
 			if (w[i] * c > W) {
-				goto LOOP_END;
+				goto NEXT_LOOP;
 			}
 			v2.push_back(v[i] * (int)c);
 			w2.push_back(w[i] * c);
@@ -583,7 +588,7 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll W, vi& sel
 		v2.push_back(v[i] * (int)m_i);
 		w2.push_back(w[i] * m_i);
 		kind.push_back(i);
-	LOOP_END:;
+	NEXT_LOOP:;
 	}
 
 	// セットに対して 0-1 ナップサック問題を解く．
@@ -624,7 +629,7 @@ ll knapsack_problem_minimize_weight_limited(const vi& v, const vl& w, const vl& 
 		while (c < m_i) {
 			// 価値が V を超えたセットは無意味なので追加しない．
 			if (v[i] * c > (ll)V) {
-				goto LOOP_END;
+				goto NEXT_LOOP;
 			}
 			v2.push_back(v[i] * (int)c);
 			w2.push_back(w[i] * c);
@@ -636,7 +641,7 @@ ll knapsack_problem_minimize_weight_limited(const vi& v, const vl& w, const vl& 
 		v2.push_back(v[i] * (int)m_i);
 		w2.push_back(w[i] * m_i);
 		kind.push_back(i);
-	LOOP_END:;
+	NEXT_LOOP:;
 	}
 
 	// セットに対して重さ最小化 0-1 ナップサック問題を解く．
@@ -668,6 +673,8 @@ ll knapsack_problem_minimize_weight_limited(const vi& v, const vl& w, const vl& 
 *（重さと色数を状態としたインライン状態 DP）
 */
 ll knapsack01_problem(const vl& v, const vi& w, const vi& c, int w_max, int c_max) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_knapsack
+
 	int n = sz(v); // 品物の個数
 
 	const int m = *max_element(all(c)) + 1;

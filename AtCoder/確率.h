@@ -4,17 +4,18 @@
 // ■■■■■ 確率 ■■■■■
 
 
-
 //【コインの表の枚数の確率】O(n^2)
 /*
-* 表が出る確率がそれぞれ p[i] のコインをすべて投げたとき，
-* 表が j 枚出る確率を head に格納する．
+* 表が出る確率がそれぞれ p[0..n) のコインをすべて投げたとき，
+* 表が j 枚出る確率を head[j] に格納する．
 * 
 *（確率 DP）
 */
 void coin_probability(const vd& p, vd& head) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_i
+
 	int n = sz(p);
-	head = vd(n + 1);
+	head.resize(n + 1);
 
 	// dp[i][j] : コイン [0..i) のうち表が j 枚出る確率
 	vvd dp(n + 1, vd(n + 1));
@@ -30,8 +31,7 @@ void coin_probability(const vd& p, vd& head) {
 			dp[i + 1][j] += (1 - p[i]) * dp[i][j];
 		}
 	}
-	dumpel(dp);
-
+	
 	repi(j, 0, n) {
 		head[j] = dp[n][j];
 	}
@@ -47,6 +47,8 @@ void coin_probability(const vd& p, vd& head) {
 *（確率DP）
 */
 void tournament_probability(const vd& r, vd& win, function<double(double, double)>& f) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tournament
+
 	int n = sz(r);
 	int k = msb(n);
 	win = vd(n);
@@ -87,8 +89,12 @@ void tournament_probability(const vd& r, vd& win, function<double(double, double
 * 6 面サイコロを n 回振ったときの出目の積が d の倍数になる確率を返す．
 *
 *（確率 DP）
+* 
+* 利用：【素因数分解】
 */
 double dice_product_probability(int n, ll d) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_dice
+
 	// d を素因数分解する．
 	map<ll, int> pps;
 	factor_integer(d, pps);

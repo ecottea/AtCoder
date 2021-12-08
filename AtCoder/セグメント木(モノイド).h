@@ -56,6 +56,8 @@ template <class T> struct Segtree {
 
 	// コンストラクタ（配列で初期化）
 	Segtree(vector<T>& v_) : Segtree(sz(v_)) {
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
 		// 全ての葉にデータを設定する．
 		rep(i, sz(v_)) v[i + n] = v_[i];
 
@@ -65,6 +67,8 @@ template <class T> struct Segtree {
 
 	// v[i] = x とする．
 	void set(int i, T x) {
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
 		// 実際にデータを格納すべき葉の位置へ
 		i += n;
 
@@ -82,7 +86,11 @@ template <class T> struct Segtree {
 	T get(int i) const { return v[i + n]; }
 
 	// Πv[l..r) を返す．空なら e を返す．
-	T prod(int l, int r) const { return prod_rf(l, r, 1, 0, n); }
+	T prod(int l, int r) const {
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
+		return prod_rf(l, r, 1, 0, n);
+	}
 
 	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
 	T prod_rf(int l, int r, int k, int kl, int kr) const {
@@ -229,6 +237,8 @@ template <class T> struct Lazy_segtree {
 
 	// コンストラクタ（配列で初期化）
 	Lazy_segtree(vector<typename T::S>& v_) : Lazy_segtree(sz(v_)) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+
 		// 全ての葉にデータを設定する．
 		rep(i, sz(v_)) v[i + n] = v_[i];
 
@@ -280,7 +290,11 @@ template <class T> struct Lazy_segtree {
 	typename T::S get(int i) { return prod(i, i + 1); }
 
 	// op( v[l..r) ) を返す．空なら e() を返す．
-	typename T::S prod(int l, int r) { return prod_rf(l, r, 1, 0, n); }
+	typename T::S prod(int l, int r) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+
+		return prod_rf(l, r, 1, 0, n);
+	}
 
 	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
 	typename T::S prod_rf(int l, int r, int k, int kl, int kr) {
@@ -303,7 +317,11 @@ template <class T> struct Lazy_segtree {
 	void apply(int i, typename T::F f) { apply(i, i + 1, f); }
 
 	// v[l..r) = f( v[l..r) ) とする．
-	void apply(int l, int r, typename T::F f) { apply_rf(l, r, f, 1, 0, n); }
+	void apply(int l, int r, typename T::F f) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+	
+		apply_rf(l, r, f, 1, 0, n);
+	}
 
 	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
 	void apply_rf(int l, int r, typename T::F f, int k, int kl, int kr) {

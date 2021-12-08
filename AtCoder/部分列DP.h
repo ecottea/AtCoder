@@ -3,7 +3,7 @@
 // ■■■■■ 部分列 DP ■■■■■
 
 
-//【部分列の数え上げ】O(k |s|)
+//【部分列の数え上げ】O(n k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) の部分列の個数を返す．
 * 空文字列も s の部分列とみなす．
@@ -12,11 +12,12 @@
 */
 mint count_subseq(const string& s) {
 	// 参考 : https://qiita.com/drken/items/a207e5ae3ea2cf17f4bd
+	// verify : https://judge.yosupo.jp/problem/number_of_substrings
 
 	int n = sz(s);
 	const int k = 26;
 
-	// nxt[i][c] : 部分文字列 s[i..n) で最初に文字 c が現れる位置（無いなら -1）
+	// nxt[i][c] : s[i..n) で最初に文字 c が現れる位置（無いなら -1）
 	vvi nxt(n + 1, vi(k, -1));
 	repir(i, n - 1, 0) {
 		rep(c, k) {
@@ -25,7 +26,7 @@ mint count_subseq(const string& s) {
 		nxt[i][s[i] - 'a'] = i;
 	}
 
-	// dp[i + 1] : 部分文字列 s[0..i] から得られる s[i] を含む部分列の個数．
+	// dp[i + 1] : s[0..i] から得られる s[i] を含む部分列の個数．
 	//	ただし同じ部分列については選択する位置の組が辞書順最小になるもののみを認める．
 	//	この制約を設けることにより同じ部分列を重複して数えてしまわないようにする．
 	vm dp(n + 1);
@@ -35,7 +36,7 @@ mint count_subseq(const string& s) {
 	rep(i, n) {
 		// 次に選ぶ文字 c について
 		rep(c, k) {
-			// 部分文字列 s[i..n) で最初に文字 c が現れる位置
+			// s[i..n) で最初に文字 c が現れる位置
 			int j = nxt[i][c];
 
 			// もう c が現れないなら c を選ぶことはできない．
@@ -58,7 +59,7 @@ mint count_subseq(const string& s) {
 }
 
 
-//【回文部分列の数え上げ】O(k |s|^2)
+//【回文部分列の数え上げ】O(n^2 k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) の回文部分列の個数を返す．
 * 空文字列も s の回文部分列とみなす．
@@ -72,7 +73,7 @@ mint count_subseq_palindrome(const string& s) {
 	int n = sz(s);
 	const int k = 26;
 
-	// nxt[i][c] : 部分文字列 s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
+	// nxt[i][c] : s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
 	vvi nxt(n + 1, vi(k, n));
 	repir(i, n - 1, 0) {
 		rep(c, k) {
@@ -81,7 +82,7 @@ mint count_subseq_palindrome(const string& s) {
 		nxt[i][s[i] - 'a'] = i;
 	}
 
-	// prv[i + 1][c] : 部分文字列 s[0..i] で最後に文字 c が現れる位置（無いなら -1）
+	// prv[i + 1][c] : s[0..i] で最後に文字 c が現れる位置（無いなら -1）
 	vvi prv(n + 1, vi(k, -1));
 	rep(i, n) {
 		rep(c, k) {
@@ -91,7 +92,7 @@ mint count_subseq_palindrome(const string& s) {
 	}
 
 	// dp[i + 1][j] : 
-	//		回文の前半が部分文字列 s[0..i] から，後半が s[j..n-1] から得られる
+	//		回文の前半が s[0..i] から，後半が s[j..n-1] から得られる
 	//		s[i] と s[j] を含む部分列の個数．
 	// ただし同じ部分列については選択する位置の組が前半は辞書順最小，
 	// 後半は辞書順最大になるもののみを認める．
@@ -104,10 +105,10 @@ mint count_subseq_palindrome(const string& s) {
 		repir(j, n, i + 1) {
 			// 次に選ぶ文字 c について
 			rep(c, k) {
-				// 部分文字列 s[i..n-1] で最初に文字 c が現れる位置
+				// s[i..n-1] で最初に文字 c が現れる位置
 				int l = nxt[i][c];
 
-				// 部分文字列 s[0..j] で最後に文字 c が現れる位置
+				// s[0..j] で最後に文字 c が現れる位置
 				int r = prv[j][c];
 
 				// もう c が現れないか前後が逆転するなら c を選ぶことはできない．

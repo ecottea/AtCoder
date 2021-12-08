@@ -53,7 +53,7 @@ template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; retur
 template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; return true; } return false; } // 最大値を更新（更新されたら true を返す）
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
 
-// 入出力用の >>, << のオーバーロード
+// 演算子オーバーロード
 template <class T, class U> inline istream& operator>> (istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const pair<T, U>& p) { os << "(" << p.first << "," << p.second << ")"; return os; }
 template <class T, class U, class V> inline istream& operator>> (istream& is, tuple<T, U, V>& t) { is >> get<0>(t) >> get<1>(t) >> get<2>(t); return is; }
@@ -63,6 +63,7 @@ template <class T, class U, class V, class W> inline ostream& operator<< (ostrea
 template <class T> inline istream& operator>> (istream& is, vector<T>& v) { repea(x, v) is >> x; return is; }
 template <class T> inline ostream& operator<< (ostream& os, const vector<T>& v) { repe(x, v) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
@@ -71,6 +72,7 @@ template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while 
 template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop_front(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue_rev<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
+template <class T> inline vector<T>& operator--(vector<T>& v) { rep(i, sz(v)) --v[i]; return v; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -83,7 +85,7 @@ inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, 
 template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define dump(x) cout << "\033[1;36m" << (x) << "\033[0m" << endl;
 #define dumps(x) cout << "\033[1;36m" << (x) << "\033[0m ";
-#define dumpel(a) { int i = 0; cout << "\033[1;36m"; repe(x, a) {cout << i++ << ": " << x << endl;} cout << "\033[0m"; }
+#define dumpel(a) { int i = -1; cout << "\033[1;36m"; repe(x, a) {cout << ++i << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream isTMP(f); cin.rdbuf(isTMP.rdbuf());
 #define output_to_file(f) ofstream osTMP(f); cout.rdbuf(osTMP.rdbuf());
 // 提出用（gcc）
@@ -105,116 +107,230 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-////-----------------AtCoder 専用-----------------
-//#include <atcoder/all>
-//using namespace atcoder;
-//
-////using mint = modint1000000007;
-////using mint = modint998244353;
+//-----------------AtCoder 専用-----------------
+#include <atcoder/all>
+using namespace atcoder;
+
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
-//
-//template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-//ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
-//using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-////----------------------------------------------
+
+template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+//----------------------------------------------
 
 
-//【根付き木のノード】
+//【素因数分解／試し割り法】O(√n)
 /*
-* parent : 親の頂点（なければ -1）
-* child : 子のリスト（なければ空リスト）
-* depth : 深さ（根からのパスの長さ）
-* weight : 重さ（部分木のもつ辺の数）
-*/
-
-
-
-//【根付き木】
-/*
-* rt[i] : 根付き木の i 番目のノードの情報
-* r : 根の頂点番号
+* n を素因数分解した結果を pps に格納する．
 *
-* Rooted_tree(g, r) : O(|V|)
-*	木 g を r を根とみなした根付き木として受け取る．
+* pps[p] = d : n に素因数 p が d 個含まれていることを表す．
 */
-struct Rooted_tree {
+void factor_integer(ll n, map<ll, int>& pps) {
+	// verify : https://algo-method.com/tasks/457
 
-	struct Node {
-		int parent = -1; // 親（なければ -1）
-		vi child; // 子（なければ空リスト）
-		int depth = -1; // 深さ（根からのパスの長さ）
-		int& dist = depth; // 深さを距離ともみなす（パスのコストを 1 とみなす）
-		int weight = -1; // 重さ（部分木のもつ辺の数）
+	pps.clear();
 
-		// デバッグ出力
-		friend ostream& operator<<(ostream& os, const Node& v) {
-			os << "(p:" << v.parent << ", c:" << v.child << ", d:" << v.depth
-				<< ", w:" << v.weight << ")";
-			return os;
+	for (ll i = 2; i * i <= n; i++) {
+		int d = 0;
+		while (n % i == 0) {
+			d++;
+			n /= i;
 		}
-	};
+		if (d > 0) pps[i] = d;
+	}
+	if (n > 1) pps[n] = 1;
+}
 
-	int n;
-	vector<Node> v;
-	int r;
 
-	// コンストラクタ（木と根で初期化）
-	Rooted_tree(Graph& g, int r_) : n(sz(g)), v(n), r(r_) {
-		// 再帰用の関数
-		// s : 注目ノード，p : s の親
-		function<void(int, int)> dfs = [&](int s, int p) {
-			v[s].parent = p;
-			v[s].child.clear();
-			v[s].weight = 0;
+//【互いに素な数の個数】O(√a + 2^m)（m : a の素因数の種類数）
+/*
+* l 以上 r 以下の整数のうち、a と互いに素な数の個数を返す．
+*
+*（状態系包除原理）
+*
+* 利用：【素因数分解】
+*/
+ll count_coprime(ll a, ll l, ll r) {
+	// a と互いに素 ⇔ a の各素因数で割り切れない，なので a を素因数分解する．
+	map<ll, int> pps;
+	factor_integer(a, pps);
 
-			repe(t, g[s]) {
-				if (t == p) continue;
+	// a の素因数だけのリスト p を作る．（個数は使わない）
+	vl p;
+	repe(s, pps) p.push_back(s.first);
+	int m = sz(p);
 
-				v[t].depth = v[s].depth + 1;
+	// 包除原理を用いて数え上げる．
+	// 例えば，6 と互いに素な数の個数は，
+	//		1 の倍数を全て数え，そこから 2 の倍数の個数を引き，
+	//		さらに 3 の倍数の個数を引き，引きすぎた 6 の倍数の個数を足す
+	// ことにより数えることができる．
+	ll res = 0;
+	rep(bit, 1 << m) {
+		// mul の倍数を考える．
+		ll mul = 1;
 
-				dfs(t, s);
+		// mul が何個の素因数の積か．
+		int ones = 0;
 
-				v[s].child.push_back(t);
-				v[s].weight += v[t].weight + 1;
+		rep(i, m) {
+			if (bit & (1 << i)) {
+				mul *= p[i];
+				ones++;
 			}
-		};
+		}
 
-		// 根 r を始点として再帰関数を呼び出す．
-		v[r].depth = 0;
-		dfs(r, -1);
+		// 素因数の個数の偶奇で加減を切り替えつつ個数を数えていく．
+		res += ((ones % 2) ? -1 : 1) * (r / mul - (l - 1) / mul);
+	}
+	return res;
+}
+
+
+// x を固定して y を数えることを繰り返す．
+// x を 1 個ずつ素因数分解してるので TLE しそうだが 1900ms くらいでギリギリ AC する．
+void AC1() {
+	ll l, r;
+	cin >> l >> r;
+
+	ll res = 0;
+	repi(x, l, r) {
+		res += (r - x) - (count_coprime(x, x + 1, r));
+		if (x > 1) {
+			res -= r / x - 1;
+		}
+	}
+	res *= 2;
+
+	cout << res << endl;
+}
+
+
+//【一括素因数分解】O(n log(log n))
+/*
+* n 以下の自然数 i の素因数分解を pps[i] に格納する．（pps[0] は使わない）
+*
+*（エラトステネスの篩）
+*/
+void factor_integer_all(int n, vector<map<int, int>>& pps) {
+	pps = vector<map<int, int>>(n + 1);
+
+	// 順に素数で割っていった残りの値を記録しておくためのテーブル
+	vi a(n + 1);
+	iota(all(a), 0);
+
+	int p = 2;
+
+	// √n 以下の p の処理（continue されない場合は p は素数）
+	for (; p * p <= n; p++) {
+		if (a[p] == 1) continue;
+
+		for (int i = p; i <= n; i += p) {
+			while (a[i] % p == 0) {
+				pps[i][p]++;
+				a[i] /= p;
+			}
+		}
 	}
 
-	// アクセス
-	Node const& operator[](int i) const { return v[i]; }
-	Node& operator[](int i) { return v[i]; }
-
-	// 大きさ
-	int size() const { return n; }
-
-	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const Rooted_tree& rt) {
-		rep(i, rt.n) os << rt[i] << endl;
-		return os;
+	// √n より大きい p の処理（この p は素数とは限らないので注意）
+	for (; p <= n; p++) {
+		if (a[p] != 1) pps[p][a[p]]++;
 	}
-};
+}
+
+
+//【添字非倍数の和】O(2^n n O(mf))
+/*
+* 互いに異なる素数 ps[0..n) のいずれの倍数でもない数の集合を S とし，Σi∈S f(i) を返す．
+* ただし mf(d) := Σd|i f(i) とする．
+* 
+* ps を数 a の素因数のリストとすれば，i は a と互いに素な数を走査する．
+*
+*（状態系包除原理）
+*/
+template <class T> T nonmultiple_sum(vl& ps, function<T(ll)>& mf) {
+	int n = sz(ps);
+
+	T res = 0;
+	
+	// 包除原理を用いて計算する．
+	// 例えば ps[0..2) = (2, 3) のとき，
+	//		Σi∈S f(i) = Σ1|i f(i) - Σ2|i f(i) - Σ3|i f(i) + Σ6|i f(i)
+	// となる．
+	repb(set, n) {
+		ll d = 1; // d の倍数を考える．
+		int sign = 1; // sign : 符号因子
+
+		rep(i, n) {
+			if (set & (1 << i)) {
+				// オーバーフロー対策
+				if (d > INFL / ps[i]) goto NEXT_LOOP;
+
+				d *= ps[i];
+				sign *= -1;
+			}
+		}
+
+		res += sign * mf(d);
+
+	NEXT_LOOP:;
+	}
+
+	return res;
+}
+
+
+// AC1() と考え方は同じだが，素因数分解を一括で行うことにした．
+// 実行時間は 1000ms ほどまで改善された．
+void AC2() {
+	int l, r;
+	cin >> l >> r;
+
+	vector<map<int, int>> pps;
+	factor_integer_all(r, pps);
+
+	ll res = 0;
+	repi(x, l, r) {
+		vl ps;
+		repe(pp, pps[x]) ps.push_back(pp.first);
+		function<ll(ll)> mf = [&](ll d) { return r / d - x / d; };
+		res += (r - x) - nonmultiple_sum(ps, mf);
+		if (x > 1) {
+			res -= r / x - 1;
+		}
+	}
+	res *= 2;
+
+	cout << res << endl;
+}
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	int n;
-	cin >> n;
+	int l, r;
+	cin >> l >> r;
 
-	vl w(n);
-	cin >> w;
+	vector<map<int, int>> pps;
+	factor_integer_all(r, pps);
 
-	vi p;
-	coordinate_compression(w, p);
-
-	auto res = minimum_cost_sort(p, w);
+	ll res = 0;
+	repi(x, l, r) {
+		vl ps;
+		repe(pp, pps[x]) ps.push_back(pp.first);
+		function<ll(ll)> mf = [&](ll d) { return r / d - x / d; };
+		res += (r - x) - nonmultiple_sum(ps, mf);
+		if (x > 1) {
+			res -= r / x - 1;
+		}
+	}
+	res *= 2;
 
 	cout << res << endl;
 }

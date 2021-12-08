@@ -7,7 +7,7 @@
 
 //【連結成分分解】O(|V| + |E|)
 /*
-* 無向グラフ g を連結成分分解し，結果を cc に返す．
+* 無向グラフ g を連結成分分解し，結果を cc に格納する．
 * cc[i] は i 番目の連結成分の頂点からなるリストである．
 */
 void connected_component(const Graph& g, vvi& cc) {
@@ -22,7 +22,7 @@ void connected_component(const Graph& g, vvi& cc) {
 
 		cc.rbegin()->push_back(s);
 
-		for (auto t : g[s]) {
+		repe(t, g[s]) {
 			if (t == p) continue;
 
 			dfs(t, s);
@@ -39,7 +39,7 @@ void connected_component(const Graph& g, vvi& cc) {
 }
 
 
-//【頂点の縮約】O(|V| + |E| log |V|)
+//【頂点の縮約】O(|V| + |E| log|V|)
 /*
 * グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として
 * 縮約したグラフを gc に格納する．
@@ -144,14 +144,10 @@ bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
 	// 各頂点 s について
 	rep(s, n) {
 		// 既になぞった連結成分に属する頂点なら何もしない．
-		if (g[s].empty()) {
-			continue;
-		}
+		if (g[s].empty()) continue;
 
 		// s から始まる閉路を探す．閉路分割に失敗したら false を返す．
-		if (!find_cycle(s)) {
-			return false;
-		}
+		if (!find_cycle(s)) return false;
 	}
 
 	return true;
@@ -193,19 +189,13 @@ template <class G> void cycle_detection(const G& g, vi& cycle) {
 			auto end = dfs(t, s);
 
 			// 閉路が検出できなかったなら何もせず次の t を考える．
-			if (end == -1) {
-				continue;
-			}
+			if (end == -1) continue;
 
 			// s が検出した閉路の末端であれば，閉路の記録をここで終わる．
-			if (end == s || end == -2) {
-				return -2;
-			}
+			if (end == s || end == -2) return -2;
 
 			// 検出した閉路を逆順に記録していく．
-			if (end >= 0) {
-				cycle.push_back(s);
-			}
+			if (end >= 0) cycle.push_back(s);
 
 			return end;
 		}
@@ -216,17 +206,13 @@ template <class G> void cycle_detection(const G& g, vi& cycle) {
 	// 各頂点 v について
 	rep(v, n) {
 		// 既になぞった連結成分に属する頂点なら何もしない．
-		if (seen[v]) {
-			continue;
-		}
+		if (seen[v]) continue;
 
 		// v から深さ優先探索を始める．
 		int end = dfs(v, v);
 
 		// 閉路を検出していたら終了．
-		if (end != -1) {
-			return;
-		}
+		if (end != -1) return;
 	}
 }
 
@@ -241,6 +227,8 @@ template <class G> void cycle_detection(const G& g, vi& cycle) {
 * 利用：【強連結成分分解】
 */
 template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
+	// verify : https://judge.yosupo.jp/problem/cycle_detection
+
 	int n = sz(g);
 	cycle.clear();
 
@@ -270,19 +258,13 @@ template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
 				auto end = dfs(t);
 
 				// 閉路が検出できなかったなら何もせず次の t を考える．
-				if (end == -1) {
-					continue;
-				}
+				if (end == -1) continue;
 
 				// s が検出した閉路の末端であれば，閉路の記録をここで終わる．
-				if (end == s || end == -2) {
-					return -2;
-				}
+				if (end == s || end == -2) return -2;
 
 				// 検出した閉路を逆順に記録していく．
-				if (end >= 0) {
-					cycle.push_back(s);
-				}
+				if (end >= 0) cycle.push_back(s);
 
 				return end;
 			}
@@ -293,9 +275,7 @@ template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
 		// 各頂点 v について
 		rep(v, n) {
 			// 既になぞった連結成分に属する頂点なら何もしない．
-			if (seen[v]) {
-				continue;
-			}
+			if (seen[v]) continue;
 
 			// v から深さ優先探索を始める．
 			int end = dfs(v);
@@ -319,9 +299,7 @@ template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
 		// 大きさ 2 以上の強連結成分 vs があれば閉路がある．
 		if (sz(vs) > 1) {
 			// 通っても良い頂点の集合に vs の頂点を記録する．
-			repe(v, vs) {
-				valid.insert(v);
-			}
+			repe(v, vs) valid.insert(v);
 
 			// vs 内なら行き止まりがないので，行きあたりばったりで閉路検出ができる．
 			ikiatari_battari();
@@ -331,7 +309,7 @@ template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
 }
 
 
-//【二部グラフ判定】O(|E|)
+//【二部グラフ判定】O(|V| + |E|)
 /*
 * 連結無向グラフが二部グラフかどうか判定する．
 * 二部グラフならその彩色例を col に格納する（色は 0, 1 で表す）
@@ -344,7 +322,7 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 
 	// 再帰用の関数
 	function<bool(int)> dfs = [&](int s) {
-		for (auto t : g[s]) {
+		repe(t, g[s]) {
 			// 未彩色の頂点の場合
 			if (col[t] == -1) {
 				// s と異なる色で t を彩色する．
@@ -370,6 +348,55 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 }
 
 
+//【二部グラフ判定】O(|V| + |E|)
+/*
+* 無向グラフを連結成分分解した結果を連結成分の頂点リストとして cc[i] に格納し，
+* i 番目の連結成分 cc[i] が二部グラフかどうかを b[i] に格納する．
+* 二部グラフの部分についてはその彩色例を col に格納する（色は 0, 1 で表す）
+*
+* 利用：【連結成分分解】
+*/
+void bipartite_graphQ(const Graph& g, vvi& cc, vb& b, vi& col) {
+	int n = sz(g);
+
+	// g を連結成分分解する．
+	connected_component(g, cc);
+	int m = sz(cc);
+	b.resize(m);
+
+	// 頂点の色（0,1 は色を，-1 は未探索を表す）
+	col = vi(n, -1);
+
+	// 再帰用の関数
+	function<bool(int)> dfs = [&](int s) {
+		repe(t, g[s]) {
+			// 未彩色の頂点の場合
+			if (col[t] == -1) {
+				// s と異なる色で t を彩色する．
+				col[t] = 1 - col[s];
+
+				// t から先を彩色しにいき，二部グラフでないならすぐに帰る．
+				if (!dfs(t)) return false;
+			}
+			// 彩色済の頂点の場合
+			else {
+				// s と t が同色だったら二部グラフではないのですぐに帰る．
+				if (col[t] == col[s]) return false;
+			}
+		}
+
+		// ここまで来たなら見た範囲は二部グラフである．
+		return true;
+	};
+
+	// 各連結成分の代表を始点として再帰関数を呼び出す．
+	rep(i, m) {
+		col[cc[i][0]] = 0;
+		b[i] = dfs(cc[i][0]);
+	}
+}
+
+
 //【グラフの関節点と橋】O(|V| + |E|)
 /*
 * 無向グラフ g の関節点のリストを a に，橋のリストを b に格納する．
@@ -384,6 +411,8 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 template <class E>
 void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 	// 参考 : https://algo-logic.info/articulation-points/
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
 
 	int n = sz(g);
 
@@ -408,7 +437,7 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 		bool ap = false; // 関節点か
 		int ccnt = 0; // 子の個数
 
-		for (auto t : g[s]) {
+		repe(t, g[s]) {
 			// 親に戻る辺と自己ループは通らない．
 			// （自己ループは連結性に影響を与えないので無視できる）
 			if (t == p || t == s) continue;
@@ -427,9 +456,7 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 				chmin(low[s], low[t]);
 
 				// 橋であれば記録する．
-				if (in[s] < low[t]) {
-					b.push_back({ s, t });
-				}
+				if (in[s] < low[t]) b.push_back({ s, t });
 
 				// 関節点かどうかの判定用
 				ap |= (in[s] <= low[t]);
@@ -438,14 +465,10 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 		}
 
 		// 根の場合の例外処理
-		if (s == r) {
-			ap = (ccnt >= 2);
-		}
+		if (s == r) ap = (ccnt >= 2);
 
 		// 関節点であれば記録する．
-		if (ap) {
-			a.push_back(s);
-		}
+		if (ap) a.push_back(s);
 	};
 
 	// 適当な点を根（始点）として DFS を行う．
@@ -458,7 +481,7 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 }
 
 
-//【二辺連結成分分解】O(|V| + |E| log|V|)
+//【二辺連結成分分解】O(|V| + |E|)
 /*
 * 無向グラフ g を二辺連結成分分解し，結果を tecc に返す．
 * tecc[i] は i 番目の二辺連結成分の頂点からなるリストである．
@@ -466,13 +489,15 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 * 利用：【グラフの関節点と橋】，【連結成分分解】
 */
 void two_edge_connected_component(const Graph& g, vvi& tecc) {
+	// verify : https://judge.yosupo.jp/problem/two_edge_connected_components
+
 	int n = sz(g);
 
 	vi a;
 	vector<pii> b;
 	lowlink(g, a, b);
 
-	vector<set<int>> bridges(n);
+	vector<unordered_set<int>> bridges(n);
 	repe(e, b) {
 		bridges[e.first].insert(e.second);
 		bridges[e.second].insert(e.first);
@@ -481,68 +506,12 @@ void two_edge_connected_component(const Graph& g, vvi& tecc) {
 	Graph g2(n);
 	rep(s, n) {
 		repe(t, g[s]) {
-			if (bridges[s].count(t)) {
-				bridges[s].erase(t);
-			}
-			else {
-				g2[s].push_back(t);
-			}
+			if (bridges[s].count(t)) bridges[s].erase(t);
+			else g2[s].push_back(t);
 		}
 	}
 
 	connected_component(g2, tecc);
-}
-
-
-//【葉の削除回数】O(|V|)
-/*
-* 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納する．
-*
-*（葉からの幅優先探索）
-*/
-void leaf_remove_level(const Graph& g, vi& lv) {
-	int n = sz(g);
-	lv = vi(n);
-
-	// 木が 1 頂点のみで次数 1 の頂点が存在しない場合の例外処理
-	if (n == 1) {
-		lv[0] = 0;
-		return;
-	}
-
-	// 次数を求めておく．
-	vi degree(n);
-	rep(i, n) {
-		repe(t, g[i]) {
-			degree[t]++;
-		}
-	}
-
-	// 次数が 1 の頂点から順に取り除いていく．
-	queue<pii> q;
-	rep(i, n) {
-		if (degree[i] == 1) {
-			q.push({ i, 0 });
-		}
-	}
-
-	while (!q.empty()) {
-		int s, d;
-		tie(s, d) = q.front();
-		q.pop();
-
-		lv[s] = d;
-
-		repe(t, g[s]) {
-			// 頂点 s を取り除き，t の次数を更新する．
-			degree[t]--;
-
-			// 新たに次数 1 の頂点が生まれたらキューに追加する．
-			if (degree[t] == 1) {
-				q.push({ t, d + 1 });
-			}
-		}
-	}
 }
 
 

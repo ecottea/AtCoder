@@ -13,6 +13,8 @@
 *（葉からの幅優先探索）
 */
 void topological_sort(const Graph& g, vi& seq) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_4_B
+
 	int n = sz(g);
 
 	// 入次数を求めておく．
@@ -33,8 +35,7 @@ void topological_sort(const Graph& g, vi& seq) {
 
 	seq.clear();
 	while (!q.empty()) {
-		auto s = q.front();
-		q.pop();
+		auto s = q.front(); q.pop();
 
 		// 入次数が 0 の頂点を見つけ結果に格納する．
 		seq.push_back(s);
@@ -59,22 +60,19 @@ void topological_sort(const Graph& g, vi& seq) {
 */
 void strongly_connected_component(const Graph& g, vvi& scc) {
 	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
+	// verify : https://judge.yosupo.jp/problem/scc
 
 	int n = sz(g);
 
 	// 辺の向きを逆にしたグラフを作成
 	Graph g_rev(n);
-	rep(s, n) {
-		repe(t, g[s]) {
-			g_rev[t].push_back(s);
-		}
-	}
+	rep(s, n) repe(t, g[s]) g_rev[t].push_back(s);
 
 	// 各頂点の状態（0:未探索，1:順探索済かつ未逆探索，2:逆探索済）
 	vi status(n, 0);
 
 
-	// step1: まず順探索（深さ優先）を行い，結果をスタックに格納する．
+	// (step1): まず順探索（深さ優先）を行い，結果をスタックに格納する．
 
 	// 深さ優先の順探索で見つかった順に頂点を記録するスタック
 	stack<int> stk;
@@ -86,9 +84,7 @@ void strongly_connected_component(const Graph& g, vvi& scc) {
 
 		repe(t, g[s]) {
 			// 未探索の頂点を探索しにいく．
-			if (status[t] == 0) {
-				trace(t);
-			}
+			if (status[t] == 0) trace(t);
 		}
 
 		// 先の探索が済んだら自身を記録する（深さ優先探索）
@@ -97,13 +93,11 @@ void strongly_connected_component(const Graph& g, vvi& scc) {
 
 	rep(i, n) {
 		// 未探索の頂点を見つけたら探索する．
-		if (status[i] == 0) {
-			trace(i);
-		}
+		if (status[i] == 0) trace(i);
 	}
 
 
-	// step2: 次に逆探索を行い，強連結成分を確定する．
+	// (step2): 次に逆探索を行い，強連結成分を確定する．
 
 	// 逆探索用の再帰関数
 	function<void(int)> trace_rev = [&](int s) {
@@ -112,9 +106,7 @@ void strongly_connected_component(const Graph& g, vvi& scc) {
 
 		repe(t, g_rev[s]) {
 			// 未逆探索の頂点を探索しにいく．
-			if (status[t] == 1) {
-				trace_rev(t);
-			}
+			if (status[t] == 1) trace_rev(t);
 		}
 
 		// 先の探索が済んだら自身を強連結成分の一員として記録する．
@@ -172,6 +164,8 @@ void count_path(const Graph& g, vm& cnt) {
 *（DAG 上の DP）
 */
 void longest_path(const Graph& g, vi& len) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_g
+
 	int n = sz(g);
 
 	// len[s] : 頂点 s からの最長パスの長さ
@@ -228,9 +222,7 @@ ll highest_cost_path(const Graph& g, const vl& w) {
 
 	// 各頂点 s についての情報を計算する．
 	ll res = 0;
-	rep(s, n) {
-		chmax(res, dfs(s));
-	}
+	rep(s, n) chmax(res, dfs(s));
 
 	return res;
 }
@@ -295,6 +287,7 @@ ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 */
 ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
 	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/26/172626
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_graph
 
 	int n = sz(g_);
 
@@ -324,7 +317,7 @@ ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
 		breadth_first_search(g, s, dist);
 
 		rep(t, n) {
-			downQ[s][t] = (dist[t] >= 0);
+			downQ[s][t] = (dist[t] < INF);
 		}
 	}
 

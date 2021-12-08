@@ -56,7 +56,7 @@ template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; retur
 template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; return true; } return false; } // 最大値を更新（更新されたら true を返す）
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
 
-// 入出力用の >>, << のオーバーロード
+// 演算子オーバーロード
 template <class T, class U> inline istream& operator>> (istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const pair<T, U>& p) { os << "(" << p.first << "," << p.second << ")"; return os; }
 template <class T, class U, class V> inline istream& operator>> (istream& is, tuple<T, U, V>& t) { is >> get<0>(t) >> get<1>(t) >> get<2>(t); return is; }
@@ -74,6 +74,7 @@ template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while 
 template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop_front(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue_rev<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
+template <class T> inline vector<T>& operator--(vector<T>& v) { rep(i, sz(v)) --v[i]; return v; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -86,7 +87,7 @@ inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, 
 template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define dump(x) cout << "\033[1;36m" << (x) << "\033[0m" << endl;
 #define dumps(x) cout << "\033[1;36m" << (x) << "\033[0m ";
-#define dumpel(a) { int i = 0; cout << "\033[1;36m"; repe(x, a) {cout << i++ << ": " << x << endl;} cout << "\033[0m"; }
+#define dumpel(a) { int i = -1; cout << "\033[1;36m"; repe(x, a) {cout << ++i << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream isTMP(f); cin.rdbuf(isTMP.rdbuf());
 #define output_to_file(f) ofstream osTMP(f); cout.rdbuf(osTMP.rdbuf());
 // 提出用（gcc）
@@ -106,6 +107,7 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif
 
 #endif // 折りたたみ用
+
 
 
 
@@ -134,7 +136,10 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 * 
 * // string s_ を vector<char> s に変換
 * vc s(all(s_));
-* 
+*
+* // vc s_ を string s に変換
+* string s(all(s_));
+*
 * // 空白も含め一行を文字列 str として読み込み
 * string str; getline(cin, str);
 * 

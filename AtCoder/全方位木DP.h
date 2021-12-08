@@ -5,11 +5,9 @@
 // ■■■■■ 全方位木 DP ■■■■■
 
 
-//【木の高さ】O(|V|)
+//【木の高さ】O(n)
 /*
-* 木 g の頂点 i を根にしたときの高さを h[i] に格納する．
-* 
-* h[i] : 頂点 i から最も遠い葉までの距離
+* 木 g の頂点 i を根にしたときの高さ（最も遠い葉までの距離）を h[i] に格納する．
 *
 *（全方位木 DP）
 */
@@ -79,15 +77,15 @@ void height_of_undirected_tree(Graph& g, vi& h) {
 }
 
 
-//【コスト付き木の高さ】O(|V|)
+//【コスト付き木の高さ】O(n)
 /*
-* コスト付き木 g の頂点 i を根にしたときの高さを h[i] に格納する．
-*
-*  h[i] : 頂点 i から最も遠い葉までのコスト
+* コスト付き木 g の頂点 i を根にしたときの高さ（最も遠い葉までのコスト）を h[i] に格納する．
 * 
 *（全方位木 DP）
 */
 void height_of_undirected_tree(WGraph& g, vl& h) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_B
+
 	ll n = sz(g);
 
 	// 辺 (p, s) を切断したときの s を根とする部分木を部分木 (p, s) と呼ぶ．
@@ -157,13 +155,15 @@ void height_of_undirected_tree(WGraph& g, vl& h) {
 }
 
 
-//【部分木の数え上げ】O(|V|)
+//【部分木の数え上げ】O(n)
 /*
 * 木 g の部分木のうち頂点 i を含むものの個数を cnt[i] に格納する．
 *
 *（全方位木 DP）
 */
 void count_subtree(Graph& g, vm& cnt) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_v
+
 	ll n = sz(g);
 
 	// 辺 (p, s) を切断したときの s を含む部分木を部分木 (p, s) と呼ぶ．
@@ -237,7 +237,7 @@ void count_subtree(Graph& g, vm& cnt) {
 }
 
 
-//【木の構築方法の数え上げ】O(|V|)
+//【木の構築方法の数え上げ】O(n)
 /*
 * 連結性を保ったままの辺の追加を行う木 g を構築する方法の数を返す．
 *
@@ -249,7 +249,7 @@ mint continuous_tree_construction(Graph& g) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tree
 
 	ll n = sz(g);
-	factorial_mint fm((int)n);
+	Factorial_mint fm((int)n);
 
 	// 辺 (p, s) を切断したときの s を含む部分木を部分木 (p, s) と呼ぶ．
 	// dp[p * n + s] : s からの連結性を保ったまま部分木 (p, s) を構築する方法の数 

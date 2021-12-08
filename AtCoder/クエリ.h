@@ -68,6 +68,7 @@ struct Mod_sum_query {
 */
 struct Convex_hull_trick {
 	// 参考 : https://satanic0258.hatenablog.com/entry/2016/08/16/181331
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_z
 
 	int n; // 記録している直線の本数
 	deque<pll> lines; // 直線を傾き狭義降順に記録したデック

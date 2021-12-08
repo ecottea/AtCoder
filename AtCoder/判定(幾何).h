@@ -6,7 +6,6 @@
 // ■■■■■ 判定 ■■■■■
 
 
-
 //【合同判定】O(|s| log|s|)　利用：【偏角ソート】，【クヌース・モリス・プラット法】
 /*
 * 点の集合 s, t が合同かどうかを返す．
@@ -102,6 +101,8 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 */
 template <typename T>
 bool convexQ(const Polygon<T>& poly) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_B
+
 	int n = sz(poly);
 
 	bool first_call = true;
@@ -159,6 +160,8 @@ bool ccwQ(const Polygon<T>& poly) {
 */
 template <class T>
 int in_out_judgment(const Polygon<T>& poly, Point<T>& p) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_C
+
 	int n = sz(poly);
 
 	int res = -1;
@@ -205,6 +208,8 @@ int in_out_judgment(const Polygon<T>& poly, Point<T>& p) {
 */
 template <typename T>
 inline int ccw(const Point<T>& p, const Line<T>& s) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_C
+
 	auto op = (s.second - s.first).cross(p - s.first);
 	if (op > 0) {
 		// p が s の左側にある
@@ -298,6 +303,8 @@ inline bool intersectQ_L_OS(const Line<T>& l, const Line<T>& s) {
 */
 template <typename T>
 inline bool intersectQ_CS_CS(const Line<T>& s1, const Line<T>& s2) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_2_B
+
 	// 共有点をもつ
 	// ⇔ (s1 の両端が s2 について逆側，かつ，s2 の両端が s1 について逆側)
 	//    または (s1 の端点が s2 上) または (s2 の端点が s1 上)
@@ -346,6 +353,8 @@ inline bool intersectQ_CS_P(const Line<T>& s, const Point<T>& p) {
 */
 template <typename T>
 inline int pos_relation_C_C(const Circle<T>& c1, const Circle<T>& c2) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_A
+
 	T r1 = c1.second;
 	T r2 = c2.second;
 	T d_sq = (c1.first - c2.first).sqnorm();

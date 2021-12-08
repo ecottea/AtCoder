@@ -4,7 +4,6 @@
 // ¡¡¡¡¡ Œv—Ê ¡¡¡¡¡
 
 
-
 //y“_‚Æ’¼ü‚Ì‹——£zO(1)
 /*
 * “_ p ‚Æ’¼ü l ‚Æ‚Ì‹——£‚ğ•Ô‚·D
@@ -75,8 +74,9 @@ bool compare_argument(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
 * 
 * —˜—pFy•ÎŠp‚Ì”äŠrz
 */
-template <typename T>
-void argument_sort(vector<Point<T>>& p, const Point<T>& c) {
+template <typename T> void argument_sort(vector<Point<T>>& p, const Point<T>& c) {
+	// verify : https://judge.yosupo.jp/problem/sort_points_by_argument
+
 	auto compare = [&](Point<T> a, Point<T> b) {
 		return compare_argument(a, b, c);
 	};
@@ -93,6 +93,8 @@ void argument_sort(vector<Point<T>>& p, const Point<T>& c) {
 */
 template <typename T>
 T area_polygon(const Polygon<T>& poly) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_A
+
 	int n = sz(poly);
 
 	T res = 0;
@@ -116,6 +118,8 @@ T area_polygon(const Polygon<T>& poly) {
 */
 template <typename T>
 double convex_diameter(const Polygon<T>& poly, pii& id) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_B
+
 	int n = sz(poly);
 
 	// x À•W‚ªÅ¬[Å‘å]‚Ì’¸“_‚Ì”Ô† i0[j0] ‚ğ“¾‚éD

@@ -72,14 +72,17 @@ void noncontinuous_bitsequence(int n, vl& seqs) {
 }
 
 
-//【括弧列の列挙】O(4^n n^(-3/2))（カタラン数）
+//【括弧列の列挙】O(Catalan(n))（n = 15 くらいまで OK）
 /*
 * 長さ 2 n の括弧列を辞書順に seqs に格納する．
 */
 void parenthesis_sequence(int n, vector<string>& seqs) {
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_b
+
 	string s = "";
 	seqs.clear();
 
+	// l, r : 左右の括弧をあといくつ使えるか
 	function<void(int, int)> rf = [&](int l, int r) {
 		// 左右の括弧を使い切っている場合
 		if (l == 0 && r == 0) {
@@ -94,12 +97,14 @@ void parenthesis_sequence(int n, vector<string>& seqs) {
 			rf(l - 1, r);
 			s.pop_back();
 		}
+
 		// 左括弧が十分あり右括弧を使える場合
 		if (r > l) {
 			s += ')';
 			rf(l, r - 1);
 			s.pop_back();
 		}
+
 		return;
 	};
 

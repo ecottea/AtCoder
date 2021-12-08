@@ -4,13 +4,15 @@
 // ■■■■■ 木 DP ■■■■■
 
 
-//【独立集合の数え上げ】O(|V|)
+//【独立集合の数え上げ】O(n)
 /*
 * 木 g の独立集合（辺を共有しない頂点の集合）の個数を返す．
 *
 *（木の状態 DP）
 */
 mint count_independent_set(Graph& g) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_p
+
 	int n = sz(g);
 
 	// 便宜上 g を 0 を根とした根付き木とみなす．

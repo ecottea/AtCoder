@@ -4,7 +4,6 @@
 // ■■■■■ 作図 ■■■■■
 
 
-
 //【回転】O(1)
 /*
 * 点 p を点 c を中心に th[rad] だけ回転した点を返す．
@@ -68,6 +67,8 @@ inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const 
 * 点 p から直線 l へ降ろした垂線の足を返す．
 */
 inline Point<double> foot_of_perpendicular(Point<double>& p, Line<double>& l) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_A
+
 	auto d = (l.second - l.first).normalize();
 	return l.first + (p - l.first).dot(d) * d;
 }
@@ -78,6 +79,8 @@ inline Point<double> foot_of_perpendicular(Point<double>& p, Line<double>& l) {
 * 直線 l に関して点 p を対称移動した点を返す．
 */
 inline Point<double> symmetrical_move(Point<double>& p, Line<double>& l) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_B
+
 	auto d = (l.second - l.first).normalize();
 	auto v = p - l.first;
 	return l.first - v + v.dot(d) * d * 2.0;
@@ -90,6 +93,8 @@ inline Point<double> symmetrical_move(Point<double>& p, Line<double>& l) {
 */
 template <typename T>
 inline Point<double> intersection_L_L(const Line<T>& l1, const Line<T>& l2) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_2_C
+
 	double x1 = (double)l1.first.x;
 	double y1 = (double)l1.first.y;
 	double x2 = (double)l1.second.x;
@@ -118,6 +123,8 @@ inline Point<double> intersection_L_L(const Line<T>& l1, const Line<T>& l2) {
 */
 template <typename T>
 inline Circle<double> incircle(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_B
+
 	auto len_a = (b - c).norm();
 	auto len_b = (c - a).norm();
 	auto len_c = (a - b).norm();
@@ -141,6 +148,8 @@ inline Circle<double> incircle(const Point<T>& a, const Point<T>& b, const Point
 */
 template <typename T>
 void convex_hull(const Polygon<T>& p, Polygon<T>& ch) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
+	
 	int n = (int)p.size();
 
 	// x 座標を優先して昇順ソート（x 座標が同じなら y 座標昇順）
@@ -195,6 +204,8 @@ void convex_hull(const Polygon<T>& p, Polygon<T>& ch) {
 */
 template <typename T>
 void convex_cut(const Polygon<T>& poly, const Line<T>& l, Polygon<double>& lpoly) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_C
+
 	int n = sz(poly);
 
 	lpoly.clear();
