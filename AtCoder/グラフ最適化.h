@@ -1,121 +1,198 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "変形(グラフ).h"
 #include "最短路.h"
-#include "マッチング.h"
 #include "ビット全探索.h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
 
 
-//【最小全域森／クラスカル法】O(|E| log|V|)
+//【最大独立集合問題】O(2^(|V|/2) |V|)
 /*
-* クラスカル法でコスト付き無向グラフ g の最小全域森を求める．
-* 最小全域森は msf に構成し，各最小全域木の代表元を mst に格納する．
-* また戻り値として最小コストを返す．
+* 無向グラフ g の最大独立集合の 1 つを vs に格納し，その大きさを返す．
+* S ⊂ V が独立集合であるとは，S の任意の 2 点を結ぶ辺が E に属さないことをいう．
 */
-ll kruskal(const WGraph& g, WGraph& msf, vi& mst) {
-	// 参考 : https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%AB%E3%83%AB%E6%B3%95
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_A
+int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
+	// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_g
 
 	int n = sz(g);
-	msf = WGraph(n);
 
-	// 辺を集めてコスト昇順にソートする．
-	vector<tuple<ll, int, int>> edges;
-	rep(i, n) {
-		repe(v, g[i]) {
-			edges.push_back({ v.cost, i, v.to });
+	// 前半 V1 と後半 V2 の頂点数
+	int n1 = n / 2, n2 = n - n1;
+
+
+	// is_ind1[set1] : set1 ⊂ V1 が独立集合か
+	vb is_ind1(1 << n1, true);
+
+	// 辺の両端からなる 2 点集合 {s, t} ⊂ V1 は独立集合ではない．
+	rep(s, n1) {
+		repe(t, g[s]) {
+			if (t >= n1) continue;
+
+			int set = (1 << s) + (1 << t);
+			is_ind1[set] = false;
 		}
 	}
-	sort(all(edges));
 
-	ll cost = 0; // 最小コスト
-	dsu d(n + 1); // 連結判定用
-	rep(i, sz(edges)) {
-		// もし辺の両端が既に連結なら繋がない．
-		int s = get<1>(edges[i]);
-		int t = get<2>(edges[i]);
-		if (d.same(s, t)) {
+	// 独立集合でない集合を部分集合にもつ集合は独立集合ではない．
+	repb(set1, n1) {
+		rep(i, n1) {
+			if (set1 & (1 << i)) {
+				int sub1 = set1 - (1 << i);
+				is_ind1[set1] = is_ind1[set1] & is_ind1[sub1];
+			}
+		}
+	}
+
+
+	// no_edge[set1] : set1 ⊂ V1 との間に辺をもたない V2 の頂点集合
+	vi no_edge(1 << n1);
+
+	// 空集合 ⊂ V1 の相手は明らかに全体集合 V2
+	no_edge[0] = (1 << n2) - 1;
+
+	// 1 点集合 {s} ⊂ V1 の相手は s と辺で結ばれていない V2 の点集合
+	rep(s, n1) {
+		no_edge[1 << s] = (1 << n2) - 1;
+		repe(t, g[s]) {
+			if (t < n1) continue;
+
+			no_edge[1 << s] -= (1 << (t - n1));
+		}
+	}
+
+	// 2 点以上の集合 set1 ⊂ V1 については 1 点集合の相手との共通部分を考える．
+	repb(set1, n1) {
+		rep(i, n1) {
+			if (set1 & (1 << i)) {
+				int sub1 = set1 - (1 << i);
+				no_edge[set1] = no_edge[1 << i] & no_edge[sub1];
+				break;
+			}
+		}
+	}
+
+
+	// max_ind2[set2] : set2 ⊂ V2 の最大独立集合の 1 つ
+	vi max_ind2(1 << n2);
+
+	// 1 点集合 {s} ⊂ V2 の最大独立集合は {s} ⊂ V2
+	rep(i, n2) {
+		int set2 = 1 << i;
+		max_ind2[set2] = set2;
+	}
+
+	// 辺の両端からなる 2 点集合 {s, t} ⊂ V2 は独立集合ではない．
+	rep(i, n2) {
+		repe(t, g[n1 + i]) {
+			if (t < n1) continue;
+
+			int set2 = (1 << i) + (1 << (t - n1));
+			max_ind2[set2] = 1 << i;
+		}
+	}
+
+	// 3 点以上の集合 set2 ⊂ V2 については，それが独立集合ならそれ自身，
+	// さもなくば 1 つ抜き集合の最大独立集合のうちの最大のものを選択する．
+	repb(set2, n2) {
+		int pc = popcount(set2);
+		if (pc <= 2) {
+			// どの辺の両端ともならない 2 点集合 {s, t} ⊂ V2 は独立集合である．
+			if (pc == 2 && max_ind2[set2] == 0) {
+				max_ind2[set2] = set2;
+			}
 			continue;
 		}
 
-		// そうでないならコスト最小の辺なのでそれで繋ぐ．
-		ll c = get<0>(edges[i]);
-		msf[s].push_back({ t, c });
-		cost += c;
-		d.merge(s, t);
-	}
-
-	// 連結成分のそれぞれが最小全域木なので，その代表元を記録．
-	mst = vi();
-	repe(t, d.groups()) {
-		mst.push_back(t[0]);
-	}
-
-	return cost;
-}
-
-
-//【最小全域木／プリム法】O(|E| log|V|)
-/*
-* コスト付きグラフ g の頂点 r を含む連結成分の最小全域木を mst に格納する．
-* また戻り値として最小コストを返す．
-*/
-ll prim(const WGraph& g, int r, WGraph& mst) {
-	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_A
-
-	int n = sz(g);
-	mst = WGraph(n);
-	ll res = 0;
-
-	// selected[v] : 頂点 v を既に選んだかどうか
-	vb selected(n);
-	selected[r] = true;
-
-	// 選んだ頂点から出ている辺をコスト昇順に記録しておくための優先度付きキュー．
-	using E = tuple<ll, int, int>;
-	priority_queue<E, vector<E>, greater<E>> q;
-	repe(e, g[r]) {
-		q.push({ e.cost, r, e.to });
-	}
-
-	while (!q.empty()) {
-		ll c;
-		int s, t;
-		tie(c, s, t) = q.top();
-		q.pop();
-
-		// 既に選んだ頂点への辺なら何もしない．
-		if (selected[t]) {
-			continue;
+		bool ind_flag = true;
+		rep(i, n2) {
+			if (set2 & (1 << i)) {
+				int sub2 = set2 - (1 << i);
+				if (popcount(max_ind2[set2]) < popcount(max_ind2[sub2])) {
+					max_ind2[set2] = max_ind2[sub2];
+				}
+				if (max_ind2[sub2] != sub2) {
+					ind_flag = false;
+				}
+			}
 		}
 
-		// 最小全域木に辺を追加し，頂点を選んだことを記録しておく．
-		mst[s].push_back({ t, c });
-		res += c;
-		selected[t] = true;
+		if (ind_flag) max_ind2[set2] = set2;
+	}
 
-		// 調べるべき辺を追加する．
-		repe(e, g[t]) {
-			q.push({ e.cost, t, e.to });
+
+	// 最大独立集合の大きさ
+	int pc_max = 0;
+
+	// 最大独立集合の前半部分と後半部分
+	int set1_max = 0, set2_max = 0;
+
+	repb(set1, n1) {
+		// set1 ⊂ V1 が独立集合でないなら不適
+		if (!is_ind1[set1]) continue;
+
+		// set1 ⊂ V1 と辺で結ばれていない頂点集合 set2 ⊂ V2 を得る
+		int set2 = no_edge[set1];
+
+		// set2 ⊂ V2 をその最大独立集合に置き換える．
+		set2 = max_ind2[set2];
+
+		int pc = popcount(set1) + popcount(set2);
+		if (chmax(pc_max, pc)) {
+			set1_max = set1;
+			set2_max = set2;
+		}
+	}
+	// 最大独立集合の構成
+	if (vs != nullptr) {
+		vs->clear();
+		rep(i, n1) {
+			if (set1_max & (1 << i)) {
+				vs->push_back(i);
+			}
+		}
+		rep(i, n2) {
+			if (set2_max & (1 << i)) {
+				vs->push_back(n1 + i);
+			}
 		}
 	}
 
-	return res;
+	return pc_max;
 }
 
 
-//【最大クリーク問題】O(2^√(2|E|) |V|)
+//【最大クリーク問題】O(2^(|V|/2) |V|)
 /*
 * 無向グラフ g の最大クリークの大きさを返す．
-* 
-* 利用：【部分集合の全探索】
+* S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
+*
+* 利用：【補グラフ】，【最大独立集合問題】
 */
-int maximum_clique(const Graph& g) {
+int maximum_clique(const Graph& g, vi* vs = nullptr) {
+	// verify : https://atcoder.jp/contests/abc002/tasks/abc002_4
+
+	//【方法】
+	// 最大クリーク問題は，補グラフについての最大独立集合問題と等価である．
+
+	Graph gc;
+	complement_graph(g, gc);
+
+	return maximum_independent_set(gc, vs);
+}
+
+
+//【クリークの列挙】O(2^(1.4√|E|) |V|)
+/*
+* 無向グラフ g の i 番目に見つけたクリークを cs[i] に頂点の列として列挙する．
+* S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
+*/
+void enumerate_clique(const Graph& g, vvi& cs) {
 	// 参考：https://www.slideshare.net/wata_orz/ss-12131479
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2306
 
 	int n = sz(g);
+	cs.clear();
 
 	// 隣接行列 adj，各頂点の次数 deg，総次数 deg_sum，
 	// 最小次数 deg_min，次数最小頂点の番号 i_min を得る．
@@ -123,27 +200,19 @@ int maximum_clique(const Graph& g) {
 	vi deg(n);
 	int deg_sum = 0, deg_min = INF, i_min = -1;
 	rep(s, n) {
-		repe(t, g[s]) {
-			adj[s][t] = true;
-			deg[s]++;
-		}
+		deg[s] = sz(g[s]);
 		deg_sum += deg[s];
+		repe(t, g[s]) adj[s][t] = true;
 
-		if (chmin(deg_min, deg[s])) {
-			i_min = s;
-		}
+		if (chmin(deg_min, deg[s])) i_min = s;
 	}
 
 	// 考慮すべき頂点のリスト
 	vi v(n);
-	rep(i, n) {
-		v[i] = i;
-	}
+	iota(all(v), 0);
 
 	// 素朴な方法で最大クリークを求める O(2^n n)
-	function<int()> naive = [&]() {
-		int res = 0;
-
+	function<void()> naive = [&]() {
 		// 全ての部分集合 set について
 		repb(set, n) {
 			bool sum = 0;
@@ -164,61 +233,72 @@ int maximum_clique(const Graph& g) {
 
 					// 辺 (v[i], v[j]) がなければクリークでない．
 					if (!adj[v[i]][v[j]]) {
-						goto LOOP_END;
+						goto NEXT_LOOP;
 					}
 				}
 			}
 
-			// クリークが見つかったので大きさを更新する．
-			chmax(res, popcount(set));
+			// クリークが見つかったので記録する．
+			cs.push_back(vi());
+			rep(i, n) {
+				if (set & (1 << i)) {
+					cs.rbegin()->push_back(v[i]);
+				}
+			}
 
-		LOOP_END:;
+		NEXT_LOOP:;
 		}
-		return res;
 	};
 
 	int res = 1;
 	while (n > 0) {
 		// 辺に対して頂点が十分少ないなら素朴な方法で構わない．
-		if (deg_min * deg_min <= deg_sum) {
-			return max(res, naive());
+		if (deg_min * deg_min >= deg_sum) {
+			naive();
+			return;
 		}
 
 		// 次数最小の頂点 v[i_min] の隣接点の番号の集合を得る．
 		// 同時に v[i_min] に出入りする辺を削除したことにし，各頂点の次数 deg を更新する．
-		int set = 0;
+		vi ia;
 		rep(i, n) {
 			if (adj[v[i_min]][v[i]]) {
-				set += 1 << i;
+				ia.push_back(i);
 
 				deg[v[i]]--;
 			}
 		}
+		int d = sz(ia);
 
 		// まず v[i_min] を含む最大クリークの大きさ res を求める．
 		// v[i_min] の隣接点の部分集合 sub すべてについて
-		repbs(sub, set) {
-			rep(i, n) {
+		repb(sub, d) {
+			rep(i, d) {
 				// sub に選んでいないなら無関係
 				if (!(sub & (1 << i))) {
 					continue;
 				}
 
-				repi(j, i + 1, n - 1) {
+				repi(j, i + 1, d - 1) {
 					// sub に選んでいないなら無関係
 					if (!(sub & (1 << j))) {
 						continue;
 					}
 
 					// sub がクリークでなければ何もしない．
-					if (!adj[v[i]][v[j]]) {
+					if (!adj[v[ia[i]]][v[ia[j]]]) {
 						goto LOOP_END;
 					}
 				}
 			}
 
-			// sub がクリークなら v[i_min] と合わせてもクリークとなる．
-			chmax(res, popcount(sub) + 1);
+			// sub がクリークなら v[i_min] と合わせてもクリークとなるので記録する．
+			cs.push_back(vi({ v[i_min] }));
+			rep(i, d) {
+				if (sub & (1 << i)) {
+					cs.rbegin()->push_back(v[ia[i]]);
+				}
+			}
 
 		LOOP_END:;
 		}
@@ -239,94 +319,10 @@ int maximum_clique(const Graph& g) {
 			deg_sum += deg[v[i]];
 		}
 	}
-
-	return res;
 }
 
 
-//【最大流問題／フォード・ファルカーソンのアルゴリズム】O(|E| maxflow)
-/*
-* コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
-*/
-ll ford_fullkerson(const WGraph& g, int s, int t) {
-	// 参考：https://algo-logic.info/ford-fullkerson/
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_6_A
-
-	int n = sz(g);
-
-	// 残余ネットワークを作り初期化する．
-	// また更新のために逆向きの辺の番号を記録しておく．
-	WGraph res(n);
-	vvi rev(n);
-	rep(i, n) {
-		repe(e, g[i]) {
-			// 順方向は g と同じ，逆方向は 0 で初期化．
-			res[i].push_back(e);
-			res[e.to].push_back({ i, 0 });
-
-			// e = res[i][j] の逆向きの辺は res[e.to][rev[i][j]]
-			rev[i].push_back(sz(res[e.to]) - 1);
-			rev[e.to].push_back(sz(res[i]) - 1);
-		}
-	}
-
-	vb seen(n);
-	function<ll(int, ll)> dfs = [&](int v, ll f) {
-		// 終点 t まで流せたら流量を返す．
-		if (v == t) {
-			return f;
-		}
-
-		// 頂点 v に訪れたことを記録する．
-		seen[v] = true;
-
-		// v から出ている残余ネットワークの各辺 e について
-		rep(j, sz(res[v])) {
-			auto& e = res[v][j];
-
-			// e の先の頂点に既に訪れていたり，e に空きが無いなら何もしない．
-			if (seen[e.to] || e.cost == 0) {
-				continue;
-			}
-
-			// e にフローを流す．
-			ll f2 = dfs(e.to, min(f, e.cost));
-
-			// もしフローが流れたら残余ネットワークを更新し流量を返す．
-			if (f2 > 0) {
-				e.cost -= f2;
-				res[e.to][rev[v][j]].cost += f2;
-				return f2;
-			}
-		}
-
-		// ここまでくるのはフローを流せなかったとき
-		return 0LL;
-	};
-
-	ll mf = 0;
-	while (true) {
-		// どの頂点にも訪れていない状態にする．
-		seen.assign(n, false);
-
-		// 始点 s からフローを流す．
-		ll f = dfs(s, INFL);
-
-		// フローが流れなかったら最大まで流し切ったので結果を返す．
-		if (f == 0) {
-			return mf;
-		}
-
-		// フローが流れたら流量を更新する．
-		mf += f;
-	}
-
-	// ここにはこない．
-	return 0LL;
-}
-
-
-//【巡回セールスマン問題】O(|V|^2 2^|V|)
+//【巡回セールスマン問題】O(2^|V| |V|^2)
 /*
 * コスト付き有向グラフ g の最小コストハミルトン閉路のコストを返す．
 * ハミルトン閉路が存在しない場合は -1 を返す．
@@ -348,25 +344,20 @@ ll traveling_salesman_problem(const WGraph& g) {
 	// メモ化再帰用の関数の定義
 	function<ll(int, int)> rf = [&](int s, int set) {
 		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][set]) {
-			return dp[s][set];
-		}
+		if (seen[s][set]) return dp[s][set];
+		seen[s][set] = true;
 
 		// s から出ている各辺 e について
 		repe(e, g[s]) {
-			auto t = e.to;
-			auto c = e.cost;
+			int t = e.to; ll c = e.cost;
 
 			// e の行き先 t が set に含まれていなければ何もしない．
-			if (!(set & (1 << t))) {
-				continue;
-			}
+			if (!(set & (1 << t))) continue;
 
 			// s → t と進む方がコストが小さければ更新する．
 			chmin(dp[s][set], rf(t, set - (1 << t)) + c);
 		}
 
-		seen[s][set] = true;
 		return dp[s][set];
 	};
 
@@ -376,7 +367,7 @@ ll traveling_salesman_problem(const WGraph& g) {
 }
 
 
-//【最小コストハミルトンパス】O(|V|^2 2^|V|)
+//【最小コストハミルトンパス】O(2^|V| |V|^2)
 /*
 * コスト付き有向グラフ g の最小コストハミルトンパスのコストを返す．
 * ハミルトンパスが存在しない場合は -1 を返す．
@@ -398,20 +389,15 @@ ll shortest_hamiltonian_path(const WGraph& g) {
 	// メモ化再帰用の関数の定義
 	function<ll(int, int)> rf = [&](int s, int set) {
 		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][set]) {
-			return dp[s][set];
-		}
+		if (seen[s][set]) return dp[s][set];
 		seen[s][set] = true;
 
 		// s から出ている各辺 e について
 		repe(e, g[s]) {
-			auto t = e.to;
-			auto c = e.cost;
+			int t = e.to; ll c = e.cost;
 
 			// e の行き先 t が set に含まれていなければ何もしない．
-			if (!(set & (1 << t))) {
-				continue;
-			}
+			if (!(set & (1 << t))) continue;
 
 			// s → t と進む方がコストが小さければ更新する．
 			chmin(dp[s][set], rf(t, set - (1 << t)) + c);
@@ -422,10 +408,53 @@ ll shortest_hamiltonian_path(const WGraph& g) {
 
 	// メモ化再帰を用いて bit DP を行う．
 	ll res = INFL;
-	rep(s, n) {
-		chmin(res, rf(s, (1 << n) - 1 - (1 << s)));
-	}
+	rep(s, n) chmin(res, rf(s, (1 << n) - 1 - (1 << s)));
+
 	return (res == INFL ? -1 : res);
+}
+
+
+//【最小コスト完全マッチング】O(2^|V| |V|)
+/*
+* コスト付きグラフ g の隣接行列 adj を元に，g の最小コスト完全マッチングのコストを返す．
+*
+*（bit DP）
+*/
+ll minimum_cost_matching(const vvl& adj) {
+	int n = sz(adj);
+	if (n % 2 == 1) {
+		return -INFL;
+	}
+
+	// dp[set] : set に含まれる頂点で作れる完全マッチングの最小コスト
+	vl dp(int(1 << n), INF);
+	vb seen(int(1 << n));
+	dp[0] = 0;
+	seen[0] = true;
+
+	// set : 考慮すべき頂点の集合
+	function<ll(int)> rf = [&](int set) {
+		// 計算済ならその値を返す．
+		if (seen[set]) {
+			return dp[set];
+		}
+		seen[set] = true;
+
+		// s : set で最も番号の小さい頂点
+		int s = lsb(set);
+
+		// t : s とペアになる set の頂点
+		repi(t, s + 1, n - 1) {
+			if (set & (1 << t)) {
+				chmin(dp[set], rf(set - (1 << s) - (1 << t)) + adj[s][t]);
+			}
+		}
+
+		return dp[set];
+	};
+
+	// 全頂点に対して最小コストを計算する．
+	return rf((1 << n) - 1);
 }
 
 
@@ -476,6 +505,82 @@ ll chinese_postman_problem(const WGraph& g) {
 	res += minimum_cost_matching(adj);
 
 	return res;
+}
+
+
+//【最大流問題／フォード・ファルカーソンのアルゴリズム】O(|E| maxflow)
+/*
+* コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
+*/
+ll ford_fullkerson(const WGraph& g, int s, int t) {
+	// 参考：https://algo-logic.info/ford-fullkerson/
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_6_A
+
+	int n = sz(g);
+
+	// 残余ネットワークを作り初期化する．
+	// また更新のために逆向きの辺の番号を記録しておく．
+	WGraph res(n);
+	vvi rev(n);
+	rep(i, n) {
+		repe(e, g[i]) {
+			// 順方向は g と同じ，逆方向は 0 で初期化．
+			res[i].push_back(e);
+			res[e.to].push_back({ i, 0 });
+
+			// e = res[i][j] の逆向きの辺は res[e.to][rev[i][j]]
+			rev[i].push_back(sz(res[e.to]) - 1);
+			rev[e.to].push_back(sz(res[i]) - 1);
+		}
+	}
+
+	vb seen(n);
+	function<ll(int, ll)> dfs = [&](int v, ll f) {
+		// 終点 t まで流せたら流量を返す．
+		if (v == t) return f;
+
+		// 頂点 v に訪れたことを記録する．
+		seen[v] = true;
+
+		// v から出ている残余ネットワークの各辺 e について
+		rep(j, sz(res[v])) {
+			auto& e = res[v][j];
+
+			// e の先の頂点に既に訪れていたり，e に空きが無いなら何もしない．
+			if (seen[e.to] || e.cost == 0) continue;
+
+			// e にフローを流す．
+			ll f2 = dfs(e.to, min(f, e.cost));
+
+			// もしフローが流れたら残余ネットワークを更新し流量を返す．
+			if (f2 > 0) {
+				e.cost -= f2;
+				res[e.to][rev[v][j]].cost += f2;
+				return f2;
+			}
+		}
+
+		// ここまでくるのはフローを流せなかったとき
+		return 0LL;
+	};
+
+	ll mf = 0;
+	while (true) {
+		// どの頂点にも訪れていない状態にする．
+		seen.assign(n, false);
+
+		// 始点 s からフローを流す．
+		ll f = dfs(s, INFL);
+
+		// フローが流れなかったら最大まで流し切ったので結果を返す．
+		if (f == 0) return mf;
+
+		// フローが流れたら流量を更新する．
+		mf += f;
+	}
+
+	// ここにはこない．
+	return 0LL;
 }
 
 

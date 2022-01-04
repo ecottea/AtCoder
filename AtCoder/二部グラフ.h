@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-// ■■■■■ マッチング ■■■■■
+// ■■■■■ 二部グラフ ■■■■■
 
 
 //【二部グラフの最大マッチング】
@@ -132,7 +132,7 @@ struct minimum_cost_bipartite_matching {
 	int m, n;
 	mcf_graph<int, ll> g;
 	int ST, GL;
-	
+
 	// |S|, |T| を渡して初期化する．
 	minimum_cost_bipartite_matching(int m_, int n_) : m(m_), n(n_) {
 		g = mcf_graph<int, ll>(m + n + 2);
@@ -270,7 +270,7 @@ mint count_perfect_matching(vvb& e) {
 		rep(j, n) {
 			// (i, j) に辺がなかったり，j が set に属していなければ何もしない．
 			if (!e[i][j] || !(set & (1 << j))) continue;
-			
+
 			// i と j がマッチしている場合の数を加算する．
 			dp[set] += rf(set - (1 << j));
 		}
@@ -279,50 +279,6 @@ mint count_perfect_matching(vvb& e) {
 	};
 
 	// set = T として再帰関数に投げる．
-	return rf((1 << n) - 1);
-}
-
-
-//【最小コスト完全マッチング】O(2^|V| |V|)
-/*
-* コスト付きグラフ g の隣接行列 adj を元に，g の最小コスト完全マッチングのコストを返す．
-*
-*（bit DP）
-*/
-ll minimum_cost_matching(const vvl& adj) {
-	int n = sz(adj);
-	if (n % 2 == 1) {
-		return -INFL;
-	}
-
-	// dp[set] : set に含まれる頂点で作れる完全マッチングの最小コスト
-	vl dp(int(1 << n), INF);
-	vb seen(int(1 << n));
-	dp[0] = 0;
-	seen[0] = true;
-
-	// set : 考慮すべき頂点の集合
-	function<ll(int)> rf = [&](int set) {
-		// 計算済ならその値を返す．
-		if (seen[set]) {
-			return dp[set];
-		}
-		seen[set] = true;
-
-		// s : set で最も番号の小さい頂点
-		int s = lsb(set);
-
-		// t : s とペアになる set の頂点
-		repi(t, s + 1, n - 1) {
-			if (set & (1 << t)) {
-				chmin(dp[set], rf(set - (1 << s) - (1 << t)) + adj[s][t]);
-			}
-		}
-
-		return dp[set];
-	};
-
-	// 全頂点に対して最小コストを計算する．
 	return rf((1 << n) - 1);
 }
 

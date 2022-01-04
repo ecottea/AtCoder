@@ -52,7 +52,6 @@ struct Group {
 
 
 //y‰ÁZ ŒQz
-// verify : https://judge.yosupo.jp/problem/static_range_sum
 using S1 = ll;
 S1 op(S1 a, S1 b) { return a + b; }
 S1 o1() { return 0; }

@@ -39,6 +39,127 @@ void connected_component(const Graph& g, vvi& cc) {
 }
 
 
+//【トポロジカルソート】O(|V| + |E|)
+/*
+* DAG g をトポロジカルソートした結果を seq に返す．
+* g が DAG でない場合は失敗し，seq.size() < g.size() となる．
+*
+*（葉からの幅優先探索）
+*/
+void topological_sort(const Graph& g, vi& seq) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_4_B
+
+	int n = sz(g);
+
+	// 入次数を求めておく．
+	vi in_degree(n);
+	rep(i, n) {
+		repe(t, g[i]) {
+			in_degree[t]++;
+		}
+	}
+
+	// 入次数が 0 の頂点から順に取り除いていく．
+	queue<int> q;
+	rep(i, n) {
+		if (in_degree[i] == 0) {
+			q.push(i);
+		}
+	}
+
+	seq.clear();
+	while (!q.empty()) {
+		auto s = q.front(); q.pop();
+
+		// 入次数が 0 の頂点を見つけ結果に格納する．
+		seq.push_back(s);
+
+		repe(t, g[s]) {
+			// 頂点 s を取り除き，t の入次数を更新する．
+			in_degree[t]--;
+
+			// 新たに入次数 0 の頂点が生まれたらキューに追加する．
+			if (in_degree[t] == 0) {
+				q.push(t);
+			}
+		}
+	}
+}
+
+
+//【強連結成分分解】O(|V| + |E|)
+/*
+* 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を scc に返す．
+* scc[i] は i 番目の強連結成分の頂点からなるリストである．
+*/
+void strongly_connected_component(const Graph& g, vvi& scc) {
+	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
+	// verify : https://judge.yosupo.jp/problem/scc
+
+	int n = sz(g);
+
+	// 辺の向きを逆にしたグラフを作成
+	Graph g_rev(n);
+	rep(s, n) repe(t, g[s]) g_rev[t].push_back(s);
+
+	// 各頂点の状態（0:未探索，1:順探索済かつ未逆探索，2:逆探索済）
+	vi status(n, 0);
+
+
+	// (step1): まず順探索（深さ優先）を行い，結果をスタックに格納する．
+
+	// 深さ優先の順探索で見つかった順に頂点を記録するスタック
+	stack<int> stk;
+
+	// 順探索用の再帰関数
+	function<void(int)> trace = [&](int s) {
+		// 状態を順探索済かつ未逆探索（1）にする．
+		status[s] = 1;
+
+		repe(t, g[s]) {
+			// 未探索の頂点を探索しにいく．
+			if (status[t] == 0) trace(t);
+		}
+
+		// 先の探索が済んだら自身を記録する（深さ優先探索）
+		stk.push(s);
+	};
+
+	rep(i, n) {
+		// 未探索の頂点を見つけたら探索する．
+		if (status[i] == 0) trace(i);
+	}
+
+
+	// (step2): 次に逆探索を行い，強連結成分を確定する．
+
+	// 逆探索用の再帰関数
+	function<void(int)> trace_rev = [&](int s) {
+		// 状態を逆探索済（2）にする．
+		status[s] = 2;
+
+		repe(t, g_rev[s]) {
+			// 未逆探索の頂点を探索しにいく．
+			if (status[t] == 1) trace_rev(t);
+		}
+
+		// 先の探索が済んだら自身を強連結成分の一員として記録する．
+		scc.rbegin()->push_back(s);
+	};
+
+	while (!stk.empty()) {
+		auto v = stk.top();
+		stk.pop();
+
+		// 新しい強連結成分を見つけたらそれをなぞりに行く．
+		if (status[v] == 1) {
+			scc.push_back(vi());
+			trace_rev(v);
+		}
+	}
+}
+
+
 //【頂点の縮約】O(|V| + |E| log|V|)
 /*
 * グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として
@@ -403,18 +524,24 @@ void bipartite_graphQ(const Graph& g, vvi& cc, vb& b, vi& col) {
 *	関節点：その頂点を取り除くとグラフの連結成分が 1 つ増える頂点
 *	橋：その辺を取り除くとグラフの連結成分が 1 つ増える辺
 *
-* 制約：多重辺なし
-*
 * a[i] : i 番目に見つけた関節点の頂点番号
 * b[i] = {s, e} : i 番目に見つけた橋の始点が s，終点への辺が e
 */
 template <class E>
 void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 	// 参考 : https://algo-logic.info/articulation-points/
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
 
 	int n = sz(g);
+	a.clear();
+	b.clear();
+
+	// e_cnt[s * n + t] : 頂点 s, t を結ぶ辺の本数
+	unordered_map<ll, int> e_cnt;
+	rep(s, n) {
+		repe(t, g[s]) {
+			e_cnt[(ll)s * n + t]++;
+		}
+	}
 
 	// in[s] : DFS で頂点 s を何番目に探索したか
 	// low[s] : s から後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
@@ -422,8 +549,6 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 	vi in(n), low(n);
 	vb seen(n);
 
-	a.clear();
-	b.clear();
 	int time = 0;
 	int r; // 暫定的な根
 
@@ -455,8 +580,10 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 				// DFS 木の辺なので low[t] で low[s] を更新する．
 				chmin(low[s], low[t]);
 
-				// 橋であれば記録する．
-				if (in[s] < low[t]) b.push_back({ s, t });
+				// 橋であれば記録する（多重辺は橋にはなりえない）
+				if (in[s] < low[t] && e_cnt[(ll)s * n + t] == 1) {
+					b.push_back({ s, t });
+				}
 
 				// 関節点かどうかの判定用
 				ap |= (in[s] <= low[t]);
@@ -497,17 +624,21 @@ void two_edge_connected_component(const Graph& g, vvi& tecc) {
 	vector<pii> b;
 	lowlink(g, a, b);
 
-	vector<unordered_set<int>> bridges(n);
+	unordered_set<ll> bridges;
 	repe(e, b) {
-		bridges[e.first].insert(e.second);
-		bridges[e.second].insert(e.first);
+		int s, t;
+		tie(s, t) = e;
+
+		bridges.insert((ll)s * n + t);
+		bridges.insert((ll)t * n + s);
 	}
 
 	Graph g2(n);
 	rep(s, n) {
 		repe(t, g[s]) {
-			if (bridges[s].count(t)) bridges[s].erase(t);
-			else g2[s].push_back(t);
+			if (!bridges.count((ll)s * n + t)) {
+				g2[s].push_back(t);
+			}
 		}
 	}
 

@@ -55,7 +55,6 @@ using T = Wellordered_set<S1, comp, inf1>;
 
 
 //y~‡ ®—ñW‡z
-// verify : https://atcoder.jp/contests/abc228/tasks/abc228_f
 using S2 = int;
 bool comp(S2 a, S2 b) { return a > b; }
 S2 inf2() { return -INF; }

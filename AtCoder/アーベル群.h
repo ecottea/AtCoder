@@ -56,7 +56,6 @@ struct Abel_group {
 
 
 //y‰ÁZ ƒA[ƒxƒ‹ŒQz
-// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
 using S1 = ll;
 S1 op(S1 a, S1 b) { return a + b; }
 S1 o1() { return 0; }

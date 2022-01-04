@@ -9,8 +9,6 @@
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
 template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
-	// verify : https://algo-method.com/tasks/366
-
 	// 境界が決定するまで
 	while (abs(ok - ng) > 1) {
 		// 区間の中間

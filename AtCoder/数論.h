@@ -3,13 +3,26 @@
 // ■■■■■ 数論 ■■■■■
 
 
+//【最大公約数／ユークリッドの互除法】O(log max(a, b))
+/*
+* gcd(a, b) を返す．
+*/
+ll euclid(ll a, ll b) {
+	// 改変しやすいよう再帰を用いずに書く
+	while (b > 0) {
+		a %= b;
+		swap(a, b);
+	}
+
+	return a;
+}
+
+
 //【最大公約数（複数）】O(n log(max a))
 /*
 * gcd a[0..n) を返す．（空列の gcd は 0 とする）
 */
 ll gcd(vl& a) {
-	// verify : https://algo-method.com/tasks/496
-
 	int n = sz(a);
 
 	ll g = 0;
@@ -24,8 +37,6 @@ ll gcd(vl& a) {
 * lcm(a, b) を返す．
 */
 ll lcm(ll a, ll b) {
-	// verify : https://algo-method.com/tasks/475
-
 	return a / gcd(a, b) * b;
 }
 
@@ -132,7 +143,7 @@ void divisors(ll n, vl& divs) {
 }
 
 
-//【約数関数 σ_k(n)】O(√n)
+//【約数関数】O(√n)
 /*
 * 約数関数 σ_k(n) = (n の約数それぞれを k 乗した和) を返す．
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
@@ -195,7 +206,7 @@ bool primeQ(ll n) {
 }
 
 
-//【オイラー関数 φ(n)】O(√n)
+//【オイラー関数】O(√n)
 /*
 * オイラー関数の値 φ(n) を返す．
 * 
@@ -208,14 +219,44 @@ ll euler_phi(ll n) {
 
 	// φ(n) を計算する．
 	ll res = 1;
-	for (auto pp : pps) {
+	repe(pp, pps) {
 		res *= (pp.first - 1) * pow(pp.first, pp.second - 1);
 	}
 	return res;
 }
 
 
-//【メービウス関数 μ(n)】O(√n)
+//【カーマイケル関数】O(√n)
+/*
+* カーマイケル関数の値 λ(n) を返す．
+*
+* 利用：【素因数分解】
+*/
+ll carmichael_lambda(ll n) {
+	// verify : https://atcoder.jp/contests/jag2015summer-day4/tasks/icpc2015summer_day4_d
+
+	// n を素因数分解した結果を pps に受け取る．
+	map<ll, int> pps;
+	factor_integer(n, pps);
+
+	// λ(n) を計算する．
+	ll res = 1;
+	repe(pp, pps) {
+		ll v;
+		if (pp.first == 2) {
+			int e = (pp.second >= 3 ? pp.second - 2 : pp.second - 1);
+			v = pow(2, e);
+		}
+		else {
+			v = (pp.first - 1) * pow(pp.first, pp.second - 1);
+		}
+		res = res / gcd(res, v) * v;
+	}
+	return res;
+}
+
+
+//【メービウス関数】O(√n)
 /*
 * メービウス関数の値 μ(n) を返す．
 * μ(n) = (-1)^k (n が相異なる k 個の素数の積) or 0 （n が平方因子を含む）
@@ -239,7 +280,7 @@ int mobius_mu(ll n) {
 }
 
 
-//【p-進付値 ord_p(n)】O(log n)
+//【p-進付値】O(log n)
 /*
 * n を割る p の最大べきを返す．（p は素数でなくても動作する）
 */
@@ -321,6 +362,49 @@ ll prime_pi(ll n) {
 	}
 
 	return dp[1][1];
+}
+
+
+//【素因数と約数の列挙】O(√n)
+/*
+* n の互いに異なる素因数全てをリスト ps に，約数全てをリスト divs にそれぞれ昇順に格納する．
+*/
+void primefactors_and_divisors(ll n, vl& ps, vl& divs) {
+	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
+
+	ps.clear();
+	divs.clear();
+	divs.push_back(1);
+
+	for (ll p = 2; p * p <= n; p++) {
+		int d = 0;
+		while (n % p == 0) {
+			d++;
+			n /= p;
+		}
+		if (d == 0) continue;
+
+		ps.push_back(p);
+
+		vl powp(d);
+		powp[0] = p;
+		rep(i, d - 1) powp[i + 1] = powp[i] * p;
+
+		repir(j, sz(divs) - 1, 0) {
+			rep(i, d) {
+				divs.push_back(divs[j] * powp[i]);
+			}
+		}
+	}
+
+	if (n > 1) {
+		ps.push_back(n);
+
+		repir(j, sz(divs) - 1, 0) {
+			divs.push_back(divs[j] * n);
+		}
+	}
+	sort(all(divs));
 }
 
 

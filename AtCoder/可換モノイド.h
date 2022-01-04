@@ -51,32 +51,30 @@ struct Commutative_monoid {
 
 //y‰ÁZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S1 = int;
-S1 op(S1 a, S1 b) { return a + b; }
+S1 op1(S1 a, S1 b) { return a + b; }
 S1 o1() { return 0; }
-using T = Commutative_monoid<S1, op, o1>;
+using T = Commutative_monoid<S1, op1, o1>;
 
 
 //yæZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S2 = int;
-S2 op(S2 a, S2 b) { return a * b; }
+S2 op2(S2 a, S2 b) { return a * b; }
 S2 o2() { return 1; }
-using T = Commutative_monoid<S2, op, o2>;
+using T = Commutative_monoid<S2, op2, o2>;
 
 
 //ymax ‰ÂŠ·ƒ‚ƒmƒCƒhz
-// verify : https://codeforces.com/contest/689/problem/D
 using S3 = int;
-S3 op(S3 a, S3 b) { return max(a, b); }
+S3 op3(S3 a, S3 b) { return max(a, b); }
 S3 o3() { return -INF; }
-using T = Commutative_monoid<S3, op, o3>;
+using T = Commutative_monoid<S3, op3, o3>;
 
 
 //ymin ‰ÂŠ·ƒ‚ƒmƒCƒhz
-// verify : https://codeforces.com/contest/689/problem/D
 using S4 = int;
-S4 op(S4 a, S4 b) { return min(a, b); }
+S4 op4(S4 a, S4 b) { return min(a, b); }
 S4 o4() { return INF; }
-using T = Commutative_monoid<S4, op, o4>;
+using T = Commutative_monoid<S4, op4, o4>;
 
 
 //yxor ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -84,9 +82,9 @@ using T = Commutative_monoid<S4, op, o4>;
 * (Z/2Z)^d ã‚Ì ‰ÁZ ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
 */
 using S10 = int;
-S10 op(S10 a, S10 b) { return a ^ b; }
+S10 op10(S10 a, S10 b) { return a ^ b; }
 S10 o10() { return 0; }
-using T = Commutative_monoid<S10, op, o10>;
+using T = Commutative_monoid<S10, op10, o10>;
 
 
 //yor ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -94,9 +92,9 @@ using T = Commutative_monoid<S10, op, o10>;
 * (Z/2Z)^d ã‚Ì max ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
 */
 using S11 = int;
-S11 op(S11 a, S11 b) { return a | b; }
+S11 op11(S11 a, S11 b) { return a | b; }
 S11 o11() { return 0; }
-using T = Commutative_monoid<S11, op, o11>;
+using T = Commutative_monoid<S11, op11, o11>;
 
 
 //yand ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -104,8 +102,8 @@ using T = Commutative_monoid<S11, op, o11>;
 * (Z/2Z)^d ã‚Ì min ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
 */
 using S12 = int;
-S12 op(S12 a, S12 b) { return a & b; }
+S12 op12(S12 a, S12 b) { return a & b; }
 S12 o12() { return ~0; }
-using T = Commutative_monoid<S12, op, o12>;
+using T = Commutative_monoid<S12, op12, o12>;
 
 

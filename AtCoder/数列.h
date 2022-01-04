@@ -26,6 +26,8 @@ mint arithmetic_series(mint a, mint b, ll i0, ll i1) {
 *
 * geometric_series(r, i0, i1) : O(log max(i0, i1))
 *	Σi=[i0..i1) r^i を返す．
+* 
+*（ダブリング）
 */
 mint geometric_series(mint r, ll n) {
 	// おなじみの公式では r-1 による割り算を必要とするのでまずい．
@@ -53,6 +55,8 @@ mint geometric_series(mint r, ll i0, ll i1) {
 * arithmetic_geometric_series(a, b, r, i0, i1) : O(log max(i0, i1))
 *	Σi=[i0..i1) (a i + b) r^i を返す．
 *
+*（ダブリング）
+* 
 * 利用：【等比数列の和】
 */
 mint arithmetic_geometric_series(mint r, ll n) {
@@ -91,7 +95,7 @@ mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
 /*
 * Σi=[0..∞) i^d r^i の値を返す．
 *
-* 制約 : r ≠ 1, d < 4 * 10^6
+* 制約 : r != 1, d < 4 * 10^6
 *
 * 利用：【階乗と二項係数（mint利用）】
 */

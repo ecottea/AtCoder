@@ -37,10 +37,51 @@ int cut_histogram_horizontal(const vl& hist, vector<pli>& hls) {
 }
 
 
+//【順列全探索 → bitDP】O(2^n n)
+/*
+* a[0..n) に対して，1 回の操作でコスト x で a[i]++, a[i]--，コスト y で swap(a[i], a[i+1])
+* が行えるとき，a[0..n) を b[0..n) に一致させるための最小コストを返す．
+*/
+ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
+	// verify : https://atcoder.jp/contests/abc232/tasks/abc232_f
+
+	int n = sz(a);
+
+	// dp[set] : a[set] を b[0..|set|) に一致させるための最小コスト
+	vl dp(1 << n, INFL);
+	dp[0] = 0;
+
+	repb(set, n) {
+		if (set == 0) continue;
+
+		// set_size : 添字集合 set の大きさ
+		int set_size = popcount(set);
+
+		ll swap_cost = (set_size - 1) * y;
+
+		// 添字集合 set の要素 i を昇順に走査する．
+		rep(i, n) {
+			if (set & (1 << i)) {
+				int n_set = set - (1 << i);
+				ll inc_dec_cost = abs(a[i] - b[set_size - 1]) * x;
+
+				chmin(dp[set], dp[n_set] + inc_dec_cost + swap_cost);
+
+				swap_cost -= y;
+			}
+		}
+	}
+
+	return dp[(1 << n) - 1];
+}
+
+
 //【隣接和をとる操作で得られる列】
 /*
 * a[0..n) に対し，隣接する 2 数をその和に置き換えるという操作を考える．
 * 操作を 0 回以上の任意回行って得られる列が何通りあるかを返す．
+* 
+*（前処理で高速化した DP）
 */
 mint count_adjacent_sum_contraction_seq(const vl& a) {
 	int n = sz(a);
@@ -110,13 +151,11 @@ mint count_adjacent_sum_contraction_seq(const vl& a) {
 		// 累積和 s を更新する．
 		s += a[i];
 	}
-	dump(k);
 
 	// 貰う DP
 	repi(i, 1, n - 1) {
 		dp[i + 1] = 2 * dp[i] - dp[k[i]];
 	}
-	dump(dp);
 
 	return dp[n];
 }

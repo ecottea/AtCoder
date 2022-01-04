@@ -10,7 +10,7 @@
 * st から各頂点 s への最短経路長を dist[s] に格納する．
 * s が st から到達不能な頂点の場合は dist[s] = INF となる．
 */
-void bfs(const Graph& g, int st, vi& dist) {
+void breadth_first_search(const Graph& g, int st, vi& dist) {
 	// verify : https://algo-method.com/tasks/414
 
 	int n = sz(g);
@@ -173,7 +173,7 @@ void topological_bfs(const Graph& g, const vi& st, vi& time) {
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
 template <class G>
-void dfs(G& g, int st, vi& seq) {
+void depth_first_search(G& g, int st, vi& seq) {
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_d
 
 	int n = sz(g);

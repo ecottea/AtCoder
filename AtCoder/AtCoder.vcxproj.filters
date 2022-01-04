@@ -37,9 +37,6 @@
     <Filter Include="ヘッダー ファイル\計算">
       <UniqueIdentifier>{59318c8d-7ef2-4194-b058-dabafd79dab4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\確率">
-      <UniqueIdentifier>{36597baf-90fc-48c6-a94a-085803720106}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\集合">
       <UniqueIdentifier>{4cbbb6b1-b0b0-4a8a-a58d-468e172956ee}</UniqueIdentifier>
     </Filter>
@@ -48,9 +45,6 @@
     </Filter>
     <Filter Include="ヘッダー ファイル\文字列">
       <UniqueIdentifier>{4ab017ff-67b5-4897-b871-957943fd7976}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\計算%28整数%29">
-      <UniqueIdentifier>{bfa2e7c8-eb39-4a41-ba8f-1845a0d9c0c3}</UniqueIdentifier>
     </Filter>
     <Filter Include="ヘッダー ファイル\列%28区間%29">
       <UniqueIdentifier>{29392755-fd06-423f-a2da-fbaaed974ab3}</UniqueIdentifier>
@@ -75,6 +69,15 @@
     </Filter>
     <Filter Include="ヘッダー ファイル\old">
       <UniqueIdentifier>{105e03a8-7561-4890-8b11-66c02a5a18b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\数論">
+      <UniqueIdentifier>{bfa2e7c8-eb39-4a41-ba8f-1845a0d9c0c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\数の表示">
+      <UniqueIdentifier>{cbcf7be6-52aa-4b89-828d-166001894684}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\確率統計">
+      <UniqueIdentifier>{36597baf-90fc-48c6-a94a-085803720106}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -134,9 +137,6 @@
     <ClInclude Include="区間.h">
       <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
-    <ClInclude Include="マッチング.h">
-      <Filter>ヘッダー ファイル\グラフ</Filter>
-    </ClInclude>
     <ClInclude Include="マンハッタン幾何.h">
       <Filter>ヘッダー ファイル\幾何</Filter>
     </ClInclude>
@@ -168,22 +168,19 @@
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
     <ClInclude Include="合同式.h">
-      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+      <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="数論.h">
-      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
-    </ClInclude>
-    <ClInclude Include="数の表示.h">
-      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+      <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="畳み込み.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="確率.h">
-      <Filter>ヘッダー ファイル\確率</Filter>
+      <Filter>ヘッダー ファイル\確率統計</Filter>
     </ClInclude>
     <ClInclude Include="期待値.h">
-      <Filter>ヘッダー ファイル\確率</Filter>
+      <Filter>ヘッダー ファイル\確率統計</Filter>
     </ClInclude>
     <ClInclude Include="組合せゲーム.h">
       <Filter>ヘッダー ファイル\ゲーム</Filter>
@@ -231,13 +228,13 @@
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="mint.h">
-      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+      <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="最短路.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
     <ClInclude Include="数論%28高速%29.h">
-      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+      <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="文字列.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
@@ -249,7 +246,7 @@
       <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
     <ClInclude Include="数論(一括).h">
-      <Filter>ヘッダー ファイル\計算%28整数%29</Filter>
+      <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="モノイド.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
@@ -311,9 +308,6 @@
     <ClInclude Include="部分列DP.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
-    <ClInclude Include="桁DP.h">
-      <Filter>ヘッダー ファイル\文字列</Filter>
-    </ClInclude>
     <ClInclude Include="群.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
@@ -362,7 +356,7 @@
     <ClInclude Include="ビット列.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
-    <ClInclude Include="一変数最小化.h">
+    <ClInclude Include="一変数最適化.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
     <ClInclude Include="探索(old).h">
@@ -370,6 +364,54 @@
     </ClInclude>
     <ClInclude Include="包除原理.h">
       <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="数論%28old%29.h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="桁DP(old).h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="桁DP%28上から%29.h">
+      <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
+    <ClInclude Include="数の表示.h">
+      <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
+    <ClInclude Include="桁ダブリング.h">
+      <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
+    <ClInclude Include="桁DP(下から).h">
+      <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
+    <ClInclude Include="混合基数.h">
+      <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
+    <ClInclude Include="統計量.h">
+      <Filter>ヘッダー ファイル\確率統計</Filter>
+    </ClInclude>
+    <ClInclude Include="全域木.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="探索(木).h">
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
+    </ClInclude>
+    <ClInclude Include="変形%28格子%29.h">
+      <Filter>ヘッダー ファイル\格子</Filter>
+    </ClInclude>
+    <ClInclude Include="二分探索.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="尺取り法.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="有名パズル.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="二部グラフ.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="変形(グラフ).h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

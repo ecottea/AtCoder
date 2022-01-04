@@ -3,82 +3,6 @@
 // ■■■■■ 格子上の問題 ■■■■■
 
 
-//【単純多角形判定】O(h w)
-/*
-* 盤面 c[0..h)[0..w) で，外部が o，内部がそれ以外で表された多角形が単純であるかを返す．
-*/
-bool simple_polygonQ(const vvc& c_, char o = '.') {
-	int h = sz(c_) + 2;
-	int w = sz(c_[0]) + 2;
-
-	// 外周に空マスを追加しておく．
-	vvc c(h, vc(w, o));
-	rep(i, h - 2) {
-		rep(j, w - 2) {
-			c[i + 1][j + 1] = c_[i][j];
-		}
-	}
-
-	// 探索済みかどうか
-	vvb seen(h, vb(w));
-
-	// 多角形内[外] のマスの 1 つを得る
-	pii in = { -1, -1 }, out = { -1, -1 };
-	rep(i, h) {
-		rep(j, w) {
-			if (c[i][j] == o) out = { i, j };
-			else in = { i, j };
-		}
-	}
-
-	// 多角形内[外] のマスそれぞれ 1 つずつをキューに登録する．
-	queue<pii> q;
-	if (in != make_pair(-1, -1)) {
-		q.push(in);
-		seen[in.first][in.second] = true;
-	}
-	q.push(out);
-	seen[out.first][out.second] = true;
-
-	// 幅優先探索を行う．
-	while (!q.empty()) {
-		int x, y;
-		tie(x, y) = q.front();
-		q.pop();
-
-		// マス (x, y) の 4 近傍を調べる．
-		rep(k, 4) {
-			// (nx, ny) : (x, y) の近傍の座標
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
-
-			// 盤面の外に出たり，異種のマスへ移動することはない．
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] != c[x][y]) {
-				continue;
-			}
-
-			// 探索したことを記録しておく．
-			if (seen[nx][ny]) continue;
-			seen[nx][ny] = true;
-
-			// 後で探索するためキューに追加する．
-			q.push({ nx, ny });
-		}
-	}
-
-	// 多角形内のマスで未探索のマスがあるなら多角形が非連結または自己交差あり．
-	// 多角形外のマスで未探索のマスがあるなら多角形に穴が空いているまたは自己交差あり．
-	// どちらにせよ単純多角形ではないので false を返す．
-	rep(i, h) {
-		rep(j, w) {
-			if (!seen[i][j]) return false;
-		}
-	}
-
-	return true;
-}
-
-
 //【最大正方形】O(h w)
 /*
 * a[0..h)[0..w) の able のマスのみを使って作られる，
@@ -187,6 +111,82 @@ ll largest_square(vvi& a) {
 	rep(i, h) chmax(res, largest_rectangle_in_histogram(a[i]));
 
 	return res;
+}
+
+
+//【単純多角形判定】O(h w)
+/*
+* 盤面 c[0..h)[0..w) で，外部が o，内部がそれ以外で表された多角形が単純であるかを返す．
+*/
+bool simple_polygonQ(const vvc& c_, char o = '.') {
+	int h = sz(c_) + 2;
+	int w = sz(c_[0]) + 2;
+
+	// 外周に空マスを追加しておく．
+	vvc c(h, vc(w, o));
+	rep(i, h - 2) {
+		rep(j, w - 2) {
+			c[i + 1][j + 1] = c_[i][j];
+		}
+	}
+
+	// 探索済みかどうか
+	vvb seen(h, vb(w));
+
+	// 多角形内[外] のマスの 1 つを得る
+	pii in = { -1, -1 }, out = { -1, -1 };
+	rep(i, h) {
+		rep(j, w) {
+			if (c[i][j] == o) out = { i, j };
+			else in = { i, j };
+		}
+	}
+
+	// 多角形内[外] のマスそれぞれ 1 つずつをキューに登録する．
+	queue<pii> q;
+	if (in != make_pair(-1, -1)) {
+		q.push(in);
+		seen[in.first][in.second] = true;
+	}
+	q.push(out);
+	seen[out.first][out.second] = true;
+
+	// 幅優先探索を行う．
+	while (!q.empty()) {
+		int x, y;
+		tie(x, y) = q.front();
+		q.pop();
+
+		// マス (x, y) の 4 近傍を調べる．
+		rep(k, 4) {
+			// (nx, ny) : (x, y) の近傍の座標
+			int nx = x + dx4[k];
+			int ny = y + dy4[k];
+
+			// 盤面の外に出たり，異種のマスへ移動することはない．
+			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] != c[x][y]) {
+				continue;
+			}
+
+			// 探索したことを記録しておく．
+			if (seen[nx][ny]) continue;
+			seen[nx][ny] = true;
+
+			// 後で探索するためキューに追加する．
+			q.push({ nx, ny });
+		}
+	}
+
+	// 多角形内のマスで未探索のマスがあるなら多角形が非連結または自己交差あり．
+	// 多角形外のマスで未探索のマスがあるなら多角形に穴が空いているまたは自己交差あり．
+	// どちらにせよ単純多角形ではないので false を返す．
+	rep(i, h) {
+		rep(j, w) {
+			if (!seen[i][j]) return false;
+		}
+	}
+
+	return true;
 }
 
 

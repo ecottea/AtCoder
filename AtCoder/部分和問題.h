@@ -137,6 +137,47 @@ int minimize_partial_sum(const vi& a, int v) {
 }
 
 
+//y•”•ª˜a–â‘èi”‚¦ã‚°jzO(2^(n/2) n)
+/*
+* ’·‚³ n ‚Ì”ñ•‰®”‚Ì—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ğì‚é•û–@‚ª‰½’Ê‚è‚ ‚é‚©‚ğ•Ô‚·D
+*
+*i”¼•ª‘S—ñ‹“j
+*/
+ll count_partial_sum(const vl& a, ll v) {
+	int n = sz(a);
+
+	// ‘O”¼‚ÆŒã”¼‚Ì—v‘f”
+	int n1 = n / 2, n2 = n - n1;
+
+	// cnt[v] : ‘O”¼‚Å•”•ª˜a v ‚ğì‚é•û–@‚Ì”
+	unordered_map<ll, int> cnt;
+
+	repb(set, n1) {
+		// ‘O”¼‚Ì•”•ª˜a‚ÌŒvZ
+		ll sum = 0;
+		rep(i, n1) {
+			if (set & (1 << i)) sum += a[i];
+		}
+
+		cnt[sum]++;
+	}
+
+	ll res = 0;
+	repb(set, n2) {
+		// Œã”¼‚Ì•”•ª˜a‚ÌŒvZ
+		ll sum = 0;
+		rep(i, n2) {
+			if (set & (1 << i)) sum += a[n1 + i];
+		}
+
+		// ‘O”¼‚Ì•”•ª˜a‚Å v - sum ‚É‚È‚é‚à‚Ì‚ª‚ ‚ê‚ÎC‡‚í‚¹‚Ä•”•ª˜a‚ª v ‚Æ‚È‚éD
+		res += cnt[v - sum];
+	}
+
+	return res;
+}
+
+
 //y•”•ª˜a–â‘èi‘¶İ”»’èjzO(2^(n/2))
 /*
 * ’·‚³ n ‚Ì”ñ•‰®”‚Ì—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ªì‚ê‚é‚©‚ğ•Ô‚·D
@@ -179,7 +220,6 @@ template <class T> bool partial_sum(const vector<T>& a, T v) {
 		// ƒŠƒXƒg‚É’Ç‰Á
 		sum1s.insert(sum1);
 	}
-	dump(sum1s);
 
 
 	// Œã”¼‚Ì—v‘f”
@@ -445,7 +485,7 @@ mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 *
 *i˜a‚ğó‘Ô‚É‚à‚Âó‘Ô DPj
 */
-mint count_limited_signed_partial_sum(const vi& a, const vi& m, int v) {
+mint count_limited_signed_partial_sum(vi& a, const vi& m, int v) {
 	// Ql : https://betrue12.hateblo.jp/entry/2020/10/05/124052
 
 	int n = sz(a);

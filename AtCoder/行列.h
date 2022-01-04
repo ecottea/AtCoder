@@ -131,14 +131,13 @@ template <class T> struct Matrix {
 };
 
 
-//【行基本変形】O(m^2 n)
+//【階段行列】O(m^2 n)
 /*
-* 行基本変形で mat を階段行列に変形する．
+* 行基本変形で m * n 行列 mat を階段行列に変形する．
 * 最も右下のピボットの位置 (i, j) を返す．零行列なら (-1, -1) を返す．
 */
 template <class T> pii row_echelon_form(Matrix<T>& mat) {
-	auto m = mat.m;
-	auto n = mat.n;
+	int m = mat.m, n = mat.n;
 	auto& v = mat.v;
 	
 	// 直前に見つけたピボットの位置
@@ -159,8 +158,7 @@ template <class T> pii row_echelon_form(Matrix<T>& mat) {
 		}
 
 		// 見つかったら i 行目とその行を入れ替える．
-		pi = i;
-		pj = j;
+		pi = i; pj = j;
 		if (i != k) swap(v[i], v[k]);
 
 		// v[i][j] が 1 になるよう行全体を v[i][j] で割る．
@@ -183,12 +181,12 @@ template <class T> pii row_echelon_form(Matrix<T>& mat) {
 
 //【行列式】O(n^3)
 /*
-* 正方行列 mat の行列式を返す．
+* n 次正方行列 mat の行列式を返す．
 */
 template <class T> T determinant(Matrix<T>& mat) {
 	// verify : https://judge.yosupo.jp/problem/matrix_det
 
-	auto n = mat.n;
+	int n = mat.n;
 	auto& v = mat.v;
 
 	// 注目位置を (i, j)（i 行目かつ j 列目）とする．
@@ -235,7 +233,7 @@ template <class T> T determinant(Matrix<T>& mat) {
 
 //【逆行列】O(n^3)
 /*
-* 正方行列 mat の逆行列が存在すればそれを mat_inv に格納する．
+* n 次正方行列 mat の逆行列が存在すればそれを mat_inv に格納する．
 * また存在する場合は true，存在しない場合は false を返す．
 */
 template <class T> bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
@@ -274,8 +272,7 @@ template <class T> bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
 		}
 
 		// 見つかったら i 行目とその行を入れ替える．
-		pi = i;
-		pj = j;
+		pi = i; pj = j;
 		if(i != k) swap(v[i], v[k]);
 
 		// v[i][j] が 1 になるよう行全体を v[i][j] で割る

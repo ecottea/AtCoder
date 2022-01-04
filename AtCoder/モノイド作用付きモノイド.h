@@ -139,7 +139,6 @@ using T = MLop_Monoid<S4, op, e4, F4, mapping, composition, id4>;
 
 
 //y‰ÁZ ì—p•t‚« max ƒ‚ƒmƒCƒhz
-// verify : https://atcoder.jp/contests/joi2010ho/tasks/joi2010ho_e
 using S5 = int;
 S5 op(S5 x, S5 y) { return max(x, y); }
 S5 e5() { return -INF; }

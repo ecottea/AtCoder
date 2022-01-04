@@ -37,6 +37,11 @@ struct mint {
 	bool operator==(ll b) const { return v == safe_mod(b); }
 	friend bool operator==(int a, const mint& b) { return b == a; }
 	friend bool operator==(ll a, const mint& b) { return b == a; }
+	bool operator!=(const mint& b) const { return v != b.v; }
+	bool operator!=(int b) const { return v != safe_mod(b); }
+	bool operator!=(ll b) const { return v != safe_mod(b); }
+	friend bool operator!=(int a, const mint& b) { return b != a; }
+	friend bool operator!=(ll a, const mint& b) { return b != a; }
 
 	// ’P€‰‰Z
 	mint operator-() const { mint a = *this; return a *= -1; }

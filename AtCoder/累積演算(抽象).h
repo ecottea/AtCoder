@@ -277,7 +277,7 @@ void slide_minimum(const vector<S>& a, int w, vector<S>& a_min) {
 }
 
 
-//【二次元スライド最小値】O(h w)
+//【二次元スライド最小値（整列集合）】O(h w)
 /*
 * 二次元配列 a[0..h)[0..w) に対し min a[i..i+dh)[j..j+dw) を a_min[i][j] に返す．
 */

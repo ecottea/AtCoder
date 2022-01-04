@@ -6,7 +6,7 @@
 
 //【位数】O(√p)
 /*
-* a^x = 1 となる最小の自然数 x を返す．（なければ -1）
+* 素数 p を法として a^x = 1 となる最小の自然数 x を返す．（なければ -1）
 *
 * 利用：【約数列挙】
 */
@@ -18,6 +18,35 @@ int ord(const mint& a) {
 	divisors(p - 1, divs);
 
 	// p - 1 の約数を昇順に調べていく．
+	repe(d, divs) {
+		if (a.pow(d) == 1) {
+			return (int)d;
+		}
+	}
+
+	return -1;
+}
+
+
+//【位数】O(√m)
+/*
+* m を法として a^x = 1 となる最小の自然数 x を返す．（なければ -1）
+*
+* 利用：【カーマイケル関数】，【約数列挙】
+*/
+int ord(const mint& a) {
+	// verify : https://atcoder.jp/contests/jag2015summer-day4/tasks/icpc2015summer_day4_d
+
+	const int m = mint::mod();
+
+	// λ(m) を求める．
+	ll lambda = carmichael_lambda(m);
+
+	// λ(m) の約数が位数の候補となる．
+	vl divs;
+	divisors(lambda, divs);
+
+	// λ(m) の約数を昇順に調べていく．
 	repe(d, divs) {
 		if (a.pow(d) == 1) {
 			return (int)d;

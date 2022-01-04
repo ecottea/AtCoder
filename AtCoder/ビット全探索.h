@@ -3,7 +3,7 @@
 // ■■■■■ ビット全探索 ■■■■■
 
 
-//【上位集合の全探索】
+//【上位集合の全探索】O(2^|Ω-A|)
 /*
 * 大きさ d の全体集合 Ω とその部分集合 A ⊂ Ω について，
 * A ⊂ set ⊂ Ω なる set を昇順に全探索する．
@@ -11,15 +11,15 @@
 #define repbu(set, A, d) for(int set = A; set < (1 << int(d)); set = (set + 1) | A)
 
 
-//【下位集合の全探索】
+//【下位集合の全探索】O(2^|A|)
 /*
 * 大きさ d の全体集合 Ω とその部分集合 A ⊂ Ω について，
 * set ⊂ A ⊂ Ω なる set を降順に全探索する．
 */
-#define repbs(set, A) for(int set = int(A), bset = 1; bset > 0; bset = set, set = (set - 1) & int(A)) 
+#define repbs(set, A) for(int set = int(A), bset##A = 1; bset##A > 0; bset##A = set, set = (set - 1) & int(A)) 
 
 
-//【部分集合の全探索（大きさ固定）】
+//【部分集合の全探索（大きさ固定）】O(binomial(d, k))
 /*
 * 大きさ d の全体集合 Ω のうち，大きさ k の部分集合 set⊂Ω を昇順に全探索する．
 */

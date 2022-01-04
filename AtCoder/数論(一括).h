@@ -18,11 +18,12 @@ void eratosthenes(int n, vi& ps) {
 
 	// 素数かどうかを記録しておくためのテーブル
 	vb is_prime(n + 1, true);
+	is_prime[0] = is_prime[1] = false;
 
-	int i;
+	int i = 2;
 
 	// √n 以下の i の処理
-	for (i = 2; i <= n / i; i++) {
+	for (; i <= n / i; i++) {
 		if (is_prime[i]) {
 			ps.push_back(i);
 
@@ -142,7 +143,7 @@ void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
 * i = [1..n] について約数関数 σ_k(i) = (i の約数の k 乗和) を s[i] に格納する．
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
 *
-* 利用：【添字 lcm での畳込み】
+* 利用：【約数変換】
 */
 template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
@@ -151,8 +152,8 @@ template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 	s[0] = 0;
 	repi(i, 1, n) s[i] = T(pow(i, k));
 
-	LCM_convolution<T> l(n);
-	l.zeta(s);
+	Divisor_transform<T> dt(n);
+	dt.divisor_zeta(s);
 }
 
 
@@ -160,17 +161,18 @@ template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 /*
 * i = [1..n] についてオイラー関数 φ(i) の値を e[i] に格納する．
 *
-* 利用：【添字 lcm での畳込み】
+* 利用：【約数変換】
 */
 void euler_phi(int n, vi& phi) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
+	// verify : https://onlinejudge.u-aizu.ac.jp/challenges/sources/VPC/RUPC/2286?year=2011
 
 	phi.resize(n + 1);
 	phi[0] = 0;
 	repi(i, 1, n) phi[i] = i;
 
-	LCM_convolution<int> l(n);
-	l.mobius(phi);
+	Divisor_transform<int> dt(n);
+	dt.divisor_mobius(phi);
 }
 
 
@@ -178,7 +180,7 @@ void euler_phi(int n, vi& phi) {
 /*
 * i = [1..n] についてメービウス関数 μ(i) の値を mu[i] に格納する．
 *
-* 利用：【添字 lcm での畳込み】
+* 利用：【約数変換】
 */
 void mobius_mu(int n, vi& mu) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
@@ -186,69 +188,30 @@ void mobius_mu(int n, vi& mu) {
 	mu = vi(n + 1, 0);
 	mu[1] = 1;
 
-	LCM_convolution<int> l(n);
-	l.mobius(mu);
+	Divisor_transform<int> dt(n);
+	dt.divisor_mobius(mu);
 }
 
 
-//【定数との gcd の分布】O(√n + d(n)^2)　（d(n) : n の約数の個数）
+//【Z/nZ の位数分布】O(√n)
 /*
-* gcd(i, n) = g になるような i∈[1..K] の個数を cnt[g] に昇順に格納する．
+* Z/nZ に位数 d の元が何個あるかを cnt[d] に格納する．
 *
-* K=n のとき，cnt[g] は Z/nZ に位数 n/g の元が何個あるかとも解釈できる．
-* 
-* 利用：【約数列挙】
+* 利用：【倍数変換（添字約数制限）】,【素因数と約数の列挙】
 */
-void gcd_distribution(ll K, ll n, unordered_map<ll, ll>& cnt) {
-	// ds : n の約数の集合（昇順）
-	vl ds;
-	divisors(n, ds);
-	int m = sz(ds);
+void order_distribution(ll n, unordered_map<ll, ll>& cnt) {
+	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
 
-	// cnt[d] : gcd(i, n) = d になるような i∈[1..K] の個数
+	vl ps, divs;
+	primefactors_and_divisors(n, ps, divs);
+
+	Limited_multiple_transform<ll> lmt(ps, divs);
+
 	cnt.clear();
+	repe(d, divs) cnt[d] = d;
 
-	repir(j, m - 1, 0) {
-		// gcd(i, n) が d の倍数になるような i∈[1..K] の個数
-		cnt[ds[j]] = K / ds[j];
-
-		// gcd(i, n) = 2d, 3d, ... になるような i∈[1..K] の個数を引く．
-		repi(j2, j + 1, m - 1) {
-			if (ds[j2] % ds[j] == 0) cnt[ds[j]] -= cnt[ds[j2]];
-		}
-	}
+	lmt.multiple_mobius(cnt);
 }
 
-
-//【定数との添字 gcd の和】O(√n + d(n)^2)　（d(n) : n の約数の個数）
-/*
-* gcd(i, n) = g になるような i∈[1..K] について，Σi を val[g] に昇順に格納する．
-*
-* 利用：【約数列挙】
-*/
-void gcd_indexed_sum(ll K, ll n, unordered_map<ll, mint>& val) {
-	// verify : https://atcoder.jp/contests/abc020/tasks/abc020_d
-
-	// ds : n の約数の集合（昇順）
-	vl ds;
-	divisors(n, ds);
-	int m = sz(ds);
-
-	mint inv2 = mint(2).inv();
-
-	// val[d] : gcd(i, n) = d になるような i∈[1..K] についての Σi
-	val.clear();
-
-	repir(j, m - 1, 0) {
-		// gcd(i, n) が d の倍数になるような i∈[1..K] について Σi を求める．
-		// これは等差数列の和で，初項は d，末項は K / d * d，項数は K / d である．
-		val[ds[j]] = mint(ds[j] + K / ds[j] * ds[j]) * (K / ds[j]) * inv2;
-
-		// gcd(i, n) = 2d, 3d, ... になるような i∈[1..K] の Σi を引く
-		repi(j2, j + 1, m - 1) {
-			if (ds[j2] % ds[j] == 0) val[ds[j]] -= val[ds[j2]];
-		}
-	}
-}
 
 

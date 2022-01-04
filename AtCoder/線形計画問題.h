@@ -18,11 +18,9 @@
 * maximize_diff(a, diff) : O(n m)（m : 制約の数）
 *	v[b] - v[a] の最大値（無いなら INFL）を diff[b] に格納する．
 *	制約を満たすことが不可能なら false を返す．
-*
-* 利用：【単一始点最短路／ベルマン・フォード法】
 */
 struct Ushige {
-	// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/0304
 
 	int n;
 	WGraph g;
@@ -45,6 +43,46 @@ struct Ushige {
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
 		// ただし負の閉路を持っていた場合は制約を満たせない．
 		return bellman_ford(g, a, diff);
+	}
+
+	bool bellman_ford(const WGraph& g, int st, vl& cost) {
+		cost = vl(n, INFL); // スタートからの最小コストを保持するテーブル
+		cost[st] = 0;
+
+		rep(i, n) {
+			bool updated = false;
+
+			// 全ての辺についての操作
+			rep(s, n) {
+				repe(e, g[s]) {
+					// もし (始点へのコスト) + (辺のコスト) < (終点へのコスト) なら
+					// (終点へのコスト) を更新する．
+					// INFL からの引き算も認めて計算しているので，
+					// st から到達不可能な負閉路も含めて検出する．
+					if (cost[s] + e.cost < cost[e.to]) {
+						cost[e.to] = cost[s] + e.cost;
+						updated = true;
+					}
+				}
+			}
+
+			// もしコストの更新が起こらなければ最小コスト確定
+			if (!updated) return true;
+		}
+
+		// もし全ての辺についての操作を |V| 回繰り返してもコストの更新があったなら，
+		// どこかに負の閉路を持っているので false を返す．
+		return false;
+	}
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Ushige& u) {
+		rep(s, u.n) {
+			repe(e, u.g[s]) {
+				os << "v[" << e.to << "] - v[" << s << "] <= " << e.cost << endl;
+			}
+		}
+		return os;
 	}
 };
 
@@ -70,6 +108,8 @@ struct Ushige_ub_only {
 	Ushige_ub_only(int n_) : n(n_), g(n_) {}
 
 	void set_ub(int a, int b, ll d) {
+		assert(d >= 0);
+		
 		// 差の上限に対応する重みを持つ辺を張る．
 		g[a].push_back({ b, d });
 	}
@@ -78,6 +118,16 @@ struct Ushige_ub_only {
 		// a を始点とする最短経路問題を解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
 		dijkstra(g, a, diff);
+	}
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Ushige_ub_only& u) {
+		rep(s, u.n) {
+			repe(e, u.g[s]) {
+				os << "v[" << e.to << "] - v[" << s << "] <= " << e.cost << endl;
+			}
+		}
+		return os;
 	}
 };
 
@@ -105,6 +155,8 @@ struct Ushige_ub01_only {
 	Ushige_ub01_only(int n_) : n(n_), g(n_) {}
 
 	void set_ub(int a, int b, int d) {
+		assert(d == 0 || d == 1);
+
 		// 差の上限に対応する重みを持つ辺を張る．
 		g[a].push_back({ b, d });
 	}
@@ -113,6 +165,16 @@ struct Ushige_ub01_only {
 		// a を始点とする最短経路問題を解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
 		binary_bfs(g, a, diff);
+	}
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Ushige_ub01_only& u) {
+		rep(s, u.n) {
+			repe(e, u.g[s]) {
+				os << "v[" << e.to << "] - v[" << s << "] <= " << e.cost << endl;
+			}
+		}
+		return os;
 	}
 };
 

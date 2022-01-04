@@ -57,10 +57,10 @@ template <class T> struct Imos {
 /*
 * [0, h) * [0, w) 内の長方形領域に一定の値を加算する．
 *
-* Imos_2d(h, w) : O(h w)
+* Imos_2D(h, w) : O(h w)
 *	[0, h) * [0, w) を 0 で初期化する．
 *
-* set_rect(x1, y1, x2, y2, val) : O(1)
+* set(x1, y1, x2, y2, val) : O(1)
 *	[x1, x2) * [y1, y2) に val を加算する準備を行う．
 *
 * sum() : O(h w)
@@ -69,14 +69,14 @@ template <class T> struct Imos {
 * v[i][j] : O(1)
 *	加算後の位置 (i, j) の値を得る．
 */
-template <class T> struct Imos_2d {
+template <class T> struct Imos_2D {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
 	int h, w;
 	vector<vector<T>> v;
 
 	// [0, h) * [0, w) を 0 で初期化する．
-	Imos_2d(int h_, int w_) : h(h_), w(w_), v(h + 1, vector<T>(w + 1)) {}
+	Imos_2D(int h_, int w_) : h(h_), w(w_), v(h + 1, vector<T>(w + 1)) {}
 
 	// アクセス
 	vector<T> const& operator[](int i) const { return v[i]; }
@@ -102,18 +102,16 @@ template <class T> struct Imos_2d {
 				v[i][j] += v[i][j - 1];
 			}
 		}
-		dumpel(v);
 
 		// 不要な部分の削除
 		v.pop_back();
 		rep(i, h) {
 			v[i].pop_back();
 		}
-		dumpel(v);
 	}
 
 	// デバッグ出力用
-	friend ostream& operator<<(ostream& os, const Imos_2d& imos) {
+	friend ostream& operator<<(ostream& os, const Imos_2D& imos) {
 		rep(i, sz(imos.v)) {
 			rep(j, sz(imos.v[0])) os << imos[i][j] << " ";
 			os << endl;
@@ -127,7 +125,7 @@ template <class T> struct Imos_2d {
 /*
 * [0, h) * [0, w) 内の長方形または三角形領域に一定の値を加算する．
 *
-* Imos_2d(h, w) : O(h w)
+* Imos_2D(h, w) : O(h w)
 *	[0, h) * [0, w) を 0 で初期化する．
 *
 * set_rect(x1, y1, x2, y2, val) : O(1)
@@ -142,7 +140,7 @@ template <class T> struct Imos_2d {
 * v[i][j] : O(1)
 *	加算後の位置 (i, j) の値を得る．
 */
-template <class T> struct Imos_2d_tri {
+template <class T> struct Imos_2D_tri {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 	
 	int h;
@@ -150,7 +148,7 @@ template <class T> struct Imos_2d_tri {
 	vector<vector<T>> v;
 
 	// [0, h) * [0, w) を 0 で初期化する．
-	Imos_2d_tri(int h_, int w_) : h(h_), w(w_), v(h + 2, vector<T>(w + 2)) {}
+	Imos_2D_tri(int h_, int w_) : h(h_), w(w_), v(h + 2, vector<T>(w + 2)) {}
 	
 	// アクセス
 	vector<T> const& operator[](int i) const { return v[i]; }
@@ -225,7 +223,7 @@ template <class T> struct Imos_2d_tri {
 	}
 
 	// デバッグ出力用
-	friend ostream& operator<<(ostream& os, const Imos_2d& imos) {
+	friend ostream& operator<<(ostream& os, const Imos_2D& imos) {
 		rep(i, sz(imos.v)) {
 			rep(j, sz(imos.v[0])) os << imos[i][j] << " ";
 			os << endl;

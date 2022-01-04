@@ -711,8 +711,12 @@ FPS taylor_shift(const FPS& f, mint c, const Factorial_mint& fm) {
 //【一次式の積の展開】O(n (log n)^2)
 /*
 * (x - x[0]) ... (x - x[n-1]) を返す．
+* 
+* 戻り値の i 次の項の係数は，x[0..n) の符号付き n - i 次基本対称式になる．
 */
 FPS expand(const vm& x) {
+	// verify : https://atcoder.jp/contests/abc231/tasks/abc231_g
+
 	int n = sz(x);
 
 	vector<FPS> f(n);

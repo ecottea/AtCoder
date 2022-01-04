@@ -24,14 +24,17 @@
 *
 * size() : O(1)
 *	連結成分の個数を返す．
+*
+* groups() : O(n)
+*	連結成分のリストを返す．
 */
 struct Union_find {
 	int n; // 頂点の個数
 	int m; // 連結成分の個数
 
-	// parent_or_size[i] : 頂点 i の親または集合の大きさ
-	// 頂点 i が根でない場合は親の番号（非負）を，
-	// 根の場合は属する連結成分の大きさの -1 倍（負）を表す．
+	// parent_or_size[i] : 頂点 i の親または属する集合の大きさ
+	//	頂点 i が根でない場合は親の番号（非負）を，
+	//	根の場合は属する連結成分の大きさの -1 倍（負）を表す．
 	vi parent_or_size;
 
 	// コンストラクタ（初期化なし，大きさ n で初期化）
@@ -47,9 +50,7 @@ struct Union_find {
 		int rb = leader(b);
 
 		// 根が同じであれば既に連結であるから何もしない．
-		if (ra == rb) {
-			return;
-		}
+		if (ra == rb) return;
 
 		// 根が異なる場合，大きい連結成分の根を改めて ra，小さい方を rb とする．
 		if (-parent_or_size[ra] < -parent_or_size[rb]) {
@@ -78,9 +79,7 @@ struct Union_find {
 
 		// a が根であれば自分自身を返す．
 		int pa = parent_or_size[a];
-		if (pa < 0) {
-			return a;
-		}
+		if (pa < 0) return a;
 
 		// a が根でなければ，a の親 pa の根 ra を求める．
 		int ra = leader(pa);
@@ -101,6 +100,20 @@ struct Union_find {
 		//verify : https://atcoder.jp/contests/abc229/tasks/abc229_e
 
 		return m;
+	}
+
+	// 連結成分のリストを返す．
+	vvi groups() {
+		vvi res(m);
+
+		vi r_to_i(n, -1); int i = 0;
+		rep(a, n) {
+			int r = leader(a);
+			if (r_to_i[r] == -1) r_to_i[r] = i++;
+			res[r_to_i[r]].push_back(a);
+		}
+
+		return res;
 	}
 };
 

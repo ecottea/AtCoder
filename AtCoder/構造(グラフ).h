@@ -43,8 +43,6 @@ void read_graph(int n, int m, Graph& g,
 * cost : 辺のコスト
 */
 struct Edge {
-	// 参考：https://nyaannyaan.github.io/library/graph/graph-template.hpp
-
 	int to; // 行き先の頂点番号
 	ll cost; // 辺のコスト
 
@@ -92,39 +90,33 @@ void read_graph(int n, int m, WGraph& g,
 }
 
 
-//【グリッド → グラフ】O(h w)
+//【コスト付きグラフの入力（コストは別）】O(|V| + |E|)
 /*
-* h 行 w 列のグリッドから nb 近傍を連結としたグラフ g を構築する．
-* 壁マスは wall，空きマスはその他とする．
-* i 行目の j 列目にあるマス (i, j) はグラフ頂点 i * w + j に対応する．
+* 始点 終点 コストの組からなる入力を受け取り，n 頂点 m 辺のグラフを構成する．
+* 辺へのコストの割り当ては別で記録する．
+*
+* n : グラフの頂点の数
+* m : グラフの辺の数
+* g : ここにグラフを構築して返す
+* c : 辺 (s, t) のコストを c[s][t] に格納する
+* directed : 有向グラフなら true
+* one_indexed : 入力が 1-indexed で与えられるなら true
 */
-template <class T>
-void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb = 4) {
-	int h = sz(c), w = sz(c[0]);
+void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
+	bool directed = false, bool one_indexed = true) {
+	g = Graph(n);
+	c = vector<unordered_map<int, ll>>(n);
+	rep(i, m) {
+		int a, b; ll x;
+		cin >> a >> b >> x;
 
-	const vi& dx = (nb == 4 ? dx4 : dx8);
-	const vi& dy = (nb == 4 ? dy4 : dy8);
+		if (one_indexed) { a--; b--; }
 
-	g = Graph(h * w);
-	rep(x, h) {
-		rep(y, w) {
-			// 空きマスでなかったら辺は追加しない．
-			if (c[x][y] == wall) continue;
-
-			// 今考えている近傍それぞれについて
-			rep(k, nb) {
-				// 近傍のマスの座標
-				int nx = x + dx[k];
-				int ny = y + dy[k];
-
-				// 範囲外だったり空きマスでなかったら辺は追加しない．
-				if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
-					continue;
-				}
-
-				// 近傍に空きマスがあったら辺を追加する．
-				g[x * w + y].push_back(nx * w + ny);
-			}
+		g[a].push_back(b);
+		c[a][b] = x;
+		if (!directed) {
+			g[b].push_back(a);
+			c[b][a] = x;
 		}
 	}
 }

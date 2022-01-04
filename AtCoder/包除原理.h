@@ -1,14 +1,67 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
-#include "数論(一括).h"
 // ■■■■■ 包除原理 ■■■■■
+
+
+//【状態系包除原理】O(2^n)
+/*
+* 集合族 S[0..n) について，添字集合が set で表されるような集合族の交わりの大きさ
+* #(∩i∈set S[i]) が c[set] であるときの，どの集合にも属さない要素の個数を返す．
+*/
+ll state_PIE(const vl& c) {
+	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e
+
+	int n = msb(sz(c));
+
+	ll res = 0;
+
+	repb(set, n) {
+		int sign = (popcount(set) % 2 ? -1 : 1);
+		res += sign * c[set];
+	}
+
+	return res;
+}
+
+
+//【個数系包除原理】O(n)
+/*
+* 集合族 S[0..n) について，k 個の集合の交わり（k = 0 なら全体集合とする）の大きさが
+* 集合の選び方によらず一律 c[k] であるときの，どの集合にも属さない要素の個数を返す．
+*
+* 制約：fm は n! まで計算可能であること
+*
+* 利用：【階乗と二項係数（mint利用）】
+*/
+mint counting_PIE(const vm& c, const Factorial_mint& fm) {
+	// verify : https://atcoder.jp/contests/abc172/tasks/abc172_e
+
+	int n = sz(c) - 1;
+
+	mint res = 0;
+
+	int sign = 1;
+	repi(k, 0, n) {
+		res += sign * fm.binomial(n, k) * c[k];
+		sign *= -1;
+	}
+
+	return res;
+}
+
+
+//【約数系包除原理】
+/*
+*【倍数変換】や【約数変換】のメビウス変換を利用すればよい．
+*/
 
 
 //【指定バウンディングボックスをもつ点配置の数え上げ】O(1)
 /*
 * バウンディングボックスが [0..h)×[0..w) になるような n 個の格子点の配置の数を返す．
-* 最大 (h * w)! まで計算可能な fm を引数に与えること．
+* 
+* 制約：fm は (h * w)! まで計算可能であること
 *
 *（状態系包除原理）
 *
@@ -19,7 +72,7 @@ mint count_points_in_BB(int n, int h, int w, Factorial_mint& fm) {
 
 	mint res = 0;
 
-	// すべての場合
+	// 無条件の場合
 	res += fm.binomial(h * w, n);
 
 	// 少なくとも 1 個の辺が条件を満たしていない場合
@@ -42,47 +95,45 @@ mint count_points_in_BB(int n, int h, int w, Factorial_mint& fm) {
 }
 
 
-//【互いに素な数の個数】O(√a + 2^m)（m : a の素因数の種類数）
+//【倍数和 → 非倍数の和】O(2^n n O(mf))
 /*
-* l 以上 r 以下の整数のうち、a と互いに素な数の個数を返す．
-* 
-*（状態系包除原理）
+* 互いに異なる素数 ps[0..n) のいずれの倍数でもない数の集合を S とし，Σi∈S f(i) を返す．
+* ただし mf(d) := Σd|i f(i) とする．
 *
-* 利用：【素因数分解】
+* ps を数 a の素因数のリストとすれば，i は a と互いに素な数を走査する．
+*
+*（状態系包除原理）
 */
-ll count_coprime(ll a, ll l, ll r) {
-	// a と互いに素 ⇔ a の各素因数で割り切れない，なので a を素因数分解する．
-	map<ll, int> pps;
-	factor_integer(a, pps);
+template <class T> T nonmultiple_sum(vl& ps, function<T(ll)>& mf) {
+	// verify : https://atcoder.jp/contests/abc206/tasks/abc206_e
 
-	// a の素因数だけのリスト p を作る．（個数は使わない）
-	vl p;
-	repe(s, pps) p.push_back(s.first);
-	int m = sz(p);
+	int n = sz(ps);
 
-	// 包除原理を用いて数え上げる．
-	// 例えば，6 と互いに素な数の個数は，
-	//		1 の倍数を全て数え，そこから 2 の倍数の個数を引き，
-	//		さらに 3 の倍数の個数を引き，引きすぎた 6 の倍数の個数を足す
-	// ことにより数えることができる．
-	ll res = 0;
-	rep(bit, 1 << m) {
-		// mul の倍数を考える．
-		ll mul = 1;
+	T res = 0;
 
-		// mul が何個の素因数の積か．
-		int ones = 0;
+	// 包除原理を用いて計算する．
+	// 例えば ps[0..2) = (2, 3) のとき，
+	//		Σi∈S f(i) = Σ1|i f(i) - Σ2|i f(i) - Σ3|i f(i) + Σ6|i f(i)
+	// となる．
+	repb(set, n) {
+		ll d = 1; // d の倍数を考える．
+		int sign = 1; // sign : 符号因子
 
-		rep(i, m) {
-			if (bit & (1 << i)) {
-				mul *= p[i];
-				ones++;
+		rep(i, n) {
+			if (set & (1 << i)) {
+				// オーバーフロー対策
+				if (d > INFL / ps[i]) goto NEXT_LOOP;
+
+				d *= ps[i];
+				sign *= -1;
 			}
 		}
 
-		// 素因数の個数の偶奇で加減を切り替えつつ個数を数えていく．
-		res += ((ones % 2) ? -1 : 1) * (r / mul - (l - 1) / mul);
+		res += sign * mf(d);
+
+	NEXT_LOOP:;
 	}
+
 	return res;
 }
 

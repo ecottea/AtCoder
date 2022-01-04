@@ -124,7 +124,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 	rep(i, n) a_cnt[a[i]]++;
 	rep(j, m) b_cnt[b[j]]++;
 
-	GCD_convolution<mint> g(K);
+	Multiple_transform<mint> g(K);
 	auto c = g.convolution_gcd(a_cnt, b_cnt);
 
 	mint res = 0;
@@ -160,7 +160,7 @@ mint lcm_sum(const vi& a, const vi& b) {
 	rep(i, n) a_cnt[a[i]] += a[i];
 	rep(j, m) b_cnt[b[j]] += b[j];
 
-	GCD_convolution<mint> g(K);
+	Multiple_transform<mint> g(K);
 	auto c = g.convolution_gcd(a_cnt, b_cnt);
 
 	Factorial_mint fm(K);

@@ -7,11 +7,48 @@
 
 //y“]“|”zO(n log n)
 /*
-* ’·‚³ n ‚Ì”z—ñ a ‚Ì“]“|”‚ğ•Ô‚·D
+* a[0..n) ‚Ì“]“|”‚ğ•Ô‚·D
+*/
+template <class T> ll inversion_number(vector<T>& a) {
+	// verify : https://atcoder.jp/contests/arc075/tasks/arc075_c
+
+	int n = sz(a);
+
+	// ’l a[i] ‚Æ“Yš i ‚ğ‘g‚É‚µƒ\[ƒg‚·‚éD
+	vector<pair<T, int>> ai(n);
+	rep(i, n) {
+		ai[i] = { a[i], i };
+	}
+	sort(all(ai));
+
+	ll res = 0;
+
+	// ft[i] : ‚¢‚Ü‚Ü‚Å‚É“Yš i ‚Ì—v‘f‚ªŒ»‚ê‚½‚©
+	fenwick_tree<int> ft(n);
+
+	// ’l‚É‚Â‚¢‚Ä¸‡‚ÉŒ©‚Ä‚¢‚­D
+	rep(j, n) {
+		// id : ¸‡‚Å j ”Ô–Ú‚Ì’l‚Ì“Yš
+		int id = ai[j].second;
+
+		// id ‚æ‚è‘å‚«‚¢“Yš‚ğ‚à‚Â”‚ª¡‚Ü‚Å‚É‰½ŒÂ‚ ‚Á‚½‚©‚ğ‰ÁZ‚·‚éD
+		res += ft.sum(id + 1, n);
+
+		// “Yš id ‚ÌoŒ»‚ğ‹L˜^‚·‚éD
+		ft.add(id, 1);
+	}
+
+	return res;
+}
+
+
+//y“]“|”zO(n log n)
+/*
+* a[0..n) ‚Ì“]“|”‚ğ•Ô‚·D
 *
 * —˜—pFyÀ•Wˆ³kz
 */
-template <class T> ll inversion_number(vector<T>& a) {
+template <class T> ll inversion_number_cc(vector<T>& a) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_D
 
 	int n = sz(a);

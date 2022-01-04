@@ -65,6 +65,7 @@ template <class T, class U, class V, class W> inline istream& operator>> (istrea
 template <class T, class U, class V, class W> inline ostream& operator<< (ostream& os, const tuple<T, U, V, W>& t) { os << "(" << get<0>(t) << "," << get<1>(t) << "," << get<2>(t) << "," << get<3>(t) << ")"; return os; }
 template <class T> inline istream& operator>> (istream& is, vector<T>& v) { repea(x, v) is >> x; return is; }
 template <class T> inline ostream& operator<< (ostream& os, const vector<T>& v) { repe(x, v) os << x << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, const list<T>& v) { repe(x, v) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
@@ -74,7 +75,7 @@ template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while 
 template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop_front(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue_rev<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
-template <class T> inline vector<T>& operator--(vector<T>& v) { rep(i, sz(v)) --v[i]; return v; }
+template <class T> inline vector<T>& operator--(vector<T>& v) { rep(_i_, sz(v)) --v[_i_]; return v; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -87,7 +88,7 @@ inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, 
 template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define dump(x) cout << "\033[1;36m" << (x) << "\033[0m" << endl;
 #define dumps(x) cout << "\033[1;36m" << (x) << "\033[0m ";
-#define dumpel(a) { int i = -1; cout << "\033[1;36m"; repe(x, a) {cout << ++i << ": " << x << endl;} cout << "\033[0m"; }
+#define dumpel(a) { int _i_ = -1; cout << "\033[1;36m"; repe(x, a) {cout << ++_i_ << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream isTMP(f); cin.rdbuf(isTMP.rdbuf());
 #define output_to_file(f) ofstream osTMP(f); cout.rdbuf(osTMP.rdbuf());
 // 提出用（gcc）
@@ -174,8 +175,8 @@ int main() {
 	cin >> t;
 
 	while (t--) {
-		solve();
 		dump("------------------------------");
+		solve();
 	}
 }
 */

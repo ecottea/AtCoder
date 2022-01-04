@@ -193,6 +193,8 @@ ll fac(int n) {
 * ‹ğ’¼‚É“ñ€ŒW” nCr ‚ğŒvZ‚·‚éD
 */
 template <class T> T binomial(ll n, ll r) {
+	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e
+
 	T val = 1;
 	chmin(r, n - r);
 

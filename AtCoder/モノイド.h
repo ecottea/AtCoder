@@ -69,7 +69,6 @@ using T = Monoid<S3, op, e3>;
 
 
 //ymin ƒ‚ƒmƒCƒhz
-// verify : https://judge.yosupo.jp/problem/staticrmq
 using S4 = int;
 S4 op(S4 a, S4 b) { return min(a, b); }
 S4 e4() { return INF; }
