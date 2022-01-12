@@ -107,57 +107,57 @@ using T = MLop_Monoid<S1, op, e1, F1, mapping, composition, id1>;
 
 //【変更 作用付き 左変更 モノイド】
 using S2 = int;
-S2 op(S2 x, S2 y) { return x == e2() ? y : x; }
 S2 e2() { return INF; } // 使わない値なら何でも OK
+S2 op(S2 x, S2 y) { return x == e2() ? y : x; }
 using F2 = int;
+F2 id2() { return INF; } // 使わない値なら何でも OK
 S2 mapping(F2 f, S2 x) { return f == id2() ? x : f; }
 F2 composition(F2 f, F2 g) { return f == id2() ? g : f; }
-F2 id2() { return INF; } // 使わない値なら何でも OK
 using T = MLop_Monoid<S2, op, e2, F2, mapping, composition, id2>;
 
 
 //【変更 作用付き max モノイド】
 using S3 = int;
-S3 op(S3 x, S3 y) { return max(x, y); }
+S3 op3(S3 x, S3 y) { return max(x, y); }
 S3 e3() { return -INF; }
 using F3 = int;
-S3 mapping(F3 f, S3 x) { return f == id3() ? x : f; }
-F3 composition(F3 f, F3 g) { return f == id3() ? g : f; }
 F3 id3() { return INF; } // 使わない値なら何でも OK
-using T = MLop_Monoid<S3, op, e3, F3, mapping, composition, id3>;
+S3 mapping3(F3 f, S3 x) { return f == id3() ? x : f; }
+F3 composition3(F3 f, F3 g) { return f == id3() ? g : f; }
+using T = MLop_Monoid<S3, op3, e3, F3, mapping3, composition3, id3>;
 
 
 //【変更 作用付き min モノイド】
 using S4 = int;
-S4 op(S4 x, S4 y) { return min(x, y); }
+S4 op4(S4 x, S4 y) { return min(x, y); }
 S4 e4() { return INF; }
 using F4 = int;
-S4 mapping(F4 f, S4 x) { return f == id4() ? x : f; }
-F4 composition(F4 f, F4 g) { return f == id4() ? g : f; }
 F4 id4() { return INF; } // 使わない値なら何でも OK
-using T = MLop_Monoid<S4, op, e4, F4, mapping, composition, id4>;
+S4 mapping4(F4 f, S4 x) { return f == id4() ? x : f; }
+F4 composition4(F4 f, F4 g) { return f == id4() ? g : f; }
+using T = MLop_Monoid<S4, op4, e4, F4, mapping4, composition4, id4>;
 
 
 //【加算 作用付き max モノイド】
 using S5 = int;
-S5 op(S5 x, S5 y) { return max(x, y); }
+S5 op5(S5 x, S5 y) { return max(x, y); }
 S5 e5() { return -INF; }
 using F5 = int;
-S5 mapping(F5 f, S5 x) { return f + x; }
-F5 composition(F5 f, F5 g) { return f + g; }
+S5 mapping5(F5 f, S5 x) { return f + x; }
+F5 composition5(F5 f, F5 g) { return f + g; }
 F5 id5() { return 0; }
-using T = MLop_Monoid<S5, op, e5, F5, mapping, composition, id5>;
+using T = MLop_Monoid<S5, op5, e5, F5, mapping5, composition5, id5>;
 
 
 //【加算 作用付き min モノイド】
 using S6 = int;
-S6 op(S6 x, S6 y) { return min(x, y); }
+S6 op6(S6 x, S6 y) { return min(x, y); }
 S6 e6() { return INF; }
 using F6 = int;
-S6 mapping(F6 f, S6 x) { return f + x; }
-F6 composition(F6 f, F6 g) { return f + g; }
+S6 mapping6(F6 f, S6 x) { return f + x; }
+F6 composition6(F6 f, F6 g) { return f + g; }
 F6 id6() { return 0; }
-using T = MLop_Monoid<S6, op, e6, F6, mapping, composition, id6>;
+using T = MLop_Monoid<S6, op6, e6, F6, mapping6, composition6, id6>;
 
 
 //【アフィン変換 作用付き 加算 モノイド】

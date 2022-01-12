@@ -143,3 +143,143 @@ void count_simple_path(const Graph& g, vvl& cnt) {
 }
 
 
+//【クリークの列挙】O(2^(1.4√|E|) |V|)
+/*
+* 無向グラフ g の i 番目に見つけたクリークを cs[i] に頂点の列として列挙する．
+* S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
+*/
+void enumerate_clique(const Graph& g, vvi& cs) {
+	// 参考：https://www.slideshare.net/wata_orz/ss-12131479
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2306
+
+	int n = sz(g);
+	cs.clear();
+
+	// 隣接行列 adj，各頂点の次数 deg，総次数 deg_sum，
+	// 最小次数 deg_min，次数最小頂点の番号 i_min を得る．
+	vvb adj(n, vb(n));
+	vi deg(n);
+	int deg_sum = 0, deg_min = INF, i_min = -1;
+	rep(s, n) {
+		deg[s] = sz(g[s]);
+		deg_sum += deg[s];
+		repe(t, g[s]) adj[s][t] = true;
+
+		if (chmin(deg_min, deg[s])) i_min = s;
+	}
+
+	// 考慮すべき頂点のリスト
+	vi v(n);
+	iota(all(v), 0);
+
+	// 素朴な方法で最大クリークを求める O(2^n n)
+	function<void()> naive = [&]() {
+		// 全ての部分集合 set について
+		repb(set, n) {
+			bool sum = 0;
+
+			// n 頂点それぞれについて
+			rep(i, n) {
+				// set に選んでいないなら無関係
+				if (!(set & (1 << i))) {
+					continue;
+				}
+
+				// i 番目以降の頂点について
+				repi(j, i + 1, n - 1) {
+					// set に選んでいないなら無関係 
+					if (!(set & (1 << j))) {
+						continue;
+					}
+
+					// 辺 (v[i], v[j]) がなければクリークでない．
+					if (!adj[v[i]][v[j]]) {
+						goto NEXT_LOOP;
+					}
+				}
+			}
+
+			// クリークが見つかったので記録する．
+			cs.push_back(vi());
+			rep(i, n) {
+				if (set & (1 << i)) {
+					cs.rbegin()->push_back(v[i]);
+				}
+			}
+
+		NEXT_LOOP:;
+		}
+	};
+
+	int res = 1;
+	while (n > 0) {
+		// 辺に対して頂点が十分少ないなら素朴な方法で構わない．
+		if (deg_min * deg_min >= deg_sum) {
+			naive();
+			return;
+		}
+
+		// 次数最小の頂点 v[i_min] の隣接点の番号の集合を得る．
+		// 同時に v[i_min] に出入りする辺を削除したことにし，各頂点の次数 deg を更新する．
+		vi ia;
+		rep(i, n) {
+			if (adj[v[i_min]][v[i]]) {
+				ia.push_back(i);
+
+				deg[v[i]]--;
+			}
+		}
+		int d = sz(ia);
+
+		// まず v[i_min] を含む最大クリークの大きさ res を求める．
+		// v[i_min] の隣接点の部分集合 sub すべてについて
+		repb(sub, d) {
+			rep(i, d) {
+				// sub に選んでいないなら無関係
+				if (!(sub & (1 << i))) {
+					continue;
+				}
+
+				repi(j, i + 1, d - 1) {
+					// sub に選んでいないなら無関係
+					if (!(sub & (1 << j))) {
+						continue;
+					}
+
+					// sub がクリークでなければ何もしない．
+					if (!adj[v[ia[i]]][v[ia[j]]]) {
+						goto LOOP_END;
+					}
+				}
+			}
+
+			// sub がクリークなら v[i_min] と合わせてもクリークとなるので記録する．
+			cs.push_back(vi({ v[i_min] }));
+			rep(i, d) {
+				if (sub & (1 << i)) {
+					cs.rbegin()->push_back(v[ia[i]]);
+				}
+			}
+
+		LOOP_END:;
+		}
+
+		// v[i_min] を含む最大クリークの大きさは求まったので，
+		// 以降は v[i_min] を含まないクリークだけを考えれば良い．
+		// 頂点 v[i_min] と v[n-1] を交換して n を減らすことで v[i_min] を除去する．
+		swap(v[i_min], v[n - 1]);
+		n--;
+
+		// 総次数 deg_sum，最小次数 deg_min，次数最小頂点の番号 i_min を得る．
+		deg_sum = 0;
+		deg_min = INF;
+		rep(i, n) {
+			if (chmin(deg_min, deg[v[i]])) {
+				i_min = i;
+			}
+			deg_sum += deg[v[i]];
+		}
+	}
+}
+
+

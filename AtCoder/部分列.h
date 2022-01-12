@@ -27,8 +27,7 @@ template <class T> bool subsequenceQ(const vector<T>& seq, const vector<T>& sub)
 
 //【最長増加部分列】O(n log n)
 /*
-* 長さ n の配列 a の最長増加部分列の長さを返す．
-* また最長増加部分列の一例を lis に構成する．
+* 列 a[0..n) の最長増加部分列の長さを返す．またその一例を lis に構成する．
 * 
 * なお戻り値は「広義減少部分列への分割の最小個数」とも解釈できる．
 *
@@ -36,8 +35,8 @@ template <class T> bool subsequenceQ(const vector<T>& seq, const vector<T>& sub)
 *
 * 利用：【座標圧縮】
 */
-int op3(int a, int b) { return max(a, b); }
-int e3() { return 0; }
+int op_lis(int a, int b) { return max(a, b); }
+int e_lis() { return 0; }
 template <class T>
 int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr) {
 	int n = sz(a);
@@ -49,7 +48,7 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 
 	// dp : 区間最大値を計算できるセグメント木
 	// dp[j] : 今まで見てきた中での，右端の値が j であるような最長増加部分列の長さ
-	segtree<int, op3, e3> dp(m);
+	segtree<int, op_lis, e_lis> dp(m);
 
 	// j = b[i] を順に見ていく
 	rep(i, n) {
@@ -80,10 +79,53 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 				i--;
 			}
 		}
-		dump(*lis);
 	}
 
 	return len;
+}
+
+
+//【コスト最大増加部分列】O(n log n)
+/*
+* 非負コスト c[0..n) が与えられた列 a[0..n) のコスト最大増加部分列のコストを返す．
+*
+*（セグメント木で高速化したインライン DP）
+*
+* 利用：【座標圧縮】
+*/
+ll op_mis(ll a, ll b) { return max(a, b); }
+ll e_mis() { return 0; }
+template <class T>
+ll maxcost_increasing_subsequence(const vector<T>& a, const vl& c) {
+	int n = sz(a);
+
+	// a を座標圧縮した結果を b に格納する．
+	vi b; vector<T> x;
+	int m = coordinate_compression(a, b, &x);
+
+	// dp[j] : 今まで見てきた中での，右端の値が j であるような増加部分列の最大コスト
+	segtree<ll, op_mis, e_mis> dp(m);
+
+	// j = b[i] を順に見ていく
+	rep(i, n) {
+		int j = b[i];
+
+		// j を右端にもてるのは，それまでの右端が j 未満のもののみ．
+		// よってその中での増加部分列の最大コストを求め，それに c[i] を加える．
+		ll cost = dp.prod(0, j) + c[i];
+
+		// j を右端とするよりコストの大きいものが作れれば更新する．
+		// dp[j] 以外は更新されることはないので，更新は O(log n) で終わる．
+		// この性質が dp テーブルのインライン化と相性が良い．
+		if (cost > dp.get(j)) {
+			dp.set(j, cost);
+		}
+	}
+
+	// 右端の値を任意としたときの増加部分列の最大コストを得る．
+	ll cost = dp.prod(0, m);
+
+	return cost;
 }
 
 

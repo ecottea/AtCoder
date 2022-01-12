@@ -22,6 +22,7 @@
 */
 template <class T> struct Imos {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
+	// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
 
 	int n;
 	vector<T> v;
@@ -32,23 +33,29 @@ template <class T> struct Imos {
 	// アクセス
 	T const& operator[](int i) const { return v[i]; }
 	T& operator[](int i) { return v[i]; }
-	
-	// 半開区間 [l, r) に val を加算する準備を行う．O(1)
+
+	// 半開区間 [l, r) に val を加算する準備を行う．
 	void set(int l, int r, T val) {
 		v[l] += val;
 		v[r] -= val;
 	}
 
-	// 実際の加算を行う．O(n)
+	// 実際の加算を行う．
 	vector<T>& sum() {
 		rep(i, n) {
 			v[i + 1] += v[i];
 		}
 
-		// 不要な部分の削除
-		v.pop_back();
-
 		return v;
+	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Imos& imos) {
+		rep(i, imos.n) {
+			os << imos[i] << " ";
+		}
+		os << endl;
+		return os;
 	}
 };
 
@@ -102,18 +109,12 @@ template <class T> struct Imos_2D {
 				v[i][j] += v[i][j - 1];
 			}
 		}
-
-		// 不要な部分の削除
-		v.pop_back();
-		rep(i, h) {
-			v[i].pop_back();
-		}
 	}
 
 	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, const Imos_2D& imos) {
-		rep(i, sz(imos.v)) {
-			rep(j, sz(imos.v[0])) os << imos[i][j] << " ";
+		rep(i, imos.h) {
+			rep(j, imos.w) os << imos[i][j] << " ";
 			os << endl;
 		}
 		return os;
@@ -231,6 +232,89 @@ template <class T> struct Imos_2D_tri {
 		return os;
 	}
 };
+
+
+//【三次元いもす法（直方体）】
+/*
+* [0, h) * [0, w) * [0, d) 内の直方体領域に一定の値を加算する．
+*
+* Imos_3D(h, w, d) : O(h w d)
+*	[0, h) * [0, w) * [0, d) を 0 で初期化する．
+*
+* set(x1, y1, z1, x2, y2, z2, val) : O(1)
+*	[x1, x2) * [y1, y2) * [z1, z2) に val を加算する準備を行う．
+*
+* sum() : O(h w d)
+*	実際に加算を行う．
+*
+* v[i][j][k] : O(1)
+*	加算後の位置 (i, j, k) の値を得る．
+*/
+template <class T> struct Imos_3D {
+	// verify : https://atcoder.jp/contests/joi2013yo/tasks/joi2013yo_e
+	
+	int h, w, d;
+	vector<vector<vector<T>>> v;
+
+	// [0, h) * [0, w) * [0, d) を 0 で初期化する．
+	Imos_3D(int h_, int w_, int d_) : h(h_), w(w_), d(d_),
+		v(h + 1, vector<vector<T>>(w + 1, vector<T>(d + 1))) {}
+
+	// アクセス
+	vector<vector<T>> const& operator[](int i) const { return v[i]; }
+	vector<vector<T>>& operator[](int i) { return v[i]; }
+
+	// [x1, x2) * [y1, y2) * [z1, z2) に val を加算する準備を行う．O(1)
+	void set(int x1, int y1, int z1, int x2, int y2, int z2, T val) {
+		v[x1][y1][z1] += val;
+		v[x1][y1][z2] -= val;
+		v[x1][y2][z1] -= val;
+		v[x2][y1][z1] -= val;
+		v[x1][y2][z2] += val;
+		v[x2][y1][z2] += val;
+		v[x2][y2][z1] += val;
+		v[x2][y2][z2] -= val;
+	}
+
+	// 実際の加算を行う．O(h w d)
+	void sum() {
+		repi(i, 1, h) {
+			repi(j, 0, w) {
+				repi(k, 0, d) {
+					v[i][j][k] += v[i - 1][j][k];
+				}
+			}
+		}
+		repi(i, 0, h) {
+			repi(j, 1, w) {
+				repi(k, 0, d) {
+					v[i][j][k] += v[i][j - 1][k];
+				}
+			}
+		}
+		repi(i, 0, h) {
+			repi(j, 0, w) {
+				repi(k, 1, d) {
+					v[i][j][k] += v[i][j][k - 1];
+				}
+			}
+		}
+	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Imos_3D& imos) {
+		rep(i, imos.h) {
+			rep(j, imos.w) {
+				rep(k, imos.d) {
+					os << imos[i][j] << " ";
+				}
+				os << endl;
+			}
+			os << endl;
+		}
+		return os;
+	}
+}; 
 
 
 //【木上のいもす法】

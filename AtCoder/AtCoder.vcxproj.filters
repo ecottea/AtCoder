@@ -61,9 +61,6 @@
     <Filter Include="ヘッダー ファイル\アルゴリズム">
       <UniqueIdentifier>{7adeaad2-d27f-482e-842c-f80780e53b38}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\列挙">
-      <UniqueIdentifier>{1a49ddbb-8e29-412b-98db-3a1a3a0c7386}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\データ構造%28抽象代数%29">
       <UniqueIdentifier>{56f5b44a-7edc-4f7f-835f-e9b5763fd635}</UniqueIdentifier>
     </Filter>
@@ -220,9 +217,6 @@
     </ClInclude>
     <ClInclude Include="有名数列.h">
       <Filter>ヘッダー ファイル\計算</Filter>
-    </ClInclude>
-    <ClInclude Include="全列挙.h">
-      <Filter>ヘッダー ファイル\列挙</Filter>
     </ClInclude>
     <ClInclude Include="二項係数.h">
       <Filter>ヘッダー ファイル\計算</Filter>
@@ -410,8 +404,29 @@
     <ClInclude Include="二部グラフ.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
-    <ClInclude Include="変形(グラフ).h">
+    <ClInclude Include="変換%28グラフ%29.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(列).h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(格子).h">
+      <Filter>ヘッダー ファイル\格子</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(数論).h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(集合).h">
+      <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="変換(文字列).h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="座標圧縮(old).h">
+      <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="抽象データ構造(old).h">
+      <Filter>ヘッダー ファイル\old</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

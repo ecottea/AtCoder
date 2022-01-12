@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -175,14 +175,21 @@
     <ClInclude Include="全方位木DP.h" />
     <ClInclude Include="全順序.h" />
     <ClInclude Include="分析(文字列).h" />
+    <ClInclude Include="列挙(列).h" />
+    <ClInclude Include="列挙(数論).h" />
+    <ClInclude Include="列挙(格子).h" />
+    <ClInclude Include="列挙(集合).h" />
     <ClInclude Include="包除原理.h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="半環.h" />
     <ClInclude Include="可換モノイド.h" />
     <ClInclude Include="可換環.h" />
     <ClInclude Include="変形%28格子%29.h" />
-    <ClInclude Include="変形(グラフ).h" />
+    <ClInclude Include="変換%28グラフ%29.h" />
+    <ClInclude Include="変換(文字列).h" />
     <ClInclude Include="尺取り法.h" />
+    <ClInclude Include="座標圧縮(old).h" />
+    <ClInclude Include="抽象データ構造(old).h" />
     <ClInclude Include="挿入DP.h" />
     <ClInclude Include="探索(old).h" />
     <ClInclude Include="探索(木).h" />
@@ -245,7 +252,6 @@
     <ClInclude Include="header.h" />
     <ClInclude Include="行列.h" />
     <ClInclude Include="数論.h" />
-    <ClInclude Include="全列挙.h" />
     <ClInclude Include="ソート.h" />
     <ClInclude Include="文字列.h" />
     <ClInclude Include="ゲーム.h" />

@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-// ■■■■■ グラフの変形 ■■■■■
+// ■■■■■ グラフの変換 ■■■■■
 
 
 //【グリッド → グラフ】O(h w)

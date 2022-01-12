@@ -74,6 +74,7 @@ template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while 
 template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue_rev<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 template <class T> inline vector<T>& operator--(vector<T>& v) { rep(_i_, sz(v)) --v[_i_]; return v; }
+template <class T> inline vector<T>& operator++(vector<T>& v) { rep(_i_, sz(v)) ++v[_i_]; return v; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -108,229 +109,118 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-////-----------------AtCoder 専用-----------------
-//#include <atcoder/all>
-//using namespace atcoder;
-//
-//using mint = modint1000000007;
-////using mint = modint998244353;
-////using mint = modint; // mint::set_mod(m);
-//
-//template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-//ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
-//using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-////----------------------------------------------
+//-----------------AtCoder 専用-----------------
+#include <atcoder/all>
+using namespace atcoder;
+
+using mint = modint1000000007;
+//using mint = modint998244353;
+//using mint = modint; // mint::set_mod(m);
+
+template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+//----------------------------------------------
 
 
-//【コスト付きグラフの入力（コストは別）】O(|V| + |E|)
+//【置換の分解】O(n)
 /*
-* 始点 終点 コストの組からなる入力を受け取り，n 頂点 m 辺のグラフを構成する．
-* 辺へのコストの割り当ては別で記録する．
-*
-* n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* c : 辺 (s, t) のコストを c[s][t] に格納する
-* directed : 有向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
+* [0..n) の置換 p を巡回置換の積に分解して cycles に格納する．
+* p は任意の i を p[i] に動かすような置換を表す．
 */
-void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
-	bool directed = false, bool one_indexed = true) {
-	g = Graph(n);
-	c = vector<unordered_map<int, ll>>(n);
-	rep(i, m) {
-		int a, b; ll x;
-		cin >> a >> b >> x;
+int permutation_decomposition(const vi& p, vvi& cycles) {
+	int n = sz(p);
 
-		if (one_indexed) { a--; b--; }
+	int m = 0;
+	vb seen(n);
 
-		g[a].push_back(b);
-		c[a][b] = x;
-		if (!directed) {
-			g[b].push_back(a);
-			c[b][a] = x;
-		}
+	rep(i, n) {
+		// 抽出済のサイクルに含まれるなら次へ
+		if (seen[i]) continue;
+
+		// 新しいサイクルを発見
+		cycles.push_back(vi());
+		m++;
+
+		// サイクルを順に格納していく．
+		int s = i;
+		do {
+			cycles[m - 1].push_back(s);
+			seen[s] = true;
+			s = p[s];
+		} while (s != i);
 	}
+
+	return m;
 }
 
 
-//【クリークの列挙】O(2^(1.4√|E|) |V|)
-/*
-* 無向グラフ g の i 番目に見つけたクリークを cs[i] に頂点の列として列挙する．
-* S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
-*/
-void enumerate_clique(const Graph& g, vvi& cs) {
-	// 参考：https://www.slideshare.net/wata_orz/ss-12131479
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2306
-
-	int n = sz(g);
-	cs.clear();
-
-	// 隣接行列 adj，各頂点の次数 deg，総次数 deg_sum，
-	// 最小次数 deg_min，次数最小頂点の番号 i_min を得る．
-	vvb adj(n, vb(n));
-	vi deg(n);
-	int deg_sum = 0, deg_min = INF, i_min = -1;
-	rep(s, n) {
-		deg[s] = sz(g[s]);
-		deg_sum += deg[s];
-		repe(t, g[s]) adj[s][t] = true;
-
-		if (chmin(deg_min, deg[s])) i_min = s;
-	}
-
-	// 考慮すべき頂点のリスト
-	vi v(n);
-	iota(all(v), 0);
-
-	// 素朴な方法で最大クリークを求める O(2^n n)
-	function<void()> naive = [&]() {
-		// 全ての部分集合 set について
-		repb(set, n) {
-			bool sum = 0;
-
-			// n 頂点それぞれについて
-			rep(i, n) {
-				// set に選んでいないなら無関係
-				if (!(set & (1 << i))) {
-					continue;
-				}
-
-				// i 番目以降の頂点について
-				repi(j, i + 1, n - 1) {
-					// set に選んでいないなら無関係 
-					if (!(set & (1 << j))) {
-						continue;
-					}
-
-					// 辺 (v[i], v[j]) がなければクリークでない．
-					if (!adj[v[i]][v[j]]) {
-						goto NEXT_LOOP;
-					}
-				}
-			}
-
-			// クリークが見つかったので記録する．
-			cs.push_back(vi());
-			rep(i, n) {
-				if (set & (1 << i)) {
-					cs.rbegin()->push_back(v[i]);
-				}
-			}
-
-		NEXT_LOOP:;
-		}
-	};
-
-	int res = 1;
-	while (n > 0) {
-		// 辺に対して頂点が十分少ないなら素朴な方法で構わない．
-		if (deg_min * deg_min >= deg_sum) {
-			naive();
-			return;
-		}
-
-		// 次数最小の頂点 v[i_min] の隣接点の番号の集合を得る．
-		// 同時に v[i_min] に出入りする辺を削除したことにし，各頂点の次数 deg を更新する．
-		vi ia;
-		rep(i, n) {
-			if (adj[v[i_min]][v[i]]) {
-				ia.push_back(i);
-
-				deg[v[i]]--;
-			}
-		}
-		int d = sz(ia);
-
-		// まず v[i_min] を含む最大クリークの大きさ res を求める．
-		// v[i_min] の隣接点の部分集合 sub すべてについて
-		repb(sub, d) {
-			rep(i, d) {
-				// sub に選んでいないなら無関係
-				if (!(sub & (1 << i))) {
-					continue;
-				}
-
-				repi(j, i + 1, d - 1) {
-					// sub に選んでいないなら無関係
-					if (!(sub & (1 << j))) {
-						continue;
-					}
-
-					// sub がクリークでなければ何もしない．
-					if (!adj[v[ia[i]]][v[ia[j]]]) {
-						goto LOOP_END;
-					}
-				}
-			}
-
-			// sub がクリークなら v[i_min] と合わせてもクリークとなるので記録する．
-			cs.push_back(vi({ v[i_min] }));
-			rep(i, d) {
-				if (sub & (1 << i)) {
-					cs.rbegin()->push_back(v[ia[i]]);
-				}
-			}
-
-		LOOP_END:;
-		}
-
-		// v[i_min] を含む最大クリークの大きさは求まったので，
-		// 以降は v[i_min] を含まないクリークだけを考えれば良い．
-		// 頂点 v[i_min] と v[n-1] を交換して n を減らすことで v[i_min] を除去する．
-		swap(v[i_min], v[n - 1]);
-		n--;
-
-		// 総次数 deg_sum，最小次数 deg_min，次数最小頂点の番号 i_min を得る．
-		deg_sum = 0;
-		deg_min = INF;
-		rep(i, n) {
-			if (chmin(deg_min, deg[v[i]])) {
-				i_min = i;
-			}
-			deg_sum += deg[v[i]];
-		}
-	}
-}
+//【lcm モノイド】
+using S16 = ll;
+S16 op16(S16 a, S16 b) { return a / gcd(a, b) * b; }
+S16 e16() { return 1; }
+#define LCM_Monoid S16, op16, e16
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	int n, m;
-	cin >> n >> m;
+	int n, q;
+	cin >> n >> q;
 
-	Graph g;
-	vector<unordered_map<int, ll>> c;
-	read_graph(n, m, g, c);
-	dumpel(g);
-	dumpel(c);
+	vi p(n);
+	cin >> p;
+	--p;
+	
+	// 置換 p を巡回置換の積に分解する．
+	vvi cycles;
+	permutation_decomposition(p, cycles);
 
-	vvi cs;
-	enumerate_clique(g, cs);
-	dumpel(cs);
-
-	ll res = 0;
-	repe(cq, cs) {
-		int k = sz(cq);
-		if (k <= 1) continue;
-
-		ll sc = 0;
-		rep(i, k) {
-			ll sat = INFL;
-			rep(j, k) {
-				if (i == j) continue;
-
-				chmin(sat, c[cq[i]][cq[j]]);
-			}
-			sc += sat;
+	// seg[i] : i が属する巡回置換の位数
+	segtree<LCM_Monoid> seg(n);
+	repe(c, cycles) {
+		ll len = sz(c);
+		repe(i, c) {
+			seg.set(i, len);
 		}
-
-		chmax(res, sc);
 	}
+	dump(seg);
 
-	cout << res << endl;
+	// ord : 置換 p の位数
+	ll ord = seg.all_prod();
+
+	// sc[i] : i から始めて ord だけ回したときの合計スコア
+	vm sc(n);
+	repe(c, cycles) {
+		ll len = sz(c);
+		ll val = accumulate(all(c), len);
+		repe(i, c) {
+			sc[i] = (mint)val * (ord / len);
+		}
+	}
+	dump(sc);
+
+	// acc[i] : Σsc[0..i)
+	vm acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + sc[i];
+
+	rep(hoge, q) {
+		int l, r;
+		cin >> l >> r;
+		l--;
+
+		// sc : ord だけ回ったときのスコア
+		mint sc = acc[r] - acc[l];
+
+		// len : 実際に回る回数
+		ll len = seg.prod(l, r);
+
+		// res : 割り引いた実際のスコア
+		mint res = sc / (ord / len);
+
+		cout << res << endl;
+	}
 }
