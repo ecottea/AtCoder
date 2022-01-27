@@ -42,7 +42,7 @@
 *	f(x)^k mod x^d を返す．
 *
 * f.deg(), f.size() : O(1)
-*	多項式 f の次数[+1]を返す．
+*	多項式 f の次数[項数]を返す．
 *
 * FPS::monomial(d) : O(d)
 *	単項式 x^d を返す．
@@ -61,7 +61,7 @@
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
 * power_mod(f, d, g) : O(m log m log d)　（m = deg g）
-*	f(x)^d % g(x) を返す．
+*	f(x)^d mod g(x) を返す．
 *
 * derivative(f) : O(n)
 *	f'(x) を返す．
@@ -96,6 +96,10 @@ struct FPS {
 	FPS(const FPS& f) = default;
 	FPS& operator=(const FPS& f) = default;
 	FPS& operator=(const mint& c0) { n = 1; c = { c0 }; return *this; }
+
+	// 比較
+	bool operator==(const FPS& g) const { return c == g.c; }
+	bool operator!=(const FPS& g) const { return c != g.c; }
 
 	// アクセス
 	mint const& operator[](int i) const { return c[i]; }
@@ -173,6 +177,7 @@ struct FPS {
 	}
 	FPS& mul_other(const FPS& g) {
 		int m = g.deg();
+		if (m == 0) return *this = FPS();
 		resize(n + m);
 
 		// 後ろからインライン配る DP
@@ -890,6 +895,90 @@ FPS falling_factorial(int n, const Factorial_mint& fm) {
 	}
 
 	return res;
+}
+
+
+//【拡張ユークリッドの互除法】O(deg(a) deg(b)) (?)
+/*
+* a(x) u(x) + b(x) v(x) = g(x) の解 (u(x), v(x)) を u, v に格納する．
+* またモニックな g(x) = gcd(a(x), b(x)) を返す．
+*/
+FPS ext_gcd(FPS a, FPS b, FPS& u, FPS& v) {
+	// TODO：遅いので作り直す
+
+	b.resize();
+	if (sz(b) == 0) {
+		u = FPS(a[a.deg()].inv());
+		v = FPS();
+		a /= a[a.deg()];
+		return a;
+	}
+
+	FPS d = ext_gcd(b, a.reminder(b), v, u);
+	v -= a.quotient(b) * u;
+	return d;
+}
+
+
+//【多項式逆元】O(deg(a) deg(b)) (?)
+/*
+* a(x) u(x) = 1 (mod b(x)) を満たす u(x) を格納する．（なければ false を返す）
+*
+* 利用：【拡張ユークリッドの互除法】
+*/
+bool polynomial_inverse(const FPS& a, const FPS& b, FPS& u) {
+	// TODO：遅いので作り直す
+
+	FPS v;
+	FPS g = ext_gcd(a, b, u, v);
+
+	return g == FPS(1);
+}
+
+
+//【多項式対数問題／baby-step giant-step】O(mod^(deg(f)/2) deg(f))
+/*
+* a(x)^d = b(x) mod f(x) の最小解 d >= 0 を返す．（なければ INF）
+*
+*（平方分割）
+*/
+int log(const FPS& a, FPS b, const FPS& f) {
+	// TODO：遅いので作り直す
+
+	dump("--log--");
+	int m = (int)pow(mint::mod(), f.deg() / 2);
+	dump(a); dump(b); dump(m);
+
+	// loga[a^i] = i を計算しておく．
+	map<vi, int> loga;
+	FPS a_pow(1, f.deg());
+	rep(i, m) {
+		vi tmp(sz(a_pow));
+		rep(i, sz(a_pow)) tmp[i] = a_pow[i].val();
+		if (!loga.count(tmp)) {
+			loga[tmp] = i;
+		}
+		a_pow = (a_pow * a).reminder(f);
+	}
+	dump(loga);
+
+	// r = a^(-m)
+	FPS r;
+	polynomial_inverse(a_pow, f, r);
+	dump(r);
+
+	// 方程式の両辺に r = a^(-m) を掛けながら解を探していく．
+	rep(i, m) {
+		vi tmp(sz(a_pow));
+		rep(i, sz(a_pow)) tmp[i] = b[i].val();
+		if (loga.count(tmp)) {
+			return m * i + loga[tmp];
+		}
+		b = (b * r).reminder(f);
+	}
+
+	// 見つからなかったら INF を返す．
+	return INF;
 }
 
 

@@ -46,11 +46,12 @@ struct Rooted_tree {
 		int depth = -1; // 深さ（根からのパスの長さ）
 		int& dist = depth; // 深さを距離ともみなす（パスのコストを 1 とみなす）
 		int weight = -1; // 重さ（部分木のもつ辺の数）
+		int height = -1; // 高さ（最も遠い葉までの距離）
 
 		// デバッグ出力
 		friend ostream& operator<<(ostream& os, const Node& v) {
 			os << "(p:" << v.parent << ", c:[" << v.child << "], d:" << v.depth
-				<< ", w:" << v.weight << ")";
+				<< ", w:" << v.weight << ", h:" << v.height << ")";
 			return os;
 		}
 	};
@@ -61,12 +62,13 @@ struct Rooted_tree {
 
 	// コンストラクタ（空で初期化，木と根で初期化）
 	Rooted_tree() : n(0), r(-1) {}
-	Rooted_tree(Graph& g, int r_) : n(sz(g)), v(n), r(r_) {
+	Rooted_tree(Graph& g, int r_) : n(sz(g)), r(r_), v(n) {
 		// s : 注目ノード，p : s の親
 		function<void(int, int)> dfs = [&](int s, int p) {
 			v[s].parent = p;
 			v[s].child.clear();
 			v[s].weight = 0;
+			v[s].height = 0;
 
 			repe(t, g[s]) {
 				if (t == p) continue;
@@ -77,6 +79,7 @@ struct Rooted_tree {
 
 				v[s].child.push_back(t);
 				v[s].weight += v[t].weight + 1;
+				chmax(v[s].height, v[t].height + 1);
 			}
 		};
 
@@ -162,7 +165,7 @@ void read_rooted_tree(int n, Rooted_tree& rt, bool one_indexed = true, bool shuf
 struct Weighted_rooted_tree {
 	struct Node {
 		int parent = -1; // 親（なければ -1）
-		vector<Edge> child; // 子（なければ空リスト）
+		vector<WEdge> child; // 子（なければ空リスト）
 		int depth = -1; // 深さ（根からのパスの長さ）
 		ll dist = -1; // 距離（根からのパスのコスト）
 		int weight = -1; // 重さ（部分木のもつ辺の数）

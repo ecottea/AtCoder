@@ -6,30 +6,30 @@
 //【座標圧縮】O(n log n)
 /*
 * 大きさ n の集合 a を 0 以上 |a| 未満の範囲に座標圧縮した結果を a_cp に格納する．
-* また x[j] に圧縮された座標 j に対応する元の座標を格納する．
+* また xs[j] に圧縮された座標 j に対応する元の座標を格納する．
 * 戻り値として |a| を返す．
 *
 * a に重複する要素がなければ，a_cp[i] は a[i] が小さい方から何番目かを表し，
-* x[j] は小さい方から j 番目の要素が何かを表す．
+* xs[j] は小さい方から j 番目の要素が何かを表す．
 */
 template <typename T>
-int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* x = nullptr) {
+int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* xs = nullptr) {
 	// verify : https://atcoder.jp/contests/abc036/tasks/abc036_c
 
 	int n = sz(a);
-	if (x == nullptr) x = new vector<T>;
+	if (xs == nullptr) xs = new vector<T>;
 
-	// *x : a の x 座標のユニークな昇順列
-	*x = a;
-	uniq(*x);
+	// *xs : a の x 座標のユニークな昇順列
+	*xs = a;
+	uniq(*xs);
 
-	// a[i] が x において何番目かを求める．
+	// a[i] が xs において何番目かを求める．
 	a_cp.resize(n);
 	rep(i, n) {
-		a_cp[i] = distance(x->begin(), lower_bound(all(*x), a[i]));
+		a_cp[i] = distance(xs->begin(), lower_bound(all(*xs), a[i]));
 	}
 
-	return sz(*x);
+	return sz(*xs);
 }
 
 

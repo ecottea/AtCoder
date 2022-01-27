@@ -27,25 +27,20 @@ template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 */
 double binary_search(double ok, double ng, function<bool(double)>& okQ) {
-	// verify : https://algo-method.com/tasks/368
-
-	// 絶対誤差 EPS で境界が決定するまで
-	while (abs(ok - ng) > EPS) {
+	// 誤差 EPS で境界が決定するまで
+	while (true) {
 		// 区間の中間
 		double mid = (ok + ng) / 2;
 
-		// 相対誤差が EPS 以下なら終了する．
-		if (abs(ok - ng) <= mid * EPS) {
+		// 絶対誤差か相対誤差が EPS 以下なら終了する．
+		double err = abs(ok - ng);
+		if (err <= EPS || err <= abs(mid) * EPS) {
 			break;
 		}
 
 		// 中間が OK かどうかに応じて区間を縮小する．
-		if (okQ(mid)) {
-			ok = mid;
-		}
-		else {
-			ng = mid;
-		}
+		if (okQ(mid)) ok = mid;
+		else ng = mid;
 	}
 	return (ok + ng) / 2;
 }
@@ -195,7 +190,7 @@ double golden_search(double left, double right, function<double(double)>& f) {
 //【並列二分探索】O(O(okQ) log max|ok[i] - ng[i]|)
 /*
 * i=[0..q) について，条件を満たす要素 ok[i] と満たさない要素 ng[i] の
-* 境界を二分探索し，ok[i] を境界に接する条件を満たす要素に変更する．
+* 境界を二分探索し，ok[i] を境界に接する OK 側の要素に変更する．
 * okQ は，okQ(mid, res) で呼び出すと mid[i] が条件を満たすかが res[i] に格納されるとする．
 */
 template <typename T>

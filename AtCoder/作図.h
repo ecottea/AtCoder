@@ -8,7 +8,7 @@
 /*
 * 点 p を点 c を中心に th[rad] だけ回転した点を返す．
 */
-inline Point<double> rotate(Point<double>& p, Point<double>& c, double th) {
+inline Point<double> rotate(const Point<double>& p, const Point<double>& c, double th) {
 	Point<double> q;
 
 	q.x = cos(th) * (p.x - c.x) - sin(th) * (p.y - c.y) + c.x;
@@ -23,10 +23,10 @@ inline Point<double> rotate(Point<double>& p, Point<double>& c, double th) {
 * 点 p を点 c を中心に 90°× i だけ回転した点を返す．
 */
 template <class T>
-inline Point<T> rotate90(Point<T>& p, Point<T>& c, int i) {
+inline Point<T> rotate90(const Point<T>& p, const Point<T>& c, int i) {
 	Point<T> q;
 
-	switch (((i % 4) + 4) % 4) {
+	switch (smod(i, 4)) {
 	case 0:
 		q.x = 1 * (p.x - c.x) - 0 * (p.y - c.y) + c.x;
 		q.y = 0 * (p.x - c.x) + 1 * (p.y - c.y) + c.y;
@@ -66,7 +66,7 @@ inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const 
 /*
 * 点 p から直線 l へ降ろした垂線の足を返す．
 */
-inline Point<double> foot_of_perpendicular(Point<double>& p, Line<double>& l) {
+inline Point<double> foot_of_perpendicular(const Point<double>& p, const Line<double>& l) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_A
 
 	auto d = (l.second - l.first).normalize();
@@ -78,7 +78,7 @@ inline Point<double> foot_of_perpendicular(Point<double>& p, Line<double>& l) {
 /*
 * 直線 l に関して点 p を対称移動した点を返す．
 */
-inline Point<double> symmetrical_move(Point<double>& p, Line<double>& l) {
+inline Point<double> symmetrical_move(const Point<double>& p, const Line<double>& l) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_B
 
 	auto d = (l.second - l.first).normalize();

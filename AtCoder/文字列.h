@@ -33,7 +33,6 @@ struct rolling_hash_sub {
 	// pow_invB[i] : B^(-i)
 	vm pow_invB;
 
-
 	// コンストラクタ（文字列 s で初期化）
 	rolling_hash_sub(const STR& s_) : s(s_), n(sz(s_)), v(n + 1), pow_invB(n) {
 		// ハッシュ値計算用の B の累乗

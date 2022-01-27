@@ -75,3 +75,38 @@ void quotient_range(ll n, vector<pair<ll, pll>>& qr) {
 }
 
 
+//【フロイドの循環検出法】O(nc + c)
+/*
+* a[i+1] = f(a[i]), a[0] = a0 なる数列について，a[0] から始まる非周期列の長さ nc と
+* a[nc] から始まる周期列の長さ c の組 {nc, c} を返す．
+*/
+template <class T> pii floyds_cycle_finding(function<T(T)>& f, T a0) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89%E3%81%AE%E5%BE%AA%E7%92%B0%E6%A4%9C%E5%87%BA%E6%B3%95
+
+	T x = a0, y = a0;
+	int m = 0;
+	do {
+		x = f(x);
+		y = f(f(y));
+		m++;
+	} while (x != y);
+
+	x = a0;
+	int nc = 0;
+	while (x != y) {
+		x = f(x);
+		y = f(y);
+		nc++;
+	}
+
+	int c = 0;
+	do {
+		x = f(x);
+		y = f(f(y));
+		c++;
+	} while (x != y);
+
+	return make_pair(nc, c);
+}
+
+

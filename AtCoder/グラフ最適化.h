@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-#include "変形(グラフ).h"
+#include "変換(グラフ).h"
 #include "最短路.h"
 #include "ビット全探索.h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■

@@ -66,6 +66,7 @@ template <class T> inline ostream& operator<< (ostream& os, const list<T>& v) { 
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, const multiset<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while (!s.empty()) { os << s.top() << " "; s.pop(); } return os; }
@@ -109,118 +110,40 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-//-----------------AtCoder 専用-----------------
-#include <atcoder/all>
-using namespace atcoder;
-
-using mint = modint1000000007;
+////-----------------AtCoder 専用-----------------
+//#include <atcoder/all>
+//using namespace atcoder;
+//
+////using mint = modint1000000007;
 //using mint = modint998244353;
-//using mint = modint; // mint::set_mod(m);
+////using mint = modint; // mint::set_mod(m);
+//
+//istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+//ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+//using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+//
+//template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+//template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+//ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; };
+////----------------------------------------------
 
-template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
-using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-//----------------------------------------------
 
+void solve() {
+	int n;
+	cin >> n;
 
-//【置換の分解】O(n)
-/*
-* [0..n) の置換 p を巡回置換の積に分解して cycles に格納する．
-* p は任意の i を p[i] に動かすような置換を表す．
-*/
-int permutation_decomposition(const vi& p, vvi& cycles) {
-	int n = sz(p);
-
-	int m = 0;
-	vb seen(n);
-
-	rep(i, n) {
-		// 抽出済のサイクルに含まれるなら次へ
-		if (seen[i]) continue;
-
-		// 新しいサイクルを発見
-		cycles.push_back(vi());
-		m++;
-
-		// サイクルを順に格納していく．
-		int s = i;
-		do {
-			cycles[m - 1].push_back(s);
-			seen[s] = true;
-			s = p[s];
-		} while (s != i);
-	}
-
-	return m;
+	
 }
 
-
-//【lcm モノイド】
-using S16 = ll;
-S16 op16(S16 a, S16 b) { return a / gcd(a, b) * b; }
-S16 e16() { return 1; }
-#define LCM_Monoid S16, op16, e16
-
-
 int main() {
-//	input_from_file("input.txt");
-//	output_to_file("output.txt");
+	//	input_from_file("input.txt");
+	//	output_to_file("output.txt");
 
-	int n, q;
-	cin >> n >> q;
+	int t;
+	cin >> t;
 
-	vi p(n);
-	cin >> p;
-	--p;
-	
-	// 置換 p を巡回置換の積に分解する．
-	vvi cycles;
-	permutation_decomposition(p, cycles);
-
-	// seg[i] : i が属する巡回置換の位数
-	segtree<LCM_Monoid> seg(n);
-	repe(c, cycles) {
-		ll len = sz(c);
-		repe(i, c) {
-			seg.set(i, len);
-		}
-	}
-	dump(seg);
-
-	// ord : 置換 p の位数
-	ll ord = seg.all_prod();
-
-	// sc[i] : i から始めて ord だけ回したときの合計スコア
-	vm sc(n);
-	repe(c, cycles) {
-		ll len = sz(c);
-		ll val = accumulate(all(c), len);
-		repe(i, c) {
-			sc[i] = (mint)val * (ord / len);
-		}
-	}
-	dump(sc);
-
-	// acc[i] : Σsc[0..i)
-	vm acc(n + 1);
-	rep(i, n) acc[i + 1] = acc[i] + sc[i];
-
-	rep(hoge, q) {
-		int l, r;
-		cin >> l >> r;
-		l--;
-
-		// sc : ord だけ回ったときのスコア
-		mint sc = acc[r] - acc[l];
-
-		// len : 実際に回る回数
-		ll len = seg.prod(l, r);
-
-		// res : 割り引いた実際のスコア
-		mint res = sc / (ord / len);
-
-		cout << res << endl;
+	while (t--) {
+		dump("------------------------------");
+		solve();
 	}
 }

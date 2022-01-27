@@ -1,8 +1,8 @@
 #pragma once
 #include "header.h"
-#include "ô‚İ‚İ.h"
+#include "–ñ””{”•ÏŠ·.h"
 #include "“ñ€ŒW”.h"
-// ¡¡¡¡¡ “ñd˜a ¡¡¡¡¡
+// ¡¡¡¡¡ “ñd‚Ì˜a‚È‚Ç ¡¡¡¡¡
 
 
 //y·‚Ì‘˜azO(n log n)
@@ -30,7 +30,7 @@ template <class T> mint difference_sum(vector<T> a) {
 /*
 * ƒ°i=[0..n) ƒ°j=[0..m) a[i] xor b[j] ‚Ì’l‚ğ•Ô‚·D
 */
-template<class T> T xor_sum(const vl& a, const vl& b) {
+template <class T> T xor_sum(const vl& a, const vl& b) {
 	int n = sz(a), m = sz(b);
 	const int d = 63;
 

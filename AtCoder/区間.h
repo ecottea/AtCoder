@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "二分木.h"
 // ■■■■■ 区間 ■■■■■
 
 
@@ -41,10 +42,10 @@ int interval_union(vector<pair<T, T>>& lr, vector<pair<T, T>>& res) {
 * 
 * なお戻り値は「全ての区間 [l[i], r[i]) を切断するための最小切断回数」にも一致する．
 *
-*（貪欲法）
+*（ソートして貪欲法）
 */
 int interval_scheduling(const vl& l, const vl& r) {
-	// varify : https://algo-method.com/tasks/363
+	// varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
 
 	int n = sz(l);
 
@@ -78,7 +79,7 @@ int interval_scheduling(const vl& l, const vl& r) {
 * 締め切りが r[i]，所要日数が w[i]，報酬が a[i] の n 個の仕事について，
 * 得られる最大報酬を返す．
 *
-*（貪欲 DP）
+*（ソートして DP）
 */
 ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) {
 	int n = sz(r);
@@ -181,6 +182,7 @@ int maximize_interval_nest(const vl& l, vl r) {
 	RMQ dp(m);
 
 	rep(i, n) {
+		// 右端の座標圧縮
 		int j = distance(r.begin(), lower_bound(all(r), lr[i].second));
 
 		// j を右端にもてるのは，それまでの右端が j より大きいもののみ．
@@ -303,6 +305,41 @@ ll interval_pinning(const vector<pii>& lr, const vl& a) {
 
 	// 右端のピンの位置を任意としたときの最高スコアを返す．
 	return dp.all_prod();
+}
+
+
+//【自身以上の要素からなる区間】O(n)
+/*
+* 列 a[0..n) の各要素 a[i] について，a[i] を含み a[i] 以上の要素のみからなる
+* 最大区間が [l[i], r[i]) であることを l, r に格納する．
+* greater = false とすると大小関係を逆転して計算する．
+*
+* 制約：a[0..n) は互いに異なる．
+*
+* 利用：【デカルト木】
+*/
+template <class T> void greater_interval(const vector<T>& a, vi& l, vi& r, bool greater = true) {
+	// verify : https://yukicoder.me/problems/no/1031
+
+	int n = sz(a);
+	l.resize(n); r.resize(n);
+
+	Binary_Tree ct;
+	cartesian_tree(a, ct, greater);
+
+	function<void(int, int, int)> rf = [&](int s, int pl, int pr) {
+		l[s] = pl; r[s] = pr;
+
+		if (ct[s].left != -1) {
+			rf(ct[s].left, pl, s);
+		}
+
+		if (ct[s].right != -1) {
+			rf(ct[s].right, s + 1, pr);
+		}
+	};
+
+	rf(ct.root, 0, n);
 }
 
 

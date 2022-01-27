@@ -13,7 +13,7 @@
 * out[s] : 最後に頂点 s から離れた時刻（根なら 2 n - 1）
 * pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 n - 1）
 */
-template <class TREE> void euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
+template <class TREE> void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
 
 	int n = sz(rt);

@@ -15,10 +15,7 @@ void tree_dfs(G& g, int st, vi& seq) {
 	seq.clear();
 
 	// 再帰用の関数
-	function<void(int)> dfs = [&](int s, int p) {
-		// 頂点を訪れたことを記録
-		seen[s] = true;
-
+	function<void(int, int)> dfs = [&](int s, int p) {
 		// 行きがけ順の処理
 		seq.push_back(s);
 

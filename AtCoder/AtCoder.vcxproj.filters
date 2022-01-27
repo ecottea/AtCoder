@@ -134,7 +134,7 @@
     <ClInclude Include="区間.h">
       <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
-    <ClInclude Include="マンハッタン幾何.h">
+    <ClInclude Include="平面走査.h">
       <Filter>ヘッダー ファイル\幾何</Filter>
     </ClInclude>
     <ClInclude Include="線形計画問題.h">
@@ -155,7 +155,7 @@
     <ClInclude Include="二重和.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
-    <ClInclude Include="数列.h">
+    <ClInclude Include="一重和.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="列.h">
@@ -401,7 +401,7 @@
     <ClInclude Include="有名パズル.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
-    <ClInclude Include="二部グラフ.h">
+    <ClInclude Include="二部マッチング.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
     <ClInclude Include="変換%28グラフ%29.h">
@@ -419,7 +419,7 @@
     <ClInclude Include="列挙(集合).h">
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
-    <ClInclude Include="変換(文字列).h">
+    <ClInclude Include="前処理%28文字列%29.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
     <ClInclude Include="座標圧縮(old).h">
@@ -427,6 +427,18 @@
     </ClInclude>
     <ClInclude Include="抽象データ構造(old).h">
       <Filter>ヘッダー ファイル\old</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和%28区間%29.h">
+      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
+    </ClInclude>
+    <ClInclude Include="約数倍数変換.h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
+    <ClInclude Include="マトロイド.h">
+      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+    </ClInclude>
+    <ClInclude Include="前処理(列).h">
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -436,5 +448,8 @@
     <Text Include="output.txt">
       <Filter>リソース ファイル</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

@@ -90,35 +90,36 @@ int find_primitive_root() {
 
 //【離散対数問題／baby-step giant-step】O(√p)
 /*
-* a^x = b mod p の最小解 x >= 0 を返す．（なければ -1）
+* a^x = b mod p の最小解 x >= 0 を返す．（なければ INF）
 *
 * 制約 : p = mint::mod() は素数
 *
 *（平方分割）
 */
-int log(const mint& a, mint b) {
+int log(mint a, mint b) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/baby-step-giant-step.html
 
 	//【方法】
 	// m = ceil(√p)，r = a^(-m) とおく．
 	// 
-	// まず 0 <= x < m の範囲の x について a^x を計算した集合 S を得る．
+	// まず x∈[0..m) について a^x を計算した集合 S を得る．（計算量 O(m)）
 	// S の中に b に一致するものがあればそれでよい．
 	// なかった場合は x >= m であることが確定する．
 	// 
 	// 次に解くべき方程式
 	//		a^x = b
-	// の両辺に r を掛けて
+	// の両辺に r = a^(-m) を掛けて
 	//		a^(x-m) = b r
 	// とする．
 	// もし S の中に b r に一致するものがあれば，そこから x-m が分かり，
 	// その結果に m を加えたものが求める x の値である．
 	// なかった場合は x >= 2 m であることが確定する．
 	//
+	// この調子で S の中に b, b r, b r^2, ... があるかどうかを調べていく．
 	// a^(mod - 1) = 1 なので，同様のステップは高々 m 回で終了する．
 	// 各回の S へのアクセスが O(1) で行えるなら，全体計算量は O(m) である．
 
-	int m = (int)(ceil(sqrt(mint::mod())) + 0.5);
+	int m = (int)(ceil(sqrt(mint::mod())) + EPS);
 
 	// a = 0 の場合の例外処理
 	if (a == 0) {
@@ -128,10 +129,10 @@ int log(const mint& a, mint b) {
 
 	// loga[a^i] = i を計算しておく．
 	unordered_map<int, int> loga;
-	mint p = a.pow(m), a_inv = a.inv();
+	mint a_pow = a.pow(m), a_inv = a.inv();
 	repir(i, m - 1, 0) {
-		p *= a_inv;
-		loga[p.val()] = i;
+		a_pow *= a_inv;
+		loga[a_pow.val()] = i;
 	}
 
 	// r = a^(-m)
@@ -145,8 +146,8 @@ int log(const mint& a, mint b) {
 		b *= r;
 	}
 
-	// 見つからなかったら -1 を返す．
-	return -1;
+	// 見つからなかったら INF を返す．
+	return INF;
 }
 
 

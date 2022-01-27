@@ -35,7 +35,6 @@ struct Neighbor_prod_query {
 	vi last; // last[i] : 頂点 i から最後に撒いたクエリ
 	int q; // 何個のクエリを処理したか
 
-
 	// コンストラクタ（初期化なし）
 	Neighbor_prod_query() {}
 

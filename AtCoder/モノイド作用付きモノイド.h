@@ -6,7 +6,6 @@
 //【モノイド左作用付きモノイド】
 /*
 * モノイド左作用付きモノイド (S, op, e, F, mapping, composition, id) を表す．
-* （op, mapping, composition は * をオーバーロードする）
 *
 * すなわち，(S, op, e), (F, composition, id) がそれぞれモノイドであり，
 * F の S への左作用 * : F × S → S が
@@ -15,149 +14,72 @@
 *   恒等射 : ∀x ∈ S,               id(x) = x
 * を満たすものとする．
 */
-template <class S_, S_(*op)(S_, S_), S_(*e_)(),
-	class F_, S_(*mapping)(F_, S_), F_(*composition)(F_, F_), F_(*id_)()>
-struct MLop_Monoid {
-	// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
-
-	struct S {
-		S_ v;
-
-		// 単位元
-		static S_ e() { return e_(); }
-
-		// コンストラクタ
-		S() : v(e()) {}
-		S(S_ a) : v(a) {}
-
-		// 比較
-		bool operator==(const S& a) const { return v == a.v; }
-		bool operator!=(const S& a) const { return v != a.v; }
-
-		// 積
-		S operator*(const S& a) const {
-			if (v == e()) return a;
-			if (a.v == e()) return *this;
-			return op(v, a.v);
-		}
-
-		// 入出力
-		friend istream& operator>>(istream& is, S& a) { is >> a.v; return is; }
-		friend ostream& operator<<(ostream& os, const S& a) {
-#ifdef _MSC_VER
-			if (a.v == e()) return os << "e";
-#endif
-			return os << a.v;
-		}
-	};
-
-	struct F {
-		F_ v;
-
-		// 単位元
-		static F_ id() { return id_(); }
-
-		// コンストラクタ
-		F() : v(id()) {}
-		F(F_ a) : v(a) {}
-
-		// 比較
-		bool operator==(const F& a) const { return v == a.v; }
-		bool operator!=(const F& a) const { return v != a.v; }
-
-		// 積
-		F operator*(const F& a) const {
-			if (v == id()) return a;
-			if (a.v == id()) return *this;
-			return composition(v, a.v);
-		}
-
-		// 入出力
-		friend istream& operator>>(istream& is, F& a) { is >> a.v; return is; }
-		friend ostream& operator<<(ostream& os, const F& a) {
-#ifdef _MSC_VER
-			if (a.v == id()) return os << "id";
-#endif
-			return os << a.v;
-		}
-	};
-
-	// 単位元
-	static S e() { return e_(); }
-	static F id() { return id_(); }
-
-	// 左作用
-	friend S operator*(const F& f, const S& x) {
-		if (f.v == f.id()) return x;
-		return mapping(f.v, x.v);
-	}
-};
 
 
 //【乗算 作用付き 加算 モノイド】
-using S1 = mint;
-S1 op(S1 x, S1 y) { return x + y; }
-S1 e1() { return 0; }
-using F1 = mint;
-S1 mapping(F1 f, S1 x) { return f * x; }
-F1 composition(F1 f, F1 g) { return f * g; }
-F1 id1() { return 1; }
-using T = MLop_Monoid<S1, op, e1, F1, mapping, composition, id1>;
+using S101 = mint;
+S101 op101(S101 x, S101 y) { return x + y; }
+S101 e101() { return 0; }
+using F101 = mint;
+S101 mapping101(F101 f, S101 x) { return f * x; }
+F101 composition101(F101 f, F101 g) { return f * g; }
+F101 id101() { return 1; }
+#define Mul_Add_mlop_monoid S101, op101, e101, F101, mapping101, composition101, id101
 
 
 //【変更 作用付き 左変更 モノイド】
-using S2 = int;
-S2 e2() { return INF; } // 使わない値なら何でも OK
-S2 op(S2 x, S2 y) { return x == e2() ? y : x; }
-using F2 = int;
-F2 id2() { return INF; } // 使わない値なら何でも OK
-S2 mapping(F2 f, S2 x) { return f == id2() ? x : f; }
-F2 composition(F2 f, F2 g) { return f == id2() ? g : f; }
-using T = MLop_Monoid<S2, op, e2, F2, mapping, composition, id2>;
+using S102 = int;
+S102 e102() { return INF; } // 使わない値なら何でも OK
+S102 op102(S102 x, S102 y) { return x == e102() ? y : x; }
+using F102 = int;
+F102 id102() { return INF; } // 使わない値なら何でも OK
+S102 mapping102(F102 f, S102 x) { return f == id102() ? x : f; }
+F102 composition102(F102 f, F102 g) { return f == id102() ? g : f; }
+#define Update_Lupdate_mlop_monoid S102, op102, e102, F102, mapping102, composition102, id102
 
 
 //【変更 作用付き max モノイド】
-using S3 = int;
-S3 op3(S3 x, S3 y) { return max(x, y); }
-S3 e3() { return -INF; }
-using F3 = int;
-F3 id3() { return INF; } // 使わない値なら何でも OK
-S3 mapping3(F3 f, S3 x) { return f == id3() ? x : f; }
-F3 composition3(F3 f, F3 g) { return f == id3() ? g : f; }
-using T = MLop_Monoid<S3, op3, e3, F3, mapping3, composition3, id3>;
+using S103 = int;
+S103 op103(S103 x, S103 y) { return max(x, y); }
+S103 e103() { return -INF; }
+using F103 = int;
+F103 id103() { return INF; } // 使わない値なら何でも OK
+S103 mapping103(F103 f, S103 x) { return f == id103() ? x : f; }
+F103 composition103(F103 f, F103 g) { return f == id103() ? g : f; }
+#define Update_max_mlop_monoid S103, op103, e103, F103, mapping103, composition103, id103
 
 
 //【変更 作用付き min モノイド】
-using S4 = int;
-S4 op4(S4 x, S4 y) { return min(x, y); }
-S4 e4() { return INF; }
-using F4 = int;
-F4 id4() { return INF; } // 使わない値なら何でも OK
-S4 mapping4(F4 f, S4 x) { return f == id4() ? x : f; }
-F4 composition4(F4 f, F4 g) { return f == id4() ? g : f; }
-using T = MLop_Monoid<S4, op4, e4, F4, mapping4, composition4, id4>;
+using S104 = int;
+S104 op104(S104 x, S104 y) { return min(x, y); }
+S104 e104() { return INF; }
+using F104 = int;
+F104 id104() { return INF; } // 使わない値なら何でも OK
+S104 mapping104(F104 f, S104 x) { return f == id104() ? x : f; }
+F104 composition104(F104 f, F104 g) { return f == id104() ? g : f; }
+#define update_min_mlop_monoid S104, op104, e104, F104, mapping104, composition104, id104
 
 
 //【加算 作用付き max モノイド】
-using S5 = int;
-S5 op5(S5 x, S5 y) { return max(x, y); }
-S5 e5() { return -INF; }
-using F5 = int;
-S5 mapping5(F5 f, S5 x) { return f + x; }
-F5 composition5(F5 f, F5 g) { return f + g; }
-F5 id5() { return 0; }
-using T = MLop_Monoid<S5, op5, e5, F5, mapping5, composition5, id5>;
+using S105 = ll;
+S105 op105(S105 x, S105 y) { return max(x, y); }
+S105 e105() { return -INFL; }
+using F105 = ll;
+S105 mapping105(F105 f, S105 x) { return f + x; }
+F105 composition105(F105 f, F105 g) { return f + g; }
+F105 id105() { return 0; }
+#define Add_max_mlop_monoid S105, op105, e105, F105, mapping105, composition105, id105
 
 
 //【加算 作用付き min モノイド】
-using S6 = int;
-S6 op6(S6 x, S6 y) { return min(x, y); }
-S6 e6() { return INF; }
-using F6 = int;
-S6 mapping6(F6 f, S6 x) { return f + x; }
-F6 composition6(F6 f, F6 g) { return f + g; }
-F6 id6() { return 0; }
-using T = MLop_Monoid<S6, op6, e6, F6, mapping6, composition6, id6>;
+using S106 = ll;
+S106 op106(S106 x, S106 y) { return min(x, y); }
+S106 e106() { return INFL; }
+using F106 = ll;
+S106 mapping106(F106 f, S106 x) { return f + x; }
+F106 composition106(F106 f, F106 g) { return f + g; }
+F106 id106() { return 0; }
+#define Add_min_mlop_monoid S106, op106, e106, F106, mapping106, composition106, id106
 
 
 //【アフィン変換 作用付き 加算 モノイド】
@@ -169,9 +91,9 @@ using T = MLop_Monoid<S6, op6, e6, F6, mapping6, composition6, id6>;
 * f composition g : 合成した一次関数 f o g を返す．
 */
 // verify : https://judge.yosupo.jp/problem/range_affine_range_sum
-using S7 = pair<mint, mint>; // 斉次ベクトル (v, c)
-using F7 = pair<mint, mint>; // 斉次行列 (a, b; 0, 1)
-S7 op(S7 x, S7 y) {
+using S107 = pair<mint, mint>; // 斉次ベクトル (v, c)
+using F107 = pair<mint, mint>; // 斉次行列 (a, b; 0, 1)
+S107 op107(S107 x, S107 y) {
 	mint vx, vy, cx, cy;
 	tie(vx, cx) = x; // ベクトル (vx, cx)
 	tie(vy, cy) = y; // ベクトル (vy, cy)
@@ -179,8 +101,8 @@ S7 op(S7 x, S7 y) {
 	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
 	return { vx + vy, cx + cy };
 }
-S7 e7() { return { 0, 0 }; }
-S7 mapping(F7 f, S7 x) {
+S107 e107() { return { 0, 0 }; }
+S107 mapping107(F107 f, S107 x) {
 	mint v, c, a, b;
 	tie(v, c) = x; // ベクトル (v, c)
 	tie(a, b) = f; // 行列 (a, b; 0, 1)
@@ -188,7 +110,7 @@ S7 mapping(F7 f, S7 x) {
 	// (a, b; 0, 1).(v, c) = (a v + b c, c)
 	return { a * v + b * c, c };
 }
-F7 composition(F7 f, F7 g) {
+F107 composition107(F107 f, F107 g) {
 	mint a, b, c, d;
 	tie(a, b) = f; // 行列 (a, b; 0, 1)
 	tie(c, d) = g; // 行列 (c, d; 0, 1)
@@ -196,8 +118,8 @@ F7 composition(F7 f, F7 g) {
 	// (a, b; 0, 1).(c, d; 0, 1) = (a c, a d + b; 0, 1)
 	return { a * c, a * d + b };
 }
-F7 id7() { return { 1, 0 }; }
-using T = MLop_Monoid<S7, op, e7, F7, mapping, composition, id7>;
+F107 id107() { return { 1, 0 }; }
+#define Affine_add_mlop_monoid S107, op107, e107, F107, mapping107, composition107, id107
 
 
 //【加算 作用付き 加算 モノイド】
@@ -208,9 +130,9 @@ using T = MLop_Monoid<S7, op, e7, F7, mapping, composition, id7>;
 * f mapping x : c 個の元の和で値 v + c f をとっている状態にする．
 * f composition g : 合成した一次関数 f o g を返す．
 */
-using S8 = pair<ll, ll>; // 斉次ベクトル (v, c)
-using F8 = ll; // 斉次行列 (1, f; 0, 1)
-S8 op(S8 x, S8 y) {
+using S108 = pair<ll, ll>; // 斉次ベクトル (v, c)
+using F108 = ll; // 斉次行列 (1, f; 0, 1)
+S108 op108(S108 x, S108 y) {
 	ll vx, vy, cx, cy;
 	tie(vx, cx) = x; // ベクトル (vx, cx)
 	tie(vy, cy) = y; // ベクトル (vy, cy)
@@ -218,20 +140,20 @@ S8 op(S8 x, S8 y) {
 	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
 	return { vx + vy, cx + cy };
 }
-S8 e8() { return { 0, 0 }; }
-S8 mapping(F8 f, S8 x) {
+S108 e108() { return { 0, 0 }; }
+S108 mapping108(F108 f, S108 x) {
 	ll v, c;
 	tie(v, c) = x; // ベクトル (v, c)
 
 	// (1, f; 0, 1).(v, c) = (v + f c, c)
 	return { v + f * c, c };
 }
-F8 composition(F8 f, F8 g) {
+F108 composition108(F108 f, F108 g) {
 	// (1, f; 0, 1).(1, g; 0, 1) = (1, f + g; 0, 1)
 	return f + g;
 }
-F8 id8() { return 0; }
-using T = MLop_Monoid<S8, op, e8, F8, mapping, composition, id8>;
+F108 id108() { return 0; }
+#define Add_add_mlop_monoid S108, op108, e108, F108, mapping108, composition108, id108
 
 
 //【変更 作用付き 加算 モノイド】
@@ -242,9 +164,9 @@ using T = MLop_Monoid<S8, op, e8, F8, mapping, composition, id8>;
 * f mapping x : c 個の元の和で値 c f をとっている状態にする．
 * f composition g : 合成した零次関数 f o g を返す．
 */
-using S9 = pair<ll, ll>; // 斉次ベクトル (v, c)
-using F9 = ll; // 斉次行列 (0, f; 0, 1)
-S9 op(S9 x, S9 y) {
+using S109 = pair<ll, ll>; // 斉次ベクトル (v, c)
+using F109 = ll; // 斉次行列 (0, f; 0, 1)
+S109 op109(S109 x, S109 y) {
 	ll vx, vy, cx, cy;
 	tie(vx, cx) = x; // ベクトル (vx, cx)
 	tie(vy, cy) = y; // ベクトル (vy, cy)
@@ -252,31 +174,31 @@ S9 op(S9 x, S9 y) {
 	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
 	return { vx + vy, cx + cy };
 }
-S9 e9() { return { 0, 0 }; }
-S9 mapping(F9 f, S9 x) {
+S109 e109() { return { 0, 0 }; }
+S109 mapping109(F109 f, S109 x) {
 	ll v, c;
 	tie(v, c) = x; // ベクトル (v, c)
 
 	// (0, f; 0, 1).(v, c) = (f c, c)
 	return { f * c, c };
 }
-F9 composition(F9 f, F9 g) {
+F109 composition109(F109 f, F109 g) {
 	// (0, f; 0, 1).(0, g; 0, 1) = (0, f; 0, 1)
 	return f;
 }
-F9 id9() { return INFL; } // 使わない値なら何でも OK
-using T = MLop_Monoid<S9, op, e9, F9, mapping, composition, id9>;
+F109 id109() { return INFL; } // 使わない値なら何でも OK
+#define Update_add_mlop_monoid S109, op109, e109, F109, mapping109, composition109, id109
 
 
 //【and 作用付き xor モノイド】
-using S10 = int;
-S10 op(S10 x, S10 y) { return x ^ y; }
-S10 e10() { return 0; }
-using F10 = int;
-S10 mapping(F10 f, S10 x) { return f & x; }
-F10 composition(F10 f, F10 g) { return f & g; }
-F10 id10() { return ~0; }
-using T = MLop_Monoid<S10, op, e10, F10, mapping, composition, id10>;
+using S110 = int;
+S110 op110(S110 x, S110 y) { return x ^ y; }
+S110 e110() { return 0; }
+using F110 = int;
+S110 mapping110(F110 f, S110 x) { return f & x; }
+F110 composition110(F110 f, F110 g) { return f & g; }
+F110 id110() { return ~0; }
+#define AND_XOR_mlop_monoid S110, op110, e110, F110, mapping110, composition110, id110
 
 
 //【トロピカルアフィン変換 作用付き max モノイド】
@@ -287,18 +209,18 @@ using T = MLop_Monoid<S10, op, e10, F10, mapping, composition, id10>;
 * f mapping x : トロピカル一次関数への代入 f(x)
 * f composition g : 合成したトロピカル一次関数 f o g を返す．
 */
-using S11 = ll; // 斉次ベクトル (x, 0)
-using F11 = pll; // 斉次行列 (a, b; -∞, 0)
-S11 op(S11 x, S11 y) { return max(x, y); }
-S11 e11() { return -INFL; }
-S11 mapping(F11 f, S11 x) {
+using S111 = ll; // 斉次ベクトル (x, 0)
+using F111 = pll; // 斉次行列 (a, b; -∞, 0)
+S111 op111(S111 x, S111 y) { return max(x, y); }
+S111 e111() { return -INFL; }
+S111 mapping111(F111 f, S111 x) {
 	ll a, b;
 	tie(a, b) = f; // 行列 (a, b; -∞, 0)
 
 	// (a, b; -∞, 0).(x, 0) = (max(a + x, b), 0)
 	return max(a + x, b);
 }
-F11 composition(F11 f, F11 g) {
+F111 composition111(F111 f, F111 g) {
 	ll a, b, c, d;
 	tie(a, b) = f; // 行列 (a, b; -∞, 0)
 	tie(c, d) = g; // 行列 (c, d; -∞, 0)
@@ -306,8 +228,8 @@ F11 composition(F11 f, F11 g) {
 	// (a, b; -∞, 0).(c, d; -∞, 0) = (a + c, max(a + d, b); -∞, 0)
 	return { a + c, max(a + d, b) };
 }
-F11 id11() { return { 0, -INFL }; }
-using T = MLop_Monoid<S11, op, e11, F11, mapping, composition, id11>;
+F111 id111() { return { 0, -INFL }; }
+#define Tropical_affine_max_mlop_monoid S111, op111, e111, F111, mapping111, composition111, id111
 
 
 //【ビット列上 xor 作用付き 転倒数 モノイド】
@@ -318,10 +240,10 @@ using T = MLop_Monoid<S11, op, e11, F11, mapping, composition, id11>;
 * f mapping x : 列 x の各要素と f との xor をとった列
 * f composition g : f xor g
 */
-// verify : https://atcoder.jp/contests/practice2/tasks/practice2_l
-using S12 = tuple<ll, ll, ll>;
-using F12 = bool;
-S12 op(S12 x, S12 y) {
+// verify : https://atcoder.jp/contests/practice12/tasks/practice12_l
+using S112 = tuple<ll, ll, ll>;
+using F112 = bool;
+S112 op112(S112 x, S112 y) {
 	ll x_inv, y_inv, x_c0, x_c1, y_c0, y_c1;
 	tie(x_inv, x_c0, x_c1) = x;
 	tie(y_inv, y_c0, y_c1) = y;
@@ -334,8 +256,8 @@ S12 op(S12 x, S12 y) {
 
 	return { inv, c0, c1 };
 }
-S12 e12() { return { 0LL, 0, 0 }; }
-S12 mapping(F12 f, S12 x) {
+S112 e112() { return { 0LL, 0, 0 }; }
+S112 mapping112(F112 f, S112 x) {
 	if (!f) return x;
 
 	ll inv, c0, c1;
@@ -348,10 +270,10 @@ S12 mapping(F12 f, S12 x) {
 
 	return { inv, c1, c0 };
 }
-F12 composition(F12 f, F12 g) {
+F112 composition112(F112 f, F112 g) {
 	return f ^ g;
 }
-F12 id12() { return false; }
-using T = MLop_Monoid<S12, op, e12, F12, mapping, composition, id12>;
+F112 id112() { return false; }
+#define XOR_inversion_mlop_monoid S112, op112, e112, F112, mapping112, composition112, id112
 
 

@@ -118,7 +118,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <DisableSpecificWarnings>26451;6297;4334</DisableSpecificWarnings>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -159,11 +160,13 @@
     <ClInclude Include="アーベル群.h" />
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
+    <ClInclude Include="スコア和%28区間%29.h" />
     <ClInclude Include="セグメント木%28抽象%29.h" />
     <ClInclude Include="ビット列.h" />
+    <ClInclude Include="マトロイド.h" />
     <ClInclude Include="一変数最適化.h" />
     <ClInclude Include="二分探索.h" />
-    <ClInclude Include="二部グラフ.h" />
+    <ClInclude Include="二部マッチング.h" />
     <ClInclude Include="全域木.h" />
     <ClInclude Include="列.h" />
     <ClInclude Include="ヒープ.h" />
@@ -179,6 +182,7 @@
     <ClInclude Include="列挙(数論).h" />
     <ClInclude Include="列挙(格子).h" />
     <ClInclude Include="列挙(集合).h" />
+    <ClInclude Include="前処理(列).h" />
     <ClInclude Include="包除原理.h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="半環.h" />
@@ -186,7 +190,7 @@
     <ClInclude Include="可換環.h" />
     <ClInclude Include="変形%28格子%29.h" />
     <ClInclude Include="変換%28グラフ%29.h" />
-    <ClInclude Include="変換(文字列).h" />
+    <ClInclude Include="前処理%28文字列%29.h" />
     <ClInclude Include="尺取り法.h" />
     <ClInclude Include="座標圧縮(old).h" />
     <ClInclude Include="抽象データ構造(old).h" />
@@ -208,6 +212,7 @@
     <ClInclude Include="構造(木).h" />
     <ClInclude Include="混合基数.h" />
     <ClInclude Include="確率.h" />
+    <ClInclude Include="約数倍数変換.h" />
     <ClInclude Include="累積演算%28抽象%29.h" />
     <ClInclude Include="累積演算.h" />
     <ClInclude Include="組合せゲーム.h" />
@@ -220,11 +225,11 @@
     <ClInclude Include="部分列DP.h" />
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />
-    <ClInclude Include="数列.h" />
+    <ClInclude Include="一重和.h" />
     <ClInclude Include="区間木%28特殊化%29.h" />
     <ClInclude Include="ビット行列.h" />
     <ClInclude Include="フェニック木%28アーベル群%29.h" />
-    <ClInclude Include="マンハッタン幾何.h" />
+    <ClInclude Include="平面走査.h" />
     <ClInclude Include="二分木.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />
@@ -265,6 +270,9 @@
   <ItemGroup>
     <Text Include="input.txt" />
     <Text Include="output.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

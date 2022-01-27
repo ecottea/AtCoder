@@ -93,13 +93,13 @@ struct Factorial_mint {
 * Factorial_mod(p) : O(p)
 *	(p-1)! までの階乗を法を p として前計算する．
 *
-* fac(n) : O(n log n)
+* fac(n) : O(log n)
 *	n! mod p を返す．
 *
-* factorial_qr(n) : O(n log n)
+* factorial_qr(n) : O(log n)
 *	n! が p で割り切れる回数と p で割った余りを返す．
 *
-* binomial(n, r) : O(n log n log p)
+* binomial(n, r) : O(log n log p)
 *	nCr mod p を返す．
 */
 struct Factorial_mod {

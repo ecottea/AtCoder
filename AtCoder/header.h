@@ -67,7 +67,9 @@ template <class T> inline istream& operator>> (istream& is, vector<T>& v) { repe
 template <class T> inline ostream& operator<< (ostream& os, const vector<T>& v) { repe(x, v) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const list<T>& v) { repe(x, v) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
+template <class T> inline ostream& operator<< (ostream& os, const multiset<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while (!s.empty()) { os << s.top() << " "; s.pop(); } return os; }
@@ -122,6 +124,7 @@ using mint = modint998244353;
 
 template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
 template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; };
 istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
@@ -132,20 +135,28 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 
 // C++ の便利な機能
 /*
-* // 0 埋め出力（d : 桁数，res : 出力したい数値）
-* cout << setfill('0') << right << setw(d) << res << endl;
-* 
-* // string s_ を vector<char> s に変換
-* vc s(all(s_));
-*
-* // vc s_ を string s に変換
-* string s(all(s_));
-*
-* // 空白も含め一行を文字列 str として読み込み
-* string str; getline(cin, str);
-* 
-* // 空白区切りで文字列 str から s に読み込み
-* stringstream ss{ str }; getline(ss, s, ' ');
+// 0 埋め出力（d : 桁数，res : 出力したい数値）
+cout << setfill('0') << right << setw(d) << res << endl;
+ 
+// string s_ を vector<char> s に変換
+vc s(all(s_));
+
+// vc s_ を string s に変換
+string s(all(s_));
+
+// 空白も含め一行を文字列 str として読み込み
+string str;
+getline(cin, str);
+
+// 空白区切りで文字列 str から s に読み込み
+stringstream ss{ str };
+getline(ss, s, ' ');
+ 
+// x に [l..r] 上の一様乱数を代入する
+mt19937 mt;
+mt.seed((int)time(NULL));
+uniform_int_distribution<> rnd(l, r);
+int x = rnd(mt);
 */
 
 

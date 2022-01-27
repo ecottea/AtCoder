@@ -223,3 +223,16 @@ mint count_permutations(const string& s) {
 }
 
 
+//【互換で生成される対称群の部分群】
+/*
+* 対称群 S_n の互換の集合 E で生成される部分群 H は次のように決定できる：
+* 
+* 無向グラフ G を，[0..n) を頂点とし互換 e ∈ E に対応する辺をもつよう定める．
+* G の k 個の連結成分それぞれの頂点集合を A[0..k) とおくと，
+*		H ~= S_(A[0]) * S_(A[1]) * ... * S_(A[k-1])
+* となる．これは Union-Find を用いることで効率的に計算できる．
+* 
+* verify : https://atcoder.jp/contests/arc107/tasks/arc107_c
+*/
+
+

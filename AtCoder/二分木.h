@@ -35,7 +35,7 @@ struct Binary_Tree {
 	int root; // 根
 	vector<Node> v; // 頂点
 
-	// コンストラクタ（初期化なし，木と根で初期化）
+	// コンストラクタ（初期化なし，子の情報で初期化）
 	Binary_Tree() : n(0), root(-1) {}
 	Binary_Tree(const vi& s, const vi& l, const vi& r) : n(sz(s)), v(n) {
 		// 親子関係を設定する．
@@ -121,6 +121,50 @@ void read_binary_tree(int n, Binary_Tree& bt, bool one_indexed = true, int nval 
 		}
 	}
 	bt = Binary_Tree(s, l, r);
+}
+
+
+//【デカルト木】O(n)
+/*
+* a[0..n) の最小要素を根とするデカルト木を ct に構築する．
+* 根から順に小さい要素での区間の分割を表す（同じ要素は左のものほど小さいとする．）
+* smaller = false とすると，大小関係を逆転して木の構築を行う．
+*
+* 利用：【二分木】
+*/
+template <class T> void cartesian_tree(const vector<T>& a, Binary_Tree& ct, bool smaller = true) {
+	// verify : https://judge.yosupo.jp/problem/cartesian_tree
+
+	int n = sz(a);
+
+	// p[i] : i の親，l[i] : i の左の子，r[i] : i の右の子, rt : 根
+	vi p(n, -1), l(n, -1), r(n, -1);
+	int rt = 0;
+
+	repi(i, 1, n - 1) {
+		// pt : i - 1 の祖先で値が a[i] 以下であるもののうち最も深いもの（なければ -1）
+		int pt = i - 1;
+		while (pt != -1 && (smaller ? a[pt] > a[i] : a[pt] < a[i])) {
+			pt = p[pt];
+		}
+
+		// pt の右の子を i，i の左の子を pt の元の右の子とする．
+		if (pt != -1) {
+			p[i] = pt;
+			if (r[pt] != -1) p[r[pt]] = i;
+			l[i] = r[pt];
+			r[pt] = i;
+		}
+		else {
+			l[i] = rt;
+			p[rt] = i;
+			rt = i;
+		}
+	}
+
+	vi s(n);
+	iota(all(s), 0);
+	ct = Binary_Tree(s, l, r);
 }
 
 

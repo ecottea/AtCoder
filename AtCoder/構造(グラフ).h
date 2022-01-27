@@ -42,7 +42,7 @@ void read_graph(int n, int m, Graph& g,
 * to : 行き先の頂点番号
 * cost : 辺のコスト
 */
-struct Edge {
+struct WEdge {
 	int to; // 行き先の頂点番号
 	ll cost; // 辺のコスト
 
@@ -50,7 +50,7 @@ struct Edge {
 	operator int() const { return to; }
 
 	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const Edge& e) {
+	friend ostream& operator<<(ostream& os, const WEdge& e) {
 		os << '(' << e.to << ',' << e.cost << ')';
 		return os;
 	}
@@ -62,7 +62,7 @@ struct Edge {
 * WGraph g
 * g[v] : 頂点 v から出る辺を並べたリスト
 */
-using WGraph = vector<vector<Edge>>;
+using WGraph = vector<vector<WEdge>>;
 
 
 //【コスト付きグラフの入力】O(|V| + |E|)
@@ -118,6 +118,59 @@ void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
 			g[b].push_back(a);
 			c[b][a] = x;
 		}
+	}
+}
+
+
+//【参照付きグラフの辺】
+/*
+* to : 行き先の頂点番号
+* id : 辺の番号
+*/
+struct IEdge {
+	int to; // 行き先の頂点番号
+	int id; // 辺の番号
+
+	// コストなしグラフで呼ばれたとき用
+	operator int() const { return to; }
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const IEdge& e) {
+		os << '(' << e.to << ',' << e.id << ')';
+		return os;
+	}
+};
+
+
+//【参照付きグラフ】
+/*
+* IGraph g
+* g[v] : 頂点 v から出る辺を並べたリスト
+*/
+using IGraph = vector<vector<IEdge>>;
+
+
+//【参照付きグラフの入力】O(|V| + |E|)
+/*
+* 始点 終点 の組からなる入力を受け取り，n 頂点 m 辺の参照付きグラフを構成する．
+*
+* n : グラフの頂点の数
+* m : グラフの辺の数
+* g : ここにグラフを構築して返す
+* directed : 有向グラフなら true
+* one_indexed : 入力が 1-indexed で与えられるなら true
+*/
+void read_graph(int n, int m, IGraph& g,
+	bool directed = false, bool one_indexed = true) {
+	g = IGraph(n);
+	rep(i, m) {
+		int a, b;
+		cin >> a >> b;
+
+		if (one_indexed) { a--; b--; }
+
+		g[a].push_back({ b, i });
+		if (!directed) g[b].push_back({ a, i });
 	}
 }
 

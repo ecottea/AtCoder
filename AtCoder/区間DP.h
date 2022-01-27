@@ -305,6 +305,11 @@ int daruma_otoshi(const vi& w, int d) {
 int iwi(const string& s) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_iwi
 
+	//【備考】
+	// もし "iwi" でなく "fox" なら，取り除けるなら取り除くというのが最善になるので，
+	// 3 つまで掘れるスタックを用いた線形走査で O(n) が達成できる．
+	// verify : https://atcoder.jp/contests/arc108/tasks/arc108_b
+
 	int n = sz(s);
 
 	// dp[l][r] : s[l..r) から取り除ける文字数

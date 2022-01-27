@@ -5,7 +5,7 @@
 
 //y‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
-* ‰ÂŠ·ƒ‚ƒmƒCƒh (S, op, o) ‚ğ•\‚·iop ‚Í + ‚ğƒI[ƒo[ƒ[ƒh‚·‚éj
+* ‰ÂŠ·ƒ‚ƒmƒCƒh (S, op, o) ‚ğ•\‚·D
 *
 * ‚·‚È‚í‚¿CW‡ S ‚Æ‚»‚Ìã‚Ì“ñ€‰‰Z + : S ~ S ¨ S ‚Å
 *	Œ‹‡—¥ : Ía, b, c ¸ SC (a + b) + c = a + (b + c)
@@ -13,97 +13,63 @@
 *	ŒğŠ·—¥ : Ía, b ¸ S,     a + b = b + a
 * ‚ğ–‚½‚·‚à‚Ì‚Æ‚·‚éD
 */
-template <class S, S(*op)(S, S), S(*o_)()>
-struct Commutative_monoid {
-	S v;
-
-	// ’PˆÊŒ³
-	static S o() { return o_(); }
-
-	// ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-	Commutative_monoid() : v(o()) {}
-	Commutative_monoid(S a) : v(a) {}
-
-	// ”äŠr
-	bool operator==(const Commutative_monoid& a) const { return v == a.v; }
-	bool operator!=(const Commutative_monoid& a) const { return v != a.v; }
-
-	// ˜a
-	Commutative_monoid& operator+=(const Commutative_monoid& a) {
-		if (v == o()) return *this = a;
-		if (a.v == o()) return *this;
-		return *this = op(v, a.v);
-	}
-	Commutative_monoid operator+(const Commutative_monoid& a) const {
-		return Commutative_monoid(*this) += a;
-	}
-
-	// “üo—Í
-	friend istream& operator>>(istream& is, Commutative_monoid& a) { is >> a.v; return is; }
-	friend ostream& operator<<(ostream& os, const Commutative_monoid& a) {
-#ifdef _MSC_VER
-		if (a.v == o()) return os << "o";
-#endif
-		return os << a.v;
-	}
-};
 
 
 //y‰ÁZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
-using S1 = int;
-S1 op1(S1 a, S1 b) { return a + b; }
-S1 o1() { return 0; }
-using T = Commutative_monoid<S1, op1, o1>;
+using S501 = int;
+S501 op501(S501 a, S501 b) { return a + b; }
+S501 o501() { return 0; }
+#define Add_cmonoid S501, op501, o501
 
 
 //yæZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
-using S2 = int;
-S2 op2(S2 a, S2 b) { return a * b; }
-S2 o2() { return 1; }
-using T = Commutative_monoid<S2, op2, o2>;
+using S502 = int;
+S502 op502(S502 a, S502 b) { return a * b; }
+S502 o502() { return 1; }
+#define Mul_cmonoid S502, op502, o502
 
 
 //ymax ‰ÂŠ·ƒ‚ƒmƒCƒhz
-using S3 = int;
-S3 op3(S3 a, S3 b) { return max(a, b); }
-S3 o3() { return -INF; }
-using T = Commutative_monoid<S3, op3, o3>;
+using S503 = int;
+S503 op503(S503 a, S503 b) { return max(a, b); }
+S503 o503() { return -INF; }
+#define Max_cmonoid S503, op503, o503
 
 
 //ymin ‰ÂŠ·ƒ‚ƒmƒCƒhz
-using S4 = int;
-S4 op4(S4 a, S4 b) { return min(a, b); }
-S4 o4() { return INF; }
-using T = Commutative_monoid<S4, op4, o4>;
+using S504 = int;
+S504 op504(S504 a, S504 b) { return min(a, b); }
+S504 o504() { return INF; }
+#define Min_cmonoid S504, op504, o504
 
 
 //yxor ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * (Z/2Z)^d ã‚Ì ‰ÁZ ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
 */
-using S10 = int;
-S10 op10(S10 a, S10 b) { return a ^ b; }
-S10 o10() { return 0; }
-using T = Commutative_monoid<S10, op10, o10>;
+using S505 = int;
+S505 op505(S505 a, S505 b) { return a ^ b; }
+S505 o505() { return 0; }
+#define XOR_cmonoid S505, op505, o505
 
 
 //yor ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * (Z/2Z)^d ã‚Ì max ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
 */
-using S11 = int;
-S11 op11(S11 a, S11 b) { return a | b; }
-S11 o11() { return 0; }
-using T = Commutative_monoid<S11, op11, o11>;
+using S506 = int;
+S506 op506(S506 a, S506 b) { return a | b; }
+S506 o506() { return 0; }
+#define OR_cmonoid S506, op506, o506
 
 
 //yand ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * (Z/2Z)^d ã‚Ì min ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
 */
-using S12 = int;
-S12 op12(S12 a, S12 b) { return a & b; }
-S12 o12() { return ~0; }
-using T = Commutative_monoid<S12, op12, o12>;
+using S507 = int;
+S507 op507(S507 a, S507 b) { return a & b; }
+S507 o507() { return ~0; }
+#define AND_cmonoid S507, op507, o507
 
 

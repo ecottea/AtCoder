@@ -307,3 +307,4 @@ template <class T> bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
 	return true;
 }
 
+

@@ -5,7 +5,43 @@
 // ■■■■■ 木の性質の分析 ■■■■■
 
 
-//【木の直径】O(n log n)
+//【木の直径】O(n)
+/*
+* 木の直径の長さを返す．また直径の両端となる頂点の組を p に格納する．
+*
+* 利用：【幅優先探索】
+*/
+int tree_diameter(const Graph& g, pii& p) {
+	int n = sz(g);
+
+	// 適当な頂点を始点にして最遠の点 s を求める．
+	vi dist;
+	breadth_first_search(g, 0, dist);
+
+	int max_dist = -1;
+	int s;
+	rep(i, n) {
+		if (chmax(max_dist, dist[i])) {
+			s = i;
+		}
+	}
+
+	// s を始点にして最遠の点 t を求めれば，s と t の距離が木の直径である．
+	max_dist = -1;
+	int t;
+	breadth_first_search(g, s, dist);
+	rep(i, n) {
+		if (chmax(max_dist, dist[i])) {
+			t = i;
+		}
+	}
+
+	p = { s, t };
+	return max_dist;
+}
+
+
+//【コスト付き木の直径】O(n log n)
 /*
 * コスト付き木の直径の長さを返す．また直径の両端となる頂点の組を p に格納する．
 *
@@ -28,7 +64,7 @@ ll tree_diameter(const WGraph& g, pii& p) {
 		}
 	}
 
-	// s を始点にして最遠の点 t を求めれば，|s t| が木の直径である．
+	// s を始点にして最遠の点 t を求めれば，s と t の距離が木の直径である．
 	max_dist = -1;
 	int t;
 	dijkstra(g, s, dist);

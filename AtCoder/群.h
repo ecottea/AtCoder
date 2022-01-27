@@ -5,7 +5,7 @@
 
 //yŒQz
 /*
-* ŒQ (S, op, e, inv) ‚ğ•\‚·iop ‚Í * ‚ğƒI[ƒo[ƒ[ƒh‚·‚éj
+* ŒQ (S, op, e, inv) ‚ğ•\‚·D
 *
 * ‚·‚È‚í‚¿CW‡ S ‚Æ‚»‚Ìã‚Ì“ñ€‰‰Z * : S ~ S ¨ S ‚Å
 *	Œ‹‡—¥ : Ía, b, c ¸ SC (a b) c = a (b c)
@@ -13,66 +13,30 @@
 *	‹tŒ³   : Ía ¸ S,        a inv(a) = inv(a) a = e
 * ‚ğ–‚½‚·‚à‚Ì‚Æ‚·‚éD
 */
-template <class S, S(*op)(S, S), S(*e_)(), S(*inv_)(S)>
-struct Group {
-	// verify : https://judge.yosupo.jp/problem/queue_operate_all_composite
-
-	S v;
-
-	// ’PˆÊŒ³
-	static S e() { return e_(); }
-
-	// ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-	Group() : v(e()) {}
-	Group(S a) : v(a) {}
-
-	// ”äŠr
-	bool operator==(const Group& a) const { return v == a.v; }
-	bool operator!=(const Group& a) const { return v != a.v; }
-
-	// Ï
-	Group operator*(const Group& a) const {
-		if (v == e()) return a;
-		if (a.v == e()) return *this;
-		return op(v, a.v);
-	}
-
-	// ‹tŒ³
-	Group inv() const { return inv_(v); }
-
-	// “üo—Í
-	friend istream& operator>>(istream& is, Group& a) { is >> a.v; return is; }
-	friend ostream& operator<<(ostream& os, const Group& a) {
-#ifdef _MSC_VER
-		if (a.v == e()) return os << "e";
-#endif
-		return os << a.v;
-	}
-};
 
 
 //y‰ÁZ ŒQz
-using S1 = ll;
-S1 op(S1 a, S1 b) { return a + b; }
-S1 o1() { return 0; }
-S1 inv(S1 a) { return -a; }
-using T = Group<S1, op, o1, inv>;
+using S601 = ll;
+S601 op601(S601 a, S601 b) { return a + b; }
+S601 o601() { return 0; }
+S601 inv601(S601 a) { return -a; }
+#define Add_group S601, op601, o601, inv601
 
 
 //yæZ ŒQz
-using S2 = mint;
-S2 op(S2 a, S2 b) { return a * b; }
-S2 o2() { return 1; }
-S2 inv(S2 a) { return a.inv(); }
-using T = Group<S2, op, o2, inv>;
+using S602 = mint;
+S602 op602(S602 a, S602 b) { return a * b; }
+S602 o602() { return 1; }
+S602 inv602(S602 a) { return a.inv(); }
+#define Mul_group S602, op602, o602, inv602
 
 
 //yxor ŒQz
-using S3 = int;
-S3 op(S3 a, S3 b) { return a ^ b; }
-S3 o3() { return 0; }
-S3 inv(S3 a) { return a; }
-using T = Group<S3, op, o3, inv>;
+using S603 = int;
+S603 op603(S603 a, S603 b) { return a ^ b; }
+S603 o603() { return 0; }
+S603 inv603(S603 a) { return a; }
+#define XOR_group S603, op603, o603, inv603
 
 
 //y‰Â‹tƒAƒtƒBƒ“•ÏŠ·‚Ì‡¬ ŒQz
@@ -83,8 +47,8 @@ using T = Group<S3, op, o3, inv>;
 * ³‘¥s—ñ (a, b; 0, 1) ‚Ì‘S‘Ì‚ªÏ‚ÉŠÖ‚µ‚Äì‚Á‚Ä‚¢‚éŒQ‚Æ‚à‚İ‚È‚¹‚éD
 */
 // verify : https://judge.yosupo.jp/problem/queue_operate_all_composite
-using S4 = pair<mint, mint>;
-S4 op(S4 f, S4 g) {
+using S604 = pair<mint, mint>;
+S604 op604(S604 f, S604 g) {
 	mint a, b, c, d;
 	tie(a, b) = f; // f(x) = a x + b;
 	tie(c, d) = g; // g(x) = c x + d;
@@ -92,15 +56,15 @@ S4 op(S4 f, S4 g) {
 	// (f o g)(x) = a (c x + d) + b = (a c)x + (a d + b)
 	return { a * c, a * d + b };
 }
-S4 e4() { return { 1, 0 }; } // e(x) = x = 1 x + 0
-S4 inv(S4 f) {
+S604 e604() { return { 1, 0 }; } // e(x) = x = 1 x + 0
+S604 inv604(S604 f) {
 	mint a, b;
 	tie(a, b) = f; // f(x) = a x + b;
 
 	// f(x) = a x + b Ì x = (1/a) f(x) - b/a
 	return { a.inv(), -b / a };
 }
-using T = Group<S4, op, e4, inv>;
+#define Affine_composite_group S604, op604, e604, inv604
 
 
 //yƒrƒbƒg—ñã “]“|” ŒQz
@@ -110,8 +74,8 @@ using T = Group<S4, op, e4, inv>;
 */
 // Ql : https://qiita.com/hamko/items/92660ac5aed9df4d346d
 // verify : https://atcoder.jp/contests/dwacon5th-prelims/tasks/dwacon5th_prelims_c
-using S5 = tuple<ll, ll, ll>;
-S5 op(S5 x, S5 y) {
+using S605 = tuple<ll, ll, ll>;
+S605 op605(S605 x, S605 y) {
 	ll x_inv, y_inv, x_c0, x_c1, y_c0, y_c1;
 	tie(x_inv, x_c0, x_c1) = x;
 	tie(y_inv, y_c0, y_c1) = y;
@@ -124,8 +88,8 @@ S5 op(S5 x, S5 y) {
 
 	return { inv, c0, c1 };
 }
-S5 e5() { return { 0LL, 0, 0 }; }
-S5 inv(S5 x) {
+S605 e605() { return { 0LL, 0, 0 }; }
+S605 inv605(S605 x) {
 	ll x_inv, x_c0, x_c1;
 	tie(x_inv, x_c0, x_c1) = x;
 	
@@ -133,6 +97,6 @@ S5 inv(S5 x) {
 	// ‚±‚ê‚ç‚Í 0, 1 ‚»‚ê‚¼‚ê -1 ŒÂ‚Æ‚µ‚Ä”‚¦C“]“|‚É‚Â‚¢‚Ä‚Í‹t‚ÌU‚é•‘‚¢‚ğ‚·‚éD
 	return { x_c0 * x_c1 - x_inv, -x_c0, -x_c1 };
 }
-using T = Group<S5, op, e5, inv>;
+#define Inversion_group S605, op605, e605, inv605
 
 

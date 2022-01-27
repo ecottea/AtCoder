@@ -18,7 +18,7 @@ ll euclid(ll a, ll b) {
 }
 
 
-//【最大公約数（複数）】O(n log(max a))
+//【最大公約数（複数）】O(n + log(max a[0..n)))
 /*
 * gcd a[0..n) を返す．（空列の gcd は 0 とする）
 */
@@ -41,7 +41,7 @@ ll lcm(ll a, ll b) {
 }
 
 
-//【最小公倍数（複数）】O(n log(max a))
+//【最小公倍数（複数）】O(n + log(lcm a[0..n))) ?
 /*
 * lcm a[0..n) を返す．（空列の lcm は 1 とする）
 */

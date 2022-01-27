@@ -84,6 +84,8 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 *（前処理で高速化した DP）
 */
 mint count_adjacent_sum_contraction_seq(const vl& a) {
+	// verify : https://atcoder.jp/contests/abc230/tasks/abc230_f
+
 	int n = sz(a);
 
 	//【方法】

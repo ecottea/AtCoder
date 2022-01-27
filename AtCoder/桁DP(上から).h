@@ -230,8 +230,8 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 			rep(j, m) {
 				// d : d[i]
 				repi(d, 0, d_max) {
-					int n_smaller = smaller || (d < d_max);
-					int n_leading0 = leading0 && (d == 0);
+					int n_smaller = (int)(smaller || (d < d_max));
+					int n_leading0 = (int)(leading0 && (d == 0));
 					int nf = n_smaller | (n_leading0 << 1);
 
 					int nj = (j + d) % m;
@@ -265,7 +265,7 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 mint maximize_pair_digit_sum(const string& num, int b = 10) {
 	int n = sz(num);
 
-	// dp[i][f][j] : 以下の条件を満たす数の個数：
+	// dp[i][f] : 以下の条件を満たす数の個数：
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	    d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
@@ -323,10 +323,11 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 	num.insert(num.begin(), '0');
 	int n = sz(num);
 
-	// dp[i][f][j] : 以下の条件を満たす数の個数：
+	// dp[i][f] : 以下の条件を満たす数の個数：
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	    d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
+	//		f はこれら 2 つのフラグの OR をとったもの
 	vvl dp(n + 1, vl(4, INFL));
 	dp[0][0 | 0] = 0;
 
@@ -368,6 +369,68 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 	}
 
 	return min(dp[n][0 | 0], dp[n][0 | 1]);
+}
+
+
+//【組の上から桁 DP，未満フラグ，数え上げ】O(max(n1, n2) b^2)
+/*
+* b 進数で n1[n2] 桁の数 num1[num2] について，num1[num2] 以下の非負整数 d1[d2] の組の個数を返す．
+*/
+mint count_pair(string num1, string num2, int b = 10) {
+	int n = max(sz(num1), sz(num2));
+
+	// 0 埋め
+	ostringstream sout1, sout2;
+	sout1 << setfill('0') << setw(n) << num1;
+	sout2 << setfill('0') << setw(n) << num2;
+	num1 = sout1.str();
+	num2 = sout2.str();
+
+	// dp[i][f] : 以下の条件を満たす数の個数：
+	//	i : 上からの桁 d1[0..i), d2[0..i) まで決まっている．
+	//	f : d1[0..i) < num1[0..i) なら 1，さもなくば 0（未満フラグ 1）
+	//	    d2[0..i) < num2[0..i) なら 2，さもなくば 0（未満フラグ 2）
+	//		f はこれら 2 つのフラグの OR をとったもの
+	vvm dp(n + 1, vm(4, 0));
+	dp[0][0 | 0] = 1;
+
+	// 上の桁から順に配る DP
+	rep(i, n) {
+		// x1[x2] : num1[num2] の上から i 桁目の数
+		int x1 = num1[i] - '0';
+		int x2 = num2[i] - '0';
+
+		rep(f, 4) {
+			int smaller1 = (f >> 0) & 1;
+			int smaller2 = (f >> 1) & 1;
+
+			// d1_max[d2_max] : d1[i][ d2[i] ] のとれる値の最大値
+			int d1_max = (smaller1 ? b - 1 : x1);
+			int d2_max = (smaller2 ? b - 1 : x2);
+
+			// d1[d2] : d1[i][ d2[i] ]
+			repi(d1, 0, d1_max) {
+				repi(d2, 0, d2_max) {
+					int n_smaller1 = (int)(smaller1 || (d1 < d1_max));
+					int n_smaller2 = (int)(smaller2 || (d2 < d2_max));
+					int nf = (n_smaller1 << 0) | (n_smaller2 << 1);
+
+					dp[i + 1][nf] += dp[i][f];
+				}
+			}
+		}
+
+		//dump(i + 1);
+		//rep(f, 4) {
+		//	dumps("(smaller2, smaller1) ="); dump(bitset<2>(f));
+		//	dump(dp[i + 1][f]);
+		//}
+	}
+
+	mint res = 0;
+	rep(f, 4) res += dp[n][f];
+
+	return res;
 }
 
 

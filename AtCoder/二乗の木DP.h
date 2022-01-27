@@ -22,6 +22,8 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 	// s : 注目頂点，p : s の親，戻り値 : 部分木 s の大きさ
 	function<int(int, int)> dfs = [&](int s, int p) {
 		int ws = 1; // 部分木 s の大きさ
+
+		// ひとまず s を含む部分木を数え上げる．
 		dp[s] = vm(ws + 1, 1);
 
 		// s の子 t それぞれについて
@@ -32,6 +34,7 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
+			// これは畳み込みなので，mod998244353 なら高速化できる．
 			vm ndps(ws + wt + 1);
 			repi(i, 1, ws) {
 				repi(j, 0, wt) {
@@ -42,7 +45,9 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 			dp[s] = ndps;
 			ws += wt;
 		}
-		dp[s][0] = 1; // 空の部分木
+
+		// s を含まない部分木は空の部分木のみである．
+		dp[s][0] = 1;
 
 		return ws;
 	};
@@ -80,6 +85,7 @@ mint count_subtree(const Graph& g, int r, int k) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
+			// これは畳み込みなので，mod998244353 なら高速化できる．
 			vm ndps(min(ws + wt, k) + 1);
 			repi(i, 1, min(ws, k)) {
 				repi(j, 0, min(wt, k - i)) {
@@ -227,6 +233,58 @@ mint count_coprime_path(Graph& g, int k) {
 	}
 
 	return res;
+}
+
+
+//【先祖-子孫関係にない頂点集合の数え上げ】O(n^2)
+/*
+* r を根とする根付き木 g の大きさ i の頂点集合のうち，
+* どの 2 頂点も先祖-子孫の関係にないものの個数を cnt[i] に格納する．
+*
+*（二乗の木 DP）
+*/
+void count_nonancestor_set(const Graph& g, int r, vm& cnt) {
+	int n = sz(g);
+
+	// dp[v][i] : v を根とする大きさ i の頂点集合の個数
+	vvm dp(n);
+
+	// s : 注目頂点，p : s の親，戻り値 : 部分木 s の大きさ
+	function<int(int, int)> dfs = [&](int s, int p) {
+		int ws = 1; // 部分木 s の大きさ
+
+		// ひとまず s を選ばないものとして数え上げる．
+		dp[s] = vm({ 1, 0 });
+
+		// s の子 t それぞれについて
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// wt : 部分木 t の大きさ
+			int wt = dfs(t, s);
+
+			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の頂点集合の個数
+			// これは畳み込みなので，mod998244353 なら高速化できる．
+			vm ndps(ws + wt + 1);
+			repi(i, 0, ws) {
+				repi(j, 0, wt) {
+					ndps[i + j] += dp[s][i] * dp[t][j];
+				}
+			}
+
+			dp[s] = ndps;
+			ws += wt;
+		}
+
+		// s を選べるのは根だけの一点集合のみである．
+		dp[s][1]++;
+
+		return ws;
+	};
+
+	dfs(r, -1);
+
+	cnt = dp[r];
 }
 
 

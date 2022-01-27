@@ -41,6 +41,8 @@ S12 op12(S12 x, S12 y) { return x + y; }
 S12 e12() { return 0; }
 S12 inv12(S12 x) { return -x; }
 struct Dynamic_dictionary {
+	// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
 	int n;
 
 	// ft[v] : 要素 v の個数
@@ -55,8 +57,6 @@ struct Dynamic_dictionary {
 
 	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
 	Dynamic_dictionary(int n_, const vi& a) : n(n_) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
 		vi cnt(n);
 		repe(v, a) cnt[v]++;
 		ft = RSQ(cnt);
@@ -66,43 +66,25 @@ struct Dynamic_dictionary {
 	int size() { return ft.prod(0, n); }
 
 	// 要素 v の個数を返す．
-	int count(int v) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
-		return ft.get(v);
-	}
+	int count(int v) {return ft.get(v);}
 
 	// 値[l..r) をもつ要素の個数を返す．
 	int count(int l, int r) { return ft.prod(l, r); }
 
 	// 要素 v を挿入する．
-	void insert(int v) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-	
-		ft.apply(v, 1);
-	}
+	void insert(int v) {ft.apply(v, 1);}
 
 	// 要素 v を削除する．
-	void erase(int v) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-		
-		ft.apply(v, -1);
-	}
+	void erase(int v) {ft.apply(v, -1);}
 
 	// 昇順で i 番目の要素を返す．
 	int get(int i) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
 		auto f = [&](ll x) { return x <= i; };
 		return ft.max_right(f);
 	}
 
 	// v が昇順で何番目の要素かを返す．
-	int lower_bound(int v) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-		
-		return ft.prod(0, v);
-	}
+	int lower_bound(int v) {return ft.prod(0, v);}
 
 	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, const Dynamic_dictionary& dd) {
@@ -256,6 +238,7 @@ struct Interval_dictionary {
 */
 struct Trie_tree {
 	// 参考 : https://algo-logic.info/trie-tree/
+	// verify : https://codeforces.com/contest/1629/problem/D
 
 	const int K = 26; // 文字数
 
@@ -323,18 +306,16 @@ struct Trie_tree {
 			}
 		}
 
-		return end[v] | prefix_flag;
+		return end[v] || prefix_flag;
 	}
 
-	int count() const {
-		return cnt[0];
-	}
+	int count() const { return cnt[0]; }
 };
 
 
 //【ウェーブレット行列】
 /*
-* Wavelet_matrix(a) : O(n)
+* Wavelet_matrix(a) : O(n log n log(max a))
 *	辞書を非負整数列 a で初期化する．
 *
 * get(i) : O(log(max a))
@@ -377,7 +358,7 @@ struct Wavelet_matrix {
 	vvl acc; // acc[j] : 第 j ビットについての安定ソート後の a の累積和
 
 	// コンストラクタ（初期化なし，多重集合 t で初期化）
-	Wavelet_matrix() : n(0) {}
+	Wavelet_matrix() : n(0), k(0) {}
 	Wavelet_matrix(const vl& t)
 		: n(sz(t)), k(msbll(*max_element(all(t))) + 1),
 		bs(k, vb(n)), bs_acc(2, vvi(k, vi(n + 1))), num_zeros(k), acc(k + 1, vl(n + 1))
@@ -733,13 +714,13 @@ struct Outer_sum_dictionary {
 	int n, m;
 	vl a, b, acc_b;
 
-	Outer_sum_dictionary() {}
+	Outer_sum_dictionary() : n(0), m(0) {}
 
 	// S = { a[i] + b[j] | i∈[0..n), j∈[0..m) } で初期化する．
 	Outer_sum_dictionary(const vl& a_, const vl& b_)
-		: n(sz(a_)), m(sz(b_)), a(a_), b(b_) {
-		sort(all(a));
-		sort(all(b));
+		: n(sz(a_)), m(sz(b_)), a(a_), b(b_)
+	{
+		sort(all(a)); sort(all(b));
 
 		acc_b = vl(m + 1);
 		rep(j, m) {
@@ -782,12 +763,11 @@ struct Outer_sum_dictionary {
 		// v : i 番目の要素 
 		ll v = get(i);
 
-		// sum : v 未満の要素の和
-		// cnt : v 未満の要素の個数
+		// sum : v 未満の要素の和, cnt : v 未満の要素の個数
 		ll sum = 0, cnt = 0;
 		rep(i, n) {
 			auto it = std::lower_bound(all(b), v - a[i]);
-			int d = (int)distance(b.begin(), it);
+			int d = distance(b.begin(), it);
 			sum += a[i] * d + acc_b[d];
 			cnt += d;
 		}
@@ -815,16 +795,16 @@ struct Outer_sum_dictionary {
 */
 struct Outer_mul_dictionary {
 	// n, m : a, b の要素数
-	// np, mp : a, b の正の要素数
+	// np, mp : a, b の 正の要素数
 	// nz, mz : a, b の 0 の要素数
-	// nn, mn : a, b の負の要素数
+	// nn, mn : a, b の 負の要素数
 	int n, np, nz, nn, m, mp, mz, mn;
 
 	// ap, bp : a, b の正の要素を昇順に格納したリスト
 	// an, bn : a, b の負の要素の 絶対値 を昇順に格納したリスト
 	vl ap, an, bp, bn;
 
-	Outer_mul_dictionary() {}
+	Outer_mul_dictionary() : n(0), np(0), nz(0), nn(0), m(0), mp(0), mz(0), mn(0) {}
 
 	// S = { a[i] b[j] | i∈[0..n), j∈[0..m) } で初期化する．
 	Outer_mul_dictionary(const vl& a, const vl& b) {
@@ -842,8 +822,7 @@ struct Outer_mul_dictionary {
 				nz++;
 			}
 		}
-		sort(all(ap));
-		sort(all(an));
+		sort(all(ap)); sort(all(an));
 		n = np + nz + nn;
 
 		mp = mz = mn = 0;
@@ -860,8 +839,7 @@ struct Outer_mul_dictionary {
 				mz++;
 			}
 		}
-		sort(all(bp));
-		sort(all(bn));
+		sort(all(bp)); sort(all(bn));
 		m = mp + mz + mn;
 	}
 

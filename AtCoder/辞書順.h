@@ -254,7 +254,6 @@ string shortest_common_nonsubsequence(const string& s, const string& t) {
 			}
 		}
 	}
-	dumpel(s_nxt); dumpel(t_nxt); dumpel(dp); dumpel(head);
 
 	// DP •œŒ³
 	string res;

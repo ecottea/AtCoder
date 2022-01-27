@@ -5,96 +5,52 @@
 
 //【半環】
 /*
-* 半環 (S, add, o, mul, e) を表す（add は + を，mul は * をオーバーロードする）
+* 半環 (S, add, o, mul, e) を表す．
 *
 * すなわち，(S, add, o) が可換モノイド，(S, mul, e) がモノイドで，
 *	分配律 : ∀a, b, c ∈ S， a(b + c) = a b + a c, (a + b)c = a c + b c
 *	零倍   : ∀a ∈ S,        a o = o a = o
 * を満たすものとする．
 */
-template <class S, S(*add)(S, S), S(*o_)(), S(*mul)(S, S), S(*e_)()>
-struct Semiring {
-	// 参考 : https://nyaannyaan.github.io/library/math/semiring.hpp
-
-	S v;
-
-	// 零元，単位元
-	static S o() { return o_(); }
-	static S e() { return e_(); }
-
-	// コンストラクタ
-	Semiring() : v(o()) {}
-	Semiring(S a) : v(a) {}
-
-	// 比較
-	bool operator==(const Semiring& a) const { return v == a.v; }
-	bool operator!=(const Semiring& a) const { return v != a.v; }
-
-	// 和
-	Semiring& operator+=(const Semiring& a) {
-		if (v == o()) return *this = a;
-		if (a.v == o()) return *this;
-		return *this = add(v, a.v);
-	}
-	Semiring operator+(const Semiring& a) const { return Semiring(*this) += a; }
-
-	// 積
-	Semiring operator*(const Semiring& a) const {
-		if (v == o() || a.v == o()) return o();
-		if (v == e()) return a;
-		if (a.v == e()) return *this;
-		return mul(v, a.v);
-	}
-
-	// 入出力
-	friend istream& operator>>(istream& is, Semiring& a) { is >> a.v; return is; }
-	friend ostream& operator<<(ostream& os, const Semiring& a) {
-#ifdef _MSC_VER
-		if (a.v == o()) return os << "o";
-		if (a.v == e()) return os << "e";
-#endif
-		return os << a.v;
-	}
-};
 
 
 //【加算 - 乗算 半環】
 /*
 * 特に半環上の正方行列に自然に和と積を定めれば，これもまた（非可換）半環となる．
 */
-using S1 = mint;
-S1 add(S1 x, S1 y) { return x + y; }
-S1 o1() { return 0; }
-S1 mul(S1 x, S1 y) { return x * y; }
-S1 e1() { return 1; }
-using T = Semiring<S1, add, o1, mul, e1>;
+using S801 = mint;
+S801 add801(S801 x, S801 y) { return x + y; }
+S801 o801() { return 0; }
+S801 mul801(S801 x, S801 y) { return x * y; }
+S801 e801() { return 1; }
+#define Add_mul_semiring S801, add801, o801, mul801, e801
 
 
 //【xor - and 半環】
-using S2 = unsigned int;
-S2 add(S2 x, S2 y) { return x ^ y; }
-S2 o2() { return 0; }
-S2 mul(S2 x, S2 y) { return x & y; }
-S2 e2() { return ~0; }
-using T = Semiring<S2, add, o2, mul, e2>;
+using S802 = unsigned int;
+S802 add802(S802 x, S802 y) { return x ^ y; }
+S802 o802() { return 0; }
+S802 mul802(S802 x, S802 y) { return x & y; }
+S802 e802() { return ~0; }
+#define XOR_AND_semiring S802, add802, o802, mul802, e802
 
 
 //【min - plus 半環（トロピカル半環）】
-using S3 = ll;
-S3 add(S3 x, S3 y) { return min(x, y); }
-S3 o3() { return INFL; }
-S3 mul(S3 x, S3 y) { return x + y; }
-S3 e3() { return 0; }
-using T = Semiring<S3, add, o3, mul, e3>;
+using S803 = ll;
+S803 add803(S803 x, S803 y) { return min(x, y); }
+S803 o803() { return INFL; }
+S803 mul803(S803 x, S803 y) { return x + y; }
+S803 e803() { return 0; }
+#define Min_plus_semiring S803, add803, o803, mul803, e803
 
 
 //【max - plus 半環（トロピカル半環）】
-using S4 = ll;
-S4 add(S4 x, S4 y) { return max(x, y); }
-S4 o4() { return -INFL; }
-S4 mul(S4 x, S4 y) { return x + y; }
-S4 e4() { return 0; }
-using T = Semiring<S4, add, o4, mul, e4>;
+using S804 = ll;
+S804 add804(S804 x, S804 y) { return max(x, y); }
+S804 o804() { return -INFL; }
+S804 mul804(S804 x, S804 y) { return x + y; }
+S804 e804() { return 0; }
+#define Max_plus_semiring S804, add804, o804, mul804, e804
 
 
 //【トロピカルアフィン変換の max - 合成 半環】
@@ -103,26 +59,26 @@ using T = Semiring<S4, add, o4, mul, e4>;
 * f add g : max(f, g)(x) = max(max(a + c) + x, max(b, d)) を表す．
 * f mul g : 合成したトロピカル一次関数 f o g を返す．
 */
-using S5 = pll; // 斉次行列 (a, b; -∞, 0)
-S5 add(S5 f, S5 g) {
+using S805 = pll; // 斉次行列 (a, b; -∞, 0)
+S805 add805(S805 f, S805 g) {
 	ll a, b, c, d;
 	tie(a, b) = f; // 行列 (a, b; -∞, 0)
 	tie(c, d) = g; // 行列 (c, d; -∞, 0)
 
-	// (a, b; -∞, 0)+(c, d; -∞, 0) = (max(a, c), max(b, d); -∞, 0)
+	// (a, b; -∞, 0) + (c, d; -∞, 0) = (max(a, c), max(b, d); -∞, 0)
 	return { max(a, c), max(b, d) };
 }
-S5 o5() { return { -INFL, -INFL }; }
-S5 mul(S5 f, S5 g) {
+S805 o805() { return { -INFL, -INFL }; }
+S805 mul805(S805 f, S805 g) {
 	ll a, b, c, d;
 	tie(a, b) = f; // 行列 (a, b; -∞, 0)
 	tie(c, d) = g; // 行列 (c, d; -∞, 0)
 
-	// (a, b; -∞, 0).(c, d; -∞, 0) = (a + c, max(a + d, b); -∞, 0)
+	// (a, b; -∞, 0) * (c, d; -∞, 0) = (a + c, max(a + d, b); -∞, 0)
 	return { a + c, max(a + d, b) };
 }
-S5 e5() { return { 0, -INFL }; }
-using T = Semiring<S5, add, o5, mul, e5>;
+S805 e805() { return { 0, -INFL }; }
+#define Tropical_affine_max_cmposite_semiring S805, add805, o805, mul805, e805
 
 
 //【トロピカルアフィン変換の max - 逆合成 半環】
@@ -133,25 +89,69 @@ using T = Semiring<S5, add, o5, mul, e5>;
 * 
 * グラフの隣接行列の成分として用いるなら，通る向きが f → g なのでこれを用いる．
 */
-using S6 = pll; // 斉次行列 (a, b; -∞, 0)
-S6 add(S6 f, S6 g) {
+using S806 = pll; // 斉次行列 (a, b; -∞, 0)
+S806 add806(S806 f, S806 g) {
 	ll a, b, c, d;
 	tie(a, b) = g; // 行列 (a, b; -∞, 0)
 	tie(c, d) = f; // 行列 (c, d; -∞, 0)
 
-	// (a, b; -∞, 0)+(c, d; -∞, 0) = (max(a, c), max(b, d); -∞, 0)
+	// (a, b; -∞, 0) + (c, d; -∞, 0) = (max(a, c), max(b, d); -∞, 0)
 	return { max(a, c), max(b, d) };
 }
-S6 o6() { return { -INFL, -INFL }; }
-S6 mul(S6 f, S6 g) {
+S806 o806() { return { -INFL, -INFL }; }
+S806 mul806(S806 f, S806 g) {
 	ll a, b, c, d;
 	tie(a, b) = g; // 行列 (a, b; -∞, 0)
 	tie(c, d) = f; // 行列 (c, d; -∞, 0)
 
-	// (a, b; -∞, 0).(c, d; -∞, 0) = (a + c, max(a + d, b); -∞, 0)
+	// (a, b; -∞, 0) * (c, d; -∞, 0) = (a + c, max(a + d, b); -∞, 0)
 	return { a + c, max(a + d, b) };
 }
-S6 e6() { return { 0, -INFL }; }
-using T = Semiring<S6, add, o6, mul, e6>;
+S806 e806() { return { 0, -INFL }; }
+#define Tropical_affine_max_invcmposite_semiring S806, add806, o806, mul806, e806
+
+
+//【min - max 半環】
+/*
+* 最大値の最小化で用いる．
+* 
+* verify : https://atcoder.jp/contests/abc236/tasks/abc236_g
+*/
+using S807 = ll;
+S807 add807(S807 x, S807 y) { return min(x, y); }
+S807 o807() { return INFL; }
+S807 mul807(S807 x, S807 y) { return max(x, y); }
+S807 e807() { return -INFL; }
+#define Min_max_semiring S807, add807, o807, mul807, e807
+
+
+//【max - min 半環】
+/*
+* 最小値の最大化で用いる．
+*/
+using S808 = ll;
+S808 add808(S808 x, S808 y) { return max(x, y); }
+S808 o808() { return -INFL; }
+S808 mul808(S808 x, S808 y) { return min(x, y); }
+S808 e808() { return INFL; }
+#define Max_min_semiring S808, add808, o808, mul808, e808
+
+
+//【or - and 半環】
+using S809 = unsigned int;
+S809 add809(S809 x, S809 y) { return x | y; }
+S809 o809() { return 0; }
+S809 mul809(S809 x, S809 y) { return x & y; }
+S809 e809() { return ~0; }
+#define OR_AND_semiring S809, add809, o809, mul809, e809
+
+
+//【and - or 半環】
+using S810 = unsigned int;
+S810 add810(S810 x, S810 y) { return x & y; }
+S810 o810() { return ~0; }
+S810 mul810(S810 x, S810 y) { return x | y; }
+S810 e810() { return 0; }
+#define AND_OR_semiring S810, add810, o810, mul810, e810
 
 

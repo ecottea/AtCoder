@@ -124,7 +124,7 @@ void spanning_forest(const Graph& g, Graph& sf, vi* v = nullptr) {
 		}
 	}
 
-	// 連結成分のそれぞれが最小全域木なので，その代表元を記録．
+	// 連結成分のそれぞれが全域木なので，その代表元を記録．
 	if (v != nullptr) {
 		v->clear();
 		repe(tmp, d.groups()) v->push_back(tmp[0]);
@@ -286,6 +286,90 @@ pair<ll, mint> count_minimum_spanning_forest(const WGraph& g) {
 	}
 
 	return make_pair(cost, cnt);
+}
+
+
+//【最小全域森の構築森】O(|E| log |V|)
+/*
+* クラスカル法で最小全域森を構築する様子を表した根付き森を fst に構築し，
+* その根のリストを rs に格納する．
+* 葉に近い頂点から順に統合されていく（コストが同じなら同時に統合される）
+*/
+void mst_tree(const WGraph& g, Graph& fst, vi& rs) {
+	int n = sz(g);
+
+	// コストごと（昇順）に辺を集めておく．
+	map<ll, vector<pii>> c_to_ab;
+	rep(s, n) {
+		repe(e, g[s]) {
+			c_to_ab[e.cost].push_back({ s, e.to });
+		}
+	}
+
+	// p[s] : 頂点 s の親
+	vi p(n, -1);
+
+	// r[s] : 頂点 r の属する部分木の根
+	vi r(n); iota(all(r), 0);
+
+	// 頂点 a の根を返しつつ途中を短絡する．
+	function<int(int)> find_root = [&](int a) {
+		int ra = r[a];
+		if (ra == a) return a;
+
+		ra = find_root(ra);
+		r[a] = ra;
+		return ra;
+	};
+
+	repe(tmp, c_to_ab) {
+		// rs : 後で親を設定しないといけない頂点の集合
+		unordered_set<int> roots;
+		repe(ab, tmp.second) {
+			int a, b;
+			tie(a, b) = ab;
+
+			int ra = find_root(a), rb = find_root(b);
+			if (ra == rb) continue;
+
+			roots.insert(ra);
+			roots.insert(rb);
+
+			// 仮の根を設定しておく．
+			r[rb] = ra;
+		}
+
+		int nn = n;
+		repe(s, roots) {
+			// rs : s の仮の根または真の根
+			int rs = find_root(s);
+
+			// rs が仮の根であった場合
+			if (rs < n) {
+				// 真の根を作り，rs の根とする．
+				r.push_back(nn);
+				p.push_back(-1);
+				r[rs] = nn++;
+				rs = r[rs];
+			}
+
+			// 親を設定する．
+			p[s] = rs;
+		}
+		n = nn;
+	}
+
+	fst = Graph(n);
+	rs.clear();
+	rep(i, n) {
+		if (p[i] != -1) {
+			fst[i].push_back(p[i]);
+			fst[p[i]].push_back(i);
+		}
+		else {
+			rs.push_back(i);
+		}
+	}
 }
 
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
-#include "畳み込み.h"
+#include "約数倍数変換.h"
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 

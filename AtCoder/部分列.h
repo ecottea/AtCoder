@@ -6,7 +6,7 @@
 
 //y•”•ª—ñ”»’èzO(n)
 /*
-* ’·‚³ n ‚Ì—ñ seq ‚ª•”•ª—ñ‚Æ‚µ‚Ä sub ‚ğŠÜ‚Ş‚©‚ğ•Ô‚·D
+* seq[0..n) ‚ª•”•ª—ñ‚Æ‚µ‚Ä sub[0..m) ‚ğŠÜ‚Ş‚©‚ğ•Ô‚·D
 */
 template <class T> bool subsequenceQ(const vector<T>& seq, const vector<T>& sub) {
 	int n = sz(seq);

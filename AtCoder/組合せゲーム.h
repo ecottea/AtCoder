@@ -23,7 +23,7 @@ struct Nimber {
 	set<pii> lrs;
 
 	// cnt[v] : ニム値 v をもつ局面の数
-	map<int, int> cnt;
+	unordered_map<int, int> cnt;
 
 	// コンストラクタ（空で初期化）
 	Nimber() {}
@@ -101,8 +101,8 @@ struct Nimber {
 * 状態 i のニム値 nimber[i] が次式で与えられる場合のニム値を一括計算する．
 *	nimber[i] = mex{ nimber[j] | j ∈ [i-c[i]..i) }（直前 c[i] 個の mex）
 */
-int op4(int a, int b) { return min(a, b); }
-int e4() { return INF; }
+int op_rm(int a, int b) { return min(a, b); }
+int e_rm() { return INF; }
 void range_mex(const vi& c, vi& nimber) {
 	int n = sz(c);
 	nimber = vi(n);
@@ -110,7 +110,7 @@ void range_mex(const vi& c, vi& nimber) {
 	// seg[v] : 今まで見てきた中でニム値 v が最後に現れた局面（なければ -1）
 	vi ini(n, -1);
 	ini[0] = 0;
-	segtree<int, op4, e4> seg(ini);
+	segtree<int, op_rm, e_rm> seg(ini);
 
 	repi(i, 1, n - 1) {
 		// [i-c[i]..i) よりも前にしか現れていない最小のニム値 v を得る．

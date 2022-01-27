@@ -87,7 +87,7 @@ pii row_echelon_form(Bit_matrix<n>& mat) {
 		pj = j;
 		swap(v[i], v[i2]);
 
-		// v[i][j] より下方の行の成分が全て 0 になるよう xor をとる．
+		// v[i][j] より下方の行の成分が全て 0 になるよう XOR をとる．
 		for (i2++; i2 < m; i2++) {
 			if (v[i2][j]) v[i2] ^= v[i];
 		}
@@ -135,7 +135,7 @@ bool solve_eq(Bit_matrix<N>& mat, int n, bitset<N>* sol = nullptr) {
 		// 定数項のみが 1 なら解なし
 		if (j == n) return false;
 
-		// j 列目に見つかったら j 列目が 1 である他の行と xor をとる．
+		// j 列目に見つかったら j 列目が 1 である他の行と XOR をとる．
 		pivots.push_back({ i, j });
 		rep(i2, m) {
 			if (v[i2][j] && i2 != i) v[i2] ^= v[i];
@@ -187,7 +187,7 @@ void priority_solve_eq(Bit_matrix<N>& mat, int n, bitset<N>& sol) {
 		int j = *it;
 		rmd.erase(it);
 
-		// j 列目に見つかったら j 列目が 1 である他の行と xor をとる．
+		// j 列目に見つかったら j 列目が 1 である他の行と XOR をとる．
 		pivots.push_back({ i, j });
 		rep(i2, m) {
 			if (v[i2][j] && i2 != i) v[i2] ^= v[i];
