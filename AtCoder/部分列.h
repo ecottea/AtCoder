@@ -27,7 +27,49 @@ template <class T> bool subsequenceQ(const vector<T>& seq, const vector<T>& sub)
 
 //【最長増加部分列】O(n log n)
 /*
-* 列 a[0..n) の最長増加部分列の長さを返す．またその一例を lis に構成する．
+* 列 a[0..n) の最長（狭義）増加部分列の長さを返す．
+*
+* なお戻り値は「広義減少部分列への分割の最小個数」とも解釈できる．
+*
+*（二分探索で高速化したインライン DP）
+*/
+template <class T>
+int longest_increasing_subsequence(const vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/DPL_1_D
+
+	int n = sz(a);
+
+	// dp_i[j] : a[0..i] までで，長さが j である増加部分列の右端の値の最小値
+	//	短い増加部分列はそれより長い増加部分列の部分列なので，広義単調増加性がある．
+	vector<T> dp(n + 1, numeric_limits<T>::max());
+	dp[0] = numeric_limits<T>::min();
+
+	rep(i, n) {
+		// 右端を a[i] に置き換えても損しないような長さの最小値 j を得る．
+		int j = distance(dp.begin(), lower_bound(all(dp), a[i]));
+
+		// 長さ j の増加部分列の右端を a[i] に置き換える．
+		// これより短いものは右端を a[i] に置き換えても得しないので無視できる．
+		// これより長いものはそもそも右端を a[i] に置き換えることができない．
+		dp[j] = a[i];
+	}
+
+	// 右端の値が設定できている長さの最大値を求める．
+	int res = 0;
+	repir(j, n, 1) {
+		if (dp[j] != numeric_limits<T>::max()) {
+			res = j;
+			break;
+		}
+	}
+
+	return res;
+}
+
+
+//【最長増加部分列】O(n log n)
+/*
+* 列 a[0..n) の最長（狭義）増加部分列の長さを返す．またその一例を lis に構成する．
 * 
 * なお戻り値は「広義減少部分列への分割の最小個数」とも解釈できる．
 *
@@ -39,6 +81,8 @@ int op_lis(int a, int b) { return max(a, b); }
 int e_lis() { return 0; }
 template <class T>
 int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/DPL_1_D
+
 	int n = sz(a);
 
 	// a を座標圧縮した結果を b に格納する．
@@ -46,8 +90,7 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 	vector<T> x;
 	int m = coordinate_compression(a, b, &x);
 
-	// dp : 区間最大値を計算できるセグメント木
-	// dp[j] : 今まで見てきた中での，右端の値が j であるような最長増加部分列の長さ
+	// dp_i[j] : b[0..i] までで右端の値が j であるような最長増加部分列の長さ
 	segtree<int, op_lis, e_lis> dp(m);
 
 	// j = b[i] を順に見ていく
@@ -97,6 +140,8 @@ ll op_mis(ll a, ll b) { return max(a, b); }
 ll e_mis() { return 0; }
 template <class T>
 ll maxcost_increasing_subsequence(const vector<T>& a, const vl& c) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_q
+
 	int n = sz(a);
 
 	// a を座標圧縮した結果を b に格納する．

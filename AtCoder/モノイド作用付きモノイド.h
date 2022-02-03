@@ -164,6 +164,7 @@ F108 id108() { return 0; }
 * f mapping x : c 個の元の和で値 c f をとっている状態にする．
 * f composition g : 合成した零次関数 f o g を返す．
 */
+// verify : https://atcoder.jp/contests/abc237/tasks/abc237_g
 using S109 = pair<ll, ll>; // 斉次ベクトル (v, c)
 using F109 = ll; // 斉次行列 (0, f; 0, 1)
 S109 op109(S109 x, S109 y) {
@@ -175,7 +176,10 @@ S109 op109(S109 x, S109 y) {
 	return { vx + vy, cx + cy };
 }
 S109 e109() { return { 0, 0 }; }
+F109 id109() { return INFL; } // 使わない値なら何でも OK
 S109 mapping109(F109 f, S109 x) {
+	if (f == id109()) return x;
+
 	ll v, c;
 	tie(v, c) = x; // ベクトル (v, c)
 
@@ -183,10 +187,11 @@ S109 mapping109(F109 f, S109 x) {
 	return { f * c, c };
 }
 F109 composition109(F109 f, F109 g) {
+	if (f == id109()) return g;
+
 	// (0, f; 0, 1).(0, g; 0, 1) = (0, f; 0, 1)
 	return f;
 }
-F109 id109() { return INFL; } // 使わない値なら何でも OK
 #define Update_add_mlop_monoid S109, op109, e109, F109, mapping109, composition109, id109
 
 

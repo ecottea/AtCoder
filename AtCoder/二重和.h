@@ -103,7 +103,7 @@ int sum_xor(const vi& a, const vi& b) {
 /*
 * ƒ°i=[0..n) ƒ°j=[0..m) gcd(a[i], b[j]) ‚Ì’l‚ğ•Ô‚·D
 *
-* —˜—pFy“Yš gcd ‚Å‚Ìô‚İz
+* —˜—pFy”{”•ÏŠ·z
 */
 mint gcd_sum(const vi& a, const vi& b) {
 	//y•û–@z
@@ -138,7 +138,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 /*
 * ƒ°i=[0..n) ƒ°j=[0..m) lcm(a[i], b[j]) ‚Ì’l‚ğ•Ô‚·D
 *
-* —˜—pFy“Yš gcd ‚Å‚Ìô‚İzCyŠKæ‚Æ“ñ€ŒW”imint—˜—pjz
+* —˜—pFy”{”•ÏŠ·zCyŠKæ‚Æ“ñ€ŒW”imint—˜—pjz
 */
 mint lcm_sum(const vi& a, const vi& b) {
 	//y•û–@z

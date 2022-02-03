@@ -408,3 +408,24 @@ void primefactors_and_divisors(ll n, vl& ps, vl& divs) {
 }
 
 
+//【部分集合の gcd】
+/*
+* 与えられた非負整数の集合 U と非負整数 g について，
+*	gcd(S) = g となるような S ⊂ U が存在する
+*	⇔ g の倍数である U の元全ての gcd が g に一致する
+* 
+* // verify : https://codeforces.com/contest/1627/problem/D
+*/
+
+
+//【余りの取れる値の範囲】
+/*
+* 非負整数 a を m(<= a) で割った余りは a/2 未満になる．
+* 
+* 証明：m <= a/2 のときは明らか．m > a/2 のときは
+*		a mod m = a - m < a - a/2 = a/2
+* 
+* verify : https://codeforces.com/contest/1617/problem/C
+*/
+
+

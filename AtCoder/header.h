@@ -157,6 +157,9 @@ mt19937 mt;
 mt.seed((int)time(NULL));
 uniform_int_distribution<> rnd(l, r);
 int x = rnd(mt);
+
+// vi a() で確保したメモリを解法する
+vi().swap(a)
 */
 
 
@@ -183,11 +186,59 @@ int main() {
 //	output_to_file("output.txt");
 
 	int t;
-	cin >> t;
+	cin >> t; // マルチテストケースの場合
+//	t = 1; // シングルテストケースの場合
 
 	while (t--) {
 		dump("------------------------------");
 		solve();
+	}
+}
+*/
+
+
+// 実験用の雛形
+/*
+int naive(int n, vi a) {
+	// 愚直コード
+
+	int res = 0;
+
+	return res;
+}
+
+int solve(int n, vi a) {
+	// 提出用コード
+
+	int res = 0;
+
+	return res;
+}
+
+void find_error() {
+	// 合わない入力例を見つける．
+
+	srand((int)time(0));
+
+	int n;
+	cin >> n;
+
+	rep(hoge, 100) {
+		vi a(n);
+		rep(i, n) {
+			a[i] = rand() % 3;
+		}
+	
+		auto res1 = naive(n, a);
+		auto res2 = solve(n, a);
+
+		if (res1 != res2) {
+			cout << "----------error!----------" << endl;
+			cout << a << endl;
+			cout << res1 << endl;
+			cout << res2 << endl;
+			cout << "--------------------------" << endl;
+		}
 	}
 }
 */

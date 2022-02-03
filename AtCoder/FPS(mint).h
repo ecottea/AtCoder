@@ -390,7 +390,7 @@ struct FPS {
 	friend FPS power_mod(const FPS& f, ll d, const FPS& g) {
 		FPS res(1), pow2(f);
 		while (d > 0) {
-			if (d & 1) res = (res * pow2).reminder(g);
+			if (d & 1LL) res = (res * pow2).reminder(g);
 			pow2 = (pow2 * pow2).reminder(g);
 			d /= 2;
 		}

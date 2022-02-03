@@ -3,12 +3,12 @@
 // ■■■■■ 列に対する汎用性のある前処理 ■■■■■
 
 
-//【自身より 1 大きい数の最左位置】O(n)
+//【自身より 1 大きい数の次の位置】O(n)
 /*
 * a[0..n) の各要素 a[i] について，j > i かつ a[j] = a[i] + 1 となる最小の j を
 * nxt[j] に格納する．（存在しなければ -1）
 */
-void left_most_next(const vi& a, vi& nxt) {
+void next_upper1(const vi& a, vi& nxt) {
 	int n = sz(a);
 
 	// nxt[i] : j > i かつ a[j] = a[i] + 1 となる最小の j（なければ -1）

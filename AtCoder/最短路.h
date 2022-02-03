@@ -6,8 +6,7 @@
 
 //【幅優先探索】O(|V| + |E|)
 /*
-* グラフ g に対し，始点を st として幅優先探索を行い，
-* st から各頂点 i への最短経路長を dist[i] に格納する．
+* グラフ g に対し，始点 st から各頂点 i への最短経路長を dist[i] に格納する．
 * i が st から到達不能な頂点の場合は dist[i] = INF となる．
 */
 void breadth_first_search(const Graph& g, int st, vi& dist) {
@@ -80,9 +79,7 @@ void binary_bfs(const WGraph& g, int st, vi& dist) {
 
 //【単一始点最短路／ダイクストラ法】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g に対し，始点を st として
-* ダイクストラ法を用いて最小コスト経路問題を解き，
-* st から各頂点 i への最小コストを cost[i] に格納する．
+* 非負のコスト付きグラフ g に対し，始点 st から各頂点 i への最小コストを cost[i] に格納する．
 */
 void dijkstra(const WGraph& g, int st, vl& cost) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_A
@@ -115,9 +112,8 @@ void dijkstra(const WGraph& g, int st, vl& cost) {
 
 //【単一始点最短路／ダイクストラ法（頂点コスト）】O(|V| + |E| log|V|)
 /*
-* 頂点に非負のコスト vc が与えられたグラフ g に対し，始点を st として
-* ダイクストラ法を用いて最小コスト経路問題を解き，
-* st から各頂点 i への最小コストを cost[i] に格納する．
+* 頂点に非負のコスト vc が与えられたグラフ g に対し，
+* 始点 st から各頂点 i への最小コストを cost[i] に格納する．
 */
 void dijkstra(const Graph& g, const vl& vc, int st, vl& cost) {
 	int n = sz(g);
@@ -141,6 +137,57 @@ void dijkstra(const Graph& g, const vl& vc, int st, vl& cost) {
 
 		// そこから移動できるノードについての情報をキューに追加する．
 		repe(t, g[s]) que.push({ c + vc[t], t });
+	}
+}
+
+
+//【ボテンシャル付きダイクストラ法】O(|V| + |E| log|V|)
+/*
+* 負閉路のないコスト付きグラフ g に対し，実行可能ポテンシャル u を与え，
+* 始点 st から各頂点 i への最小コストを cost[i] に格納する．
+*
+* 条件：g[s][t].cost >= u[t] - u[s]
+*/
+void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
+	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_e
+
+	//【方法】
+	// g の各頂点 s にポテンシャル u[s] を導入し，辺 s→t のコスト c[s][t] が
+	//		c[s][t] = (u[t] - u[s]) + r[s][t]  (r[s][t] >= 0)
+	// と表されるとする．
+	//（場所依存のコスト Δu と経路依存のコスト r に分けるイメージ）
+	// 
+	// 任意の経路 s→...→t について，u からの寄与は途中によらず u[t] - u[s] で一定である．
+	//（ベクトル解析の rot grad = 0 を思い出す．勾配場中の移動コストは経路に依存しない．）
+	// よって残る r からの寄与を最小化すればよいが，r は非負なので通常のダイクストラ法でよい．
+	//
+	// なお，負のコストの辺がある場合に通常のダイクストラ法を使うと，
+	//		負の閉路に行ける → 無限ループ
+	//		負の閉路に行けない → 正しい答えは出るが，最悪計算量 O(2^|V|)
+	// となるのでだめ．参考：https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
+
+	int n = sz(g);
+	cost = vl(n, INFL);
+
+	priority_queue_rev<pli> que;
+	que.push({ 0, st });
+
+	while (!que.empty()) {
+		ll c; int s;
+		tie(c, s) = que.top(); que.pop();
+
+		if (c >= cost[s]) continue;
+
+		cost[s] = c;
+
+		repe(e, g[s]) {
+			ll r = e.cost - (u[e.to] - u[s]);
+			que.push({ c + r, e.to });
+		}
+	}
+
+	rep(i, n) {
+		cost[i] += u[i] - u[st];
 	}
 }
 

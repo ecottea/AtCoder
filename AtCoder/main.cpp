@@ -66,7 +66,6 @@ template <class T> inline ostream& operator<< (ostream& os, const list<T>& v) { 
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
-template <class T> inline ostream& operator<< (ostream& os, const multiset<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while (!s.empty()) { os << s.top() << " "; s.pop(); } return os; }
@@ -110,40 +109,76 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-////-----------------AtCoder 専用-----------------
-//#include <atcoder/all>
-//using namespace atcoder;
-//
-////using mint = modint1000000007;
+//-----------------AtCoder 専用-----------------
+#include <atcoder/all>
+using namespace atcoder;
+
+//using mint = modint1000000007;
 //using mint = modint998244353;
-////using mint = modint; // mint::set_mod(m);
-//
-//istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-//ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
-//using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-//
-//template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-//ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; };
-////----------------------------------------------
+using mint = modint; // mint::set_mod(m);
+
+istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+
+template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; };
+//----------------------------------------------
 
 
-void solve() {
-	int n;
-	cin >> n;
+//【ビット行列】
+/*
+* ビット行列を表す構造体
+*
+* Matrix<N>(m, n) : O(m N)
+*	m * n 零行列で初期化する．
+* 　制約：n <= N
+*
+* Matrix<N>(a, n) : O(m N)
+*	配列 a の要素で初期化する．
+*
+* push_back(col) : O(N)
+*	最下行に col を追加する．
+*/
+template <int N> struct Bit_matrix {
+	int m, n; // 行数, 列数（行列のサイズは m * n）
+	vector<bitset<N>> v; // 行列の成分
 
-	
-}
+	// コンストラクタ（初期化なし，零行列，二次元配列）
+	Bit_matrix() : m(0), n(0) {}
+	Bit_matrix(int m_, int n_) : m(m_), n(n_), v(m_) {}
+	Bit_matrix(const vector<bitset<N>>& a, int n_) : m(sz(a)), n(n_), v(a) {}
+
+	// 代入
+	Bit_matrix(const Bit_matrix& old) = default;
+	Bit_matrix& operator=(const Bit_matrix& other) = default;
+
+	// 比較
+	bool operator==(const BFPS& g) const { return m == g.m && n == g.n && v == g.v; }
+	bool operator!=(const BFPS& g) const { return !(*this == g); }
+
+	// アクセス
+	bitset<N> const& operator[](int i) const { return v[i]; }
+	bitset<N>& operator[](int i) { return v[i]; }
+
+	// 行の追加
+	void push_back(const bitset<N>& col) { v.push_back(col); m++; }
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Bit_matrix& a) {
+		rep(i, a.m) {
+			rep(j, a.n) os << a.v[i][j] << " ";
+			os << endl;
+		}
+		return os;
+	}
+};
+
 
 int main() {
-	//	input_from_file("input.txt");
-	//	output_to_file("output.txt");
+//	input_from_file("input.txt");
+//	output_to_file("output.txt");
 
-	int t;
-	cin >> t;
-
-	while (t--) {
-		dump("------------------------------");
-		solve();
-	}
+	
 }

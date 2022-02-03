@@ -8,22 +8,22 @@
 /*
 * 二部グラフ (S, T) の最大マッチングを求める．
 *
-* Bipartite_matching(n, m) : O(n + m)
+* Bipartite_matching(n, m) : O(|V|)
 *	S, T の要素数を n, m で初期化する．
 *
 * add_edge(s, t) : O(1)
 *	s∈S と t∈T の間に辺を張る．
 *
-* flow() : O( min((n + m)^(2/3) (n + m + |E|), (n + m + |E|)^(3/2)) )
+* flow() : O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
 *	フローを流し計算を行う．
 *	戻り値：最大マッチングの大きさ
 *
-* maximum_matching(es) : O(n + m + |E|)
+* maximum_matching(es) : O(|E|)
 *	最大マッチングの例を具体的に求め es に格納する．
 *	flow() の後に呼び出すこと．
 * 	es : 最大マッチングに含まれる辺 {s, t} ∈ S×T のリスト
 *
-* minimum_edge_covering(es) : O(n + m + |E|)
+* minimum_edge_covering(es) : O(|V| + |E|)
 *	最小辺被覆の例を具体的に求め es に格納する．
 *	flow() の後に呼び出すこと．
 * 	es : 最小辺被覆に含まれる辺 {s, t} ∈ S×T のリスト
@@ -109,9 +109,9 @@ struct Bipartite_matching {
 
 //【二部グラフの最小コスト最大マッチング】
 /*
-* 二部グラフ (S, T) の最小コスト最大マッチングを求める．
+* コスト付き二部グラフ (S, T) の最小コスト最大マッチングを求める．
 *
-* minimum_cost_bipartite_matching(m, n) : O(m + n)
+* minimum_cost_bipartite_matching(m, n) : O(|V|)
 *	S, T の要素数を m, n で初期化する．
 *
 * add_edge(s, t, c) : O(1)
@@ -121,7 +121,7 @@ struct Bipartite_matching {
 *	フローを流し計算を行う．
 *	戻り値 : 最大マッチングの大きさと，そのうちの最小コストの組
 *
-* minimul_cost_maximum_matching(es) : O((m + n) |E|)
+* minimul_cost_maximum_matching(es) : O(|E|)
 *	最大マッチングの例を具体的に求め es に格納する．
 *	flow() の後に呼び出すこと．
 *	es : 最大マッチングに含まれる辺 (s, t) ∈ S×T のリスト
@@ -158,8 +158,8 @@ struct minimum_cost_bipartite_matching {
 		return g.flow(ST, GL);
 	}
 
-	// 実現例を具体的に求める．O(|E|)
-	vector<pii>& minimul_cost_maximum_matching(vector<pii>& es) {
+	// 実現例を具体的に求める．
+	void minimul_cost_maximum_matching(vector<pii>& es) {
 		es.clear();
 		repe(e, g.edges()) {
 			// フローが流れている S, T 間の辺がマッチングに対応する．
