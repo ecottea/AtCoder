@@ -282,3 +282,25 @@ F112 id112() { return false; }
 #define XOR_inversion_mlop_monoid S112, op112, e112, F112, mapping112, composition112, id112
 
 
+//yæZ ì—p•t‚« gcd ƒ‚ƒmƒCƒhz
+using S113 = ll;
+S113 op113(S113 x, S113 y) { return gcd(x, y); }
+S113 e113() { return 0; }
+using F113 = ll;
+S113 mapping113(F113 f, S113 x) { return f * x; }
+F113 composition113(F113 f, F113 g) { return f * g; }
+F113 id113() { return 1; }
+#define Mul_GCD_mlop_monoid S113, op113, e113, F113, mapping113, composition113, id113
+
+
+//yæZ ì—p•t‚« lcm ƒ‚ƒmƒCƒhz
+using S114 = ll;
+S114 op114(S114 x, S114 y) { return x / gcd(x, y) * y; }
+S114 e114() { return 1; }
+using F114 = ll;
+S114 mapping114(F114 f, S114 x) { return f * x; }
+F114 composition114(F114 f, F114 g) { return f * g; }
+F114 id114() { return 1; }
+#define Mul_LCM_mlop_monoid S114, op114, e114, F114, mapping114, composition114, id114
+
+

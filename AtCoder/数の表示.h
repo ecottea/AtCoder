@@ -5,38 +5,79 @@
 
 //【桁の数の取得】O(log n)
 /*
-* n を b 進表記したときの桁の数字を下位桁から順に並べたものを digits に格納する．
+* n を b 進表記したときの桁の数字を上位桁から順に並べたものを ds に格納する．
+* 
+* 制約：|b| >= 2
 */
-void integer_digits(ll n, int b, vi& digits) {
-	digits.clear();
-	while (n > 0) {
-		digits.push_back(n % b);
-		n /= b;
+void integer_digits(ll n, vi& ds, ll b = 10) {
+	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
+
+	ds.clear();
+
+	// n = 0 の場合の例外処理
+	if (n == 0) {
+		ds.push_back(0);
+		return;
 	}
+
+	// mod |b| を取れば最下位桁から順に決定していく．
+	while (n != 0) {
+		ll d = smod(n, abs(b));
+		ds.push_back(d);
+		n = (n - d) / b;
+	}
+
+	// 上位桁から順になるように並べ直す．
+	reverse(all(ds));
 }
 
 
-//【桁の数からの復元】O(d)
+//【桁の数からの復元】O(n)
 /*
-* b 進表記で下位桁から順に digits が並んだ d 桁の数の値を返す．
+* b 進表記で上位桁から順に ds[0..n) が並んだ数の値を返す．
 */
-ll from_digits(vi& digits, int b = 10) {
-	ll res = 0;
-	ll powb = 1;
-	repe(d, digits) {
-		res += d * powb;
+ll from_digits(vi& ds, ll b = 10) {
+	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
+
+	int n = sz(ds);
+
+	ll res = 0, powb = 1;
+	repir(i, n - 1, 0) {
+		res += ds[i] * powb;
 		powb *= b;
 	}
+
 	return res;
 }
 
 
-//【数字和】O(d)
+//【桁の数からの復元（文字列）】O(n)
 /*
-* d 桁の数 n を b 進表記したときの桁の数字の和を返す．
+* b 進表記で表された数 s[0..n) の値を返す．桁の '0' は zero とする．
 */
-int digit_sum(ll n, int b = 10) {
-	int sum = 0;
+mint from_digits(const string& s, int b = 10, char zero = '0') {
+	// verify : https://atcoder.jp/contests/abc242/tasks/abc242_e
+
+	mint res = 0, powb = 1;
+
+	int n = sz(s);
+	repir(i, n - 1, 0) {
+		res += (s[i] - zero) * powb;
+		powb *= b;
+	}
+
+	return res;
+}
+
+
+//【数字和】O(log n)
+/*
+* 非負の数 n を b 進表記したときの桁の数字の和を返す．
+*/
+ll digit_sum(ll n, ll b = 10) {
+	// verify : https://atcoder.jp/contests/abc080/tasks/abc080_b
+
+	ll sum = 0;
 	while (n > 0) {
 		sum += n % b;
 		n /= b;
@@ -45,71 +86,11 @@ int digit_sum(ll n, int b = 10) {
 }
 
 
-//【数字根】O(d)
+//【数字根】
 /*
-* d 桁の数 n を b 進表記したときの数字根を返す．
+* 正の数 n を b 進表記したときの数字根は以下で与えられる：
+*	(n - 1) % (b - 1) + 1
 */
-int digit_root(ll n, int b = 10) {
-	while (n >= b) {
-		ll sum = 0;
-		while (n > 0) {
-			sum += n % b;
-			n /= b;
-		}
-		n = sum;
-	}
-	return (int)n;
-}
-
-
-//【インクリメント】O(n)
-/*
-* n 桁の数 num に 1 を加える．
-*/
-void increment(string& num, int b = 10) {
-	// verify : https://atcoder.jp/contests/dp/tasks/dp_s
-
-	int n = sz(num);
-
-	repir(i, n - 1, 0) {
-		if (num[i] != '0' + (b - 1)) {
-			num[i]++;
-			break;
-		}
-
-		num[i] = '0';
-	}
-
-	if (num[0] == '0') {
-		num.insert(num.begin(), '1');
-	}
-}
-
-
-//【デクリメント】O(n)
-/*
-* n 桁の数 num から 1 を減じる．
-*/
-void decrement(string& num, int b = 10) {
-	// verify : https://atcoder.jp/contests/joi2012yo/tasks/joi2012yo_f
-
-	assert(num[0] != '0');
-
-	int n = sz(num);
-
-	repir(i, n - 1, 0) {
-		if (num[i] != '0') {
-			num[i]--;
-			break;
-		}
-
-		num[i] = '0' + (b - 1);
-	}
-
-	if (n >= 2 && num[0] == '0') {
-		num.erase(num.begin());
-	}
-}
 
 
 //【真分数 → 循環小数】O(m)
@@ -195,3 +176,51 @@ pll from_real_digits(const vi& noncycle, const vi& cycle, int base = 10) {
 }
 
 
+//【小数第 n 位の数】
+/*
+* num / dnm の b 進法での小数第 n 位の数を返す．
+*
+* 制約：dnm * b <= 2 * 10^9 + 1000
+*/
+int real_digit(int num, int dnm, ll n, int b = 10) {
+	// verify : https://yukicoder.me/problems/no/1842
+
+	//【方法】
+	// 整数問題に帰着することを目指して変形する．
+	// 
+	// num / dnm の小数第 n 位の数は，num * b^n / dnm の 1 の位の数に等しい．
+	// num * b^n を dnm で割った余りを r とおくと，求める数 x は
+	//		x = ((num * b^n - r) / dnm)  (mod b)
+	// と表される．両辺および法を dnm 倍し，両辺に r を加えることで
+	//		dnm x + r = num * b^n  (mod (dnm b))
+	// を得る．
+	//
+	// x は桁の数より 0 <= x < b ⇔ 0 <= x <= b - 1 である．
+	// また r は dnm で割った余りより 0 <= r < dnm である．
+	// 両者より左辺は
+	//		0 <= dnm x + r < dnm (b - 1) + dnm = dnm b
+	// と評価できるから，
+	//		y = num * b^n mod (dnm b)
+	// とおくと，
+	//		x = (y - r) / dnm = y / dnm - r / dnm
+	// である．0 <= r < dnm であったから，これはより簡潔に
+	//		x = floor(y / dnm)
+	// と表される．
+
+	modint::set_mod(dnm * b);
+	modint y = num * modint(b).pow(n);
+	int res = y.val() / dnm;
+
+	return res;
+}
+
+
+//【小数の読み込み】
+/*
+* 小数部分が k 桁以下の実数を誤差なく扱いたい場合，10^k 倍すれば整数になるので，
+*		double x_; cin >> x_;
+*		ll x = (ll)(x_ * 1ek + (x_ > 0 ? 0.5 : -0.5));
+* とすれば良い．（キャスト時に 0 方向への丸めが入ることに注意．）
+* 
+* verify : https://atcoder.jp/contests/arc015/tasks/arc015_2
+*/

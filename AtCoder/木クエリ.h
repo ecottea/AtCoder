@@ -9,9 +9,9 @@
 /*
 * 根付き木 rt のオイラーツアーを求める．
 *
-* in[s] : 最初に頂点 s を訪れた時刻（根なら 0）
-* out[s] : 最後に頂点 s から離れた時刻（根なら 2 n - 1）
-* pos[t] : 時刻 t に訪れた頂点の番号（長さ 2 n - 1）
+* in[s] : DFS で最初に頂点 s を訪れた時刻（根なら 0）
+* out[s] : DFS で最後に頂点 s から離れた時刻（根なら 2 n - 1）
+* pos[t] : DFS で時刻 t に訪れていた頂点の番号（長さ 2 n - 1）
 */
 template <class TREE> void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
@@ -618,5 +618,100 @@ struct Segtree_on_tree_vertex {
 		return os;
 	}
 };
+
+
+//【根付き木のユニークオイラーツアー】O(n)
+/*
+* 根付き木 rt のユニークオイラーツアーを求める．
+*
+* in[s] : DFS で頂点 s を何番目になぞるか（根なら 0）
+* out[s] : DFS で頂点 s から出て次になぞる頂点が何番目か（根なら n）
+* pos[i] : DFS で i 番目になぞる頂点番号（長さ n）
+*/
+template <class TREE>
+void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
+	// 参考：https://ei1333.hateblo.jp/entry/2017/09/11/211011
+
+	int n = sz(rt);
+
+	int time = 0;
+	in.resize(n); out.resize(n); pos.resize(n);
+
+	// s : 注目している頂点
+	function<void(int)> dfs = [&](int s) {
+		in[s] = time;
+		pos[time++] = s;
+
+		repe(t, rt[s].child) dfs(t);
+
+		// s から最後に離れる
+		out[s] = time;
+	};
+
+	dfs(rt.r);
+}
+
+
+//【Mo's algorithm（部分木クエリ）】O((n + q)√n α)
+/*
+* 頂点コスト c[s] の与えられた n 頂点の根付き木 rt について，
+* st[j] を根とする q 個の部分木クエリに対する解を res[j] に格納する．
+* 頂点集合に i を追加[削除]する場合，新たな解は insert[erase]（計算量 O(α)）で計算されるとする．
+*
+* 利用：【根付き木のユニークオイラーツアー】
+*
+*（平方分割）
+*/
+template <class T, class S>
+void mo_algorithm(const Rooted_tree& rt, const vector<T>& c, const vi& st, vector<S>& res) {
+	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
+
+	int n = sz(rt), q = sz(st);
+	int sqrt_n = (int)(sqrt(n) + EPS);
+	res.resize(q);
+
+	vi l, r, pos;
+	unique_euler_tour(rt, l, r, pos);
+
+	// a[0..n) を幅 √n のブロックに分割する．
+	// クエリを左端の位置するブロックについて昇順に，
+	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
+	vector<tuple<int, int, int>> lb_sr_j(q);
+	rep(j, q) {
+		int b = l[st[j]] / sqrt_n;
+		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[st[j]], j };
+	}
+	sort(all(lb_sr_j));
+
+	// ----------------------- ここを実装する -----------------------
+	// 頂点集合に i を追加する場合の解 sol を更新する．
+	function<void(int, S&)> insert = [&](int i, S& sol) {
+		sol = sol;
+	};
+
+	// 頂点集合から i を削除する場合の解 sol を更新する．
+	function<void(int, S&)> erase = [&](int i, S& sol) {
+		sol = sol;
+	};
+	// --------------------------------------------------------------
+
+	// 初期化
+	int lpt = 0, rpt = 0; S sol = 0;
+
+	// クエリを順に処理していく
+	rep(jj, q) {
+		int j = get<2>(lb_sr_j[jj]);
+
+		// 区間を広げる
+		while (lpt > l[st[j]]) { insert(pos[--lpt], sol); }
+		while (rpt < r[st[j]]) { insert(pos[rpt++], sol); }
+
+		// 区間を狭める
+		while (lpt < l[st[j]]) { erase(pos[lpt++], sol); }
+		while (rpt > r[st[j]]) { erase(pos[--rpt], sol); }
+
+		res[j] = sol;
+	}
+}
 
 

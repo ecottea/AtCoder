@@ -39,7 +39,7 @@ template <class T> double minimize_squared_sum(const vector<T>& a) {
 
 	//【方法】
 	// f(x) = Σi (a[i] - x)^2 のグラフは下に凸の放物線になり，
-	// 軸の位置は x = Σa[0..n) / n = mean(x) である．
+	// 軸の位置は x = Σa[0..n) / n = mean(a) である．
 
 	// a_mean : a[0..n) の平均
 	double a_mean = accumulate(all(a), 0.) / n;

@@ -250,11 +250,11 @@ template <class T> struct Lazy_fenwick_tree {
 
 //【二次元フェニック木】
 /*
-* Fenwick_tree_2d(n) : O(h w)
+* Fenwick_tree_2D(n) : O(h w)
 *	要素数 h * w かつ初期値 o で初期化する．
 *	要素はアーベル群 T = (S, op, o, inv) の元とする．
 *
-* Fenwick_tree_2d(a) : O(h w)
+* Fenwick_tree_2D(a) : O(h w)
 *	二次元配列 a で初期化する．
 *
 * set(x, y, val) : O(log h log w) // 遅いので add が使えるならそちらを使うべき
@@ -269,7 +269,7 @@ template <class T> struct Lazy_fenwick_tree {
 * add(x, y, val) : O(log h log w)
 *	v[x][y] += val とする．
 */
-template <class T> struct Fenwick_tree_2d {
+template <class T> struct Fenwick_tree_2D {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
 
 	// ノードの個数（要素数 + 1）
@@ -279,13 +279,13 @@ template <class T> struct Fenwick_tree_2d {
 	vector<vector<T>> v;
 
 	// コンストラクタ（初期化なし）
-	Fenwick_tree_2d() {}
+	Fenwick_tree_2D() {}
 
 	// 要素数 n かつ初期値 e で初期化
-	Fenwick_tree_2d(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(h, vector<T>(w)) {}
+	Fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(h, vector<T>(w)) {}
 
 	// 配列 a で初期化
-	Fenwick_tree_2d(const vector<vector<T>>& v_) : h(sz(v_) + 1), w(sz(v_[0]) + 1),
+	Fenwick_tree_2D(const vector<vector<T>>& v_) : h(sz(v_) + 1), w(sz(v_[0]) + 1),
 		v(h, vector<T>(w)) {
 		// 配列の値を仮登録する．
 		rep(i, h - 1) {
@@ -361,7 +361,7 @@ template <class T> struct Fenwick_tree_2d {
 	}
 
 	// デバッグ出力用
-	friend ostream& operator<<(ostream& os, const Fenwick_tree_2d& ft) {
+	friend ostream& operator<<(ostream& os, const Fenwick_tree_2D& ft) {
 		rep(x, ft.h - 1) {
 			rep(y, ft.w - 1) {
 				os << ft.get(x, y) << " ";

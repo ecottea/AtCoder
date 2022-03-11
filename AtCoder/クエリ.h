@@ -3,6 +3,66 @@
 // ■■■■■ クエリ処理 ■■■■■
 
 
+//【Mo's algorithm】O(n√q α)
+/*
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納する．
+* res00 は a[0..0) クエリに対する解とする．また区間に a[i] を追加[削除]する場合，
+* 新たな解は insert[erase]（計算量 O(α)）で計算されるとする．
+*
+*（平方分割）
+*/
+template <class T, class S>
+void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector<S>& res) {
+	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
+	// verify : https://atcoder.jp/contests/abc242/tasks/abc242_g
+
+	int q = sz(l);
+	int sqrt_q = (int)(sqrt(q) + EPS);
+	res.resize(q);
+
+	// a[0..n) を幅 √q のブロックに分割する．
+	// クエリを左端の位置するブロックについて昇順に，
+	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
+	vector<tuple<int, int, int>> lb_sr_j(q);
+	rep(j, q) {
+		int b = l[j] / sqrt_q; 
+		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
+	}
+	sort(all(lb_sr_j));
+
+	// ----------------------- ここを実装する -----------------------
+
+	// 区間に a[i] を追加する場合の解 sol を更新する．
+	function<void(int, S&)> insert = [&](int i, S& sol) {
+		sol = sol;
+	};
+
+	// 区間から a[i] を削除する場合の解 sol を更新する．
+	function<void(int, S&)> erase = [&](int i, S& sol) {
+		sol = sol;
+	};
+	// --------------------------------------------------------------
+
+	// 初期化
+	int lpt = 0, rpt = 0; S sol = res00;
+
+	// クエリを順に処理していく
+	rep(k, q) {
+		int j = get<2>(lb_sr_j[k]);
+
+		// 区間を広げる
+		while (lpt > l[j]) { insert(--lpt, sol); }
+		while (rpt < r[j]) { insert(rpt++, sol); }
+
+		// 区間を狭める
+		while (lpt < l[j]) { erase(lpt++, sol); }
+		while (rpt > r[j]) { erase(--rpt, sol); }
+
+		res[j] = sol;
+	}
+}
+
+
 //【法を m とした和クエリ】
 /*
 * Mod_sum_query(a) : O(n)
@@ -224,7 +284,7 @@ struct Slope_trick {
 };
 
 
-//【区間への一次式との最小値／一点取得クエリ】
+//【区間への一次式との最小値 & 一点取得クエリ】
 /*
 * Range_minimize1d_query(n) : O(1)
 *	要素数 n かつ初期値 INF で初期化する．
@@ -287,227 +347,6 @@ struct Range_minimize1d_query {
 			chmin(res, p.first * i + p.second.get(i));
 		}
 		return res;
-	}
-};
-
-
-//【kd 木】
-/*
-* KDTree() : O(1)
-*	空で初期化する．
-*
-* KDTree(ps) : O(n log n) // TODO 遅いので作り直す
-*	点群 ps で初期化する．
-*
-* insert(p) : O(log n) // TODO 点の分布によっては木の形が悪くなるので作り直す
-*	点 p を挿入する．
-*
-* search(p0, p1, res) : O(n^(1 - 1 / dim) + |res|)
-*	半開長方形 R = [p0, p1) 内の点を res に格納する．
-*	p0 = {x0, y0}, p1 = {x1, y1} としたとき，R = [x0, x1) × [y0, y1) である．
-*/
-template <class T, class S> struct KDTree {
-	using Pnt = pair<T, T>;
-
-	// kd-木のノード
-	struct Node {
-		Pnt p;
-		S val;
-		Node* left, * right;
-
-		// コンストラクタ
-		Node() {}
-		Node(const Pnt& p_, const S& val_) : p(p_), val(val_),
-			left(nullptr), right(nullptr) {}
-	};
-
-	int n; // 要素数
-	Node* root; // 根へのポインタ
-
-	// 空で初期化
-	KDTree() : n(0), root(nullptr) {}
-
-	// 配列で初期化
-	KDTree(vector<pair<Pnt, S>>& a) : n(sz(a)), root(nullptr) {
-		mt19937 rnd((int)time(0));
-		shuffle(all(a), rnd);
-		rep(i, n) {
-			insert_rf(root, true, a[i].first, a[i].second);
-		}
-	}
-
-	// 点の比較（x_axis = true なら x 座標で，false なら y 座標で比較する）
-	bool less(bool x_axis, const Pnt& p, const Pnt& q) {
-		return x_axis ? p.first < q.first : p.second < q.second;
-	}
-
-	// 点の挿入
-	void insert(const Pnt& p, const S& val) {
-		insert_rf(root, true, p, val);
-		n++;
-	}
-
-	// t : 挿入位置，dim : 比較に使う次元，p : 挿入する点
-	void insert_rf(Node*& t, bool x_axis, const Pnt& p, const S& val) {
-		// 葉に辿り着いたら新しいノードを挿入する．
-		if (t == nullptr) {
-			t = new Node(p, val);
-			return;
-		}
-
-		// p の座標がいまのノードの座標より小さいか大きいかで場合分けし挿入位置を探る．
-		if (less(x_axis, p, t->p)) {
-			insert_rf(t->left, !x_axis, p, val);
-		}
-		else {
-			insert_rf(t->right, !x_axis, p, val);
-		}
-	}
-
-	// 点の探索
-	void search(const Pnt& p0, const Pnt& p1, vector<Node*>& res) {
-		res.clear();
-		search_rf(root, true, p0, p1, res);
-	}
-
-	void search_rf(Node* t, bool x_axis, const Pnt& p0, const Pnt& p1, vector<Node*>& res) {
-		// 葉に辿り着いたらすぐに帰る．
-		if (t == nullptr) {
-			return;
-		}
-
-		// 領域内なら点を記録する．
-		if (p0.first <= t->p.first && t->p.first < p1.first
-			&& p0.second <= t->p.second && t->p.second < p1.second) {
-			res.push_back(t);
-		}
-
-		// t->p < p0 でない限り左の子を調べにいく．
-		if (!less(x_axis, t->p, p0)) {
-			search_rf(t->left, !x_axis, p0, p1, res);
-		}
-
-		// p1 <= t->p でない限り右の子を調べにいく．
-		if (less(x_axis, t->p, p1)) {
-			search_rf(t->right, !x_axis, p0, p1, res);
-		}
-	}
-};
-
-
-//【kd トライ】
-/*
-* KDTrie(ps) : O(n log n)
-*	点と値の組の集合 ps[i] = {{x[i], y[i]}, val[i]} で初期化する．
-*	制約 : 点の座標は互いに異なる．
-*
-* sum(p1, p2) : O(n^(1 - 1 / dim))
-*	半開長方形 R = [p1, p2) 内の点の値の和を返す．
-*	p1 = {x1, y1}, p2 = {x2, y2} としたとき，R = [x1, x2) × [y1, y2) である．
-*/
-struct KDTrie {
-	struct Node {
-		vl p1, p2; // 半開長方形 R = [p1, p2) に対応するノード
-		ll val;
-		Node* left, * right;
-
-		// コンストラクタ
-		Node() {}
-		Node(vl p1_, vl p2_, ll val_) : p1(p1_), p2(p2_), val(val_),
-			left(nullptr), right(nullptr) {}
-	};
-
-	Node* root; // 根へのポインタ
-
-	// 空で初期化
-	KDTrie() : root(nullptr) {}
-
-	// 点と値の集合で初期化
-	KDTrie(vector<pair<vl, ll>>& a) : root(nullptr) {
-		split(root, { -INFL, -INFL }, { INFL, INFL }, a, 0, sz(a), 0);
-	}
-
-	ll at(vector<pair<vl, ll>>& a, int i, int d) { return a[i].first[d]; }
-
-	// ノード *t に a[i0..i1) を割り当て分割する．
-	ll split(Node*& t, vl p1, vl p2, vector<pair<vl, ll>>& a, int i0, int i1, int d) {
-		// 空なら何もしない．
-		if (i0 == i1) return 0;
-
-		// 要素が一つだけなら葉として格納して帰る．
-		if (i0 + 1 == i1) {
-			t = new Node(a[i0].first, { a[i0].first[0] + 1, a[i0].first[1] + 1 },
-				a[i0].second);
-			return a[i0].second;
-		}
-
-		// 中央値を得る．
-		vl dat;
-		repi(i, i0, i1 - 1) dat.push_back(at(a, i, d));
-		uniq(dat);
-		ll median = dat[sz(dat) / 2];
-		
-		// median を閾値として用い，それ未満のものを左，以上のものを右に移動する．
-		int i = i0; // i : a[i0, i) が median 未満の要素と確定
-		repi(j, i0, i1 - 1) { // j : a[i, j) が median 以上の要素と確定
-			// j の位置に median 未満の要素がある場合
-			if (at(a, j, d) < median) {
-				// 最も左の x 以上の要素と交換する．
-				swap(a[i], a[j]);
-				i++;
-			}
-		}
-
-		// median で分割して左右の子を作りに行く．
-		t = new Node(p1, p2, 0);
-		vl pm(2);
-		pm[d] = median;
-		pm[1 - d] = p2[1 - d];
-		t->val += split(t->left, p1, pm, a, i0, i, 1 - d);
-		pm[1 - d] = p1[1 - d];
-		t->val += split(t->right, pm, p2, a, i, i1, 1 - d);
-
-		return t->val;
-	}
-
-	// 半開長方形 R = [p1, p2) 内の点の値の和を返す．
-	ll sum(const vl& p1, const vl& p2) { return sum_rf(root, p1, p2, 0); }
-
-	ll sum_rf(Node* t, const vl& p1, const vl& p2, int d) {
-		// 木が空の場合
-		if (t == nullptr) return 0;
-
-		// 一部も範囲に入っていない場合
-		if (p2[d] <= t->p1[d] || t->p2[d] <= p1[d]) return 0;
-
-		// 完全に範囲に入っている場合
-		if (p1[0] <= t->p1[0] && t->p2[0] <= p2[0]
-			&& p1[1] <= t->p1[1] && t->p2[1] <= p2[1]) {
-			return t->val;
-		}
-
-		ll val = 0;
-		val += sum_rf(t->left, p1, p2, 1 - d);
-		val += sum_rf(t->right, p1, p2, 1 - d);
-
-		return val;
-	}
-
-	// デバッグ出力用
-	friend ostream& operator<<(ostream& os, const KDTrie& kd) {
-		kd.print_rf(os, kd.root);
-		return os;
-	}
-	void print_rf(ostream& os, Node* t) const {
-		if (t == nullptr) return;
-
-		print_rf(os, t->left);
-		os << "val:" << t->val << ", p1:" << t->p1 << ", p2:" << t->p2 << ", left:";
-		t->left != nullptr ? os << "(" << t->left->p1 << "," << t->left->p2 << ")" : os << "-";
-		os << ", right:";
-		t->right != nullptr ? os << "(" << t->right->p1 << "," << t->right->p2 << ")" : os << "-";
-		os << endl;
-		print_rf(os, t->right);
 	}
 };
 

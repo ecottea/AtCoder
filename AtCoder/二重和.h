@@ -10,6 +10,8 @@
 * ΣΣi<j |a[j] - a[i]| の値を返す．
 */
 template <class T> mint difference_sum(vector<T> a) {
+	// verify : https://atcoder.jp/contests/abc058/tasks/arc071_b
+
 	int n = sz(a);
 
 	// a を昇順ソートしておく．
@@ -26,9 +28,9 @@ template <class T> mint difference_sum(vector<T> a) {
 }
 
 
-//【xor の和】O(n log(max(a, b)))
+//【XOR の和】O((n + m) log max(a, b))
 /*
-* Σi=[0..n) Σj=[0..m) a[i] xor b[j] の値を返す．
+* Σi=[0..n)j=[0..m) a[i] XOR b[j] の値を返す．
 */
 template <class T> T xor_sum(const vl& a, const vl& b) {
 	int n = sz(a), m = sz(b);
@@ -59,11 +61,13 @@ template <class T> T xor_sum(const vl& a, const vl& b) {
 }
 
 
-//【和の xor】O(n log m log(max(a, b)))
+//【和の XOR】O(n log m log(max(a, b)))
 /*
-* XORi=[0..n) XORj=[0..m) (a[i] + b[j]) の値を返す．
+* XORi=[0..n)j=[0..m) (a[i] + b[j]) の値を返す．
 */
 int sum_xor(const vi& a, const vi& b) {
+	// verify : https://atcoder.jp/contests/abc091/tasks/arc092_b
+
 	int n = sz(a), m = sz(b);
 	const int d = 30;
 
@@ -101,7 +105,7 @@ int sum_xor(const vi& a, const vi& b) {
 
 //【gcd の総和】O(n + K log(log K))（K = max(a[i], b[j])）
 /*
-* Σi=[0..n) Σj=[0..m) gcd(a[i], b[j]) の値を返す．
+* Σi=[0..n)j=[0..m) gcd(a[i], b[j]) の値を返す．
 *
 * 利用：【倍数変換】
 */
@@ -136,7 +140,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 
 //【lcm の総和】O(n + m + K log(log K))（K = max(a[i], b[j])）
 /*
-* Σi=[0..n) Σj=[0..m) lcm(a[i], b[j]) の値を返す．
+* Σi=[0..n)j=[0..m) lcm(a[i], b[j]) の値を返す．
 *
 * 利用：【倍数変換】，【階乗と二項係数（mint利用）】
 */

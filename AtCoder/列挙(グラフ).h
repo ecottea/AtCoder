@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
-// ■■■■■ グラフ上の数え上げ問題 ■■■■■
+#include "構造(グラフ).h"
+// ■■■■■ グラフ上の列挙問題 ■■■■■
 
 
 //【完全グラフの完全マッチングの列挙】O((2n)!! n)
@@ -68,143 +69,163 @@ void enumerate_perfect_matching(int n, vector<vector<pii>>& mcs) {
 }
 
 
-//【連結成分の数え上げ】O(deg(v)^k)
+//【連結成分の列挙】O(deg(v)^k |V| k)
 /*
-* 無向グラフ g の大きさ k の連結成分の個数を返す．
-* 
-*（道ではなく頂点集合に注目したバックトラッキング）
+* 無向グラフ g の大きさ k の連結成分を ccs に列挙する．
+* 連結成分は頂点番号のリストとして表す．
+*
+*（バックトラッキング）
 */
-int count_connected_component(Graph& g, int k) {
+void enumerate_connected_component(const Graph& g, int k, vvi& ccs) {
 	// verify : https://atcoder.jp/contests/abc211/tasks/abc211_e
 
 	int n = sz(g);
 
-	// seen[v] : 頂点 v の探索状態
-	// 0：未探索，1：選択済，2：選択したことがあるので考慮不要
-	vi seen(n);
+	// seen[v] : 頂点 v の探索を済ませたか
+	vb seen(n);
 
 	// 今選択している頂点の集合
 	vi sel;
-
-	// 見つけた連結成分の個数
-	int res = 0;
 
 	// バックトラッキング用の再帰関数
 	// rmd : あと何個頂点を選べば良いか
 	function<void(int)> dfs = [&](int rmd) {
 		// もう頂点を選ぶ必要がなければ大きさ k の連結成分の発見．
 		if (rmd == 0) {
-			res++;
+			ccs.push_back(sel);
 			return;
 		}
 
 		// 探索すべき頂点を記憶しておくためのリスト
-		set<int> nxt;
+		vi nxt;
 
 		// 選択済みの各頂点 s について
 		repe(s, sel) {
 			// s と隣接する各頂点 t について
 			repe(t, g[s]) {
-				// もし t が未探索の状態でないなら何もしない．
-				if (seen[t] != 0) {
-					continue;
-				}
+				// もし t が探索済なら何もしない．
+				if (seen[t]) continue;
 
 				// t が未探索なら探索すべき頂点として記録する．
-				nxt.insert(t);
+				nxt.push_back(t);
 			}
 		}
 
 		// 探索すべき各頂点 v について
 		repe(v, nxt) {
-			// もし v が未探索の状態でないなら何もしない．
-			if (seen[v] != 0) {
-				continue;
-			}
+			// もし v が探索済なら何もしない．
+			if (seen[v]) continue;
 
-			// v を選択済みの状態にして再帰を回し，その後状態を元に戻す．
+			// v を選択して再帰を回し，その後 v を削除する．
 			// ただし 0→1→2 の後で 0→2→1 を見に行ったりするのを防ぐため，
-			// v の状態は「選択したことがあるので考慮不要」にしておく．
-			seen[v] = 1;
+			// v の状態だけは探索済のままにしておく．
+			seen[v] = true;
 			sel.push_back(v);
 			dfs(rmd - 1);
 			sel.pop_back();
-			seen[v] = 2;
 		}
 
-		// 「選択したことがあるので考慮不要」の状態にしたままだと，
+		// 探索済の状態にしたままだと，
 		// 例えば先に続いて 0→3→2 のようなものを見落としてしまうので，
-		// ちゃんと状態を「未探索」に戻しておく．
-		repe(v, nxt) {
-			seen[v] = 0;
-		}
+		// ちゃんと状態を未探索に戻しておく．
+		repe(v, nxt) seen[v] = false;
 	};
 
 	// グラフ g の各頂点 v について
 	rep(v, n) {
-		// v を選択済みの状態にして再帰を回し，その後状態を元に戻す．
-		// ただし 0→1→2 の後で 1→0→2 を見に行ったりするのを防ぐため，
-		// v の状態は「選択したことがあるので考慮不要」にしておく．
-		seen[v] = 1;
+		// v を選択して再帰を回し，その後 v を削除する．
+		// ただし 0→1→2 の後で 0→2→1 を見に行ったりするのを防ぐため，
+		// v の状態は探索済のままにしておく．
+		seen[v] = true;
 		sel.push_back(v);
 		dfs(k - 1);
 		sel.pop_back();
-		seen[v] = 2;
 	}
-
-	return res;
 }
 
 
-//【単純パスの数え上げ】O(|V|^2 2^|V|)
+//【有向木の列挙】
 /*
-* グラフ g について単純パス s → t の個数を cnt[s][t] に格納する．
+* 参照付きグラフ g の r を根とする大きさ k の有向木の辺集合を dts に列挙する．
+* 辺集合は辺に付けられた参照番号を並べたリストで表す．
 *
-*（bit DP）
+*（バックトラッキング）
 */
-void count_simple_path(const Graph& g, vvl& cnt) {
+void enumerate_tree(IGraph& g, int r, int k, vvi& dts) {
+	// verify : https://atcoder.jp/contests/arc009/tasks/arc009_4
+
 	int n = sz(g);
 
-	// dp[s][t][set] : 単純パス s → t で途中 set を通るものの個数
-	//		s !∈ set, t ∈ set とする．
-	vvvl dp(n, vvl(n, vl(1 << n)));
-	vvvb seen(n, vvb(n, vb(1 << n)));
-	rep(s, n) {
-		dp[s][s][0] = 1;
-		seen[s][s][0] = true;
-	}
+	// seen_v[i] : 頂点 i の探索を済ませたか
+	vb seen_v(n);
 
-	// 単純パス s → t で途中 set を通るものの個数を返す．
-	function<ll(int, int, int)> rf = [&](int s, int t, int set) {
-		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][t][set]) return dp[s][t][set];
-		seen[s][t][set] = true;
+	// seen_e[i][j] : 頂点 i から頂点 j への辺の探索を済ませたか
+	vvb seen_e(n, vb(n));
 
-		// s から行ける各頂点 v について
-		repe(v, g[s]) {
-			// v が set に含まれていなければ何もしない．
-			if (!(set & (1 << v))) continue;
+	// 今選択している頂点の集合，辺番号の集合
+	vi sel, ids;
 
-			// s → v と進む単純パスの個数を加算する．
-			dp[s][t][set] += rf(v, t, set - (1 << v));
+	// バックトラッキング用の再帰関数
+	// rmd : あと何個頂点を選べば良いか
+	function<void(int)> dfs = [&](int rmd) {
+		// もう頂点を選ぶ必要がなければ大きさ k の有向木の発見．
+		if (rmd == 0) {
+			dts.push_back(ids);
+			return;
 		}
 
-		return dp[s][t][set];
+		// 探索すべき辺を記憶しておくためのリスト
+		vector<tuple<int, int, int>> stids;
+
+		// 選択済みの各頂点 s について
+		repe(s, sel) {
+			// s から出る各辺 e について
+			repe(e, g[s]) {
+				// もし e や e の先が探索済なら何もしない．
+				if (seen_e[s][e.to] || seen_v[e.to]) continue;
+
+				// e と e の先が未探索なら探索すべき辺として記録する．
+				stids.push_back({ s, e.to, e.id });
+			}
+		}
+
+		// 探索すべき各辺 e : s -> t について
+		repe(stid, stids) {
+			int s, t, id;
+			tie(s, t, id) = stid;
+
+			// もし e や e の先が探索済なら何もしない．
+			if (seen_e[s][t] || seen_v[t]) continue;
+
+			// e と e の先を選択済みの状態にして再帰を回し，その後状態を元に戻す．
+			// ただし 2←0→1 の後で 1←0→2 を見に行ったりするのを防ぐため，
+			// e の状態だけは探索済のままにしておく．
+			seen_e[s][t] = true;
+			seen_e[t][s] = true;
+			seen_v[t] = true;
+			sel.push_back(t);
+			ids.push_back(id);
+			dfs(rmd - 1);
+			ids.pop_back();
+			sel.pop_back();
+			seen_v[t] = false;
+		}
+
+		// e を探索済の状態にしたままだと，
+		// 例えば先に続いて 0→2→1 のようなものを見落としてしまうので，
+		// ちゃんと状態を未探索に戻しておく．
+		repe(stid, stids) {
+			int s, t, id;
+			tie(s, t, id) = stid;
+
+			seen_e[s][t] = false;
+			seen_e[t][s] = false;
+		}
 	};
 
-	// 結果の格納
-	cnt = vvl(n, vl(n));
-	rep(s, n) {
-		rep(t, n) {
-			repb(set, n) {
-				if ((set & (1 << s)) || !(set & (1 << t))) continue;
-				cnt[s][t] += rf(s, t, set);
-			}
-
-			// 不動の場合もカウントする．
-			if (s == t) cnt[s][t]++;
-		}
-	}
+	sel.push_back(r);
+	seen_v[r] = true;
+	dfs(k - 1);
 }
 
 

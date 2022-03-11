@@ -1,21 +1,23 @@
 #pragma once
 #include "header.h"
 #include "最短路.h"
+#include "分析(グラフ).h"
+#include "DAG.h"
 // ■■■■■ 線形計画問題 ■■■■■
 
 
 //【牛ゲー】
 /*
-* Ushige(n) : O(1)
+* Ushige(int n) : O(n)
 *	n 変数で初期化する．
 *
-* set_ub(a, b, d) : O(1)
+* set_ub(int a, int b, ll d) : O(1)
 *	v[b] - v[a] <= d という制約を追加する．
 *
-* set_lb(a, b, d) : O(1)
+* set_lb(int a, int b, ll d) : O(1)
 *	v[b] - v[a] >= d という制約を追加する．
 *
-* maximize_diff(a, diff) : O(n m)（m : 制約の数）
+* bool maximize_diff(int a, vl& diff) : O(n m)（m : 制約の数）
 *	v[b] - v[a] の最大値（無いなら INFL）を diff[b] に格納する．
 *	制約を満たすことが不可能なら false を返す．
 */
@@ -25,7 +27,6 @@ struct Ushige {
 	int n;
 	WGraph g;
 
-	Ushige() : n(0) {}
 	Ushige(int n_) : n(n_), g(n_) {}
 
 	void set_ub(int a, int b, ll d) {
@@ -55,10 +56,8 @@ struct Ushige {
 			// 全ての辺についての操作
 			rep(s, n) {
 				repe(e, g[s]) {
-					// もし (始点へのコスト) + (辺のコスト) < (終点へのコスト) なら
-					// (終点へのコスト) を更新する．
 					// INFL からの引き算も認めて計算しているので，
-					// st から到達不可能な負閉路も含めて検出する．
+					// st から到達不可能な負閉路も含めて検出することに注意．
 					if (cost[s] + e.cost < cost[e.to]) {
 						cost[e.to] = cost[s] + e.cost;
 						updated = true;
@@ -134,7 +133,7 @@ struct Ushige_ub_only {
 
 //【牛ゲー（01-上界指定のみ）】
 /*
-* Ushige_ub_only(n) : O(1)
+* Ushige_ub01_only(n) : O(1)
 *	n 変数で初期化する．
 *
 * set_ub(a, b, d) : O(1)
@@ -172,6 +171,56 @@ struct Ushige_ub01_only {
 		rep(s, u.n) {
 			repe(e, u.g[s]) {
 				os << "v[" << e.to << "] - v[" << s << "] <= " << e.cost << endl;
+			}
+		}
+		return os;
+	}
+};
+
+
+//【牛ゲー（1-下界指定のみ）】
+/*
+* Ushige_lb1_only(int n) : O(n)
+*	n 変数で初期化する．
+*
+* set_lb1(int a, int b) : O(1)
+*	v[b] - v[a] >= 1 という制約を追加する．
+*
+* bool minimize_range(vi& val) : O(n + m)（m : 制約の数）
+*	min(v) = 0 で max(v) を最小とする v[i] の一例を val[i] に格納する．
+*	制約を満たすことが不可能なら false を返す．
+*
+* 利用：【トポロジカルソート】，【最長パス】
+*/
+struct Ushige_lb1_only {
+	// verify : https://codeforces.com/contest/1635/problem/E
+
+	int n;
+	Graph g; // 辺の重みが -1 のグラフ
+
+	Ushige_lb1_only(int n_) : n(n_), g(n_) {}
+
+	void set_lb1(int a, int b) {
+		// 差の下限に対応する重みを持つ辺を張る．
+		g[b].push_back(a);
+	}
+
+	bool minimize_range(vi& val) {
+		// 負閉路がどこかにあれば制約充足不可能
+		vi seq;
+		bool top_res = topological_sort(g, seq);
+		if (!top_res) return false;
+
+		// DAG が保証されたので最長パスを求める．
+		longest_path(g, val);
+		return true;
+	}
+
+	// デバッグ出力
+	friend ostream& operator<<(ostream& os, const Ushige_lb1_only& u) {
+		rep(s, u.n) {
+			repe(t, u.g[s]) {
+				os << "v[" << t << "] - v[" << s << "] >= " << 1 << endl;
 			}
 		}
 		return os;

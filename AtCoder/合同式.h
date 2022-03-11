@@ -4,7 +4,7 @@
 // ¡¡¡¡¡ ‡“¯® ¡¡¡¡¡
 
 
-//yˆÊ”zO(ãp)
+//yˆÊ”i–@‚ª‘f”jzO(ãp)
 /*
 * ‘f” p ‚ğ–@‚Æ‚µ‚Ä a^x = 1 ‚Æ‚È‚éÅ¬‚Ì©‘R” x ‚ğ•Ô‚·Di‚È‚¯‚ê‚Î -1j
 *
@@ -88,7 +88,7 @@ int find_primitive_root() {
 }
 
 
-//y—£U‘Î”–â‘è^baby-step giant-stepzO(ãp)
+//y—£U‘Î”–â‘èi–@‚ª‘f”j^baby-step giant-stepzO(ãp)
 /*
 * a^x = b mod p ‚ÌÅ¬‰ğ x >= 0 ‚ğ•Ô‚·Di‚È‚¯‚ê‚Î INFj
 *
@@ -147,6 +147,56 @@ int log(mint a, mint b) {
 	}
 
 	// Œ©‚Â‚©‚ç‚È‚©‚Á‚½‚ç INF ‚ğ•Ô‚·D
+	return INF;
+}
+
+
+//y—£U‘Î”–â‘è^baby-step giant-stepzO(ãm log m)
+/*
+* a x^d = b mod m ‚ÌÅ¬‰ğ d >= 0 ‚ğ•Ô‚·i‚È‚¯‚ê‚Î INFj
+* ‚±‚±‚Å m = mint::mod() ‚Å‚ ‚éD‚Ü‚½ 0^0 = 1 ‚Æ‚·‚éD
+*
+*i•½•û•ªŠ„j
+*/
+int log(mint a, mint x, mint b) {
+	// verify : https://judge.yosupo.jp/problem/discrete_logarithm_mod
+
+	if (x == 0) {
+		if (a == b) return 0;
+		if (b == 0) return 1;
+		return INF;
+	}
+
+	int sqrt_m = (int)(ceil(sqrt(mint::mod())) + EPS);
+
+	// logx[v] : v = a x^j ‚Æ‚È‚é ãm –¢–‚Ì j ‚Ì¸‡ƒŠƒXƒg
+	unordered_map<int, vi> logx;
+	mint x_pow = 1;
+	rep(j, sqrt_m) {
+		if (a * x_pow == b) return j;
+
+		logx[(b * x_pow).val()].push_back(j);
+
+		x_pow *= x;
+	}
+
+	// a ‚É x_pow = x^ãm ‚ğŠ|‚¯‚È‚ª‚ç‰ğ‚ÌŒó•â‚ğ’T‚µ‚Ä‚¢‚­D
+	mint ax = a;
+	repi(i, 1, sqrt_m) {
+		ax *= x_pow;
+		if (logx.count(ax.val())) {
+			repir(t, sz(logx[ax.val()]) - 1, 0) {
+				int j = logx[ax.val()][t];
+
+				// a x^(i hn) = b x^j ‚È‚é (i, j) ‚ªŒ©‚Â‚©‚Á‚½D
+				int d = i * sqrt_m - j;
+
+				// ÀÛ‚ÉŒvZ‚µ‚Ä‚İ‚Äˆê’v‚·‚é‚©‚ğŒ©‚éD
+				if (a * x.pow(d) == b) return d;
+			}
+		}
+	}
+
 	return INF;
 }
 

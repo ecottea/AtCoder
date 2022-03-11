@@ -6,17 +6,17 @@
 
 //【倍数変換】
 /*
-* Multiple_transform(n) : O(n log(log n))
+* Multiple_transform<T>(int n) : O(n log(log n))
 *   n までの素数を持って初期化する．
 *
-* convolution_gcd(a, b) : O(n log(log n))
+* vT convolution_gcd(vT a, vT b) : O(n log(log n))
 *   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
 *
-* multiple_zeta(a) : O(n log(log n))
+* multiple_zeta(vT& a) : O(n log(log n))
 *   A[j] = Σ_(j | i) a[i] なる A に上書きする．
 *  （倍数ゼータ変換，約数への累積和）
 *
-* multiple_mobius(A) : O(n log(log n))
+* multiple_mobius(vT& A) : O(n log(log n))
 *   A[j] = Σ_(j | i) a[i] なる a に上書きする．
 *  （倍数メビウス変換，倍数への差分）
 *
@@ -26,7 +26,7 @@
 */
 template <typename T> struct Multiple_transform {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
-	// verify : https://atcoder.jp/contests/abc206/tasks/abc206_e
+	// verify : https://judge.yosupo.jp/problem/gcd_convolution
 
 	vi ps; // 素数のリスト
 
@@ -65,18 +65,18 @@ template <typename T> struct Multiple_transform {
 
 //【約数変換】
 /*
-* Divisor_transform(n) : O(n log(log n))
+* Divisor_transform<T>(int n) : O(n log(log n))
 *   n までの素数を持って初期化する．
 *
-* convolution_lcm(a, b) : O(n log(log n))
+* vT convolution_lcm(vT a, vT b) : O(n log(log n))
 *   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
 *   ただし c[n] を含めそれ以降は切り捨てる．
 *
-* divisor_zeta(a) : O(n log(log n))
+* divisor_zeta(vT& a) : O(n log(log n))
 *   A[j] = Σ_(i | j) a[i] なる A に上書きする．
 *  （約数ゼータ変換，倍数への累積和）
 *
-* divisor_mobius(A) : O(n log(log n))
+* divisor_mobius(vT& A) : O(n log(log n))
 *   A[j] = Σ_(i | j) a[i] なる a に上書きする．
 *  （約数メビウス変換，約数への差分）
 *
@@ -86,6 +86,7 @@ template <typename T> struct Multiple_transform {
 */
 template <typename T> struct Divisor_transform {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
+	// verify : https://judge.yosupo.jp/problem/lcm_convolution
 
 	vi ps; // 素数のリスト
 
@@ -130,7 +131,7 @@ template <typename T> struct Divisor_transform {
 *
 * convolution_gcd(a, b) : O(σ(n) ω(n))
 *   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
-* （σ(n) : n の約数の個数，ω(n) : 素因数の種類数）
+* （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * multiple_zeta(a) : O(σ(n) ω(n))
 *   A[j] = Σ_(j | i) a[i] なる A に上書きする．
@@ -195,7 +196,7 @@ template <typename T> struct Limited_multiple_transform {
 *
 * convolution_lcm(a, b) : O(σ(n) ω(n))
 *   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
-* （σ(n) : n の約数の個数，ω(n) : 素因数の種類数）
+* （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * divisor_zeta(a) : O(σ(n) ω(n))
 *   A[j] = Σ_(i | j) a[i] なる A に上書きする．

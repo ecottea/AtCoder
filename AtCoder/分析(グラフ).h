@@ -7,12 +7,12 @@
 
 //【連結成分分解】O(|V| + |E|)
 /*
-* 無向グラフ g を連結成分分解し，結果を cc に格納する．
-* cc[i] は i 番目の連結成分の頂点からなるリストである．
+* 無向グラフ g を連結成分分解し，結果を ccs に格納する．
+* ccs[i] は i 番目の連結成分の頂点からなるリストである．
 */
-void connected_component(const Graph& g, vvi& cc) {
+void connected_component(const Graph& g, vvi& ccs) {
 	int n = sz(g);
-	cc.clear();
+	ccs.clear();
 
 	vb seen(n);
 
@@ -20,7 +20,7 @@ void connected_component(const Graph& g, vvi& cc) {
 		if (seen[s]) return;
 		seen[s] = true;
 
-		cc.rbegin()->push_back(s);
+		ccs.rbegin()->push_back(s);
 
 		repe(t, g[s]) {
 			if (t == p) continue;
@@ -33,7 +33,7 @@ void connected_component(const Graph& g, vvi& cc) {
 	rep(s, n) {
 		if (seen[s]) continue;
 
-		cc.push_back(vi());
+		ccs.push_back(vi());
 		dfs(s, -1);
 	}
 }
@@ -42,11 +42,11 @@ void connected_component(const Graph& g, vvi& cc) {
 //【トポロジカルソート】O(|V| + |E|)
 /*
 * DAG g をトポロジカルソートした結果を seq に返す．
-* g が DAG でない場合は失敗し，seq.size() < g.size() となる．
+* g が DAG でない場合は false を返す．
 *
 *（葉からの幅優先探索）
 */
-void topological_sort(const Graph& g, vi& seq) {
+bool topological_sort(const Graph& g, vi& seq) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_4_B
 
 	int n = sz(g);
@@ -84,15 +84,17 @@ void topological_sort(const Graph& g, vi& seq) {
 			}
 		}
 	}
+
+	return sz(seq) == n;
 }
 
 
 //【強連結成分分解】O(|V| + |E|)
 /*
-* 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を scc に返す．
-* scc[i] は i 番目の強連結成分の頂点からなるリストである．
+* 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を ccs に返す．
+* ccs[i] は i 番目の強連結成分の頂点からなるリストである．
 */
-void strongly_connected_component(const Graph& g, vvi& scc) {
+void strongly_connected_component(const Graph& g, vvi& ccs) {
 	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
 	// verify : https://judge.yosupo.jp/problem/scc
 
@@ -144,7 +146,7 @@ void strongly_connected_component(const Graph& g, vvi& scc) {
 		}
 
 		// 先の探索が済んだら自身を強連結成分の一員として記録する．
-		scc.rbegin()->push_back(s);
+		ccs.rbegin()->push_back(s);
 	};
 
 	while (!stk.empty()) {
@@ -153,7 +155,7 @@ void strongly_connected_component(const Graph& g, vvi& scc) {
 
 		// 新しい強連結成分を見つけたらそれをなぞりに行く．
 		if (status[v] == 1) {
-			scc.push_back(vi());
+			ccs.push_back(vi());
 			trace_rev(v);
 		}
 	}
@@ -164,6 +166,8 @@ void strongly_connected_component(const Graph& g, vvi& scc) {
 /*
 * グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として
 * 縮約したグラフを gc に格納する．
+* 
+* 特に強連結成分についての縮約を行えば DAG が得られる．
 */
 void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
 	int n = sz(g);
@@ -474,46 +478,46 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 * 無向グラフを連結成分分解した結果を連結成分の頂点リストとして cc[i] に格納し，
 * i 番目の連結成分 cc[i] が二部グラフかどうかを b[i] に格納する．
 * 二部グラフの部分についてはその彩色例を col に格納する（色は 0, 1 で表す）
-*
-* 利用：【連結成分分解】
 */
-void bipartite_graphQ(const Graph& g, vvi& cc, vb& b, vi& col) {
-	int n = sz(g);
+void bipartite_graphQ(const WGraph& g, vvi& cc, vb& b, vi& col) {
+	// veriy : https://codeforces.com/contest/1635/problem/E
 
-	// g を連結成分分解する．
-	connected_component(g, cc);
-	int m = sz(cc);
-	b.resize(m);
+	int n = sz(g);
+	cc.clear(); b.clear();
 
 	// 頂点の色（0,1 は色を，-1 は未探索を表す）
 	col = vi(n, -1);
 
 	// 再帰用の関数
 	function<bool(int)> dfs = [&](int s) {
+		cc.rbegin()->push_back(s);
+		bool is_bipartite = true;
+
 		repe(t, g[s]) {
 			// 未彩色の頂点の場合
 			if (col[t] == -1) {
 				// s と異なる色で t を彩色する．
 				col[t] = 1 - col[s];
 
-				// t から先を彩色しにいき，二部グラフでないならすぐに帰る．
-				if (!dfs(t)) return false;
+				is_bipartite &= dfs(t);
 			}
 			// 彩色済の頂点の場合
 			else {
-				// s と t が同色だったら二部グラフではないのですぐに帰る．
-				if (col[t] == col[s]) return false;
+				// s と t が同色だったら二部グラフではない．
+				if (col[t] == col[s]) is_bipartite = false;
 			}
 		}
 
-		// ここまで来たなら見た範囲は二部グラフである．
-		return true;
+		return is_bipartite;
 	};
 
-	// 各連結成分の代表を始点として再帰関数を呼び出す．
-	rep(i, m) {
-		col[cc[i][0]] = 0;
-		b[i] = dfs(cc[i][0]);
+	// 連結成分に分解しつつ二部グラフかどうか判定する．
+	rep(s, n) {
+		if (col[s] != -1) continue;
+
+		col[s] = 0;
+		cc.push_back(vi());
+		b.push_back(dfs(s));
 	}
 }
 

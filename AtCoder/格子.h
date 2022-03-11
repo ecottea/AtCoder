@@ -42,15 +42,16 @@ void largest_square(const vector<vector<T>>& a, vvi& len, T able = 1) {
 //【ヒストグラム内最大長方形】O(n)
 /*
 * ヒストグラム hist[0..n) に包まれる長方形の面積の最大値を返す．
+* また長方形が [l..r) * [0..h) であることを l, r, h に格納する．
 */
 template <class T>
-ll largest_rectangle_in_histogram(vector<T>& hist) {
+ll largest_rectangle_in_histogram(vector<T>& hist, int* l = nullptr, int* r = nullptr, ll* h = nullptr) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-132.html
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
 
 	int n = sz(hist);
 
-	ll res = 0;
+	ll res = 0; int res_l = -1, res_r = -1; ll res_h = -1;
 
 	// 面積未確定の長方形を記憶しておくためのスタック
 	// 要素 (l, h) は，左端位置が l，高さが h であることを表す．
@@ -64,15 +65,16 @@ ll largest_rectangle_in_histogram(vector<T>& hist) {
 
 		// スタックに記録されている長方形を順に見ていく．
 		while (!st.empty()) {
-			int l;
-			T h;
+			int l; T h;
 			tie(l, h) = st.top();
 
 			// 注目位置以下の高さをもつ長方形についてはまだ面積を増やせる．
 			if (h <= hist[i]) break;
 
 			// 注目位置より高い左端をもつ長方形はこれ以上伸ばせないので面積確定．
-			chmax(res, (ll)h * (i - l));
+			if (chmax(res, (ll)h * (i - l))) {
+				res_l = l; res_r = i; res_h = h;
+			}
 			left = l;
 			st.pop();
 		}
@@ -81,6 +83,10 @@ ll largest_rectangle_in_histogram(vector<T>& hist) {
 		st.push({ left, hist[i] });
 	}
 	hist.pop_back();
+
+	if (l != nullptr) *l = res_l;
+	if (r != nullptr) *r = res_r;
+	if (h != nullptr) *h = res_h;
 
 	return res;
 }
@@ -256,7 +262,7 @@ mint king_problem(vvb& hall) {
 * 二次元配列 c の欠損領域を周囲の値の平均で塗りつぶす．
 * 欠損値は defect で表されているとする．
 */
-template <class T> void defect_repair(vector<vector<T>>& c, T defect) {
+template <class T> void defect_repair(vector<vector<T>>& c, T defect = -1) {
 	int h = sz(c), w = sz(c[0]);
 
 	vvi seen(h, vi(w));
@@ -328,4 +334,12 @@ template <class T> void defect_repair(vector<vector<T>>& c, T defect) {
 	*/
 }
 
+
+//【長方形の扱い】
+/*
+* (x1, y1) を左上，(x2, y2) を右下にもつ長方形が存在する
+* ⇔ 第 x1 行と第 x2 行の両方に辺 (y1, y2) が存在する．
+* 
+* verify : https://atcoder.jp/contests/arc019/tasks/arc019_4
+*/
 

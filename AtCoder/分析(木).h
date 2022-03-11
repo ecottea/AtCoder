@@ -211,6 +211,78 @@ int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
 }
 
 
+//【コスト付き木上のシュタイナー木】O(n)
+/*
+* コスト付き無向木 g の頂点集合 v を含む最小の木を st に構築し，その合計コストを返す．
+* また st の頂点 i が g のどの頂点と対応するかを id[i] に格納する．
+*/
+ll steiner_tree(const WGraph& g, const vi& v, WGraph& st, vi& id) {
+	int n = sz(g);
+
+	vb sel(n); // v に属するか
+	repe(s, v) sel[s] = true;
+
+	vi deg(n); // 次数
+	queue<int> q_deg1; // 次数 1 の頂点を入れておくキュー
+
+	rep(s, n) {
+		deg[s] = sz(g[s]);
+		if (!sel[s] && deg[s] == 1) q_deg1.push(s);
+	}
+
+	// 次数 1 で v に属さない頂点を次々に除去していく．
+	int m = n;
+	while (!q_deg1.empty()) {
+		int s = q_deg1.front();
+		q_deg1.pop();
+
+		deg[s] = -1; // st から除外の意味とする
+		m--;
+
+		repe(t, g[s]) {
+			if (deg[t] > 0) deg[t]--;
+			if (!sel[t] && deg[t] == 1) q_deg1.push(t);
+		}
+	}
+
+	st.resize(m);
+	id.resize(m);
+	vi id_inv(n);
+	queue<int> q_st;
+
+	q_st.push(v[0]);
+	id[0] = v[0];
+	id_inv[v[0]] = 0;
+	int i = 1;
+
+	ll cost = 0;
+
+	// 幅優先探索で st の頂点をなぞりつつ新たな木を構築する．
+	while (!q_st.empty()) {
+		int s = q_st.front();
+		q_st.pop();
+
+		repe(t, g[s]) {
+			if (deg[t] >= 0) {
+				id[i] = t;
+				id_inv[t] = i;
+
+				st[id_inv[s]].push_back({ i, t.cost });
+				st[i].push_back({ id_inv[s], t.cost });
+				cost += t.cost;
+
+				q_st.push(t);
+				i++;
+			}
+		}
+
+		deg[s] = -2; // 探索終了の意味とする
+	}
+
+	return cost;
+}
+
+
 //【葉の削除回数】O(n)
 /*
 * 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納する．

@@ -32,8 +32,8 @@ S202 inv202(S202 a) { return a.inv(); }
 #define Mul_abel_group S202, op202, o202, inv202
 
 
-//yxor ƒA[ƒxƒ‹ŒQz
-using S203 = int;
+//yXOR ƒA[ƒxƒ‹ŒQz
+using S203 = ll;
 S203 op203(S203 a, S203 b) { return a ^ b; }
 S203 o203() { return 0; }
 S203 inv203(S203 a) { return a; }

@@ -90,7 +90,7 @@ void enumerate_partial_sum(const vi& a, bitset<A>& res) {
 
 	int n = sz(a);
 
-	// res_i[j] : i ”Ô–Ú‚Ü‚Å‚Ì”‚ÅC˜a‚ğ‚¿‚å‚¤‚Ç j ‚É‚Å‚«‚é‚©‚Ç‚¤‚©
+	// res_i[j] : i ”Ô–Ú‚Ü‚Å‚Ì”‚ÅC˜a‚ğ‚¿‚å‚¤‚Ç j ‚É‚Å‚«‚é‚©
 	res.reset();
 	res[0] = 1;
 

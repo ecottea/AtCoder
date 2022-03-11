@@ -3,6 +3,45 @@
 // ■■■■■ 桁 DP（上の桁から） ■■■■■
 
 
+//【上から桁 DP，未満フラグ，数え上げ】O(n b)
+/*
+* b 進数で n 桁の数 num 以下の非負の整数の個数を返す．
+*/
+mint count_digit_sum(const string& num, int b = 10) {
+	int n = sz(num);
+
+	// dp[i][f] : 以下の条件を満たす数の個数：
+	//	i : 上からの桁 d[0..i) まで決まっている．
+	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
+	vvm dp(n + 1, vm(1 << 1));
+	dp[0][0] = 1;
+
+	// 上の桁から順に配る DP
+	rep(i, n) {
+		// x : num の上から i 桁目の数
+		int x = num[i] - '0';
+
+		rep(f, 2) {
+			// d_max : d[i] のとれる値の最大値
+			int d_max = (f ? b - 1 : x);
+
+			// d : d[i]
+			repi(d, 0, d_max) {
+				int nf = (int)(f || (d < d_max));
+
+				dp[i + 1][nf] += dp[i][f];
+			}
+		}
+
+		//dump(i + 1);
+		//dump("!smaller"); dump(dp[i + 1][0]);
+		//dump("smaller"); dump(dp[i + 1][1]);
+	}
+
+	return dp[n][0] + dp[n][1];
+}
+
+
 //【上から桁 DP，未満フラグ，数え上げ】O(n b m)
 /*
 * b 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの個数を返す．
@@ -32,7 +71,7 @@ mint count_digit_sum(const string& num, int m, int b = 10) {
 			rep(j, m) {
 				// d : d[i]
 				repi(d, 0, d_max) {
-					int nf = f || (d < d_max);
+					int nf = (int)(f || (d < d_max));
 					int nj = (j + d) % m;
 
 					dp[i + 1][nf][nj] += dp[i][f][j];
@@ -77,7 +116,7 @@ mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 			rep(j, m) {
 				// d : d[i]
 				repi(d, d_min, b - 1) {
-					int nf = f || (d > d_min);
+					int nf = (int)(f || (d > d_min));
 					int nj = (j + d) % m;
 
 					dp[i + 1][nf][nj] += dp[i][f][j];
@@ -108,7 +147,7 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 	//      d[0..i) の全てが '0' なら 2，さもなくば 0（前 0 フラグ）
 	//      f はこれら 2 つのフラグの OR をとったもの
 	//	j : d[0..i) の数字和 (mod m)
-	vvvm dp(n + 1, vvm(4, vm(m)));
+	vvvm dp(n + 1, vvm(1 << 2, vm(m)));
 	dp[0][2 | 0][0] = 1;
 
 	// 上の桁から順に配る DP
@@ -116,7 +155,7 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 4) {
+		repb(f, 2) {
 			int smaller = (f >> 0) & 1;
 			int leading0 = (f >> 1) & 1;
 
@@ -126,8 +165,8 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 			rep(j, m) {
 				// d : d[i]
 				repi(d, 0, d_max) {
-					int n_smaller = smaller || (d < d_max);
-					int n_leading0 = leading0 && (d == 0);
+					int n_smaller = (int)(smaller || (d < d_max));
+					int n_leading0 = (int)(leading0 && (d == 0));
 					int nf = (n_smaller << 0) | (n_leading0 << 1);
 
 					int nj = (j + d) % m;
@@ -141,7 +180,7 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 		}
 
 		//dump(i + 1);
-		//rep(f, 4) {
+		//repb(f, 2) {
 		//	dumps("(lz, smaller) =");
 		//	dump(bitset<2>(f));
 		//	dump(dp[i + 1][f]);
@@ -179,7 +218,7 @@ mint sum_digit_sum(const string& num, int m, int b = 10) {
 			rep(j, m) {
 				// d : d[i]
 				repi(d, 0, d_max) {
-					int nf = f || (d < d_max);
+					int nf = (int)(f || (d < d_max));
 					int nj = (j + d) % m;
 
 					cnt[i + 1][nf][nj] += cnt[i][f][j];
@@ -287,7 +326,7 @@ mint maximize_pair_digit_sum(const string& num, int b = 10) {
 
 			// d : d[i]
 			repi(d, 0, d_max) {
-				int n_smaller = smaller || (d < d_max);
+				int n_smaller = (int)(smaller || (d < d_max));
 
 				rep(n_carry, 2) {
 					int nf = (n_smaller << 0) | (n_carry << 1);
@@ -345,7 +384,7 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 
 			// d : d[i]
 			repi(d, 0, d_max) {
-				int n_smaller = smaller || (d < d_max);
+				int n_smaller = (int)(smaller || (d < d_max));
 
 				rep(n_carry, 2) {
 					int nf = (n_smaller << 0) | (n_carry << 1);

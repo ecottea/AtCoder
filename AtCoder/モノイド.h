@@ -172,6 +172,7 @@ S14 e14() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
 
 
 //【gcd モノイド】
+// verify : https://atcoder.jp/contests/arc017/tasks/arc017_4
 using S15 = ll;
 S15 op15(S15 a, S15 b) { return gcd(a, b); }
 S15 e15() { return 0; }
@@ -206,5 +207,47 @@ S17 op17(S17 x, S17 y) {
 }
 S17 e17() { return { 0LL, 0, 0 }; }
 #define Inversion_monoid S17, op17, e17
+
+
+//【置換の合成 モノイド】（参照渡ししていないので遅い）
+/*
+* S ∋ f[0..n) : 置換 i → f[i] を表す．
+* f op g : 合成置換 f o g を返す．
+*/
+// verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
+using S18 = vi;
+S18 op18(S18 a, S18 b) {
+	if (sz(a) == 0) return b;
+	if (sz(b) == 0) return a;
+
+	int n = sz(a);
+	S18 res(n);
+	rep(i, n) res[i] = a[b[i]];
+
+	return res;
+}
+S18 e18() { return S18(); }
+#define Permutation_composite_monoid S18, op18, e18
+
+
+//【置換の逆合成 モノイド】（参照渡ししていないので遅い）
+/*
+* S ∋ f[0..n) : 置換 i → f[i] を表す．
+* f op g : 合成置換 g o f を返す．
+*/
+// verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
+using S19 = vi;
+S19 op19(S19 a, S19 b) {
+	if (sz(a) == 0) return b;
+	if (sz(b) == 0) return a;
+
+	int n = sz(a);
+	S19 res(n);
+	rep(i, n) res[i] = b[a[i]];
+
+	return res;
+}
+S19 e19() { return S19(); }
+#define Permutation_invcomposite_monoid S19, op19, e19
 
 

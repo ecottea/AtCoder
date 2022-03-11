@@ -164,7 +164,7 @@
     <ClInclude Include="列.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
-    <ClInclude Include="グラフ最適化.h">
+    <ClInclude Include="最適化%28グラフ%29.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
     <ClInclude Include="合同式.h">
@@ -229,9 +229,6 @@
     </ClInclude>
     <ClInclude Include="数論%28高速%29.h">
       <Filter>ヘッダー ファイル\数論</Filter>
-    </ClInclude>
-    <ClInclude Include="文字列.h">
-      <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
     <ClInclude Include="分析(文字列).h">
       <Filter>ヘッダー ファイル\文字列</Filter>
@@ -447,6 +444,30 @@
       <Filter>ヘッダー ファイル\FPS</Filter>
     </ClInclude>
     <ClInclude Include="FPS(bit).h">
+      <Filter>ヘッダー ファイル\FPS</Filter>
+    </ClInclude>
+    <ClInclude Include="ハッシュ.h">
+      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
+    </ClInclude>
+    <ClInclude Include="作図(基本).h">
+      <Filter>ヘッダー ファイル\幾何</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(文字列).h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="ダブリング.h">
+      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
+    </ClInclude>
+    <ClInclude Include="不等式.h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
+    </ClInclude>
+    <ClInclude Include="多倍長整数.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(グラフ).h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="多項式.h">
       <Filter>ヘッダー ファイル\FPS</Filter>
     </ClInclude>
   </ItemGroup>

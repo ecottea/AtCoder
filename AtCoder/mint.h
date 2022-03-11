@@ -4,93 +4,87 @@
 
 
 //【有限体 F_p 上の計算（32 bit）】
-struct mint {
-	// verify : https://codeforces.com/contest/1279/problem/D
-
+template <ll MOD> struct static_modint {
 	ll v;
 
-	// 適切な法（素数）に書き換えてから用いる．
-//	static const ll MOD = (ll)1e9 + 7;
-	static const ll MOD = 998244353;
-
 	// コンストラクタ
-	mint() : v(0) {};
-	mint(const mint& a) = default;
-	mint(int a) : v(safe_mod(a)) {};
-	mint(ll a) : v(safe_mod(a)) {};
+	static_modint() : v(0) {};
+	static_modint(const static_modint& a) = default;
+	static_modint(int a) : v(safe_mod(a)) {};
+	static_modint(ll a) : v(safe_mod(a)) {};
 
 	// 代入
-	mint& operator=(const mint& a) { v = a.v; return *this; }
-	mint& operator=(int a) { v = safe_mod(a); return *this; }
-	mint& operator=(ll a) { v = safe_mod(a); return *this; }
+	static_modint& operator=(const static_modint& a) { v = a.v; return *this; }
+	static_modint& operator=(int a) { v = safe_mod(a); return *this; }
+	static_modint& operator=(ll a) { v = safe_mod(a); return *this; }
 
 	// 入出力
-	friend istream& operator>> (istream& is, mint& x) { is >> x.v; x.v = safe_mod(x.v); return is; }
-	friend ostream& operator<< (ostream& os, const mint& x) { os << x.v; return os; }
+	friend istream& operator>> (istream& is, static_modint& x) { is >> x.v; x.v = safe_mod(x.v); return is; }
+	friend ostream& operator<< (ostream& os, const static_modint& x) { os << x.v; return os; }
 
 	// 非負 mod
 	template <class T> static ll safe_mod(T a) { return (((ll)a % MOD) + MOD) % MOD; }
 
 	// 比較
-	bool operator==(const mint& b) const { return v == b.v; }
+	bool operator==(const static_modint& b) const { return v == b.v; }
 	bool operator==(int b) const { return v == safe_mod(b); }
 	bool operator==(ll b) const { return v == safe_mod(b); }
-	friend bool operator==(int a, const mint& b) { return b == a; }
-	friend bool operator==(ll a, const mint& b) { return b == a; }
-	bool operator!=(const mint& b) const { return v != b.v; }
+	friend bool operator==(int a, const static_modint& b) { return b == a; }
+	friend bool operator==(ll a, const static_modint& b) { return b == a; }
+	bool operator!=(const static_modint& b) const { return v != b.v; }
 	bool operator!=(int b) const { return v != safe_mod(b); }
 	bool operator!=(ll b) const { return v != safe_mod(b); }
-	friend bool operator!=(int a, const mint& b) { return b != a; }
-	friend bool operator!=(ll a, const mint& b) { return b != a; }
+	friend bool operator!=(int a, const static_modint& b) { return b != a; }
+	friend bool operator!=(ll a, const static_modint& b) { return b != a; }
 
 	// 単項演算
-	mint operator-() const { mint a = *this; return a *= -1; }
-	mint& operator++() { v = safe_mod(v + 1); return *this; }
-	mint operator++(int) { mint tmp = *this; ++(*this); return tmp; }
-	mint& operator--() { v = safe_mod(v - 1); return *this; }
-	mint operator--(int) { mint tmp = *this; --(*this); return tmp; }
+	static_modint operator-() const { static_modint a = *this; return a *= -1; }
+	static_modint& operator++() { v = safe_mod(v + 1); return *this; }
+	static_modint operator++(int) { static_modint tmp = *this; ++(*this); return tmp; }
+	static_modint& operator--() { v = safe_mod(v - 1); return *this; }
+	static_modint operator--(int) { static_modint tmp = *this; --(*this); return tmp; }
 
 	// 二項演算
-	mint& operator+=(const mint& b) { v = safe_mod(v + b.v); return *this; }
-	mint& operator-=(const mint& b) { v = safe_mod(v - b.v); return *this; }
-	mint& operator*=(const mint& b) { v = safe_mod(v * b.v); return *this; }
-	mint& operator/=(const mint& b) { *this *= b.inv(); return *this; }
-	mint operator+(const mint& b) const { mint a = *this; return a += b; }
-	mint operator-(const mint& b) const { mint a = *this; return a -= b; }
-	mint operator*(const mint& b) const { mint a = *this; return a *= b; }
-	mint operator/(const mint& b) const { mint a = *this; return a /= b; }
+	static_modint& operator+=(const static_modint& b) { v = safe_mod(v + b.v); return *this; }
+	static_modint& operator-=(const static_modint& b) { v = safe_mod(v - b.v); return *this; }
+	static_modint& operator*=(const static_modint& b) { v = safe_mod(v * b.v); return *this; }
+	static_modint& operator/=(const static_modint& b) { *this *= b.inv(); return *this; }
+	static_modint operator+(const static_modint& b) const { static_modint a = *this; return a += b; }
+	static_modint operator-(const static_modint& b) const { static_modint a = *this; return a -= b; }
+	static_modint operator*(const static_modint& b) const { static_modint a = *this; return a *= b; }
+	static_modint operator/(const static_modint& b) const { static_modint a = *this; return a /= b; }
 
 	// int との演算
-	mint& operator+=(int b) { v = safe_mod(v + b); return *this; }
-	mint& operator-=(int b) { v = safe_mod(v - b); return *this; }
-	mint& operator*=(int b) { v = safe_mod(v * b); return *this; }
-	mint& operator/=(int b) { *this *= mint(b).inv(); return *this; }
-	mint operator+(int b) const { mint a = *this; return a += b; }
-	mint operator-(int b) const { mint a = *this; return a -= b; }
-	mint operator*(int b) const { mint a = *this; return a *= b; }
-	mint operator/(int b) const { mint a = *this; return a /= b; }
-	friend mint operator+(int a, const mint& b) { return b + a; }
-	friend mint operator-(int a, const mint& b) { return -(b - a); }
-	friend mint operator*(int a, const mint& b) { return b * a; }
-	friend mint operator/(int a, const mint& b) { return b.inv() * a; }
+	static_modint& operator+=(int b) { v = safe_mod(v + b); return *this; }
+	static_modint& operator-=(int b) { v = safe_mod(v - b); return *this; }
+	static_modint& operator*=(int b) { v = safe_mod(v * b); return *this; }
+	static_modint& operator/=(int b) { *this *= static_modint(b).inv(); return *this; }
+	static_modint operator+(int b) const { static_modint a = *this; return a += b; }
+	static_modint operator-(int b) const { static_modint a = *this; return a -= b; }
+	static_modint operator*(int b) const { static_modint a = *this; return a *= b; }
+	static_modint operator/(int b) const { static_modint a = *this; return a /= b; }
+	friend static_modint operator+(int a, const static_modint& b) { return b + a; }
+	friend static_modint operator-(int a, const static_modint& b) { return -(b - a); }
+	friend static_modint operator*(int a, const static_modint& b) { return b * a; }
+	friend static_modint operator/(int a, const static_modint& b) { return b.inv() * a; }
 
 	// ll との演算
-	mint& operator+=(ll b) { v = safe_mod(v + (b % MOD)); return *this; }
-	mint& operator-=(ll b) { v = safe_mod(v - (b % MOD)); return *this; }
-	mint& operator*=(ll b) { v = safe_mod(v * (b % MOD)); return *this; }
-	mint& operator/=(ll b) { *this *= mint(b).inv(); return *this; }
-	mint operator+(ll b) const { mint a = *this; return a += b; }
-	mint operator-(ll b) const { mint a = *this; return a -= b; }
-	mint operator*(ll b) const { mint a = *this; return a *= b; }
-	mint operator/(ll b) const { mint a = *this; return a /= b; }
-	friend mint operator+(ll a, const mint& b) { return b + a; }
-	friend mint operator-(ll a, const mint& b) { return -(b - a); }
-	friend mint operator*(ll a, const mint& b) { return b * a; }
-	friend mint operator/(ll a, const mint& b) { return b.inv() * a; }
+	static_modint& operator+=(ll b) { v = safe_mod(v + (b % MOD)); return *this; }
+	static_modint& operator-=(ll b) { v = safe_mod(v - (b % MOD)); return *this; }
+	static_modint& operator*=(ll b) { v = safe_mod(v * (b % MOD)); return *this; }
+	static_modint& operator/=(ll b) { *this *= static_modint(b).inv(); return *this; }
+	static_modint operator+(ll b) const { static_modint a = *this; return a += b; }
+	static_modint operator-(ll b) const { static_modint a = *this; return a -= b; }
+	static_modint operator*(ll b) const { static_modint a = *this; return a *= b; }
+	static_modint operator/(ll b) const { static_modint a = *this; return a /= b; }
+	friend static_modint operator+(ll a, const static_modint& b) { return b + a; }
+	friend static_modint operator-(ll a, const static_modint& b) { return -(b - a); }
+	friend static_modint operator*(ll a, const static_modint& b) { return b * a; }
+	friend static_modint operator/(ll a, const static_modint& b) { return b.inv() * a; }
 
 	// 累乗（0^0 := 1）
-	mint pow(ll d) const {
-		mint res(1), pow2 = *this;
+	static_modint pow(ll d) const {
+		static_modint res(1), pow2 = *this;
 		while (d > 0) {
 			if (d & 1LL) res *= pow2;
 			pow2 *= pow2;
@@ -100,7 +94,7 @@ struct mint {
 	}
 
 	// 逆元（0^(-1) は未定義）
-	mint inv() const {
+	static_modint inv() const {
 		assert(v != 0);
 		return pow(MOD - 2);
 	}
@@ -111,6 +105,8 @@ struct mint {
 	// 値の確認
 	int val() const { return int(v); }
 };
+//using mint = static_modint<1000000007>;
+using mint = static_modint<998244353>;
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 
 
@@ -206,7 +202,7 @@ struct mll {
 	mll inv() const { return pow(MOD - 2); }
 
 	// 法の設定，確認
-	static void set_mod(ll MOD_) { MOD = MOD_; }
+	static void set_mod(ll MOD_) { assert(MOD_ > 0); MOD = MOD_; }
 	static ll mod() { return (ll)MOD; }
 
 	// 値の確認

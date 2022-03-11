@@ -125,7 +125,7 @@ template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
 	STR s_riffled;
 	s_riffled.resize(2 * n + 1);
 	rep(i, n) s_riffled[2 * i + 1] = s[i];
-	rep(i, n + 1) s_riffled[2 * i] = '0'; // '0' は s に含まれない文字
+	rep(i, n + 1) s_riffled[2 * i] = '_'; // '_' は s に含まれない文字
 
 	vi r;
 	manacher(s_riffled, r);
@@ -183,6 +183,87 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 		}
 		i += k;
 		j -= k;
+	}
+}
+
+
+//【部分文字列判定】O(n + m)
+/*
+* s[0..n) の部分文字列として w[0..m) が含まれているかどうか調べ，
+* 見つかった場所の先頭位置を昇順に pos に格納する．
+*
+*（クヌース・モリス・プラット法）
+*/
+template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos) {
+	//  参考 : https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%8C%E3%83%BC%E3%82%B9%E2%80%93%E3%83%A2%E3%83%AA%E3%82%B9%E2%80%93%E3%83%97%E3%83%A9%E3%83%83%E3%83%88%E6%B3%95
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_B
+
+	int n = sz(s);
+	int m = sz(w);
+	pos.clear();
+
+	// 部分マッチテーブル tbl の作成
+	// s[i] から照合を開始して s[i + j] != w[j] となった場合，
+	// 次に照合を開始すべき位置が s[i + j - tbl[j]] であるように構築する．
+	vi tbl(m + 1);
+	tbl[0] = -1; tbl[1] = 0;
+	int i = 2; // いま tbl[i] を計算中であることを表す．
+	int j = 0; // いま w[j] まで見ていることを表す．
+	while (i <= m) {
+		// サブ文字列が w の先頭と一致し続けている場合
+		if (w[i - 1] == w[j]) {
+			// 一致した長さの分だけバックトラッキングしなければならない．
+			tbl[i] = j + 1;
+
+			// それぞれ 1 文字先を見に行く．
+			i++; j++;
+		}
+		// サブ文字列と w の先頭との一致が終わった場合？
+		else if (j > 0) {
+			// 次のサブ文字列を走査するため j を戻す．？
+			j = tbl[j];
+		}
+		// ？
+		else {
+			tbl[i] = 0;
+			i++;
+		}
+	}
+
+	// 連続部分列を探す．
+	i = 0; // いま s[i] から始まる連続部分列を見ていることを表す．
+	j = 0; // いま w[j] まで見ていることを表す．
+	while (i + j < n) {
+		// s で見ている文字 s[i + j] が w で見ている文字 w[j] に一致した場合
+		if (w[j] == s[i + j]) {
+			// さらに 1 文字先を見に行く．
+			j++;
+
+			// もし w を走査し終えたなら連続部分列として w を発見．
+			if (j == m) {
+				pos.push_back(i);
+
+				// 部分マッチテーブルに従い i, j を再設定する．
+				// i = i + j としたいが tbl[j] だけのバックトラッキングが入る．
+				i = i + j - tbl[j];
+
+				// その代わり w との照合を tbl[j] だけ進んだところから始められる．
+				if (j > 0) {
+					j = tbl[j];
+				}
+			}
+		}
+		// s で見ている文字 s[i + j] が w で見ている文字 w[j] に一致しなかった場合
+		else {
+			// 部分マッチテーブルに従い i, j を再設定する．
+			// i = i + j としたいが tbl[j] だけのバックトラッキングが入る．
+			i = i + j - tbl[j];
+
+			// その代わり w との照合を tbl[j] だけ進んだところから始められる．
+			if (j > 0) {
+				j = tbl[j];
+			}
+		}
 	}
 }
 

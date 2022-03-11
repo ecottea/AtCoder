@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
+#include "座標圧縮.h"
 // ■■■■■ 格子路の問題 ■■■■■
 
 
@@ -148,9 +149,48 @@ mint count_lattice_path_no_continuous_turns(int h, int w) {
 }
 
 
-//【最短経路数（禁止点指定）】O(n^2)
+//【コスト最大経路（スパースコスト指定）】O(n log n)
 /*
-* h × w の格子路の (0, 0) から (h-1, w-1) までの最短路のうち，
+* n 個の点 (x[i], y[i]) に非負コスト c[i] が与えられており，その他の点のコストは 0 である．
+* (-inf, -inf) から (inf, inf) までの最短路のうち，コストの和が最大のもののコストを返す．
+*
+*（平面走査 DP）
+*/
+ll op_mcp(ll a, ll b) { return max(a, b); }
+ll e_mcp() { return 0; }
+ll maximize_cost_path(const vl& x_, const vl& y_, const vl& c) {
+	// verify : https://yukicoder.me/problems/no/1826
+
+	int n = sz(x_);
+
+	// 座標圧縮を行う．
+	vi x, y;
+	int h = coordinate_compression(x_, x);
+	int w = coordinate_compression(y_, y);
+
+	// x 座標降順，次いで y 座標降順にソートする．
+	vector<tuple<int, int, ll>> xyc(n);
+	rep(i, n) xyc[i] = { x[i], y[i], c[i] };
+	sort(all(xyc), greater< tuple<int, int, ll> >());
+
+	// dp_i[j] : 点 i までで，y 座標が j である点からの最大コスト 
+	segtree<ll, op_mcp, e_mcp> dp(w);
+
+	rep(i, n) {
+		int x, y; ll c;
+		tie(x, y, c) = xyc[i];
+
+		ll c2 = dp.prod(y, w);
+		dp.set(y, c + c2);
+	}
+
+	return dp.all_prod();
+}
+
+
+//【最短経路数（スパース禁止点指定）】O(n^2)
+/*
+* h * w の格子の (0, 0) から (h-1, w-1) までの最短路のうち，
 * n 個の禁止点 fb[i] = {r[i], c[i]} を 1 つも通らないものの個数を返す．
 *
 * 利用：【階乗と二項係数（mint利用）】
@@ -190,6 +230,59 @@ mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
 
 	// DPL 行列の行列式，すなわち (0,0) 成分が答え．
 	return dpl[0][0];
+}
+
+
+//【自由経路数】O(1)（前計算 O(n)）
+/*
+* 原点から (x, y) まで n 回の移動で到達する経路の数を返す．
+*
+* 制約：fm は n! まで計算可能
+*
+* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
+*/
+mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
+	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
+
+	//【方法】
+	// x, y >= 0 とする．ローラン多項式の言葉に直すと，求める場合の数は
+	//		[s^x t^y] (s + 1/s + t + 1/t)^n
+	// である．以下明らかに 0 と分かる場合は無視する．
+	//
+	// 指数の底は因数分解できるので，これは
+	//		[s^x t^y] ( (s + t)^n (1 + 1/st)^n )
+	// と書き直せる．
+	// 
+	// 第一因子からは s, t の次数の和が n の項しか作れないので，
+	// 第二因子から作るべき項の次数の和は x + y - n である．
+	// それが第 k 項だとすると，次数についての方程式
+	//		0 * (n - k) + (-2) * k = x + y - n
+	// を解いて
+	//		k = (n - x - y) / 2
+	// と分かり，その係数は二項定理より binomial(n, (n-x-y)/2) である．
+	//
+	// 第二因子からは s, t の次数の差が 0 の項しか作れないので，
+	// 第一因子から作るべき項の次数の差は x - y である．
+	// それが第 k 項だとすると，次数についての方程式
+	//		(n - k) - k = x - y
+	// を解いて
+	//		k = (n - x + y) / 2
+	// と分かり，その係数は二項定理より binomial(n, (n-x+y)/2) である．
+	//
+	// 以上より，求める場合の数は
+	//		binomial(n, (n-x-y)/2) binomial(n, (n-x+y)/2)
+	// である．
+
+	//【別の方法】
+	// 45°回転すれば，移動可能な箇所が x, y について独立（長方形状）になり，
+	// 座標ごとに独立に問題をといて積をとるだけでよくなる．
+
+	x = abs(x); y = abs(y);
+
+	// 明らかに 0 通りの場合．
+	if (x + y > n || (n - x - y) % 2 == 1) return 0;
+
+	return fm.binomial(n, (n - x - y) / 2) * fm.binomial(n, (n - x + y) / 2);
 }
 
 

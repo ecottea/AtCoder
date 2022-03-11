@@ -397,22 +397,24 @@ ll maximize_digit_triple(string num, int b = 10) {
 * b 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_pair(const string& num, int b = 10) {
+	// verify : https://atcoder.jp/contests/abc050/tasks/arc066_b
+
 	int n = sz(num);
 
-	// dp[i][f][j] : 以下の条件を満たす数の個数：
+	// dp[i][f] : 以下の条件を満たす数の個数：
 	//	i : 下からの桁 d[i..n) まで決まっている．
 	//      ここで d = d1 + d2 である．
 	//	f : d[i..n) <= num[i..n) なら 1，さもなくば 0（以下フラグ）
 	//      d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
 	//      f はこれら 2 つのフラグの OR をとったもの
-	vvm dp(n + 1, vm(4, 0));
-	dp[n][1] = 1;
+	vvm dp(n + 1, vm(1 << 2, 0));
+	dp[n][1 | 0] = 1;
 
 	// 下の桁から順に配る DP
 	repir(i, n - 1, 0) {
 		int x = num[i] - '0';
 
-		rep(f, 4) {
+		repb(f, 2) {
 			int leq = f & 1;
 			int carry = (f >> 1) & 1;
 
@@ -437,7 +439,7 @@ mint count_pair(const string& num, int b = 10) {
 		//dump("leq && carry"); dump(dp[i][3]);
 	}
 
-	return dp[0][1];
+	return dp[0][1 | 0];
 }
 
 
@@ -449,7 +451,7 @@ mint count_pair(const string& num, int b = 10) {
 mint count_unordered_pair(const string& num, int b = 10) {
 	int n = sz(num);
 
-	// dp[i][f][j] : 以下の条件を満たす数の個数：
+	// dp[i][f] : 以下の条件を満たす数の個数：
 	//	i : 下からの桁 d[i..n) まで決まっている．
 	//      ここで d = d1 + d2 である．
 	//	f : d[i..n) <= num[i..n) なら 1，さもなくば 0（以下フラグ）
@@ -506,7 +508,7 @@ mint count_unordered_pair(const string& num, int b = 10) {
 mint carry_sum_unordered_pair(const string& num, int b = 10) {
 	int n = sz(num);
 
-	// dp[i][f][j] : 以下の条件を満たす数の繰り上がり回数：
+	// dp[i][f] : 以下の条件を満たす数の繰り上がり回数：
 	//	i : 下からの桁 d[i..n) まで決まっている．
 	//      ここで d = d1 + d2 である．
 	//	f : d[i..n) <= num[i..n) なら 1，さもなくば 0（以下フラグ）

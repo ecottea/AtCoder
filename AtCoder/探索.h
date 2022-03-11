@@ -19,6 +19,12 @@ template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 		else ng = mid;
 	}
 	return ok;
+
+	/* okQ の定義の雛形
+	function<bool(ll)> okQ = [&](ll x) {
+		return true;
+	};
+	*/
 }
 
 
@@ -26,14 +32,17 @@ template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 /*
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 */
-double binary_search(double ok, double ng, function<bool(double)>& okQ) {
+template <typename T> T binary_search(T ok, T ng, function<bool(T)>& okQ) {
+	// verify : https://atcoder.jp/contests/abc189/tasks/abc189_f
+
 	// 誤差 EPS で境界が決定するまで
 	while (true) {
 		// 区間の中間
-		double mid = (ok + ng) / 2;
+		T mid = (ok + ng) / 2;
+		//double mid = sqrt(ok * ng); // 相対誤差を小さくする場合
 
 		// 絶対誤差か相対誤差が EPS 以下なら終了する．
-		double err = abs(ok - ng);
+		T err = abs(ok - ng);
 		if (err <= EPS || err <= abs(mid) * EPS) {
 			break;
 		}
@@ -43,6 +52,12 @@ double binary_search(double ok, double ng, function<bool(double)>& okQ) {
 		else ng = mid;
 	}
 	return (ok + ng) / 2;
+
+	/* okQ の定義の雛形
+	function<bool(double)> okQ = [&](double x) {
+		return true;
+	};
+	*/
 }
 
 

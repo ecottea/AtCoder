@@ -72,6 +72,8 @@ template <class T> void rotate90(const vector<vector<T>>& a, vector<vector<T>>& 
 * a[0..h)[0..w) ‚ğ”½Œv‰ñ‚è‚É 270‹‰ñ“]‚µ‚½‚à‚Ì‚ğ b ‚ÉŠi”[‚·‚éD
 */
 template <class T> void rotate270(const vector<vector<T>>& a, vector<vector<T>>& b) {
+	// verify : https://atcoder.jp/contests/abc036/tasks/abc036_b
+	
 	int h = sz(a), w = sz(a[0]);
 
 	b = vector<vector<T>>(w, vector<T>(h));

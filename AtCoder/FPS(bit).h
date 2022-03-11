@@ -319,7 +319,7 @@ bool polynomial_inverse(const BFPS<N>& a, const BFPS<N>& b, BFPS<N>& u) {
 }
 
 
-//y‘½€®‚Ì—£U‘Î”–â‘è^baby-step giant-stepzO(2^(deg(g)/2) deg(g))
+//y‘½€®‚Ì—£U‘Î”–â‘è^baby-step giant-stepzO(2^(deg(g)/2) deg(g)^2)
 /*
 * a(x) f(x)^d = b(x) mod g(x) ‚ÌÅ¬‰ğ d >= 0 ‚ğ•Ô‚·Di‚È‚¯‚ê‚Î INFLj
 *
@@ -355,7 +355,7 @@ ll log(const BFPS<N>& f, const BFPS<N>& a, const BFPS<N>& b, const BFPS<N>& g) {
 			if (sz((a * power_mod(f, d, g) + b).reminder(g).resize()) == 0) {
 				return d;
 			}
-			return INFL;
+			return INFL; // ‚±‚±‚Å‘Å‚¿Ø‚Á‚Ä‚¢‚¢‚Æ‚ÍŒÀ‚ç‚È‚¢‚Ì‚Å‚ÍHH
 		}
 	}
 

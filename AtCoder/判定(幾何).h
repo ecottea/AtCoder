@@ -2,16 +2,20 @@
 #include "header.h"
 #include "構造(幾何).h"
 #include "計量.h"
-#include "文字列.h"
+#include "分析(文字列).h"
 // ■■■■■ 判定 ■■■■■
 
 
-//【合同判定】O(|s| log|s|)　利用：【偏角ソート】，【クヌース・モリス・プラット法】
+//【合同判定】O(|s| log|s|)　
 /*
-* 点の集合 s, t が合同かどうかを返す．
+* 点の集合 s, t が同じ向きで合同かどうかを返す．
+* 
+* 利用：【偏角ソート】，【クヌース・モリス・プラット法】
 */
 template <typename T>
 bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
+	// verify : https://atcoder.jp/contests/abc207/tasks/abc207_d
+
 	int n = sz(s);
 
 	// 点の数が違うならもちろん合同ではない．
@@ -95,6 +99,105 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 }
 
 
+//【相似判定】O(|s| log|s|)
+/*
+* 点の集合 s, t が同じ向きで相似であれば，s から t への倍率を返す（相似でなければ -1 を返す）
+*
+* 利用：【偏角ソート】，【クヌース・モリス・プラット法】
+*/
+template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t) {
+	int n = sz(s);
+
+	// 点の数が違うならもちろん相似ではない．
+	if (sz(t) != n) {
+		return false;
+	}
+
+	// 原点中心に n 倍拡大した上で重心を求める．
+	Point<T> gs, gt;
+	rep(i, n) {
+		gs += s[i];
+		s[i] *= n;
+
+		gt += t[i];
+		t[i] *= n;
+	}
+
+	// 重心が原点にくるよう平行移動を行う．
+	rep(i, n) {
+		s[i] -= gs;
+		t[i] -= gt;
+	}
+
+	// 原点の周りで偏角ソートを行う．
+	Point<T> o;
+	argument_sort(s, o);
+	argument_sort(t, o);
+
+	// 原点に点が存在した場合の例外処理
+	// o は便宜上偏角最大としていたので，存在するなら配列の末尾にある．
+	if (*s.rbegin() == o) {
+		if (*t.rbegin() == o) {
+			// 両者が原点を含んでいたなら，それらを取り除く．
+			s.pop_back();
+			t.pop_back();
+			n--;
+		}
+		else {
+			// s のみが原点を含んでいたなら相似ではない．
+			return -1;
+		}
+	}
+	else {
+		if (*t.rbegin() == o) {
+			// t のみが原点を含んでいたなら相似ではない．
+			return -1;
+		}
+	}
+
+	// 1 点のみだった場合の例外処理（もちろん相似）
+	if (s.empty()) {
+		return 1;
+	}
+
+	// 原点回りの夾角の大きさの情報を格納したリスト
+	// 実際には夾角の大きさの代わりに余弦と正弦，さらにその代わりに内積と外積の比を用いる．
+	vl tri_s, tri_t;
+	s.push_back(s[0]);
+	t.push_back(t[0]);
+	rep(i, n) {
+		ll in_s = s[i].dot(s[i + 1]);
+		ll out_s = s[i].cross(s[i + 1]);
+		ll g_s = gcd(in_s, out_s);
+		tri_s.push_back(in_s / g_s);
+		tri_s.push_back(out_s / g_s);
+
+		ll in_t = t[i].dot(t[i + 1]);
+		ll out_t = t[i].cross(t[i + 1]);
+		ll g_t = gcd(in_t, out_t);
+		tri_t.push_back(in_t / g_t);
+		tri_t.push_back(out_t / g_t);
+	}
+
+	// tri_t をコピーし 2 倍に延長することで周期境界を扱いやすくする．
+	rep(i, 2 * n) {
+		tri_t.push_back(tri_t[i]);
+	}
+
+	// 2 * tri_t が tri_s を連続部分列として含んでいるかをチェックする．
+	vi pos;
+	knuth_morris_pratt(tri_t, tri_s, pos);
+
+	double res = -1;
+	if (sz(pos) != 0) {
+		int i = pos[0] / 2;
+		res = t[i].norm() / s[0].norm();
+	}
+
+	return res;
+}
+
+
 //【凸性判定】O(n)
 /*
 * n 角形 poly が凸多角形なら true，さもなくば false を返す．
@@ -130,11 +233,9 @@ bool convexQ(const Polygon<T>& poly) {
 }
 
 
-//【多角形の頂点順】O(n)
+//【多角形の頂点順】O(n)（TODO : 定数倍で無駄なことしまくっているので作り直す）
 /*
 * 単純 n 角形 poly の頂点が反時計回りに並んでいたら true，さもなくば false を返す．
-* 
-* （定数倍で無駄なことしまくっているので注意．）
 */
 template <typename T>
 bool ccwQ(const Polygon<T>& poly) {

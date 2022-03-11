@@ -11,24 +11,26 @@
 * Bipartite_matching(n, m) : O(|V|)
 *	S, T の要素数を n, m で初期化する．
 *
-* add_edge(s, t) : O(1)
+* add_edge(int s, int t) : O(1)
 *	s∈S と t∈T の間に辺を張る．
 *
-* flow() : O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
+* int flow() : O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
 *	フローを流し計算を行う．
 *	戻り値：最大マッチングの大きさ
 *
-* maximum_matching(es) : O(|E|)
+* maximum_matching(vector<pii>& es) : O(|E|)
 *	最大マッチングの例を具体的に求め es に格納する．
 *	flow() の後に呼び出すこと．
 * 	es : 最大マッチングに含まれる辺 {s, t} ∈ S×T のリスト
 *
-* minimum_edge_covering(es) : O(|V| + |E|)
+* minimum_edge_covering(vector<pii>& es) : O(|V| + |E|)
 *	最小辺被覆の例を具体的に求め es に格納する．
 *	flow() の後に呼び出すこと．
 * 	es : 最小辺被覆に含まれる辺 {s, t} ∈ S×T のリスト
 */
 struct Bipartite_matching {
+	// verify : https://judge.yosupo.jp/problem/bipartitematching
+	
 	int n, m;
 	mf_graph<int> g;
 	int ST, GL;
@@ -60,8 +62,6 @@ struct Bipartite_matching {
 
 	// 最大マッチングの例を具体的に求める．
 	void maximum_matching(vector<pii>& es) {
-		// verify : https://judge.yosupo.jp/problem/bipartitematching
-
 		es.clear();
 		repe(e, g.edges()) {
 			// フローが流れている S, T 間の辺がマッチングに対応する．

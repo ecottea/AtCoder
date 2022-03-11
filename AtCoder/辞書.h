@@ -5,48 +5,48 @@
 // ■■■■■ 辞書 ■■■■■
 
 
-//【動的辞書】
+//【多重集合の動的辞書】
 /*
-* Dynamic_dictionary(n) : O(n)
+* Dynamic_dictionary(int n) : O(n)
 *	[0..n) を記録可能な辞書を空で初期化する．
 *
-* Dynamic_dictionary(n, a) : O(n)
+* Dynamic_dictionary(int n, vi a) : O(n)
 *	[0..n) を記録可能な辞書を多重集合 a で初期化する．
 *
-* size() : O(log n)
+* ll size() : O(log n)
 *	要素の総数を返す．
 *
-* count(v) : O(log n)
+* ll count(int v) : O(log n)
 *	要素 v の個数を返す．
-* 
-* count(l, r) : O(log n)
+*
+* ll count(int l, int r) : O(log n)
 *	値 [l..r) をもつ要素の個数を返す．
 *
-* insert(v) : O(log n)
-*	要素 v を挿入する．
+* insert(int v), insert(int v, ll k) : O(log n)
+*	要素 v を 1 個 [k 個] 挿入する．
 *
-* erase(v) : O(log n)
-*	要素 v を削除する．個数は負数にもなる．
+* erase(int v), erase(int v, ll k) : O(log n)
+*	要素 v を 1 個 [k 個] 削除する．個数は負数にもなる．
 *
-* get(i) : O(log n)
+* int get(ll i) : O(log n)
 *	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
 *
-* lower_bound(v) : O(log n)
+* ll lower_bound(int v) : O(log n)
 *	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
 *
 * 利用：【フェニック木】
 */
-using S12 = int;
-S12 op12(S12 x, S12 y) { return x + y; }
-S12 e12() { return 0; }
-S12 inv12(S12 x) { return -x; }
+ll opdd(ll x, ll y) { return x + y; }
+ll edd() { return 0; }
+ll invdd(ll x) { return -x; }
 struct Dynamic_dictionary {
 	// verify : https://judge.yosupo.jp/problem/predecessor_problem
+	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_c
 
 	int n;
 
 	// ft[v] : 要素 v の個数
-	using RSQ = Fenwick_tree<S12, op12, e12, inv12>;
+	using RSQ = Fenwick_tree<ll, opdd, edd, invdd>;
 	RSQ ft;
 
 	// コンストラクタ（何もしない）
@@ -57,34 +57,36 @@ struct Dynamic_dictionary {
 
 	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
 	Dynamic_dictionary(int n_, const vi& a) : n(n_) {
-		vi cnt(n);
+		vl cnt(n);
 		repe(v, a) cnt[v]++;
 		ft = RSQ(cnt);
 	}
 
 	// 要素の総数を返す．
-	int size() { return ft.prod(0, n); }
+	ll size() { return ft.prod(0, n); }
 
 	// 要素 v の個数を返す．
-	int count(int v) {return ft.get(v);}
+	ll count(int v) { return ft.get(v); }
 
-	// 値[l..r) をもつ要素の個数を返す．
-	int count(int l, int r) { return ft.prod(l, r); }
+	// 値 [l..r) をもつ要素の個数を返す．
+	ll count(int l, int r) { return ft.prod(l, r); }
 
 	// 要素 v を挿入する．
-	void insert(int v) {ft.apply(v, 1);}
+	void insert(int v) { ft.apply(v, 1); }
+	void insert(int v, ll k) { ft.apply(v, k); }
 
 	// 要素 v を削除する．
-	void erase(int v) {ft.apply(v, -1);}
+	void erase(int v) { ft.apply(v, -1); }
+	void erase(int v, ll k) { ft.apply(v, -k); }
 
 	// 昇順で i 番目の要素を返す．
-	int get(int i) {
+	int get(ll i) {
 		auto f = [&](ll x) { return x <= i; };
 		return ft.max_right(f);
 	}
 
 	// v が昇順で何番目の要素かを返す．
-	int lower_bound(int v) {return ft.prod(0, v);}
+	ll lower_bound(int v) { return ft.prod(0, v); }
 
 	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, const Dynamic_dictionary& dd) {
@@ -94,9 +96,9 @@ struct Dynamic_dictionary {
 };
 
 
-//【区間の動的辞書】
+//【区間の動的辞書（集合）】
 /*
-* Interval_dictionary() : O(1)
+* Interval_dictionary_set() : O(1)
 *	空で初期化する．
 *
 * size() : O(1)
@@ -117,11 +119,11 @@ struct Dynamic_dictionary {
 * erase(l, r) : ならし O(log n)
 *	区間 [l, r) を削除する．
 */
-struct Interval_dictionary {
+struct Interval_dictionary_set {
 	set<pll> lr; // 区間 [l[i], r[i]) の昇順列
 
 	// コンストラクタ（空で初期化）
-	Interval_dictionary() {}
+	Interval_dictionary_set() {}
 
 	// 区間の数を返す．
 	int size() { return sz(lr); }
@@ -212,43 +214,177 @@ struct Interval_dictionary {
 	typename set<pll>::iterator end() { return lr.end(); }
 
 	// デバッグ出力用
-	friend ostream& operator<<(ostream& os, const Interval_dictionary& d) {
+	friend ostream& operator<<(ostream& os, const Interval_dictionary_set& d) {
 		repe(p, d.lr) os << p << " ";
 		return os;
 	}
 };
 
 
-//【トライ木】
+//【区間の動的辞書（写像）】
 /*
-* Trie_tree() : O(1)
-*   空文字列のみで初期化する．
+* Interval_dictionary_map<S, T>(T nil) : O(1)
+*	S の全ての値に nil を割り当てる．
 *
-* insert(str) : O(|str|)
-*   文字列 str を登録する．
+* void set(S l, S r, T v) : ならし O(log n)
+*	区間 [l..r) に値 v を割り当てる．
 *
-* find(str) : O(|str|)
-*   文字列 str が登録されているかを返す．
+* void set(S l, S r, T v, vS* ls, vS* rs, vT* vs) : ならし O(log n)
+*	区間 [l..r) に含まれる区間の左端[右端, 値] を ls[rs, vs] に格納する．
+*	その後区間 [l..r) に値 v を割り当てる．
 *
-* find_prefix(str) : O(|str|)
-*   文字列 str を接頭辞にもつ文字列が登録されているかを返す．
+* T get(S x) : O(log n)
+*	x に割り当てられた値を返す．
+*/
+template <class S, class T> struct Interval_dictionary_map {
+	// verify : https://codeforces.com/contest/1638/problem/E
+
+	map<pair<S, S>, T> lr_to_v; // 区間 [l[i], r[i]) → v[i]
+	T nil;
+
+	// 全ての値に nil を割り当てる．
+	Interval_dictionary_map(T nil_) : nil(nil_) {}
+
+	// x に割り当てられた値を返す．
+	T get(S x) {
+		auto it = get_iter(x);
+		return it == lr_to_v.end() ? nil : it->second;
+	}
+
+	// x が含まれる区間を指すイテレータを返す（なければ lr_to_v.end() を返す）
+	typename map<pair<S, S>, T>::iterator get_iter(S x) {
+		auto it = lr_to_v.lower_bound({ x, numeric_limits<S>::max() });
+		if (it == lr_to_v.begin()) return lr_to_v.end();
+		it--;
+		if (it->first.first <= x && x < it->first.second) return it;
+		else return lr_to_v.end();
+	}
+
+	// x の 1 つ右にある区間を指すイテレータを返す（なければ lr_to_v.end() を返す）
+	typename map<pair<S, S>, T>::iterator get_right_iter(S x) {
+		return lr_to_v.lower_bound({ x, numeric_limits<S>::max() });
+	}
+
+	// x の 1 つ左にある区間を指すイテレータを返す（なければ lr_to_v.end() を返す）
+	typename map<pair<S, S>, T>::iterator get_left_iter(S x) {
+		auto it = lr_to_v.lower_bound({ x, numeric_limits<S>::max() });
+		if (it == lr_to_v.begin()) return lr_to_v.end();
+		it--;
+		if (it->first.first <= x && x < it->first.second) {
+			if (it == lr_to_v.begin()) return lr_to_v.end();
+			it--;
+		}
+		return it;
+	}
+
+	// 区間 [l..r) に値 v を割り当てる．
+	// また [l..r) に含まれていた区間の情報を ls, rs, vs に格納する．
+	void set(S l, S r, T v, vector<S>* ls = nullptr, vector<S>* rs = nullptr, vector<T>* vs = nullptr) {
+		// 左端 l がぶつかる区間を調べる．
+		bool n_l_flag = false; S nl_l, nr_l; T nv_l;
+		auto it_l = get_iter(l);
+		if (it_l != lr_to_v.end()) {
+			n_l_flag = true;
+			nl_l = it_l->first.first;
+			nr_l = it_l->first.second;
+			nv_l = it_l->second;
+		}
+		else {
+			it_l = get_right_iter(l);
+		}
+
+		// 右端 r がぶつかる区間を調べる．
+		bool n_r_flag = false; S nl_r, nr_r; T nv_r;
+		auto it_r = get_iter(r - 1);
+		if (it_r != lr_to_v.end()) {
+			n_r_flag = true;
+			nl_r = it_r->first.first;
+			nr_r = it_r->first.second;
+			nv_r = it_r->second;
+		}
+		else {
+			it_r = get_left_iter(r - 1);
+		}
+
+		if (ls != nullptr) {
+			ls->clear(); rs->clear(); vs->clear();
+		}
+
+		if (ls != nullptr && n_l_flag) {
+			if (n_r_flag && it_l == it_r) {
+				ls->push_back(l); rs->push_back(r); vs->push_back(nv_l);
+			}
+			else {
+				ls->push_back(l); rs->push_back(nr_l); vs->push_back(nv_l);
+			}
+		}
+
+		if (it_l != lr_to_v.end() && it_r != lr_to_v.end()) {
+			if (ls != nullptr) {
+				for (auto it = it_l; it != next(it_r); it++) {
+					if (n_l_flag && it == it_l) continue;
+					if (n_r_flag && it == it_r) continue;
+
+					ls->push_back(it->first.first);
+					rs->push_back(it->first.second);
+					vs->push_back(it->second);
+				}
+			}
+			lr_to_v.erase(it_l, next(it_r));
+		}
+
+		if (ls != nullptr && n_r_flag) {
+			if (!(n_l_flag && it_l == it_r)) {
+				ls->push_back(nl_r); rs->push_back(r); vs->push_back(nv_r);
+			}
+		}
+
+		lr_to_v[{l, r}] = v;
+		if (n_l_flag) lr_to_v[{nl_l, l}] = nv_l;
+		if (n_r_flag) lr_to_v[{r, nr_r}] = nv_r;
+	}
+
+	typename map<pair<S, S>, T>::iterator begin() { return lr_to_v.begin(); }
+	typename map<pair<S, S>, T>::iterator end() { return lr_to_v.end(); }
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Interval_dictionary_map& d) {
+		repe(p, d.lr_to_v) os << p << " ";
+		return os;
+	}
+};
+
+
+//【トライ木（集合）】
+/*
+* Trie_tree_set() : O(1)
+*   空で初期化する．
 *
-* count() : O(1)
+* insert(string s) : O(|s|)
+*   文字列 s を登録する．
+*
+* bool find(string s) : O(|s|)
+*   文字列 s が登録されているかを返す．
+*
+* bool find_prefix(string s) : O(|s|)
+*   文字列 s を接頭辞にもつ文字列が登録されているかを返す．
+*
+* int count() : O(1)
 *   登録されている文字列の個数を返す．
 */
-struct Trie_tree {
+struct Trie_tree_set {
 	// 参考 : https://algo-logic.info/trie-tree/
 	// verify : https://codeforces.com/contest/1629/problem/D
 
 	const int K = 26; // 文字数
 
-	int n; // g のノード数
-	Graph g; // トライ木
-	vc chars; // 頂点 g[i] に対応する文字
-	vb end; // g[i] で終わる文字があるか
-	vi cnt; // g[i] を含む文字列の個数
+	int n;		// g のノード数
+	Graph g;	// トライ木
+	vc chars;	// chars[i] : 頂点 g[i] に対応する文字
+	vb end;		// end[i] : g[i] で終わる文字列があるか
+	vi cnt;		// cnt[i] : g[i] を含む文字列の個数
 
-	Trie_tree() : n(1), g(1, vi(K, -1)), chars(1), end(1), cnt(1) {}
+	Trie_tree_set() : n(1), g(1, vi(K, -1)), chars(1), end(1), cnt(1) {}
 
 	void insert(const string& str) {
 		int v = 0;
@@ -313,36 +449,196 @@ struct Trie_tree {
 };
 
 
+//【トライ木（写像）】
+/*
+* Trie_tree_set(T nil) : O(1)
+*   空で初期化する．nil は今後割り当てることのない値とする．
+*
+* set(string s, T v) : O(|s|)
+*   s に値 v を割り当てる．
+*
+* T get(string s) : O(|s|)
+*   s に割り当てられている値を返す（無ければ nil）
+*
+* void get_prefix(string s, vi& len, vT& val) : O(|s|)
+*	s の接頭辞である i 番目の登録済文字列の長さ[値]を len[i][ val[i] ] に格納する．
+*
+* int count() : O(1)
+*   登録されている文字列の個数を返す．
+*
+* int count_prefix(string s) : O(|s|)
+*   s を接頭辞にもつ文字列が何個登録されているかを返す．
+*/
+template <class T> struct Trie_tree_map {
+	// 参考 : https://algo-logic.info/trie-tree/
+	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_b
+
+	const int K = 26; // 文字数
+
+	int n;			// g のノード数
+	Graph g;		// トライ木（K 分木）
+	vc chars;		// chars[i] : 頂点 g[i] に対応する文字
+	vi cnt;			// cnt[i] : g[i] を含む文字列の個数
+	vector<T> vals;	// vals[i] : g[i] で終わる文字列に対応する値（無ければ nil）
+	T nil;
+
+	Trie_tree_map() : n(1), g(1, vi(K, -1)), chars(1), cnt(1), vals(1), nil(numeric_limits<T>::min()) {}
+	Trie_tree_map(T nil_) : n(1), g(1, vi(K, -1)), chars(1), cnt(1), vals(1), nil(nil_) {}
+
+	void set(const string& str, T val) {
+		int v = 0;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// str は頂点 v を含む文字列なので個数に加算する．
+			cnt[v]++;
+
+			// 登録済みの文字だった場合
+			if (g[v][c - 'a'] != -1) {
+				// そのノードへ移動
+				v = g[v][c - 'a'];
+			}
+			// 未登録の文字だった場合
+			else {
+				// 新たにノード n を追加
+				g.push_back(vi(K, -1));
+				chars.push_back(c);
+				cnt.push_back(0);
+				vals.push_back(nil);
+
+				// 新たなノードへのパスを追加
+				g[v][c - 'a'] = n;
+
+				// 新たなノードへ移動
+				v = n++;
+			}
+		}
+
+		vals[v] = val;
+	}
+
+	T get(const string& str) const {
+		int v = 0;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// 登録済みの文字だった場合
+			if (g[v][c - 'a'] != -1) {
+				// そのノードへ移動
+				v = g[v][c - 'a'];
+			}
+			// 未登録の文字だった場合
+			else {
+				return nil;
+			}
+		}
+
+		return vals[v];
+	}
+
+	// s の接頭辞である i 番目の登録済文字列の長さ[値] を len[i][ val[i] ] に格納する．
+	void get_prefix(const string& str, vi& len, vector<T>& val) {
+		int v = 0, l = 0;
+		len.clear(); val.clear();
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			if (vals[v] != nil) {
+				len.push_back(l);
+				val.push_back(vals[v]);
+			}
+
+			// 登録済みの文字だった場合
+			if (g[v][c - 'a'] != -1) {
+				// そのノードへ移動
+				v = g[v][c - 'a'];
+				l++;
+			}
+			// 未登録の文字だった場合
+			else {
+				return;
+			}
+		}
+
+		if (vals[v] != nil) {
+			len.push_back(l);
+			val.push_back(vals[v]);
+		}
+	}
+
+	int count() const { return cnt[0]; }
+
+	int count_prefix(const string& str) const {
+		int v = 0;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// 登録済みの文字だった場合
+			if (g[v][c - 'a'] != -1) {
+				// そのノードへ移動
+				v = g[v][c - 'a'];
+			}
+			// 未登録の文字だった場合
+			else {
+				return 0;
+			}
+		}
+
+		return cnt[v];
+	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const Trie_tree_map& trie) {
+		string s;
+
+		function<void(int)> dfs = [&](int v) {
+			s.push_back(trie.chars[v]);
+			if (trie.vals[v] != trie.nil) {
+				os << s << "->" << trie.vals[v] << endl;
+			}
+			rep(c, trie.K) {
+				if (trie.g[v][c] == -1) continue;
+				dfs(trie.g[v][c]);
+			}
+			s.pop_back();
+		};
+		dfs(0);
+
+		return os;
+	}
+};
+
+
 //【ウェーブレット行列】
 /*
-* Wavelet_matrix(a) : O(n log n log(max a))
-*	辞書を非負整数列 a で初期化する．
+* Wavelet_matrix(vl a) : O(n log n log(max a))
+*	非負整数列 a で初期化する．
 *
-* get(i) : O(log(max a))
+* ll get(int i) : O(log(max a))
 *	昇順で i 番目の要素を返す．
 *
-* get(l, r, i) : O(log(max a))
+* ll get(int l, int r, int i) : O(log(max a))
 *	a[l..r) の中で昇順で i 番目の要素を返す．
 *
-* count(l, r, v) : O(log(max a))
+* int count(int l, int r, ll v) : O(log(max a))
 *	a[l..r) に v が何個あるかを返す．
 *
-* count(l, r, v0, v1) : O(log(max a))
+* int count(int l, int r, ll v0, ll v1) : O(log(max a))
 *	a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
 *
-* position(v, c) : O(log(n) log(max a))
+* int position(ll v, int c) : O(log(n) log(max a))
 *	昇順で c 番目の v の位置を返す．
 *
-* frequency(l, r, c, freq) : O(min(r - l, max a) log(max a))
+* frequency(int l, int r, int c,vector<pli>& freq) : O(min(r - l, max a) log(max a))
 *	a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組のリストを freq に格納する．
 *
-* sum(l, r) : O(1)
+* ll sum(int l, int r) : O(1)
 *	a[l..r) の和を返す．
 *
-* sum(l, r, v0, v1) : O(log(max a))
+* ll sum(int l, int r, ll v0, ll v1) : O(log(max a))
 *	a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
 *
-* intersection(l1, r1, l2, r2, freq) : O(min((r1 - l1) + (r2 - l2), max a) log(max a))
+* intersection(int l1, int r1, int l2, int r2, vector<tuple<ll, int, int>>& freq) : O(min((r1 - l1) + (r2 - l2), max a) log(max a))
 *	a[l1..r1) と a[l2..r2) に共通する要素を求め，
 *	その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
 */
@@ -476,6 +772,8 @@ struct Wavelet_matrix {
 
 	// a[l..r) のうち昇順で i 番目の要素を返す．
 	ll get(int l, int r, int i) {
+		// verify : https://judge.yosupo.jp/problem/range_kth_smallest
+
 		ll res = 0;
 
 		repir(j, k - 1, 0) {
@@ -633,14 +931,14 @@ struct Wavelet_matrix {
 
 //【部分文字列辞書】
 /*
-* Substring_dictionary(s) : O(|s|)
-*	文字列 s の部分文字列（空文字列は除く）で初期化する．
+* Substring_dictionary(s) : O(n)
+*	文字列 s[0..n) の部分文字列（空文字列は除く）で初期化する．
 *
-* size() : O(1)
+* ll size() : O(1)
 *	部分文字列の個数を返す．
 *
-* get(i) : O(|s|)
-*	辞書順で i 番目の部分文字列を返す．（0-indexed, なければ "" を返す）
+* string get(ll i) : O(|sub| + log n)
+*	辞書順で i 番目の部分文字列 sub を返す．（0-indexed, なければ "" を返す）
 */
 struct Substring_dictionary {
 	int n;
@@ -693,19 +991,19 @@ struct Substring_dictionary {
 
 //【組の和の辞書】
 /*
-* Outer_sum_dictionary(a, b) : O(n log n + m log m)
+* Outer_sum_dictionary(vl a, vl b) : O(n log n + m log m)
 *	S = { a[i] + b[j] | i∈[0..n), j∈[0..m) } で初期化する．
 *
-* lower_bound(v) : O(n log m)
+* ll lower_bound(ll v) : O(n log m)
 *	S の v 未満の要素の個数を返す．
 *
-* upper_bound(v) : O(n log m)
+* ll upper_bound(ll v) : O(n log m)
 *	S の v 以下の要素の個数を返す．
 *
-* get(i) : O(n log m log(max(a+b) - min(a+b)))
+* ll get(ll i) : O(n log m log(max(a+b) - min(a+b)))
 *	S の i 番目の要素を返す．
 *
-* sum(i) : O(n log m log(max(a+b) - min(a+b)))
+* ll sum(ll i) : O(n log m log(max(a+b) - min(a+b)))
 *	S の i 番目未満の要素の和を返す．
 *
 * 利用：【めぐる式二分探索】
@@ -782,13 +1080,13 @@ struct Outer_sum_dictionary {
 
 //【組の積の辞書】
 /*
-* Outer_mul_dictionary(a, b) : O(n log n + m log m)
+* Outer_mul_dictionary(vl a, vl b) : O(n log n + m log m)
 *	S = { a[i] b[j] | i∈[0..n), j∈[0..m) } で初期化する．
 *
-* lower_bound(v) : O(n log m)
+* ll lower_bound(ll v) : O(n log m)
 *	S の v 未満の要素の個数を返す．
 *
-* get(i) : O(n log m log(INFL))
+* ll get(ll i) : O(n log m log(INFL))
 *	S の i 番目の要素を返す．
 *
 * 利用：【めぐる式二分探索】
@@ -879,6 +1177,227 @@ struct Outer_mul_dictionary {
 			return lower_bound(v) <= i;
 		};
 		return meguru_search(-INFL, INFL, okQ);
+	}
+};
+
+
+//【kd 木（集合，2 次元）】
+/*
+* KDTree<T, S>() : O(1)
+*	空で初期化する．
+*
+* KDTree<T, S>(vector<pair<pair<T, T>, S>> ps) : O(n log n) // TODO 遅いので作り直す
+*	点群とその値 ps で初期化する．
+*
+* insert(pair<T, T> p, S val) : O(log n) // TODO 点の分布によっては木の形が悪くなるので作り直す
+*	点 p に値 val をもたせて挿入する．
+*
+* search(pair<T, T> p0, pair<T, T> p1, vector<Node*>& res) : O(n^(1 - 1/dim) + |res|)
+*	半開長方形 R = [p0, p1) 内の点を res に格納する．
+*	p0 = {x0, y0}, p1 = {x1, y1} としたとき，R = [x0, x1) * [y0, y1) である．
+*/
+template <class T, class S> struct KDTree {
+	using Pnt = pair<T, T>;
+
+	// kd-木のノード
+	struct Node {
+		Pnt p;
+		S val;
+		Node* left, * right;
+
+		// コンストラクタ
+		Node() {}
+		Node(const Pnt& p_, const S& val_) : p(p_), val(val_),
+			left(nullptr), right(nullptr) {}
+	};
+
+	int n; // 要素数
+	Node* root; // 根へのポインタ
+
+	// 空で初期化
+	KDTree() : n(0), root(nullptr) {}
+
+	// 配列で初期化
+	KDTree(vector<pair<Pnt, S>>& a) : n(sz(a)), root(nullptr) {
+		mt19937 rnd((int)time(0));
+		shuffle(all(a), rnd);
+		rep(i, n) {
+			insert_rf(root, true, a[i].first, a[i].second);
+		}
+	}
+
+	// 点の比較（x_axis = true なら x 座標で，false なら y 座標で比較する）
+	bool less(bool x_axis, const Pnt& p, const Pnt& q) {
+		return x_axis ? p.first < q.first : p.second < q.second;
+	}
+
+	// 点の挿入
+	void insert(const Pnt& p, const S& val) {
+		insert_rf(root, true, p, val);
+		n++;
+	}
+
+	// t : 挿入位置，dim : 比較に使う次元，p : 挿入する点
+	void insert_rf(Node*& t, bool x_axis, const Pnt& p, const S& val) {
+		// 葉に辿り着いたら新しいノードを挿入する．
+		if (t == nullptr) {
+			t = new Node(p, val);
+			return;
+		}
+
+		// p の座標がいまのノードの座標より小さいか大きいかで場合分けし挿入位置を探る．
+		if (less(x_axis, p, t->p)) {
+			insert_rf(t->left, !x_axis, p, val);
+		}
+		else {
+			insert_rf(t->right, !x_axis, p, val);
+		}
+	}
+
+	// 点の探索
+	void search(const Pnt& p0, const Pnt& p1, vector<Node*>& res) {
+		res.clear();
+		search_rf(root, true, p0, p1, res);
+	}
+
+	void search_rf(Node* t, bool x_axis, const Pnt& p0, const Pnt& p1, vector<Node*>& res) {
+		// 葉に辿り着いたらすぐに帰る．
+		if (t == nullptr) {
+			return;
+		}
+
+		// 領域内なら点を記録する．
+		if (p0.first <= t->p.first && t->p.first < p1.first
+			&& p0.second <= t->p.second && t->p.second < p1.second) {
+			res.push_back(t);
+		}
+
+		// t->p < p0 でない限り左の子を調べにいく．
+		if (!less(x_axis, t->p, p0)) {
+			search_rf(t->left, !x_axis, p0, p1, res);
+		}
+
+		// p1 <= t->p でない限り右の子を調べにいく．
+		if (less(x_axis, t->p, p1)) {
+			search_rf(t->right, !x_axis, p0, p1, res);
+		}
+	}
+};
+
+
+//【kd トライ（写像）】
+/*
+* KDTrie(vvS p, vT val) : O(n log n)
+*	n 個の点 p[i] に値 val[i] を持たせて初期化する．
+*	制約 : 点の座標は互いに異なる．
+*
+* T sum(vS p1, vS p2) : O(n^(1 - 1/dim))
+*	半開直方体 R = [p1, p2) 内の点の値の和を返す．
+*/
+template <class S, class T> struct KDTrie {
+	// verify : https://atcoder.jp/contests/abc075/tasks/abc075_d
+
+	using vS = vector<S>; using vvS = vector<vS>; using vT = vector<T>;
+	const S Smin = numeric_limits<S>::min(), Smax = numeric_limits<S>::max();
+
+	struct Node {
+		vS p1, p2; // 半開直方体 R = [p1, p2) に対応するノード
+		T val;
+		Node* left, * right;
+
+		Node() {}
+		Node(vS p1_, vS p2_, T val_) : p1(p1_), p2(p2_), val(val_), left(nullptr), right(nullptr) {}
+	};
+
+	Node* root; // 根へのポインタ
+	int dim; // 次元
+
+	// n 個の点 p[i] に値 val[i] を持たせて初期化する．
+	KDTrie(vvS& p, vT& val) : root(nullptr), dim(sz(p[0])) {
+		int n = sz(p);
+		split(root, vS(dim, Smin), vS(dim, Smax), p, val, 0, n, 0);
+	}
+
+	// ノード *t に点 p[i0..i1) と値 val[i0..i1) を割り当て分割する．
+	T split(Node*& t, vS p1, vS p2, vvS& p, vT& val, int i0, int i1, int d) {
+		// 空なら何もしない．
+		if (i0 == i1) return 0;
+
+		// 要素が一つだけなら葉として格納して帰る．
+		if (i0 + 1 == i1) {
+			vS p0_inc = p[i0];
+			rep(i, dim) p0_inc[i]++;
+
+			t = new Node(p[i0], p0_inc, val[i0]);
+			return val[i0];
+		}
+
+		// 中央値を得る．
+		vS cds;
+		repi(i, i0, i1 - 1) cds.push_back(p[i][d]);
+		uniq(cds);
+		S median = cds[sz(cds) / 2];
+
+		// median を閾値として用い，それ未満のものを左，以上のものを右に移動する．
+		int i = i0; // i : p[i0, i) が median 未満の座標と確定
+		repi(j, i0, i1 - 1) { // j : p[i, j) が median 以上の座標と確定
+			// j の位置に median 未満の座標がある場合
+			if (p[j][d] < median) {
+				// 最も左の median 以上の座標と交換する．
+				swap(p[i], p[j]); swap(val[i], val[j]);
+				i++;
+			}
+		}
+
+		// median で分割して左右の子を作りに行く．
+		t = new Node(p1, p2, 0);
+		vS p1m = p1, p2m = p2;
+		p1m[d] = median; p2m[d] = median;
+		t->val += split(t->left, p1, p2m, p, val, i0, i, (d + 1) % dim);
+		t->val += split(t->right, p1m, p2, p, val, i, i1, (d + 1) % dim);
+
+		return t->val;
+	}
+
+	// 半開直方体 R = [p1, p2) 内の点の値の和を返す．
+	T sum(const vS& p1, const vS& p2) { return sum_rf(root, p1, p2, 0); }
+
+	T sum_rf(Node* t, const vS& p1, const vS& p2, int d) {
+		// 木が空の場合
+		if (t == nullptr) return 0;
+
+		// 一部も範囲に入っていない場合
+		if (p2[d] <= t->p1[d] || t->p2[d] <= p1[d]) return 0;
+
+		// 完全に範囲に入っている場合
+		bool in_flag = true;
+		rep(i, dim) {
+			if (t->p1[i] < p1[i] || p2[i] < t->p2[i]) in_flag = false;
+		}
+		if (in_flag) return t->val;
+
+		T val = 0;
+		val += sum_rf(t->left, p1, p2, 1 - d);
+		val += sum_rf(t->right, p1, p2, 1 - d);
+
+		return val;
+	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const KDTrie& kd) {
+		kd.print_rf(os, kd.root);
+		return os;
+	}
+	void print_rf(ostream& os, Node* t) const {
+		if (t == nullptr) return;
+
+		print_rf(os, t->left);
+		os << "val:" << t->val << ", p1:" << t->p1 << ", p2:" << t->p2 << ", left:";
+		t->left != nullptr ? os << "(" << t->left->p1 << "," << t->left->p2 << ")" : os << "-";
+		os << ", right:";
+		t->right != nullptr ? os << "(" << t->right->p1 << "," << t->right->p2 << ")" : os << "-";
+		os << endl;
+		print_rf(os, t->right);
 	}
 };
 

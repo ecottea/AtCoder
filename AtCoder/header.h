@@ -22,7 +22,7 @@ template <class T> using priority_queue_rev = priority_queue<T, vector<T>, great
 using Graph = vvi;
 
 // 定数の定義
-const double PI = 3.14159265359;
+const double PI = 3.1415926535897932384626433832795;
 const double DEG = PI / 180.; // θ [deg] = θ * DEG [rad]
 const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi dy4 = { 0, 1, 0, -1 };
@@ -38,7 +38,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define all(a) (a).begin(), (a).end()
 #define sz(x) ((int)(x).size())
 #define distance (int)distance
-#define Yes(b) {cout << ((b) ? "Yes" : "No") << endl;}
+#define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -50,6 +50,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
 #define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
+#define EXIT(a) {cout << (a) << endl; exit(0);} // 強制終了
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -69,8 +70,8 @@ template <class T> inline ostream& operator<< (ostream& os, const list<T>& v) { 
 template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
-template <class T> inline ostream& operator<< (ostream& os, const multiset<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
+template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U, greater<T>>& m) { repe(p, m) os << p << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while (!s.empty()) { os << s.top() << " "; s.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop(); } return os; }
@@ -78,6 +79,7 @@ template <class T> inline ostream& operator<< (ostream& os, deque<T> q) { while 
 template <class T> inline ostream& operator<< (ostream& os, priority_queue<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, priority_queue_rev<T> q) { while (!q.empty()) { os << q.top() << " "; q.pop(); } return os; }
 template <class T> inline vector<T>& operator--(vector<T>& v) { rep(_i_, sz(v)) --v[_i_]; return v; }
+template <class T> inline vector<T>& operator++(vector<T>& v) { rep(_i_, sz(v)) ++v[_i_]; return v; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
@@ -88,9 +90,6 @@ inline int lsbll(unsigned long long n) { unsigned long i; _BitScanForward64(&i, 
 inline int msb(unsigned int n) { unsigned long i; _BitScanReverse(&i, n); return i; } // 最上位ビットの位置（0-indexed）
 inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, n); return i; }
 template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
-#define dump(x) cout << "\033[1;36m" << (x) << "\033[0m" << endl;
-#define dumps(x) cout << "\033[1;36m" << (x) << "\033[0m ";
-#define dumpel(a) { int _i_ = -1; cout << "\033[1;36m"; repe(x, a) {cout << ++_i_ << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream isTMP(f); cin.rdbuf(isTMP.rdbuf());
 #define output_to_file(f) ofstream osTMP(f); cout.rdbuf(osTMP.rdbuf());
 // 提出用（gcc）
@@ -102,16 +101,22 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define msb(n) (31 - __builtin_clz(n))
 #define msbll(n) (63 - __builtin_clzll(n))
 #define gcd __gcd
-#define dump(x)
-#define dumps(x)
-#define dumpel(v)
 #define input_from_file(f)
 #define output_to_file(f)
 #endif
 
+// デバッグ出力用
+#ifdef _MSC_VER
+#define dump(x) cout << "\033[1;36m" << (x) << "\033[0m" << endl;
+#define dumps(x) cout << "\033[1;36m" << (x) << "\033[0m ";
+#define dumpel(a) { int _i_ = -1; cout << "\033[1;36m"; repe(x, a) {cout << ++_i_ << ": " << x << endl;} cout << "\n\033[0m"; }
+#else
+#define dump(x)
+#define dumps(x)
+#define dumpel(v)
+#endif
+
 #endif // 折りたたみ用
-
-
 
 
 //-----------------AtCoder 専用-----------------
@@ -122,14 +127,15 @@ using namespace atcoder;
 using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
-template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; };
 istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-//----------------------------------------------
 
+template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
+ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; }
+template <class T>ostream& operator<<(ostream& os, mf_graph<T> g) { repe(e, g.edges()) { os << e.from << "->" << e.to << " c:" << e.cap << " f:" << e.flow << endl; } return os; }
+//----------------------------------------------
 
 
 
@@ -143,6 +149,15 @@ vc s(all(s_));
 
 // vc s_ を string s に変換
 string s(all(s_));
+
+// string s を int n [ll n] に変換
+int n = stoi(s); [ ll n = stoll(s); ]
+
+// string s から s[i..i+k) を取得
+string sub = s.substr(i, k);
+
+// ll n を二進法表示の string s に変換
+string s = bitset<63>(n).to_string();
 
 // 空白も含め一行を文字列 str として読み込み
 string str;
@@ -160,6 +175,15 @@ int x = rnd(mt);
 
 // vi a() で確保したメモリを解法する
 vi().swap(a)
+
+// 型 T の最小値[最大値] を取得する．
+numeric_limits<T>::min(); numeric_limits<T>::max();
+
+// 時間計測して TLE 寸前に終了
+auto start = chrono::system_clock::now();
+auto now = chrono::system_clock::now();
+auto msec = chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+if (msec >= 1950) break;
 */
 
 
@@ -175,8 +199,9 @@ vi().swap(a)
 */
 
 
-// Codeforces 用の雛形
-/*
+// マルチテストケース 用の雛形
+/* ----------------------------------------------------------------
+
 void solve() {
 	
 }
@@ -194,12 +219,14 @@ int main() {
 		solve();
 	}
 }
-*/
+
+------------------------------------------------------------------ */
 
 
 // 実験用の雛形
-/*
-int naive(int n, vi a) {
+/* -----------------------------------------------------------------
+
+int naive(int n, const vi& a) {
 	// 愚直コード
 
 	int res = 0;
@@ -207,7 +234,7 @@ int naive(int n, vi a) {
 	return res;
 }
 
-int solve(int n, vi a) {
+int solve(int n, const vi& a) {
 	// 提出用コード
 
 	int res = 0;
@@ -215,30 +242,31 @@ int solve(int n, vi a) {
 	return res;
 }
 
-void find_error() {
+void zikken() {
 	// 合わない入力例を見つける．
 
-	srand((int)time(0));
-
-	int n;
-	cin >> n;
+	mt19937_64 mt;
+	mt.seed((int)time(NULL));
+	uniform_int_distribution<ll> rnd(0LL, 1LL << 62);
 
 	rep(hoge, 100) {
+		int n = 100;
 		vi a(n);
 		rep(i, n) {
-			a[i] = rand() % 3;
+			a[i] = rnd(mt) % 3;
 		}
-	
-		auto res1 = naive(n, a);
-		auto res2 = solve(n, a);
 
-		if (res1 != res2) {
+		auto res_naive = naive(n, a);
+		auto res_solve = solve(n, a);
+
+		if (res_naive != res_solve) {
 			cout << "----------error!----------" << endl;
 			cout << a << endl;
-			cout << res1 << endl;
-			cout << res2 << endl;
+			cout << res_naive << endl;
+			cout << res_solve << endl;
 			cout << "--------------------------" << endl;
 		}
 	}
 }
-*/
+
+--------------------------------------------------------------- */

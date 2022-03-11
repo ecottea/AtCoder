@@ -42,7 +42,7 @@ template <class T> struct Matrix {
 	vector<vector<T>> v; // 行列の成分
 
 	// コンストラクタ（初期化なし，零行列，単位行列，二次元配列）
-	Matrix() {}
+	Matrix() : m(0), n(0) {}
 	Matrix(const int& m_, const int& n_) : m(m_), n(n_), v(m_, vector<T>(n_)) {}
 	Matrix(const int& n_) : m(n_), n(n_), v(n_, vector<T>(n_)) { rep(i, n) v[i][i] = 1; }
 	Matrix(const vector<vector<T>>& a) : m(sz(a)), n(sz(a[0])), v(a) {}

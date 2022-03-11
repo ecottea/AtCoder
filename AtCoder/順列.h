@@ -143,7 +143,7 @@ void permutation_order_distribution(int n, map<int, mint>& cnt) {
 				l = l / gcd(l, v) * v;
 
 				// 上の方法での最後の調整を先に済ませておく
-				res *= fm.fac(v - 1).pow(c) * fm.fac_inv(c);
+				res *= fm.factorial(v - 1).pow(c) * fm.factorial_inv(c);
 			}
 			res *= fm.multinomial(a);
 
@@ -172,7 +172,7 @@ void permutation_order_distribution(int n, map<int, mint>& cnt) {
 }
 
 
-//【順列の数え上げ（大小関係指定）】O(n^2)
+//【順列の数え上げ（隣接大小関係指定）】O(n^2)
 /*
 * '<', '>', '?' からなる長さ n-1 の文字列 s で指定される
 * 大小関係を満たすような長さ n の順列の個数を返す．

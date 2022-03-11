@@ -19,13 +19,13 @@ template <class T> using priority_queue_rev = priority_queue<T, vector<T>, great
 using Graph = vvi;
 
 // 定数の定義
-const double PI = 3.14159265359;
+const double PI = 3.1415926535897932384626433832795;
 const double DEG = PI / 180.; // θ [deg] = θ * DEG [rad]
 const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi dy4 = { 0, 1, 0, -1 };
 const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
 const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
-const int INF = 1001001001; const ll INFL = 2002002002002002002LL;
+const int INF = 1001001001; const ll INFL = 4004004004004004004LL;
 const double EPS = 1e-10; // 許容誤差に応じて調整
 
 // 入出力高速化
@@ -35,7 +35,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define all(a) (a).begin(), (a).end()
 #define sz(x) ((int)(x).size())
 #define distance (int)distance
-#define Yes(b) {cout << ((b) ? "Yes" : "No") << endl;}
+#define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -47,6 +47,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repitr(it, a) for(auto it = (a).rbegin(); it != (a).rend(); ++it) // イテレータを回す（降順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
 #define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
+#define EXIT(a) {cout << (a) << endl; exit(0);} // 強制終了
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -67,6 +68,7 @@ template <class T> inline ostream& operator<< (ostream& os, const set<T>& s) { r
 template <class T> inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) { repe(x, s) os << x << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, const unordered_set<T>& s) { repe(x, s) os << x << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U>& m) { repe(p, m) os << p << " "; return os; }
+template <class T, class U> inline ostream& operator<< (ostream& os, const map<T, U, greater<T>>& m) { repe(p, m) os << p << " "; return os; }
 template <class T, class U> inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) { repe(p, m) os << p << " "; return os; }
 template <class T> inline ostream& operator<< (ostream& os, stack<T> s) { while (!s.empty()) { os << s.top() << " "; s.pop(); } return os; }
 template <class T> inline ostream& operator<< (ostream& os, queue<T> q) { while (!q.empty()) { os << q.front() << " "; q.pop(); } return os; }
@@ -85,9 +87,6 @@ inline int lsbll(unsigned long long n) { unsigned long i; _BitScanForward64(&i, 
 inline int msb(unsigned int n) { unsigned long i; _BitScanReverse(&i, n); return i; } // 最上位ビットの位置（0-indexed）
 inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, n); return i; }
 template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
-#define dump(x) cout << "\033[1;36m" << (x) << "\033[0m" << endl;
-#define dumps(x) cout << "\033[1;36m" << (x) << "\033[0m ";
-#define dumpel(a) { int _i_ = -1; cout << "\033[1;36m"; repe(x, a) {cout << ++_i_ << ": " << x << endl;} cout << "\033[0m"; }
 #define input_from_file(f) ifstream isTMP(f); cin.rdbuf(isTMP.rdbuf());
 #define output_to_file(f) ofstream osTMP(f); cout.rdbuf(osTMP.rdbuf());
 // 提出用（gcc）
@@ -99,11 +98,19 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define msb(n) (31 - __builtin_clz(n))
 #define msbll(n) (63 - __builtin_clzll(n))
 #define gcd __gcd
+#define input_from_file(f)
+#define output_to_file(f)
+#endif
+
+// デバッグ出力用
+#ifdef _MSC_VER
+#define dump(x) cerr << "\033[1;36m" << (x) << "\033[0m" << endl;
+#define dumps(x) cerr << "\033[1;36m" << (x) << "\033[0m ";
+#define dumpel(a) { int _i_ = -1; cerr << "\033[1;36m"; repe(x, a) {cerr << ++_i_ << ": " << x << endl;} cerr << "\n\033[0m"; }
+#else
 #define dump(x)
 #define dumps(x)
 #define dumpel(v)
-#define input_from_file(f)
-#define output_to_file(f)
 #endif
 
 #endif // 折りたたみ用
@@ -113,9 +120,9 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #include <atcoder/all>
 using namespace atcoder;
 
-//using mint = modint1000000007;
+using mint = modint1000000007;
 //using mint = modint998244353;
-using mint = modint; // mint::set_mod(m);
+//using mint = modint; // mint::set_mod(m);
 
 istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
@@ -123,62 +130,14 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 
 template <class S, S(*op)(S, S), S(*e)()>ostream& operator<<(ostream& os, segtree<S, op, e> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
 template <class S, S(*op)(S, S), S(*e)(), class F, S(*mp)(F, S), F(*cp)(F, F), F(*id)()>ostream& operator<<(ostream& os, lazy_segtree<S, op, e, F, mp, cp, id> seg) { int n = seg.max_right(0, [](S x) {return true; }); rep(i, n) os << seg.get(i) << " "; return os; }
-ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; };
+ostream& operator<<(ostream& os, dsu d) { repe(g, d.groups()) { repe(v, g) { os << v << " "; } os << endl; } return os; }
+template <class T>ostream& operator<<(ostream& os, mf_graph<T> g) { repe(e, g.edges()) { os << e.from << "->" << e.to << " c:" << e.cap << " f:" << e.flow << endl; } return os; }
 //----------------------------------------------
-
-
-//【ビット行列】
-/*
-* ビット行列を表す構造体
-*
-* Matrix<N>(m, n) : O(m N)
-*	m * n 零行列で初期化する．
-* 　制約：n <= N
-*
-* Matrix<N>(a, n) : O(m N)
-*	配列 a の要素で初期化する．
-*
-* push_back(col) : O(N)
-*	最下行に col を追加する．
-*/
-template <int N> struct Bit_matrix {
-	int m, n; // 行数, 列数（行列のサイズは m * n）
-	vector<bitset<N>> v; // 行列の成分
-
-	// コンストラクタ（初期化なし，零行列，二次元配列）
-	Bit_matrix() : m(0), n(0) {}
-	Bit_matrix(int m_, int n_) : m(m_), n(n_), v(m_) {}
-	Bit_matrix(const vector<bitset<N>>& a, int n_) : m(sz(a)), n(n_), v(a) {}
-
-	// 代入
-	Bit_matrix(const Bit_matrix& old) = default;
-	Bit_matrix& operator=(const Bit_matrix& other) = default;
-
-	// 比較
-	bool operator==(const BFPS& g) const { return m == g.m && n == g.n && v == g.v; }
-	bool operator!=(const BFPS& g) const { return !(*this == g); }
-
-	// アクセス
-	bitset<N> const& operator[](int i) const { return v[i]; }
-	bitset<N>& operator[](int i) { return v[i]; }
-
-	// 行の追加
-	void push_back(const bitset<N>& col) { v.push_back(col); m++; }
-
-	// デバッグ出力用
-	friend ostream& operator<<(ostream& os, const Bit_matrix& a) {
-		rep(i, a.m) {
-			rep(j, a.n) os << a.v[i][j] << " ";
-			os << endl;
-		}
-		return os;
-	}
-};
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	
+
 }

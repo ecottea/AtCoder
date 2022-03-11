@@ -3,9 +3,11 @@
 // ■■■■■ 数論 ■■■■■
 
 
-//【最大公約数／ユークリッドの互除法】O(log max(a, b))
+//【最大公約数】O(log max(a, b))
 /*
 * gcd(a, b) を返す．
+* 
+*（ユークリッドの互除法）
 */
 ll euclid(ll a, ll b) {
 	// 改変しやすいよう再帰を用いずに書く
@@ -62,6 +64,7 @@ ll lcm(vl& a) {
 */
 ll ext_gcd(ll a, ll b, ll& x, ll& y) {
 	// 参考：https://qiita.com/drken/items/b97ff231e43bce50199a
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/6/NTL/all/NTL_1_E
 
 	//【方法】
 	// b = 0 の場合は，明らかに g = a で，(x, y) = (1, 0) が解である．
@@ -82,15 +85,19 @@ ll ext_gcd(ll a, ll b, ll& x, ll& y) {
 		// 最大公約数は正とする．
 		x = (a > 0) ? 1 : -1;
 		y = 0;
-		return abs(a);
+		return a * x;
 	}
 
+	// a を b で割った商 q と余り r を求めておく．
+	ll q = a / b, r = a % b;
+
 	// a, b を更新し解 X, Y を得る．
-	// 一時変数を使用しないで済むよう y = X, x = Y と受け取っているので注意．
-	ll d = ext_gcd(b, a % b, y, x);
+	ll X, Y;
+	ll d = ext_gcd(b, r, X, Y);
 
 	// X, Y から x, y を得る．
-	y -= a / b * x;
+	x = Y;
+	y = X - q * Y;
 
 	return d;
 }
@@ -116,30 +123,30 @@ ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
 }
 
 
-//【約数の列挙】O(√n)
+//【約数列挙】O(√n)
 /*
-* n の約数全てをリスト divs に昇順に格納する．
+* n の約数全てをリスト ds に昇順に格納する．
 */
-void divisors(ll n, vl& divs) {
+void divisors(ll n, vl& ds) {
 	// verify : https://algo-method.com/tasks/346
 
-	divs.clear();
+	ds.clear();
 
 	if (n == 1) {
-		divs.push_back(1);
+		ds.push_back(1);
 		return;
 	}
 
 	ll i = 1;
 	for (; i * i < n; i++) {
 		if (n % i == 0) {
-			divs.push_back(i);
-			divs.push_back(n / i);
+			ds.push_back(i);
+			ds.push_back(n / i);
 		}
 	}
-	if (i * i == n) divs.push_back(i);
+	if (i * i == n) ds.push_back(i);
 
-	sort(all(divs));
+	sort(all(ds));
 }
 
 
@@ -166,7 +173,7 @@ ll divisor_sigma(int k, ll n) {
 }
 
 
-//【素因数分解／試し割り法】O(√n)
+//【素因数分解】O(√n)
 /*
 * n を素因数分解した結果を pps に格納する．
 * 
@@ -189,7 +196,7 @@ void factor_integer(ll n, map<ll, int>& pps) {
 }
 
 
-//【素数判定／試し割り法】O(√n)
+//【素数判定】O(√n)
 /*
 * n が素数かを返す．
 */
@@ -285,6 +292,10 @@ int mobius_mu(ll n) {
 * n を割る p の最大べきを返す．（p は素数でなくても動作する）
 */
 int integer_exponent(ll n, ll p) {
+	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_a
+
+	assert(n != 0);
+
 	int res = 0;
 	while (n % p == 0) {
 		n /= p;
@@ -414,7 +425,7 @@ void primefactors_and_divisors(ll n, vl& ps, vl& divs) {
 *	gcd(S) = g となるような S ⊂ U が存在する
 *	⇔ g の倍数である U の元全ての gcd が g に一致する
 * 
-* // verify : https://codeforces.com/contest/1627/problem/D
+* verify : https://codeforces.com/contest/1627/problem/D
 */
 
 
@@ -426,6 +437,25 @@ void primefactors_and_divisors(ll n, vl& ps, vl& divs) {
 *		a mod m = a - m < a - a/2 = a/2
 * 
 * verify : https://codeforces.com/contest/1617/problem/C
+*/
+
+
+//【ウィルソンの定理の一般化】
+/*
+* [1..n] で n と互いに素な数の総積を P とする．
+* n = 4 であるか，ある奇素数 p と自然数 k を用いて n = p^k or 2 p^k と表されるとき
+*		P = -1 (mod n)
+* その他のとき
+*		P = 1  (mod n)
+*/
+
+
+//【gcd と階差】
+/*
+* 数列 a[0..n) の階差を d[0..n-1)（d[i] = a[i+1] - a[i]）とするとき，
+*		gcd(a[l..r)) = gcd( a[i], gcd(d[l..r-1)) )（i∈[l..r)）
+* 
+* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4
 */
 
 

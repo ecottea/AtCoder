@@ -34,7 +34,7 @@ void read_tree(int n, Graph& g, bool directed = false, bool one_indexed = true) 
 * Rooted_tree() : O(1)
 *	‹ó‚Å‰Šú‰»‚·‚éD
 *
-* Rooted_tree(g, r) : O(n)
+* Rooted_tree(Graph g, int r) : O(n)
 *	–Ø g ‚ğ r ‚ğª‚Æ‚İ‚È‚µ‚½ª•t‚«–Ø‚Æ‚µ‚Äó‚¯æ‚éD
 */
 struct Rooted_tree {

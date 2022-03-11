@@ -163,12 +163,16 @@
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="スコア和%28区間%29.h" />
     <ClInclude Include="セグメント木%28抽象%29.h" />
+    <ClInclude Include="ダブリング.h" />
+    <ClInclude Include="ハッシュ.h" />
     <ClInclude Include="ビット列.h" />
     <ClInclude Include="ビット演算.h" />
     <ClInclude Include="マトロイド.h" />
     <ClInclude Include="一変数最適化.h" />
+    <ClInclude Include="不等式.h" />
     <ClInclude Include="二分探索.h" />
     <ClInclude Include="二部マッチング.h" />
+    <ClInclude Include="作図(基本).h" />
     <ClInclude Include="全域木.h" />
     <ClInclude Include="写像12相.h" />
     <ClInclude Include="列.h" />
@@ -182,6 +186,7 @@
     <ClInclude Include="全順序.h" />
     <ClInclude Include="分析(文字列).h" />
     <ClInclude Include="列挙(列).h" />
+    <ClInclude Include="列挙(文字列).h" />
     <ClInclude Include="列挙(格子).h" />
     <ClInclude Include="列挙(集合).h" />
     <ClInclude Include="前処理(列).h" />
@@ -193,12 +198,15 @@
     <ClInclude Include="変形%28格子%29.h" />
     <ClInclude Include="変換%28グラフ%29.h" />
     <ClInclude Include="前処理%28文字列%29.h" />
+    <ClInclude Include="多倍長整数.h" />
+    <ClInclude Include="多項式.h" />
     <ClInclude Include="尺取り法.h" />
     <ClInclude Include="座標圧縮(old).h" />
     <ClInclude Include="抽象データ構造(old).h" />
     <ClInclude Include="挿入DP.h" />
     <ClInclude Include="探索(old).h" />
     <ClInclude Include="探索(木).h" />
+    <ClInclude Include="数え上げ(グラフ).h" />
     <ClInclude Include="数論(一括).h" />
     <ClInclude Include="数論%28old%29.h" />
     <ClInclude Include="整列集合.h" />
@@ -235,7 +243,7 @@
     <ClInclude Include="二分木.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />
-    <ClInclude Include="グラフ最適化.h" />
+    <ClInclude Include="最適化%28グラフ%29.h" />
     <ClInclude Include="セグメント木%28モノイド%29.h" />
     <ClInclude Include="ベクトル.h" />
     <ClInclude Include="作図.h" />
@@ -260,7 +268,6 @@
     <ClInclude Include="行列.h" />
     <ClInclude Include="数論.h" />
     <ClInclude Include="ソート.h" />
-    <ClInclude Include="文字列.h" />
     <ClInclude Include="ゲーム.h" />
     <ClInclude Include="ナップサック.h" />
     <ClInclude Include="辞書.h" />

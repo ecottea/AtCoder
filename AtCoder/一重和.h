@@ -119,16 +119,45 @@ mint powered_geometric_series(mint r, int d) {
 }
 
 
-//【連続自然数の XOR】
+//【XOR の和】
 /*
-* s[i] := XOR[0..i) とおくと，これは周期 4 をもち，
-*		s[4 k]     = 0
-*		s[4 k + 1] = 4 k
-*		s[4 k + 2] = 1
-*		s[4 k + 3] = 4 k + 3
-* と簡単に表すことができる．
-* 
-* verify : https://atcoder.jp/contests/arc133/tasks/arc133_d
+* Xor_sum(vT a) : O(n log max(a))
+*	a[0..n) で初期化する．
+*
+* ll sum(T x) : O(log max(a))
+*	Σi=[0..n) a[i] XOR x の値を返す．
 */
+template <class T> struct Xor_sum {
+	// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
+
+	int d;
+	vvi cnt;
+
+	// a[0..n) で初期化する．
+	Xor_sum(const vector<T>& a) {
+		T a_max = *max_element(all(a));
+		if (a_max > 0) d = msbll((ll)a_max) + 1;
+		else d = 0;
+
+		cnt = vvi(d, vi(2));
+
+		repe(v, a) {
+			rep(j, d) {
+				cnt[j][(v >> j) & 1]++;
+			}
+		}
+	}
+
+	// Σi=[0..n) a[i] XOR x の値を返す．
+	ll sum(T x) {
+		// ビット毎に独立に寄与を計算し和をとればよい．
+		ll res = 0;
+		rep(j, d) {
+			// (0,1), (1,0) の組だけがビット位置に応じた寄与をもつ．
+			res += (ll)cnt[j][1 - ((x >> j) & 1)] << j;
+		}
+		return res;
+	}
+};
 
 

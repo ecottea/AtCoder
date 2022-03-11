@@ -3,16 +3,119 @@
 // ■■■■■ 畳み込み ■■■■■
 
 
+//【mod 998244353 での畳込み】O((|a| + |b|) log(|a| + |b|))
+/*
+* ACL の vm convolution(vm a, vm b) を利用すればよい．
+* 
+* 制約：|a| + |b| - 1 <= 8388608 = 2^23
+*/
+
+
+//【mod 998244353 での畳込み（やや長い配列）】O((n + m) log(n + m))
+/*
+* a[0..n) と b[0..m) の mod 998244353 での畳み込みを res[0..n+m-1) に格納する．
+*
+* 制約：n + m - 1 <= 16777216 = 2^24
+*/
+void convolution998244353_long(vm& a, vm& b, vm& res) {
+	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
+
+	//【方法】
+	// ACL の convolution() が結果の大きさ 2^23 以下までしか対応していないので，
+	// もしそれより大きい結果になりそうなら列を等分し，畳み込み結果を統合する．
+
+	int n = sz(a), m = sz(b);
+
+	// 畳み込み結果の大きさが 2^23 以下なら ACL が対応している．
+	if (n + m - 1 <= (1 << 23)) {
+		res = convolution(a, b);
+		return;
+	}
+
+	res.resize(n + m - 1);
+
+	// |a| >= |b| とする．
+	bool swap_flag = false;
+	if (n < m) {
+		a.swap(b);
+		swap_flag = true;
+	}
+
+	// a を等分する．
+	int n1 = n / 2, n2 = n - n1;
+	vm a1(n1), a2(n2);
+	rep(i, n1) a1[i] = a[i];
+	rep(i, n2) a2[i] = a[n1 + i];
+
+	// a を等分することにより畳み込み結果の大きさが 2^23 以下になる場合は b はそのまま
+	if (n2 + m - 1 <= (1 << 23)) {
+		vm c1 = convolution(a1, b);
+		vm c2 = convolution(a2, b);
+
+		if (!c1.empty()) rep(i, n1 + m - 1) res[i] += c1[i];
+		if (!c2.empty()) rep(i, n2 + m - 1) res[n1 + i] += c2[i];
+	}
+	// そうでないなら a, b 共に等分する．
+	else {
+		int m1 = m / 2, m2 = m - m1;
+		vm b1(m1), b2(m2);
+		rep(i, m1) b1[i] = b[i];
+		rep(i, m2) b2[i] = b[m1 + i];
+
+		vm c11 = convolution(a1, b1);
+		vm c12 = convolution(a1, b2);
+		vm c21 = convolution(a2, b1);
+		vm c22 = convolution(a2, b2);
+
+		if (!c11.empty()) rep(i, n1 + m1 - 1) res[i] += c11[i];
+		if (!c12.empty()) rep(i, n1 + m2 - 1) res[m1 + i] += c12[i];
+		if (!c21.empty()) rep(i, n2 + m1 - 1) res[n1 + i] += c21[i];
+		if (!c22.empty()) rep(i, n2 + m2 - 1) res[n1 + m1 + i] += c22[i];
+	}
+
+	if (swap_flag) a.swap(b);
+}
+
+
+//【mod 998244353 での畳込み（長い配列）】O((n + m)^2)（遅い）
+/*
+* a[0..n) と b[0..m) の mod 998244353 での畳み込みを res[0..n+m-1) に格納する．
+*/
+void convolution998244353_long(const vm& a, const vm& b, vm& res) {
+	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
+
+	//【方法】
+	// ACL の convolution() が結果の大きさ 2^23 以下までしか対応していないので，
+	// もしそれより大きい結果になりそうなら列を分割し，畳み込み結果を統合する．
+
+	const int len = (1 << 22);
+	int n = sz(a), m = sz(b);
+	res.resize(n + m - 1);
+
+	for (int i = 0; i < n; i += len) {
+		vm a_sub{ a.begin() + i, a.begin() + min(i + len, n) };
+
+		for (int j = 0; j < m; j += len) {
+			vm b_sub{ b.begin() + j, b.begin() + min(j + len, m) };
+
+			vm c = convolution(a_sub, b_sub);
+
+			rep(k, sz(c)) res[i + j + k] += c[k];
+		}
+	}
+}
+
+
 //【添字 xor での畳込み】
 /*
-* convolution_xor(a, b) : O(n log n)
-*   c[k] = Σ_(i xor j = k) a[i] b[j] なる c を返す．
+* vT convolution_xor(vT a, vT b) : O(n log n)
+*   c[k] = Σ_(i xor j = k) a[i] b[j] なる c[0..n) を返す．
 *
-* fwt_xor(a) : O(n log n)
-*   a を高速アダマール変換する．
+* fwt_xor(vT& a) : O(n log n)
+*   a[0..n) を高速アダマール変換する．
 *
-* ifwt_xor(A) : O(n log n)
-*   A を逆高速アダマール変換する．
+* ifwt_xor(vT& A) : O(n log n)
+*   A[0..n) を逆高速アダマール変換する．
 * 
 * 制約 : n は 2 の冪乗
 */
@@ -52,15 +155,15 @@ template <typename T> vector<T> convolution_xor(vector<T> a, vector<T> b) {
 
 //【上位集合，添字 and での畳込み】
 /*
-* convolution_and(a, b) : O(n log n)
-*   c[k] = Σ_(i and j = k) a[i] b[j] なる c を返す．
+* vT convolution_and(vT a, v T b) : O(n log n)
+*   c[k] = Σ_(i and j = k) a[i] b[j] なる c[0..n) を返す．
 *
-* fwt_and(a) : O(n log n)
-*   A[j] = Σ_(i ⊃ j) a[i] なる A に上書きする．
+* fwt_and(vT& a) : O(n log n)
+*   A[j] = Σ_(i ⊃ j) a[i] なる A[0..n) に上書きする．
 *  （上位集合での高速ゼータ変換）
 *
-* ifwt_and(A) : O(n log n)
-*   a[j] = Σ_(i ⊃ j) (-1)^(i - j) A[i] なる a に上書きする．
+* ifwt_and(vT& A) : O(n log n)
+*   a[j] = Σ_(i ⊃ j) (-1)^(i - j) A[i] なる a[0..n) に上書きする．
 *  （上位集合での高速メビウス変換）
 * 
 * 制約 : n は 2 の冪乗
@@ -95,15 +198,15 @@ template <typename T> vector<T> convolution_and(vector<T> a, vector<T> b) {
 
 //【下位集合，添字 or での畳込み】
 /*
-* convolution_or(a, b) : O(n log n)
-*   c[k] = Σ_(i or j = k) a[i] b[j] なる c を返す．
+* vT convolution_or(vT a, vT b) : O(n log n)
+*   c[k] = Σ_(i or j = k) a[i] b[j] なる c[0..n) を返す．
 *
-* fwt_or(a) : O(n log n)
-*   A[j] = Σ_(i ⊂ j) a[i] なる A に上書きする．
+* fwt_or(vT& a) : O(n log n)
+*   A[j] = Σ_(i ⊂ j) a[i] なる A[0..n) に上書きする．
 *  （下位集合での高速ゼータ変換）
 *
-* ifwt_or(A) : O(n log n)
-*   a[j] = Σ_(i ⊂ j) (-1)^(i - j) A[i] なる a に上書きする．
+* ifwt_or(vT& A) : O(n log n)
+*   a[j] = Σ_(i ⊂ j) (-1)^(i - j) A[i] なる a[0..n) に上書きする．
 *  （下位集合での高速メビウス変換）
 * 
 * 制約 : n は 2 の冪乗

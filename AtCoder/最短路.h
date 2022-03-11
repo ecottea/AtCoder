@@ -77,7 +77,7 @@ void binary_bfs(const WGraph& g, int st, vi& dist) {
 }
 
 
-//【単一始点最短路／ダイクストラ法】O(|V| + |E| log|V|)
+//【単一視点最短路／ダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 非負のコスト付きグラフ g に対し，始点 st から各頂点 i への最小コストを cost[i] に格納する．
 */
@@ -110,7 +110,7 @@ void dijkstra(const WGraph& g, int st, vl& cost) {
 }
 
 
-//【単一始点最短路／ダイクストラ法（頂点コスト）】O(|V| + |E| log|V|)
+//【単一視点最短路（頂点コスト）／ダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 頂点に非負のコスト vc が与えられたグラフ g に対し，
 * 始点 st から各頂点 i への最小コストを cost[i] に格納する．
@@ -141,7 +141,7 @@ void dijkstra(const Graph& g, const vl& vc, int st, vl& cost) {
 }
 
 
-//【ボテンシャル付きダイクストラ法】O(|V| + |E| log|V|)
+//【ポテンシャル付きダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 負閉路のないコスト付きグラフ g に対し，実行可能ポテンシャル u を与え，
 * 始点 st から各頂点 i への最小コストを cost[i] に格納する．
@@ -192,7 +192,7 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
 }
 
 
-//【単一始点最短路／ベルマン－フォード法】O(|E| |V|)
+//【単一視点最短路（負コスト可）／ベルマン・フォード法】O(|E| |V|)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，始点を st として
 * ベルマン・フォード法を用いて最小コスト経路問題を解き，
@@ -233,9 +233,9 @@ bool bellman_ford(const WGraph& g, int st, vl& cost) {
 }
 
 
-//【全頂点対最短路／ワーシャル－フロイド法】O(|V|^3)
+//【全頂点対最短路（負コスト可）／ワーシャル・フロイド法】O(|V|^3)
 /*
-* コスト付きグラフ g（負のコストも可）に対し，ワーシャルフロイド法を用いて
+* コスト付きグラフ g（負のコストも可）に対し，ワーシャル・フロイド法を用いて
 * 全頂点対 (i, j) に関する最小コスト経路問題を解き，結果を cost[i][j] に格納する．
 * もし負の閉路をもっていれば false を返す．
 */
@@ -243,7 +243,10 @@ bool warshall_floyd(const WGraph& g, vvl& cost) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_C
 
 	int n = sz(g);
-	cost = vvl(n, vl(n, INFL)); // 頂点対の最小コストを保持するテーブル
+
+	// cost[i][j] : 頂点 i から頂点 j までの最短距離
+	cost = vvl(n, vl(n, INFL));
+
 	rep(s, n) cost[s][s] = 0;
 	rep(s, n) {
 		repe(e, g[s]) {
@@ -256,18 +259,18 @@ bool warshall_floyd(const WGraph& g, vvl& cost) {
 		// 途中で通っていいのが 0 から k までの頂点のとき
 		rep(i, n) {
 			rep(j, n) {
+				// 通れない場合は加算しないようにしてオーバーフローに注意する．
+				if (cost[i][k] == INFL || cost[k][j] == INFL) continue;
+
 				// 新しく通れるようになった k を通る方がコストが小さければ更新
 				// （一時配列に退避させず計算してしまっているので途中は間違った値
 				// になっているが，より小さい値になるだけなので最後には合う．）
 				cost[i][j] = min(cost[i][j], cost[i][k] + cost[k][j]);
-
-				// ∞ からは何を引いても ∞ になっていて欲しい．
-				if (cost[i][j] > INFL / 2) cost[i][j] = INFL;
 			}
 		}
 	}
 
-	// 負の閉路を持っていれば false を返す
+	// 負の閉路を持っていれば false を返す．
 	rep(i, n) {
 		if (cost[i][i] < 0) return false;
 	}
@@ -338,7 +341,7 @@ int shortest_path(const Graph& g, int st, int gl, vi* path = nullptr) {
 
 //【最短サイクル】O(|V| + |E|)
 /*
-* グラフ g の頂点 st を通る最短サイクルの長さを返す．（存在しないなら INF）
+* 有向グラフ g の頂点 st を通る最短サイクルの長さを返す（存在しないなら INF）
 * 必要なら path に最短サイクル上の頂点の列を格納する．
 *
 *（幅優先探索）
@@ -463,7 +466,7 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 
 //【コスト最小サイクル】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g の頂点 st を通るコスト最小サイクルのコストを返す．
+* 非負のコスト付き有向グラフ g の頂点 st を通るコスト最小サイクルのコストを返す．
 * 存在しないなら INFL を返す．必要なら path にコスト最小サイクル上の頂点の列を格納する．
 *
 *（ダイクストラ法）
@@ -495,7 +498,7 @@ ll minimum_cost_cycle(const WGraph& g, int st, vi* path = nullptr) {
 		parent[s] = p;
 
 		// st に戻ってきたら終了
-		if (s == st) break;
+		if (s == st) break; 
 
 		// そこから移動できるノードについての情報をキューに追加する．
 		repe(e, g[s]) {
@@ -528,7 +531,7 @@ ll minimum_cost_cycle(const WGraph& g, int st, vi* path = nullptr) {
 //【最近傍探索】O(|V| + |E|)
 /*
 * 無向グラフ g とその頂点集合 v について，頂点 i と最も近い v の頂点の 1 つを nn[i] に，
-* i と nn[i] との距離を dist[i] にそれぞれ格納する．（なければそれぞれ -1, INF）
+* i と nn[i] との距離を dist[i] にそれぞれ格納する（なければそれぞれ -1, INF）
 * 
 *（幅優先探索）
 */
@@ -560,11 +563,11 @@ void nearest_neighbor(const Graph& g, const vi& v, vi& nn, vi& dist) {
 }
 
 
-//【最近傍探索】O(|V| + |E| log|V|)
+//【コスト最小近傍探索】O(|V| + |E| log|V|)
 /*
 * コスト付き無向グラフ g とその頂点集合 v について，
 * 頂点 i と最も近い v の頂点の 1 つを nn[i] に，
-* i と nn[i] との距離を cost[i] にそれぞれ格納する．（なければそれぞれ -1, INFL）
+* i と nn[i] との距離を cost[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
 *
 *（ダイクストラ法）
 */

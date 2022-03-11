@@ -3,6 +3,25 @@
 // ■■■■■ 列 ■■■■■
 
 
+//【隣接要素への加算に対する不変量】
+/*
+* 列 a に対して a[i..i+1] += x という操作だけが許される場合，
+* a の交代和 Σi (-1)^i a[i] は不変量となる．
+* 
+* verify : https://atcoder.jp/contests/arc135/tasks/arc135_d
+*/
+
+
+//【連の長さに応じたスコア】
+/*
+* 連の長さに応じたスコアが得られる場合，連の長さが 1 増加したときの
+* スコアの増加量に読み替えることができれば，連の長さではなく
+* 直前に選んだ要素のみを状態にもった DP ができる．
+* 
+* verify : https://atcoder.jp/contests/arc010/tasks/arc010_3
+*/
+
+
 //【ヒストグラムの横切り】
 /*
 * ヒストグラム hist を横切りしたときの (高さ, 長さ) の組を hls に格納する．
@@ -46,6 +65,10 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 	// verify : https://atcoder.jp/contests/abc232/tasks/abc232_f
 
 	int n = sz(a);
+
+	// a のどの要素を b のどの要素に対応させるかを決め打ち順列全探索を行えば，
+	// コストが (要素の差の和) x + (順列の転倒数) y であることは容易に分かる．
+	// これで間に合わない場合でも bitDP を用いて高速化できる．
 
 	// dp[set] : a[set] を b[0..|set|) に一致させるための最小コスト
 	vl dp(1 << n, INFL);

@@ -5,9 +5,9 @@
 // ■■■■■ 形式的冪級数 ■■■■■
 
 
-//【形式的冪級数】
+//【形式的冪級数（mint 利用）】
 /*
-* mod 998244353 以外だと積が遅くなる（O(n^2)）ので注意．
+* mod 998244353 以外だと積などが遅くなる（O(n^2)）ので注意．
 *
 * FPS() : O(1)
 *	零多項式 f = 0 で初期化する．
@@ -573,7 +573,7 @@ FPS sqrt(const FPS& f, int d, bool& find) {
 }
 
 
-//【展開係数／ボスタン－森法】O(n log n log d)
+//【展開係数／ボスタン・森法】O(n log n log d)
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
@@ -647,7 +647,7 @@ mint coef(const FPS& f, const FPS& g, ll d) {
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 数列 a について，a[n] の値を返す．
 *
-* 利用：【展開係数／ボスタン－森法】
+* 利用：【展開係数／ボスタン・森法】
 */
 mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 	// verify : https://judge.yosupo.jp/problem/kth_term_of_linearly_recurrent_sequence
@@ -702,12 +702,12 @@ FPS taylor_shift(const FPS& f, mint c, const Factorial_mint& fm) {
 	repi(i, 1, n - 1) g[i] = g[i - 1] * c * fm.inv(i);
 
 	FPS h(f);
-	rep(i, n) h[i] *= fm.fac(i);
+	rep(i, n) h[i] *= fm.factorial(i);
 	h = h.rev();
 
 	FPS fs = (g * h).resize(n);
 	fs = fs.rev();
-	rep(i, n) fs[i] *= fm.fac_inv(i);
+	rep(i, n) fs[i] *= fm.factorial_inv(i);
 
 	return fs;
 }
@@ -810,7 +810,7 @@ mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 	mint res = 0;
 	rep(i, n) {
 		res += y[i] * acc_l[i] * acc_r[i] * ((n - 1 - i) & 1 ? -1 : 1)
-			* fm.fac_inv(i) * fm.fac_inv(n - 1 - i);
+			* fm.factorial_inv(i) * fm.factorial_inv(n - 1 - i);
 	}
 	return res * mint(a).pow(n - 1);
 }
@@ -898,14 +898,12 @@ FPS falling_factorial(int n, const Factorial_mint& fm) {
 }
 
 
-//【拡張ユークリッドの互除法】O(deg(a) deg(b)) (?)
+//【拡張ユークリッドの互除法】O(deg(a) deg(b)) (?) // TODO：遅いので作り直す
 /*
 * a(x) u(x) + b(x) v(x) = g(x) の解 (u(x), v(x)) を u, v に格納する．
 * またモニックな g(x) = gcd(a(x), b(x)) を返す．
 */
 FPS ext_gcd(FPS a, FPS b, FPS& u, FPS& v) {
-	// TODO：遅いので作り直す
-
 	b.resize();
 	if (sz(b) == 0) {
 		u = FPS(a[a.deg()].inv());
@@ -920,34 +918,29 @@ FPS ext_gcd(FPS a, FPS b, FPS& u, FPS& v) {
 }
 
 
-//【多項式逆元】O(deg(a) deg(b)) (?)
+//【多項式逆元】O(deg(a) deg(b)) (?) // TODO：遅いので作り直す
 /*
 * a(x) u(x) = 1 (mod b(x)) を満たす u(x) を格納する．（なければ false を返す）
 *
 * 利用：【拡張ユークリッドの互除法】
 */
 bool polynomial_inverse(const FPS& a, const FPS& b, FPS& u) {
-	// TODO：遅いので作り直す
-
 	FPS v;
 	FPS g = ext_gcd(a, b, u, v);
-
 	return g == FPS(1);
 }
 
 
-//【多項式対数問題／baby-step giant-step】O(mod^(deg(f)/2) deg(f))
+//【多項式の離散対数問題】O(mod^(deg(f)/2) deg(f)) // TODO : 逆元が必要ないように作り直す
 /*
 * a(x)^d = b(x) mod f(x) の最小解 d >= 0 を返す．（なければ INF）
+* 
+* 利用：【多項式逆元】
 *
-*（平方分割）
+*（baby-step giant-step）
 */
 int log(const FPS& a, FPS b, const FPS& f) {
-	// TODO：遅いので作り直す
-
-	dump("--log--");
 	int m = (int)pow(mint::mod(), f.deg() / 2);
-	dump(a); dump(b); dump(m);
 
 	// loga[a^i] = i を計算しておく．
 	map<vi, int> loga;
@@ -960,12 +953,10 @@ int log(const FPS& a, FPS b, const FPS& f) {
 		}
 		a_pow = (a_pow * a).reminder(f);
 	}
-	dump(loga);
 
 	// r = a^(-m)
 	FPS r;
 	polynomial_inverse(a_pow, f, r);
-	dump(r);
 
 	// 方程式の両辺に r = a^(-m) を掛けながら解を探していく．
 	rep(i, m) {

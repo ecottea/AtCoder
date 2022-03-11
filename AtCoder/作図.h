@@ -4,144 +4,6 @@
 // ¡¡¡¡¡ ì} ¡¡¡¡¡
 
 
-//y‰ñ“]zO(1)
-/*
-* “_ p ‚ğ“_ c ‚ğ’†S‚É th[rad] ‚¾‚¯‰ñ“]‚µ‚½“_‚ğ•Ô‚·D
-*/
-inline Point<double> rotate(const Point<double>& p, const Point<double>& c, double th) {
-	Point<double> q;
-
-	q.x = cos(th) * (p.x - c.x) - sin(th) * (p.y - c.y) + c.x;
-	q.y = sin(th) * (p.x - c.x) + cos(th) * (p.y - c.y) + c.y;
-
-	return q;
-}
-
-
-//y90‹‰ñ“]zO(1)
-/*
-* “_ p ‚ğ“_ c ‚ğ’†S‚É 90‹~ i ‚¾‚¯‰ñ“]‚µ‚½“_‚ğ•Ô‚·D
-*/
-template <class T>
-inline Point<T> rotate90(const Point<T>& p, const Point<T>& c, int i) {
-	Point<T> q;
-
-	switch (smod(i, 4)) {
-	case 0:
-		q.x = 1 * (p.x - c.x) - 0 * (p.y - c.y) + c.x;
-		q.y = 0 * (p.x - c.x) + 1 * (p.y - c.y) + c.y;
-		break;
-	case 1:
-		q.x = 0 * (p.x - c.x) - 1 * (p.y - c.y) + c.x;
-		q.y = 1 * (p.x - c.x) + 0 * (p.y - c.y) + c.y;
-		break;
-	case 2:
-		q.x = -1 * (p.x - c.x) - 0 * (p.y - c.y) + c.x;
-		q.y = 0 * (p.x - c.x) + (-1) * (p.y - c.y) + c.y;
-		break;
-	case 3:
-		q.x = 0 * (p.x - c.x) - (-1) * (p.y - c.y) + c.x;
-		q.y = -1 * (p.x - c.x) + 0 * (p.y - c.y) + c.y;
-		break;
-	default:;
-	}
-
-	return q;
-}
-
-
-//yŠp‚Ì“ñ“™•ªüzO(1)
-/*
-* Ú a o b ‚Ì“ñ“™•ªü‚ğ•Ô‚·D
-*/
-template <typename T>
-inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const Point<T>& b) {
-	Point<double> p1 = o;
-	Point<double> p2 = p1 + (a - o).normalize() + (b - o).normalize();
-	return { p1, p2 };
-}
-
-
-//y‚ü‚Ì‘«zO(1)
-/*
-* “_ p ‚©‚ç’¼ü l ‚Ö~‚ë‚µ‚½‚ü‚Ì‘«‚ğ•Ô‚·D
-*/
-inline Point<double> foot_of_perpendicular(const Point<double>& p, const Line<double>& l) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_A
-
-	auto d = (l.second - l.first).normalize();
-	return l.first + (p - l.first).dot(d) * d;
-}
-
-
-//y‘ÎÌˆÚ“®zO(1)
-/*
-* ’¼ü l ‚ÉŠÖ‚µ‚Ä“_ p ‚ğ‘ÎÌˆÚ“®‚µ‚½“_‚ğ•Ô‚·D
-*/
-inline Point<double> symmetrical_move(const Point<double>& p, const Line<double>& l) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_B
-
-	auto d = (l.second - l.first).normalize();
-	auto v = p - l.first;
-	return l.first - v + v.dot(d) * d * 2.0;
-}
-
-
-//y2 ’¼ü‚ÌŒğ“_zO(1)
-/*
-* 2 ’¼ü l1, l2 ‚ÌŒğ“_‚ğ•Ô‚·D
-*/
-template <typename T>
-inline Point<double> intersection_L_L(const Line<T>& l1, const Line<T>& l2) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_2_C
-
-	double x1 = (double)l1.first.x;
-	double y1 = (double)l1.first.y;
-	double x2 = (double)l1.second.x;
-	double y2 = (double)l1.second.y;
-	double x3 = (double)l2.first.x;
-	double y3 = (double)l2.first.y;
-	double x4 = (double)l2.second.x;
-	double y4 = (double)l2.second.y;
-
-	double x_num = x2 * x3 * y1 - x2 * x4 * y1 - x1 * x3 * y2 + x1 * x4 * y2
-		- x1 * x4 * y3 + x2 * x4 * y3 + x1 * x3 * y4 - x2 * x3 * y4;
-	double x_dnm = x3 * y1 - x4 * y1 - x3 * y2 + x4 * y2
-		- x1 * y3 + x2 * y3 + x1 * y4 - x2 * y4;
-	double y_num = x2 * y1 * y3 - x4 * y1 * y3 - x1 * y2 * y3 + x4 * y2 * y3
-		- x2 * y1 * y4 + x3 * y1 * y4 + x1 * y2 * y4 - x3 * y2 * y4;
-	double y_dnm = x3 * y1 - x4 * y1 - x3 * y2 + x4 * y2
-		- x1 * y3 + x2 * y3 + x1 * y4 - x2 * y4;
-
-	return { x_num / x_dnm, y_num / y_dnm };
-}
-
-
-//y“àÚ‰~zO(1)
-/*
-* OŠpŒ` a b c ‚Ì“àÚ‰~‚ğ•Ô‚·D
-*/
-template <typename T>
-inline Circle<double> incircle(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_B
-
-	auto len_a = (b - c).norm();
-	auto len_b = (c - a).norm();
-	auto len_c = (a - b).norm();
-	Point<double> da = a;
-	Point<double> db = b;
-	Point<double> dc = c;
-	auto i = (len_a * da + len_b * db + len_c * dc) / (len_a + len_b + len_c);
-
-	Point<double> d = (b - a).normalize();
-	Point<double> n = { -d.y, d.x };
-	Point<double> p2 = i - a;
-	auto r = abs(p2.dot(n));
-
-	return { i, r };
-}
-
-
 //y“Ê•ïzO(n log n)
 /*
 * n ŒÂ‚Ì“_‚ÌW‡ p ‚Ì“Ê•ï‚Ì’¸“_‚ğ”½Œv‰ñ‚è‚É ch ‚ÉŠi”[‚·‚éD
@@ -156,7 +18,6 @@ void convex_hull(const Polygon<T>& p, Polygon<T>& ch) {
 	sort(all(p), [](Point<T> a, Point<T> b) {
 		return a.x == b.x ? a.y < b.y : a.x < b.x;
 		});
-	dump_array(p);
 
 	// “Ê•ï‚ğ¬‚·’¸“_
 	ch = vector<Point<T>>();
@@ -175,7 +36,6 @@ void convex_hull(const Polygon<T>& p, Polygon<T>& ch) {
 		ch.push_back(p[i]);
 		pt++;
 	}
-	dump_array(ch);
 
 	// Ÿ‚É x À•W~‡‚ÉŒ©‚Ä‚¢‚«C“Ê•ï‚Ì y À•W‚Ì‘å‚«‚¢‘¤‚ğ“¾‚éD
 	repir(i, n - 2, 0) {
@@ -193,6 +53,63 @@ void convex_hull(const Polygon<T>& p, Polygon<T>& ch) {
 
 	// p[0] ‚ªd•¡‚µ‚Ä‚µ‚Ü‚Á‚Ä‚¢‚é‚Ì‚Åæ‚èœ‚­D
 	ch.pop_back();
+}
+
+
+//yã‚©‚ç‚Ì“Ê•ïzO(n log n)
+/*
+* n ŒÂ‚Ì“_ (x[i], y[i]) ‚Ìã‚©‚ç‚Ì“Ê•ï‚Ì x À•W‚É‚Â‚¢‚Ä¸‡‚Å j ”Ô–Ú‚Ì’¸“_‚ÌÀ•W‚ğ p[j] ‚ÉŠi”[‚·‚éD
+* ‚Ü‚½ p ‚Ì‘å‚«‚³‚ğ•Ô‚·Dstrict = false ‚Æ‚·‚é‚ÆL‹`“Ê•ïCupper = false ‚Æ‚·‚é‚Æ‰º‚©‚ç‚Ì“Ê•ï‚ğŠi”[‚·‚éD
+*/
+template <class T>
+int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>& p,
+	bool strict = false, bool upper = true)
+{
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
+
+	int n = sz(x);
+	p.clear();
+
+	// x À•W‚É‚Â‚¢‚Ä¸‡‚É•À‚×‚éD
+	map<T, T> x_to_y;
+	rep(i, n) {
+		if (x_to_y.count(x[i])) {
+			if (upper) chmax(x_to_y[x[i]], y[i]);
+			else chmin(x_to_y[x[i]], y[i]);
+		}
+		else x_to_y[x[i]] = y[i];
+	}
+
+	// 3 “_ P, Q, R ‚Ì‚Ì•”•ª‚ªã‚É“Ê‚©‚ğ•Ô‚·D
+	//		P, Q, R •”•ª‚ªã‚É“Ê
+	//		Ì ’¼ü PQ ‚ÌŒX‚« > ’¼ü PR ‚ÌŒX‚«
+	//		Ì (Q[y] - P[y]) / (Q[x] - P[x]) > (R[y] - P[y]) / (R[x] - P[x])
+	//		Ì (Q[y] - P[y]) (R[x] - P[x]) > (R[y] - P[y]) (Q[x] - P[x])
+	using PT = pair<T, T>;
+	function<bool(const PT&, const PT&, const PT&)> convexQ = [&](const PT& P, const PT& Q, const PT& R) {
+		T left = (Q.second - P.second) * (R.first - P.first);
+		T right = (R.second - P.second) * (Q.first - P.first);
+
+		if (!strict && left == right) return true;
+
+		return upper ? left > right : left < right;
+	};
+
+	int pt = 0;
+	repe(xy, x_to_y) {
+		// “Ê•ï‚Ì’¼‘O‚Ì 2 “_‚ğ P, QC¡Œ©‚Ä‚¢‚é“_‚ğ R ‚Æ‚µC
+		// P, Q, R •”•ª‚ªã‚É“Ê‚Å‚È‚¢ŒÀ‚è Q ‚ğœ‹‚·‚é‚±‚Æ‚ğŒJ‚è•Ô‚·D
+		while (pt >= 2 && !convexQ(p[pt - 2], p[pt - 1], xy)) {
+			p.pop_back();
+			pt--;
+		}
+
+		// ¡Œ©‚Ä‚¢‚é“_‚ğb’è“I‚É“Ê•ï‚É‰Á‚¦‚éD
+		p.push_back(xy);
+		pt++;
+	}
+
+	return pt;
 }
 
 

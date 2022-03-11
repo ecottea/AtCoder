@@ -49,7 +49,7 @@ struct WEdge {
 	// コストなしグラフで呼ばれたとき用
 	operator int() const { return to; }
 
-	// デバッグ出力
+	// デバッグ出力用
 	friend ostream& operator<<(ostream& os, const WEdge& e) {
 		os << '(' << e.to << ',' << e.cost << ')';
 		return os;

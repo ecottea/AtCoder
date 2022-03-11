@@ -176,7 +176,7 @@ mint stirling_S2(int n, int k) {
 	repi(j, 1, k) {
 		res += ((k - j) % 2 == 0 ? 1 : -1) * fm.binomial(k, j) * mint(j).pow(n);
 	}
-	res *= fm.fac_inv(k);
+	res *= fm.factorial_inv(k);
 
 	return res;
 }
@@ -205,8 +205,8 @@ void stirling_S2(int n, vm& s) {
 	Factorial_mint fm(n);
 
 	repi(i, 0, n) {
-		f[i] = (i & 1 ? -1 : 1) * fm.fac_inv(i);
-		g[i] = mint(i).pow(n) * fm.fac_inv(i);
+		f[i] = (i & 1 ? -1 : 1) * fm.factorial_inv(i);
+		g[i] = mint(i).pow(n) * fm.factorial_inv(i);
 	}
 
 	s = convolution(f, g);

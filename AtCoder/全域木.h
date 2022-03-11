@@ -6,11 +6,13 @@
 // ■■■■■ 全域木 ■■■■■
 
 
-//【最小全域森／クラスカル法】O(|E| log|V|)
+//【最小全域森】O(|E| log|V|)
 /*
 * クラスカル法でコスト付き無向グラフ g の最小全域森を求める．
 * 最小全域森は msf に構成し，各最小全域木の代表元を mst に格納する．
 * また戻り値として最小コストを返す．
+* 
+*（クラスカル法）
 */
 ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* mst = nullptr) {
 	int n = sz(g);
@@ -53,10 +55,12 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* mst = nullptr) {
 }
 
 
-//【最小全域木／プリム法】O(|E| log|V|)
+//【最小全域木】O(|E| log|V|)
 /*
 * コスト付きグラフ g の頂点 r を含む連結成分の最小全域木を mst に格納する．
 * また戻り値として最小コストを返す．
+* 
+*（プリム法）
 */
 ll prim(const WGraph& g, int r, WGraph& mst) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95
@@ -167,6 +171,23 @@ mint count_spanning_tree(const Graph& g) {
 }
 
 
+//【完全グラフの全域木の数え上げ】
+/*
+* 完全グラフ K_n の全域木は n^(n-2) 個存在する．
+*
+*（Cayley の定理）
+*/
+
+
+//【完全グラフの全域木の数え上げ（次数制約付き）】
+/*
+* 完全グラフ K_n の全域木で，頂点 i の次数が d[i] であるものの個数は以下の式で与えられる：
+*	(n - 2)! / (Πi (d[i] - 1)!)
+*
+*（Cayley の定理）
+*/
+
+
 //【全域森の数え上げ】O(|V|^3)
 /*
 * 自己ループのない無向グラフ g（多重辺は可）の全域森の個数を返す．
@@ -202,6 +223,7 @@ mint count_spanning_forest(const Graph& g) {
 	rep(i, n) {
 		rep(j, n) {
 			if (avoid.count(i) || avoid.count(j)) {
+				// クロネッカーのデルタへの書き換えて除去したことにする．
 				mat[i][j] = (i == j);
 			}
 		}

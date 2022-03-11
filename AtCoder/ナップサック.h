@@ -116,16 +116,89 @@ ll knapsack01_problem(const vi& v, vl& w, ll w_max, vb* sel = nullptr) {
 }
 
 
+//【0-1 ナップサック問題（個数が小）】O(2^(n/2) n)
+/*
+* 価値が v[0..n) で重さが w[0..n) である品物から，重さ w_max 以下で
+* 価値が最大になるよう品物を選んだときの価値を返す．
+*
+*（半分全列挙）
+*/
+ll knapsack01_problem(const vl& v, const vl& w, ll w_max) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_H
+
+	int n = sz(v); // 品物の個数
+
+	// 前後半それぞれの品物の個数
+	int n1 = n / 2;
+	int n2 = n - n1;
+
+	// 前半の品物の部分集合の重さに価値を対応付けるリスト
+	map<ll, ll> w1_to_v1;
+
+	// 前半の品物の部分集合をビット全探索する．
+	repb(set1, n1) {
+		ll w1 = 0, v1 = 0;
+
+		rep(i, n1) {
+			if (set1 & (1 << i)) {
+				w1 += w[i];
+				v1 += v[i];
+			}
+		}
+
+		// 重さが上限以下ならばリストに追加
+		if (w1 <= w_max) {
+			chmax(w1_to_v1[w1], v1);
+		}
+	}
+
+	// リストを再利用し，その重さ以下での最大価値に更新しておく．
+	ll v1_max = 0;
+	repea(p, w1_to_v1) {
+		chmax(p.second, v1_max);
+		v1_max = p.second;
+	}
+
+	ll res = 0;
+
+	// 後半の品物の部分集合をビット全探索する．
+	repb(set2, n2) {
+		ll w2 = 0, v2 = 0;
+
+		rep(i, n2) {
+			if (set2 & (1 << i)) {
+				w2 += w[n1 + i];
+				v2 += v[n1 + i];
+			}
+		}
+
+		// 重さが上限以下ならば前半のリストと照合し最大価値を更新する．
+		if (w2 <= w_max) {
+			// 価値が w_max - w2 以下である前半の部分集合の最大価値を見つける．
+			auto it = w1_to_v1.upper_bound(w_max - w2);
+			it--;
+
+			chmax(res, it->second + v2);
+		}
+	}
+
+	return res;
+}
+
+
 //【0-1 ナップサック問題（個数が小）】O(2^(N/2) N)
 /*
 * 価値 v[i] と重さ w[i] の定まった N 個の品物から，重さ W 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
 *
-*（半分全列挙）
+*（半分全列挙，グレイコード）
 */
-ll knapsack01_problem(const vl& v, vl& w, ll W) {
+ll knapsack01_problem_gray(const vl& v, vl& w, ll W) {
 	// 参考：https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_H
+
+	// せっかくグレイコードを使っても，二分探索を使用しているせいで計算量は改善しない．
+	// 重さがちょうど W という問題なら代わりにハッシュが使えるので計算量が改善する．
 
 	int N = sz(v); // 品物の個数
 

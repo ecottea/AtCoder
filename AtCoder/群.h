@@ -100,3 +100,61 @@ S605 inv605(S605 x) {
 #define Inversion_group S605, op605, e605, inv605
 
 
+//y’uŠ·‚Ì‡¬ ŒQziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
+/*
+* S ¹ f[0..n) : ’uŠ· i ¨ f[i] ‚ğ•\‚·D
+* f op g : ‡¬’uŠ· f o g ‚ğ•Ô‚·D
+*/
+using S606 = vi;
+S606 op606(S606 a, S606 b) {
+	if (sz(a) == 0) return b;
+	if (sz(b) == 0) return a;
+
+	int n = sz(a);
+	S606 res(n);
+	rep(i, n) res[i] = a[b[i]];
+
+	return res;
+}
+S606 e606() { return S606(); }
+S606 inv606(S606 a) {
+	if (sz(a) == 0) return a;
+
+	int n = sz(a);
+	S606 res(n);
+	rep(i, n) res[a[i]] = i;
+
+	return res;
+}
+#define Permutation_composite_group S606, op606, e606, inv606
+
+
+//y’uŠ·‚Ì‹t‡¬ ŒQziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
+/*
+* S ¹ f[0..n) : ’uŠ· i ¨ f[i] ‚ğ•\‚·D
+* f op g : ‡¬’uŠ· g o f ‚ğ•Ô‚·D
+*/
+using S607 = vi;
+S607 op607(S607 a, S607 b) {
+	if (sz(a) == 0) return b;
+	if (sz(b) == 0) return a;
+
+	int n = sz(a);
+	S607 res(n);
+	rep(i, n) res[i] = b[a[i]];
+
+	return res;
+}
+S607 e607() { return S607(); }
+S607 inv607(S607 a) {
+	if (sz(a) == 0) return a;
+
+	int n = sz(a);
+	S607 res(n);
+	rep(i, n) res[a[i]] = i;
+
+	return res;
+}
+#define Permutation_invcomposite_group S607, op607, e607, inv607
+
+

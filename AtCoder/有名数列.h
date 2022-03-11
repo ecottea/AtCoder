@@ -37,22 +37,20 @@ mint fibonacci(ll n) {
 
 //【攪乱順列の数（モンモール数）】O(n)
 /*
-* i=[0..n] について，i 番目のモンモール数を m[i] に格納する．
-* m[i] は長さ i の攪乱順列の数と解釈できる．
+* i=[0..n] について，i 番目のモンモール数を mon[i] に格納する．
+* mon[i] は長さ i の攪乱順列の数と解釈できる．
 */
-void montmort_number(int n, vm& m) {
+void montmort_number(int n, vm& mon) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E5%AE%8C%E5%85%A8%E9%A0%86%E5%88%97
 	// verify : https://judge.yosupo.jp/problem/montmort_number_mod
 
 	//【方法】
-	// モンモール数は，2 項間漸化式
-	//		m[n] = n m[n - 1] + (-1)^n
-	// を満たす．
+	// モンモール数は以下の 2 項間漸化式を満たす：
+	//		mon[n] = n mon[n - 1] + (-1)^n
 
-	m = vm(n + 1);
-
-	m[0] = 1;
-	repi(i, 1, n) m[i] = m[i - 1] * i + (i & 1 ? -1 : 1);
+	mon.resize(n + 1);
+	mon[0] = 1;
+	repi(i, 1, n) mon[i] = mon[i - 1] * i + (i & 1 ? -1 : 1);
 }
 
 

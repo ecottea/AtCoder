@@ -11,12 +11,16 @@
 */
 template <class T>
 int interval_union(vector<pair<T, T>>& lr, vector<pair<T, T>>& res) {
+	// verify : https://atcoder.jp/contests/abc060/tasks/arc073_a
+
 	int n = sz(lr);
+	res.clear();
+
+	if (n == 0) return 0;
 
 	sort(all(lr));
 
 	int m = 1;
-	res.clear();
 	res.push_back(lr[0]);
 	repi(i, 1, n - 1) {
 		// i 番目の区間の左端が結合中の区間の右端より右だった場合
@@ -151,10 +155,8 @@ ll unit_commitment_problem(const vvl& c) {
 *
 *（最長増加部分列）
 */
-using S14 = int;
-S14 op14(S14 x, S14 y) { return max(x, y); }
-S14 e14() { return 0; }
-using RMQ = segtree<S14, op14, e14>;
+int op_minest(int x, int y) { return max(x, y); }
+int e_minest() { return 0; }
 int maximize_interval_nest(const vl& l, vl r) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_target
 
@@ -179,7 +181,7 @@ int maximize_interval_nest(const vl& l, vl r) {
 	int m = sz(r);
 
 	// dp_i[j] : r[0..i) までで右端が j である最長減少部分列の長さ
-	RMQ dp(m);
+	segtree<int, op_minest, e_minest> dp(m);
 
 	rep(i, n) {
 		// 右端の座標圧縮
@@ -248,13 +250,11 @@ ll interval_overlapping(const vvl& a) {
 *
 *（遅延評価セグメント木で高速化したインライン DP）
 */
-using S2 = ll;
-S2 op2(S2 x, S2 y) { return max(x, y); }
-S2 e2() { return -INFL; }
-using F2 = ll;
-S2 mapping2(F2 f, S2 x) { return f + x; }
-F2 composition2(F2 f, F2 g) { return f + g; }
-F2 id2() { return 0; }
+ll op_ip(ll x, ll y) { return max(x, y); }
+ll e_ip() { return -INFL; }
+ll mapping_ip(ll f, ll x) { return f + x; }
+ll composition_ip(ll f, ll g) { return f + g; }
+ll id_ip() { return 0; }
 ll interval_pinning(const vector<pii>& lr, const vl& a) {
 	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231106
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_w
@@ -276,7 +276,7 @@ ll interval_pinning(const vector<pii>& lr, const vl& a) {
 	// dp_i[j + 1] : 今まで見てきた区間の中で考えたときの，
 	//   最も右のピンの位置が j であるようなものの中での最高スコア
 	//  （j + 1 = 0 はピンが全くないことを表す．）
-	lazy_segtree<S2, op2, e2, F2, mapping2, composition2, id2> dp(n + 1);
+	lazy_segtree<ll, op_ip, e_ip, ll, mapping_ip, composition_ip, id_ip> dp(n + 1);
 
 	// 1 が全くないときのスコアは 0 である．
 	dp.set(0, 0);

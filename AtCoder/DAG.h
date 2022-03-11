@@ -2,6 +2,7 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "最短路.h"
+#include "二部マッチング.h"
 // ■■■■■ DAG（有向非巡回グラフ） ■■■■■
 
 
@@ -234,6 +235,45 @@ ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
 			chmax(res, dp[s1][s2]);
 		}
 	}
+	return res;
+}
+
+
+//【最小パス被覆】O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
+/*
+* DAG g の最小パス被覆の大きさを返す．
+*
+* 利用：【二部グラフの最大マッチング】
+*/
+int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
+	// 参考：https://kyopro.hateblo.jp/entry/2018/06/04/000659
+
+	int n = sz(g);
+
+	Bipartite_matching bm(n, n);
+	rep(s, n) {
+		repe(t, g[s]) {
+			bm.add_edge(s, t);
+		}
+	}
+
+	int res = n - bm.flow();
+
+	if (paths == nullptr) return res;
+
+	vector<pii> es;
+	bm.maximum_matching(es);
+
+	dsu uf(n);
+	repe(e, es) {
+		int s, t;
+		tie(s, t) = e;
+
+		uf.merge(s, t);
+	}
+
+	*paths = uf.groups();
+
 	return res;
 }
 
