@@ -2,6 +2,7 @@
 #include "header.h"
 #include "合同式.h"
 #include "二項係数.h"
+#include "多項式.h"
 // ■■■■■ 形式的冪級数 ■■■■■
 
 
@@ -9,16 +10,16 @@
 /*
 * mod 998244353 以外だと積などが遅くなる（O(n^2)）ので注意．
 *
-* FPS() : O(1)
+* MFPS() : O(1)
 *	零多項式 f = 0 で初期化する．
 *
-* FPS(c0) : O(1)
+* MFPS(c0) : O(1)
 *	定数多項式 f = c0 で初期化する．
 *
-* FPS(c0, d) : O(d)
+* MFPS(c0, d) : O(d)
 *	d 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
-* FPS(c) : O(|c|)
+* MFPS(c) : O(|c|)
 *	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
@@ -44,7 +45,7 @@
 * f.deg(), f.size() : O(1)
 *	多項式 f の次数[項数]を返す．
 *
-* FPS::monomial(d) : O(d)
+* MFPS::monomial(d) : O(d)
 *	単項式 x^d を返す．
 *
 * f.assign(c) : O(n)
@@ -77,29 +78,29 @@
 *	exp f(x) mod x^d を返す．
 *	制約 : f(0) = 0;
 */
-struct FPS {
-	using SFPS = vector<pair<int, mint>>;
+struct MFPS {
+	using SMFPS = vector<pair<int, mint>>;
 
 	int n; // 係数の個数（次数 + 1）
 	vm c; // 係数列
 
 	// コンストラクタ（0，定数，係数列で初期化）
-	FPS() : n(0) {}
-	FPS(const mint& c0) : n(1), c({ c0 }) {}
-	FPS(const int& c0) : n(1), c({ mint(c0) }) {}
-	FPS(const mint& c0, int d) : n(d), c(n) { c[0] = c0; }
-	FPS(const int& c0, int d) : n(d), c(n) { c[0] = c0; }
-	FPS(const vm& c_) : n(sz(c_)), c(c_) {}
-	FPS(const vi& c_) : n(sz(c_)), c(n) { rep(i, n) c[i] = c_[i]; }
+	MFPS() : n(0) {}
+	MFPS(const mint& c0) : n(1), c({ c0 }) {}
+	MFPS(const int& c0) : n(1), c({ mint(c0) }) {}
+	MFPS(const mint& c0, int d) : n(d), c(n) { c[0] = c0; }
+	MFPS(const int& c0, int d) : n(d), c(n) { c[0] = c0; }
+	MFPS(const vm& c_) : n(sz(c_)), c(c_) {}
+	MFPS(const vi& c_) : n(sz(c_)), c(n) { rep(i, n) c[i] = c_[i]; }
 
 	// 代入
-	FPS(const FPS& f) = default;
-	FPS& operator=(const FPS& f) = default;
-	FPS& operator=(const mint& c0) { n = 1; c = { c0 }; return *this; }
+	MFPS(const MFPS& f) = default;
+	MFPS& operator=(const MFPS& f) = default;
+	MFPS& operator=(const mint& c0) { n = 1; c = { c0 }; return *this; }
 
 	// 比較
-	bool operator==(const FPS& g) const { return c == g.c; }
-	bool operator!=(const FPS& g) const { return c != g.c; }
+	bool operator==(const MFPS& g) const { return c == g.c; }
+	bool operator!=(const MFPS& g) const { return c != g.c; }
 
 	// アクセス
 	mint const& operator[](int i) const { return c[i]; }
@@ -110,7 +111,7 @@ struct FPS {
 	int size() const { return n; }
 
 	// 加算
-	FPS& operator+=(const FPS& g) {
+	MFPS& operator+=(const MFPS& g) {
 		if (n >= g.n) rep(i, g.n) c[i] += g.c[i];
 		else {
 			rep(i, n) c[i] += g.c[i];
@@ -119,22 +120,22 @@ struct FPS {
 		}
 		return *this;
 	}
-	FPS operator+(const FPS& g) const { return FPS(*this) += g; }
+	MFPS operator+(const MFPS& g) const { return MFPS(*this) += g; }
 
 	// 定数加算
-	FPS& operator+=(const mint& sc) {
+	MFPS& operator+=(const mint& sc) {
 		if (n == 0) { n = 1; c = { sc }; }
 		else { c[0] += sc; }
 		return *this;
 	}
-	FPS operator+(const mint& sc) const { return FPS(*this) += sc; }
-	friend FPS operator+(const mint& sc, const FPS& f) { return f + sc; }
-	FPS& operator+=(const int& sc) { *this += mint(sc); return *this; }
-	FPS operator+(const int& sc) const { return FPS(*this) += sc; }
-	friend FPS operator+(const int& sc, const FPS& f) { return f + sc; }
+	MFPS operator+(const mint& sc) const { return MFPS(*this) += sc; }
+	friend MFPS operator+(const mint& sc, const MFPS& f) { return f + sc; }
+	MFPS& operator+=(const int& sc) { *this += mint(sc); return *this; }
+	MFPS operator+(const int& sc) const { return MFPS(*this) += sc; }
+	friend MFPS operator+(const int& sc, const MFPS& f) { return f + sc; }
 
 	// 減算
-	FPS& operator-=(const FPS& g) {
+	MFPS& operator-=(const MFPS& g) {
 		if (n >= g.n) rep(i, g.n) c[i] -= g.c[i];
 		else {
 			rep(i, n) c[i] -= g.c[i];
@@ -143,48 +144,47 @@ struct FPS {
 		}
 		return *this;
 	}
-	FPS operator-(const FPS& g) const { return FPS(*this) -= g; }
+	MFPS operator-(const MFPS& g) const { return MFPS(*this) -= g; }
 
 	// 定数減算
-	FPS& operator-=(const mint& sc) { *this += -sc; return *this; }
-	FPS operator-(const mint& sc) const { return FPS(*this) -= sc; }
-	friend FPS operator-(const mint& sc, const FPS& f) { return -(f - sc); }
-	FPS& operator-=(const int& sc) { *this += -sc; return *this; }
-	FPS operator-(const int& sc) const { return FPS(*this) -= sc; }
-	friend FPS operator-(const int& sc, const FPS& f) { return -(f - sc); }
+	MFPS& operator-=(const mint& sc) { *this += -sc; return *this; }
+	MFPS operator-(const mint& sc) const { return MFPS(*this) -= sc; }
+	friend MFPS operator-(const mint& sc, const MFPS& f) { return -(f - sc); }
+	MFPS& operator-=(const int& sc) { *this += -sc; return *this; }
+	MFPS operator-(const int& sc) const { return MFPS(*this) -= sc; }
+	friend MFPS operator-(const int& sc, const MFPS& f) { return -(f - sc); }
 
 	// 加法逆元
-	FPS operator-() const { return FPS(*this) *= -1; }
+	MFPS operator-() const { return MFPS(*this) *= -1; }
 
 	// 定数倍
-	FPS& operator*=(const mint& sc) { rep(i, n) c[i] *= sc; return *this; }
-	FPS operator*(const mint& sc) const { return FPS(*this) *= sc; }
-	friend FPS operator*(const mint& sc, const FPS& f) { return f * sc; }
-	FPS& operator*=(const int& sc) { *this *= mint(sc); return *this; }
-	FPS operator*(const int& sc) const { return FPS(*this) *= sc; }
-	friend FPS operator*(const int& sc, const FPS& f) { return f * sc; }
+	MFPS& operator*=(const mint& sc) { rep(i, n) c[i] *= sc; return *this; }
+	MFPS operator*(const mint& sc) const { return MFPS(*this) *= sc; }
+	friend MFPS operator*(const mint& sc, const MFPS& f) { return f * sc; }
+	MFPS& operator*=(const int& sc) { *this *= mint(sc); return *this; }
+	MFPS operator*(const int& sc) const { return MFPS(*this) *= sc; }
+	friend MFPS operator*(const int& sc, const MFPS& f) { return f * sc; }
 
 	// 右からの定数除算
-	FPS& operator/=(const mint& sc) { *this *= sc.inv(); return *this; }
-	FPS operator/(const mint& sc) const { return FPS(*this) /= sc; }
-	FPS& operator/=(const int& sc) { *this /= mint(sc); return *this; }
-	FPS operator/(const int& sc) const { return FPS(*this) /= sc; }
+	MFPS& operator/=(const mint& sc) { *this *= sc.inv(); return *this; }
+	MFPS operator/(const mint& sc) const { return MFPS(*this) /= sc; }
+	MFPS& operator/=(const int& sc) { *this /= mint(sc); return *this; }
+	MFPS operator/(const int& sc) const { return MFPS(*this) /= sc; }
 
 	// 積
-	FPS& operator*=(const FPS& g) {
+	MFPS& operator*=(const MFPS& g) {
 		c = convolution(c, g.c); n = sz(c); return *this; // mod 998244353 用
 //		return mul_other(g);
 	}
-	FPS& mul_other(const FPS& g) {
+	MFPS& mul_other(const MFPS& g) {
 		int m = g.deg();
-		if (m == 0) return *this = FPS();
+		if (m == -1) return *this = MFPS();
 		resize(n + m);
 
 		// 後ろからインライン配る DP
 		repir(i, n - 1, 0) {
 			// 上位項に係数倍して配っていく．
 			repi(j, 1, m) {
-
 				if (i + j >= n) break;
 
 				c[i + j] += c[i] * g[j];
@@ -196,10 +196,10 @@ struct FPS {
 
 		return *this;
 	}
-	FPS operator*(const FPS& g) const { return FPS(*this) *= g; }
+	MFPS operator*(const MFPS& g) const { return MFPS(*this) *= g; }
 
 	// 除算
-	FPS inv(int d) const {
+	MFPS inv(int d) const {
 		// 参考：https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
 		// verify : https://judge.yosupo.jp/problem/inv_of_formal_power_series
 
@@ -228,7 +228,7 @@ struct FPS {
 		//
 		// この手順を d <= 2^i となる i まで繰り返し，d 次以上の項を削除すればよい．
 
-		FPS g(c[0].inv());
+		MFPS g(c[0].inv());
 		for (int k = 1; k < d; k *= 2) {
 			g = (2 - *this * g) * g;
 			g.resize(2 * k);
@@ -236,11 +236,11 @@ struct FPS {
 
 		return g.resize(d);
 	}
-	FPS& operator/=(const FPS& g) { return *this *= g.inv(n); }
-	FPS operator/(const FPS& g) const { return FPS(*this) /= g; }
+	MFPS& operator/=(const MFPS& g) { return *this *= g.inv(n); }
+	MFPS operator/(const MFPS& g) const { return MFPS(*this) /= g; }
 
 	// 余り付き除算
-	FPS quotient(const FPS& g) const {
+	MFPS quotient(const MFPS& g) const {
 		// 参考 : https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
 
 		//【方法】
@@ -264,21 +264,21 @@ struct FPS {
 		// これで q を mod x^(n-m+1) で正しく求めることができることになるが，
 		// q の次数は n - m であったから，q 自身を正しく求めることができた．
 
-		if (n < g.n) return FPS();
+		if (n < g.n) return MFPS();
 		return ((this->rev() / g.rev()).resize(n - g.n + 1)).rev();
 	}
-	FPS reminder(const FPS& g) const { return (*this - this->quotient(g) * g).resize(g.n - 1); }
-	pair<FPS, FPS> quotient_remainder(const FPS& g) const {
+	MFPS reminder(const MFPS& g) const { return (*this - this->quotient(g) * g).resize(g.n - 1); }
+	pair<MFPS, MFPS> quotient_remainder(const MFPS& g) const {
 		// verify : https://judge.yosupo.jp/problem/division_of_polynomials
 
-		pair<FPS, FPS> res;
+		pair<MFPS, MFPS> res;
 		res.first = this->quotient(g);
 		res.second = (*this - res.first * g).resize(g.n - 1);
 		return res;
 	}
 
 	// スパース積
-	FPS& operator*=(const SFPS& g) {
+	MFPS& operator*=(const SMFPS& g) {
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
 		mint g0 = 0;
@@ -305,10 +305,10 @@ struct FPS {
 
 		return *this;
 	}
-	FPS operator*(const SFPS& g) const { return FPS(*this) *= g; }
+	MFPS operator*(const SMFPS& g) const { return MFPS(*this) *= g; }
 
 	// スパース商
-	FPS& operator/=(const SFPS& g) {
+	MFPS& operator/=(const SMFPS& g) {
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
 		assert(it0->first == 0 && it0->second != 0);
@@ -334,20 +334,20 @@ struct FPS {
 
 		return *this;
 	}
-	FPS operator/(const SFPS& g) const { return FPS(*this) /= g; }
+	MFPS operator/(const SMFPS& g) const { return MFPS(*this) /= g; }
 
 	// 係数反転
-	FPS rev() const { FPS h = *this; reverse(all(h.c)); return h; }
+	MFPS rev() const { MFPS h = *this; reverse(all(h.c)); return h; }
 
 	// 単項式
-	friend FPS monomial(int d) {
-		FPS mono(0, d + 1);
+	static MFPS monomial(int d) {
+		MFPS mono(0, d + 1);
 		mono[d] = 1;
 		return mono;
 	}
 
 	// 不要な高次項の除去
-	FPS& resize() {
+	MFPS& resize() {
 		// 最高次の係数が非 0 になるまで削る．
 		while (n > 0 && c[n - 1] == 0) {
 			c.pop_back();
@@ -357,7 +357,7 @@ struct FPS {
 	}
 
 	// 高次項の除去
-	FPS& resize(int d) {
+	MFPS& resize(int d) {
 		// x^d 以上の項を除去する．
 		n = d;
 		c.resize(d);
@@ -372,23 +372,23 @@ struct FPS {
 	}
 
 	// 係数のシフト
-	FPS& operator>>=(int d) {
+	MFPS& operator>>=(int d) {
 		n += d;
 		c.insert(c.begin(), d, 0);
 		return *this;
 	}
-	FPS& operator<<=(int d) {
+	MFPS& operator<<=(int d) {
 		n -= d;
 		if (n <= 0) { c.clear(); n = 0; }
 		else c.erase(c.begin(), c.begin() + d);
 		return *this;
 	}
-	FPS operator>>(int d) const { return FPS(*this) >>= d; }
-	FPS operator<<(int d) const { return FPS(*this) <<= d; }
+	MFPS operator>>(int d) const { return MFPS(*this) >>= d; }
+	MFPS operator<<(int d) const { return MFPS(*this) <<= d; }
 
 	// 累乗の剰余
-	friend FPS power_mod(const FPS& f, ll d, const FPS& g) {
-		FPS res(1), pow2(f);
+	friend MFPS power_mod(const MFPS& f, ll d, const MFPS& g) {
+		MFPS res(1), pow2(f);
 		while (d > 0) {
 			if (d & 1LL) res = (res * pow2).reminder(g);
 			pow2 = (pow2 * pow2).reminder(g);
@@ -398,23 +398,23 @@ struct FPS {
 	}
 
 	// 微分
-	friend FPS derivative(const FPS& f) {
-		FPS res;
+	friend MFPS derivative(const MFPS& f) {
+		MFPS res;
 		repi(i, 1, f.n - 1) res.c.push_back(f[i] * i);
 		res.n = sz(res.c);
 		return res;
 	}
 
 	// 不定積分
-	friend FPS integral(const FPS& f) {
-		FPS res(0);
+	friend MFPS integral(const MFPS& f) {
+		MFPS res(0);
 		repi(i, 0, f.n - 1) res.c.push_back(f[i] / (i + 1));
 		res.n = sz(res.c);
 		return res;
 	}
 
 	// 対数関数
-	friend FPS log(const FPS& f, int d) {
+	friend MFPS log(const MFPS& f, int d) {
 		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 		// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
 
@@ -422,7 +422,7 @@ struct FPS {
 	}
 
 	// 指数関数
-	friend FPS exp(const FPS& f, int d) {
+	friend MFPS exp(const MFPS& f, int d) {
 		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 		// verify : https://judge.yosupo.jp/problem/exp_of_formal_power_series
 
@@ -447,7 +447,7 @@ struct FPS {
 		// これを繰り返せば所望の g が求まる．
 
 		// ニュートン法で log g = f なる g を見つける．
-		FPS g(1);
+		MFPS g(1);
 		for (int k = 1; k < d; k *= 2) {
 			g = g * (f + 1 - log(g, 2 * k));
 			g.resize(2 * k);
@@ -458,7 +458,7 @@ struct FPS {
 	}
 
 	// 累乗
-	FPS pow(ll k, int d) const {
+	MFPS pow(ll k, int d) const {
 		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 		// verify : https://judge.yosupo.jp/problem/pow_of_formal_power_series
 
@@ -467,29 +467,29 @@ struct FPS {
 		while (i0 < n && c[i0] == 0) i0++;
 
 		// f = 0 なら f^k = 0 である．
-		if (i0 == n) return FPS(0, d);
+		if (i0 == n) return MFPS(0, d);
 
 		// 最低次の項の係数を記録する．
 		mint c0 = c[i0];
 
 		// 定数項が 1 になるようシフトかつ定数除算した多項式を得る．
-		FPS fs = (*this << i0) / c0;
+		MFPS fs = (*this << i0) / c0;
 		ll ds = d - k * i0;
 
 		// 最終的に k * i0 次以上の項しか残らないことに注意し，0 になるケースを処理する．
-		if (ds <= 0) return FPS(0, d);
+		if (ds <= 0) return MFPS(0, d);
 
 		// f^k = exp(k log f(x)) を用いて f^k を計算する．
-		FPS gs = exp(mint(k) * log(fs, (int)ds), (int)ds);
+		MFPS gs = exp(mint(k) * log(fs, (int)ds), (int)ds);
 
 		// シフトと定数除算した分を元に戻す．
-		FPS g = (gs * c0.pow(k)) >> ((int)k * i0);
+		MFPS g = (gs * c0.pow(k)) >> ((int)k * i0);
 
 		return g;
 	}
 
 	// デバッグ出力
-	friend ostream& operator<<(ostream& os, const FPS& f) {
+	friend ostream& operator<<(ostream& os, const MFPS& f) {
 		if (f.n == 0) os << 0;
 		else {
 			rep(i, f.n) {
@@ -508,7 +508,7 @@ struct FPS {
 *
 * 利用：【平方剰余／トネリ－シャンクスのアルゴリズム】
 */
-FPS sqrt(const FPS& f, int d, bool& find) {
+MFPS sqrt(const MFPS& f, int d, bool& find) {
 	// 参考 : https://nyaannyaan.github.io/library/fps/fps-sqrt.hpp
 	// verify : https://judge.yosupo.jp/problem/sqrt_of_formal_power_series
 
@@ -536,7 +536,7 @@ FPS sqrt(const FPS& f, int d, bool& find) {
 	// 零多項式なら平方根も零多項式である．
 	if (i0 == f.deg() + 1) {
 		find = true;
-		FPS g;
+		MFPS g;
 		g.resize(d);
 		return g;
 	}
@@ -544,28 +544,28 @@ FPS sqrt(const FPS& f, int d, bool& find) {
 	// 最低次の項が奇数次の項なら平方根は存在しない．
 	if (i0 % 2 == 1) {
 		find = false;
-		return FPS();
+		return MFPS();
 	}
 
 	// 最低次の項の係数が平方剰余でなければ平方根は存在しない．
 	int c0 = (f[i0] == 1 ? 1 : sqrt(f[i0])); // 1 のことが多いので高速化
 	if (c0 == -1) {
 		find = false;
-		return FPS();
+		return MFPS();
 	}
 
 	// 定数項が 0 でないようにシフトした多項式を得る．
-	FPS fs = f << i0;
+	MFPS fs = f << i0;
 
 	// ニュートン法で g = √f を見つける．
-	FPS gs(c0);
+	MFPS gs(c0);
 	for (int k = 1; k < d; k *= 2) {
 		gs = (gs + fs * gs.inv(2 * k)) / 2;
 		gs.resize(2 * k);
 	}
 
 	// シフトした分を元に戻す．
-	FPS g = gs >> (i0 / 2);
+	MFPS g = gs >> (i0 / 2);
 	g.resize(d);
 
 	find = true;
@@ -573,13 +573,13 @@ FPS sqrt(const FPS& f, int d, bool& find) {
 }
 
 
-//【展開係数／ボスタン・森法】O(n log n log d)
+//【展開係数／ボスタン－森法】O(n log n log d)
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
-* 制約 : deg f < deg g,
+* 制約 : deg f < deg g, g[0] != 0
 */
-mint coef(const FPS& f, const FPS& g, ll d) {
+mint coef(const MFPS& f, const MFPS& g, ll d) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_fibonacci
 
@@ -610,9 +610,9 @@ mint coef(const FPS& f, const FPS& g, ll d) {
 	}
 
 	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
-	FPS f2, g2 = g;
+	MFPS f2, g2 = g;
 	rep(i, g2.n) {
-		if (i % 2) {
+		if (i % 2 == 1) {
 			g2[i] *= -1;
 		}
 	}
@@ -620,7 +620,7 @@ mint coef(const FPS& f, const FPS& g, ll d) {
 	g2 *= g;
 
 	// f3(x) = E(x) or O(x), g3(x) = e(x) を求める．
-	FPS f3, g3;
+	MFPS f3, g3;
 	if (d % 2 == 0) {
 		for (int i = 0; 2 * i < f2.n; i++) {
 			f3.c.push_back(f2[2 * i]);
@@ -642,21 +642,51 @@ mint coef(const FPS& f, const FPS& g, ll d) {
 }
 
 
+//【展開係数（分子が疎）】O(n m log m log d)（n : f の項数，m : deg g）
+/*
+* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
+*
+* 制約 : g[0] != 0
+*
+* 利用：【展開係数／ボスタン－森法】
+*/
+mint coef(const SPoly<mint>& f, const MFPS& g, ll d) {
+	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_h
+
+	//【方法】
+	// 分子の c x^k という項からの [x^d](f / g) への寄与は
+	//		c [x^(d - k)] (1 / g)
+	// である．これを分子の全ての項について足し合わせる．
+	mint res = 0;
+
+	repe(p, f.c) {
+		ll fd; mint fc;
+		tie(fd, fc) = p;
+
+		if (d - fd < 0) continue;
+
+		res += fc * coef(MFPS(1), g, d - fd);
+	}
+
+	return res;
+}
+
+
 //【線形漸化式】O(d log d log n)
 /*
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 数列 a について，a[n] の値を返す．
 *
-* 利用：【展開係数／ボスタン・森法】
+* 利用：【展開係数／ボスタン－森法】
 */
 mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 	// verify : https://judge.yosupo.jp/problem/kth_term_of_linearly_recurrent_sequence
 
 	int d = sz(a);
 
-	FPS A(a), C(c);
-	FPS Dnm = 1 - (C >> 1);
-	FPS Num = (Dnm * A).resize(d);
+	MFPS A(a), C(c);
+	MFPS Dnm = 1 - (C >> 1);
+	MFPS Num = (Dnm * A).resize(d);
 	return coef(Num, Dnm, n);
 }
 
@@ -665,11 +695,11 @@ mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 /*
 * f(x + c) を返す．
 *
-* 制約 : fm は def(f) までの階乗計算が可能であること．
+* 制約 : fm は deg(f) までの階乗計算が可能であること．
 *
 * 利用：【階乗と二項係数（mint利用）】
 */
-FPS taylor_shift(const FPS& f, mint c, const Factorial_mint& fm) {
+MFPS taylor_shift(const MFPS& f, mint c, const Factorial_mint& fm) {
 	// 参考 : https://nyaannyaan.github.io/library/fps/taylor-shift.hpp.html
 	// verify : https://judge.yosupo.jp/problem/polynomial_taylor_shift
 
@@ -697,15 +727,15 @@ FPS taylor_shift(const FPS& f, mint c, const Factorial_mint& fm) {
 
 	int n = f.deg() + 1;
 
-	FPS g(1);
+	MFPS g(1);
 	g.resize(n);
 	repi(i, 1, n - 1) g[i] = g[i - 1] * c * fm.inv(i);
 
-	FPS h(f);
+	MFPS h(f);
 	rep(i, n) h[i] *= fm.factorial(i);
 	h = h.rev();
 
-	FPS fs = (g * h).resize(n);
+	MFPS fs = (g * h).resize(n);
 	fs = fs.rev();
 	rep(i, n) fs[i] *= fm.factorial_inv(i);
 
@@ -719,13 +749,13 @@ FPS taylor_shift(const FPS& f, mint c, const Factorial_mint& fm) {
 * 
 * 戻り値の i 次の項の係数は，x[0..n) の符号付き n - i 次基本対称式になる．
 */
-FPS expand(const vm& x) {
+MFPS expand(const vm& x) {
 	// verify : https://atcoder.jp/contests/abc231/tasks/abc231_g
 
 	int n = sz(x);
 
-	vector<FPS> f(n);
-	rep(i, n) f[i] = FPS(vm({ -x[i], 1 }));
+	vector<MFPS> f(n);
+	rep(i, n) f[i] = MFPS(vm({ -x[i], 1 }));
 
 	// 2 冪個ずつ掛けていく（分割統治法）
 	for (int k = 1; k < n; k *= 2) {
@@ -742,7 +772,7 @@ FPS expand(const vm& x) {
 /*
 * n 次多項式 f について，f(x[0..m)) の値を y[0..m) に格納する．
 */
-void multipoint_evaluation(const FPS& f, const vm& x, vm& y) {
+void multipoint_evaluation(const MFPS& f, const vm& x, vm& y) {
 	// 参考 : https://37zigen.com/multipoint-evaluation/
 	// verify : https://judge.yosupo.jp/problem/multipoint_evaluation
 
@@ -751,13 +781,13 @@ void multipoint_evaluation(const FPS& f, const vm& x, vm& y) {
 	int m2 = 1 << (msb(m - 1) + 1);
 
 	// sp : (x - x[i]) の連続する 2 冪個の積からなる完全二分木
-	vector<FPS> sp(m2 * 2);
-	repi(i, m2, m2 + m - 1) sp[i] = FPS(vm({ -x[i - m2], 1 }));
-	repi(i, m2 + m, 2 * m2 - 1) sp[i] = FPS(1);
+	vector<MFPS> sp(m2 * 2);
+	repi(i, m2, m2 + m - 1) sp[i] = MFPS(vm({ -x[i - m2], 1 }));
+	repi(i, m2 + m, 2 * m2 - 1) sp[i] = MFPS(1);
 	repir(i, m2 - 1, 1) sp[i] = sp[2 * i] * sp[2 * i + 1];
 
 	// sr : f を sp[i] で割った余りからなる完全二分木
-	vector<FPS> sr(m2 * 2);
+	vector<MFPS> sr(m2 * 2);
 	sr[1] = f.reminder(sp[1]);
 	repi(i, 2, m2 + m - 1) sr[i] = sr[i / 2].reminder(sp[i]);
 
@@ -822,7 +852,7 @@ mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 *
 * 利用：【一次式の積の展開】，【多点評価】
 */
-FPS lagrange_interpolation(const vm& x, const vm& y) {
+MFPS lagrange_interpolation(const vm& x, const vm& y) {
 	// 参考 : https://37zigen.com/lagrange-interpolation/
 	// verify : https://judge.yosupo.jp/problem/polynomial_interpolation
 
@@ -848,15 +878,15 @@ FPS lagrange_interpolation(const vm& x, const vm& y) {
 
 	int n = sz(x);
 
-	FPS g = expand(x);
+	MFPS g = expand(x);
 	g = derivative(g);
 	vm b;
 	multipoint_evaluation(g, x, b);
 
-	vector<FPS> num(n), dnm(n);
+	vector<MFPS> num(n), dnm(n);
 	rep(i, n) {
-		num[i] = FPS(y[i] / b[i]);
-		dnm[i] = FPS(vm({ -x[i], 1 }));
+		num[i] = MFPS(y[i] / b[i]);
+		dnm[i] = MFPS(vm({ -x[i], 1 }));
 	}
 
 	// 2 冪個ずつ足していく（分割統治法）
@@ -879,14 +909,14 @@ FPS lagrange_interpolation(const vm& x, const vm& y) {
 *
 * 利用：【階乗と二項係数（mint利用）】，【平行移動】
 */
-FPS falling_factorial(int n, const Factorial_mint& fm) {
+MFPS falling_factorial(int n, const Factorial_mint& fm) {
 	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind
 
 	//【方法】
 	// 累乗をダブリングで計算するのと同様．
 	// ただし同じものを掛けるのではなく平行移動したものを掛ける．
 
-	FPS f(vm({ 0, 1 })), res(1);
+	MFPS f(vm({ 0, 1 })), res(1);
 
 	while (n > 0) {
 		if (n & 1) res = taylor_shift(res, -f.deg(), fm) * f;
@@ -903,16 +933,16 @@ FPS falling_factorial(int n, const Factorial_mint& fm) {
 * a(x) u(x) + b(x) v(x) = g(x) の解 (u(x), v(x)) を u, v に格納する．
 * またモニックな g(x) = gcd(a(x), b(x)) を返す．
 */
-FPS ext_gcd(FPS a, FPS b, FPS& u, FPS& v) {
+MFPS ext_gcd(MFPS a, MFPS b, MFPS& u, MFPS& v) {
 	b.resize();
 	if (sz(b) == 0) {
-		u = FPS(a[a.deg()].inv());
-		v = FPS();
+		u = MFPS(a[a.deg()].inv());
+		v = MFPS();
 		a /= a[a.deg()];
 		return a;
 	}
 
-	FPS d = ext_gcd(b, a.reminder(b), v, u);
+	MFPS d = ext_gcd(b, a.reminder(b), v, u);
 	v -= a.quotient(b) * u;
 	return d;
 }
@@ -924,10 +954,10 @@ FPS ext_gcd(FPS a, FPS b, FPS& u, FPS& v) {
 *
 * 利用：【拡張ユークリッドの互除法】
 */
-bool polynomial_inverse(const FPS& a, const FPS& b, FPS& u) {
-	FPS v;
-	FPS g = ext_gcd(a, b, u, v);
-	return g == FPS(1);
+bool polynomial_inverse(const MFPS& a, const MFPS& b, MFPS& u) {
+	MFPS v;
+	MFPS g = ext_gcd(a, b, u, v);
+	return g == MFPS(1);
 }
 
 
@@ -939,12 +969,12 @@ bool polynomial_inverse(const FPS& a, const FPS& b, FPS& u) {
 *
 *（baby-step giant-step）
 */
-int log(const FPS& a, FPS b, const FPS& f) {
+int log(const MFPS& a, MFPS b, const MFPS& f) {
 	int m = (int)pow(mint::mod(), f.deg() / 2);
 
 	// loga[a^i] = i を計算しておく．
 	map<vi, int> loga;
-	FPS a_pow(1, f.deg());
+	MFPS a_pow(1, f.deg());
 	rep(i, m) {
 		vi tmp(sz(a_pow));
 		rep(i, sz(a_pow)) tmp[i] = a_pow[i].val();
@@ -955,7 +985,7 @@ int log(const FPS& a, FPS b, const FPS& f) {
 	}
 
 	// r = a^(-m)
-	FPS r;
+	MFPS r;
 	polynomial_inverse(a_pow, f, r);
 
 	// 方程式の両辺に r = a^(-m) を掛けながら解を探していく．

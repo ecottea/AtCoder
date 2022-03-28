@@ -6,6 +6,28 @@
 // ■■■■■ DAG（有向非巡回グラフ） ■■■■■
 
 
+//【DAG と DP】
+/*
+* いかなる DP も，その状態を頂点，状態遷移を有向辺とすると DAG になる．
+* もし DAG でないと，メモ化再帰で実装したときに無限ループを生じてしまう．
+* 参考 : https://tayama-2.hatenadiary.org/entry/20111210/1323502092
+* 
+* 速さ以前に DP の遷移式すら作れずに困った場合，
+*		(a) 持つ状態を増やして状態遷移グラフを DAG にする．
+*		(b) DAG でなくても効率的に求まる最短路問題に帰着する．
+* などの対処が考えられる．
+* 
+* (a) の例：
+* 非 DAG の長さ k のパスの数え上げにおいては，「どの頂点に居るか」だけでなく，
+* 「何歩で来たか」も状態にもつことで状態遷移グラフを DAG にしている．
+* verify : https://atcoder.jp/contests/abc244/tasks/abc244_e
+* 
+* (b) の例：
+* 操作回数の最小値を求めよとか，コストを最小化せよとかがあれば疑うべき．
+* verify : https://atcoder.jp/contests/abc244/tasks/abc244_f
+*/
+
+
 //【パスの個数】O(|V| + |E|)
 /*
 * DAG g の頂点 s からのパス（不動も可）の個数を cnt[s] に格納する．
@@ -22,6 +44,7 @@ void count_path(const Graph& g, vm& cnt) {
 	function<mint(int)> dfs = [&](int s) {
 		if (seen[s]) return cnt[s];
 		seen[s] = true;
+
 		cnt[s] = 1; // 不動の場合に対応
 
 		repe(t, g[s]) {

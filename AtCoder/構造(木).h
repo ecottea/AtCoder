@@ -14,7 +14,7 @@
 * one_indexed : “ü—Í‚ª 1-indexed ‚Å—^‚¦‚ç‚ê‚é‚È‚ç true
 */
 void read_tree(int n, Graph& g, bool directed = false, bool one_indexed = true) {
-	// verify : https://algo-method.com/tasks/525
+	// verify : https://atcoder.jp/contests/arc028/tasks/arc028_3
 
 	g = Graph(n);
 	repi(i, 1, n - 1) {

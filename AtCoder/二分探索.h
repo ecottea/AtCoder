@@ -52,3 +52,37 @@ double maximize_concentration(const vd& a, const vd& p, int k) {
 }
 
 
+//【互いに異なるカードの選択】O(n log n)
+/*
+* n 種のカードが各 c[i] 枚ある．互いに異なる k 枚のカードを最大何回抽出できるかを返す．
+*
+* 利用：【めぐる式二分探索】
+*/
+ll all_different_select(vl c, ll k) {
+	int n = sz(c);
+
+	// 枚数昇順にソートする．
+	sort(all(c));
+
+	// 累積枚数
+	vl acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + c[i];
+
+	// x 回抽出できるか
+	function<bool(ll)> okQ = [&](ll x) {
+		// x 枚以上あるカードについては，そのうち x 枚しか使えないので，
+		// そのようなカードの種類数 * x で枚数が求まる．
+		// それ以外については全て使えるので下からの累積和で枚数が求まる．
+		int i = distance(c.begin(), lower_bound(all(c), x));
+		ll sel = acc[i] + (n - i) * x;
+
+		// 使えるカードの枚数 sel が使いたいカードの枚数 k * x 以上なら抽出可能．
+		return sel / k >= x;
+	};
+
+	ll res = meguru_search(0LL, accumulate(all(c), 0LL) / k + 1, okQ);
+
+	return res;
+}
+
+

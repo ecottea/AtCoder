@@ -3,7 +3,7 @@
 // ■■■■■ 統計量 ■■■■■
 
 
-//【中央値の 2 倍】O(n log n)
+//【中央値（生データ）】O(n log n)
 /*
 * a[0..n) の中央値の二倍を返す．
 */
@@ -14,7 +14,39 @@ template <class T> T doubled_median(vector<T> a) {
 }
 
 
-//【四分位数の 2 倍】O(n log n)
+//【中央値（度数分布）】O(n log n)
+/*
+* a[0..n) が各 c[0..n) 個あるデータの中央値の二倍を返す．
+*/
+template <class T> T doubled_median(const vector<T>& a, const vl& c) {
+	// verify : https://yukicoder.me/problems/no/1251
+
+	int n = sz(a);
+
+	vector<pll> ac(n);
+	rep(i, n) ac[i] = { a[i], c[i] };
+	sort(all(ac));
+
+	// acc : 累積度数
+	vl acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + ac[i].second;
+	assert(acc[n] > 0);
+
+	// 累積度数が総度数の半分になるところを探す．
+	repi(i, 1, n) {
+		if (2 * acc[i] > acc[n]) {
+			return ac[i - 1].first * 2;
+		}
+		else if (2 * acc[i] == acc[n]) {
+			return ac[i - 1].first + ac[i].first;
+		}
+	}
+
+	return -1;
+}
+
+
+//【四分位数（生データ）】O(n log n)
 /*
 * a[0..n) の四分位数の二倍を返す．
 */

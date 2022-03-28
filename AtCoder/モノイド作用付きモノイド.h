@@ -24,7 +24,29 @@ using F101 = mint;
 S101 mapping101(F101 f, S101 x) { return f * x; }
 F101 composition101(F101 f, F101 g) { return f * g; }
 F101 id101() { return 1; }
-#define Mul_Add_mlop_monoid S101, op101, e101, F101, mapping101, composition101, id101
+#define Mul_Add_amonoid S101, op101, e101, F101, mapping101, composition101, id101
+
+
+//【chmin 作用付き min モノイド】
+using S115 = ll;
+S115 op115(S115 x, S115 y) { return min(x, y); }
+S115 e115() { return INFL; }
+using F115 = ll;
+S115 mapping115(F115 f, S115 x) { return min(f, x); }
+F115 composition115(F115 f, F115 g) { return min(f, g); }
+F115 id115() { return INFL; }
+#define Chmin_min_amonoid S115, op115, e115, F115, mapping115, composition115, id115
+
+
+//【chmax 作用付き max モノイド】
+using S116 = ll;
+S116 op116(S116 x, S116 y) { return max(x, y); }
+S116 e116() { return -INFL; }
+using F116 = ll;
+S116 mapping116(F116 f, S116 x) { return max(f, x); }
+F116 composition116(F116 f, F116 g) { return max(f, g); }
+F116 id116() { return -INFL; }
+#define Chmin_min_amonoid S116, op116, e116, F116, mapping116, composition116, id116
 
 
 //【変更 作用付き 左変更 モノイド】
@@ -35,7 +57,7 @@ using F102 = int;
 F102 id102() { return INF; } // 使わない値なら何でも OK
 S102 mapping102(F102 f, S102 x) { return f == id102() ? x : f; }
 F102 composition102(F102 f, F102 g) { return f == id102() ? g : f; }
-#define Update_Lupdate_mlop_monoid S102, op102, e102, F102, mapping102, composition102, id102
+#define Update_Lupdate_amonoid S102, op102, e102, F102, mapping102, composition102, id102
 
 
 //【変更 作用付き max モノイド】
@@ -46,7 +68,7 @@ using F103 = int;
 F103 id103() { return INF; } // 使わない値なら何でも OK
 S103 mapping103(F103 f, S103 x) { return f == id103() ? x : f; }
 F103 composition103(F103 f, F103 g) { return f == id103() ? g : f; }
-#define Update_max_mlop_monoid S103, op103, e103, F103, mapping103, composition103, id103
+#define Update_max_amonoid S103, op103, e103, F103, mapping103, composition103, id103
 
 
 //【変更 作用付き min モノイド】
@@ -57,7 +79,7 @@ using F104 = int;
 F104 id104() { return INF; } // 使わない値なら何でも OK
 S104 mapping104(F104 f, S104 x) { return f == id104() ? x : f; }
 F104 composition104(F104 f, F104 g) { return f == id104() ? g : f; }
-#define update_min_mlop_monoid S104, op104, e104, F104, mapping104, composition104, id104
+#define Update_min_amonoid S104, op104, e104, F104, mapping104, composition104, id104
 
 
 //【加算 作用付き max モノイド】
@@ -68,7 +90,7 @@ using F105 = ll;
 S105 mapping105(F105 f, S105 x) { return f + x; }
 F105 composition105(F105 f, F105 g) { return f + g; }
 F105 id105() { return 0; }
-#define Add_max_mlop_monoid S105, op105, e105, F105, mapping105, composition105, id105
+#define Add_max_amonoid S105, op105, e105, F105, mapping105, composition105, id105
 
 
 //【加算 作用付き min モノイド】
@@ -79,7 +101,7 @@ using F106 = ll;
 S106 mapping106(F106 f, S106 x) { return f + x; }
 F106 composition106(F106 f, F106 g) { return f + g; }
 F106 id106() { return 0; }
-#define Add_min_mlop_monoid S106, op106, e106, F106, mapping106, composition106, id106
+#define Add_min_amonoid S106, op106, e106, F106, mapping106, composition106, id106
 
 
 //【アフィン変換 作用付き 加算 モノイド】
@@ -119,7 +141,7 @@ F107 composition107(F107 f, F107 g) {
 	return { a * c, a * d + b };
 }
 F107 id107() { return { 1, 0 }; }
-#define Affine_add_mlop_monoid S107, op107, e107, F107, mapping107, composition107, id107
+#define Affine_add_amonoid S107, op107, e107, F107, mapping107, composition107, id107
 
 
 //【加算 作用付き 加算 モノイド】
@@ -153,7 +175,7 @@ F108 composition108(F108 f, F108 g) {
 	return f + g;
 }
 F108 id108() { return 0; }
-#define Add_add_mlop_monoid S108, op108, e108, F108, mapping108, composition108, id108
+#define Add_add_amonoid S108, op108, e108, F108, mapping108, composition108, id108
 
 
 //【変更 作用付き 加算 モノイド】
@@ -192,7 +214,7 @@ F109 composition109(F109 f, F109 g) {
 	// (0, f; 0, 1).(0, g; 0, 1) = (0, f; 0, 1)
 	return f;
 }
-#define Update_add_mlop_monoid S109, op109, e109, F109, mapping109, composition109, id109
+#define Update_add_amonoid S109, op109, e109, F109, mapping109, composition109, id109
 
 
 //【and 作用付き xor モノイド】
@@ -203,7 +225,7 @@ using F110 = int;
 S110 mapping110(F110 f, S110 x) { return f & x; }
 F110 composition110(F110 f, F110 g) { return f & g; }
 F110 id110() { return ~0; }
-#define AND_XOR_mlop_monoid S110, op110, e110, F110, mapping110, composition110, id110
+#define AND_XOR_amonoid S110, op110, e110, F110, mapping110, composition110, id110
 
 
 //【トロピカルアフィン変換 作用付き max モノイド】
@@ -234,7 +256,7 @@ F111 composition111(F111 f, F111 g) {
 	return { a + c, max(a + d, b) };
 }
 F111 id111() { return { 0, -INFL }; }
-#define Tropical_affine_max_mlop_monoid S111, op111, e111, F111, mapping111, composition111, id111
+#define Tropical_affine_max_amonoid S111, op111, e111, F111, mapping111, composition111, id111
 
 
 //【ビット列上 xor 作用付き 転倒数 モノイド】
@@ -279,7 +301,7 @@ F112 composition112(F112 f, F112 g) {
 	return f ^ g;
 }
 F112 id112() { return false; }
-#define XOR_inversion_mlop_monoid S112, op112, e112, F112, mapping112, composition112, id112
+#define XOR_inversion_amonoid S112, op112, e112, F112, mapping112, composition112, id112
 
 
 //【乗算 作用付き gcd モノイド】
@@ -290,7 +312,7 @@ using F113 = ll;
 S113 mapping113(F113 f, S113 x) { return f * x; }
 F113 composition113(F113 f, F113 g) { return f * g; }
 F113 id113() { return 1; }
-#define Mul_GCD_mlop_monoid S113, op113, e113, F113, mapping113, composition113, id113
+#define Mul_GCD_amonoid S113, op113, e113, F113, mapping113, composition113, id113
 
 
 //【乗算 作用付き lcm モノイド】
@@ -301,6 +323,6 @@ using F114 = ll;
 S114 mapping114(F114 f, S114 x) { return f * x; }
 F114 composition114(F114 f, F114 g) { return f * g; }
 F114 id114() { return 1; }
-#define Mul_LCM_mlop_monoid S114, op114, e114, F114, mapping114, composition114, id114
+#define Mul_LCM_amonoid S114, op114, e114, F114, mapping114, composition114, id114
 
 

@@ -10,7 +10,7 @@
 *
 * —˜—pFy–ñ”—ñ‹“z
 */
-int ord(const mint& a) {
+int ord_p(const mint& a) {
 	const int p = mint::mod();
 
 	// p - 1 ‚Ì–ñ”‚ªˆÊ”‚ÌŒó•â‚Æ‚È‚éD

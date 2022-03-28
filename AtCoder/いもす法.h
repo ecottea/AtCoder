@@ -337,6 +337,8 @@ template <class T> struct Imos_3D {
 *	‰ÁZŒã‚Ì’¸“_ v ‚Ì’l‚ğ“¾‚éD
 */
 template <class T> struct Imos_tree {
+	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
+
 	Rooted_tree rt;
 	vector<T> v_anc, v_dsc;
 

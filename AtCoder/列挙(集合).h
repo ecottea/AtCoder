@@ -69,7 +69,7 @@ void integer_partitions(int n, int k, vvi& ips) {
 		if (n == 0) {
 			// •ªŠ„‚Ì‹L˜^
 			ips.push_back(vi());
-			repitr(it, ip) {
+			for (auto it = ip.rbegin(); it != ip.rend(); it++) {
 				rep(i, it->second) {
 					ips.rbegin()->push_back(it->first);
 				}

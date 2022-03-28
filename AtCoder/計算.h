@@ -177,9 +177,10 @@ ll root(ll a, int n) {
 //【商列挙】O(√n)
 /*
 * i=[1..n] に対し，n/i の商が q となる i の範囲が [i1..i2) であることを
-* {q, {i1, i2}} として q について降順に qr に格納する．
+* {q, {i1, i2}} として q について降順に qi に格納する．
+* 各範囲においては余りは公差 n/i の等差数列を成す．
 */
-void quotient_range(ll n, vector<pair<ll, pll>>& qr) {
+void quotient_range(ll n, vector<pair<ll, pll>>& qi) {
 	// verify : https://atcoder.jp/contests/abc230/tasks/abc230_e
 
 	//【方法】
@@ -199,56 +200,41 @@ void quotient_range(ll n, vector<pair<ll, pll>>& qr) {
 	//		⇔ √n <= q
 	// としてもオーダーに影響はない．
 
+	//（例）
+	// 例えば n = 15 のときは以下のように分類できる：
+	//		商 n/i	i の範囲	余り n%i
+	//		15		[1..2)		[0]
+	//		7		[2..3)		[1]
+	//		5		[3..4)		[0]
+	//		3		[4..6)		[3, 0]
+	//		2		[6..8)		[3, 1]
+	//		1		[8..16)		[7, 6, 5, 4, 3, 2, 1, 0]
+
 	ll m = (ll)(sqrt(n) + EPS);
 
 	// q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
 	for (int i = 1; n / i > m; i++) {
-		qr.push_back({ n / i, {i, i + 1} });
+		qi.push_back({ n / i, {i, i + 1} });
 	}
 
 	// そうでない部分は q ごとにまとめて考える．
 	repir(q, m, 1) {
 		ll i0 = n / (q + 1) + 1;
 		ll i1 = n / q + 1;
-		qr.push_back({ q, {i0, i1} });
+		qi.push_back({ q, {i0, i1} });
 	}
 }
 
 
-//【フロイドの循環検出法】O(nc + c)
+//【余りの取れる値の範囲】
 /*
-* a[i+1] = f(a[i]), a[0] = a0 なる数列について，a[0] から始まる非周期列の長さ nc と
-* a[nc] から始まる周期列の長さ c の組 {nc, c} を返す．
+* 非負整数 a を m(<= a) で割った余りは a/2 未満になる．
+*
+* 証明：m <= a/2 のときは明らか．m > a/2 のときは
+*		a mod m = a - m < a - a/2 = a/2
+*
+* verify : https://codeforces.com/contest/1617/problem/C
 */
-template <class T> pii floyds_cycle_finding(function<T(T)>& f, T a0) {
-	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89%E3%81%AE%E5%BE%AA%E7%92%B0%E6%A4%9C%E5%87%BA%E6%B3%95
-	// verify : https://atcoder.jp/contests/abc030/tasks/abc030_d
-
-	T x = a0, y = a0;
-	int m = 0;
-	do {
-		x = f(x);
-		y = f(f(y));
-		m++;
-	} while (x != y);
-
-	x = a0;
-	int nc = 0;
-	while (x != y) {
-		x = f(x);
-		y = f(y);
-		nc++;
-	}
-
-	int c = 0;
-	do {
-		x = f(x);
-		y = f(f(y));
-		c++;
-	} while (x != y);
-
-	return make_pair(nc, c);
-}
 
 
 //【切り捨て除算】

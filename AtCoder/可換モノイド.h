@@ -44,9 +44,6 @@ S504 o504() { return INF; }
 
 
 //yxor ‰ÂŠ·ƒ‚ƒmƒCƒhz
-/*
-* (Z/2Z)^d ã‚Ì ‰ÁZ ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
-*/
 using S505 = int;
 S505 op505(S505 a, S505 b) { return a ^ b; }
 S505 o505() { return 0; }
@@ -54,9 +51,6 @@ S505 o505() { return 0; }
 
 
 //yor ‰ÂŠ·ƒ‚ƒmƒCƒhz
-/*
-* (Z/2Z)^d ã‚Ì max ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
-*/
 using S506 = int;
 S506 op506(S506 a, S506 b) { return a | b; }
 S506 o506() { return 0; }
@@ -64,12 +58,23 @@ S506 o506() { return 0; }
 
 
 //yand ‰ÂŠ·ƒ‚ƒmƒCƒhz
-/*
-* (Z/2Z)^d ã‚Ì min ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
-*/
 using S507 = int;
 S507 op507(S507 a, S507 b) { return a & b; }
 S507 o507() { return ~0; }
 #define AND_cmonoid S507, op507, o507
+
+
+//ygcd ‰ÂŠ·ƒ‚ƒmƒCƒhz
+using S508 = ll;
+S508 op508(S508 a, S508 b) { return gcd(a, b); }
+S508 o508() { return 0; }
+#define GCD_cmonoid S508, op508, o508
+
+
+//ylcm ‰ÂŠ·ƒ‚ƒmƒCƒhz
+using S509 = ll;
+S509 op509(S509 a, S509 b) { return a / gcd(a, b) * b; }
+S509 o509() { return 1; }
+#define LCM_cmonoid S509, op509, o509
 
 

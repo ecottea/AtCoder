@@ -4,6 +4,38 @@
 // ■■■■■ 組合せゲーム ■■■■■
 
 
+//【局面のニム値】O(?)（遅いので実験用）
+/*
+* 初期局面 p から遷移可能な局面とそのニム値を nim に格納する．
+* nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納する．
+*/
+template <class T>
+void calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt, map<T, int>& nim) {
+	nim.clear();
+
+	function<int(const T&)> calc_nimber = [&](const T& p) {
+		if (nim.count(p)) return nim[p];
+
+		vector<T> nps;
+		nxt(p, nps);
+
+		vi next_nimbers;
+		repe(np, nps) {
+			next_nimbers.push_back(calc_nimber(np));
+		}
+		uniq(next_nimbers);
+
+		int i = 0;
+		while (i < sz(next_nimbers) && next_nimbers[i] == i) i++;
+		nim[p] = i;
+
+		return nim[p];
+	};
+
+	calc_nimber(p);
+}
+
+
 //【最小除外数（mex）】
 /*
 * Nimber() : O(1)

@@ -6,10 +6,9 @@
 
 //【グラフ】
 /*
-* Graph g
+* Graph g（Graph = vvi）
 * g[v] : 頂点 v から行ける頂点を並べたリスト
 */
-using Graph = vvi;
 
 
 //【グラフの入力】O(|V| + |E|)
@@ -19,11 +18,10 @@ using Graph = vvi;
 * n : グラフの頂点の数
 * m : グラフの辺の数
 * g : ここにグラフを構築して返す
-* directed : 有向グラフなら true
+* undirected : 無向グラフなら true
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
-void read_graph(int n, int m, Graph& g,
-	bool directed = false, bool one_indexed = true) {
+void read_graph(int n, int m, Graph& g,	bool undirected = true, bool one_indexed = true) {
 	g = Graph(n);
 	rep(i, m) {
 		int a, b;
@@ -32,7 +30,7 @@ void read_graph(int n, int m, Graph& g,
 		if (one_indexed) { a--; b--; }
 
 		g[a].push_back(b);
-		if (!directed) g[b].push_back(a);
+		if (undirected) g[b].push_back(a);
 	}
 }
 
@@ -72,11 +70,10 @@ using WGraph = vector<vector<WEdge>>;
 * n : グラフの頂点の数
 * m : グラフの辺の数
 * g : ここにグラフを構築して返す
-* directed : 有向グラフなら true
+* undirected : 無向グラフなら true
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
-void read_graph(int n, int m, WGraph& g,
-	bool directed = false, bool one_indexed = true) {
+void read_graph(int n, int m, WGraph& g, bool undirected = true, bool one_indexed = true) {
 	g = WGraph(n);
 	rep(i, m) {
 		int a, b; ll c;
@@ -85,7 +82,7 @@ void read_graph(int n, int m, WGraph& g,
 		if (one_indexed) { a--; b--; }
 
 		g[a].push_back({ b, c });
-		if (!directed) g[b].push_back({ a, c });
+		if (undirected) g[b].push_back({ a, c });
 	}
 }
 
@@ -99,11 +96,11 @@ void read_graph(int n, int m, WGraph& g,
 * m : グラフの辺の数
 * g : ここにグラフを構築して返す
 * c : 辺 (s, t) のコストを c[s][t] に格納する
-* directed : 有向グラフなら true
+* undirected : 無向グラフなら true
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
 void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
-	bool directed = false, bool one_indexed = true) {
+	bool undirected = true, bool one_indexed = true) {
 	g = Graph(n);
 	c = vector<unordered_map<int, ll>>(n);
 	rep(i, m) {
@@ -114,7 +111,7 @@ void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
 
 		g[a].push_back(b);
 		c[a][b] = x;
-		if (!directed) {
+		if (undirected) {
 			g[b].push_back(a);
 			c[b][a] = x;
 		}
@@ -128,6 +125,8 @@ void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
 * id : 辺の番号
 */
 struct IEdge {
+	// verify : https://yukicoder.me/problems/no/1254
+
 	int to; // 行き先の頂点番号
 	int id; // 辺の番号
 
@@ -146,6 +145,8 @@ struct IEdge {
 /*
 * IGraph g
 * g[v] : 頂点 v から出る辺を並べたリスト
+* 
+* verify : https://yukicoder.me/problems/no/1254
 */
 using IGraph = vector<vector<IEdge>>;
 
@@ -157,11 +158,12 @@ using IGraph = vector<vector<IEdge>>;
 * n : グラフの頂点の数
 * m : グラフの辺の数
 * g : ここにグラフを構築して返す
-* directed : 有向グラフなら true
+* undirected : 無向グラフなら true
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
-void read_graph(int n, int m, IGraph& g,
-	bool directed = false, bool one_indexed = true) {
+void read_graph(int n, int m, IGraph& g, bool undirected = true, bool one_indexed = true) {
+	// verify : https://yukicoder.me/problems/no/1254
+
 	g = IGraph(n);
 	rep(i, m) {
 		int a, b;
@@ -170,7 +172,7 @@ void read_graph(int n, int m, IGraph& g,
 		if (one_indexed) { a--; b--; }
 
 		g[a].push_back({ b, i });
-		if (!directed) g[b].push_back({ a, i });
+		if (undirected) g[b].push_back({ a, i });
 	}
 }
 

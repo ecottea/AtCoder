@@ -4,14 +4,14 @@
 // ■■■■■ 高速な数論アルゴリズム ■■■■■
 
 
-//【素数判定／ミラー・ラビン法】O((log n)^3)
+//【素数判定／ミラー－ラビン法】O((log n)^3)
 /*
 * n が素数かを返す．
 */
 //internal::is_prime_constexpr(int n);
 
 
-//【素数判定／ミラー・ラビン法】O((log n)^3)
+//【素数判定／ミラー－ラビン法】O((log n)^3)
 /*
 * n が素数かを返す．
 *
@@ -156,7 +156,7 @@ ll pollard_rho(ll n) {
 }
 
 
-//【素因数分解／ポラードのρ法】O(n^(1/4))
+//【素因数分解】O(n^(1/4))
 /*
 * n を素因数分解した結果を pps に格納する．
 *
@@ -197,7 +197,7 @@ void factor_integer(ll n, map<ll, int>& pps) {
 /*
 * n の約数全てをリスト divs に昇順に格納する．
 *
-* 利用：【素因数分解／ポラードのρ法】
+* 利用：【素因数分解】
 */
 void divisors(ll n, vl& divs) {
 	assert(n > 0);
@@ -230,7 +230,7 @@ void divisors(ll n, vl& divs) {
 /*
 * n の約数の個数を返す．
 *
-* 利用：【素因数分解／ポラードのρ法】
+* 利用：【素因数分解】
 */
 int count_divisors(ll n) {
 	assert(n > 0);
@@ -249,7 +249,7 @@ int count_divisors(ll n) {
 /*
 * n の約数の総和を返す．
 *
-* 利用：【素因数分解／ポラードのρ法】
+* 利用：【素因数分解】
 */
 ll divisors_sum(ll n) {
 	assert(n > 0);

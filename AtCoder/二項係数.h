@@ -440,9 +440,9 @@ struct Factorial_arbitrary_mod {
 };
 
 
-//yŠKæzO(n)
+//yŠKæin ‚ª¬‚³‚¢jzO(n)
 /*
-* ‹ğ’¼‚ÉŠKæ n! ‚ğŒvZ‚·‚éD
+* n! ‚ğ•Ô‚·D
 */
 ll factorial(int n) {
 	ll val = 1;
@@ -455,9 +455,9 @@ ll factorial(int n) {
 }
 
 
-//y“ñ€ŒW”zO(min(r, n-r))
+//y“ñ€ŒW”ir ‚© n-r ‚ª¬‚³‚¢jzO(min(r, n-r))
 /*
-* ‹ğ’¼‚É“ñ€ŒW” nCr ‚ğŒvZ‚·‚éD
+* “ñ€ŒW” nCr ‚ğ•Ô‚·D
 */
 template <class T> T binomial(ll n, ll r) {
 	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e
@@ -475,5 +475,42 @@ template <class T> T binomial(ll n, ll r) {
 	}
 	return val;
 }
+
+
+//yƒzƒbƒP[ƒXƒeƒBƒbƒNP“™®z
+/*
+* ƒpƒXƒJƒ‹‚ÌOŠpŒ`‚ÌÎ‚ß•ûŒü‚Ì—İÏ˜a‚ÍˆÈ‰º‚Ì®‚Å‹‚ß‚ç‚ê‚éF
+*	ƒ°i=[i0..i1) bin(i, r) = bin(i1, r+1) - bin(i0, r+1)
+* 
+* verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
+*/
+
+
+//y“ñ€ŒW”‚Ì“ñŸŒ³—İÏ˜az
+/*
+* ƒpƒXƒJƒ‹‚ÌOŠpŒ`‚É‚¨‚¯‚é“ñŸŒ³—İÏ˜a‚ÍˆÈ‰º‚Ì®‚Å‹‚ß‚ç‚ê‚éF
+*	ƒ°i=[i0..i1)ƒ°j=[j0..j1) bin(i + j, i)
+*	= bin(i1 + j1, i1) - bin(i1 + j0, i1) - bin(i0 + j1, i0) + bin(i0 + j0, i0)
+* 
+* verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
+*/
+
+
+//yŠKæ™p‚Ì˜az
+/*
+* ‡—ñ‚Ì”‚Ì—İÏ˜a‚ÍˆÈ‰º‚Ì®‚Å‹‚ß‚ç‚ê‚éF
+*	ƒ°i=[r..n) iPr = nPr (n-r) / (r+1)
+* 
+* verify : https://yukicoder.me/problems/no/1886
+*/
+
+
+//y“ñ€ŒW”‚ÌüŒ`‰Ád˜az
+/*
+* “ñ€ŒW”‚ÆˆêŸ®‚ÌÏ‚Ì˜a‚É‚Â‚¢‚ÄCˆÈ‰º‚Ì®‚ª¬‚è—§‚ÂF
+*	ƒ°r=[0..n] (a r + b) nCr = (a n + 2 b) 2^(n-1)
+* 
+* verify : https://atcoder.jp/contests/abc150/tasks/abc150_e
+*/
 
 

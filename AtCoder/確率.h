@@ -44,7 +44,7 @@ void coin_probability(const vd& p, vd& head) {
 * それぞれの人の優勝する確率を win[i] に格納する．
 * レート r の人にレート r0 の人に対する勝率は f(r, r0) で計算される．
 * 
-*（確率DP）
+*（確率 DP）
 */
 void tournament_probability(const vd& r, vd& win, function<double(double, double)>& f) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tournament
@@ -57,9 +57,7 @@ void tournament_probability(const vd& r, vd& win, function<double(double, double
 	vvd dp(k + 1, vd(n));
 
 	// 0 回戦で勝つ（出場資格を得る）確率は 1 とする．
-	rep(i, n) {
-		dp[0][i] = 1.;
-	}
+	rep(i, n) dp[0][i] = 1.;
 
 	repi(d, 1, k) {
 		rep(i, n) {
@@ -78,9 +76,7 @@ void tournament_probability(const vd& r, vd& win, function<double(double, double
 		}
 	}
 
-	rep(i, n) {
-		win[i] = dp[k][i];
-	}
+	rep(i, n) win[i] = dp[k][i];
 }
 
 

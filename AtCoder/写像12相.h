@@ -8,6 +8,8 @@
 /*
 * ボールが n 個，箱が m 個の場合，重複順列の考え方より
 * ボールの入れ方は m^n 通りとなる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_A
 */
 
 
@@ -15,15 +17,15 @@
 /*
 * ボールが n 個，箱が m 個の場合，順列の考え方より
 * ボールの入れ方は mPn 通りとなる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_B
 */
 
 
-//【全射の数】O(n m)
+//【全射の数（ボールの区別あり，箱の区別あり，箱の中身は 1 個以上）】O(n m)
 /*
 * 各 i ∈ [0..n], j ∈ [0..m] について，
 * i 点集合から j 点集合への全射の数を c[i][j] に格納する．
-* 
-*（ボールの区別あり，箱の区別あり，箱の中身は 1 個以上）
 */
 void count_surjections(int n, int m, vvm& c) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_C
@@ -57,10 +59,8 @@ void count_surjections(int n, int m, vvm& c) {
 //【全射の数】O(m log n)
 /*
 * n 点集合から m 点集合への全射の数を返す．
-*
-*（ボールの区別あり，箱の区別あり，箱の中身は 1 個以上）
 * 
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
 */
 mint count_surjections(int n, int m) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_C
@@ -94,6 +94,17 @@ mint count_surjections(int n, int m) {
 /*
 * ボールが n 個，箱が m 個の場合，重複組合せの考え方より
 * ボールの入れ方は mHn = n+m-1Cm-1 通りとなる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_D
+*/
+
+
+//【ボールの区別なし，箱の区別あり，箱の中身は 1 個以下】
+/*
+* ボールが n 個，箱が m 個の場合，単にどの箱を選んだかなので，
+* ボールの入れ方は mCn 通りとなる．
+*
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_E
 */
 
 
@@ -101,12 +112,16 @@ mint count_surjections(int n, int m) {
 /*
 * ボールが n 個，箱が m 個の場合，事前に配る考え方と重複組合せの考え方より
 * ボールの入れ方は mHn-m = n-1Cm-1 通りとなる．
+*
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_F
 */
 
 
 //【ボールの区別あり，箱の区別なし，箱の中身は任意】
 /*
 * 箱の中身が 1 個以上のときの累積和をとればよい．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
 */
 
 
@@ -114,15 +129,15 @@ mint count_surjections(int n, int m) {
 /*
 * ボールが n 個，箱が m 個の場合，ボールの入れ方は明らかに
 * n <= k のとき 1 通り，n > k のとき 0 通りとなる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_H
 */
 
 
-//【集合の分割の数（第 2 種スターリング数）】O(n^2)
+//【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）】O(n^2)
 /*
 * 各 i ∈ [0..n], j ∈ [0..n] について，
 * i 点集合をちょうど j 個に分割する方法の数を c[i][j] に格納する．
-*
-*（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）
 */
 void stirling_S2(int n, vvm& c) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
@@ -214,14 +229,12 @@ void stirling_S2(int n, vm& s) {
 }
 
 
-//【自然数の分割の数（分割数の補助関数）】O(n m)
+//【自然数の分割の数（ボールの区別なし，箱の区別なし，箱の中身は任意）】O(n m)
 /*
 * 各 i ∈ [0..n], j ∈ [0..m] について，
 * 自然数 i を j 個以下に分割する方法の数を c[i][j] に格納する．
 *
 * c[i][j] は，自然数 i を j 以下の自然数に分割する方法の数とも解釈できる．
-* 
-*（ボールの区別なし，箱の区別なし，箱の中身は任意）
 */
 void count_integer_partitions(int n, int m, vvm& c) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_J
@@ -271,7 +284,7 @@ void count_integer_partitions(int n, int m, vvm& c) {
 }
 
 
-//【自然数の分割の数（個数制限付き）】O(n m)
+//【自然数の分割の数（個数上限付き）】O(n m)
 /*
 * 各 i ∈ [0..n], j ∈ [0..m] について，同じ自然数は k 個以下しか使えない条件で，
 * 自然数 i を j 個以下に分割する方法の数を c[i][j] に格納する．
@@ -279,7 +292,7 @@ void count_integer_partitions(int n, int m, vvm& c) {
 * c[i][j] は，次に大きい自然数との差が k 以下でなくてはならない条件で，
 * 自然数 i を j 以下の自然数に分割する方法の数とも解釈できる．
 */
-void count_limited_integer_partitions(int n, int m, int k, vvm& c) {
+void count_cntlimited_integer_partitions(int n, int m, int k, vvm& c) {
 	// verify : https://atcoder.jp/contests/abc221/tasks/abc221_h
 
 	//【方法】
@@ -319,7 +332,7 @@ void count_limited_integer_partitions(int n, int m, int k, vvm& c) {
 }
 
 
-//【自然数の分割の数（大きさ制限付き）】O(n m d)
+//【自然数の分割の数（大きさ上限付き）】O(n m d)
 /*
 * 各 i ∈ [0..n], j ∈ [0..m], k ∈ [0..d] について，
 * 自然数 i を j 以下の自然数 k 個以下に分割する方法の数を c[i][j][k] に格納する．
@@ -389,12 +402,16 @@ void partition_function(int n, vm& p) {
 /*
 * ボールが n 個，箱が m 個の場合，ボールの入れ方は明らかに
 * n <= k のとき 1 通り，n > k のとき 0 通りとなる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_K
 */
 
 
 //【ボールの区別なし，箱の区別なし，箱の中身は 1 個以上】
 /*
 * 箱の中身が任意のときの結果の差分を取ればよい．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_L
 */
 
 

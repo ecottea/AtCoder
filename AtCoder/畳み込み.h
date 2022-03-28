@@ -120,7 +120,28 @@ void convolution998244353_long(const vm& a, const vm& b, vm& res) {
 * 制約 : n は 2 の冪乗
 */
 template <typename T> void fwt_xor(vector<T>& f) {
-    int n = sz(f);
+	// 具体例：
+	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[1] = a[0] - a[1] + a[2] - a[3] + a[4] - a[5] + a[6] - a[7] + ...
+	//	A[2] = a[0] + a[1] - a[2] - a[3] + a[4] + a[5] - a[6] - a[7] + ...
+	//	A[3] = a[0] - a[1] - a[2] + a[3] + a[4] - a[5] - a[6] + a[7] + ...
+	//	A[4] = a[0] + a[1] + a[2] + a[3] - a[4] - a[5] - a[6] - a[7] + ...
+	//	A[5] = a[0] - a[1] + a[2] - a[3] - a[4] + a[5] - a[6] + a[7] + ...
+	//	A[6] = a[0] + a[1] - a[2] - a[3] - a[4] - a[5] + a[6] + a[7] + ...
+	//	A[7] = a[0] - a[1] - a[2] + a[3] - a[4] + a[5] + a[6] - a[7] + ...
+	//
+	// 係数行列の + の部分だけ書くと，
+	//	+ + + + + + + +
+	//	+   +   +   +  
+	//  + +     + +    
+	//  +     + +     +
+	//  + + + +        
+	//  +   +     +   +
+	//  + +         + +
+	//  +     +   + +  
+	// となり，ギャスケットっぽいがゴミが付いている．
+
+	int n = sz(f);
     for (int i = 1; i < n; i <<= 1) {
         rep(j, n) {
             if ((j & i) == 0) {
@@ -169,6 +190,16 @@ template <typename T> vector<T> convolution_xor(vector<T> a, vector<T> b) {
 * 制約 : n は 2 の冪乗
 */
 template <typename T> void fwt_and(vector<T>& f) {
+	// 具体例を書いてみると，次のようにシェルピンスキーのギャスケットのパターンが見える：
+	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[1] =      + a[1]        + a[3]        + a[5]        + a[7] + ...
+	//	A[2] =             + a[2] + a[3]               + a[6] + a[7] + ...
+	//	A[3] =                    + a[3]                      + a[7] + ...
+	//	A[4] =                           + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[5] =                                  + a[5]        + a[7] + ...
+	//	A[6] =                                         + a[6] + a[7] + ...
+	//	A[7] =                                                + a[7] + ...
+	
 	int n = sz(f);
     for (int i = 1; i < n; i <<= 1) {
         rep(j, n) {
@@ -212,6 +243,16 @@ template <typename T> vector<T> convolution_and(vector<T> a, vector<T> b) {
 * 制約 : n は 2 の冪乗
 */
 template <typename T> void fwt_or(vector<T>& f) {
+	// 具体例を書いてみると，次のようにシェルピンスキーのギャスケットのパターンが見える：
+	//	A[0] = a[0]
+	//	A[1] = a[0] + a[1]
+	//	A[2] = a[0] +      + a[2]
+	//	A[3] = a[0] + a[1] + a[2] + a[3]
+	//	A[4] = a[0]                      + a[4]
+	//	A[5] = a[0] + a[1]               + a[4] + a[5]
+	//	A[6] = a[0] +      + a[2]        + a[4]        + a[6]
+	//	A[7] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7]
+
 	int n = sz(f);
     for (int i = 1; i < n; i <<= 1) {
         rep(j, n) {
@@ -252,10 +293,30 @@ template <typename T> vector<T> convolution_or(vector<T> a, vector<T> b) {
 *  （上位メビウス変換，下からの差分）
 */
 template <typename T> void zeta_min(vector<T>& f) {
+	// 具体例：
+	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[1] =        a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[2] =             + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[3] =                    + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[4] =                           + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[5] =                                  + a[5] + a[6] + a[7] + ...
+	//	A[6] =                                         + a[6] + a[7] + ...
+	//	A[7] =                                                + a[7] + ...
+
 	int n = sz(f);
 	repir(i, n - 2, 0) f[i] += f[i + 1];
 }
 template <typename T> void mobius_min(vector<T>& f) {
+	// 具体例：
+	//	a[0] = A[0] - A[1]
+	//	a[1] =        A[1] - A[2]
+	//	a[2] =               A[2] - A[3]
+	//	a[3] =                      A[3] - A[4]
+	//	a[4] =                             A[4] - A[5]
+	//	a[5] =                                    A[5] - A[6]
+	//	a[6] =                                           A[6] - A[7]
+	//	a[7] =                                                  A[7] - A[8]
+
 	int n = sz(f);
 	repi(i, 0, n - 2) f[i] -= f[i + 1];
 }
@@ -284,10 +345,30 @@ template <typename T> vector<T> convolution_min(vector<T> a, vector<T> b) {
 *  （下位メビウス変換，上からの差分）
 */
 template <typename T> void zeta_max(vector<T>& f) {
+	// 具体例：
+	//	A[0] = a[0]
+	//	A[1] = a[0] + a[1]
+	//	A[2] = a[0] + a[1] + a[2]
+	//	A[3] = a[0] + a[1] + a[2] + a[3]
+	//	A[4] = a[0] + a[1] + a[2] + a[3] + a[4]
+	//	A[5] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5]
+	//	A[6] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6]
+	//	A[7] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7]
+
 	int n = sz(f);
 	repi(i, 1, n - 1) f[i] += f[i - 1];
 }
 template <typename T> void mobius_max(vector<T>& f) {
+	// 具体例：
+	//	a[0] =   A[0]
+	//	a[1] = - A[0] + A[1]
+	//	a[2] =        - A[1] + A[2]
+	//	a[3] =               - A[2] + A[3]
+	//	a[4] =                      - A[3] + A[4]
+	//	a[5] =                             - A[4] + A[5]
+	//	a[6] =                                    - A[5] + A[6]
+	//	a[7] =                                           - A[6] + A[7]
+
 	int n = sz(f);
 	repir(i, n - 1, 1) f[i] -= f[i - 1];
 }

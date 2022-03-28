@@ -73,11 +73,11 @@
     <Filter Include="ヘッダー ファイル\確率統計">
       <UniqueIdentifier>{36597baf-90fc-48c6-a94a-085803720106}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\FPS">
-      <UniqueIdentifier>{ba528092-a95b-4f5c-aa6a-be05393742d8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\_old">
       <UniqueIdentifier>{105e03a8-7561-4890-8b11-66c02a5a18b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\代数">
+      <UniqueIdentifier>{a4e43b3f-cd28-4954-94a9-975a103cd4fe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -104,7 +104,7 @@
     <ClInclude Include="探索%28グラフ%29.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
-    <ClInclude Include="ナップサック.h">
+    <ClInclude Include="ナップサック問題.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
     <ClInclude Include="行列.h">
@@ -437,15 +437,6 @@
     <ClInclude Include="ビット演算.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
-    <ClInclude Include="FPS%28mint%29.h">
-      <Filter>ヘッダー ファイル\FPS</Filter>
-    </ClInclude>
-    <ClInclude Include="FPS(抽象).h">
-      <Filter>ヘッダー ファイル\FPS</Filter>
-    </ClInclude>
-    <ClInclude Include="FPS(bit).h">
-      <Filter>ヘッダー ファイル\FPS</Filter>
-    </ClInclude>
     <ClInclude Include="ハッシュ.h">
       <Filter>ヘッダー ファイル\アルゴリズム</Filter>
     </ClInclude>
@@ -467,8 +458,41 @@
     <ClInclude Include="数え上げ(グラフ).h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
+    <ClInclude Include="確率分布.h">
+      <Filter>ヘッダー ファイル\確率統計</Filter>
+    </ClInclude>
+    <ClInclude Include="周期性.h">
+      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(区間).h">
+      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS(bit).h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS%28mint%29.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="FPS(抽象).h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
     <ClInclude Include="多項式.h">
-      <Filter>ヘッダー ファイル\FPS</Filter>
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="群論.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="桁DP(組).h">
+      <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
+    <ClInclude Include="debug.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(文字列).h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和(文字列).h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

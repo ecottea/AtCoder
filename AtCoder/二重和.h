@@ -14,7 +14,7 @@ template <class T> mint difference_sum(vector<T> a) {
 
 	int n = sz(a);
 
-	// a を昇順ソートしておく．
+	// a の順序は無関係なので昇順ソートしておく．
 	sort(all(a));
 
 	mint res = 0;
@@ -28,11 +28,21 @@ template <class T> mint difference_sum(vector<T> a) {
 }
 
 
+//【min の総和】O(n log n)
+/*
+* ΣΣi<j min( a[i..j) ) の値を返す．
+* 
+*【区間の数え上げ（最小値指定）】を利用すればよい．
+*/
+
+
 //【XOR の和】O((n + m) log max(a, b))
 /*
 * Σi=[0..n)j=[0..m) a[i] XOR b[j] の値を返す．
 */
 template <class T> T xor_sum(const vl& a, const vl& b) {
+	// verify : https://atcoder.jp/contests/abc147/tasks/abc147_d
+
 	int n = sz(a), m = sz(b);
 	const int d = 63;
 

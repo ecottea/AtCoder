@@ -196,8 +196,8 @@ ll traveling_salesman_problem(const WGraph& g) {
 
 	// dp[i][set] : 頂点 i から set を通り頂点 n - 1 までのハミルトンパスの最小コスト
 	//	i !∈ set だが，n - 1 ∈ set なので注意．
-	vvl dp(n, vl(1 << n, INFL));
-	vvb seen(n, vb(1 << n));
+	vvl dp(n, vl(1LL << n, INFL));
+	vvb seen(n, vb(1LL << n));
 	dp[n - 1][0] = 0;
 	seen[n - 1][0] = true;
 
@@ -239,8 +239,8 @@ ll shortest_hamiltonian_path(const WGraph& g) {
 
 	// dp[s][set] : 頂点 s から出発し set を通るハミルトンパスの最小コスト
 	//	s !∈ set とする．
-	vvl dp(n, vl(1 << n, INFL));
-	vvb seen(n, vb(1 << n));
+	vvl dp(n, vl(1LL << n, INFL));
+	vvb seen(n, vb(1LL << n));
 	rep(s, n) {
 		dp[s][0] = 0;
 		seen[s][0] = true;
@@ -368,7 +368,7 @@ ll chinese_postman_problem(const WGraph& g) {
 }
 
 
-//【最大流問題／フォード・ファルカーソンのアルゴリズム】O(|E| maxflow)
+//【最大流問題／フォード－ファルカーソンのアルゴリズム】O(|E| maxflow)
 /*
 * コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */

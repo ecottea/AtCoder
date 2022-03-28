@@ -46,7 +46,7 @@ int coordinate_compression_interval(const vector<T>& x1, const vector<T>& x2,
 	// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
 
 	int n = sz(x1);
-	if (xs == nullptr) xs = new vector<T>;
+	if (xs == nullptr) xs = new vl;
 
 	// x À•W‚¾‚¯‚ð”²‚«o‚·D
 	xs->clear();

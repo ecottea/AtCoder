@@ -8,7 +8,7 @@
 * Binary_Tree() : O(1)
 *	空で初期化する．
 *
-* Binary_Tree(s, l, r) : O(n)
+* Binary_Tree(vi s, vi l, vi r) : O(n)
 *	s[i] の左の子が l[i]，右の子が r[i] であるような二分木で初期化する．
 *	存在しない場合は -1 を与える．
 */
@@ -126,7 +126,7 @@ void read_binary_tree(int n, Binary_Tree& bt, bool one_indexed = true, int nval 
 
 //【デカルト木】O(n)
 /*
-* a[0..n) の最小要素を根とするデカルト木を ct に構築する．
+* a[0..n) の最小要素の位置を根とするデカルト木を ct に構築する．
 * 根から順に小さい要素での区間の分割を表す（同じ要素は左のものほど小さいとする．）
 * smaller = false とすると，大小関係を逆転して木の構築を行う．
 *

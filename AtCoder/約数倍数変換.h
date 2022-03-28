@@ -151,7 +151,7 @@ template <typename T> struct Limited_multiple_transform {
 	void multiple_zeta(unordered_map<ll, T>& f) {
 		// Še‘fˆö”‚²‚Æ‚Éã‚©‚ç‚Ì—İÏ˜a‚ğ‚Æ‚é
 		repe(p, ps) {
-			repitr(it, divs) {
+			for (auto it = divs.rbegin(); it != divs.rend(); it++) {
 				ll d = *it;
 
 				if (!f.count(p * d)) continue;
@@ -229,7 +229,7 @@ template <typename T> struct Limited_divisor_transform {
 
 		// Še‘fˆö”‚²‚Æ‚Éã‚©‚ç‚Ì·•ª‚ğ‚Æ‚é
 		repe(p, ps) {
-			repitr(it, divs) {
+			for (auto it = divs.rbegin(); it != divs.rend(); it++) {
 				ll d = *it;
 
 				if (!f.count(p * d)) continue;

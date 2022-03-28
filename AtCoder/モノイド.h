@@ -28,7 +28,16 @@ S2 e2() { return 1; }
 #define Mul_monoid S2, op2, e2
 
 
+//y‹tæZ ƒ‚ƒmƒCƒhz
+// verify : https://atcoder.jp/contests/arc025/tasks/arc025_4
+using S20 = int;
+S20 op20(S20 a, S20 b) { return b * a; }
+S20 e20() { return 1; }
+#define Invmul_monoid S20, op20, e20
+
+
 //ymax ƒ‚ƒmƒCƒhz
+// verify : https://atcoder.jp/contests/abc134/tasks/abc134_c
 using S3 = int;
 S3 op3(S3 a, S3 b) { return max(a, b); }
 S3 e3() { return -INF; }
@@ -40,6 +49,43 @@ using S4 = int;
 S4 op4(S4 a, S4 b) { return min(a, b); }
 S4 e4() { return INF; }
 #define Min_monoid S4, op4, e4
+
+
+//yxor ƒ‚ƒmƒCƒhz
+using S10 = int;
+S10 op10(S10 a, S10 b) { return a ^ b; }
+S10 e10() { return 0; }
+#define XOR_monoid S10, op10, e10
+
+
+//yor ƒ‚ƒmƒCƒhz
+// verify : https://atcoder.jp/contests/abc157/tasks/abc157_e
+using S11 = int;
+S11 op11(S11 a, S11 b) { return a | b; }
+S11 e11() { return 0; }
+#define OR_monoid S11, op11, e11
+
+
+//yand ƒ‚ƒmƒCƒhz
+using S12 = int;
+S12 op12(S12 a, S12 b) { return a & b; }
+S12 e12() { return ~0; }
+#define AND_monoid S12, op12, e12
+
+
+//ygcd ƒ‚ƒmƒCƒhz
+// verify : https://atcoder.jp/contests/arc017/tasks/arc017_4
+using S15 = ll;
+S15 op15(S15 a, S15 b) { return gcd(a, b); }
+S15 e15() { return 0; }
+#define GCD_monoid S15, op15, e15
+
+
+//ylcm ƒ‚ƒmƒCƒhz
+using S16 = ll;
+S16 op16(S16 a, S16 b) { return a / gcd(a, b) * b; }
+S16 e16() { return 1; }
+#define LCM_monoid S16, op16, e16
 
 
 //y¶•ÏX ƒ‚ƒmƒCƒhz
@@ -102,36 +148,6 @@ S9 e9() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 #define Affine_invcomposite_monoid S9, op9, e9
 
 
-//yxor ƒ‚ƒmƒCƒhz
-/*
-* (Z/2Z)^d ã‚Ì ‰ÁZ ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
-*/
-using S10 = int;
-S10 op10(S10 a, S10 b) { return a ^ b; }
-S10 e10() { return 0; }
-#define XOR_monoid S10, op10, e10
-
-
-//yor ƒ‚ƒmƒCƒhz
-/*
-* (Z/2Z)^d ã‚Ì max ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
-*/
-using S11 = int;
-S11 op11(S11 a, S11 b) { return a | b; }
-S11 e11() { return 0; }
-#define OR_monoid S11, op11, e11
-
-
-//yand ƒ‚ƒmƒCƒhz
-/*
-* (Z/2Z)^d ã‚Ì min ƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
-*/
-using S12 = int;
-S12 op12(S12 a, S12 b) { return a & b; }
-S12 e12() { return ~0; }
-#define AND_monoid S12, op12, e12
-
-
 //yƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“•ÏŠ·‚Ì‡¬ ƒ‚ƒmƒCƒhz
 /*
 * S ¹ f = {a, b} : ƒgƒƒsƒJƒ‹ˆêŸŠÖ” f(x) = max(a + x, b) ‚ğ•\‚·D
@@ -169,21 +185,6 @@ S14 op14(S14 f, S14 g) {
 }
 S14 e14() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -‡)
 #define Tropical_affine_invcomposite_monoid S14, op14, e14
-
-
-//ygcd ƒ‚ƒmƒCƒhz
-// verify : https://atcoder.jp/contests/arc017/tasks/arc017_4
-using S15 = ll;
-S15 op15(S15 a, S15 b) { return gcd(a, b); }
-S15 e15() { return 0; }
-#define GCD_monoid S15, op15, e15
-
-
-//ylcm ƒ‚ƒmƒCƒhz
-using S16 = ll;
-S16 op16(S16 a, S16 b) { return a / gcd(a, b) * b; }
-S16 e16() { return 1; }
-#define LCM_monoid S16, op16, e16
 
 
 //yƒrƒbƒg—ñã “]“|” ƒ‚ƒmƒCƒhz

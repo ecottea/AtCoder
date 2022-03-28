@@ -60,9 +60,7 @@ struct Matrix {
 	vector<S>& operator[](int i) { return v[i]; }
 
 	// ”äŠr
-	bool operator==(const Matrix& b) const {
-		return m == b.m && n == b.n && v == b.v;
-	}
+	bool operator==(const Matrix& b) const { return m == b.m && n == b.n && v == b.v; }
 	bool operator!=(const Matrix& b) const { return !(*this == b); }
 
 	// ‰ÁŽZ

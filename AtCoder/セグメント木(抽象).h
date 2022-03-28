@@ -5,11 +5,11 @@
 
 //【セグメント木（モノイド）】
 /*
-* Segtree<S, op, e>(n) : O(n)
+* Segtree<S, op, e>(int n) : O(n)
 *	v[0..n) = e() で初期化する．
 *	要素はモノイド (S, op, e) の元とする．
 *
-* Segtree<S, op, e>(v) : O(n)
+* Segtree<S, op, e>(vS v) : O(n)
 *	配列 v の要素で初期化する．
 *
 * set(i, x) : O(log n)
@@ -21,12 +21,13 @@
 * prod(l, r) : O(log n)
 *	op( v[l..r) ) を返す．空なら e() を返す．
 *
-* max_right<f>(l) : O(log n)
+* int max_right(int l, function<bool(S)> f) : O(log n)
 *	f( op( v[l..r) ) ) = true となる最大の r を返す．
-*   f : S → bool で f(e()) = true かつ単調とする．
+*   制約：f(e()) = true，f は単調
 *
-* min_left<f>(r) : O(log n)
+* int min_left(int r, function<bool(S)> f) : O(log n)
 *	f( op( v[l..r) ) ) = true となる最小の l を返す．
+*	制約：f(e()) = true，f は単調
 */
 template <class S, S(*op)(S, S), S(*e)()>
 struct Segtree {

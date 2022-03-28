@@ -239,16 +239,17 @@ void count_subtree(Graph& g, vm& cnt) {
 
 //【木の構築方法の数え上げ】O(n)
 /*
-* 連結性を保ったままの辺の追加を行う木 g を構築する方法の数を返す．
+* 頂点 s から始めて連結性を保ったまま辺の追加を行い木 g を構築する方法の数を cnt[s] に格納する．
 *
 *（全方位木 DP）
-* 
-* 利用：【階乗と二項係数（mint利用）】
+*
+* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
 */
-mint continuous_tree_construction(Graph& g) {
-	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tree
+void continuous_tree_construction(const Graph& g, vm& cnt) {
+	// verify : https://atcoder.jp/contests/abc160/tasks/abc160_f
 
 	ll n = sz(g);
+	cnt.resize((int)n);
 	Factorial_mint fm((int)n);
 
 	// 辺 (p, s) を切断したときの s を含む部分木を部分木 (p, s) と呼ぶ．
@@ -288,7 +289,8 @@ mint continuous_tree_construction(Graph& g) {
 		// 部分木の大きさ
 		vi ws(m);
 		rep(i, m) ws[i] = w[s * n + g[s][i]];
-		
+		int w_sum = accumulate(all(ws), 0);
+
 		// 左右からの累積積を計算する．
 		vector<mint> acc_l(m + 1), acc_r(m + 1);
 		acc_l[0] = 1;
@@ -302,24 +304,25 @@ mint continuous_tree_construction(Graph& g) {
 			acc_r[i] = acc_r[i + 1] * dp[s * n + t];
 		}
 
+		// 各回でどの子の部分木の構築を進めるかに対応する多項係数
+		mint mul = fm.multinomial(ws);
+
 		// 左右からの累積積を用いて 1 つ抜きの積を計算する．
 		rep(i, m) {
 			int t = g[s][i];
 			dp[t * n + s] = acc_l[i] * acc_r[i + 1];
 
-			int wi = ws[i];
-			ws[i] = 0; // 一旦部分木 i の大きさを 0 にしておく
-
 			// 各回でどの子の部分木の構築を進めるか
-			dp[t * n + s] *= fm.multinomial(ws);
-			w[t * n + s] = accumulate(all(ws), 1);
-			
-			ws[i] = wi; // 元に戻しておく
+			// 多項係数の計算は毎回行うのではなく差分更新する．
+			mint nmul = mul;
+			nmul *= fm.factorial(ws[i]) * fm.factorial_inv(w_sum) * fm.factorial(w_sum - ws[i]);
+			dp[t * n + s] *= nmul;
+			w[t * n + s] = w_sum - ws[i] + 1;
 		}
 
 		// 総積も記録しておく．
 		dp[s * n + s] = acc_l[m];
-		dp[s * n + s] *= fm.multinomial(ws);
+		dp[s * n + s] *= mul;
 
 		// これで子から自身への情報が計算できたので，
 		// 子に対して同様の計算を行っていく．
@@ -339,22 +342,7 @@ mint continuous_tree_construction(Graph& g) {
 	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
 	dfs_to_root(0, 0);
 
-	mint res = 0;
-
-	// 深さ偶数の頂点から部分木の構築を始めた場合のみを加算することで二重カウントを防ぐ．
-	// 総和 / 2 でも良いが，MOD が偶数であるとまずい．
-	function<void(int, int, int)> dfs = [&](int s, int p, int d) {
-		if (d % 2 == 0) res += dp[s * n + s];
-
-		repe(t, g[s]) {
-			if (t == p) continue;
-
-			dfs(t, s, d + 1);
-		}
-	};
-	dfs(0, -1, 0);
-
-	return res;
+	rep(s, n) cnt[s] = dp[s * n + s];
 }
 
 

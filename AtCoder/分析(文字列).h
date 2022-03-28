@@ -187,19 +187,16 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 }
 
 
-//【部分文字列判定】O(n + m)
+//【部分文字列判定／クヌース－モリス－プラット法】O(n + m)
 /*
 * s[0..n) の部分文字列として w[0..m) が含まれているかどうか調べ，
 * 見つかった場所の先頭位置を昇順に pos に格納する．
-*
-*（クヌース・モリス・プラット法）
 */
 template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos) {
 	//  参考 : https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%8C%E3%83%BC%E3%82%B9%E2%80%93%E3%83%A2%E3%83%AA%E3%82%B9%E2%80%93%E3%83%97%E3%83%A9%E3%83%83%E3%83%88%E6%B3%95
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_B
 
-	int n = sz(s);
-	int m = sz(w);
+	int n = sz(s), m = sz(w);
 	pos.clear();
 
 	// 部分マッチテーブル tbl の作成

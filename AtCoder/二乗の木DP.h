@@ -107,10 +107,63 @@ mint count_subtree(const Graph& g, int r, int k) {
 }
 
 
+//【部分木の最小コスト】O(n^2)
+/*
+* 頂点にコスト c[0..n) が与えられた木 g について，
+* 頂点 r を含む大きさ i の部分木の最小コストを cost[i] に格納する．
+*
+*（二乗の木 DP）
+*/
+void minimum_cost_subtree(const Graph& g, const vl& c, int r, vl& cost) {
+	// verify : https://atcoder.jp/contests/arc029/tasks/arc029_4
+
+	int n = sz(g);
+
+	// 便宜上 g を r を根とする根付き木とみなす．
+	// dp[v][i] : v を根とする大きさ i の部分木の最小コスト
+	vvl dp(n);
+
+	// s : 注目頂点，p : s の親，戻り値 : 部分木 s の大きさ
+	function<int(int, int)> dfs = [&](int s, int p) {
+		int ws = 1; // 部分木 s の大きさ
+
+		// ひとまず s を含む部分木を考える．
+		dp[s] = vl({ 0, c[s] });
+
+		// s の子 t それぞれについて
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// wt : 部分木 t の大きさ
+			int wt = dfs(t, s);
+
+			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の最小コスト
+			vl ndps(ws + wt + 1, INFL);
+			repi(i, 1, ws) {
+				repi(j, 0, wt) {
+					chmin(ndps[i + j], dp[s][i] + dp[t][j]);
+				}
+			}
+
+			dp[s] = ndps;
+			ws += wt;
+		}
+
+		// s を含まない部分木は空の部分木のみである．
+		dp[s][0] = 0;
+
+		return ws;
+	};
+
+	dfs(r, -1);
+	cost = dp[r];
+}
+
 
 //【木の誘導部分グラフの数え上げ】O(n^2)
 /*
 * 木 g の k 本の辺からなる誘導部分グラフの個数を cnt[k] に格納する．
+* 誘導部分グラフとは，その頂点対の辺の有無が g と一致する g の部分グラフをいう．
 *
 *（二乗の木状態 DP）
 */

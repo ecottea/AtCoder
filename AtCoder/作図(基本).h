@@ -65,9 +65,9 @@ inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const 
 template <typename T> inline Line<double> vertical_bisector(const Line<T>& l) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_C
 
-	Point<double> p1 = (l.first + l.second) / 2.;
-	Point<T> d = l.second - l.first;
-	Point<T> n(-d.y, d.x);
+	Point<double> p1 = Point<double>(l.first + l.second) / 2.;
+	Point<double> d = l.second - l.first;
+	Point<double> n(-d.y, d.x);
 	Point<double> p2 = p1 + n;
 	return { p1, p2 };
 }
@@ -173,6 +173,47 @@ int intersection_C_L(const Circle<ll>& c, const Line<ll>& l, Point<double>& p1, 
 }
 
 
+//【円と直線の交点（実数）】O(1)
+/*
+* 円 c と直線 l の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
+*/
+int intersection_C_L(const Circle<double>& c, const Line<double>& l, Point<double>& p1, Point<double>& p2) {
+	// verify : https://atcoder.jp/contests/abc157/tasks/abc157_f
+
+	// 円 c の中心が原点にくるよう平行移動
+	Point<double> o = c.first;
+	Point<double> a = l.first - o;
+	Point<double> b = l.second - o;
+
+	// 直線 l の方向ベクトル
+	Point<double> d = b - a;
+
+	// (0, 0) と l との符号付き距離の分子，分母の二乗，円 c の半径
+	double num = a.cross(b);
+	double dnm_sq = d.sqnorm();
+	double r = c.second;
+
+	// (0, 0) と l との距離が円の半径より大きい場合 → 共有点 0 個
+	if (dnm_sq != 0 && (num * num - 1) / dnm_sq >= r * r) {
+		return 0;
+	}
+
+	// (0, 0) と l との符号付き距離
+	double dist = num / sqrt(dnm_sq);
+
+	// 円 c の中心から弦の中点までのベクトル
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (-dist / d.norm());
+
+	// 弦の中点から一方の交点までのベクトル
+	Point<double> nd = Point<double>(d) * (sqrt(r * r - dist * dist) / d.norm());
+
+	// (0, 0) と l との距離が円の半径より小さい場合 → 交点 2 個
+	p1 = Point<double>(o) + nn + nd;
+	p2 = Point<double>(o) + nn - nd;
+	return 2;
+}
+
+
 //【円と円の交点】O(1)
 /*
 * 2 円 c1, c2 の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
@@ -213,6 +254,42 @@ int intersection_C_C(const Circle<ll>& c1, const Circle<ll>& c2, Point<double>& 
 			p1 = p2 = Point<double>(o1) - Point<double>(d) * (r1 / d.norm());
 		}
 		return 1;
+	}
+
+	// その他の場合 → 交点 2 個
+	double x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
+	double h = sqrt(r1 * r1 - x * x);
+	Point<double> nd = Point<double>(d) * (x / d.norm());
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (h / d.norm());
+	p1 = Point<double>(o1) + nd + nn;
+	p2 = Point<double>(o1) + nd - nn;
+	return 2;
+}
+
+
+//【円と円の交点（実数）】O(1)
+/*
+* 2 円 c1, c2 の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
+*/
+int intersection_C_C(const Circle<double>& c1, const Circle<double>& c2, Point<double>& p1, Point<double>& p2) {
+	// verify : https://atcoder.jp/contests/abc157/tasks/abc157_f
+
+	// 円 c1, c2 の中心と半径
+	Point<double> o1 = c1.first, o2 = c2.first;
+	double r1 = c1.second, r2 = c2.second;
+
+	// o1 から o2 へのベクトル，半径の和と差
+	Point<double> d = o2 - o1;
+	double r_sum = r1 + r2, r_dif = abs(r1 - r2);
+
+	// 中心間距離が円の半径の和より大きい場合 → 共有点 0 個
+	if (d.sqnorm() > r_sum * r_sum) {
+		return 0;
+	}
+
+	// 中心間距離が円の半径の差より小さい場合 → 共有点 0 個
+	if (d.sqnorm() < r_dif * r_dif) {
+		return 0;
 	}
 
 	// その他の場合 → 交点 2 個
@@ -362,7 +439,7 @@ Circle<double> circircle(const Point<T>& a, const Point<T>& b, const Point<T>& c
 	auto lb = vertical_bisector(Line<double>{ a, b });
 	auto lc = vertical_bisector(Line<double>{ a, c });
 	auto o = intersection_L_L(lb, lc);
-	auto r = (a - o).norm();
+	auto r = (Point<double>(a) - o).norm();
 	return { o, r };
 
 	/* 数学的には合ってるが，共線に近い鈍角三角形のときに誤差が大きくなる．

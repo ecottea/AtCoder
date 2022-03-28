@@ -3,7 +3,7 @@
 // ■■■■■ 文字列に対する汎用性のある前処理 ■■■■■
 
 
-//【ランレングス圧縮（文字列）】O(n)
+//【ランレングス符号（文字列）】O(n)
 /*
 * 文字列 s[0..n) をランレングス圧縮し，結果を cls に格納する．
 * cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
@@ -39,13 +39,15 @@ void run_length_encodeing(const string& s, vector<pair<char, int>>& cls) {
 }
 
 
-//【ランレングス圧縮】O(n)
+//【ランレングス符号】O(n)
 /*
 * a[0..n) をランレングス圧縮し，結果を cls に格納する．
 * cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
 */
 template <class T>
 void run_length_encodeing(const vector<T>& a, vector<pair<T, int>>& cls) {
+	// verify : https://atcoder.jp/contests/arc024/tasks/arc024_2
+
 	int n = sz(a);
 	cls.clear();
 
@@ -80,6 +82,8 @@ void run_length_encodeing(const vector<T>& a, vector<pair<T, int>>& cls) {
 * s[i..n-1] で最初に文字 c が現れる位置を nxt[i][c] に格納する（無いなら n）
 */
 void next_position(const string& s, vvi& nxt) {
+	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_e
+
 	int n = sz(s);
 	const int k = 26;
 
@@ -100,7 +104,7 @@ void next_position(const string& s, vvi& nxt) {
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
 * s[0..i] で最後に文字 c が現れる位置を prv[i][c] に格納する（無いなら -1）
 */
-void next_position(const string& s, vvi& prv) {
+void prev_position(const string& s, vvi& prv) {
 	int n = sz(s);
 	const int k = 26;
 	

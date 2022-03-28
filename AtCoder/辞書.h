@@ -1009,6 +1009,8 @@ struct Substring_dictionary {
 * 利用：【めぐる式二分探索】
 */
 struct Outer_sum_dictionary {
+	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_e
+
 	int n, m;
 	vl a, b, acc_b;
 
@@ -1028,8 +1030,6 @@ struct Outer_sum_dictionary {
 
 	// S の v 未満の要素の個数を返す．
 	ll lower_bound(ll v) {
-		// varify : https://algo-method.com/tasks/381
-
 		ll cnt = 0;
 		rep(i, n) {
 			auto it = std::lower_bound(all(b), v - a[i]);
@@ -1092,6 +1092,8 @@ struct Outer_sum_dictionary {
 * 利用：【めぐる式二分探索】
 */
 struct Outer_mul_dictionary {
+	// verify : https://atcoder.jp/contests/arc037/tasks/arc037_c
+
 	// n, m : a, b の要素数
 	// np, mp : a, b の 正の要素数
 	// nz, mz : a, b の 0 の要素数
@@ -1181,111 +1183,137 @@ struct Outer_mul_dictionary {
 };
 
 
-//【kd 木（集合，2 次元）】
+//【k-D 木（集合）】
 /*
-* KDTree<T, S>() : O(1)
-*	空で初期化する．
+* KDTree<S>(vvS p) : O(n log n)
+*	n 個の点 p[i] で初期化する．
+*	制約 : 点の座標は互いに異なる．
 *
-* KDTree<T, S>(vector<pair<pair<T, T>, S>> ps) : O(n log n) // TODO 遅いので作り直す
-*	点群とその値 ps で初期化する．
-*
-* insert(pair<T, T> p, S val) : O(log n) // TODO 点の分布によっては木の形が悪くなるので作り直す
-*	点 p に値 val をもたせて挿入する．
-*
-* search(pair<T, T> p0, pair<T, T> p1, vector<Node*>& res) : O(n^(1 - 1/dim) + |res|)
-*	半開長方形 R = [p0, p1) 内の点を res に格納する．
-*	p0 = {x0, y0}, p1 = {x1, y1} としたとき，R = [x0, x1) * [y0, y1) である．
+* T search(vS p1, vS p2, vi& res) : O(n^(1 - 1/dim) + |res|)
+*	半開直方体 R = [p1, p2) 内の点の番号を res に格納する．
 */
-template <class T, class S> struct KDTree {
-	using Pnt = pair<T, T>;
+template <class S> struct KDTree {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_C
 
-	// kd-木のノード
+	using vS = vector<S>; using vvS = vector<vS>; using vvSi = vector<pair<vS, int>>;
+	const S S_MIN = numeric_limits<S>::min(), S_MAX = numeric_limits<S>::max();
+
 	struct Node {
-		Pnt p;
-		S val;
+		vS p1, p2; // 半開直方体 R = [p1, p2) に対応するノードであることを表す
+		int id; // R 内の点の注目座標に関する中央値に位置する点の番号
 		Node* left, * right;
 
-		// コンストラクタ
 		Node() {}
-		Node(const Pnt& p_, const S& val_) : p(p_), val(val_),
-			left(nullptr), right(nullptr) {}
+		Node(vS p1_, vS p2_, int id_) : p1(p1_), p2(p2_), id(id_), left(nullptr), right(nullptr) {}
 	};
 
-	int n; // 要素数
+	vvS p; // 点群
 	Node* root; // 根へのポインタ
+	int dim; // 次元
 
-	// 空で初期化
-	KDTree() : n(0), root(nullptr) {}
+	// n 個の点 p[i] で初期化する．
+	KDTree(vvS& p_) : p(p_), root(nullptr), dim(sz(p[0])) {
+		int n = sz(p);
 
-	// 配列で初期化
-	KDTree(vector<pair<Pnt, S>>& a) : n(sz(a)), root(nullptr) {
-		mt19937 rnd((int)time(0));
-		shuffle(all(a), rnd);
-		rep(i, n) {
-			insert_rf(root, true, a[i].first, a[i].second);
-		}
+		vvSi pi(n);
+		rep(i, n) pi[i] = { p[i], i };
+
+		split(root, vS(dim, S_MIN), vS(dim, S_MAX), pi, 0, n, 0);
 	}
 
-	// 点の比較（x_axis = true なら x 座標で，false なら y 座標で比較する）
-	bool less(bool x_axis, const Pnt& p, const Pnt& q) {
-		return x_axis ? p.first < q.first : p.second < q.second;
-	}
+	// ノード *t に点 p[i0..i1) を割り当て分割する．
+	void split(Node*& t, vS p1, vS p2, vvSi& pi, int i0, int i1, int d) {
+		// 空なら何もしない．
+		if (i0 >= i1) return;
 
-	// 点の挿入
-	void insert(const Pnt& p, const S& val) {
-		insert_rf(root, true, p, val);
-		n++;
-	}
+		// 要素が一つだけなら葉として格納して帰る．
+		if (i0 + 1 == i1) {
+			vS p0_inc = pi[i0].first;
+			rep(i, dim) p0_inc[i]++;
 
-	// t : 挿入位置，dim : 比較に使う次元，p : 挿入する点
-	void insert_rf(Node*& t, bool x_axis, const Pnt& p, const S& val) {
-		// 葉に辿り着いたら新しいノードを挿入する．
-		if (t == nullptr) {
-			t = new Node(p, val);
+			t = new Node(pi[i0].first, p0_inc, pi[i0].second);
 			return;
 		}
 
-		// p の座標がいまのノードの座標より小さいか大きいかで場合分けし挿入位置を探る．
-		if (less(x_axis, p, t->p)) {
-			insert_rf(t->left, !x_axis, p, val);
+		// 中央値を得る．
+		vector<pair<S, int>> cds;
+		repi(i, i0, i1 - 1) cds.push_back({ pi[i].first[d], pi[i].second });
+		sort(all(cds));
+		S med = cds[sz(cds) / 2].first;
+
+		// med を閾値として用い，それ未満のものを左，以上のものを右に移動する．
+		int i = i0; // i : pi[i0, i) が med 未満の座標と確定
+		repi(j, i0, i1 - 1) { // j : pi[i, j) が med 以上の座標と確定
+			// j の位置に med 未満の座標がある場合
+			if (pi[j].first[d] < med) {
+				// 最も左の med 以上の座標と交換する．
+				swap(pi[i], pi[j]);
+				i++;
+			}
 		}
-		else {
-			insert_rf(t->right, !x_axis, p, val);
+
+		// pi[i] に座標がちょうど med のものをもってくる．
+		repi(j, i, i1 - 1) {
+			if (pi[j].first[d] == med) {
+				swap(pi[i], pi[j]);
+				break;
+			}
+		}
+
+		// med で分割して左右の子を作りに行く．
+		t = new Node(p1, p2, 0);
+		t->id = pi[i].second;
+		vS p1m = p1, p2m = p2;
+		p1m[d] = med; p2m[d] = med;
+		split(t->left, p1, p2m, pi, i0, i, (d + 1) % dim);
+		split(t->right, p1m, p2, pi, i + 1, i1, (d + 1) % dim);
+	}
+
+	// 半開直方体 R = [p1, p2) 内の点の番号を res に格納する．
+	void search(const vS& p1, const vS& p2, vi& res) { return search_rf(root, p1, p2, 0, res); }
+
+	void search_rf(Node* t, const vS& p1, const vS& p2, int d, vi& res) {
+		// 木が空の場合
+		if (t == nullptr) return;
+
+		// 点が探索範囲に入っている場合は点を記録する
+		bool in_flag = true;
+		rep(i, dim) {
+			if (p[t->id][i] < p1[i] || p2[i] <= p[t->id][i]) in_flag = false;
+		}
+		if (in_flag) res.push_back(t->id);
+
+		// 探索範囲の左端が記録範囲の中央値以下なら左の子を調べにいく．
+		if (p1[d] <= p[t->id][d]) {
+			search_rf(t->left, p1, p2, (d + 1) % dim, res);
+		}
+
+		// 探索範囲の右端が記録範囲の中央値以上なら右の子を調べにいく．
+		if (p2[d] >= p[t->id][d]) {
+			search_rf(t->right, p1, p2, (d + 1) % dim, res);
 		}
 	}
 
-	// 点の探索
-	void search(const Pnt& p0, const Pnt& p1, vector<Node*>& res) {
-		res.clear();
-		search_rf(root, true, p0, p1, res);
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, const KDTree& kd) {
+		kd.print_rf(os, kd.root);
+		return os;
 	}
+	void print_rf(ostream& os, Node* t) const {
+		if (t == nullptr) return;
 
-	void search_rf(Node* t, bool x_axis, const Pnt& p0, const Pnt& p1, vector<Node*>& res) {
-		// 葉に辿り着いたらすぐに帰る．
-		if (t == nullptr) {
-			return;
-		}
-
-		// 領域内なら点を記録する．
-		if (p0.first <= t->p.first && t->p.first < p1.first
-			&& p0.second <= t->p.second && t->p.second < p1.second) {
-			res.push_back(t);
-		}
-
-		// t->p < p0 でない限り左の子を調べにいく．
-		if (!less(x_axis, t->p, p0)) {
-			search_rf(t->left, !x_axis, p0, p1, res);
-		}
-
-		// p1 <= t->p でない限り右の子を調べにいく．
-		if (less(x_axis, t->p, p1)) {
-			search_rf(t->right, !x_axis, p0, p1, res);
-		}
+		print_rf(os, t->left);
+		os << "id:" << t->id << ", p1:" << t->p1 << ", p2:" << t->p2 << ", left:";
+		t->left != nullptr ? os << "(" << t->left->p1 << "," << t->left->p2 << ")" : os << "-";
+		os << ", right:";
+		t->right != nullptr ? os << "(" << t->right->p1 << "," << t->right->p2 << ")" : os << "-";
+		os << endl;
+		print_rf(os, t->right);
 	}
 };
 
 
-//【kd トライ（写像）】
+//【k-D トライ（写像）】
 /*
 * KDTrie(vvS p, vT val) : O(n log n)
 *	n 個の点 p[i] に値 val[i] を持たせて初期化する．
@@ -1298,12 +1326,12 @@ template <class S, class T> struct KDTrie {
 	// verify : https://atcoder.jp/contests/abc075/tasks/abc075_d
 
 	using vS = vector<S>; using vvS = vector<vS>; using vT = vector<T>;
-	const S Smin = numeric_limits<S>::min(), Smax = numeric_limits<S>::max();
+	const S S_MIN = numeric_limits<S>::min(), S_MAX = numeric_limits<S>::max();
 
 	struct Node {
-		vS p1, p2; // 半開直方体 R = [p1, p2) に対応するノード
+		vS p1, p2; // 半開直方体 R = [p1, p2) に対応するノードであることを表す
 		T val;
-		Node* left, * right;
+		Node *left, *right;
 
 		Node() {}
 		Node(vS p1_, vS p2_, T val_) : p1(p1_), p2(p2_), val(val_), left(nullptr), right(nullptr) {}
@@ -1315,7 +1343,7 @@ template <class S, class T> struct KDTrie {
 	// n 個の点 p[i] に値 val[i] を持たせて初期化する．
 	KDTrie(vvS& p, vT& val) : root(nullptr), dim(sz(p[0])) {
 		int n = sz(p);
-		split(root, vS(dim, Smin), vS(dim, Smax), p, val, 0, n, 0);
+		split(root, vS(dim, S_MIN), vS(dim, S_MAX), p, val, 0, n, 0);
 	}
 
 	// ノード *t に点 p[i0..i1) と値 val[i0..i1) を割り当て分割する．
@@ -1336,23 +1364,23 @@ template <class S, class T> struct KDTrie {
 		vS cds;
 		repi(i, i0, i1 - 1) cds.push_back(p[i][d]);
 		uniq(cds);
-		S median = cds[sz(cds) / 2];
+		S med = cds[sz(cds) / 2];
 
-		// median を閾値として用い，それ未満のものを左，以上のものを右に移動する．
-		int i = i0; // i : p[i0, i) が median 未満の座標と確定
-		repi(j, i0, i1 - 1) { // j : p[i, j) が median 以上の座標と確定
-			// j の位置に median 未満の座標がある場合
-			if (p[j][d] < median) {
-				// 最も左の median 以上の座標と交換する．
+		// med を閾値として用い，それ未満のものを左，以上のものを右に移動する．
+		int i = i0; // i : p[i0, i) が med 未満の座標と確定
+		repi(j, i0, i1 - 1) { // j : p[i, j) が med 以上の座標と確定
+			// j の位置に med 未満の座標がある場合
+			if (p[j][d] < med) {
+				// 最も左の med 以上の座標と交換する．
 				swap(p[i], p[j]); swap(val[i], val[j]);
 				i++;
 			}
 		}
 
-		// median で分割して左右の子を作りに行く．
+		// med で分割して左右の子を作りに行く．
 		t = new Node(p1, p2, 0);
 		vS p1m = p1, p2m = p2;
-		p1m[d] = median; p2m[d] = median;
+		p1m[d] = med; p2m[d] = med;
 		t->val += split(t->left, p1, p2m, p, val, i0, i, (d + 1) % dim);
 		t->val += split(t->right, p1m, p2, p, val, i, i1, (d + 1) % dim);
 
@@ -1377,8 +1405,8 @@ template <class S, class T> struct KDTrie {
 		if (in_flag) return t->val;
 
 		T val = 0;
-		val += sum_rf(t->left, p1, p2, 1 - d);
-		val += sum_rf(t->right, p1, p2, 1 - d);
+		val += sum_rf(t->left, p1, p2, (d + 1) % dim);
+		val += sum_rf(t->right, p1, p2, (d + 1) % dim);
 
 		return val;
 	}

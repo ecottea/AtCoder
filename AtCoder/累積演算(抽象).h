@@ -45,11 +45,11 @@ struct Cumulative_prod {
 
 //【二次元累積和（アーベル群）】
 /*
-* Cumulative_sum_2d<S, op, o, inv>(a) : O(h w)
+* Cumulative_sum_2d<S, op, o, inv>(vS a) : O(h w)
 *	二次元配列 a[0..h)[0..w) で初期化する．
 *	要素はアーベル群 <S, op, o, inv> の元とする．
 *
-* sum(x1, y1, x2, y2) : O(1)
+* S sum(int x1, int y1, int x2, int y2) : O(1)
 *	Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す，範囲外の値は o() とみなす）
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
@@ -123,6 +123,7 @@ struct Cumulative_sum_2d {
 template <class S, S(*op)(S, S), S(*e)()>
 struct Cumulative_lossy_prod {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_1_D
+	// verify : https://atcoder.jp/contests/abc134/tasks/abc134_c
 
 	int n;
 
@@ -146,6 +147,94 @@ struct Cumulative_lossy_prod {
 
 	// max a[0..i)∪a(i..n) を返す．
 	S without_prod(int i) { return op(acc_l[i], acc_r[i + 1]); }
+};
+
+
+//【平方分割（モノイド）】
+/*
+* Quadratic_division<S, op, e>(int n) : O(n)
+*	v[0..n) = e() で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*
+* Quadratic_division<S, op, e>(vS v) : O(n)
+*	配列 v の要素で初期化する．
+*
+* set(int i, S x) : O(log n)
+*	v[i] = x とする．
+*
+* S get(int i) : O(1)
+*	v[i] を返す．
+*
+* S prod(int l, int r) : O(log n)
+*	op( v[l..r) ) を返す．空なら e() を返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+struct Quadratic_division {
+	// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
+	using vS = vector<S>;
+
+	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
+	vector<S> v, v_mul;
+
+	// コンストラクタ（e() で初期化）
+	Quadratic_division(int n_) : n(n_) {
+		w = (int)(sqrt(n) + EPS);
+		m = (n + w - 1) / w;
+
+		v = vS(n, e());
+		v_mul = vS(m, e());
+	}
+
+	// コンストラクタ（配列で初期化）
+	Quadratic_division(vector<S>& v_) : Quadratic_division(sz(v_)) {
+		v = v_;
+		v_mul = vS(m, e());
+		rep(i, n) {
+			int j = i / w;
+			v_mul[j] = op(v_mul[j], v[i]);
+		}
+	}
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		// 要素 v[i] の更新
+		v[i] = x;
+
+		// v[i] を含むブロックの総積を再計算する．
+		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
+		v_mul[j] = e();
+		repi(i, i_min, i_max) v_mul[j] = op(v_mul[j], v[i]);
+	}
+
+	// v[i] を返す．
+	S get(int i) const { return v[i]; }
+
+	// op( v[l..r) ) を返す．空なら e() を返す．
+	S prod(int l, int r) const {
+		S res = e();
+
+		int j_min = l / w + 1, j_max = r / w - 1;
+
+		if (j_min <= j_max) {
+			repi(i, l, j_min * w - 1) res = op(res, v[i]);
+			repi(j, j_min, j_max) res = op(res, v_mul[j]);
+			repi(i, (j_max + 1) * w, r - 1) res = op(res, v[i]);
+		}
+		else {
+			repi(i, l, r - 1) res = op(res, v[i]);
+		}
+
+		return res;
+	}
+
+	// デバッグ出力用
+	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
+		rep(i, qd.n) {
+			os << qd.get(i) << " ";
+		}
+		return os;
+	}
 };
 
 

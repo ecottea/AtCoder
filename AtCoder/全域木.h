@@ -6,13 +6,10 @@
 // ■■■■■ 全域木 ■■■■■
 
 
-//【最小全域森】O(|E| log|V|)
+//【最小全域森／クラスカル法】O(|E| log|V|)
 /*
-* クラスカル法でコスト付き無向グラフ g の最小全域森を求める．
+* コスト付き無向グラフ g の最小全域森を求め，そのコストを返す．
 * 最小全域森は msf に構成し，各最小全域木の代表元を mst に格納する．
-* また戻り値として最小コストを返す．
-* 
-*（クラスカル法）
 */
 ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* mst = nullptr) {
 	int n = sz(g);
@@ -55,12 +52,10 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* mst = nullptr) {
 }
 
 
-//【最小全域木】O(|E| log|V|)
+//【最小全域木／プリム法】O(|E| log|V|)
 /*
-* コスト付きグラフ g の頂点 r を含む連結成分の最小全域木を mst に格納する．
+* コスト付き無向グラフ g の頂点 r を含む連結成分の最小全域木を mst に格納する．
 * また戻り値として最小コストを返す．
-* 
-*（プリム法）
 */
 ll prim(const WGraph& g, int r, WGraph& mst) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95
@@ -136,11 +131,9 @@ void spanning_forest(const Graph& g, Graph& sf, vi* v = nullptr) {
 }
 
 
-//【全域木の数え上げ】O(|V|^3)
+//【全域木の数え上げ／行列木定理】O(|V|^3)
 /*
 * 自己ループのない無向グラフ g（多重辺は可）の全域木の個数を返す．
-*
-*（行列木定理）
 *
 * 利用：【行列】，【行列式】
 */

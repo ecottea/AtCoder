@@ -99,18 +99,18 @@ template <typename T> struct Point {
 template <typename T> using Line = pair<Point<T>, Point<T>>;
 
 
+//y•½–Ê“à‚Ì‰~z
+/*
+* {p, r} : “_ p ‚ğ’†S‚Æ‚·‚é”¼Œa r ‚Ì‰~‚ğ•\‚·D
+*/
+template <typename T> using Circle = pair<Point<T>, T>;
+
+
 //y•½–Ê“à‚Ì‘½ŠpŒ`z
 /*
 * {pl[0], ..., pl[n - 1]} : 
 *	‚±‚ê‚ç‚Ì n “_‚ğü‚é‡‚É’¸“_‚É‚à‚Â n ŠpŒ`‚ğ•\‚·D
 */
 template <typename T> using Polygon = vector<Point<T>>;
-
-
-//y•½–Ê“à‚Ì‰~z
-/*
-* {p, r} : “_ p ‚ğ’†S‚Æ‚·‚é”¼Œa r ‚Ì‰~‚ğ•\‚·D
-*/
-template <typename T> using Circle = pair<Point<T>, T>;
 
 

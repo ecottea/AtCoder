@@ -27,7 +27,7 @@
 *	(f) :        1     2  2  2        4     5
 *	(g) :  0  1     3           0  1     1
 * 
-* ó·ëËÅF
+* verify : 
 *	(d) : https://atcoder.jp/contests/agc056/tasks/agc056_c
 *	(f) : https://atcoder.jp/contests/abc229/tasks/abc229_g
 *	(g) : https://atcoder.jp/contests/agc046/tasks/agc046_c

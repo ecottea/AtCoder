@@ -65,7 +65,7 @@ void count_partial_sum(const vi& a, int v, vm& cnt) {
 	unordered_map<int, int> c;
 	repe(x, a) c[x]++;
 
-	FPS f(0, v + 1);
+	MFPS f(0, v + 1);
 	repe(p, c) {
 		for (int k = 1; k * p.first <= v; k++) {
 			f[k * p.first] += p.second * (k & 1 ? 1 : -1) * fm.inv(k);
@@ -73,6 +73,53 @@ void count_partial_sum(const vi& a, int v, vm& cnt) {
 	}
 	f = exp(f, v + 1);
 	cnt = f.c;
+}
+
+
+//【部分和問題（復元）】O(n v)
+/*
+* 非負整数列 a[0..n) について，Σi∈S a[i] = v なる辞書順最小の添字集合 S を is に格納する．
+* S が存在しなければ false を返す．
+*
+*（和を状態にもつ状態 DP）
+*/
+bool construction_partial_sum(const vi& a, int v, vi& is) {
+	int n = sz(a);
+	is.clear();
+
+	// dp[i][j] : a[0..i) の中で和がちょうど j になる組合せがあるか
+	vvb dp(n + 1, vb(v + 1));
+	dp[0][0] = true; // 空和が 0 であることに対応
+
+	// sel[i][j] : dp[i][j] = true のとき，a[i-1] を選んだか（DP 復元用）
+	vvb sel(n + 1, vb(v + 1));
+
+	// 貰う DP
+	rep(i, n) {
+		repi(j, 0, v) {
+			// a[i] を選ばない場合から考える．
+			dp[i + 1][j] = dp[i][j];
+			if (dp[i + 1][j]) sel[i + 1][j] = false;
+
+			// それでダメなら次に a[i] を選ぶ場合を考える（i 番目の数が j 以下なら選べる）
+			if (!dp[i + 1][j] && j >= a[i]) {
+				dp[i + 1][j] = dp[i][j - a[i]];
+				if (dp[i + 1][j]) sel[i + 1][j] = true;
+			}
+		}
+	}
+
+	if (!dp[n][v]) return false;
+
+	repir(i, n, 1) {
+		if (sel[i][v]) {
+			is.push_back(i - 1);
+			v -= a[i - 1];
+		}
+	}
+	reverse(all(is));
+
+	return true;
 }
 
 

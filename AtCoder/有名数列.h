@@ -69,7 +69,7 @@ void bernoulli(int n, vm& b) {
 	//		x / (exp(x) - 1) = É∞n=[0..Åá) B(n) / n! x^n
 	// Ç≈íËã`Ç≥ÇÍÇÈÅD
 
-	FPS f = exp(FPS(vm({ 0, 1 })), n + 1);
+	MFPS f = exp(MFPS(vm({ 0, 1 })), n + 1);
 	f <<= 1;
 	f = f.inv(n);
 

@@ -88,7 +88,7 @@ ll count_intersection(const vl& x1, const vl& y1, const vl& x2, const vl& y2) {
 *
 * 利用：【二分探索（実数）】，【転倒数】
 */
-pair<double, double> minimize_manhattansum(const vd& a, const vd& b, const vd& c) {
+pair<double, double> minimize_manhattan_sum(const vd& a, const vd& b, const vd& c) {
 	// verify : https://atcoder.jp/contests/tenka1-2017/tasks/tenka1_2017_e
 
 	int n = sz(a);
@@ -328,5 +328,56 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 		return res;
 	}
 }
+
+
+//【マンハッタン距離の最大値】O(n)
+/*
+* n 個の点 (x[i], y[i]) から選んだ 2 点のマンハッタン距離の最大値を返す．
+*/
+ll maximize_manhattan_distance(const vl& x, const vl& y) {
+	// verify : https://atcoder.jp/contests/abc178/tasks/abc178_e
+
+	//【方法】
+	// 点 (x1, y1) より点 (x2, y2) が右下にある場合，マンハッタン距離は
+	//		(x2 - x1) + (y2 - y1) = (x2 + y2) - (x1 + y1)
+	// とも表される．点 (x1, y1) より点 (x2, y2) が左下にある場合，マンハッタン距離は
+	//		(x2 - x1) - (y2 - y1) = (x2 - y2) - (x1 - y1)
+	// とも表される．2 点の位置関係はこれらのうちいずれかなので，
+	//		max(x[i] + y[i]) - min(x[i] + y[i])
+	//		max(x[i] - y[i]) - min(x[i] - y[i])
+	// のうち大きい方が答えである．
+
+	int n = sz(x);
+
+	ll s_max = -INFL, s_min = INFL, d_max = -INFL, d_min = INFL;
+	rep(i, n) {
+		chmax(s_max, x[i] + y[i]);
+		chmin(s_min, x[i] + y[i]);
+		chmax(d_max, x[i] - y[i]);
+		chmin(d_min, x[i] - y[i]);
+	}
+
+	ll res = max(s_max - s_min, d_max - d_min);
+
+	return res;
+}
+
+
+//【マンハッタン距離の 45°回転表現】
+/*
+* 点 (x1, y1) と点 (x2, y2) のマンハッタン距離は次のようにも表される：
+*	|x2 - x1| + |y2 - y1| = max( |(x1 + y1) - (x2 + y2)|, |(x1 - y1) - (x2 - y2)| )
+*
+*（証明）
+*	|x2 - x1| + |y2 - y1|
+*	= max(x1 - x2, x2 - x1) + max(y1 - y2, y2 - y1)
+*	= max((x1 - x2) + (y1 - y2), (x1 - x2) + (y2 - y1),
+*		  (x2 - x1) + (y1 - y2), (x2 - x1) + (y2 - y1)) （(max, +) 分配法則）
+*	= max( (x1 + y1) - (x2 + y2),  (x1 - y1) - (x2 - y2),
+*		  -(x1 - y1) + (x2 - y2), -(x1 + y1) + (x2 + y2))
+*	= max( |(x1 + y1) - (x2 + y2)|, |(x1 - y1) - (x2 - y2)| )
+*
+* verify : https://atcoder.jp/contests/abc178/tasks/abc178_e
+*/
 
 

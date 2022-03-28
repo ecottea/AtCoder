@@ -90,6 +90,8 @@ ll digit_sum(ll n, ll b = 10) {
 /*
 * 正の数 n を b 進表記したときの数字根は以下で与えられる：
 *	(n - 1) % (b - 1) + 1
+* 
+* verify : https://yukicoder.me/problems/no/1252
 */
 
 
@@ -224,3 +226,16 @@ int real_digit(int num, int dnm, ll n, int b = 10) {
 * 
 * verify : https://atcoder.jp/contests/arc015/tasks/arc015_2
 */
+
+
+//【二進数の繰り上がり[下がり] と XOR】
+/*
+* 非負整数 a, b が二進数表示されているものとするとき，
+*	a + b で繰り上がりが起こらない ⇔ a + b = a XOR b
+*	a - b で繰り下がりが起こらない ⇔ a - b = a XOR b
+* 
+* verify : https://yukicoder.me/problems/no/1674
+* verify : https://atcoder.jp/contests/abc138/tasks/abc138_f
+*/
+
+

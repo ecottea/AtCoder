@@ -12,6 +12,8 @@
 * 利用：【幅優先探索】
 */
 int tree_diameter(const Graph& g, pii& p) {
+	// verify : https://atcoder.jp/contests/arc022/tasks/arc022_3
+
 	int n = sz(g);
 
 	// 適当な頂点を始点にして最遠の点 s を求める．
@@ -148,6 +150,12 @@ int tree_diameter_and_midpoint(const Graph& g, pii& ep, pii& ctr) {
 * また st の頂点 i が g のどの頂点と対応するかを id[i] に格納する．
 */
 int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
+	if (v.empty()) {
+		st.clear();
+		id.clear();
+		return 0;
+	}
+
 	int n = sz(g);
 
 	vb sel(n); // v に属するか

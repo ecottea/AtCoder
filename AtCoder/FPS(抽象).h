@@ -136,6 +136,7 @@ struct FPS {
 	// Ï
 	FPS& operator*=(const FPS& g) {
 		int m = g.deg();
+		if (m == -1) return *this = FPS();
 		resize(n + m);
 
 		// Œã‚ë‚©‚çƒCƒ“ƒ‰ƒCƒ“”z‚é DP

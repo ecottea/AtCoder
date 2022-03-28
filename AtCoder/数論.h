@@ -3,11 +3,9 @@
 // ■■■■■ 数論 ■■■■■
 
 
-//【最大公約数】O(log max(a, b))
+//【最大公約数／ユークリッドの互除法】O(log max(a, b))
 /*
 * gcd(a, b) を返す．
-* 
-*（ユークリッドの互除法）
 */
 ll euclid(ll a, ll b) {
 	// 改変しやすいよう再帰を用いずに書く
@@ -24,7 +22,9 @@ ll euclid(ll a, ll b) {
 /*
 * gcd a[0..n) を返す．（空列の gcd は 0 とする）
 */
-ll gcd(vl& a) {
+ll gcd(const vl& a) {
+	// verify : https://yukicoder.me/problems/no/1884
+
 	int n = sz(a);
 
 	ll g = 0;
@@ -37,23 +37,50 @@ ll gcd(vl& a) {
 //【最小公倍数】O(log max(a, b))
 /*
 * lcm(a, b) を返す．
+* 
+* verify : https://atcoder.jp/contests/abc131/tasks/abc131_c
 */
-ll lcm(ll a, ll b) {
-	return a / gcd(a, b) * b;
-}
+ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
 
 
-//【最小公倍数（複数）】O(n + log(lcm a[0..n))) ?
+//【最小公倍数（複数，結果が小さな数）】O(n log(max a[0..n))) 
 /*
 * lcm a[0..n) を返す．（空列の lcm は 1 とする）
 */
-ll lcm(vl& a) {
+ll lcm(const vl& a) {
 	int n = sz(a);
 	
 	ll l = 1;
 	rep(i, n) l = l / gcd(l, a[i]) * a[i];
 	
 	return l;
+}
+
+
+//【最小公倍数（複数，結果が大きな数）】O(n √max(a)) 
+/*
+* lcm a[0..n) を返す．（空列の lcm は 1 とする）
+*
+* 利用：【素因数分解】
+*/
+mint lcm(const vi& a) {
+	// verify : https://atcoder.jp/contests/abc152/tasks/abc152_e
+
+	int n = sz(a);
+
+	map<ll, int> lpps;
+
+	rep(i, n) {
+		map<ll, int> pps;
+		factor_integer(a[i], pps);
+
+		repe(pp, pps) chmax(lpps[pp.first], pp.second);
+	}
+
+	mint res = 1;
+	repe(pp, lpps) res *= pow(pp.first, pp.second);
+
+	return res;
 }
 
 
@@ -150,7 +177,7 @@ void divisors(ll n, vl& ds) {
 }
 
 
-//【約数関数】O(√n)
+//【約数関数】O(√n k)
 /*
 * 約数関数 σ_k(n) = (n の約数それぞれを k 乗した和) を返す．
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
@@ -236,6 +263,7 @@ ll euler_phi(ll n) {
 //【カーマイケル関数】O(√n)
 /*
 * カーマイケル関数の値 λ(n) を返す．
+* λ(n) は (Z/nZ)^* の冪数（すべての元の位数の最小公倍数）に等しい．
 *
 * 利用：【素因数分解】
 */
@@ -426,17 +454,6 @@ void primefactors_and_divisors(ll n, vl& ps, vl& divs) {
 *	⇔ g の倍数である U の元全ての gcd が g に一致する
 * 
 * verify : https://codeforces.com/contest/1627/problem/D
-*/
-
-
-//【余りの取れる値の範囲】
-/*
-* 非負整数 a を m(<= a) で割った余りは a/2 未満になる．
-* 
-* 証明：m <= a/2 のときは明らか．m > a/2 のときは
-*		a mod m = a - m < a - a/2 = a/2
-* 
-* verify : https://codeforces.com/contest/1617/problem/C
 */
 
 

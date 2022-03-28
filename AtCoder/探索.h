@@ -22,7 +22,7 @@ template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 
 	/* okQ の定義の雛形
 	function<bool(ll)> okQ = [&](ll x) {
-		return true;
+		return true || false;
 	};
 	*/
 }
@@ -55,7 +55,7 @@ template <typename T> T binary_search(T ok, T ng, function<bool(T)>& okQ) {
 
 	/* okQ の定義の雛形
 	function<bool(double)> okQ = [&](double x) {
-		return true;
+		return true || false;
 	};
 	*/
 }
@@ -150,13 +150,13 @@ struct Fibonacci_search {
 };
 
 
-//【黄金分割探索（実数）】O(log((right - left) / EPS))
+//【黄金分割探索（実数，上に凸）】O(log((right - left) / EPS))
 /*
-* 黄金分割探索を用いて，全域で狭義に上に凸な関数 f(x) の開区間 (left, right)
-* における最大値を与える x を返す．
+* 全域で狭義に上に凸な関数 f(x) の開区間 (left, right) における最大値を与える x を返す．
 */
-double golden_search(double left, double right, function<double(double)>& f) {
-	const double phi = 1.61803398875;
+double golden_search_uc(double left, double right, function<double(double)>& f) {
+	const double phi = (1 + sqrt(5)) / 2;
+
 	// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点
 	double l = left;
 	double r = right;
@@ -202,6 +202,93 @@ double golden_search(double left, double right, function<double(double)>& f) {
 }
 
 
+//【黄金分割探索（実数，下に凸）】O(log((right - left) / EPS))
+/*
+* 全域で狭義に下に凸な関数 f(x) の開区間 (left, right) における最小値を与える x を返す．
+*/
+double golden_search_lc(double left, double right, function<double(double)>& f) {
+	const double phi = (1 + sqrt(5)) / 2;
+
+	// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点
+	double l = left;
+	double r = right;
+	double m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
+	double m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
+
+	// 内分点における関数値の計算
+	double v1 = f(m1);
+	double v2 = f(m2);
+
+	// 絶対誤差か相対誤差が EPS 以下になるまで
+	while (r - l > EPS && r - l > EPS * (r + l) / 2) {
+		// 左の内分点での値の方が小さければ，次の区間は左側をとる．
+		if (v1 < v2) {
+			// 右の内分点を新たに右端とする．
+			r = m2;
+
+			// 左の内分点を新たに右の内分点とする．
+			m2 = m1;
+			v2 = v1;
+
+			// 左の内分点を新たに計算する．
+			m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
+			v1 = f(m1);
+		}
+		// 右の内分点での値の方が小さければ，次の区間は右側をとる．
+		else {
+			// 左の内分点を新たに左端とする．
+			l = m1;
+
+			// 右の内分点を新たに左の内分点とする．
+			m1 = m2;
+			v1 = v2;
+
+			// 右の内分点を新たに計算する．
+			m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
+			v2 = f(m2);
+		}
+	}
+
+	// 最後の候補を比較し，小さかった方の x を返す．
+	return (v1 < v2) ? m1 : m2;
+}
+
+
+//【ランダム三分探索（実数，下に凸）】O(log((r - l) / EPS))
+/*
+* 全域で狭義に下に凸な関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
+* 下に凸じゃなくても運が良ければ正しい解を返す．
+*/
+double random_ternary_search_lc(double l, double r, function<double(double)>& f) {
+	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_f
+
+	mt19937 mt;
+	mt.seed((int)time(NULL));
+	uniform_real_distribution<> rnd(0, 1);
+
+	double m1 = l, m2 = r;
+
+	// 絶対誤差か相対誤差が EPS 以下になるまで
+	while (r - l > EPS && r - l > EPS * (r + l) / 2) {
+		m1 = l + (r - l) * rnd(mt);
+		m2 = l + (r - l) * rnd(mt);
+		if (m1 > m2) swap(m1, m2);
+
+		// 左の内分点での値の方が小さければ，次の区間は左側をとる．
+		if (f(m1) < f(m2)) {
+			r = m2;
+		}
+		// 右の内分点での値の方が小さければ，次の区間は右側をとる．
+		else {
+			l = m1;
+		}
+	}
+
+	// 最後の候補を比較し，小さかった方の x を返す．
+	return (f(m1) < f(m2)) ? m1 : m2;
+}
+
+
 //【並列二分探索】O(O(okQ) log max|ok[i] - ng[i]|)
 /*
 * i=[0..q) について，条件を満たす要素 ok[i] と満たさない要素 ng[i] の
@@ -215,6 +302,12 @@ void parallel_binary_search(vector<T>& ok, vector<T>& ng,
 	// 参考 : https://betrue12.hateblo.jp/entry/2019/08/14/152227
 	// verify : https://atcoder.jp/contests/code-thanks-festival-2017-open/tasks/code_thanks_festival_2017_h
 
+	//【使い所】
+	// 解が単調性を持っていることが分かっているが，ランダムアクセスができず
+	// 愚直に二分探索を繰り返すと O(N Q) がかかってしまう場合（Union-Find など）
+	// どうせ線形探索に O(N) かかるのなら Q 個のクエリをまとめて処理できるので，
+	// 線形探索の回数を O(log Q) に抑えることで全体 O(N log Q) を実現する．
+	
 	int q = sz(ok); // クエリの数
 
 	vector<T> mid(q);
@@ -237,18 +330,33 @@ void parallel_binary_search(vector<T>& ok, vector<T>& ng,
 		// mid に対して一括で ok か ng かを判定する．
 		okQ(mid, res);
 
-		////【テンプレ】
-		//// mid の値ごとに処理するため，連想配列 mid → j を作る．
-		//unordered_map<int, vi> mid_to_j;
-		//rep(j, q) {
-		//	mid_to_j[mid[j]].push_back(j);
-		//}
-
 		// 判定結果に応じて ok または ng を更新する．
 		rep(i, q) {
 			if (res[i]) ok[i] = mid[i];
 			else ng[i] = mid[i];
 		}
+
+		/* okQ の定義の雛形
+		function<void(const vi&, vb&)> okQ = [&](const vi& mid, vb& res) {
+			// mid の値ごとに処理するため，連想配列 mid → id を作る．
+			unordered_map<int, vi> mid_to_id;
+			rep(id, q) {
+				mid_to_id[mid[id]].push_back(id);
+			}
+
+			// シミュレーションを行う
+			rep(t, t_max) {
+				// 時刻 t での処理
+
+				// mid = t のものに対する判定
+				if (mid_to_id.count(t)) {
+					repe(id, mid_to_id[t]) {
+						res[id] = true || false;
+					}
+				}
+			}
+		};
+		*/
 	}
 }
 

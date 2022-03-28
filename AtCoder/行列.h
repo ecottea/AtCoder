@@ -308,3 +308,27 @@ template <class T> bool inverse_matrix(Matrix<T>& mat, Matrix<T>& mat_inv) {
 }
 
 
+//【アダマール行列】O(4^n)
+/*
+* 2^n * 2^n のアダマール行列を mat に格納する．
+*/
+void hadamard_matrix(int n, vvi& mat) {
+	mat = vvi(1LL << n, vi(1LL << n));
+
+	function<void(int, int, int, int)> rf = [&](int n, int x, int y, int sgn) {
+		if (n == 0) {
+			mat[x][y] = sgn;
+			return;
+		}
+
+		int b = 1 << (n - 1);
+		rf(n - 1, x, y, sgn);
+		rf(n - 1, x + b, y, sgn);
+		rf(n - 1, x, y + b, sgn);
+		rf(n - 1, x + b, y + b, -sgn);
+	};
+
+	rf(n, 0, 0, 1);
+}
+
+

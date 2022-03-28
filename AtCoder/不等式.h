@@ -19,7 +19,7 @@
 * max_i a[i] b[i] ‚ªÅ‘å‚É‚È‚é‚Ì‚Í a, b ‚Ì‘å¬‡‚ª“¯‚¶‚Æ‚«‚ÅC
 * max_i a[i] b[i] ‚ªÅ¬‚É‚È‚é‚Ì‚Í a, b ‚Ì‘å¬‡‚ªˆÙ‚È‚é‚Æ‚«‚Å‚ ‚éD
 * 
-* verify : https://atcoder.jp/contests/abc093/tasks/arc094_b
+* verify : https://atcoder.jp/contests/abc144/tasks/abc144_e
 */
 
 

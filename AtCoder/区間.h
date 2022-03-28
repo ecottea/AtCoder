@@ -1,7 +1,16 @@
 #pragma once
 #include "header.h"
 #include "二分木.h"
+#include "座標圧縮.h"
+#include "モノイド作用付きモノイド.h"
 // ■■■■■ 区間 ■■■■■
+
+
+//【ソートの仕方】
+/*
+* 選んだ区間の共通部分が空になるように ○○ する問題の場合は右端で昇順ソート
+* 選んだ区間の和集合が全体になるように ○○ する問題の場合は左端で昇順ソート
+*/
 
 
 //【区間の結合】O(n log n)
@@ -116,6 +125,44 @@ ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) 
 	}
 
 	return dp[m][n];
+}
+
+
+//【電灯配置問題】O(n log n)
+/*
+* 区間 [l[i], r[i]) を照らせるコスト c[i] の電灯が n 個ある．
+* ∪[l[i], r[i]) を照らすために必要な最小コストを返す．
+*
+* 利用：【座標圧縮（区間）】，【chmin 作用付き min モノイド】
+*/
+template <class T>
+ll light_placement(const vector<T>& l_, const vector<T>& r_, const vl& c) {
+	// verify : https://atcoder.jp/contests/arc026/tasks/arc026_3
+
+	int n = sz(l_);
+
+	// l, r を座標圧縮する．
+	vi l, r;
+	int m = coordinate_compression_interval(l_, r_, l, r);
+
+	// 左端の小さい順にソートする．
+	vector<tuple<int, int, ll>> lrc(n);
+	rep(i, n) lrc[i] = { l[i], r[i], c[i] };
+	sort(all(lrc));
+
+	// seg_i[j] : 電灯 i までで位置 j より左を照らすための最小コスト
+	lazy_segtree<Chmin_min_mlop_monoid> seg(m);
+	seg.set(0, 0);
+
+	// 配る DP
+	rep(i, n) {
+		int l, r; ll c;
+		tie(l, r, c) = lrc[i];
+
+		seg.apply(l + 1, r + 1, seg.get(l) + c);
+	}
+
+	return seg.get(m - 1);
 }
 
 

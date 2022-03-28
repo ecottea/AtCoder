@@ -287,6 +287,8 @@ bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
 * cycle : 検出した閉路の頂点番号を順に格納したリスト（閉路なしなら空リスト）
 */
 template <class G> void cycle_detection(const G& g, vi& cycle) {
+	// verify : https://yukicoder.me/problems/no/1254
+	
 	int n = sz(g);
 
 	vb seen(n);
@@ -534,6 +536,8 @@ void bipartite_graphQ(const WGraph& g, vvi& cc, vb& b, vi& col) {
 template <class E>
 void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 	// 参考 : https://algo-logic.info/articulation-points/
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
 
 	int n = sz(g);
 	a.clear();
@@ -648,5 +652,13 @@ void two_edge_connected_component(const Graph& g, vvi& tecc) {
 
 	connected_component(g2, tecc);
 }
+
+
+//【通行可能性と壁の連結性の双対性】
+/*
+* L から R まで通行可能[不可能] ⇔ U 側の壁と D 側の壁が非連結[連結]
+* 
+* verify : https://atcoder.jp/contests/abc181/tasks/abc181_f
+*/
 
 

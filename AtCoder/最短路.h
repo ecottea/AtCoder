@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
-// ■■■■■ グラフ上の最適化問題 ■■■■■
+// ■■■■■ グラフ上の最短路問題 ■■■■■
 
 
 //【幅優先探索】O(|V| + |E|)
@@ -20,8 +20,7 @@ void breadth_first_search(const Graph& g, int st, vi& dist) {
 
 	while (!que.empty()) {
 		// 未探索の頂点を 1 つ得る．
-		auto s = que.front();
-		que.pop();
+		auto s = que.front(); que.pop();
 
 		repe(t, g[s]) {
 			// 発見済みの頂点なら何もしない．
@@ -77,7 +76,7 @@ void binary_bfs(const WGraph& g, int st, vi& dist) {
 }
 
 
-//【単一視点最短路／ダイクストラ法】O(|V| + |E| log|V|)
+//【単一始点最短路／ダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 非負のコスト付きグラフ g に対し，始点 st から各頂点 i への最小コストを cost[i] に格納する．
 */
@@ -110,7 +109,7 @@ void dijkstra(const WGraph& g, int st, vl& cost) {
 }
 
 
-//【単一視点最短路（頂点コスト）／ダイクストラ法】O(|V| + |E| log|V|)
+//【単一始点最短路（頂点コスト）／ダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 頂点に非負のコスト vc が与えられたグラフ g に対し，
 * 始点 st から各頂点 i への最小コストを cost[i] に格納する．
@@ -164,7 +163,8 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
 	// なお，負のコストの辺がある場合に通常のダイクストラ法を使うと，
 	//		負の閉路に行ける → 無限ループ
 	//		負の閉路に行けない → 正しい答えは出るが，最悪計算量 O(2^|V|)
-	// となるのでだめ．参考：https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
+	// となるのでだめ．
+	// 参考：https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
 
 	int n = sz(g);
 	cost = vl(n, INFL);
@@ -192,15 +192,17 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
 }
 
 
-//【単一視点最短路（負コスト可）／ベルマン・フォード法】O(|E| |V|)
+//【単一始点最短路（負コスト可）／ベルマン－フォード法】O(|E| |V|)
 /*
-* コスト付きグラフ g（負のコストも可）に対し，始点を st として
-* ベルマン・フォード法を用いて最小コスト経路問題を解き，
+* コスト付きグラフ g（負のコストも可）に対し，
 * st から各頂点 i への最小コストを cost[i] に格納する．
 * もし st から到達可能な負のコストをもつ閉路があれば false を返す．
 */
 bool bellman_ford(const WGraph& g, int st, vl& cost) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_B
+
+	//【補足】
+	// min-plus 半環上のスパース行列とベクトルの積の反復とも思える．
 
 	int n = sz(g);
 	cost = vl(n, INFL); // スタートからの最小コストを保持するテーブル
@@ -233,14 +235,17 @@ bool bellman_ford(const WGraph& g, int st, vl& cost) {
 }
 
 
-//【全頂点対最短路（負コスト可）／ワーシャル・フロイド法】O(|V|^3)
+//【全頂点対最短路（負コスト可）／ワーシャル－フロイド法】O(|V|^3)
 /*
-* コスト付きグラフ g（負のコストも可）に対し，ワーシャル・フロイド法を用いて
-* 全頂点対 (i, j) に関する最小コスト経路問題を解き，結果を cost[i][j] に格納する．
-* もし負の閉路をもっていれば false を返す．
+* コスト付きグラフ g（負のコストも可）に対し，
+* 頂点 i から頂点 j への最小コストを cost[i][j] に格納する．
+* もし g が負の閉路をもっていれば false を返す．
 */
 bool warshall_floyd(const WGraph& g, vvl& cost) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_C
+
+	//【補足】
+	// min-plus 半環上の行列累乗とも思える．
 
 	int n = sz(g);
 
@@ -265,7 +270,7 @@ bool warshall_floyd(const WGraph& g, vvl& cost) {
 				// 新しく通れるようになった k を通る方がコストが小さければ更新
 				// （一時配列に退避させず計算してしまっているので途中は間違った値
 				// になっているが，より小さい値になるだけなので最後には合う．）
-				cost[i][j] = min(cost[i][j], cost[i][k] + cost[k][j]);
+				chmin(cost[i][j], cost[i][k] + cost[k][j]);
 			}
 		}
 	}
@@ -528,6 +533,152 @@ ll minimum_cost_cycle(const WGraph& g, int st, vi* path = nullptr) {
 }
 
 
+//【コスト最小パス（負コスト可）】O(|E| |V|)
+/*
+* コスト付きグラフ g（負のコストも可）の始点 st から終点 gl までのコスト最小パスのコストを返す．
+* 到達不能なら INFL，コストに下限がなければ -INFL を返す．
+* 必要なら path にコスト最小パス上の頂点の列を格納する．
+*
+*（ベルマン－フォード法）
+*/
+ll minimum_cost_path_nc(const WGraph& g, int st, int gl, vi* path = nullptr) {
+	// verify : https://atcoder.jp/contests/abc137/tasks/abc137_e
+
+	int n = sz(g);
+
+	vl cost(n, INFL); cost[st] = 0; // st からの最小コスト
+	vi parent(n, -1); // そこまでのコスト最小パスにおいて直前に通る頂点（復元用）
+	vb updated(n); // コストの更新があったか
+	bool updated_any = false;
+
+	// ベルマン－フォード法で各頂点までの最小コストを求める．
+	rep(i, n) {
+		updated = vb(n);
+		updated_any = false;
+
+		// 全ての辺についての操作
+		rep(s, n) {
+			repe(e, g[s]) {
+				// st から未到達の頂点の先は一旦無視する．
+				if (cost[s] == INFL) continue;
+
+				// コストの更新
+				if (cost[s] + e.cost < cost[e.to]) {
+					cost[e.to] = cost[s] + e.cost;
+					parent[e.to] = s;
+					updated_any = updated[e.to] = true;
+				}
+			}
+		}
+
+		// もしコストの更新が起こらなければ全体の最小コストが確定したことになる．
+		if (!updated_any) break;
+	}
+
+	// gl に到達不能の場合
+	if (cost[gl] == INFL) return INFL;
+
+	// st から到達可能な負閉路が存在した場合
+	if (updated_any) {
+		// コストの更新のあった全頂点を始点にして BFS を行う．
+		queue<int> q;
+		rep(s, n) {
+			if (updated[s]) q.push(s);
+		}
+
+		vb seen(n);
+		while (!q.empty()) {
+			auto s = q.front(); q.pop();
+
+			if (seen[s]) continue;
+			seen[s] = true;
+
+			// コストの更新のあった頂点から gl に到達可能なら下限なしが確定する．
+			if (s == gl) return -INFL;
+
+			repe(t, g[s]) q.push(t);
+		}
+	}
+
+	// 必要なら経路復元を行う．
+	if (path != nullptr) {
+		path->clear();
+
+		int t = gl;
+		while (t != st) {
+			path->push_back(t);
+			t = parent[t];
+		}
+
+		path->push_back(st);
+		reverse(all(*path));
+	}
+
+	return cost[gl];
+}
+
+
+//【最短パス（参照付きグラフ）】O(|V| + |E|)
+/*
+* グラフ g の始点 st から終点 gl までの最短パスの長さを返す（到達不能なら INF）
+* また path に最短パス上の辺番号の列を格納する．
+*
+*（幅優先探索）
+*/
+int shortest_path(const IGraph& g, int st, int gl, vi& path) {
+	// verify : https://atcoder.jp/contests/abc152/tasks/abc152_f
+
+	int n = sz(g);
+
+	vi dist(n, INF); // st からの最短距離を保持するテーブル
+	dist[st] = 0;
+
+	vi p(n); // 1 つ手前の頂点を記録しておくテーブル（復元用）
+	p[st] = -1;
+
+	vi e(n); // 直前に通った辺番号を記録しておくテーブル（復元用）
+	e[st] = -1;
+
+	queue<int> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		auto s = que.front(); que.pop();
+
+		if (s == gl) break;
+
+		repe(t, g[s]) {
+			// 発見済みの頂点なら何もしない．
+			if (dist[t] != INF) continue;
+
+			// スタートからの最短距離を確定する．
+			dist[t] = dist[s] + 1;
+			p[t] = s;
+			e[t] = t.id;
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+
+	// st から gl まで到達不能の場合
+	int d = dist[gl];
+	if (d == INF) return INF;
+
+	// 経路復元を行う．
+	path = vi(d);
+
+	int t = gl, i = d - 1;
+
+	while (t != st) {
+		path[i--] = e[t];
+		t = p[t];
+	}
+
+	return d;
+}
+
+
 //【最近傍探索】O(|V| + |E|)
 /*
 * 無向グラフ g とその頂点集合 v について，頂点 i と最も近い v の頂点の 1 つを nn[i] に，
@@ -597,6 +748,58 @@ void nearest_neighbor(const WGraph& g, const vi& v, vi& nn, vl& cost) {
 			nn[e.to] = nn[s];
 
 			q.push({ cost[e.to], e.to });
+		}
+	}
+}
+
+
+//【コスト昇順 k-近傍探索】O(|V| + k |E| log|V|)
+/*
+* コスト付き無向グラフ g とその頂点集合 vs について，
+* 頂点 i と近い方から k 個の vs の頂点を knn[i] に，
+* i と knn[i] との距離を cost[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
+*
+*（ダイクストラ法）
+*/
+void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& cost) {
+	// verify : https://atcoder.jp/contests/abc245/tasks/abc245_g
+
+	int n = sz(g);
+
+	knn = vvi(n, vi(k, -1));
+	cost = vvl(n, vl(k, INFL));
+
+	// iv_to_cost[i][v] : v から i までの最小コスト
+	vector<unordered_map<int, ll>> iv_to_cost(n);
+
+	// q ∋ {c, i, vi} : vi から i へのコストが c であることを記録する．
+	priority_queue_rev<tuple<ll, int, int>> q;
+	repe(v, vs) q.push({ 0LL, v, v });
+
+	while (!q.empty()) {
+		ll c; int s, v;
+		tie(c, s, v) = q.top(); q.pop();
+
+		// k 近傍を調べ終わっていたら何もしない．
+		if (sz(iv_to_cost[s]) == k) continue;
+
+		// 既に v からの最小コストが求まっているなら何もしない．
+		if (iv_to_cost[s].count(v)) continue;
+
+		// 最小コストの更新
+		iv_to_cost[s][v] = c;
+
+		// s の先を調べる
+		repe(e, g[s]) q.push({ c + e.cost, e.to, v });
+	}
+
+	// 結果の格納
+	rep(i, n) {
+		int j = 0;
+		repe(p, iv_to_cost[i]) {
+			knn[i][j] = p.first;
+			cost[i][j] = p.second;
+			j++;
 		}
 	}
 }

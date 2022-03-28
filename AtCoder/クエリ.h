@@ -181,19 +181,19 @@ struct Convex_hull_trick {
 * Slope_trick() : O(1)
 *	f(x) = 0 で初期化する．
 *
-* min(lr) : O(1)
+* ll min(pll* lr) : O(1)
 *	min f(x) を返し，必要ならそれを与える x の範囲 [l, r] を lr に格納する．
 *
-* add_const(x0) : O(1)
+* add_const(ll x0) : O(1)
 *	f(x) += y0 とする．
 *
-* add_right(x0) : O(1)
+* add_right(ll x0) : O(1)
 *	f(x) += min(x - x0, 0) とする．（＿／ の形を加算する．）
 *
-* add_left(x0) : O(1)
+* add_left(ll x0) : O(1)
 *	f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
 *
-* add_abs(x0) : O(1)
+* add_abs(ll x0) : O(1)
 *	f(x) += |x - x0| とする．（＼／ の形を加算する．）
 *
 * acc_min_left() : O(1)
@@ -202,14 +202,15 @@ struct Convex_hull_trick {
 * acc_min_right() : O(1)
 *	f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
 *
-* shift(x0) : O(1)
+* shift(ll x0) : O(1)
 *	f(x) を x0 だけ平行移動する．（f(x) ← f(x - x0)）
 *
-* sliding_window_min(x0, x1) : O(1)
+* sliding_window_min(ll x0, ll x1) : O(1)
 *	f(x) を min f([x+x0, x+x1]) に置き換える．（＼＿＿／ の形にする．）
 */
 struct Slope_trick {
 	// 参考 : https://maspypy.com/slope-trick-1-%E8%A7%A3%E8%AA%AC%E7%B7%A8
+	// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
 
 	ll y_min; // 最小値
 	priority_queue<ll> l; // 最小値より左の折れ点の x 座標を降順に取り出せるキュー
