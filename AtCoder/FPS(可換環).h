@@ -343,7 +343,7 @@ template <class T> struct FPS {
 		return res;
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const FPS& f) {
 		if (f.n == 0) os << T::o();
 		else {
@@ -354,6 +354,7 @@ template <class T> struct FPS {
 		}
 		return os;
 	}
+#endif
 };
 
 

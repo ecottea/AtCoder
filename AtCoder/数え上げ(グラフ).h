@@ -12,6 +12,42 @@
 */
 
 
+//【独立集合の数え上げ】O(2^|V| |V|)
+/*
+* 無向グラフ g について，頂点集合 set の部分集合のうち
+* g の独立集合を成すものの個数を cnt[set] に格納する．
+*
+*（bit DP）
+*/
+void count_independent_set(const Graph& g, vm& cnt) {
+	// verify : https://judge.yosupo.jp/problem/chromatic_number
+
+	int n = sz(g);
+	cnt.resize(1LL << n);
+
+	repb(set, n) {
+		if (set == 0) {
+			cnt[set] = 1;
+			continue;
+		}
+
+		// s : set に含まれる頂点
+		int s = msb(set);
+
+		// s を含まない独立集合の個数を数える．
+		int sub = set - (1 << s);
+		cnt[set] = cnt[sub];
+
+		// s を含む独立集合の個数を数える．
+		repe(t, g[s]) {
+			// s と辺で結ばれた頂点は選ぶことができない．
+			sub &= ~(1 << t);
+		}
+		cnt[set] += cnt[sub];
+	}
+}
+
+
 //【単純パスの数え上げ】O(2^|V| |V|^2)
 /*
 * グラフ g について単純パス s → t の個数を cnt[s][t] に格納する．
@@ -23,8 +59,8 @@ void count_simple_path(const Graph& g, vvl& cnt) {
 
 	// dp[s][t][set] : 単純パス s → t で途中 set を通るものの個数
 	//		s !∈ set, t ∈ set とする．
-	vvvl dp(n, vvl(n, vl(1 << n)));
-	vvvb seen(n, vvb(n, vb(1 << n)));
+	vvvl dp(n, vvl(n, vl(1LL << n)));
+	vvvb seen(n, vvb(n, vb(1LL << n)));
 	rep(s, n) {
 		dp[s][s][0] = 1;
 		seen[s][s][0] = true;
@@ -76,7 +112,7 @@ ll count_topological_sort(const Graph& g) {
 	int n = sz(g);
 
 	// dp[set] : 位置降順で [0..|set|) 番目の頂点までが set に対応する場合の数
-	vl dp(1 << n);
+	vl dp(1LL << n);
 	dp[0] = 1;
 
 	repb(set, n) {

@@ -351,59 +351,6 @@ ll legendre(ll n, ll p) {
 }
 
 
-//【素数計数関数】O(n^(3/4))
-/*
-* n 以下の素数の個数 π(n) を返す．
-*
-*（Lucy DP）
-*/
-ll prime_pi(ll n) {
-	// 参考 : https://rsk0315.hatenablog.com/entry/2021/05/18/015511
-	// verify : https://judge.yosupo.jp/problem/counting_primes
-
-	if (n <= 1) return 0;
-
-	int m = (int)(sqrt(n) + EPS);
-
-	// S(v, p) を [1..v] で "素数または p 以下の素因数をもたない合成数" の個数とする．
-	// dp_p[0][v] : S(v, p)，dp_p[1][v] : S(n/v, p)
-	vvl dp(2, vl(m + 1));
-	repi(v, 1, m) {
-		dp[0][v] = v - 1;
-		dp[1][v] = n / v - 1;
-	}
-
-	repi(p, 2, m) {
-		// S(p - 1, p - 1)
-		ll s = dp[0][p - 1];
-
-		// p が素数でなければ次の p へ
-		if (dp[0][p] == s) continue;
-
-		// dp[1][v] = S(n/v, p) の更新
-		repi(v, 1, m) {
-			// p^2 > n/v なら次の p へ
-			if (p > n / v / p) break;
-
-			if (v <= m / p)
-				dp[1][v] -= dp[1][v * p] - s;
-			else
-				dp[1][v] -= dp[0][n / v / p] - s;
-		}
-
-		// dp[0][v] = S(v, p) の更新
-		repir(v, m, 1) {
-			// p^2 > v なら次の p へ
-			if (p > v / p) break;
-
-			dp[0][v] -= dp[0][v / p] - s;
-		}
-	}
-
-	return dp[1][1];
-}
-
-
 //【素因数と約数の列挙】O(√n)
 /*
 * n の互いに異なる素因数全てをリスト ps に，約数全てをリスト divs にそれぞれ昇順に格納する．

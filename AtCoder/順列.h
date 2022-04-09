@@ -75,10 +75,11 @@ template <class T> ll inversion_number_cc(vector<T>& a) {
 * [0..n) の置換 p を巡回置換の積に分解して cycles に格納する．
 * p は任意の i を p[i] に動かすような置換を表す．
 */
-int permutation_decomposition(const vi& p, vvi& cycles) {
+void permutation_decomposition(const vi& p, vvi& cycles) {
+	// verify : https://atcoder.jp/contests/abc175/tasks/abc175_d
+
 	int n = sz(p);
 
-	int m = 0;
 	vb seen(n);
 
 	rep(i, n) {
@@ -87,18 +88,15 @@ int permutation_decomposition(const vi& p, vvi& cycles) {
 
 		// 新しいサイクルを発見
 		cycles.push_back(vi());
-		m++;
 
 		// サイクルを順に格納していく．
 		int s = i;
 		do {
-			cycles[m - 1].push_back(s);
+			cycles.rbegin()->push_back(s);
 			seen[s] = true;
 			s = p[s];
 		} while (s != i);
 	}
-
-	return m;
 }
 
 
@@ -150,6 +148,50 @@ mint count_permutations(const string& s) {
 	}
 
 	return dp[0][0];
+}
+
+
+//【順列全探索 → bitDP】O(2^n n)
+/*
+* a[0..n) に対して，1 回の操作でコスト x で a[i]++, a[i]--，コスト y で swap(a[i], a[i+1])
+* が行えるとき，a[0..n) を b[0..n) に一致させるための最小コストを返す．
+*/
+ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
+	// verify : https://atcoder.jp/contests/abc232/tasks/abc232_f
+
+	int n = sz(a);
+
+	// a のどの要素を b のどの要素に対応させるかで決め打ち順列全探索を行えば，
+	// コストが (要素の差の和) x + (順列の転倒数) y であることは容易に分かる．
+	// これで間に合わない場合でも，b に対応させていく順番を固定することで
+	// bitDP を用いて高速化できる．
+
+	// dp[set] : a[set] を b[0..|set|) に一致させるための最小コスト
+	vl dp(1LL << n, INFL);
+	dp[0] = 0;
+
+	repb(set, n) {
+		if (set == 0) continue;
+
+		// set_size : 添字集合 set の大きさ
+		int set_size = popcount(set);
+
+		ll swap_cost = (set_size - 1) * y;
+
+		// 添字集合 set の要素 i を昇順に走査する．
+		rep(i, n) {
+			if (set & (1 << i)) {
+				int n_set = set - (1 << i);
+				ll inc_dec_cost = abs(a[i] - b[set_size - 1]) * x;
+
+				chmin(dp[set], dp[n_set] + inc_dec_cost + swap_cost);
+
+				swap_cost -= y;
+			}
+		}
+	}
+
+	return dp[(1 << n) - 1];
 }
 
 

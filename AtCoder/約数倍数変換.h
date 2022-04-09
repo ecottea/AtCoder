@@ -34,6 +34,16 @@ template <typename T> struct Multiple_transform {
 	Multiple_transform(int n) { eratosthenes(n, ps); }
 
 	void multiple_zeta(vector<T>& f) {
+		// ‹ï‘Ì—áF
+		//	A[1] = a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + a[8] + ...
+		//	A[2] =        a[2]        + a[4]        + a[6]        + a[8] + ...
+		//	A[3] =               a[3]               + a[6]               + ...
+		//	A[4] =                      a[4]                        a[8] + ...
+		//	A[5] =                             a[5]                      + ...
+		//	A[6] =                                    a[6]               + ...
+		//	A[7] =                                           a[7]        + ...
+		//	A[8] =                                                  a[8] + ...
+
 		int n = sz(f);
 
 		// Še‘fˆö”‚²‚Æ‚Éã‚©‚ç‚Ì—İÏ˜a‚ğ‚Æ‚é
@@ -94,6 +104,16 @@ template <typename T> struct Divisor_transform {
 	Divisor_transform(int n) { eratosthenes(n, ps); }
 
 	void divisor_zeta(vector<T>& f) {
+		// ‹ï‘Ì—áF
+		//	A[1] = a[1]
+		//	A[2] = a[1] + a[2]
+		//	A[3] = a[1]        + a[3]
+		//	A[4] = a[1] + a[2]        + a[4]
+		//	A[5] = a[1]                      + a[5]
+		//	A[6] = a[1] + a[2] + a[3]               + a[6]
+		//	A[7] = a[1]                                    + a[7]
+		//	A[8] = a[1] + a[2]        + a[4]                      + a[8]
+		
 		int n = sz(f);
 
 		// Še‘fˆö”‚²‚Æ‚É‰º‚©‚ç‚Ì—İÏ˜a‚ğ‚Æ‚é

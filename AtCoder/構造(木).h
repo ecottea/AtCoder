@@ -10,10 +10,10 @@
 *
 * n : グラフの頂点の数
 * g : ここにグラフを構築して返す
-* directed : 有向グラフなら true
+* undirected : 無向グラフなら true
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
-void read_tree(int n, Graph& g, bool directed = false, bool one_indexed = true) {
+void read_tree(int n, Graph& g, bool undirected = true, bool one_indexed = true) {
 	// verify : https://atcoder.jp/contests/arc028/tasks/arc028_3
 
 	g = Graph(n);
@@ -24,7 +24,7 @@ void read_tree(int n, Graph& g, bool directed = false, bool one_indexed = true) 
 		if (one_indexed) p--;
 
 		g[p].push_back(i);
-		if (!directed) g[i].push_back(p);
+		if (undirected) g[i].push_back(p);
 	}
 }
 
@@ -48,12 +48,14 @@ struct Rooted_tree {
 		int weight = -1; // 重さ（部分木のもつ辺の数）
 		int height = -1; // 高さ（最も遠い葉までの距離）
 
-		// デバッグ出力
+#ifdef _MSC_VER
 		friend ostream& operator<<(ostream& os, const Node& v) {
-			os << "(p:" << v.parent << ", c:[" << v.child << "], d:" << v.depth
-				<< ", w:" << v.weight << ", h:" << v.height << ")";
+			os << "(p:" << v.parent << ", c:[";
+			repe(s, v.child) os << s << " ";
+			os << "], d:" << v.depth << ", w:" << v.weight << ", h:" << v.height << ")";
 			return os;
 		}
+#endif
 	};
 
 	int n; // 頂点数
@@ -95,11 +97,12 @@ struct Rooted_tree {
 	// 大きさ
 	int size() const { return n; }
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Rooted_tree& rt) {
 		rep(i, rt.n) os << rt[i] << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -170,12 +173,14 @@ struct Weighted_rooted_tree {
 		ll dist = -1; // 距離（根からのパスのコスト）
 		int weight = -1; // 重さ（部分木のもつ辺の数）
 
-		// デバッグ出力
+#ifdef _MSC_VER
 		friend ostream& operator<<(ostream& os, const Node& v) {
-			os << "(par:" << v.parent << ", cld:[" << v.child << "], dep:" << v.depth
-				<< ", dist:" << v.dist << ", wgt:" << v.weight << ")";
+			os << "(par:" << v.parent << ", cld:[";
+			repe(s, v.child) os << s << " ";
+			os << "], dep:" << v.depth << ", dist:" << v.dist << ", wgt:" << v.weight << ")";
 			return os;
 		}
+#endif
 	};
 
 	int n; // 頂点数
@@ -216,11 +221,12 @@ struct Weighted_rooted_tree {
 	// 大きさ
 	int size() const { return n; }
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Weighted_rooted_tree& rt) {
 		rep(i, rt.n) os << rt[i] << endl;
 		return os;
 	}
+#endif
 };
 
 

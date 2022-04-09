@@ -183,7 +183,7 @@ int maximize_1sequence_length(const string& s, ll k, char one = '1') {
 }
 
 
-//【ビット列の連結】O(4^S S k log n)（ただし S = max(|s[i]|)）
+//【ビット列の連結】O(4^m m k log n)（ただし m = max(|s[i]|)）
 /*
 * n 個のビット列 s[i] を好きに並べて得られる長さ k のビット列の個数を返す．
 */
@@ -209,7 +209,7 @@ mint count_string_concat(const vector<string>& s_, int k, char one = '1') {
 
 	// dp[i][seq][set] : 長さ i で直前の m 文字が seq であるもので，
 	//	文字列 [0..i-j) が s を並べて得られるような j の集合が set であるものの個数
-	vvvm dp(k + 1, vvm(1 << m, vm(1 << m)));
+	vvvm dp(k + 1, vvm(1LL << m, vm(1LL << m)));
 	dp[0][0][1] = 1;
 	int mask = (1 << m) - 1;
 

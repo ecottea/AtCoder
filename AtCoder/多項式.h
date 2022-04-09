@@ -73,10 +73,11 @@ template <class T> struct Poly1 {
 	double solve() const { return -(double)b / a; }
 	double solve(const Poly1& g) const { return (*this - g).solve(); }
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Poly1& f) {
 		os << f.a << " x + " << f.b; return os;
 	}
+#endif
 };
 
 
@@ -228,7 +229,7 @@ template <class T> struct SPoly {
 	}
 	SPoly& operator*=(const SPoly& g) { *this = *this * g; return *this; }
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const SPoly& f) {
 		map<ll, T> dcs;
 		repe(p, f.c) dcs[p.first] = p.second;
@@ -237,6 +238,7 @@ template <class T> struct SPoly {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -267,9 +269,6 @@ mint coef(const SPoly<mint>& f, const SPoly<mint>& g, ll d) {
 	// となる．
 	//
 	// これを繰り返せば d を半分ずつに減らしていくことができる．
-
-	dumps(sz(f.c)); dump(sz(g.c));
-	dump(f);
 
 	// d = 0 のときは定数項を返す．
 	if (d == 0) {

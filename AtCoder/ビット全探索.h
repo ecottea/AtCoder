@@ -8,6 +8,7 @@
 * 大きさ d の全体集合 Ω とその部分集合 A ⊂ Ω について，
 * A ⊂ set ⊂ Ω なる set を昇順に全探索する．
 */
+// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/8/ITP2/all/ITP2_11_B
 #define repbu(set, A, d) for(int set = A; set < (1 << int(d)); set = (set + 1) | A)
 
 
@@ -16,13 +17,15 @@
 * 大きさ d の全体集合 Ω とその部分集合 A ⊂ Ω について，
 * set ⊂ A ⊂ Ω なる set を降順に全探索する．
 */
+// verify : https://atcoder.jp/contests/dp/tasks/dp_u
 #define repbs(set, A) for(int set = int(A), bset##A = 1; bset##A > 0; bset##A = set, set = (set - 1) & int(A)) 
 
 
-//【部分集合の全探索（大きさ固定）】O(binomial(n, r))
+//【部分集合の全探索（大きさ固定）】O(nCr)
 /*
 * 大きさ n の全体集合 Ω のうち，大きさ r の部分集合 set⊂Ω を昇順に全探索する．
 */
+// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/8/ITP2/all/ITP2_11_D
 #define repbc(set, n, r) for(int set = (1 << int(r)) - 1, lb, nx; set < (1 << int(n)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
 
 

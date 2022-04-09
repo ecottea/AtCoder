@@ -3,55 +3,37 @@
 // ■■■■■ 列挙（集合） ■■■■■
 
 
-//【集合の分割の列挙】O((n / log n)^n)
+//【集合の分割の列挙】O(n 番目のベル数)（n = 12 くらいまで動く）
 /*
-* n 点集合の分割を全出力する．
-*
-* 戻り値 : 分割の個数（ベル数 B_n）
+* n 点集合の全ての分割を sps に格納する．
+* 例えば [0..6) の分割 {{0, 1, 4}, {2, 5}, {3}} は [0,0,1,2,0,1] と一意的に表す．
 */
-int set_partitions(int n) {
-	vector<int> sets;
-	int res = 0;
+void set_partitions(int n, vvi& sps) {
+	vi sp(n);
+	sps.clear();
 
-	function<void(int)> rf = [&](int e) {
-		// 全ての要素を集合に割り振り終わった場合
-		if (e == n) {
-			// 分割を出力する．
-			repe(set, sets) {
-				rep(i, n) {
-					if (set & (1 << i)) {
-						cout << 1;
-					}
-					else {
-						cout << 0;
-					}
-				}
-				cout << " ";
-			}
-			cout << endl;
-
-			res++;
+	// [0..i) までを m 個の集合に分割し終えているとする．
+	function<void(int, int)> rf = [&](int i, int m) {
+		// 全ての要素の所属を決め終えた場合
+		if (i == n) {
+			sps.push_back(sp);
 			return;
 		}
 
-		// 要素 e を割り当てる集合 set それぞれについて
-		rep(i, sz(sets)) {
-			sets[i] += 1 << e;
-			rf(e + 1);
-			sets[i] -= 1 << e;
+		// 要素 i を既に存在する集合に含める場合
+		rep(j, m) {
+			sp[i] = j;
+			rf(i + 1, m);
 		}
 
-		// 要素 e を単独で新たな集合とする場合
-		sets.push_back({ 1 << e });
-		rf(e + 1);
-		sets.pop_back();
+		// 要素 i を単独で新たな集合とする場合
+		sp[i] = m;
+		rf(i + 1, m + 1);
 
 		return;
 	};
 
-	rf(0);
-
-	return res;
+	rf(0, 0);
 }
 
 

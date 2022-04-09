@@ -28,6 +28,7 @@
 */
 template <typename T> struct Skew_heap {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
+	// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
 
 	struct Node {
 		Node* l, * r;
@@ -86,9 +87,10 @@ template <typename T> struct Skew_heap {
 	void merge(Skew_heap<T>& hp) {
 		n += hp.n;
 		root = meld(root, hp.root);
+		hp.root = nullptr;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Skew_heap<T>& q) {
 		q.print_rf(os, q.root);
 		return os;
@@ -97,6 +99,7 @@ template <typename T> struct Skew_heap {
 		if (pt == nullptr) return;
 		os << pt->v << " "; print_rf(os, pt->l);  print_rf(os, pt->r);
 	}
+#endif
 };
 
 
@@ -186,7 +189,7 @@ template <typename T> struct Skew_heap_rev {
 		root = meld(root, hp.root);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Skew_heap_rev<T>& q) {
 		q.print_rf(os, q.root);
 		return os;
@@ -195,6 +198,7 @@ template <typename T> struct Skew_heap_rev {
 		if (pt == nullptr) return;
 		os << pt->v << " "; print_rf(os, pt->l);  print_rf(os, pt->r);
 	}
+#endif
 };
 
 

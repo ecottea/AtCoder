@@ -4,6 +4,7 @@
 #include "変換(グラフ).h"
 #include "最短路.h"
 #include "ビット全探索.h"
+#include "数え上げ(グラフ).h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
 
 
@@ -22,7 +23,7 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 
 
 	// is_ind1[set1] : set1 ⊂ V1 が独立集合か
-	vb is_ind1(1 << n1, true);
+	vb is_ind1(1LL << n1, true);
 
 	// 辺の両端からなる 2 点集合 {s, t} ⊂ V1 は独立集合ではない．
 	rep(s, n1) {
@@ -46,7 +47,7 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 
 
 	// no_edge[set1] : set1 ⊂ V1 との間に辺をもたない V2 の頂点集合
-	vi no_edge(1 << n1);
+	vi no_edge(1LL << n1);
 
 	// 空集合 ⊂ V1 の相手は明らかに全体集合 V2
 	no_edge[0] = (1 << n2) - 1;
@@ -74,7 +75,7 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 
 
 	// max_ind2[set2] : set2 ⊂ V2 の最大独立集合の 1 つ
-	vi max_ind2(1 << n2);
+	vi max_ind2(1LL << n2);
 
 	// 1 点集合 {s} ⊂ V2 の最大独立集合は {s} ⊂ V2
 	rep(i, n2) {
@@ -179,6 +180,91 @@ int maximum_clique(const Graph& g, vi* vs = nullptr) {
 	complement_graph(g, gc);
 
 	return maximum_independent_set(gc, vs);
+}
+
+
+//【彩色数】O(2^|V| |V|)
+/*
+* 無向グラフ g の彩色数を返す．彩色数とは，独立集合への分割の最小個数である．
+*
+* 利用：【独立集合の数え上げ】
+*/
+int chromatic_number(const Graph& g) {
+	// 参考 : https://drken1215.hatenablog.com/entry/2019/01/16/030000
+	// verify : https://judge.yosupo.jp/problem/chromatic_number
+
+	//【方法】
+	// 判定問題
+	//		(P): k 個の独立集合へ分割可能か
+	// を考え，(P) を満たす最小の k を線形探索する．
+	//
+	// (P) の代わりに
+	//		(P2): 長さ k の独立集合の列で被覆可能か
+	// を考えても，可能性は変わらない．
+	//
+	// (P2) の代わりに
+	//		(P3): 長さ k の独立集合の列で被覆する方法は何通りか
+	// を考え，この答えが 0 か否かを見ることにする．そこで
+	//		g[set] : set を長さ k の独立集合の列で被覆する方法の数
+	// とおく．これは彩色多項式とは関係ないので注意．
+	//
+	// g の下位集合でのゼータ変換を
+	//		f[set] = Σ_(sub ⊂ set) g[sub]
+	// とおく．f は
+	//		f[set] = set から 長さ k の独立集合の列を選ぶ方法の数
+	// と解釈できるので，
+	//		f[set] = (set の独立集合の数)^k
+	// と表される．
+	//
+	// 以上を逆に辿ると，以下のアルゴリズムが得られる：
+	//	k について昇順に
+	//		各 set ⊂ V について set の独立集合の数を求める．
+	//		→ f[set] = (set の独立集合の数)^k を求める．
+	//		→ f[set] に包除原理を適用し g[V] を求める．
+	//	を行い，始めて g[V] != 0 となった k を返せば良い．
+
+	int n = sz(g);
+	if (n == 0) return 0;
+
+	// ind[set] : set の部分集合のうち，独立集合をなすものの個数
+	vm ind;
+	count_independent_set(g, ind);
+
+	// pow_k[set] : (-1)^#(V - set) ind[set]^k
+	vm pow(1LL << n);
+	repb(set, n) pow[set] = (n - popcount(set)) % 2 ? -1 : 1;
+
+	repi(k, 1, n) {
+		mint sum = 0;
+
+		repb(set, n) {
+			pow[set] *= ind[set];
+			sum += pow[set];
+		}
+
+		if (sum != 0) return k;
+	}
+	return n;
+}
+
+
+//【最小クリーク被覆】O(2^|V| |V|)
+/*
+* 無向グラフ g の最小クリーク被覆の大きさを返す．
+* S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
+*
+* 利用：【補グラフ】，【彩色数】
+*/
+int minimum_clique_cover(const Graph& g) {
+	// verify : https://atcoder.jp/contests/abc187/tasks/abc187_f
+
+	//【方法】
+	// 最小クリーク被覆の大きさは，補グラフについての彩色数に等しい．
+
+	Graph gc;
+	complement_graph(g, gc);
+
+	return chromatic_number(gc);
 }
 
 
@@ -287,8 +373,8 @@ ll minimum_cost_matching(const vvl& adj) {
 	}
 
 	// dp[set] : set に含まれる頂点で作れる完全マッチングの最小コスト
-	vl dp(int(1 << n), INF);
-	vb seen(int(1 << n));
+	vl dp(1LL << n, INF);
+	vb seen(1LL << n);
 	dp[0] = 0;
 	seen[0] = true;
 

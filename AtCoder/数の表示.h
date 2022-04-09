@@ -101,6 +101,8 @@ ll digit_sum(ll n, ll b = 10) {
 * zŠÂ•”•ª‚ÌŒ…‚Ì”‚ğ cycle ‚É‚»‚ê‚¼‚êŠi”[‚·‚éD
 */
 void real_digits(pii frac, vi& noncycle, vi& cycle, int base = 10) {
+	// verify : https://atcoder.jp/contests/abc174/tasks/abc174_c
+
 	int n, m;
 	tie(n, m) = frac; // n / m
 

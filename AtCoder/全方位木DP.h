@@ -245,7 +245,7 @@ void count_subtree(Graph& g, vm& cnt) {
 *
 * —˜—pFyŠKæ‚Æ“ñ€ŒW”i–@‚ª‘å‚«‚È‘f”Cmint—˜—pjz
 */
-void continuous_tree_construction(const Graph& g, vm& cnt) {
+void count_continuous_tree_construction(const Graph& g, vm& cnt) {
 	// verify : https://atcoder.jp/contests/abc160/tasks/abc160_f
 
 	ll n = sz(g);

@@ -88,11 +88,12 @@ struct Binary_Tree {
 	// 大きさ
 	int size() const { return n; }
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Binary_Tree& rt) {
 		rep(i, sz(rt)) os << rt[i] << endl;
 		return os;
 	}
+#endif
 };
 
 

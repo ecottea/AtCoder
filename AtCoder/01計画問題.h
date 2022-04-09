@@ -176,7 +176,7 @@ struct Two_sat {
 	// 真理値解を返す．
 	vb answer() { return sol; }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Two_sat ts) {
 		rep(s, ts.n) {
 			os << "!" << s << " => ";
@@ -197,6 +197,7 @@ struct Two_sat {
 		}
 		return os;
 	}
+#endif
 };
 
 

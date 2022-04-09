@@ -5,7 +5,7 @@
 // ¡¡¡¡¡ “ñd‚Ì˜a‚È‚Ç ¡¡¡¡¡
 
 
-//y·‚Ì‘˜azO(n log n)
+//y‘g‚Ì·‚Ì‘˜azO(n log n)
 /*
 * ƒ°ƒ°i<j |a[j] - a[i]| ‚Ì’l‚ğ•Ô‚·D
 */
@@ -28,7 +28,7 @@ template <class T> mint difference_sum(vector<T> a) {
 }
 
 
-//ymin ‚Ì‘˜azO(n log n)
+//y‹æŠÔ‚Ì min ‚Ì‘˜azO(n log n)
 /*
 * ƒ°ƒ°i<j min( a[i..j) ) ‚Ì’l‚ğ•Ô‚·D
 * 
@@ -36,7 +36,7 @@ template <class T> mint difference_sum(vector<T> a) {
 */
 
 
-//yXOR ‚Ì˜azO((n + m) log max(a, b))
+//y‘g‚Ì XOR ‚Ì˜azO((n + m) log max(a, b))
 /*
 * ƒ°i=[0..n)j=[0..m) a[i] XOR b[j] ‚Ì’l‚ğ•Ô‚·D
 */
@@ -71,7 +71,7 @@ template <class T> T xor_sum(const vl& a, const vl& b) {
 }
 
 
-//y˜a‚Ì XORzO(n log m log(max(a, b)))
+//y‘g‚Ì˜a‚Ì XORzO(n log m log(max(a, b)))
 /*
 * XORi=[0..n)j=[0..m) (a[i] + b[j]) ‚Ì’l‚ğ•Ô‚·D
 */
@@ -113,7 +113,7 @@ int sum_xor(const vi& a, const vi& b) {
 }
 
 
-//ygcd ‚Ì‘˜azO(n + K log(log K))iK = max(a[i], b[j])j
+//y‘g‚Ì gcd ‚Ì‘˜azO(n + K log(log K))iK = max(a[i], b[j])j
 /*
 * ƒ°i=[0..n)j=[0..m) gcd(a[i], b[j]) ‚Ì’l‚ğ•Ô‚·D
 *
@@ -148,7 +148,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 }
 
 
-//ylcm ‚Ì‘˜azO(n + m + K log(log K))iK = max(a[i], b[j])j
+//y‘g‚Ì lcm ‚Ì‘˜azO(n + m + K log(log K))iK = max(a[i], b[j])j
 /*
 * ƒ°i=[0..n)j=[0..m) lcm(a[i], b[j]) ‚Ì’l‚ğ•Ô‚·D
 *

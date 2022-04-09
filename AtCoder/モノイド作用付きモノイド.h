@@ -28,6 +28,7 @@ F101 id101() { return 1; }
 
 
 //【chmin 作用付き min モノイド】
+/* verify : https://yukicoder.me/problems/no/1868 */
 using S115 = ll;
 S115 op115(S115 x, S115 y) { return min(x, y); }
 S115 e115() { return INFL; }
@@ -39,6 +40,7 @@ F115 id115() { return INFL; }
 
 
 //【chmax 作用付き max モノイド】
+/* verify : https://atcoder.jp/contests/abc177/tasks/abc177_f */
 using S116 = ll;
 S116 op116(S116 x, S116 y) { return max(x, y); }
 S116 e116() { return -INFL; }
@@ -46,15 +48,15 @@ using F116 = ll;
 S116 mapping116(F116 f, S116 x) { return max(f, x); }
 F116 composition116(F116 f, F116 g) { return max(f, g); }
 F116 id116() { return -INFL; }
-#define Chmin_min_amonoid S116, op116, e116, F116, mapping116, composition116, id116
+#define Chmax_max_amonoid S116, op116, e116, F116, mapping116, composition116, id116
 
 
 //【変更 作用付き 左変更 モノイド】
 using S102 = int;
-S102 e102() { return INF; } // 使わない値なら何でも OK
+S102 e102() { return INF + 2; } // 使わない値なら何でも OK
 S102 op102(S102 x, S102 y) { return x == e102() ? y : x; }
 using F102 = int;
-F102 id102() { return INF; } // 使わない値なら何でも OK
+F102 id102() { return INF + 1; } // 使わない値なら何でも OK
 S102 mapping102(F102 f, S102 x) { return f == id102() ? x : f; }
 F102 composition102(F102 f, F102 g) { return f == id102() ? g : f; }
 #define Update_Lupdate_amonoid S102, op102, e102, F102, mapping102, composition102, id102
@@ -65,24 +67,26 @@ using S103 = int;
 S103 op103(S103 x, S103 y) { return max(x, y); }
 S103 e103() { return -INF; }
 using F103 = int;
-F103 id103() { return INF; } // 使わない値なら何でも OK
+F103 id103() { return INF + 1; } // 使わない値なら何でも OK
 S103 mapping103(F103 f, S103 x) { return f == id103() ? x : f; }
 F103 composition103(F103 f, F103 g) { return f == id103() ? g : f; }
 #define Update_max_amonoid S103, op103, e103, F103, mapping103, composition103, id103
 
 
 //【変更 作用付き min モノイド】
+/* verify : https://atcoder.jp/contests/abc177/tasks/abc177_f */
 using S104 = int;
 S104 op104(S104 x, S104 y) { return min(x, y); }
 S104 e104() { return INF; }
 using F104 = int;
-F104 id104() { return INF; } // 使わない値なら何でも OK
+F104 id104() { return INF + 1; } // 使わない値なら何でも OK
 S104 mapping104(F104 f, S104 x) { return f == id104() ? x : f; }
 F104 composition104(F104 f, F104 g) { return f == id104() ? g : f; }
 #define Update_min_amonoid S104, op104, e104, F104, mapping104, composition104, id104
 
 
 //【加算 作用付き max モノイド】
+/* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4 */
 using S105 = ll;
 S105 op105(S105 x, S105 y) { return max(x, y); }
 S105 e105() { return -INFL; }
@@ -94,6 +98,7 @@ F105 id105() { return 0; }
 
 
 //【加算 作用付き min モノイド】
+/* verify : https://atcoder.jp/contests/abc245/tasks/abc245_e */
 using S106 = ll;
 S106 op106(S106 x, S106 y) { return min(x, y); }
 S106 e106() { return INFL; }
@@ -198,7 +203,7 @@ S109 op109(S109 x, S109 y) {
 	return { vx + vy, cx + cy };
 }
 S109 e109() { return { 0, 0 }; }
-F109 id109() { return INFL; } // 使わない値なら何でも OK
+F109 id109() { return INFL + 1; } // 使わない値なら何でも OK
 S109 mapping109(F109 f, S109 x) {
 	if (f == id109()) return x;
 

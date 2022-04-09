@@ -165,11 +165,12 @@ template <class T> struct Segtree {
 		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, f);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Segtree seg) {
 		rep(i, seg.actual_n) os << seg.get(i) << " ";
 		return os;
 	}
+#endif
 };
 
 
@@ -410,11 +411,12 @@ template <class T> struct Lazy_segtree {
 		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, g);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Lazy_segtree seg) {
 		rep(i, seg.actual_n) os << seg.get(i) << " ";
 		return os;
 	}
+#endif
 };
 
 

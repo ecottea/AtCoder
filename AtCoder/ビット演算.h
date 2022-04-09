@@ -15,6 +15,10 @@
 //【XOR と 和 の関係】
 /*
 * a XOR b は，2 進法で繰り上がりを捨てて計算した a + b に等しい．
+* 特に以下の式が成り立つ：
+*	a + b = (a XOR b) + 2(a AND b)
+* 
+* verify : https://atcoder.jp/contests/abc172/tasks/abc172_f
 */
 
 
@@ -23,6 +27,8 @@
 * a + b = (a OR b) + (a AND b)
 * 
 * 証明：ビット毎に a + b = min(a, b) + max(a, b) を適用する．
+* 
+* verify : https://atcoder.jp/contests/abc238/tasks/abc238_d
 */
 
 

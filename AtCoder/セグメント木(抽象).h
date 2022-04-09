@@ -190,13 +190,14 @@ struct Segtree {
 		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, f);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Segtree seg) {
 		rep(i, seg.actual_n) {
 			os << seg.get(i) << " ";
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -471,13 +472,14 @@ struct Lazy_segtree {
 		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, g);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Lazy_segtree seg) {
 		rep(i, seg.actual_n) {
 			os << seg.get(i) << " ";
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -746,29 +748,15 @@ struct Proportional_lazy_segtree {
 		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, g);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Proportional_lazy_segtree seg) {
 		rep(i, seg.actual_n) {
 			os << seg.get(i) << " ";
 		}
 		return os;
 	}
+#endif
 };
-
-
-//【区間変更／区間総和クエリ】
-/*
-* 利用：【遅延評価セグメント木（比例作用）】
-*/
-using S7 = ll;
-using F7 = ll;
-S7 op7(S7 x, S7 y) { return x + y; }
-S7 e7() { return 0; }
-F7 mapping7(F7 f, S7 x) { return f == INFL ? x : f; }
-F7 composition7(F7 f, F7 g) { return f == INFL ? g : f; }
-F7 id7() { return INFL; }
-F7 pow7(F7 f, int i) { return f == INFL ? INFL : f * i; }
-using RUSQ = Proportional_lazy_segtree<S7, op7, e7, F7, mapping7, composition7, id7, pow7>;
 
 
 //【連想セグメント木（モノイド）】
@@ -1105,7 +1093,7 @@ struct Segtree_map {
 		return min_left_rf(t->left, x, r, f);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Segtree_map& seg) {
 		seg.print_rf(os, seg.root);
 		return os;
@@ -1121,10 +1109,11 @@ struct Segtree_map {
 		os << endl;
 		print_rf(os, t->right);
 	}
+#endif
 };
 
 
-//【連想遅延評価セグメント木（作用付きモノイド）】
+//【連想遅延評価セグメント木（モノイド作用付きモノイド）】
 /*
 * Lazy_segtree_map<T, lb, ub, S, op, e, F, mapping, composition, id>() : O(1)
 *	空のセグメント木で初期化する．
@@ -1538,7 +1527,7 @@ struct Lazy_segtree_map {
 		return min_left_rf(t->left, x, r, f);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Lazy_segtree_map& seg) {
 		seg.print_rf(os, seg.root);
 		return os;
@@ -1555,10 +1544,11 @@ struct Lazy_segtree_map {
 		os << endl;
 		print_rf(os, t->right);
 	}
+#endif
 };
 
 
-//【平行移動可能連想遅延評価セグメント木（作用付きモノイド）】
+//【平行移動可能連想遅延評価セグメント木（モノイド作用付きモノイド）】
 /*
 * Lazy_segtree_map_shiftable<T, lb, ub, add, zero, S, op, e, F, mapping, composition, id>() : O(1)
 *	空のセグメント木で初期化する．
@@ -2112,7 +2102,7 @@ struct Lazy_segtree_map_shiftable {
 		return min_left_rf(t->left, x, r, f);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Lazy_segtree_map_shiftable& seg) {
 		seg.cout_rf(os, seg.root);
 		return os;
@@ -2153,6 +2143,7 @@ struct Lazy_segtree_map_shiftable {
 
 		print_rf(t->right);
 	}
+#endif
 };
 
 

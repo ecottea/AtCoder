@@ -8,17 +8,16 @@
 * k = 26 種類の英小文字からなる文字列 s[0..n) の部分列の個数を返す．
 * 空文字列も s の部分列とみなす．
 *
-*（部分列 DP）
+*（前処理で高速化した部分列 DP）
 */
 mint count_subseq(const string& s) {
 	// 参考 : https://qiita.com/drken/items/a207e5ae3ea2cf17f4bd
-	// verify : https://judge.yosupo.jp/problem/number_of_substrings
 
 	int n = sz(s);
 	const int k = 26;
 
-	// nxt[i][c] : s[i..n) で最初に文字 c が現れる位置（無いなら -1）
-	vvi nxt(n + 1, vi(k, -1));
+	// nxt[i][c] : s[i..n) で最初に文字 c が現れる位置（無いなら n）
+	vvi nxt(n + 1, vi(k, n));
 	repir(i, n - 1, 0) {
 		rep(c, k) {
 			nxt[i][c] = nxt[i + 1][c];
@@ -40,7 +39,7 @@ mint count_subseq(const string& s) {
 			int j = nxt[i][c];
 
 			// もう c が現れないなら c を選ぶことはできない．
-			if (j == -1) {
+			if (j == n) {
 				continue;
 			}
 
@@ -59,12 +58,47 @@ mint count_subseq(const string& s) {
 }
 
 
+//【部分列の数え上げ】O(n + max(a))
+/*
+* 列 a[0..n) の部分列の個数を返す．空列も a の部分列とみなす．
+*
+*（総和で高速化した部分列 DP）
+*/
+template <class T> mint count_subseq_inline(const vector<T>& a) {
+	int n = sz(a);
+	int m = *max_element(all(a)) + 1;
+
+	// dp_i[j] : a[0..i) の空でない部分列で，最後が j であるものの個数．
+	//	ただし同じ部分列については選択する位置の組が辞書順最大になるもののみを認める．
+	//	この制約を設けることにより同じ部分列を重複して数えてしまわないようにする．
+	vm dp(m);
+
+	// sum_i : a[0..i) の空でない部分列の個数
+	mint sum = 0;
+
+	rep(i, n) {
+		int j = a[i];
+		mint old = dp[j];
+
+		// a[i] = j を選ぶと，最後が j である列が今までの列の個数 + 1 になる．
+		// 今までの列で最後が j であるものについて a[i] = j を選ばないことは禁止されている．
+		dp[j] = sum + 1;
+
+		// 総和の差分更新
+		sum = sum - old + dp[j];
+	}
+
+	// 空列の分を加算
+	return sum + 1;
+}
+
+
 //【回文部分列の数え上げ】O(n^2 k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) の回文部分列の個数を返す．
 * 空文字列も s の回文部分列とみなす．
 *
-*（部分列 DP）
+*（前処理で高速化した部分列 DP）
 */
 mint count_subseq_palindrome(const string& s) {
 	// 参考 : https://qiita.com/drken/items/a207e5ae3ea2cf17f4bd

@@ -488,7 +488,7 @@ struct MFPS {
 		return g;
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const MFPS& f) {
 		if (f.n == 0) os << 0;
 		else {
@@ -499,6 +499,7 @@ struct MFPS {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -926,6 +927,21 @@ MFPS falling_factorial(int n, const Factorial_mint& fm) {
 
 	return res;
 }
+
+
+//【ラグランジュの反転公式】
+/*
+* f(x) と g(x) が互いに逆関数であり，条件
+*	[x^0]f(x) = [x^0]g(x) = 0, [x^1]f(x) != 0, [x^1]g(x) != 0
+* を満たすとき，以下の等式が成り立つ：
+*	[x^n]g(x) = (1/n) [x^(n-1)]((x / f(x))^n)
+* 
+*（使い所）
+* f(x) = (x の式) とは書けていないが x = (f(x) の式) という表示が得られている場合．
+* 特に木の数え上げにおいて有用である．
+* 
+* verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
+*/
 
 
 //【拡張ユークリッドの互除法】O(deg(a) deg(b)) (?) // TODO：遅いので作り直す

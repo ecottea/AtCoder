@@ -138,23 +138,23 @@ template <class T> void next_greater_positions(const vector<T>& a, int k, vvi& n
 }
 
 
-//【自身より 1 大きい数の次の位置】O(n)
+//【自身と同じ数の次の位置】O(n)
 /*
-* a[0..n) の各要素 a[i] について，j > i かつ a[j] = a[i] + 1 となる最小の j を
+* a[0..n) の各要素 a[i] について，j > i かつ a[j] = a[i] となる最小の j を
 * nxt[j] に格納する．（存在しなければ n）
 */
-void next_upper1(const vi& a, vi& nxt) {
+template <class T> void next_equal(const vector<T>& a, vi& nxt) {
 	int n = sz(a);
 
-	// nxt[i] : j > i かつ a[j] = a[i] + 1 となる最小の j（なければ n）
+	// nxt[i] : j > i かつ a[j] = a[i] となる最小の j（なければ n）
 	nxt = vi(n, n);
 
 	// num_to_pos[x] : 値 x が最後に現れた位置（右から走査する）
-	unordered_map<int, int> num_to_pos;
+	unordered_map<T, int> num_to_pos;
 
 	repir(i, n - 1, 0) {
-		if (num_to_pos.count(a[i] + 1)) {
-			nxt[i] = num_to_pos[a[i] + 1];
+		if (num_to_pos.count(a[i])) {
+			nxt[i] = num_to_pos[a[i]];
 		}
 		num_to_pos[a[i]] = i;
 	}

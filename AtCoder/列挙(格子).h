@@ -64,7 +64,7 @@ void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
 		}
 	}
 
-	/* デバッグ出力用
+	/* 確認用
 	int main() {
 		cout << fixed << setprecision(12);
 

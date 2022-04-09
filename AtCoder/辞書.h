@@ -88,11 +88,12 @@ struct Dynamic_dictionary {
 	// v が昇順で何番目の要素かを返す．
 	ll lower_bound(int v) { return ft.prod(0, v); }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Dynamic_dictionary& dd) {
 		rep(v, dd.n) rep(hoge, dd.ft.get(v)) os << v << " ";
 		return os;
 	}
+#endif
 };
 
 
@@ -176,6 +177,8 @@ struct Interval_dictionary_set {
 
 	// 区間 [l, r) を追加する．
 	void insert(ll l, ll r) {
+		if (l >= r) return;
+
 		auto it_l = get_iter(l - 1);
 		if (it_l == lr.end()) it_l = get_right_iter(l - 1);
 
@@ -192,6 +195,8 @@ struct Interval_dictionary_set {
 
 	// 区間 [l, r) を削除する．
 	void erase(ll l, ll r) {
+		if (l >= r) return;
+
 		ll l2 = l, r2 = r;
 
 		auto it_l = get_iter(l);
@@ -213,11 +218,12 @@ struct Interval_dictionary_set {
 	typename set<pll>::iterator begin() { return lr.begin(); }
 	typename set<pll>::iterator end() { return lr.end(); }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Interval_dictionary_set& d) {
 		repe(p, d.lr) os << p << " ";
 		return os;
 	}
+#endif
 };
 
 
@@ -347,11 +353,12 @@ template <class S, class T> struct Interval_dictionary_map {
 	typename map<pair<S, S>, T>::iterator begin() { return lr_to_v.begin(); }
 	typename map<pair<S, S>, T>::iterator end() { return lr_to_v.end(); }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Interval_dictionary_map& d) {
 		repe(p, d.lr_to_v) os << p << " ";
 		return os;
 	}
+#endif
 };
 
 
@@ -587,7 +594,7 @@ template <class T> struct Trie_tree_map {
 		return cnt[v];
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Trie_tree_map& trie) {
 		string s;
 
@@ -606,6 +613,7 @@ template <class T> struct Trie_tree_map {
 
 		return os;
 	}
+#endif
 };
 
 
@@ -629,7 +637,7 @@ template <class T> struct Trie_tree_map {
 * int position(ll v, int c) : O(log(n) log(max a))
 *	昇順で c 番目の v の位置を返す．
 *
-* frequency(int l, int r, int c,vector<pli>& freq) : O(min(r - l, max a) log(max a))
+* frequency(int l, int r, int c, vector<pli>& freq) : O(min(r - l, max a) log(max a))
 *	a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組のリストを freq に格納する．
 *
 * ll sum(int l, int r) : O(1)
@@ -980,12 +988,13 @@ struct Substring_dictionary {
 		return s.substr(sa[k], n - (*it - i) - sa[k]);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Substring_dictionary& sd) {
 		cout << sd.n << endl << sd.s << endl << sd.sa << endl << sd.la << endl
 			<< sd.cnt << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -1294,7 +1303,7 @@ template <class S> struct KDTree {
 		}
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const KDTree& kd) {
 		kd.print_rf(os, kd.root);
 		return os;
@@ -1310,6 +1319,7 @@ template <class S> struct KDTree {
 		os << endl;
 		print_rf(os, t->right);
 	}
+#endif
 };
 
 
@@ -1411,7 +1421,7 @@ template <class S, class T> struct KDTrie {
 		return val;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const KDTrie& kd) {
 		kd.print_rf(os, kd.root);
 		return os;
@@ -1427,6 +1437,7 @@ template <class S, class T> struct KDTrie {
 		os << endl;
 		print_rf(os, t->right);
 	}
+#endif
 };
 
 

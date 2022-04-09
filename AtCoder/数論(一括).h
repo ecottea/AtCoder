@@ -5,11 +5,9 @@
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
-//【素数の列挙】O(n log(log n))
+//【素数の列挙／エラトステネスの篩】O(n log(log n))
 /*
 * n 以下の素数を列挙し，ps に昇順に格納する．
-* 
-*（エラトステネスの篩）
 */
 void eratosthenes(int n, vi& ps) {
 	// verify : https://algo-method.com/tasks/330
@@ -191,27 +189,5 @@ void mobius_mu(int n, vi& mu) {
 	Divisor_transform<int> dt(n);
 	dt.divisor_mobius(mu);
 }
-
-
-//【Z/nZ の位数分布】O(√n)
-/*
-* Z/nZ に位数 d の元が何個あるかを cnt[d] に格納する．
-*
-* 利用：【倍数変換（添字約数制限）】,【素因数と約数の列挙】
-*/
-void order_distribution(ll n, unordered_map<ll, ll>& cnt) {
-	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
-
-	vl ps, divs;
-	primefactors_and_divisors(n, ps, divs);
-
-	Limited_multiple_transform<ll> lmt(ps, divs);
-
-	cnt.clear();
-	repe(d, divs) cnt[d] = d;
-
-	lmt.multiple_mobius(cnt);
-}
-
 
 

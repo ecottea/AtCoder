@@ -9,19 +9,39 @@
 * 集合族 S[0..n) について，添字集合が set で表されるような集合族の交わりの大きさ
 * #(∩i∈set S[i]) が c[set] であるときの，どの集合にも属さない要素の個数を返す．
 */
-ll state_PIE(const vl& c) {
+template <class T> T state_PIE(const vector<T>& c) {
 	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e
 
 	int n = msb(sz(c));
 
-	ll res = 0;
+	T res = 0;
 
 	repb(set, n) {
 		int sign = (popcount(set) % 2 ? -1 : 1);
-		res += sign * c[set];
+		res += (T)sign * c[set];
 	}
 
 	return res;
+}
+
+
+//【状態系包除原理】O(3^n)
+/*
+* 集合族 S[0..n) について，添字集合が set で表されるような集合族の交わりの大きさ
+* #(∩i∈set S[i]) が c[set] であるとする．set のみに属する要素の数
+* #((∩i∈set S[i]) - (∪i!∈set S[i])) を res[set] に格納する．
+*/
+template <class T> void state_PIE(const vector<T>& c, vector<T>& res) {
+	int n = msb(sz(c));
+	res.resize(1LL << n);
+
+	// 各集合 set について，その上位集合 sup を全探索する．
+	repb(set, n) {
+		for (int sup = set; (sup >> n) == 0; sup = (sup + 1) | set) {
+			int sign = (popcount(sup - set) % 2 ? -1 : 1);
+			res[set] += (T)sign * c[sup];
+		}
+	}
 }
 
 

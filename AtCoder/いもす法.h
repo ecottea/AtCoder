@@ -49,7 +49,7 @@ template <class T> struct Imos {
 		return v;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Imos& imos) {
 		rep(i, imos.n) {
 			os << imos[i] << " ";
@@ -57,6 +57,7 @@ template <class T> struct Imos {
 		os << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -111,7 +112,7 @@ template <class T> struct Imos_2D {
 		}
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Imos_2D& imos) {
 		rep(i, imos.h) {
 			rep(j, imos.w) os << imos[i][j] << " ";
@@ -119,6 +120,7 @@ template <class T> struct Imos_2D {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -223,7 +225,7 @@ template <class T> struct Imos_2D_tri {
 		return v;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Imos_2D& imos) {
 		rep(i, sz(imos.v)) {
 			rep(j, sz(imos.v[0])) os << imos[i][j] << " ";
@@ -231,6 +233,7 @@ template <class T> struct Imos_2D_tri {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -301,7 +304,7 @@ template <class T> struct Imos_3D {
 		}
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Imos_3D& imos) {
 		rep(i, imos.h) {
 			rep(j, imos.w) {
@@ -314,6 +317,7 @@ template <class T> struct Imos_3D {
 		}
 		return os;
 	}
+#endif
 }; 
 
 

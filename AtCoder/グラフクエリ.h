@@ -111,11 +111,12 @@ struct Neighbor_prod_query {
 		last[s] = q++;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Neighbor_prod_query npq) {
 		rep(i, npq.n) os << npq.get(i) << " ";
 		return os;
 	}
+#endif
 };
 
 

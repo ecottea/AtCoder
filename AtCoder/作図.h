@@ -6,21 +6,19 @@
 
 //【凸包】O(n log n)
 /*
-* n 個の点の集合 p の凸包の頂点を反時計回りに ch に格納する．
+* 点群 p[0..n) の凸包の頂点を反時計回りに ch に格納する．
+* p[0] は x 座標最小（同じものがあれば y 座標最小）の点とする．
 */
-template <typename T>
-void convex_hull(const Polygon<T>& p, Polygon<T>& ch) {
+template <typename T> void convex_hull(vector<Point<T>> p, Polygon<T>& ch) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
-	
-	int n = (int)p.size();
+
+	int n = sz(p);
 
 	// x 座標を優先して昇順ソート（x 座標が同じなら y 座標昇順）
-	sort(all(p), [](Point<T> a, Point<T> b) {
-		return a.x == b.x ? a.y < b.y : a.x < b.x;
-		});
+	sort(all(p));
 
 	// 凸包を成す頂点
-	ch = vector<Point<T>>();
+	ch.clear();
 
 	// まず x 座標昇順に見ていき，凸包の y 座標の小さい側を得る．
 	int pt = 0;

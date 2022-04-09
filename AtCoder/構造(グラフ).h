@@ -47,11 +47,12 @@ struct WEdge {
 	// コストなしグラフで呼ばれたとき用
 	operator int() const { return to; }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const WEdge& e) {
 		os << '(' << e.to << ',' << e.cost << ')';
 		return os;
 	}
+#endif
 };
 
 
@@ -133,11 +134,12 @@ struct IEdge {
 	// コストなしグラフで呼ばれたとき用
 	operator int() const { return to; }
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const IEdge& e) {
 		os << '(' << e.to << ',' << e.id << ')';
 		return os;
 	}
+#endif
 };
 
 

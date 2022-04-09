@@ -212,7 +212,7 @@ template <int N> struct BFPS {
 		return res;
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const BFPS& f) {
 		if (f.n == 0) os << 0;
 		else {
@@ -223,6 +223,7 @@ template <int N> struct BFPS {
 		}
 		return os;
 	}
+#endif
 };
 
 

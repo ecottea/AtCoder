@@ -17,7 +17,7 @@ ll minimize_diameter_clustering(const vvl& dist, int k) {
 	int n = sz(dist);
 
 	// dp[set][c] : 点集合 set を c 個に分割するときの最小直径
-	vvl dp(1 << n, vl(k + 1, INFL));
+	vvl dp(1LL << n, vl(k + 1, INFL));
 
 	// 点集合 set の直径 dp[set][1] を前計算しておく．O(2^n n^2)
 	repb(set, n) {
@@ -67,9 +67,9 @@ ll maximize_score_clustering(const vvl& sc) {
 	int n = sz(sc);
 
 	// dp[set] : 部分集合 set での得点の最大値
-	vector<ll> dp(1 << n);
+	vector<ll> dp(1LL << n);
 
-	rep(set, 1 << n) {
+	repb(set, n) {
 		rep(i, n) {
 			if (!(set & (1 << i))) continue;
 

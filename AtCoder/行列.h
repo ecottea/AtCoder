@@ -120,7 +120,7 @@ template <class T> struct Matrix {
 		return res;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Matrix& a) {
 		rep(i, a.m) {
 			rep(j, a.n) os << a.v[i][j] << " ";
@@ -128,6 +128,7 @@ template <class T> struct Matrix {
 		}
 		return os;
 	}
+#endif
 };
 
 

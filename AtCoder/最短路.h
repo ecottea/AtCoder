@@ -192,6 +192,15 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
 }
 
 
+//【ペナルティ付きダイクストラ法】
+/*
+* これまでのコストに依存してコストが追加でかかってくる状況でも
+* それを加味すればダイクストラ法を使うことができる．
+* 
+* verify : https://atcoder.jp/contests/abc192/tasks/abc192_e
+*/
+
+
 //【単一始点最短路（負コスト可）／ベルマン－フォード法】O(|E| |V|)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，

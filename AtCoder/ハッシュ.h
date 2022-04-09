@@ -14,17 +14,17 @@
 * ll get(int l, int r) : O(1)
 *	連続部分列 s[l, r) のハッシュ値を返す．
 */
-// verify : https://yukicoder.me/problems/no/599
+// verify : https://atcoder.jp/contests/abc175/tasks/abc175_f
 template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 	using mint = static_modint<MOD>;
 	using vm = vector<mint>;
 
-	const mint B = BASE; // 適当な基数
-	const mint invB = B.inv(); // 基数の逆数
-	const mint S = SHIFT; // 適当なシフト
+	mint B = BASE; // 適当な基数
+	mint invB = B.inv(); // 基数の逆数
+	mint S = SHIFT; // 適当なシフト
 
-	// 列とその長さ
-	STR s; int n;
+	// 列の長さ
+	int n;
 
 	// v[i] : s[0, i) のハッシュ値
 	vm v;
@@ -33,7 +33,8 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 	vm pow_invB;
 
 	// コンストラクタ（列 s で初期化）
-	Rolling_hash_sub(const STR& s_) : s(s_), n(sz(s_)), v(n + 1), pow_invB(n + 1) {
+	Rolling_hash_sub() : n(0) {}
+	Rolling_hash_sub(const STR& s) : n(sz(s)), v(n + 1), pow_invB(n + 1) {
 		// ハッシュ値計算用の B の累乗
 		pow_invB[0] = 1;
 		rep(i, n) {
@@ -48,6 +49,10 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 		}
 	}
 
+	// 代入
+	Rolling_hash_sub(const Rolling_hash_sub& rh) = default;
+	Rolling_hash_sub& operator=(const Rolling_hash_sub& rh) = default;
+
 	// s[l, r) のハッシュ値の取得
 	int get(int l, int r) {
 		// ハッシュ値は Σi=[0..r-l] (s[l+i] + SHIFT) * BASE^i (mod MOD)
@@ -55,17 +60,28 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 	}
 };
 template <class STR> struct Rolling_hash {
+	int n; // 列の長さ
+
 	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
 	Rolling_hash_sub<STR, 1000000007, 100007, 17> rh1;
 	Rolling_hash_sub<STR, 998244353, 99991, 91> rh2;
 
 	// コンストラクタ（文字列 s で初期化）
-	Rolling_hash(const STR& s) : rh1(s), rh2(s) {}
+	Rolling_hash() : n(0) {}
+	Rolling_hash(const STR& s) : n(sz(s)), rh1(s), rh2(s) {}
+
+	// 代入
+	Rolling_hash(const Rolling_hash& rh) = default;
+	Rolling_hash& operator=(const Rolling_hash& rh) = default;
 
 	// s[l, r) のハッシュ値の取得
 	ll get(int l, int r) {
+		assert(0 <= l && l <= r && r <= n);
 		return (ll(rh1.get(l, r)) << 32) + ll(rh2.get(l, r));
 	}
+
+	// 列の長さの取得
+	int size() { return n; }
 };
 
 
@@ -80,17 +96,16 @@ template <class STR> struct Rolling_hash {
 *	部分長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 */
 // verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_C
-template <class T, int MOD, int BASE_X, int BASE_Y, int SHIFT>
-struct Rolling_hash_2D_sub {
+template <class T, int MOD, int BASE_X, int BASE_Y, int SHIFT> struct Rolling_hash_2D_sub {
 	using mint = static_modint<MOD>;
 	using vm = vector<mint>;
 	using vvm = vector<vm>;
 
-	const mint BX = BASE_X; // 適当な基数
-	const mint invBX = BX.inv(); // 基数の逆数
-	const mint BY = BASE_Y;
-	const mint invBY = BY.inv();
-	const mint S = SHIFT; // 適当なシフト
+	mint BX = BASE_X; // 適当な基数
+	mint invBX = BX.inv(); // 基数の逆数
+	mint BY = BASE_Y;
+	mint invBY = BY.inv();
+	mint S = SHIFT; // 適当なシフト
 
 	// 二次元配列とその大きさ
 	vector<vector<T>> a; int h, w;
@@ -102,6 +117,7 @@ struct Rolling_hash_2D_sub {
 	vm pow_BX, pow_BY, pow_invBX, pow_invBY;
 
 	// コンストラクタ（文字列 s で初期化）
+	Rolling_hash_2D_sub() : h(0), w(0) {}
 	Rolling_hash_2D_sub(vector<vector<T>>& a_) :
 		a(a_), h(sz(a)), w(sz(a[0])), v(h + 1, vm(w + 1)),
 		pow_BX(h + 1), pow_BY(w + 1), pow_invBX(h + 1), pow_invBY(w + 1) {
@@ -126,6 +142,10 @@ struct Rolling_hash_2D_sub {
 		}
 	}
 
+	// 代入
+	Rolling_hash_2D_sub(const Rolling_hash_2D_sub& rh) = default;
+	Rolling_hash_2D_sub& operator=(const Rolling_hash_2D_sub& rh) = default;
+
 	// 長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 	int get(int x1, int y1, int x2, int y2) {
 		// ハッシュ値は次の式により計算する：
@@ -140,7 +160,12 @@ template <class T> struct Rolling_hash_2D {
 	Rolling_hash_2D_sub<T, 998244353, 99991, 54401, 91> rh2;
 
 	// コンストラクタ（二次元配列 a で初期化）
+	Rolling_hash_2D() {}
 	Rolling_hash_2D(vector<vector<T>>& a) : rh1(a), rh2(a) {}
+
+	// 代入
+	Rolling_hash_2D(const Rolling_hash_2D& rh) = default;
+	Rolling_hash_2D& operator=(const Rolling_hash_2D& rh) = default;
 
 	// 長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 	ll get(int x1, int y1, int x2, int y2) {
@@ -293,11 +318,12 @@ template <class X> struct Zobrist_hash_set {
 	// 現時点での関数 f のハッシュ値を返す．
 	ll get() { return v; }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_func_mod z) {
 		os << "v: " << z.v << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -386,7 +412,7 @@ template <class X, class Y> struct Zobrist_hash_pmap {
 	// 現時点での部分写像 f のハッシュ値を返す．
 	ll get() { return v; }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_pmap z) {
 		repe(xi, z.x_to_i) {
 			os << xi.first << "->" << z.i_to_y[xi.second] << endl;
@@ -394,6 +420,7 @@ template <class X, class Y> struct Zobrist_hash_pmap {
 		os << "v: " << z.v << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -482,7 +509,7 @@ template <class X> struct Zobrist_hash_pfunc {
 	// 現時点での部分関数 f のハッシュ値を返す．
 	ll get() { return v; }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_pfunc z) {
 		repe(xi, z.x_to_i) {
 			os << xi.first << "->" << z.i_to_y[xi.second] << endl;
@@ -490,6 +517,7 @@ template <class X> struct Zobrist_hash_pfunc {
 		os << "v: " << z.v << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -552,11 +580,12 @@ template <class X> struct Zobrist_hash_func {
 	// 現時点での関数 f のハッシュ値を返す．
 	ll get() { return v; }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_func z) {
 		os << z.x_to_y << endl << "v: " << z.v << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -625,11 +654,12 @@ template <class X> struct Zobrist_hash_func_mod {
 	// 現時点での関数 f のハッシュ値を返す．
 	ll get() { return v; }
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_func_mod z) {
 		os << z.x_to_y << endl << "v: " << z.v << endl;
 		return os;
 	}
+#endif
 };
 
 

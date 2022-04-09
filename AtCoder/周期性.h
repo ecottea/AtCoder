@@ -66,12 +66,13 @@ template <class T> struct Periodic_sequence_sum {
 		return res;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Periodic_sequence_sum& pss) {
 		os << "nc: " << pss.nc_acc << "(" << pss.nc << ")" << endl;
 		os << " c: " << pss.c_acc << "(" << pss.c << ")" << endl;
 		return os;
 	}
+#endif
 };
 
 

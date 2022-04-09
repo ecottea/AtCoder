@@ -5,7 +5,7 @@
 
 //【コスト最小ソート】O(n log n)
 /*
-* 順列 p[0..n) を 2 つの要素の交換を繰り返して昇順にソートするときの最小コストを返す．
+* 順列 p[0..n) に対し 2 つの要素の交換を繰り返して昇順にソートするときの最小コストを返す．
 * 一度の操作ではコスト c[i] + c[j] を払っての p[i] と p[j] の交換が可能である．
 */
 ll minimum_cost_sort(const vi& p, const vl& c) {
@@ -43,9 +43,192 @@ ll minimum_cost_sort(const vi& p, const vl& c) {
 }
 
 
+//【バブルソート】O(n^2)
+/*
+* a[0..n) に対してバブルソートを行う．
+*/
+template <class T> void bubble_sort(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_A
+
+	int n = sz(a);
+
+	while (true) {
+		// 要素の交換を行ったかどうか
+		bool swapped = false;
+
+		repir(j, n - 1, 1) {
+			// 隣接要素の大小関係が逆転していたら交換する．
+			if (a[j - 1] > a[j]) {
+				swap(a[j - 1], a[j]);
+				swapped = true;
+			}
+		}
+
+		// 要素の交換が行われなくなったら終了する．
+		if (!swapped) {
+			break;
+		}
+	}
+}
+
+
+//【バブルソートの交換回数】
+/*
+* 列 a に対するバブルソートの交換回数は，a の転倒数に等しい．
+*/
+
+
+//【挿入ソート】O(n^2)
+/*
+* 長さ n の配列 a に対して挿入ソートを行う．
+*/
+template <class T> void insertion_sort(vector<T>& a) {
+	int n = sz(a);
+
+	// 未ソートの要素を昇順に見ていく．
+	repi(i, 1, n - 1) {
+		// 注目要素
+		T v = a[i];
+
+		// 注目要素が存在すべき位置を調べつつ，
+		// 要素を 1 つずつずらして挿入のための隙間をつくる．
+		int j = i - 1;
+		while (j >= 0 && a[j] > v) {
+			a[j + 1] = a[j];
+			j--;
+		}
+
+		// 要素を挿入する．
+		a[j + 1] = v;
+	}
+}
+
+
+//【挿入ソートの挿入回数】
+/*
+* 列 a[0..n) に対する最適な順序で行った挿入ソートの挿入回数は，
+* n - (a の最長増加部分列の長さ) に等しい．
+*/
+
+
+//【選択ソート】O(n^2)
+/*
+* a[0..n) に対して選択ソートを行う．
+*/
+template <class T> void selection_sort(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_B
+
+	int n = sz(a);
+
+	// 左から順にそこに居るべき要素を決定していく．
+	rep(i, n) {
+		// 残る要素の中の最小のものの位置
+		int min_j = i;
+
+		// 残りの要素を順に調べる．
+		repi(j, i + 1, n - 1) {
+			// より小さい要素が見つかれば位置を記憶する．
+			if (a[j] < a[min_j]) {
+				min_j = j;
+			}
+		}
+
+		// 注目要素と最小要素とを交換する．
+		swap(a[i], a[min_j]);
+	}
+}
+
+
+//【シェルソート】O(n^1.25)
+/*
+* a[0..n) に対してシェルソートを行う．
+*/
+template <class T> void shell_sort(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_D
+
+	int n = sz(a);
+
+	// 適切な増分の列を得る．
+	vi gap;
+	int g = 1;
+	do {
+		gap.push_back(g);
+		g = 3 * g + 1;
+	} while (g < n);
+	reverse(all(gap));
+	int m = sz(gap);
+
+	// 増分を g とした挿入ソート
+	function<void(int)> isort = [&](int g) {
+		repi(i, g, n - 1) {
+			T v = a[i];
+
+			int j = i - g;
+			while (j >= 0 && a[j] > v) {
+				a[j + g] = a[j];
+				j -= g;
+			}
+
+			a[j + g] = v;
+		}
+	};
+
+	// 増分を減らしながら挿入ソートを繰り返す．
+	rep(i, m) {
+		isort(gap[i]);
+	}
+}
+
+
+//【マージソート】O(log n)
+/*
+* a[0..n) に対してマージソートを行う．
+*/
+template <class T> void merge_sort(vector<T>& a) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_B
+
+	// 型 T における最大値
+	const T T_INF = numeric_limits<T>::max();
+
+	int n = sz(a);
+
+	// 二つの配列を統合する．
+	function<void(int, int, int)> merge = [&](int l, int m, int r) {
+		vector<T> left{ a.begin() + l, a.begin() + m };
+		vector<T> right{ a.begin() + m, a.begin() + r };
+		left.push_back(T_INF);
+		right.push_back(T_INF);
+
+		int i = 0, j = 0;
+		repi(k, l, r - 1) {
+			if (left[i] <= right[j]) {
+				a[k] = left[i];
+				i++;
+			}
+			else {
+				a[k] = right[j];
+				j++;
+			}
+		}
+	};
+
+	// 再帰用の関数
+	function<void(int, int)> merge_sort_rf = [&](int l, int r) {
+		if (r - l > 1) {
+			int m = (l + r) / 2;
+			merge_sort_rf(l, m);
+			merge_sort_rf(m, r);
+			merge(l, m, r);
+		}
+	};
+
+	merge_sort_rf(0, n);
+}
+
+
 //【クイックソート】O(n log n)
 /*
-* 長さ n の配列 a に対してクイックソートを行う．
+* a[0..n) に対してクイックソートを行う．
 */
 template <class T> void quick_sort(vector<T>& a) {
 	// varify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_C
@@ -94,7 +277,7 @@ template <class T> void quick_sort(vector<T>& a) {
 
 //【計数ソート】O(n + k)
 /*
-* 各要素が k 未満の非負整数である長さ n の配列 a に対して計数ソートを行う．
+* 各要素が k 未満の非負整数である a[0..n) に対して計数ソートを行う．
 */
 void counting_sort(vi& a, int k) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_A
@@ -124,181 +307,6 @@ void counting_sort(vi& a, int k) {
 	}
 
 	swap(a, res);
-}
-
-
-//【マージソート】O(log n)
-/*
-* 長さ n の配列 a に対してマージソートを行う．
-*/
-template <class T> void merge_sort(vector<T>& a) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_B
-
-	// 型 T における最大値
-	const T T_INF = numeric_limits<T>::max();
-
-	int n = sz(a);
-
-	// 二つの配列を統合する．
-	function<void(int, int, int)> merge = [&](int l, int m, int r) {
-		vector<T> left{ a.begin() + l, a.begin() + m };
-		vector<T> right{ a.begin() + m, a.begin() + r };
-		left.push_back(T_INF);
-		right.push_back(T_INF);
-
-		int i = 0, j = 0;
-		repi(k, l, r - 1) {
-			if (left[i] <= right[j]) {
-				a[k] = left[i];
-				i++;
-			}
-			else {
-				a[k] = right[j];
-				j++;
-			}
-		}
-	};
-
-	// 再帰用の関数
-	function<void(int, int)> merge_sort_rf = [&](int l, int r) {
-		if (r - l > 1) {
-			int m = (l + r) / 2;
-			merge_sort_rf(l, m);
-			merge_sort_rf(m, r);
-			merge(l, m, r);
-		}
-	};
-
-	merge_sort_rf(0, n);
-}
-
-
-//【シェルソート】O(n^1.25)
-/*
-* 長さ n の配列 a に対してシェルソートを行う．
-*/
-template <class T> void shell_sort(vector<T>& a) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_D
-
-	int n = sz(a);
-
-	// 適切な増分の列を得る．
-	vi gap;
-	int g = 1;
-	do {
-		gap.push_back(g);
-		g = 3 * g + 1;
-	} while (g < n);
-	reverse(all(gap));
-	int m = sz(gap);
-
-	// 増分を g とした挿入ソート
-	function<void(int)> isort = [&](int g) {
-		repi(i, g, n - 1) {
-			T v = a[i];
-
-			int j = i - g;
-			while (j >= 0 && a[j] > v) {
-				a[j + g] = a[j];
-				j -= g;
-			}
-
-			a[j + g] = v;
-		}
-	};
-
-	// 増分を減らしながら挿入ソートを繰り返す．
-	rep(i, m) {
-		isort(gap[i]);
-	}
-}
-
-
-//【選択ソート】O(n^2)
-/*
-* 長さ n の配列 a に対して選択ソートを行う．
-*/
-template <class T> void selection_sort(vector<T>& a) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_B
-
-	int n = sz(a);
-
-	// 左から順にそこに居るべき要素を決定していく．
-	rep(i, n) {
-		// 残る要素の中の最小のものの位置
-		int min_j = i;
-
-		// 残りの要素を順に調べる．
-		repi(j, i + 1, n - 1) {
-			// より小さい要素が見つかれば位置を記憶する．
-			if (a[j] < a[min_j]) {
-				min_j = j;
-			}
-		}
-
-		// 注目要素と最小要素とを交換する．
-		swap(a[i], a[min_j]);
-	}
-}
-
-
-//【挿入ソート】O(n^2)
-/*
-* 長さ n の配列 a に対して挿入ソートを行う．
-*/
-template <class T> void insertion_sort(vector<T>& a) {
-	int n = sz(a);
-
-	// 未ソートの要素を昇順に見ていく．
-	repi(i, 1, n - 1) {
-		// 注目要素
-		T v = a[i];
-
-		// 注目要素が存在すべき位置を調べつつ，
-		// 要素を 1 つずつずらして挿入のための隙間をつくる．
-		int j = i - 1;
-		while (j >= 0 && a[j] > v) {
-			a[j + 1] = a[j];
-			j--;
-		}
-
-		// 要素を挿入する．
-		a[j + 1] = v;
-	}
-}
-
-
-//【バブルソート】O(n^2)
-/*
-* 長さ n の配列 a に対してバブルソートを行う．
-* 要素の交換を行った回数（a の転倒数）を返す．
-*/
-template <class T> int bubble_sort(vector<T>& a) {
-	verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_A
-
-	int n = sz(a);
-
-	int cnt = 0;
-	while (true) {
-		// 要素の交換を行ったかどうか
-		bool swapped = false;
-
-		repir(j, n - 1, 1) {
-			// 隣接要素の大小関係が逆転していたら交換する．
-			if (a[j - 1] > a[j]) {
-				swap(a[j - 1], a[j]);
-				cnt++;
-				swapped = true;
-			}
-		}
-
-		// 要素の交換が行われなくなったら終了する．
-		if (!swapped) {
-			break;
-		}
-	}
-
-	return cnt;
 }
 
 

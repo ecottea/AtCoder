@@ -115,11 +115,12 @@ template <class T> struct Fenwick_tree {
 		return l;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Fenwick_tree& ft) {
 		rep(i, ft.n - 1) os << ft.get(i) << " ";
 		return os;
 	}
+#endif
 };
 
 
@@ -240,11 +241,12 @@ template <class T> struct Lazy_fenwick_tree {
 		}
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Lazy_fenwick_tree& ft) {
 		rep(i, ft.n - 1) os << ft.get(i) << " ";
 		return os;
 	}
+#endif
 };
 
 
@@ -360,7 +362,7 @@ template <class T> struct Fenwick_tree_2D {
 		}
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Fenwick_tree_2D& ft) {
 		rep(x, ft.h - 1) {
 			rep(y, ft.w - 1) {
@@ -370,6 +372,7 @@ template <class T> struct Fenwick_tree_2D {
 		}
 		return os;
 	}
+#endif
 };
 
 

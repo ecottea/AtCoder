@@ -56,7 +56,7 @@ template <class T> struct SMatrix {
 		return res;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const SMatrix& a) {
 		int m = 0;
 		rep(i, a.n) repe(p, a.v[i]) chmax(m, p.first + 1);
@@ -70,6 +70,7 @@ template <class T> struct SMatrix {
 		}
 		return os;
 	}
+#endif
 };
 
 

@@ -206,9 +206,6 @@
     <ClInclude Include="構造(木).h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="木DP.h">
-      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
-    </ClInclude>
     <ClInclude Include="全方位木DP.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
@@ -365,9 +362,6 @@
     <ClInclude Include="数の表示.h">
       <Filter>ヘッダー ファイル\数の表示</Filter>
     </ClInclude>
-    <ClInclude Include="桁ダブリング.h">
-      <Filter>ヘッダー ファイル\数の表示</Filter>
-    </ClInclude>
     <ClInclude Include="桁DP(下から).h">
       <Filter>ヘッダー ファイル\数の表示</Filter>
     </ClInclude>
@@ -493,6 +487,12 @@
     </ClInclude>
     <ClInclude Include="スコア和(文字列).h">
       <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(木).h">
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(集合)(old).h">
+      <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

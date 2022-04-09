@@ -42,6 +42,31 @@ void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb = 
 }
 
 
+//【壁情報 → グラフ】O(h w)
+/*
+* マス (i, j) と (i + 1, j) の間の壁の有無が wx[0..h-1)[0..w) で，
+* マス (i, j) と (i, j + 1) の間の壁の有無が wy[0..h)[0..w-1) で表されたグリッドにおいて，
+* 4 近傍を連結としたグラフ g を構築する（壁があることは wall で表す）
+* マス (i, j) はグラフ頂点 i * w + j に対応する．
+*/
+template <class T>
+void wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, Graph& g, T wall = '1') {
+	// verify : https://atcoder.jp/contests/abc168/tasks/abc168_f
+
+	int h = sz(wy), w = sz(wx[0]);
+	g = Graph(h * w);
+
+	rep(x, h) {
+		rep(y, w) {
+			if (x > 0 && wx[x - 1][y] != wall) g[x * w + y].push_back((x - 1) * w + y);
+			if (x < h - 1 && wx[x][y] != wall) g[x * w + y].push_back((x + 1) * w + y);
+			if (y > 0 && wy[x][y - 1] != wall) g[x * w + y].push_back(x * w + (y - 1));
+			if (y < w - 1 && wy[x][y] != wall) g[x * w + y].push_back(x * w + (y + 1));
+		}
+	}
+}
+
+
 //【逆グラフ】O(|V| + |E|)
 /*
 * 有向グラフ g の辺の向きを逆にしたグラフを g_rev に格納する．
@@ -79,6 +104,8 @@ void reverse_graph(const WGraph& g, WGraph& g_rev) {
 * 無向グラフ g の補グラフ（単純，自己ループなし）を cg に格納する
 */
 void complement_graph(const Graph& g, Graph& cg) {
+	// verify : https://atcoder.jp/contests/abc187/tasks/abc187_f
+
 	int n = sz(g);
 	cg = Graph(n);
 
@@ -165,6 +192,22 @@ int shrink_graph(const Graph& g, Graph& gs) {
 */
 
 
+//【以外の頂点への移動】
+/*
+* 頂点 V = s[0..n) ∪ t[0..n) をもち，O(n^2) 個の有向辺
+*		s[i] → t[j] (i != j)
+* をもつ有向二部グラフ g を考える．
+* 
+* 頂点 V' = V ∪ tl[0..n) ∪ tr[0..n) をもつ有向グラフ g' を，O(n) 個の有向辺
+*		s[i] → tl[i - 1], tr[i + 1]
+*		tl[i] → tl[i - 1], t[i]
+*		tr[i] → tr[i + 1], t[i]
+* をもつよう構成しても，s[i] から t[j] への移動可能性は g と変わらない．
+*
+* verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+*/
+
+
 //【和が k 以下の頂点への移動】
 /*
 * 頂点 V = s[0..n) ∪ t[0..n) をもち，O(n^2) 個の有向辺
@@ -176,6 +219,17 @@ int shrink_graph(const Graph& g, Graph& gs) {
 *		t[i + 1] → t[i] (i < n - 1)
 *		s[i] → t[k - i] (i < k)
 * をもつよう構成しても，s[i] から t[j] への移動可能性は g と変わらない．
+* 
+* verify : https://atcoder.jp/contests/abc232/tasks/abc232_g
+*/
+
+
+//【区間内の頂点全てへの移動】
+/*
+* 全ての辺を直接張ってしまうと O(n^2) 本必要になるが，
+* セグメント木のように 2 冪個ずつ頂点をまとめれば O(n log n) 本で済む．
+* 
+* verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
 */
 
 

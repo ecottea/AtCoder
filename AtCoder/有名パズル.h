@@ -138,19 +138,19 @@ int solve_15puzzle(const vvi& a_, int h = 4, int w = 4, int max_step = 45) {
 
 	// 盤面のハッシュ化用関数
 	using ull = unsigned long long;
-	function<void(ull, vi&)> integer_digits = [](ull n, vi& digits) {
-		int i = 0;
-		digits.resize(16);
+	function<void(ull, vi&)> integer_digits = [&](ull n, vi& digits) {
+		int b = h * w, i = 0;
+		digits.resize(b);
 		while (n > 0) {
-			digits[i++] = n % 16;
-			n /= 16;
+			digits[i++] = n % b;
+			n /= b;
 		}
 	};
-	function<ull(vi&)> from_digits = [](vi& digits) {
-		ull res = 0, pow16 = 1;
+	function<ull(vi&)> from_digits = [&](vi& digits) {
+		int b = h * w; ull res = 0, powb = 1;
 		repe(d, digits) {
-			res += d * pow16;
-			pow16 *= 16;
+			res += d * powb;
+			powb *= b;
 		}
 		return res;
 	};

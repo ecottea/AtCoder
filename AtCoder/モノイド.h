@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "s—ñ.h"
 // ¡¡¡¡¡ ƒ‚ƒmƒCƒh ¡¡¡¡¡
 
 
@@ -29,15 +30,15 @@ S2 e2() { return 1; }
 
 
 //y‹tæZ ƒ‚ƒmƒCƒhz
-// verify : https://atcoder.jp/contests/arc025/tasks/arc025_4
-using S20 = int;
+/* verify: https://atcoder.jp/contests/arc025/tasks/arc025_4 */
+using S20 = Matrix<mint>;
 S20 op20(S20 a, S20 b) { return b * a; }
-S20 e20() { return 1; }
+S20 e20() { return Matrix<mint>(3); }
 #define Invmul_monoid S20, op20, e20
 
 
 //ymax ƒ‚ƒmƒCƒhz
-// verify : https://atcoder.jp/contests/abc134/tasks/abc134_c
+/* verify: https://atcoder.jp/contests/abc134/tasks/abc134_c */
 using S3 = int;
 S3 op3(S3 a, S3 b) { return max(a, b); }
 S3 e3() { return -INF; }
@@ -45,6 +46,7 @@ S3 e3() { return -INF; }
 
 
 //ymin ƒ‚ƒmƒCƒhz
+/* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
 using S4 = int;
 S4 op4(S4 a, S4 b) { return min(a, b); }
 S4 e4() { return INF; }
@@ -59,7 +61,7 @@ S10 e10() { return 0; }
 
 
 //yor ƒ‚ƒmƒCƒhz
-// verify : https://atcoder.jp/contests/abc157/tasks/abc157_e
+/* verify: https://atcoder.jp/contests/abc157/tasks/abc157_e */
 using S11 = int;
 S11 op11(S11 a, S11 b) { return a | b; }
 S11 e11() { return 0; }
@@ -74,7 +76,7 @@ S12 e12() { return ~0; }
 
 
 //ygcd ƒ‚ƒmƒCƒhz
-// verify : https://atcoder.jp/contests/arc017/tasks/arc017_4
+/* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4 */
 using S15 = ll;
 S15 op15(S15 a, S15 b) { return gcd(a, b); }
 S15 e15() { return 0; }

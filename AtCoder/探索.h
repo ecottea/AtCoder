@@ -9,6 +9,8 @@
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
 template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_4_D
+
 	// 境界が決定するまで
 	while (abs(ok - ng) > 1) {
 		// 区間の中間
@@ -56,6 +58,52 @@ template <typename T> T binary_search(T ok, T ng, function<bool(T)>& okQ) {
 	/* okQ の定義の雛形
 	function<bool(double)> okQ = [&](double x) {
 		return true || false;
+	};
+	*/
+}
+
+
+//【三分探索（上に凸）】O(log(r - l))
+/*
+* 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l, r) における最大値を与える x を返す．
+*/
+template <class T> ll ternary_search_uc(ll l, ll r, function<T(ll)>& f) {
+	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_f
+
+	while (r - l > 2) {
+		ll m1 = (l + r) / 2;
+		ll m2 = m1 + 1;
+
+		if (f(m1) < f(m2)) l = m1;
+		else r = m2;
+	}
+	return l + 1;
+
+	/* f の定義の雛形
+	function<ll(ll)> f = [&](ll x) {
+		return x;
+	};
+	*/
+}
+
+
+//【三分探索（下に凸）】O(log(r - l))
+/*
+* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
+*/
+template <class T> ll ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
+	while (r - l > 2) {
+		ll m1 = (l + r) / 2;
+		ll m2 = m1 + 1;
+
+		if (f(m1) > f(m2)) l = m1;
+		else r = m2;
+	}
+	return l + 1;
+
+	/* f の定義の雛形
+	function<ll(ll)> f = [&](ll x) {
+		return x;
 	};
 	*/
 }

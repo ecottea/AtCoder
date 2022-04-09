@@ -144,7 +144,7 @@ void enumerate_connected_component(const Graph& g, int k, vvi& ccs) {
 }
 
 
-//【有向木の列挙】
+//【有向木の列挙】O(?)
 /*
 * 参照付きグラフ g の r を根とする大きさ k の有向木の辺集合を dts に列挙する．
 * 辺集合は辺に付けられた参照番号を並べたリストで表す．

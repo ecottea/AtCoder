@@ -3,18 +3,18 @@
 // ■■■■■ クエリ処理 ■■■■■
 
 
-//【Mo's algorithm】O(n√q α)
+//【Mo's algorithm】O(n√q α + q log q)
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納する．
 * res00 は a[0..0) クエリに対する解とする．また区間に a[i] を追加[削除]する場合，
 * 新たな解は insert[erase]（計算量 O(α)）で計算されるとする．
 *
-*（平方分割）
+*（クエリ平方分割）
 */
 template <class T, class S>
 void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector<S>& res) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
-	// verify : https://atcoder.jp/contests/abc242/tasks/abc242_g
+	// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
 
 	int q = sz(l);
 	int sqrt_q = (int)(sqrt(q) + EPS);
@@ -30,15 +30,15 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 	}
 	sort(all(lb_sr_j));
 
-	// ----------------------- ここを実装する -----------------------
+	// ------------- ここを実装する（auto の方が速い） --------------
 
 	// 区間に a[i] を追加する場合の解 sol を更新する．
-	function<void(int, S&)> insert = [&](int i, S& sol) {
+	auto insert = [&](int i, S& sol) {
 		sol = sol;
 	};
 
 	// 区間から a[i] を削除する場合の解 sol を更新する．
-	function<void(int, S&)> erase = [&](int i, S& sol) {
+	auto erase = [&](int i, S& sol) {
 		sol = sol;
 	};
 	// --------------------------------------------------------------

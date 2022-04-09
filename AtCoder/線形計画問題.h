@@ -74,7 +74,7 @@ struct Ushige {
 		return false;
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Ushige& u) {
 		rep(s, u.n) {
 			repe(e, u.g[s]) {
@@ -83,6 +83,7 @@ struct Ushige {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -119,7 +120,7 @@ struct Ushige_ub_only {
 		dijkstra(g, a, diff);
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Ushige_ub_only& u) {
 		rep(s, u.n) {
 			repe(e, u.g[s]) {
@@ -128,6 +129,7 @@ struct Ushige_ub_only {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -166,7 +168,7 @@ struct Ushige_ub01_only {
 		binary_bfs(g, a, diff);
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Ushige_ub01_only& u) {
 		rep(s, u.n) {
 			repe(e, u.g[s]) {
@@ -175,6 +177,7 @@ struct Ushige_ub01_only {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -216,7 +219,7 @@ struct Ushige_lb1_only {
 		return true;
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Ushige_lb1_only& u) {
 		rep(s, u.n) {
 			repe(t, u.g[s]) {
@@ -225,6 +228,7 @@ struct Ushige_lb1_only {
 		}
 		return os;
 	}
+#endif
 };
 
 

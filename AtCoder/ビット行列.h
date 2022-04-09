@@ -101,7 +101,7 @@ template <int N> struct Bit_matrix {
 		return res;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Bit_matrix& a) {
 		rep(i, a.m) {
 			rep(j, a.n) os << a.v[i][j] << " ";
@@ -109,6 +109,7 @@ template <int N> struct Bit_matrix {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -258,6 +259,47 @@ template <int N> void priority_solve_eq(Bit_matrix<N>& mat, bitset<N>& sol) {
 	sol.reset();
 	repe(p, pivots) {
 		sol[p.second] = v[p.first][n];
+	}
+}
+
+
+//【基底の選択】O(m^2 n / 64)
+/*
+* m * n 行列 mat の行ベクトルで張られる空間を V とし，
+* mat の行ベクトルからなる V の基底を base に格納する．
+*
+*（呼び出すとき find_base<N> としないと gcc でエラーになるので注意．）
+*/
+template <int N> void find_base(Bit_matrix<N>& mat, vector<bitset<N>>& base) {
+	// verify : https://atcoder.jp/contests/arc138/tasks/arc138_d
+
+	int m = mat.m, n = mat.n;
+	auto v = mat.v;
+	base.clear();
+
+	// 未確定の列を記録しておくリスト
+	list<int> rmd;
+	rep(j, n) rmd.push_back(j);
+
+	rep(i, m) {
+		// i 行目の係数を左から走査し 1 を見つける．
+		auto it = rmd.begin();
+		for (; it != rmd.end(); it++) {
+			if (v[i][*it] == 1) break;
+		}
+
+		// 全てが 0 なら無視
+		if (it == rmd.end()) continue;
+		int j = *it;
+		rmd.erase(it);
+
+		// 1 が残っているなら基底に採用する．
+		base.push_back(mat.v[i]);
+
+		// j 列目に見つかったら j 列目が 1 である他の行と XOR をとる．
+		rep(i2, m) {
+			if (v[i2][j] && i2 != i) v[i2] ^= v[i];
+		}
 	}
 }
 

@@ -228,13 +228,14 @@ struct Quadratic_division {
 		return res;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
 		rep(i, qd.n) {
 			os << qd.get(i) << " ";
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -476,7 +477,7 @@ struct Sparse_table {
 		return op(acc[j][l], acc[j][r - (1 << j)]);
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Sparse_table& st) {
 		rep(j, st.m) {
 			rep(i, st.n) os << st.acc[j][i] << " ";
@@ -484,6 +485,7 @@ struct Sparse_table {
 		}
 		return os;
 	}
+#endif
 };
 
 
@@ -551,7 +553,7 @@ struct Sparse_table_2d {
 		return res;
 	}
 
-	// デバッグ出力用
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Sparse_table_2d& st) {
 		rep(bx, st.bh) {
 			rep(by, st.bw) {
@@ -564,6 +566,7 @@ struct Sparse_table_2d {
 		}
 		return os;
 	}
+#endif
 };
 
 

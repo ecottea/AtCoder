@@ -1,4 +1,4 @@
-#ifndef HIDDEN_IN_VISUAL_STUDIO // 折りたたみ用
+#ifndef HIDDEN_IN_VS // 折りたたみ用
 
 // 警告の抑制
 #define _CRT_SECURE_NO_WARNINGS
@@ -52,8 +52,8 @@ template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; ret
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
 
 // 演算子オーバーロード
-template <class T, class U> inline istream& operator>> (istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
-template <class T> inline istream& operator>> (istream& is, vector<T>& v) { repea(x, v) is >> x; return is; }
+template <class T, class U> inline istream& operator>>(istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
+template <class T> inline istream& operator>>(istream& is, vector<T>& v) { repea(x, v) is >> x; return is; }
 template <class T> inline vector<T>& operator--(vector<T>& v) { repea(x, v) --x; return v; }
 template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x; return v; }
 
@@ -90,18 +90,18 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-//-----------------AtCoder 専用-----------------
+//--------------AtCoder 専用--------------
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
-istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-//----------------------------------------------
+//----------------------------------------
 
 
 int main() {

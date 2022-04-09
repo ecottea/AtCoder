@@ -8,6 +8,8 @@
 * a[0..n) ‚Ì’†‰›’l‚Ì“ñ”{‚ğ•Ô‚·D
 */
 template <class T> T doubled_median(vector<T> a) {
+	// verify : https://atcoder.jp/contests/abc169/tasks/abc169_e
+
 	int n = sz(a);
 	sort(all(a));
 	return a[(n - 1) / 2] + a[n / 2];

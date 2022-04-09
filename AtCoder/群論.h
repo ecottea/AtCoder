@@ -1,6 +1,8 @@
 #pragma once
 #include "header.h"
 #include "“ñ€ŒW”.h"
+#include "”˜_.h"
+#include "–ñ””{”•ÏŠ·.h"
 // ¡¡¡¡¡ ŒQ˜_ ¡¡¡¡¡
 
 
@@ -72,6 +74,28 @@ void permutation_order_distribution(int n, map<int, mint>& cnt) {
 
 	rf(n, n);
 }
+
+
+//yZ/nZ ‚ÌˆÊ”•ª•zzO(ãn)
+/*
+* Z/nZ ‚ÉˆÊ” d ‚ÌŒ³‚ª‰½ŒÂ‚ ‚é‚©‚ğ cnt[d] ‚ÉŠi”[‚·‚éD
+*
+* —˜—pFy”{”•ÏŠ·i“Yš–ñ”§ŒÀjz,y‘fˆö”‚Æ–ñ”‚Ì—ñ‹“z
+*/
+void order_distribution(ll n, unordered_map<ll, ll>& cnt) {
+	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
+
+	vl ps, divs;
+	primefactors_and_divisors(n, ps, divs);
+
+	Limited_multiple_transform<ll> lmt(ps, divs);
+
+	cnt.clear();
+	repe(d, divs) cnt[d] = d;
+
+	lmt.multiple_mobius(cnt);
+}
+
 
 
 //yŒİŠ·‚Å¶¬‚³‚ê‚é‘ÎÌŒQ‚Ì•”•ªŒQz

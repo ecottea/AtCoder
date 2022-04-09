@@ -355,12 +355,13 @@ template <class TREE> struct Tree_edge_add_sum_query {
 		return res;
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Tree_edge_add_sum_query q) {
 		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
 			<< q.top << endl << q.rasq << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -499,12 +500,13 @@ struct Tree_vertex_add_sum_query {
 		return res;
 	}
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Tree_vertex_add_sum_query& q) {
 		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
 			<< q.top << endl << q.rasq << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -611,12 +613,13 @@ struct Segtree_on_tree_vertex {
 	// op(行きがけ順にならべた v の部分木の頂点) を返す．
 	S prod_subtree(int v) { return seg.prod(in[v], out[v]); }
 
-	// デバッグ出力
+#ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Segtree_on_tree_vertex& q) {
 		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
 			<< q.top << endl << q.seg << endl << q.seg_rev << endl;
 		return os;
 	}
+#endif
 };
 
 
@@ -628,8 +631,7 @@ struct Segtree_on_tree_vertex {
 * out[s] : DFS で頂点 s から出て次になぞる頂点が何番目か（根なら n）
 * pos[i] : DFS で i 番目になぞる頂点番号（長さ n）
 */
-template <class TREE>
-void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
+template <class TREE> void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
 	// 参考：https://ei1333.hateblo.jp/entry/2017/09/11/211011
 
 	int n = sz(rt);
@@ -663,8 +665,9 @@ void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
 *（平方分割）
 */
 template <class T, class S>
-void mo_algorithm(const Rooted_tree& rt, const vector<T>& c, const vi& st, vector<S>& res) {
+void mos_algorithm(const Rooted_tree& rt, const vector<T>& c, const vi& st, vector<S>& res) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
+	// verify : https://codeforces.com/contest/375/problem/D
 
 	int n = sz(rt), q = sz(st);
 	int sqrt_n = (int)(sqrt(n) + EPS);
@@ -684,6 +687,7 @@ void mo_algorithm(const Rooted_tree& rt, const vector<T>& c, const vi& st, vecto
 	sort(all(lb_sr_j));
 
 	// ----------------------- ここを実装する -----------------------
+	
 	// 頂点集合に i を追加する場合の解 sol を更新する．
 	function<void(int, S&)> insert = [&](int i, S& sol) {
 		sol = sol;
