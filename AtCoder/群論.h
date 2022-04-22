@@ -12,7 +12,7 @@
 *
 *（自然数の分割）
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 void permutation_order_distribution(int n, map<int, mint>& cnt) {
 	//【方法】

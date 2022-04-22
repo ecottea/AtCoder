@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
-#include "畳み込み.h"
+#include "畳込み.h"
 
 
 //【定数との gcd の分布】O(√n + d(n)^2)　（d(n) : n の約数の個数）

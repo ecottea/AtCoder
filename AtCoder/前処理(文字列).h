@@ -5,7 +5,7 @@
 
 //【ランレングス符号（文字列）】O(n)
 /*
-* 文字列 s[0..n) をランレングス圧縮し，結果を cls に格納する．
+* 文字列 s[0..n) をランレングス符号化し，結果を cls に格納する．
 * cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
 */
 void run_length_encodeing(const string& s, vector<pair<char, int>>& cls) {
@@ -41,7 +41,7 @@ void run_length_encodeing(const string& s, vector<pair<char, int>>& cls) {
 
 //【ランレングス符号】O(n)
 /*
-* a[0..n) をランレングス圧縮し，結果を cls に格納する．
+* a[0..n) をランレングス符号化し，結果を cls に格納する．
 * cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
 */
 template <class T>

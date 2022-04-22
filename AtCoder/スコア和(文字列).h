@@ -24,7 +24,7 @@ mint scoresum_noncontinuous_bitsequences(ll n, int k, mint p) {
 	gc[0] = 1;
 	repi(i, 1, k) gc[i] = -powp[i - 1];
 
-	return coef(MFPS(fc), MFPS(gc), n);
+	return bostan_mori(MFPS(fc), MFPS(gc), n);
 }
 
 

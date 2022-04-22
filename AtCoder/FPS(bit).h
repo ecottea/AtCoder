@@ -9,13 +9,10 @@
 *	零多項式 f = 0 で初期化する．
 *   次数は N 未満とし，溢れた分は切り捨てられる．
 *
-* BFPS<N>(c0) : O(1)
+* BFPS<N>(bool c0) : O(1)
 *	定数多項式 f = c0 で初期化する．
 *
-* BFPS<N>(c0, n) : O(d)
-*	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
-*
-* BFPS<N>(c, n) : O(|c|)
+* BFPS<N>(bitset c, int n) : O(n / 64)
 *	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
@@ -25,33 +22,33 @@
 *	g_sp はスパース多項式であり，係数が 1 である次数を昇順に並べた vector で表す．
 *	制約 : 商では g(0) = 1
 *
-* f.inv(d) : O(n^2)
+* BFPS f.inv(int d) : O(n^2 / 64)
 *	1 / f mod x^d を返す．
 *	制約 : f(0) = 1
 *
-* f.quotient(g) : O(n^2)
-* f.reminder(g) : O(n^2)
-* f.quotient_remainder(g) : O(n^2)
+* BFPS f.quotient(BFPS g) : O(n^2 / 64)
+* BFPS f.reminder(BFPS g) : O(n^2 / 64)
+* pair<BFPS, BFPS> f.quotient_remainder(g) : O(n^2 / 64)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
 * 　制約 : g の最項次の項の係数は 1
 *
-* f.deg(), f.size() : O(1)
+* int f.deg(), int f.size() : O(1)
 *	多項式 f の次数[+1]を返す．
 *
-* BFPS::monomial(d) : O(d)
+* BFPS::monomial(int d) : O(d / 64)
 *	単項式 x^d を返す．
 *
-* f.resize(d) : O(1)
+* f.resize(int d) : O(1)
 *	mod x^d をとる．
 *
-* f.resize() : O(n)
+* f.resize() : O(n / 64)
 *	不要な高次の項を削る．
 *
-* f >> d, f << d : O(n)
+* f >> d, f << d : O(n / 64)
 *	係数列を d だけ右[左]シフトした多項式を返す．
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
-* power_mod(f, d, g) : O(m^2 log d)　（m = deg g）
+* BFPS power_mod(BFPS f, ll d, BFPS g) : O(m^2 log d / 64)　（m = deg g）
 *	f(x)^d % g(x) を返す．
 */
 template <int N> struct BFPS {
@@ -60,10 +57,9 @@ template <int N> struct BFPS {
 	int n; // 係数の個数（次数 + 1）
 	bitset<N> c; // 係数列
 
-	// コンストラクタ（零元，定数，次数指定付き定数，係数列で初期化）
+	// コンストラクタ（零元，定数，係数列で初期化）
 	BFPS() : n(0) {}
 	BFPS(bool c0) : n(1) { c[0] = c0; }
-	BFPS(bool c0, int n_) : n(n_) { c[0] = c0; }
 	BFPS(const bitset<N>& c_, int n_) : n(n_), c(c_) {}
 
 	// 代入
@@ -100,6 +96,8 @@ template <int N> struct BFPS {
 
 	// 積
 	BFPS& operator*=(const BFPS& g) {
+		// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
+
 		n += g.n - 1;
 		bitset<N> res;
 		rep(i, g.n) {
@@ -227,14 +225,15 @@ template <int N> struct BFPS {
 };
 
 
-//【展開係数／ボスタン－森法】O(n^2 log d)
+//【展開係数】O(n^2 log d)
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
 * 制約 : deg f < deg g, g[0] = 1, 2 deg g < N
 */
-template <int N>
-bool coef(const BFPS<N>& f, const BFPS<N>& g, ll d) {
+template <int N> bool bostan_mori(const BFPS<N>& f, const BFPS<N>& g, ll d) {
+	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
+
 	assert(g.n >= 1 && g[0]);
 
 	// d = 0 のときは定数項を返す．
@@ -260,7 +259,7 @@ bool coef(const BFPS<N>& f, const BFPS<N>& g, ll d) {
 	}
 
 	// d を半分にして再帰を回す．
-	return coef(f3, g3, d / 2);
+	return bostan_mori(f3, g3, d / 2);
 }
 
 
@@ -269,16 +268,16 @@ bool coef(const BFPS<N>& f, const BFPS<N>& g, ll d) {
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 数列 a について，a[n] の値を返す．
 *
-* 利用：【展開係数／ボスタン－森法】
+* 利用：【展開係数】
 */
 template <int N>
-bool linearly_recurrent_sequence(const bitset<N>& a, int an, const bitset<N>& c, int cn, ll n) {
+bool linearly_recurrent_sequence(const bitset<N>& a, const bitset<N>& c, int d, ll n) {
 	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
-	
-	BFPS<N> A(a, an), C(c, cn);
+
+	BFPS<N> A(a, d), C(c, d);
 	BFPS<N> Dnm = 1 + (C >> 1);
-	BFPS<N> Num = (Dnm * A).resize(an);
-	return coef(Num, Dnm, n);
+	BFPS<N> Num = (Dnm * A).resize(d);
+	return bostan_mori(Num, Dnm, n);
 }
 
 
@@ -288,7 +287,7 @@ bool linearly_recurrent_sequence(const bitset<N>& a, int an, const bitset<N>& c,
 * a(x) u(x) + b(x) v(x) = g(x) の解 (u(x), v(x)) を u, v に格納する．
 */
 template <int N>
-void ext_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& g, BFPS<N>& u, BFPS<N>& v) {
+void extended_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& g, BFPS<N>& u, BFPS<N>& v) {
 	b.resize();
 	if (sz(b) == 0) {
 		u = BFPS<N>(1);
@@ -300,7 +299,7 @@ void ext_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& g, BFPS<N>& u, BFPS<N>& v) {
 	BFPS<N> q, r;
 	tie(q, r) = a.quotient_remainder(b);
 
-	ext_gcd(b, r, g, v, u);
+	extended_gcd(b, r, g, v, u);
 	v += q * u;
 }
 
@@ -314,17 +313,17 @@ void ext_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& g, BFPS<N>& u, BFPS<N>& v) {
 template <int N>
 bool polynomial_inverse(const BFPS<N>& a, const BFPS<N>& b, BFPS<N>& u) {
 	BFPS<N> g, v;
-	ext_gcd(a, b, g, u, v);
+	extended_gcd(a, b, g, u, v);
 
 	return g == BFPS<N>(1);
 }
 
 
-//【多項式の離散対数問題／baby-step giant-step】O(2^(deg(g)/2) deg(g)^2)
+//【多項式の離散対数問題】O(2^(deg(g)/2) deg(g)^2)
 /*
 * a(x) f(x)^d = b(x) mod g(x) の最小解 d >= 0 を返す．（なければ INFL）
 *
-*（平方分割）
+*（baby-step giant-step）
 */
 template <int N>
 ll log(const BFPS<N>& f, const BFPS<N>& a, const BFPS<N>& b, const BFPS<N>& g) {

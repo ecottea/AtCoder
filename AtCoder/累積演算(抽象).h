@@ -45,7 +45,7 @@ struct Cumulative_prod {
 
 //【二次元累積和（アーベル群）】
 /*
-* Cumulative_sum_2d<S, op, o, inv>(vS a) : O(h w)
+* Cumulative_sum_2D<S, op, o, inv>(vS a) : O(h w)
 *	二次元配列 a[0..h)[0..w) で初期化する．
 *	要素はアーベル群 <S, op, o, inv> の元とする．
 *
@@ -53,7 +53,7 @@ struct Cumulative_prod {
 *	Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す，範囲外の値は o() とみなす）
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
-struct Cumulative_sum_2d {
+struct Cumulative_sum_2D {
 	// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
 
 	int h, w;
@@ -62,8 +62,8 @@ struct Cumulative_sum_2d {
 	vector<vector<S>> acc;
 
 	// コンストラクタ（初期化なし，配列で初期化）
-	Cumulative_sum_2d() : h(0), w(0) {}
-	Cumulative_sum_2d(const vector<vector<S>>& a)
+	Cumulative_sum_2D() : h(0), w(0) {}
+	Cumulative_sum_2D(const vector<vector<S>>& a)
 		: h(sz(a)), w(sz(a[0])), acc(h + 1, vector<S>(w + 1, o())) {
 		// 元データを仮格納する．
 		rep(i, h) {
@@ -122,31 +122,40 @@ struct Cumulative_sum_2d {
 */
 template <class S, S(*op)(S, S), S(*e)()>
 struct Cumulative_lossy_prod {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_1_D
-	// verify : https://atcoder.jp/contests/abc134/tasks/abc134_c
-
 	int n;
 
 	// acc_l[i] : Πa[0..i)
 	// acc_r[i] : Πa[i..n)
 	vector<S> acc_l, acc_r;
 
-	// コンストラクタ（初期化なし，配列で初期化）
-	Cumulative_lossy_prod() : n(0) {}
+	// コンストラクタ（配列で初期化）
 	Cumulative_lossy_prod(const vector<S>& a) : n(sz(a)), acc_l(n + 1), acc_r(n + 1) {
 		acc_l[0] = acc_r[n] = e();
 		rep(i, n) acc_l[i + 1] = op(acc_l[i], a[i]);
 		repir(i, n - 1, 0) acc_r[i] = op(a[i], acc_r[i + 1]);
 	}
+	Cumulative_lossy_prod() : n(0) {} // ダミー
 
-	// max a[0..r] を返す．
-	S left_prod(int r) { return acc_l[r + 1]; }
+	// Πa[0..r] を返す．
+	S left_prod(int r) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_1_D
+	
+		return acc_l[r + 1]; 
+	}
 
-	// max a[l..n) を返す．
-	S right_prod(int l) { return acc_r[l]; }
+	// Πa[l..n) を返す．
+	S right_prod(int l) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_1_D
+		
+		return acc_r[l];
+	}
 
-	// max a[0..i)∪a(i..n) を返す．
-	S without_prod(int i) { return op(acc_l[i], acc_r[i + 1]); }
+	// Πa[0..i)∪a(i..n) を返す．
+	S without_prod(int i) {
+		// verify : https://atcoder.jp/contests/abc134/tasks/abc134_c
+		
+		return op(acc_l[i], acc_r[i + 1]);
+	}
 };
 
 
@@ -159,13 +168,13 @@ struct Cumulative_lossy_prod {
 * Quadratic_division<S, op, e>(vS v) : O(n)
 *	配列 v の要素で初期化する．
 *
-* set(int i, S x) : O(log n)
+* set(int i, S x) : O(√n)
 *	v[i] = x とする．
 *
 * S get(int i) : O(1)
 *	v[i] を返す．
 *
-* S prod(int l, int r) : O(log n)
+* S prod(int l, int r) : O(√n)
 *	op( v[l..r) ) を返す．空なら e() を返す．
 */
 template <class S, S(*op)(S, S), S(*e)()>
@@ -241,7 +250,7 @@ struct Quadratic_division {
 
 //【二次元累積非可逆和（可換モノイド）】
 /*
-* Cumulative_lossy_sum_2d<S, op, o>(a) : O(h w)
+* Cumulative_lossy_sum_2D<S, op, o>(a) : O(h w)
 *	二次元配列 a[0..h)[0..w) で初期化する
 *	要素は可換モノイド <S, op, o> の元とする．
 *
@@ -258,7 +267,7 @@ struct Quadratic_division {
 *	Σa[x..h)[y..w) を返す．
 */
 template <class S, S(*op)(S, S), S(*o)()>
-struct Cumulative_lossy_sum_2d {
+struct Cumulative_lossy_sum_2D {
 	int h, w;
 
 	// acc_ul[i][j] : Σa[0..i)[0..j)
@@ -268,8 +277,8 @@ struct Cumulative_lossy_sum_2d {
 	vector<vector<S>> acc_ul, acc_ur, acc_dl, acc_dr;
 
 	// コンストラクタ（初期化なし，配列で初期化）
-	Cumulative_lossy_sum_2d() : h(0), w(0) {}
-	Cumulative_lossy_sum_2d(const vector<vector<S>>& a) : h(sz(a)), w(sz(a[0])) {
+	Cumulative_lossy_sum_2D() : h(0), w(0) {}
+	Cumulative_lossy_sum_2D(const vector<vector<S>>& a) : h(sz(a)), w(sz(a[0])) {
 		acc_ul = acc_ur = acc_dl = acc_dr
 			= vector<vector<S>>(h + 1, vector<S>(w + 1, o()));
 
@@ -372,7 +381,7 @@ void slide_minimum(const vector<S>& a, int w, vector<S>& a_min) {
 * 二次元配列 a[0..h)[0..w) に対し min a[i..i+dh)[j..j+dw) を a_min[i][j] に返す．
 */
 template <class S, bool(*comp)(S, S), S(*inf)()>
-void slide_minimum_2d(const vector<vector<S>>& a, int dh, int dw, vector<vector<S>>& a_min) {
+void slide_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vector<vector<S>>& a_min) {
 	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_f
 
 	int h = sz(a), w = sz(a[0]);
@@ -499,7 +508,7 @@ struct Sparse_table {
 *	Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す）
 */
 template <class S, S(*op)(S, S), S(*o)()>
-struct Sparse_table_2d {
+struct Sparse_table_2D {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/sparse_table_2D.html
 	// verify : https://codeforces.com/problemset/problem/713/D
 
@@ -509,8 +518,8 @@ struct Sparse_table_2d {
 	vector<vector<vector<vector<S>>>> acc;
 
 	// コンストラクタ（初期化なし，二次元配列で初期化）
-	Sparse_table_2d() : h(0), w(0), bh(0), bw(0) {}
-	Sparse_table_2d(const vector<vector<S>>& a) : h(sz(a)), w(sz(a[0])), bh(msb(h) + 1), bw(msb(w) + 1),
+	Sparse_table_2D() : h(0), w(0), bh(0), bw(0) {}
+	Sparse_table_2D(const vector<vector<S>>& a) : h(sz(a)), w(sz(a[0])), bh(msb(h) + 1), bw(msb(w) + 1),
 		acc(bh, vector<vector<vector<S>>>(bw, vector<vector<S>>(h, vector<S>(w))))
 	{
 		rep(x, h) rep(y, w) acc[0][0][x][y] = a[x][y];
@@ -554,7 +563,7 @@ struct Sparse_table_2d {
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Sparse_table_2d& st) {
+	friend ostream& operator<<(ostream& os, const Sparse_table_2D& st) {
 		rep(bx, st.bh) {
 			rep(by, st.bw) {
 				rep(x, st.h) {

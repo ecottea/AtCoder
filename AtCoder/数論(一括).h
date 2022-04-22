@@ -5,7 +5,7 @@
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
-//【素数の列挙／エラトステネスの篩】O(n log(log n))
+//【素数の列挙】O(n log(log n))
 /*
 * n 以下の素数を列挙し，ps に昇順に格納する．
 */
@@ -41,8 +41,6 @@ void eratosthenes(int n, vi& ps) {
 //【素数の列挙（区間）】O((√r + (r - l))log(log r))
 /*
 * [l..r) に含まれる素数を ps に昇順に格納する．
-* 
-*（エラトステネスの区間篩）
 *
 * 利用：【素数の列挙】
 */
@@ -141,7 +139,7 @@ void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
 * i = [1..n] について約数関数 σ_k(i) = (i の約数の k 乗和) を s[i] に格納する．
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
 *
-* 利用：【約数変換】
+* 利用：【約数変換，LCM 畳込み】
 */
 template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
@@ -159,7 +157,7 @@ template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 /*
 * i = [1..n] についてオイラー関数 φ(i) の値を e[i] に格納する．
 *
-* 利用：【約数変換】
+* 利用：【約数変換，LCM 畳込み】
 */
 void euler_phi(int n, vi& phi) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
@@ -178,7 +176,7 @@ void euler_phi(int n, vi& phi) {
 /*
 * i = [1..n] についてメービウス関数 μ(i) の値を mu[i] に格納する．
 *
-* 利用：【約数変換】
+* 利用：【約数変換，LCM 畳込み】
 */
 void mobius_mu(int n, vi& mu) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6

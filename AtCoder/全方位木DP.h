@@ -5,153 +5,582 @@
 // ■■■■■ 全方位木 DP ■■■■■
 
 
+//【全方位木 DP】O(n)
+/*
+* 木 g の頂点 s を根と見たときの問題の答えを res[s] に格納する．
+*
+* T merge(T x, T y) :
+*   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
+*   これらをマージした部分木について同じく s を根と見たときの答えを返す．
+*
+* T e() :
+*   merge() の単位元を返す．
+*
+* T leaf(int s) :
+*   単独のノード s のみからなる部分木について，s を根と見たときの答えを返す．
+*
+* T apply(T x, int s, int t) :
+*   頂点 t を根とする部分木の暫定の答えが x のとき，
+*   s, t を結ぶ辺を追加して s を根と見たときの答えを返す．
+*/
+template <class T, T(*merge)(T, T), T(*e)(), T(*leaf)(int), T(*apply)(T, int, int)>
+void rerooting(const Graph& g, vector<T>& res) {
+	// 参考 : https://atcoder.jp/contests/abc222/editorial/2749
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_v
+	
+	int n = sz(g);
+	res.resize(n);
+
+	// dp[s] : p-s 間の辺を切断し，s を根と見たときの答え
+	vector<T> dp(n, e());
+
+	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．（p : s の親）
+	function<void(int, int)> dfs1 = [&](int s, int p) {
+		// s が葉か
+		bool is_leef = true;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+			is_leef = false;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えを計算する．
+			dfs1(t, s);
+
+			// 先の部分木に対して辺 s-t を接続した場合の答えを得て，
+			// それを暫定の答えとマージして自身の答えを計算していく．
+			dp[s] = merge(dp[s], apply(dp[t], s, t));
+		}
+
+		// s が葉の場合は自明な答えを代入しておく．
+		if (is_leef) dp[s] = leaf(s);
+	};
+
+	// s を根と見たときの答えを計算する．（p : s の親）
+	//  val : 根 s に辺 s-p だけを接続したときの答え
+	function<void(int, int, const T&)> dfs2 = [&](int s, int p, const T& val) {
+		// ds : 根 s から出る各辺について，その辺だけを s に接続したときの答えのリスト
+		vector<T> ds{ val };
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えは計算し終えているので，
+			// その部分木に対して辺 s-t を接続し s を根と見た場合の答えを得る．
+			ds.push_back(apply(dp[t], s, t));
+		}
+		int k = sz(ds);
+
+		// acc_l[acc_r] : 根 s の左[右]からの辺を順に s に接続したときの答えのリスト
+		vector<T> acc_l(k + 1, e()), acc_r(k + 1, e());
+
+		rep(i, k) acc_l[i + 1] = merge(acc_l[i], ds[i]);
+		repir(i, k - 1, 0) acc_r[i] = merge(acc_r[i + 1], ds[i]);
+
+		// 根 s から出る全ての辺を s に接続したときの答えが求めるものである．
+		res[s] = acc_l[k];
+
+		int i = 1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// sub : 根 s に辺 s-t 以外の全ての辺を接続したときの答え
+			T sub = merge(acc_l[i], acc_r[i + 1]);
+
+			// 先の部分木に辺 t-s を接続して t を根と見た場合の答えを再帰関数に渡す．
+			dfs2(t, s, apply(sub, t, s));
+
+			i++;
+		}
+	};
+
+	dfs1(0, -1);
+	dfs2(0, -1, e());
+
+	/* 雛形
+	using T = int;
+	T merge(T x, T y) { return max(x, y); }
+	T e() { return 0; }
+	T leaf(int s) { return 0; }
+	T apply(T x, int s, int t) { return x + 1; }
+	void solve_by_rerooting(Graph& g, vector<T>& res) {
+		rerooting<T, merge, e, leaf, apply>(g, res);
+	}
+	*/
+};
+
+
+//【全方位部分木 DP】O(n)
+/*
+* 木 g の頂点 s を根と見たときの問題の答えを res[s] に格納する．
+* また頂点 s と接続する ti 番目の頂点を t としたとき，
+* s-t 間の辺を切断し，t を根と見たときの答えを cut[s][ti] に格納する．
+*
+* T merge(T x, T y) :
+*   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
+*   これらをマージした部分木について同じく s を根と見たときの答えを返す．
+*
+* T e() :
+*   merge() の単位元を返す．
+*
+* T leaf(int s) :
+*   単独のノード s のみからなる部分木について，s を根と見たときの答えを返す．
+*
+* T apply(T x, int s, int t) :
+*   頂点 t を根とする部分木の暫定の答えが x のとき，
+*   s, t を結ぶ辺を追加して s を根と見たときの答えを返す．
+*/
+template <class T, T(*merge)(T, T), T(*e)(), T(*leaf)(int), T(*apply)(T, int, int)>
+void rerooting(const Graph& g, vector<T>& res, vector<vector<T>>& cut) {
+	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
+
+	int n = sz(g);
+	res.resize(n);
+
+	// cut[s][i] : 頂点 s と接続する i 番目の頂点を t としたとき，
+	//             s-t 間の辺を切断し，t を根と見たときの答え
+	cut.resize(n);
+	rep(s, n) cut[s] = vector<T>(sz(g[s]), e());
+
+	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．
+	//  p : s の親
+	//  si : s が p に接続する何番目の頂点か
+	function<void(int, int, int)> dfs1 = [&](int s, int p, int si) {
+		// s が葉か
+		bool is_leef = true;
+
+		rep(ti, sz(g[s])) {
+			int t = g[s][ti];
+			if (t == p) continue;
+			is_leef = false;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えを計算する．
+			dfs1(t, s, ti);
+
+			// 先の部分木に対して辺 s-t を接続した場合の答えを得て，
+			// それを暫定の答えとマージして自身の答えを計算していく．
+			if (p != -1) {
+				cut[p][si] = merge(cut[p][si], apply(cut[s][ti], s, t));
+			}
+		}
+
+		// s が葉の場合は自明な答えを代入しておく．
+		if (is_leef && p != -1) cut[p][si] = leaf(s);
+	};
+
+	// s を根と見たときの答えを計算する．
+	//  p : s の親
+	//  val : s-p 間の辺を切断し，p を根と見たときの答え
+	function<void(int, int, const T&)> dfs2 = [&](int s, int p, const T& val) {
+		// ds : 根 s から出る各辺について，その辺だけを s に接続したときの答えのリスト
+		vector<T> ds{ p != -1 ? apply(val, s, p) : e() };
+
+		rep(ti, sz(g[s])) {
+			int t = g[s][ti];
+			if (t == p) {
+				cut[s][ti] = val;
+				continue;
+			}
+
+			// s-t 間の辺を切断し，t を根と見たときの答えは計算し終えているので，
+			// その部分木に対して辺 s-t を接続し s を根と見た場合の答えを得る．
+			ds.push_back(apply(cut[s][ti], s, t));
+		}
+		int k = sz(ds);
+
+		// acc_l[acc_r] : 根 s の左[右]からの辺を順に s に接続したときの答えのリスト
+		vector<T> acc_l(k + 1, e()), acc_r(k + 1, e());
+
+		rep(i, k) acc_l[i + 1] = merge(acc_l[i], ds[i]);
+		repir(i, k - 1, 0) acc_r[i] = merge(acc_r[i + 1], ds[i]);
+
+		// 根 s から出る全ての辺を s に接続したときの答えが求めるものである．
+		res[s] = acc_l[k];
+
+		int i = 1;
+		rep(ti, sz(g[s])) {
+			int t = g[s][ti];
+			if (t == p) continue;
+
+			// 根 s に辺 s-t 以外の全ての辺を接続したときの答え，
+			// すなわち，辺 t-s を切断し，s を根と見たときの答えを再帰関数に渡す．
+			dfs2(t, s, merge(acc_l[i], acc_r[i + 1]));
+
+			i++;
+		}
+	};
+
+	dfs1(0, -1, -1);
+	dfs2(0, -1, e());
+
+	/* 雛形
+	using T = int;
+	T merge(T x, T y) { return max(x, y); }
+	T e() { return 0; }
+	T leaf(int s) { return 0; }
+	T apply(T x, int s, int t) { return x + 1; }
+	void solve_by_rerooting(Graph& g, vector<T>& res) {
+		rerooting<T, merge, e, leaf, apply>(g, res);
+	}
+	*/
+};
+
+
+//【全方位木可逆 DP】O(n)
+/*
+* 木 g の頂点 s を根と見たときの問題の答えを res[s] に格納する．
+*
+* merge(T& x, T y) :
+*   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
+*   x 側に y 側をマージして s を根と見たときの答えを上書きする．
+*
+* T erase(T x, T y) :
+*   s を根とする答えが x である部分木から，それに含まれるような
+*	答えが y である部分木を取り除いたときの s を根と見た答えを返す．
+*
+* T e() :
+*   merge() の単位元を返す．
+*
+* T leaf(int s) :
+*   単独のノード s のみからなる部分木について，s を根と見たときの答えを返す．
+*
+* T apply(T x, int s, int t) :
+*   頂点 t を根とする部分木の暫定の答えが x のとき，
+*   s, t を結ぶ辺を追加して s を根と見たときの答えを返す．
+*/
+template <class T, void(*merge)(T&, const T&), T(*erase)(const T&, const T&),
+	T(*e)(), T(*leaf)(int), T(*apply)(const T&, int, int)>
+	void rerooting(const Graph& g, vector<T>& res) {
+	// verify : https://atcoder.jp/contests/abc220/tasks/abc220_f
+
+	int n = sz(g);
+	res = vector<T>(n, e());
+
+	// dp[s] : p-s 間の辺を切断し，s を根と見たときの答え
+	vector<T> dp(n, e());
+
+	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．（p : s の親）
+	function<void(int, int)> dfs1 = [&](int s, int p) {
+		// s が葉か
+		bool is_leef = true;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+			is_leef = false;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えを計算する．
+			dfs1(t, s);
+
+			// 先の部分木に対して辺 s-t を接続した場合の答えを得て，
+			// それを暫定の答えとマージして自身の答えを計算していく．
+			merge(dp[s], apply(dp[t], s, t));
+		}
+
+		// s が葉の場合は自明な答えを代入しておく．
+		if (is_leef) dp[s] = leaf(s);
+	};
+
+	// s を根と見たときの答えを計算する．（p : s の親）
+	//  val : 根 s に辺 s-p だけを接続したときの答え
+	function<void(int, int, const T&)> dfs2 = [&](int s, int p, const T& val) {
+		// ds : 根 s から出る各辺について，その辺だけを s に接続したときの答えのリスト
+		vector<T> ds{ val };
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えは計算し終えているので，
+			// その部分木に対して辺 s-t を接続し s を根と見た場合の答えを得る．
+			ds.push_back(apply(dp[t], s, t));
+		}
+		int k = sz(ds);
+
+		// 根 s から出る全ての辺を s に接続したときの答え res[s] を得る．
+		rep(i, k) merge(res[s], ds[i]);
+
+		int i = 1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// sub : 根 s に辺 s-t 以外の全ての辺を接続したときの答えを復元する．
+			T sub = erase(res[s], ds[i]);
+
+			// 先の部分木に辺 t-s を接続して t を根と見た場合の答えを再帰関数に渡す．
+			dfs2(t, s, apply(sub, t, s));
+
+			i++;
+		}
+	};
+
+	dfs1(0, -1);
+	dfs2(0, -1, e());
+
+	/* 雛形
+	using T = int;
+	void merge(T& x, T y) { return x + y - 1; }
+	T erase(T x, T y) { return x - y + 1; }
+	T e() { return 1; }
+	T leaf(int s) { return 1; }
+	T apply(T x, int s, int t) { return x + 1; }
+	void solve_by_rerooting(Graph& g, vector<T>& res) {
+		rerooting<T, merge, erase, e, leaf, apply>(g, res);
+	}
+	*/
+};
+
+
+//【全方位木 DP（コスト付き）】O(n)
+/*
+* コスト付き木 g の頂点 s を根と見たときの問題の答えを res[s] に格納する．
+*
+* Edge : 辺の型（int, WEdge, IEdge）
+* T : 答えの型
+*
+* T merge(T x, T y) :
+*   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
+*   これらをマージした部分木について同じく s を根と見たときの答えを返す．
+*
+* T e() :
+*   merge() の単位元を返す．
+*
+* T leaf(int s) :
+*   単独のノード s のみからなる部分木について，s を根と見たときの答えを返す．
+*
+* T apply(T x, int s, int t, ll c) :
+*   頂点 t を根とする部分木の暫定の答えが x のとき，
+*   s, t を結ぶコスト c の辺を追加して s を根と見たときの答えを返す．
+*/
+template <class T, T(*merge)(T, T), T(*e)(), T(*leaf)(int), T(*apply)(T, int, int, ll)>
+void rerooting(const WGraph& g, vector<T>& res) {
+	// 参考 : https://atcoder.jp/contests/abc222/editorial/2749
+	// verify : https://atcoder.jp/contests/abc222/tasks/abc222_f
+
+	int n = sz(g);
+	res.resize(n);
+
+	// dp[s] : p-s 間の辺を切断し，s を根と見たときの答え
+	vector<T> dp(n, e());
+
+	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．（p : s の親）
+	function<void(int, int)> dfs1 = [&](int s, int p) {
+		// s が葉か
+		bool is_leef = true;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+			is_leef = false;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えを計算する．
+			dfs1(t, s);
+
+			// 先の部分木に対して辺 s-t を接続した場合の答えを得て，
+			// それを暫定の答えとマージして自身の答えを計算していく．
+			dp[s] = merge(dp[s], apply(dp[t], s, t, t.cost));
+		}
+
+		// s が葉の場合は自明な答えを代入しておく．
+		if (is_leef) dp[s] = leaf(s);
+	};
+
+	// s を根と見たときの答えを計算する．（p : s の親）
+	//  val : 根 s に辺 s-p だけを接続したときの答え
+	function<void(int, int, const T&)> dfs2 = [&](int s, int p, const T& val) {
+		// ds : 根 s から出る各辺について，その辺だけを s に接続したときの答えのリスト
+		vector<T> ds{ val };
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えは計算し終えているので，
+			// その部分木に対して辺 s-t を接続し s を根と見た場合の答えを得る．
+			ds.push_back(apply(dp[t], s, t, t.cost));
+		}
+		int k = sz(ds);
+
+		// acc_l[acc_r] : 根 s の左[右]からの辺を順に s に接続したときの答えのリスト
+		vector<T> acc_l(k + 1, e()), acc_r(k + 1, e());
+
+		rep(i, k) acc_l[i + 1] = merge(acc_l[i], ds[i]);
+		repir(i, k - 1, 0) acc_r[i] = merge(acc_r[i + 1], ds[i]);
+
+		// 根 s から出る全ての辺を s に接続したときの答えが求めるものである．
+		res[s] = acc_l[k];
+
+		int i = 1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// sub : 根 s に辺 s-t 以外の全ての辺を接続したときの答え
+			T sub = merge(acc_l[i], acc_r[i + 1]);
+
+			// 先の部分木に辺 t-s を接続して t を根と見た場合の答えを再帰関数に渡す．
+			dfs2(t, s, apply(sub, t, s, t.cost));
+
+			i++;
+		}
+	};
+
+	dfs1(0, -1);
+	dfs2(0, -1, e());
+
+	/* 雛形
+	using T = ll;
+	T merge(T x, T y) { return max(x, y); }
+	T e() { return 0; }
+	T leaf(int s) { return 0; }
+	T apply(T x, int s, int t, T c) { return x + c; }
+	void solve_by_rerooting(WGraph& g, vector<T>& res) {
+		rerooting<T, merge, e, leaf, apply>(g, res);
+	}
+	*/
+};
+
+
+//【全方位部分木 DP（コスト付き）】O(n)
+/*
+* コスト付き木 g の頂点 s を根と見たときの問題の答えを res[s] に格納する．
+* また頂点 s と接続する ti 番目の頂点を t としたとき，
+* s-t 間の辺を切断し，t を根と見たときの答えを cut[s][ti] に格納する．
+*
+* T merge(T x, T y) :
+*   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
+*   これらをマージした部分木について同じく s を根と見たときの答えを返す．
+*
+* T e() :
+*   merge() の単位元を返す．
+*
+* T leaf(int s) :
+*   単独のノード s のみからなる部分木について，s を根と見たときの答えを返す．
+*
+* T apply(T x, int s, int t, ll c) :
+*   頂点 t を根とする部分木の暫定の答えが x のとき，
+*   s, t を結ぶコスト c の辺を追加して s を根と見たときの答えを返す．
+*/
+template <class T, T(*merge)(T, T), T(*e)(), T(*leaf)(int), T(*apply)(T, int, int, ll)>
+void rerooting(const WGraph& g, vector<T>& res, vector<vector<T>>& cut) {
+	int n = sz(g);
+	res.resize(n);
+
+	// cut[s][i] : 頂点 s と接続する i 番目の頂点を t としたとき，
+	//             s-t 間の辺を切断し，t を根と見たときの答え
+	cut.resize(n);
+	rep(s, n) cut[s] = vector<T>(sz(g[s]), e());
+
+	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．
+	//  p : s の親
+	//  si : s が p に接続する何番目の頂点か
+	function<void(int, int, int)> dfs1 = [&](int s, int p, int si) {
+		// s が葉か
+		bool is_leef = true;
+
+		rep(ti, sz(g[s])) {
+			auto t = g[s][ti];
+			if (t == p) continue;
+			is_leef = false;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えを計算する．
+			dfs1(t, s, ti);
+
+			// 先の部分木に対して辺 s-t を接続した場合の答えを得て，
+			// それを暫定の答えとマージして自身の答えを計算していく．
+			if (p != -1) {
+				cut[p][si] = merge(cut[p][si], apply(cut[s][ti], s, t, t.cost));
+			}
+		}
+
+		// s が葉の場合は自明な答えを代入しておく．
+		if (is_leef && p != -1) cut[p][si] = leaf(s);
+	};
+
+	// s を根と見たときの答えを計算する．
+	//  p : s の親
+	//  c : s-p 間の辺のコスト
+	//  val : s-p 間の辺を切断し，p を根と見たときの答え
+	function<void(int, int, ll, const T&)> dfs2 = [&](int s, int p, ll c, const T& val) {
+		// ds : 根 s から出る各辺について，その辺だけを s に接続したときの答えのリスト
+		vector<T> ds{ p != -1 ? apply(val, s, p, c) : e() };
+
+		rep(ti, sz(g[s])) {
+			auto t = g[s][ti];
+			if (t == p) {
+				cut[s][ti] = val;
+				continue;
+			}
+
+			// s-t 間の辺を切断し，t を根と見たときの答えは計算し終えているので，
+			// その部分木に対して辺 s-t を接続し s を根と見た場合の答えを得る．
+			ds.push_back(apply(cut[s][ti], s, t, t.cost));
+		}
+		int k = sz(ds);
+
+		// acc_l[acc_r] : 根 s の左[右]からの辺を順に s に接続したときの答えのリスト
+		vector<T> acc_l(k + 1, e()), acc_r(k + 1, e());
+
+		rep(i, k) acc_l[i + 1] = merge(acc_l[i], ds[i]);
+		repir(i, k - 1, 0) acc_r[i] = merge(acc_r[i + 1], ds[i]);
+
+		// 根 s から出る全ての辺を s に接続したときの答えが求めるものである．
+		res[s] = acc_l[k];
+
+		int i = 1;
+		rep(ti, sz(g[s])) {
+			auto t = g[s][ti];
+			if (t == p) continue;
+
+			// 根 s に辺 s-t 以外の全ての辺を接続したときの答え，
+			// すなわち，辺 t-s を切断し，s を根と見たときの答えを再帰関数に渡す．
+			dfs2(t, s, t.cost, merge(acc_l[i], acc_r[i + 1]));
+
+			i++;
+		}
+	};
+
+	dfs1(0, -1, -1);
+	dfs2(0, -1, INFL, e());
+
+	/* 雛形
+	using T = ll;
+	T merge(T x, T y) { return max(x, y); }
+	T e() { return 0; }
+	T leaf(int s) { return 0; }
+	T apply(T x, int s, int t, T c) { return x + c; }
+	void solve_by_rerooting(WGraph& g, vector<T>& res) {
+		rerooting<T, merge, e, leaf, apply>(g, res);
+	}
+	*/
+};
+
+
 //【木の高さ】O(n)
 /*
 * 木 g の頂点 i を根にしたときの高さ（最も遠い葉までの距離）を h[i] に格納する．
 *
-*（全方位木 DP）
+* 利用：【全方位木 DP】
 */
+using T_hut = int;
+T_hut merge_hut(T_hut x, T_hut y) { return max(x, y); }
+T_hut e_hut() { return 0; }
+T_hut leaf_hut(int s) { return 0; }
+T_hut apply_hut(T_hut x, int s, int t) { return x + 1; }
 void height_of_undirected_tree(Graph& g, vi& h) {
-	ll n = sz(g); // unordered_map<ll, int> を使うので ll にキャストしておく．
-
-	// 辺 (p, s) を切断したときの s を根とする部分木を部分木 (p, s) と呼ぶ．
-	// dp[p * n + s] : 部分木 (p, s) の高さ
-	unordered_map<ll, int> dp;
-
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	function<int(int, int)> dfs_to_leaf = [&](int p, int s) {
-		// 子の情報を集めてその最大値をとり，自身の情報を計算する．
-		for (auto t : g[s]) {
-			if (t != p) {
-				chmax(dp[p * n + s], dfs_to_leaf(s, t) + 1);
-			}
-		}
-
-		return dp[p * n + s];
-	};
-
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[s * n + p] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	function<void(int, int)> dfs_to_root = [&](int p, int s) {
-		// s から出ている辺の本数
-		int m = sz(g[s]);
-
-		// 左右からの累積最大値を計算する．
-		vi acc_l(m + 1), acc_r(m + 1);
-		for (int i = 0; i < m; i++) {
-			auto t = g[s][i];
-			acc_l[i + 1] = max(acc_l[i], dp[s * n + t] + 1);
-		}
-		for (int i = m - 1; i >= 0; i--) {
-			auto t = g[s][i];
-			acc_r[i] = max(acc_r[i + 1], dp[s * n + t] + 1);
-		}
-
-		// 左右からの累積最大値を用いて 1 つ抜きの最大値を計算する．
-		rep(i, m) {
-			int t = g[s][i];
-			dp[t * n + s] = max(acc_l[i], acc_r[i + 1]);
-		}
-
-		// 総最大値も記録しておく．
-		dp[s * n + s] = acc_l[m];
-
-		// これで子から自身への情報が計算できたので，
-		// 子に対して同様の計算を行っていく．
-		for (auto t : g[s]) {
-			if (t != p) dfs_to_root(s, t);
-		}
-	};
-
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_leaf(0, 0);
-
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[p * n + s] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_root(0, 0);
-
-	h.resize(n);
-	rep(s, n) h[s] = dp[s * n + s];
+	rerooting<T_hut, merge_hut, e_hut, leaf_hut, apply_hut>(g, h);
 }
 
 
-//【コスト付き木の高さ】O(n)
+//【木の高さ（コスト付き）】O(n)
 /*
 * コスト付き木 g の頂点 i を根にしたときの高さ（最も遠い葉までのコスト）を h[i] に格納する．
-* 
+*
 *（全方位木 DP）
 */
+using T_hutc = ll;
+T_hutc merge_hutc(T_hutc x, T_hutc y) { return max(x, y); }
+T_hutc e_hutc() { return 0; }
+T_hutc leaf_hutc(int s) { return 0; }
+T_hutc apply_hutc(T_hutc x, int s, int t, T_hutc c) { return x + c; }
 void height_of_undirected_tree(WGraph& g, vl& h) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_B
 
-	ll n = sz(g);
-
-	// 辺 (p, s) を切断したときの s を根とする部分木を部分木 (p, s) と呼ぶ．
-	// dp[p * n + s] : 部分木 (p, s) の高さ
-	unordered_map<ll, ll> dp;
-
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	function<ll(int, int)> dfs_to_leaf = [&](int p, int s) {
-		// 子の情報を集めてその最大値をとり，自身の情報を計算する．
-		for (auto e : g[s]) {
-			if (e.to != p) {
-				chmax(dp[p * n + s], dfs_to_leaf(s, e.to) + e.cost);
-			}
-		}
-
-		return dp[p * n + s];
-	};
-
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[s * n + p] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	function<void(int, int)> dfs_to_root = [&](int p, int s) {
-		// s から出ている辺の本数
-		int m = sz(g[s]);
-
-		// 左右からの累積最大値を計算する．
-		vl acc_l(m + 1), acc_r(m + 1);
-		for (int i = 0; i < m; i++) {
-			auto e = g[s][i];
-			acc_l[i + 1] = max(acc_l[i], dp[s * n + e.to] + e.cost);
-		}
-		for (int i = m - 1; i >= 0; i--) {
-			auto e = g[s][i];
-			acc_r[i] = max(acc_r[i + 1], dp[s * n + e.to] + e.cost);
-		}
-
-		// 左右からの累積最大値を用いて 1 つ抜きの最大値を計算する．
-		rep(i, m) {
-			int t = g[s][i].to;
-			dp[t * n + s] = max(acc_l[i], acc_r[i + 1]);
-		}
-
-		// 総最大値も記録しておく．
-		dp[s * n + s] = acc_l[m];
-
-		// これで子から自身への情報が計算できたので，
-		// 子に対して同様の計算を行っていく．
-		for (auto e : g[s]) {
-			if (e.to != p) {
-				dfs_to_root(s, e.to);
-			}
-		}
-	};
-
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_leaf(0, 0);
-
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[p * n + s] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_root(0, 0);
-
-	h = vl(n);
-	rep(s, n) {
-		h[s] = dp[s * n + s];
-	}
+	rerooting<T_hutc, merge_hutc, e_hutc, leaf_hutc, apply_hutc>(g, h);
 }
 
 
@@ -159,81 +588,60 @@ void height_of_undirected_tree(WGraph& g, vl& h) {
 /*
 * 木 g の部分木のうち頂点 i を含むものの個数を cnt[i] に格納する．
 *
-*（全方位木 DP）
+* 利用：【全方位木 DP】
 */
+using T_st = mint;
+T_st merge_st(T_st x, T_st y) { return x * y; }
+T_st e_st() { return 1; }
+T_st leaf_st(int s) { return 1; }
+T_st apply_st(T_st x, int s, int t) { return x + 1; }
 void count_subtree(Graph& g, vm& cnt) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_v
 
-	ll n = sz(g);
+	rerooting<T_st, merge_st, e_st, leaf_st, apply_st>(g, cnt);
+}
 
-	// 辺 (p, s) を切断したときの s を含む部分木を部分木 (p, s) と呼ぶ．
-	// dp[p * n + s] : 部分木 (p, s) の s を含む部分木の個数
-	unordered_map<ll, mint> dp;
 
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	function<mint(int, int)> dfs_to_leaf = [&](int p, int s) {
-		dp[p * n + s] = 1;
+//【最大マッチングの共通部分】O(n)
+/*
+* 頂点 i が木 g の全ての最大マッチングに含まれるかを b[i] に格納する．
+*
+* 利用：【全方位木 DP】
+*/
+using T_mmi = bool; // 根を必ず使うか
+T_mmi merge_mmi(T_mmi x, T_mmi y) { return x || y; }
+T_mmi e_mmi() { return false; }
+T_mmi leaf_mmi(int s) { return false; }
+T_mmi apply_mmi(T_mmi x, int s, int t) { return !x; }
+void maximum_matching_intersection(Graph& g, vb& res) {
+	// verify : https://atcoder.jp/contests/abc223/tasks/abc223_g
 
-		// 子の情報を集めて積をとり，自身の情報を計算する．
-		for (auto t : g[s]) {
-			if (t != p) {
-				dp[p * n + s] *= dfs_to_leaf(s, t) + 1;
-			}
-		}
+	rerooting<T_mmi, merge_mmi, e_mmi, leaf_mmi, apply_mmi>(g, res);
+}
 
-		return dp[p * n + s];
-	};
 
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[s * n + p] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	function<void(int, int)> dfs_to_root = [&](int p, int s) {
-		// s から出ている辺の本数
-		int m = sz(g[s]);
+//【2 点間距離の和（端点固定）】O(n)
+/*
+* Σt=[0..n) (s-t 間の距離) を dist[s] に格納する．
+*
+* 利用：【全方位木可逆 DP】
+*/
+using T_ds = pll; // (根からの距離の和, 頂点の数)
+void merge_ds(T_ds& x, const T_ds& y) { x.first += y.first; x.second += y.second - 1; }
+T_ds erase_ds(const T_ds& x, const T_ds& y) { return { x.first - y.first, x.second - y.second + 1 }; }
+T_ds e_ds() { return { 0, 1 }; }
+T_ds leaf_ds(int s) { return { 0, 1 }; }
+T_ds apply_ds(const T_ds& x, int s, int t) { return { x.first + x.second, x.second + 1 }; }
+void distance_sum(Graph& g, vl& dist) {
+	// verify : https://atcoder.jp/contests/abc220/tasks/abc220_f
 
-		// 左右からの累積積を計算する．
-		vector<mint> acc_l(m + 1), acc_r(m + 1);
-		acc_l[0] = 1;
-		for (int i = 0; i < m; i++) {
-			int t = g[s][i];
-			acc_l[i + 1] = acc_l[i] * (dp[s * n + t] + 1);
-		}
-		acc_r[m] = 1;
-		for (int i = m - 1; i >= 0; i--) {
-			int t = g[s][i];
-			acc_r[i] = acc_r[i + 1] * (dp[s * n + t] + 1);
-		}
+	int n = sz(g);
+	dist.resize(n);
 
-		// 左右からの累積積を用いて 1 つ抜きの積を計算する．
-		rep(i, m) {
-			int t = g[s][i];
-			dp[t * n + s] = acc_l[i] * acc_r[i + 1];
-		}
+	vector<pll> tmp;
+	rerooting<T_ds, merge_ds, erase_ds, e_ds, leaf_ds, apply_ds>(g, tmp);
 
-		// 総積も記録しておく．
-		dp[s * n + s] = acc_l[m];
-
-		// これで子から自身への情報が計算できたので，
-		// 子に対して同様の計算を行っていく．
-		for (auto t : g[s]) {
-			if (t != p) {
-				dfs_to_root(s, t);
-			}
-		}
-	};
-
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_leaf(0, 0);
-
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[p * n + s] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_root(0, 0);
-
-	cnt = vector<mint>(n);
-	rep(s, n) {
-		cnt[s] = dp[s * n + s];
-	}
+	rep(i, n) dist[i] = tmp[i].first;
 }
 
 
@@ -241,108 +649,48 @@ void count_subtree(Graph& g, vm& cnt) {
 /*
 * 頂点 s から始めて連結性を保ったまま辺の追加を行い木 g を構築する方法の数を cnt[s] に格納する．
 *
-*（全方位木 DP）
-*
-* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
+* 利用：【全方位木 DP】，【階乗など（法が大きな素数）】
 */
-void count_continuous_tree_construction(const Graph& g, vm& cnt) {
+using T_cctc = pair<mint, int>; // (構築方法の数, 辺の数)
+Factorial_mint fm_cctc;
+T_cctc merge_cctc(T_cctc x, T_cctc y) {
+	mint cnt = x.first * y.first * fm_cctc.binomial(x.second + y.second, x.second);
+	return { cnt, x.second + y.second };
+}
+T_cctc e_cctc() { return { 1, 0 }; }
+T_cctc leaf_cctc(int s) { return { 1, 0 }; }
+T_cctc apply_cctc(T_cctc x, int s, int t) { return { x.first, x.second + 1 }; }
+void count_continuous_tree_construction(Graph& g, vm& cnt) {
 	// verify : https://atcoder.jp/contests/abc160/tasks/abc160_f
 
-	ll n = sz(g);
-	cnt.resize((int)n);
-	Factorial_mint fm((int)n);
+	int n = sz(g);
+	cnt.resize(n);
+	fm_cctc = Factorial_mint(n);
 
-	// 辺 (p, s) を切断したときの s を含む部分木を部分木 (p, s) と呼ぶ．
-	// dp[p * n + s] : s からの連結性を保ったまま部分木 (p, s) を構築する方法の数 
-	//				   頂点 s は最初から存在しているものとする．
-	unordered_map<ll, mint> dp;
-	unordered_map<ll, int> w; // w[p * n + s] : 部分木 (p, s) の大きさ（頂点数）
+	vector<T_cctc> tmp;
+	rerooting<T_cctc, merge_cctc, e_cctc, leaf_cctc, apply_cctc>(g, tmp);
 
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	function<mint(int, int)> dfs_to_leaf = [&](int p, int s) {
-		dp[p * n + s] = 1;
-		vi ws;
+	rep(i, n) cnt[i] = tmp[i].first;
+}
 
-		// 子の情報を集めて自身の情報を計算する．
-		repe(t, g[s]) {
-			if (t == p) continue;
 
-			// それぞれの子の部分木を構築する方法の数
-			dp[p * n + s] *= dfs_to_leaf(s, t);
+//【部分木の大きさ】O(n)
+/*
+* 木 g において頂点 s と接続する ti 番目の頂点を t としたとき，
+* s-t 間の辺を切断し，t を根と見たときの部分木の頂点数を cnt[s][ti] に格納する．
+*
+* 利用：【全方位部分木 DP】
+*/
+using T_ss = int;
+T_ss merge_ss(T_ss x, T_ss y) { return x + y - 1; }
+T_ss e_ss() { return 1; }
+T_ss leaf_ss(int s) { return 1; }
+T_ss apply_ss(T_ss x, int s, int t) { return x + 1; }
+void subtree_size(Graph& g, vvi& cnt) {
+	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
 
-			ws.push_back(w[s * n + t]);
-		}
-
-		// 各回でどの子の部分木の構築を進めるか
-		dp[p * n + s] *= fm.multinomial(ws);
-
-		w[p * n + s] = accumulate(all(ws), 1);
-		return dp[p * n + s];
-	};
-
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[s * n + p] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	function<void(int, int)> dfs_to_root = [&](int p, int s) {
-		// s から出ている辺の本数
-		int m = sz(g[s]);
-
-		// 部分木の大きさ
-		vi ws(m);
-		rep(i, m) ws[i] = w[s * n + g[s][i]];
-		int w_sum = accumulate(all(ws), 0);
-
-		// 左右からの累積積を計算する．
-		vector<mint> acc_l(m + 1), acc_r(m + 1);
-		acc_l[0] = 1;
-		rep(i, m) {
-			int t = g[s][i];
-			acc_l[i + 1] = acc_l[i] * dp[s * n + t];
-		}
-		acc_r[m] = 1;
-		repir(i, m - 1, 0) {
-			int t = g[s][i];
-			acc_r[i] = acc_r[i + 1] * dp[s * n + t];
-		}
-
-		// 各回でどの子の部分木の構築を進めるかに対応する多項係数
-		mint mul = fm.multinomial(ws);
-
-		// 左右からの累積積を用いて 1 つ抜きの積を計算する．
-		rep(i, m) {
-			int t = g[s][i];
-			dp[t * n + s] = acc_l[i] * acc_r[i + 1];
-
-			// 各回でどの子の部分木の構築を進めるか
-			// 多項係数の計算は毎回行うのではなく差分更新する．
-			mint nmul = mul;
-			nmul *= fm.factorial(ws[i]) * fm.factorial_inv(w_sum) * fm.factorial(w_sum - ws[i]);
-			dp[t * n + s] *= nmul;
-			w[t * n + s] = w_sum - ws[i] + 1;
-		}
-
-		// 総積も記録しておく．
-		dp[s * n + s] = acc_l[m];
-		dp[s * n + s] *= mul;
-
-		// これで子から自身への情報が計算できたので，
-		// 子に対して同様の計算を行っていく．
-		for (auto t : g[s]) {
-			if (t == p) continue;
-
-			dfs_to_root(s, t);
-		}
-	};
-
-	// 頂点 0 を根とし，葉の方向に向かってのみの dp[p * n + s] を計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_leaf(0, 0);
-
-	// 頂点 0 を根とし，根の方向に向かってのみの dp[p * n + s] を計算する．
-	// また特に方向を持たない dp[s * n + s] も計算する．
-	// これならばシンプルな深さ優先探索なので O(|V|) で済む．
-	dfs_to_root(0, 0);
-
-	rep(s, n) cnt[s] = dp[s * n + s];
+	vi dummy;
+	rerooting<T_ss, merge_ss, e_ss, leaf_ss, apply_ss>(g, dummy, cnt);
 }
 
 

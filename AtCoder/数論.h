@@ -3,7 +3,7 @@
 // ■■■■■ 数論 ■■■■■
 
 
-//【最大公約数／ユークリッドの互除法】O(log max(a, b))
+//【最大公約数】O(log max(a, b))
 /*
 * gcd(a, b) を返す．
 */
@@ -37,10 +37,12 @@ ll gcd(const vl& a) {
 //【最小公倍数】O(log max(a, b))
 /*
 * lcm(a, b) を返す．
-* 
-* verify : https://atcoder.jp/contests/abc131/tasks/abc131_c
 */
-ll lcm(ll a, ll b) { return a / gcd(a, b) * b; }
+ll lcm(ll a, ll b) {
+	//verify: https://atcoder.jp/contests/abc131/tasks/abc131_c
+
+	return a / gcd(a, b) * b;
+}
 
 
 //【最小公倍数（複数，結果が小さな数）】O(n log(max a[0..n))) 
@@ -89,7 +91,7 @@ mint lcm(const vi& a) {
 * g = gcd(a, b) > 0 を返しつつ，a x + b y = g の解 (x, y) を求める．
 * |x| + |y| は最小になるよう選ばれる．
 */
-ll ext_gcd(ll a, ll b, ll& x, ll& y) {
+ll extended_gcd(ll a, ll b, ll& x, ll& y) {
 	// 参考：https://qiita.com/drken/items/b97ff231e43bce50199a
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/6/NTL/all/NTL_1_E
 
@@ -120,7 +122,7 @@ ll ext_gcd(ll a, ll b, ll& x, ll& y) {
 
 	// a, b を更新し解 X, Y を得る．
 	ll X, Y;
-	ll d = ext_gcd(b, r, X, Y);
+	ll d = extended_gcd(b, r, X, Y);
 
 	// X, Y から x, y を得る．
 	x = Y;
@@ -139,7 +141,7 @@ ll ext_gcd(ll a, ll b, ll& x, ll& y) {
 * 利用：【拡張ユークリッドの互除法】
 */
 ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
-	ll g = ext_gcd(a, b, x, y);
+	ll g = extended_gcd(a, b, x, y);
 
 	if (c % g != 0) return -1;
 	
@@ -333,7 +335,7 @@ int integer_exponent(ll n, ll p) {
 }
 
 
-//【階乗のもつ素因数／ルジャンドルの公式】O(log n)
+//【階乗のもつ素因数】O(log n)
 /*
 * n! がもつ素因数 p の個数を返す．
 *

@@ -43,7 +43,7 @@ mint count_noncontinuous_bitsequences(ll n, int k) {
 	vm fc(k, 1), gc(k + 1, -1);
 	gc[0] = 1;
 
-	return coef(MFPS(fc), MFPS(gc), n);
+	return bostan_mori(MFPS(fc), MFPS(gc), n);
 }
 
 
@@ -51,7 +51,7 @@ mint count_noncontinuous_bitsequences(ll n, int k) {
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..m) を部分列にもつ長さ n の文字列の個数を返す．
 *
-* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint count_supersequences(const string& s, int n, int k = 26) {
 	// verify : https://atcoder.jp/contests/abc171/tasks/abc171_f

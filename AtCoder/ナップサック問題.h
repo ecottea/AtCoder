@@ -3,15 +3,15 @@
 // ■■■■■ ナップサック問題 ■■■■■
 
 
-//【0-1 ナップサック問題（重さが小）】O(n w_max)
+//【0-1 ナップサック問題（重さが小，貰う DP）】O(n w_max)
 /*
-* 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
-* 価値が最大になるよう品物を選んだときの価値を返す．
-* また各品物を選んだかどうかの一例を sel に格納する．
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，
+* 重さ w_max 以下で価値が最大になるよう品物を選んだときの価値を返す．
+* また品物 i を選んだかを sel[i] に格納する．
 *
-*（重さを状態とした状態 DP）
+*（重さを状態とした貰う DP）
 */
-ll knapsack01_problem(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
+ll knapsack01_problem_getDP(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_d
 
 	int n = sz(v); // 品物の個数
@@ -19,17 +19,63 @@ ll knapsack01_problem(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
 	// dp[i][j] : 品物 [0..i) の中で重さ j 以下で実現できる最大価値
 	vvl dp(n + 1, vl(w_max + 1));
 
-	// DP で 0-1 ナップサック問題を解く．
+	// 貰う DP
 	rep(i, n) {
 		repi(j, 0, w_max) {
 			// i 番目の品物を選ばない場合
-			dp[i + 1][j] = dp[i][j];
+			chmax(dp[i + 1][j], dp[i][j]);
 
 			// i 番目の品物の重さが j 以下の場合
 			if (w[i] <= j) {
 				// i 番目の品物を選ぶ方が価値を高められるなら更新する．
 				chmax(dp[i + 1][j], dp[i][j - w[i]] + v[i]);
 			}						
+		}
+	}
+
+	// DP 復元を行う．
+	if (sel != nullptr) {
+		*sel = vb(n);
+		int j = w_max;
+		repir(i, n - 1, 0) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で価値の差があれば選んだ証拠．
+			if (dp[i + 1][j] != dp[i][j]) {
+				(*sel)[i] = true;
+				j -= w[i];
+			}
+		}
+	}
+
+	return dp[n][w_max];
+}
+
+
+//【0-1 ナップサック問題（重さが小，配る DP）】O(n w_max)
+/*
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，
+* 重さ w_max 以下で価値が最大になるよう品物を選んだときの価値を返す．
+* また品物 i を選んだかを sel[i] に格納する．
+*
+*（重さを状態とした配る DP）
+*/
+ll knapsack01_problem_giveDP(const vl& v, const vi& w, int w_max, vb* sel = nullptr) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_d
+
+	int n = sz(v); // 品物の個数
+
+	// dp[i][j] : 品物 [0..i) の中で重さ j 以下で実現できる最大価値
+	vvl dp(n + 1, vl(w_max + 1));
+
+	// 配る DP
+	rep(i, n) {
+		repi(j, 0, w_max) {
+			// i 番目の品物を選ばない場合
+			chmax(dp[i + 1][j], dp[i][j]);
+
+			// i 番目の品物を選ぶ場合
+			if (j + w[i] <= w_max) {
+				chmax(dp[i + 1][j + w[i]], dp[i][j] + v[i]);
+			}
 		}
 	}
 
@@ -183,104 +229,6 @@ ll knapsack01_problem(const vl& v, const vl& w, ll w_max) {
 	}
 
 	return res;
-}
-
-
-//【0-1 ナップサック問題（個数が小）】O(2^(N/2) N)
-/*
-* 価値 v[i] と重さ w[i] の定まった N 個の品物から，重さ W 以下で
-* 価値が最大になるよう品物を選んだときの価値を返す．
-*
-*（半分全列挙，グレイコード）
-*/
-ll knapsack01_problem_gray(const vl& v, vl& w, ll W) {
-	// 参考：https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_H
-
-	// せっかくグレイコードを使っても，二分探索を使用しているせいで計算量は改善しない．
-	// 重さがちょうど W という問題なら代わりにハッシュが使えるので計算量が改善する．
-
-	int N = sz(v); // 品物の個数
-
-	// 前後半それぞれの品物の個数
-	int N_a = N / 2;
-	int N_b = (N + 1) / 2;
-
-	// 前半の品物の部分集合の重さと価値
-	ll W_a = 0, V_a = 0;
-
-	// 前半の品物の部分集合の重さに価値を対応付けるリスト
-	map<ll, ll> W_a_to_V_a;
-
-	// i = 0 に対応する処理
-	W_a_to_V_a[0] = 0;
-
-	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
-	repi(i, 1, (1 << N_a) - 1) {
-		// 差分更新が行われるのがどのビットか
-		int change_index = lsb(i);
-
-		// i 番目のグレイコード
-		int gray_code = i ^ (i >> 1);
-
-		// グレイコードのビットを見て加算か減算かを判断
-		if (gray_code & (1 << change_index)) {
-			W_a += w[change_index];
-			V_a += v[change_index];
-		}
-		else {
-			W_a -= w[change_index];
-			V_a -= v[change_index];
-		}
-
-		// 重さが上限以下ならばリストに追加
-		if (W_a <= W) {
-			W_a_to_V_a[W_a] = max(W_a_to_V_a[W_a], V_a);
-		}
-	}
-
-	// リストを再利用し，その重さ以下での最大価値に更新しておく．
-	ll max_V_a = 0;
-	for (auto& p : W_a_to_V_a) {
-		p.second = max(p.second, max_V_a);
-		max_V_a = p.second;
-	}
-
-	// 後半の品物の部分集合の重さと価値
-	ll W_b = 0, V_b = 0;
-
-	// i = 0 に対応する処理（v は全体での最大価値）
-	ll V = W_a_to_V_a.rbegin()->second;
-
-	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
-	repi(i, 1, (1 << N_b) - 1) {
-		// 差分更新が行われるのがどのビットか
-		int change_index = lsb(i);
-
-		// i 番目のグレイコード
-		int gray_code = i ^ (i >> 1);
-
-		// グレイコードのビットを見て加算か減算かを判断
-		if (gray_code & (1 << change_index)) {
-			W_b += w[N_a + change_index];
-			V_b += v[N_a + change_index];
-		}
-		else {
-			W_b -= w[N_a + change_index];
-			V_b -= v[N_a + change_index];
-		}
-
-		// 重さが上限以下ならば前半のリストと照合し最高価値で更新する．
-		if (W_b <= W) {
-			// 価値が w - wb 以下である前半の部分集合の最大価値を見つける．
-			auto it = W_a_to_V_a.upper_bound(W - W_b);
-			it--;
-
-			V = max(V, it->second + V_b);
-		}
-	}
-
-	return V;
 }
 
 
@@ -578,7 +526,7 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
 * 重さ W 以下で価値が最大になるよう品物を選んだときの価値を返す．
 * また各品物を何個選んだかの一例を sel に格納する．
 *
-* 利用：【0-1 ナップサック問題（重さが小）】
+* 利用：【0-1 ナップサック問題（重さが小，貰う DP）】
 */
 ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& sel) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_G
@@ -613,7 +561,7 @@ ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& se
 
 	// セットに対して 0-1 ナップサック問題を解く．
 	vb chosen2;
-	auto res = knapsack01_problem(v2, w2, W, &chosen2);
+	auto res = knapsack01_problem_getDP(v2, w2, W, &chosen2);
 
 	// 個数の情報を復元する．
 	sel = vi(N);

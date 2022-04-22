@@ -6,7 +6,7 @@
 // ■■■■■ 形式的冪級数 ■■■■■
 
 
-//【形式的冪級数（mint 利用）】
+//【形式的冪級数（mint）】
 /*
 * mod 998244353 以外だと積などが遅くなる（O(n^2)）ので注意．
 *
@@ -16,10 +16,10 @@
 * MFPS(c0) : O(1)
 *	定数多項式 f = c0 で初期化する．
 *
-* MFPS(c0, d) : O(d)
-*	d 次未満の項をもつ定数多項式 f = c0 で初期化する．
+* MFPS(c0, n) : O(n)
+*	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
-* MFPS(c) : O(|c|)
+* MFPS(c) : O(n)
 *	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
@@ -28,11 +28,11 @@
 * f / c : O(n)			f / g : O(n log n)		f / g_sp : O(n k)（k : g の項数）
 *	形式的冪級数としての和，差，積，商の結果を返す．
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
-*	制約 : 商では g(0) ≠ 0
+*	制約 : 商では g(0) != 0
 *
 * f.inv(d) : O(n log n)
 *	1 / f mod x^d を返す．
-*	制約 : f(0) ≠ 0
+*	制約 : f(0) != 0
 *
 * f.quotient(g) : O(n log n)
 * f.reminder(g) : O(n log n)
@@ -574,13 +574,13 @@ MFPS sqrt(const MFPS& f, int d, bool& find) {
 }
 
 
-//【展開係数／ボスタン－森法】O(n log n log d)
+//【展開係数】O(n log n log d)
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
 * 制約 : deg f < deg g, g[0] != 0
 */
-mint coef(const MFPS& f, const MFPS& g, ll d) {
+mint bostan_mori(const MFPS& f, const MFPS& g, ll d) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_fibonacci
 
@@ -639,7 +639,7 @@ mint coef(const MFPS& f, const MFPS& g, ll d) {
 	g3.n = sz(g3.c);
 
 	// d を半分にして再帰を回す．
-	return coef(f3, g3, d / 2);
+	return bostan_mori(f3, g3, d / 2);
 }
 
 
@@ -649,9 +649,9 @@ mint coef(const MFPS& f, const MFPS& g, ll d) {
 *
 * 制約 : g[0] != 0
 *
-* 利用：【展開係数／ボスタン－森法】
+* 利用：【展開係数】
 */
-mint coef(const SPoly<mint>& f, const MFPS& g, ll d) {
+mint bostan_mori(const SPoly<mint>& f, const MFPS& g, ll d) {
 	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_h
 
 	//【方法】
@@ -666,7 +666,7 @@ mint coef(const SPoly<mint>& f, const MFPS& g, ll d) {
 
 		if (d - fd < 0) continue;
 
-		res += fc * coef(MFPS(1), g, d - fd);
+		res += fc * bostan_mori(MFPS(1), g, d - fd);
 	}
 
 	return res;
@@ -678,7 +678,7 @@ mint coef(const SPoly<mint>& f, const MFPS& g, ll d) {
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 数列 a について，a[n] の値を返す．
 *
-* 利用：【展開係数／ボスタン－森法】
+* 利用：【展開係数】
 */
 mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 	// verify : https://judge.yosupo.jp/problem/kth_term_of_linearly_recurrent_sequence
@@ -688,7 +688,45 @@ mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 	MFPS A(a), C(c);
 	MFPS Dnm = 1 - (C >> 1);
 	MFPS Num = (Dnm * A).resize(d);
-	return coef(Num, Dnm, n);
+	return bostan_mori(Num, Dnm, n);
+}
+
+
+//【線形漸化式の発見】O(n^2)
+/*
+* 与えられた数列 a[0..n) に対し，
+*		a[i] = Σj=[0..d) c[j] a[i-1-j]  (∀i∈[d..n))
+* を満たす d を返し，c[0..d) を c に格納する．
+*/
+int berlekamp_massey(const vm& a, vm& c) {
+	// 参考 : https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
+	// verify : https://judge.yosupo.jp/problem/find_linear_recurrence
+
+	MFPS S(a), C(1), B(1);
+	int N = sz(a), m = 1; mint b = 1;
+
+	rep(n, N) {
+		mint d = 0;
+		rep(i, sz(C)) d += C[i] * S[n - i];
+
+		if (d == 0) {
+			m++;
+		}
+		else if (2 * C.deg() <= n) {
+			MFPS T(C);
+			C -= d * b.inv() * (B >> m);
+			B = T;
+			b = d;
+			m = 1;
+		}
+		else {
+			C -= d * b.inv() * (B >> m);
+			m++;
+		}
+	}
+	c = (-C << 1).c;
+
+	return C.deg();
 }
 
 
@@ -698,7 +736,7 @@ mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 *
 * 制約 : fm は deg(f) までの階乗計算が可能であること．
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 MFPS taylor_shift(const MFPS& f, mint c, const Factorial_mint& fm) {
 	// 参考 : https://nyaannyaan.github.io/library/fps/taylor-shift.hpp.html
@@ -744,7 +782,7 @@ MFPS taylor_shift(const MFPS& f, mint c, const Factorial_mint& fm) {
 }
 
 
-//【一次式の積の展開】O(n (log n)^2)
+//【一次式の積の展開（基本対称式）】O(n (log n)^2)
 /*
 * (x - x[0]) ... (x - x[n-1]) を返す．
 * 
@@ -801,7 +839,7 @@ void multipoint_evaluation(const MFPS& f, const vm& x, vm& y) {
 /*
 * i=[0..n) について f(a i + b) = y[i] を満たす n - 1 次多項式 f について f(c) を返す．
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 	// 参考 : https://37zigen.com/lagrange-interpolation/
@@ -908,7 +946,7 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 *
 * 制約 : fm は n 以上の最小の 2 冪までの階乗計算が可能であること（2 n で良い）
 *
-* 利用：【階乗と二項係数（mint利用）】，【平行移動】
+* 利用：【階乗など（法が大きな素数）】，【平行移動】
 */
 MFPS falling_factorial(int n, const Factorial_mint& fm) {
 	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind
@@ -949,7 +987,7 @@ MFPS falling_factorial(int n, const Factorial_mint& fm) {
 * a(x) u(x) + b(x) v(x) = g(x) の解 (u(x), v(x)) を u, v に格納する．
 * またモニックな g(x) = gcd(a(x), b(x)) を返す．
 */
-MFPS ext_gcd(MFPS a, MFPS b, MFPS& u, MFPS& v) {
+MFPS extended_gcd(MFPS a, MFPS b, MFPS& u, MFPS& v) {
 	b.resize();
 	if (sz(b) == 0) {
 		u = MFPS(a[a.deg()].inv());
@@ -958,7 +996,7 @@ MFPS ext_gcd(MFPS a, MFPS b, MFPS& u, MFPS& v) {
 		return a;
 	}
 
-	MFPS d = ext_gcd(b, a.reminder(b), v, u);
+	MFPS d = extended_gcd(b, a.reminder(b), v, u);
 	v -= a.quotient(b) * u;
 	return d;
 }
@@ -972,7 +1010,7 @@ MFPS ext_gcd(MFPS a, MFPS b, MFPS& u, MFPS& v) {
 */
 bool polynomial_inverse(const MFPS& a, const MFPS& b, MFPS& u) {
 	MFPS v;
-	MFPS g = ext_gcd(a, b, u, v);
+	MFPS g = extended_gcd(a, b, u, v);
 	return g == MFPS(1);
 }
 

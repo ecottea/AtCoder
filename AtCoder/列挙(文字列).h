@@ -77,10 +77,3 @@ void enumerate_parenthesis_sequences(int n, vector<string>& seqs) {
 }
 
 
-//【括弧列の対応】
-/*
-* 括弧列 s において，s[i] = '(' と s[j] = ')' が対応する括弧であるとき i と j の偶奇は異なる．
-* 
-* 証明：s(i..j) もまた括弧列であり，これの長さが偶数であることから直ちに従う．
-*/
-

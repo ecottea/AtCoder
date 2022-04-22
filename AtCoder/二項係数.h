@@ -1,9 +1,9 @@
 #pragma once
 #include "header.h"
-// ¡¡¡¡¡ ŠKæC“ñ€ŒW” ¡¡¡¡¡
+// ¡¡¡¡¡ ŠKæC“ñ€ŒW”‚È‚Ç ¡¡¡¡¡
 
 
-//yŠKæ‚Æ“ñ€ŒW”i–@‚ª‘å‚«‚È‘f”Cmint—˜—pjz
+//yŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
 /*
 * Factorial_mint(int n_max) : O(n_max)
 *	n_max! ‚Ü‚ÅŒvZ‰Â”\‚Æ‚µ‚Ä‰Šú‰»‚·‚éD
@@ -33,24 +33,34 @@ struct Factorial_mint {
 
 	// n! ‚Ü‚Å‚ÌŠKæ‚Æ‚»‚Ì‹t”‚ğ‘OŒvZ‚µ‚Ä‚¨‚­DO(n)
 	Factorial_mint(int n) : n_max(n) {
-		fac_ = vm(n + 1);
+		fac_.resize(n + 1);
 		fac_[0] = 1;
 		repi(i, 1, n) fac_[i] = fac_[i - 1] * i;
 
-		fac_inv_ = vm(n + 1);
+		fac_inv_.resize(n + 1);
 		fac_inv_[n] = fac_[n].inv();
-		repir(i, n - 1, 1) fac_inv_[i] = fac_inv_[i + 1] * (i + 1);
-		fac_inv_[0] = 1;
+		repir(i, n - 1, 0) fac_inv_[i] = fac_inv_[i + 1] * (i + 1);
 
-		inv_ = vm(n + 1);
+		inv_.resize(n + 1);
 		repi(i, 1, n) inv_[i] = fac_[i - 1] * fac_inv_[i];
 	}
+	Factorial_mint() {} // ƒ_ƒ~[
 
 	// n! ‚ğ•Ô‚·DO(1)
-	mint factorial(int n) const { assert(0 <= n && n <= n_max); return fac_[n]; }
+	mint factorial(int n) const {
+		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
+		
+		assert(0 <= n && n <= n_max);
+		return fac_[n];
+	}
 
 	// 1 / n! ‚ğ•Ô‚·DO(1)
-	mint factorial_inv(int n) const { assert(0 <= n && n <= n_max); return fac_inv_[n]; }
+	mint factorial_inv(int n) const {
+		// verify : verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
+		
+		assert(0 <= n && n <= n_max);
+		return fac_inv_[n];
+	}
 
 	// 1 / n ‚ğ•Ô‚·DO(1)
 	mint inv(int n) const { assert(0 < n && n <= n_max); return inv_[n]; }
@@ -65,8 +75,9 @@ struct Factorial_mint {
 
 	// “ñ€ŒW” nCr ‚ğ•Ô‚·DO(1)
 	mint binomial(int n, int r) const {
-		assert(n <= n_max);
+		// verify : https://atcoder.jp/contests/abc034/tasks/abc034_c
 
+		assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
 		return fac_[n] * fac_inv_[r] * fac_inv_[n - r];
 	}
@@ -84,7 +95,7 @@ struct Factorial_mint {
 };
 
 
-//yŠKæ‚Æ“ñ€ŒW”i–@‚ª¬‚³‚È‘f”jz
+//yŠKæ‚È‚Çi–@‚ª¬‚³‚È‘f”jz
 /*
 * Factorial_small_prime_mod(int p) : O(p)
 *	p ‚ğ–@‚Æ‚µ‚Ä‰Šú‰»‚·‚éD
@@ -163,7 +174,7 @@ struct Factorial_small_prime_mod {
 };
 
 
-//yŠKæ‚Æ“ñ€ŒW”i–@‚ª¬‚³‚¢jz
+//yŠKæ‚È‚Çi–@‚ª¬‚³‚¢jz
 /*
 * Factorial_arbitrary_small_mod(int m) : O(m)
 *	m ‚ğ–@‚Æ‚µ‚Ä‰Šú‰»‚·‚éD
@@ -298,7 +309,7 @@ struct Factorial_arbitrary_small_mod {
 };
 
 
-//yŠKæ‚Æ“ñ€ŒW”i–@‚ª”CˆÓjz
+//yŠKæ‚È‚Çi–@‚ª”CˆÓjz
 /*
 * Factorial_arbitrary_mod(int m, int n_max) : O(min(m, n_max))
 *	m ‚ğ–@‚Æ‚µ‚ÄCn_max! ‚Ü‚ÅŒvZ‰Â”\‚Æ‚µ‚Ä‰Šú‰»‚·‚éD
@@ -444,13 +455,11 @@ struct Factorial_arbitrary_mod {
 /*
 * n! ‚ğ•Ô‚·D
 */
-ll factorial(int n) {
-	ll val = 1;
+template <class T> T factorial(int n) {
+	// verify : https://atcoder.jp/contests/jsc2019-qual/tasks/jsc2019_qual_c
 
-	repi(i, 1, n) {
-		val *= i;
-	}
-
+	T val = 1;
+	repi(i, 1, n) val *= i;
 	return val;
 }
 
@@ -475,6 +484,14 @@ template <class T> T binomial(ll n, ll r) {
 	}
 	return val;
 }
+
+
+//y•‰‚Ì“ñ€’è—z
+/*
+* [z^i] (1-z)^n = bin(n-1+i, i) ‚ª¬‚è—§‚ÂD
+* 
+* verify : https://atcoder.jp/contests/agc036/tasks/agc036_c
+*/
 
 
 //y“ñ€ŒW”‚Æ—İÏ˜az

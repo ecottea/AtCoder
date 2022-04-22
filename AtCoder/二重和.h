@@ -117,7 +117,7 @@ int sum_xor(const vi& a, const vi& b) {
 /*
 * Σi=[0..n)j=[0..m) gcd(a[i], b[j]) の値を返す．
 *
-* 利用：【倍数変換】
+* 利用：【倍数変換，GCD 畳込み】
 */
 mint gcd_sum(const vi& a, const vi& b) {
 	//【方法】
@@ -127,7 +127,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 	//		= Σk=[1..K] ΣΣgcd(x,y)=k a_cnt[x] b_cnt[y] k
 	// となる．この
 	//		ΣΣgcd(x,y)=k a_cnt[x] b_cnt[y]
-	// は gcd 畳み込みであるから高速に求まる．
+	// は gcd 畳込みであるから高速に求まる．
 	//
 	// これは gcd 加重和を高速に計算する方法にもなる．
 
@@ -139,7 +139,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 	rep(j, m) b_cnt[b[j]]++;
 
 	Multiple_transform<mint> g(K);
-	auto c = g.convolution_gcd(a_cnt, b_cnt);
+	auto c = g.gcd_convolution(a_cnt, b_cnt);
 
 	mint res = 0;
 	repi(k, 1, K) res += c[k] * k;
@@ -152,7 +152,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 /*
 * Σi=[0..n)j=[0..m) lcm(a[i], b[j]) の値を返す．
 *
-* 利用：【倍数変換】，【階乗と二項係数（mint利用）】
+* 利用：【倍数変換，GCD 畳込み】，【階乗など（法が大きな素数）】
 */
 mint lcm_sum(const vi& a, const vi& b) {
 	//【方法】
@@ -163,7 +163,7 @@ mint lcm_sum(const vi& a, const vi& b) {
 	//		= Σk=[1..K] ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y]) / k
 	// となる．この
 	//		ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y])
-	// は gcd 畳み込みであるから高速に求まる．
+	// は gcd 畳込みであるから高速に求まる．
 	//
 	// これは lcm 加重和を高速に計算する方法にもなる．
 
@@ -175,7 +175,7 @@ mint lcm_sum(const vi& a, const vi& b) {
 	rep(j, m) b_cnt[b[j]] += b[j];
 
 	Multiple_transform<mint> g(K);
-	auto c = g.convolution_gcd(a_cnt, b_cnt);
+	auto c = g.gcd_convolution(a_cnt, b_cnt);
 
 	Factorial_mint fm(K);
 	mint res = 0;

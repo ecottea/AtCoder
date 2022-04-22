@@ -1,12 +1,13 @@
 #pragma once
 #include "header.h"
+#include "ゼータメビウス変換.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
 
 //【長さ k のパスの数え上げ】
 /*
-* 隣接行列を k 乗すれば，全頂点対の長さ k のパス数が O(|V|^3 log k) で分かる．
-* 辺が少なく単一始点でよいなら，行列ベクトル積を繰り返し O(|E| k) で分かる．
+* 隣接行列を k 乗すれば，全頂点対の長さ k のパス数が O(|V|^3 log k) で求まる．
+* 辺が少なく単一始点でよいなら，行列ベクトル積を繰り返し O(|E| k) で求まる．
 * 
 * verify : https://atcoder.jp/contests/abc244/tasks/abc244_e
 */
@@ -138,6 +139,102 @@ ll count_topological_sort(const Graph& g) {
 	}
 
 	return dp[(1 << n) - 1];
+}
+
+
+//【部分グラフの数え上げ】O(2^|V| |V|)
+/*
+* 無向グラフ g について，set を頂点集合とする部分グラフの個数を cnt[set] に格納する．
+*
+* 利用：【下位集合，添字 or での畳込み】
+*/
+void count_subgraph(const Graph& g, vm& cnt) {
+	// 参考：https://drken1215.hatenablog.com/entry/2021/08/12/132500
+	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_g
+
+	//【方法】
+	// 明らかに
+	//		cnt[set] = 2^(g の辺のうち両端点とも set に属するものの個数)
+	// であるから，
+	//		g[set] := g の辺のうち両端点とも set に属するものの個数
+	// が求まれば良い．
+	//
+	// そこで，
+	//		f[set] := Boole[ |set| = 2 かつそれらが g のある辺の両端点か ]
+	// と定めると，
+	//		g[set] = Σsub⊂set f[sub]
+	// と表される．これは下位集合での高速ゼータ変換で計算可能である．
+
+	int n = sz(g);
+	cnt.resize(1LL << n);
+
+	vi f(1LL << n); int cnt_e = 0;
+	rep(s, n) {
+		int set = 1 << s;
+
+		repe(t, g[s]) {
+			f[set + (1 << t)] = 1;
+			cnt_e++;
+		}
+	}
+	cnt_e /= 2;
+
+	subset_zeta(f);
+
+	vm pow2(cnt_e + 1);
+	pow2[0] = 1;
+	rep(i, cnt_e) pow2[i + 1] = pow2[i] * 2;
+
+	repb(set, n) {
+		cnt[set] = pow2[f[set]];
+	}
+}
+
+
+//【連結部分グラフの数え上げ】O(3^|V| |V|)
+/*
+* 無向グラフ g について，set を頂点集合とする連結部分グラフの個数を cnt[set] に格納する．
+*
+* 利用：【部分グラフの数え上げ】，【下位集合の全探索】
+*/
+void count_connected_subgraph(const Graph& g, vm& cnt) {
+	// 参考 : https://drken1215.hatenablog.com/entry/2021/08/12/132500
+	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_g
+
+	//【方法】
+	// まず
+	//		all[set] := set を頂点集合とする部分グラフの個数
+	// を求めておく．
+	// 
+	// cnt[set] について考える代わりに，連結でないものの個数 all[set] - cnt[set] を考える．
+	// set に属する頂点 v を 1 つ固定し，v と連結な頂点集合 sub で場合分けして和をとることにより，
+	//		all[set] - cnt[set] = Σv∈sub⊂set cnt[sub] all[set - sub]
+	// と表される．
+
+	int n = sz(g);
+	cnt.resize(1LL << n);
+
+	vm cnt_all;
+	count_subgraph(g, cnt_all);
+
+	repb(set, n) {
+		if (set == 0) {
+			cnt[set] = 1;
+			continue;
+		}
+
+		int v = lsb(set);
+
+		mint sum = 0;
+		repbs(sub, set) {
+			if (!(sub & (1 << v))) continue;
+			if (sub == set) continue;
+
+			sum += cnt[sub] * cnt_all[set - sub];
+		}
+
+		cnt[set] = cnt_all[set] - sum;
+	}
 }
 
 

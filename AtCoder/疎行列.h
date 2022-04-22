@@ -23,6 +23,8 @@
 *	疎行列 A と列ベクトル v の積を返す．
 */
 template <class T> struct SMatrix {
+	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_g
+
 	int n; // 行列のサイズ（n 行）
 	vector<vector<pair<int, T>>> v; // 行列の成分
 
@@ -39,9 +41,7 @@ template <class T> struct SMatrix {
 
 	// スカラー倍
 	SMatrix& operator*=(const T& sc) {
-		rep(i, n) {
-			repe(p, v[i]) p.second *= sc;
-		}
+		rep(i, n) repe(p, v[i]) p.second *= sc;
 		return *this;
 	}
 	SMatrix operator*(const T& sc) const { return SMatrix(*this) *= sc; }
@@ -50,19 +50,17 @@ template <class T> struct SMatrix {
 	// 行列ベクトル積
 	vector<T> operator*(const vector<T>& vec) const {
 		vector<T> res(n);
-		rep(i, n) {
-			repe(p, v[i]) res[i] += p.second * vec[p.first];
-		}
+		rep(i, n) repe(p, v[i]) res[i] += p.second * vec[p.first];
 		return res;
 	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const SMatrix& a) {
-		int m = 0;
+		int m = 1;
 		rep(i, a.n) repe(p, a.v[i]) chmax(m, p.first + 1);
 
 		vector<vector<T>> tmp(a.n, vector<T>(m));
-		rep(i, a.n) repe(p, a.v[i]) tmp[i][p.first] = p.second;
+		rep(i, a.n) repe(p, a.v[i]) tmp[i][p.first] += p.second;
 
 		rep(i, a.n) {
 			rep(j, m) os << tmp[i][j] << " ";
@@ -77,7 +75,7 @@ template <class T> struct SMatrix {
 //【疎行列同士の積】
 /*
 * 疎行列同士の積は疎行列とは限らない．
-* 例えば，全て 1 の列ベクトル * 全て 1 の行ベクトル で全て 1 の行列になる．
+* 例えば，[1, 1, ..., 1]^T * [1, 1, ..., 1] で全て 1 の行列になる．
 */
 
 

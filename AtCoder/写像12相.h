@@ -59,24 +59,24 @@ void count_surjections(int n, int m, vvm& c) {
 //【全射の数】O(m log n)
 /*
 * n 点集合から m 点集合への全射の数を返す．
-* 
-* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
+*
+* 利用：【階乗など（法が大きな素数）】
 */
-mint count_surjections(int n, int m) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_C
+mint count_surjections(ll n, int m) {
+	// verify : https://yukicoder.me/problems/no/391
 
 	//【方法】
 	// 包除原理を用いて数え上げる．
 	//
 	// n 点集合から m 点集合への写像のうち，多くとも j 元にしか行かないものの個数は
-	// どの j 元に行くかが binomial(m, j) 通り，
+	// どの j 元に行くかが bin(m, j) 通り，
 	// n 元それぞれがどこに行くかが j^n 通りから選べるので，
-	//		binomial(m, j) j^n 通り
+	//		bin(m, j) j^n 通り
 	// である．
 	//
 	// j = m として数えたいが，足しすぎたので j = m - 1 のものは引かなければならず，
 	// 引きすぎたので j = m - 2 のものは足さなければならず，...... と続けると，答えは
-	//		Σj=0..m (-1)^(m-j) binomial(m, j) j^n 通り
+	//		Σj=0..m (-1)^(m-j) bin(m, j) j^n 通り
 	// である．
 
 	Factorial_mint fm(m);
@@ -173,7 +173,7 @@ void stirling_S2(int n, vvm& c) {
 *
 *（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint stirling_S2(int n, int k) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
@@ -203,7 +203,7 @@ mint stirling_S2(int n, int k) {
 * 
 *（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 void stirling_S2(int n, vm& s) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E6%95%B0
@@ -214,7 +214,7 @@ void stirling_S2(int n, vm& s) {
 	//		s(n, k)
 	//		= (1/k!) Σm=[1..k] (-1)^(k-m) binomial(k, m) m^n
 	//		= Σm=[1..k] ((-1)^(k-m) / (k-m)!) (m^n / m!)
-	// と書け，これは畳み込みの形である．
+	// と書け，これは畳込みの形である．
 
 	vm f(n + 1), g(n + 1);
 	Factorial_mint fm(n);

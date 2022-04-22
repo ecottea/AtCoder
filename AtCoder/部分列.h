@@ -4,6 +4,14 @@
 // ■■■■■ 部分列 ■■■■■
 
 
+//【最長増加部分列問題の双対性】
+/*
+* 狭義[広義] 最長増加部分列の長さ = 広義[狭義] 減少部分列への分割の最小個数
+*
+* verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
+*/
+
+
 //【最長増加部分列】O(n log n)
 /*
 * 列 a[0..n) の（狭義）最長増加部分列の長さを返す．
@@ -165,14 +173,6 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 
 	return len;
 }
-
-
-//【最長増加部分列問題の双対性】
-/*
-* 狭義[広義] 最長増加部分列の長さ = 広義[狭義] 減少部分列への分割の最小個数
-*
-* verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
-*/
 
 
 //【コスト最大増加部分列】O(n log n)
@@ -360,7 +360,9 @@ ll levenshtein_distance(const vector<T>& s, const vector<T>& t,
 *
 *（貪欲法）
 */
-template <class T> bool subsequenceQ(const vector<T>& s, const vector<T>& t) {
+template <class STR> bool subsequenceQ(const STR& s, const STR& t) {
+	// verify : https://yukicoder.me/problems/no/1909
+
 	int n = sz(s), m = sz(t);
 
 	int j = 0;

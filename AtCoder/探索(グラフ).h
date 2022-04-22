@@ -172,18 +172,16 @@ void topological_bfs(const Graph& g, const vi& st, vi& time) {
 * グラフ g に対し始点を st として深さ優先探索を行い，通った頂点を順に seq に格納する．
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
-template <class G>
-void depth_first_search(G& g, int st, vi& seq) {
+template <class G> void depth_first_search(G& g, int st, vi& seq) {
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_d
 
 	int n = sz(g);
 	seq.clear();
 
-	// 頂点を訪れたことを記録しておくテーブル．
+	// seen[i] : 頂点 i を探索済か
 	vb seen(n);
 
-	// 再帰用の関数
-	function<void(int)> dfs = [&](int s) {
+	function<void(int, int)> dfs = [&](int s, int p) {
 		// 頂点を訪れたことを記録
 		seen[s] = true;
 
@@ -191,6 +189,9 @@ void depth_first_search(G& g, int st, vi& seq) {
 		seq.push_back(s);
 
 		repe(t, g[s]) {
+			// 親へは戻らない．
+			if (t == p) continue;
+
 			// 探索済なら何もしない．
 			if (seen[t]) continue;
 
@@ -201,11 +202,11 @@ void depth_first_search(G& g, int st, vi& seq) {
 			seq.push_back(s);
 		}
 
-		// 帰りがけ順の処理を書くのはここだが，今回は必要ない．
+		// 帰りがけ順の処理を書くのはここ
 	};
 
-	// st を始点として再帰関数を呼び出す．
-	dfs(st);
+	// st を始点として DFS を行う．
+	dfs(st, -1);
 }
 
 

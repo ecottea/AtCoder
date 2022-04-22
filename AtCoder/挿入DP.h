@@ -19,7 +19,7 @@
 *
 *（挿入 DP）
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint count_nonadjacent_sequence(const vi& cnt_) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_string
@@ -84,7 +84,7 @@ mint count_nonadjacent_sequence(const vi& cnt_) {
 *
 *（挿入 DP）
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint count_noncontinuous_sequence(const vi& cnt_) {
 	// verify : https://atcoder.jp/contests/joi2019yo/tasks/joi2019_yo_f

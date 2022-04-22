@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(幾何).h"
-#include "作図(基本).h"
+#include "作図.h"
 // ■■■■■ 計量 ■■■■■
 
 
@@ -273,45 +273,6 @@ template <typename T> double convex_diameter(const Polygon<T>& poly, pii& id) {
 	}
 
 	return sqrt(sqres);
-}
-
-
-//【最短バイトニックツアー】O(n^2)
-/*
-* x 座標の互いに異なる n 個の点列 p について，
-*	x 座標最小の点 →(x 座標昇順)→ x 座標最大の点 →(x 座標降順)→ x 座標最小の点
-* の順に点を結ぶ経路の最短長を返す．
-*/
-template <class T> double minimum_bitonic_tour(vector<Point<T>>& p) {
-	int n = sz(p);
-
-	sort(all(p));
-
-	// dp[i][j] : i から j までの最短バイトニック経路長（i < j）
-	vvd dp(n, vd(n, numeric_limits<double>::max()));
-	dp[0][1] = (p[1] - p[0]).norm();
-	repi(j, 1, n - 1) {
-		repi(i, 0, j - 1) {
-			// i, j が隣り合う頂点でない場合
-			if (j - i >= 2) {
-				// j からは j-1 にしか繋げない．
-				dp[i][j] = dp[i][j - 1] + (p[j] - p[j - 1]).norm();
-				continue;
-			}
-
-			// k : j をどこに繋ぐか
-			repi(k, 0, i - 1) {
-				chmin(dp[i][j], dp[k][i] + (p[k] - p[j]).norm());
-			}
-		}
-	}
-
-	double res = numeric_limits<double>::max();
-	repi(i, 0, n - 2) {
-		chmin(res, dp[i][n - 1] + (p[i] - p[n - 1]).norm());
-	}
-
-	return res;
 }
 
 

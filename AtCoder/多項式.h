@@ -25,7 +25,7 @@
 * double f.solve() : O(1)
 *	f(x) = 0 の解を返す．
 *
-* double f.solve(Poly g) : O(1)
+* double f.solve(Poly1 g) : O(1)
 *	f(x) = g(x) の解を返す．
 */
 template <class T> struct Poly1 {
@@ -248,7 +248,7 @@ template <class T> struct SPoly {
 *
 * 制約 : g[0] != 0
 */
-mint coef(const SPoly<mint>& f, const SPoly<mint>& g, ll d) {
+mint bostan_mori(const SPoly<mint>& f, const SPoly<mint>& g, ll d) {
 	//【方法】
 	// 分母分子に g(-x) を掛けることにより
 	//		f(x) / g(x) = f(x) g(-x) / g(x) g(-x)
@@ -308,7 +308,7 @@ mint coef(const SPoly<mint>& f, const SPoly<mint>& g, ll d) {
 	}
 
 	// d を半分にして再帰を回す．
-	return coef(f3, g3, d / 2);
+	return bostan_mori(f3, g3, d / 2);
 }
 
 

@@ -45,6 +45,7 @@ S803 e803() { return 0; }
 
 
 //【max - plus 半環（トロピカル半環）】
+/* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B */
 using S804 = ll;
 S804 add804(S804 x, S804 y) { return max(x, y); }
 S804 o804() { return -INFL; }

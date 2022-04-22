@@ -9,6 +9,10 @@
 * ƒ°i=[i0..i1) (a + b i) ‚ğ•Ô‚·D
 */
 mint arithmetic_series(mint a, mint b, ll i0, ll i1) {
+	// verify : https://atcoder.jp/contests/hhkb2020/tasks/hhkb2020_d
+
+	if (i0 >= i1) return 0;
+
 	// 2^(-1) ‚ª‘¶İ‚µ‚È‚¢ê‡‚Å‚à–â‘è‚È‚¢‚æ‚¤‚É‹ô”‚ğæ‚É 2 ‚ÅŠ„‚Á‚Ä‚¨‚­D
 	if ((i1 - i0) % 2 == 0) {
 		return a * (i1 - i0) + b * (i1 + i0 - 1) * ((i1 - i0) / 2);
@@ -47,7 +51,7 @@ mint geometric_series(mint r, ll i0, ll i1) {
 }
 
 
-//y“™·~“™”ä”—ñ‚Ì˜azO(log n)
+//y“™·~“™”äŒ^”—ñ‚Ì˜azO(log n)
 /*
 * arithmetic_geometric_series(r, n) : O(log n)
 *	ƒ°i=[0..n) i r^i ‚ğ•Ô‚·D
@@ -91,28 +95,33 @@ mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
 }
 
 
-//y—İæ~“™”ä”—ñ‚Ì–³ŒÀ˜azO(d log d)
+//y—İæ~“™”äŒ^”—ñ‚Ì–³ŒÀ˜azO(d log d)
 /*
-* ƒ°i=[0..‡) i^d r^i ‚Ì’l‚ğ•Ô‚·D
+* ƒ°i=[0..‡) i^d r^i ‚ğ•Ô‚·D
 *
-* §–ñ : r != 1, d < 4 * 10^6
-*
-* —˜—pFyŠKæ‚Æ“ñ€ŒW”imint—˜—pjz
+* §–ñ : r != 1
+* 
+* —˜—pFyŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
 */
 mint powered_geometric_series(mint r, int d) {
-	assert(r != 1);
+	// Ql : https://kyopro-friends.hatenablog.com/entry/2020/03/11/073122
+	// verify : https://judge.yosupo.jp/problem/sum_of_exponential_times_polynomial_limit
 
-	vm f(d + 1);
-	repi(i, 0, d) f[i] = mint(i).pow(d);
+	vm acc(d + 2), pow_r(d + 2);
+	pow_r[0] = 1;
+	rep(i, d + 1) {
+		acc[i + 1] = acc[i] + pow_r[i] * mint(i).pow(d);
+		pow_r[i + 1] = pow_r[i] * r;
+	}
 
 	Factorial_mint fm(d + 1);
-	vm g(d + 1);
-	repi(i, 0, d) g[i] = (i & 1 ? -1 : 1) * fm.binomial(d + 1, i);
-
-	f = convolution(f, g);
 
 	mint res = 0;
-	repir(i, d, 0) res = res * r + f[i];
+	repi(i, 0, d) {
+		res += ((d - i) % 2 == 0 ? 1 : -1) * pow_r[d - i]
+			* fm.binomial(d + 1, i + 1) * acc[i + 1];
+	}
+
 	res /= mint(1 - r).pow(d + 1);
 
 	return res;
@@ -157,6 +166,59 @@ template <class T> struct Xor_sum {
 			res += (ll)cnt[j][1 - ((x >> j) & 1)] << j;
 		}
 		return res;
+	}
+};
+
+
+//ym ‚ÅŠ„‚Á‚½—]‚è‚Ì˜az
+/*
+* Mod_sum_query(a) : O(n)
+*	”z—ñ a ‚Å‰Šú‰»‚·‚éD
+*
+* sum_mod(m) : O(max(a) log(n) / m)
+*	a[0..n) mod m ‚Ì˜a‚ğ•Ô‚·D
+*
+* sum_lack(m) : O(max(a) log(n) / m)
+*	a[0..n) ‚ğ m ‚ÅŠ„‚Á‚½•s‘«‚Ì˜a‚ğ•Ô‚·D
+*/
+struct Mod_sum_query {
+	vi a;    // š a ‚Å‚È‚­ƒoƒPƒc‚Å—İÏ˜a‚ğ‚Ä‚Î O(log n) ‚ğ—‚Æ‚¹‚éD
+	int n;
+	ll asum; // a[0..n) ‚Ì˜a
+
+	// ƒRƒ“ƒXƒgƒ‰ƒNƒ^i‰½‚à‚µ‚È‚¢j
+	Mod_sum_query() : n(0), asum(0) {}
+
+	// ”z—ñ a ‚Å‰Šú‰»
+	Mod_sum_query(const vi& a_) : a(a_), n(sz(a)), asum(0) {
+		sort(all(a));
+		rep(i, n) asum += a[i];
+	}
+
+	// a[0..n) mod m ‚Ì˜a‚ğ•Ô‚·D
+	ll sum_mod(int m) {
+		ll res = asum;
+
+		for (ll v = m; v <= a[n - 1]; v += m) {
+			// ’Êí‚Ì˜a‚Æ‚­‚ç‚×‚Ä‰½ŒÂ m ‚ğˆø‚©‚ê‚é‚©‚ğ“ñ•ª’Tõ‚Å‹‚ß‚ê‚Î—Ç‚¢D
+			res -= (ll)m * distance(lower_bound(all(a), v), a.end());
+		}
+
+		return res;
+	}
+
+	// a[0..n) ‚ğ m ‚ÅŠ„‚Á‚½•s‘«‚Ì˜a‚ğ•Ô‚·D
+	ll sum_lack(int m) {
+		// sum : 1-indexed ‚Å‚Ì a[0..n) mod m ‚Ì˜a
+		ll sum = asum;
+
+		for (ll v = m; v < a[n - 1]; v += m) {
+			// ’Êí‚Ì˜a‚Æ‚­‚ç‚×‚Ä‰½ŒÂ m ‚ğˆø‚©‚ê‚é‚©‚ğ“ñ•ª’Tõ‚Å‹‚ß‚ê‚Î—Ç‚¢D
+			sum -= (ll)m * distance(lower_bound(all(a), v + 1), a.end());
+		}
+
+		// •s‘«•ª‚ğ•Ô‚·D
+		return (ll)m * n - sum;
 	}
 };
 

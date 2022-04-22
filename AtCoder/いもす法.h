@@ -51,9 +51,7 @@ template <class T> struct Imos {
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Imos& imos) {
-		rep(i, imos.n) {
-			os << imos[i] << " ";
-		}
+		rep(i, imos.n) os << imos[i] << " ";
 		os << endl;
 		return os;
 	}

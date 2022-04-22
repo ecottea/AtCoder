@@ -4,13 +4,10 @@
 // ■■■■■ 約数変換，倍数変換 ■■■■■
 
 
-//【倍数変換】
+//【倍数変換，GCD 畳込み】
 /*
 * Multiple_transform<T>(int n) : O(n log(log n))
 *   n までの素数を持って初期化する．
-*
-* vT convolution_gcd(vT a, vT b) : O(n log(log n))
-*   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
 *
 * multiple_zeta(vT& a) : O(n log(log n))
 *   A[j] = Σ_(j | i) a[i] なる A に上書きする．
@@ -19,6 +16,9 @@
 * multiple_mobius(vT& A) : O(n log(log n))
 *   A[j] = Σ_(j | i) a[i] なる a に上書きする．
 *  （倍数メビウス変換，倍数への差分）
+*
+* vT gcd_convolution(vT a, vT b) : O(n log(log n))
+*   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
 *
 * 制約：1-indexed とし，a[0], b[0] は使用しない．
 *
@@ -61,10 +61,10 @@ template <typename T> struct Multiple_transform {
 		}
 	}
 
-	vector<T> convolution_gcd(vector<T> a, vector<T> b) {
+	vector<T> gcd_convolution(vector<T> a, vector<T> b) {
 		int n = sz(a);
 
-		// 各素因数の min をとったものが gcd なので min 畳み込みを行う．
+		// 各素因数の min をとったものが gcd なので min 畳込みを行う．
 		multiple_zeta(a); multiple_zeta(b);
 		rep(i, n) a[i] *= b[i];
 		multiple_mobius(a);
@@ -73,14 +73,10 @@ template <typename T> struct Multiple_transform {
 };
 
 
-//【約数変換】
+//【約数変換，LCM 畳込み】
 /*
 * Divisor_transform<T>(int n) : O(n log(log n))
 *   n までの素数を持って初期化する．
-*
-* vT convolution_lcm(vT a, vT b) : O(n log(log n))
-*   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
-*   ただし c[n] を含めそれ以降は切り捨てる．
 *
 * divisor_zeta(vT& a) : O(n log(log n))
 *   A[j] = Σ_(i | j) a[i] なる A に上書きする．
@@ -89,6 +85,10 @@ template <typename T> struct Multiple_transform {
 * divisor_mobius(vT& A) : O(n log(log n))
 *   A[j] = Σ_(i | j) a[i] なる a に上書きする．
 *  （約数メビウス変換，約数への差分）
+*
+* vT lcm_convolution(vT a, vT b) : O(n log(log n))
+*   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
+*   ただし c[n] を含めそれ以降は切り捨てる．
 *
 * 制約：1-indexed とし，a[0], b[0] は使用しない．
 *
@@ -131,10 +131,10 @@ template <typename T> struct Divisor_transform {
 		}
 	}
 
-	vector<T> convolution_lcm(vector<T> a, vector<T> b) {
+	vector<T> lcm_convolution(vector<T> a, vector<T> b) {
 		int n = sz(a);
 
-		// 各素因数の max をとったものが lcm なので max 畳み込みを行う．
+		// 各素因数の max をとったものが lcm なので max 畳込みを行う．
 		divisor_zeta(a); divisor_zeta(b);
 		rep(i, n) a[i] *= b[i];
 		divisor_mobius(a);
@@ -148,10 +148,7 @@ template <typename T> struct Divisor_transform {
 * Limited_multiple_transform(ps, divs) : O(1)
 *   定数 n を定め，n の素因数の昇順列を ps，約数の昇順列を divs とする．
 *	添字集合を n の約数集合として初期化する．
-*
-* convolution_gcd(a, b) : O(σ(n) ω(n))
-*   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
-* （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
+*  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * multiple_zeta(a) : O(σ(n) ω(n))
 *   A[j] = Σ_(j | i) a[i] なる A に上書きする．
@@ -160,6 +157,9 @@ template <typename T> struct Divisor_transform {
 * multiple_mobius(A) : O(σ(n) ω(n))
 *   A[j] = Σ_(j | i) a[i] なる a に上書きする．
 *  （倍数メビウス変換，倍数への差分）
+
+* gcd_convolution(a, b) : O(σ(n) ω(n))
+*   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
 */
 template <typename T> struct Limited_multiple_transform {
 	vl ps; // ps : n の素因数の昇順リスト
@@ -194,8 +194,8 @@ template <typename T> struct Limited_multiple_transform {
 		}
 	}
 
-	unordered_map<ll, T> convolution_gcd(unordered_map<ll, T> a, unordered_map<ll, T> b) {
-		// 各素因数の min をとったものが gcd なので min 畳み込みを行う．
+	unordered_map<ll, T> gcd_convolution(unordered_map<ll, T> a, unordered_map<ll, T> b) {
+		// 各素因数の min をとったものが gcd なので min 畳込みを行う．
 		multiple_zeta(a);
 		multiple_zeta(b);
 
@@ -213,10 +213,7 @@ template <typename T> struct Limited_multiple_transform {
 * Limited_divisor_transform(ps, divs) : O(1)
 *   定数 n を定め，n の素因数の昇順列を ps，約数の昇順列を divs とする．
 *	添字集合を n の約数集合として初期化する．
-*
-* convolution_lcm(a, b) : O(σ(n) ω(n))
-*   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
-* （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
+*  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * divisor_zeta(a) : O(σ(n) ω(n))
 *   A[j] = Σ_(i | j) a[i] なる A に上書きする．
@@ -225,6 +222,9 @@ template <typename T> struct Limited_multiple_transform {
 * divisor_mobius(A) : O(σ(n) ω(n))
 *   A[j] = Σ_(i | j) a[i] なる a に上書きする．
 *  （約数メビウス変換，約数への差分）
+*
+* lcm_convolution(a, b) : O(σ(n) ω(n))
+*   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
 */
 template <typename T> struct Limited_divisor_transform {
 	vl ps; // ps : n の素因数の昇順リスト
@@ -259,8 +259,8 @@ template <typename T> struct Limited_divisor_transform {
 		}
 	}
 
-	unordered_map<ll, T> convolution_gcd(unordered_map<ll, T> a, unordered_map<ll, T> b) {
-		// 各素因数の max をとったものが lcm なので max 畳み込みを行う．
+	unordered_map<ll, T> gcd_convolution(unordered_map<ll, T> a, unordered_map<ll, T> b) {
+		// 各素因数の max をとったものが lcm なので max 畳込みを行う．
 		divisor_zeta(a);
 		divisor_zeta(b);
 

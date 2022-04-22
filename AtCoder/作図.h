@@ -4,117 +4,465 @@
 // ■■■■■ 作図 ■■■■■
 
 
-//【凸包】O(n log n)
+//【回転】O(1)
 /*
-* 点群 p[0..n) の凸包の頂点を反時計回りに ch に格納する．
-* p[0] は x 座標最小（同じものがあれば y 座標最小）の点とする．
+* 点 p を点 c を中心に th[rad] だけ回転した点を返す．
 */
-template <typename T> void convex_hull(vector<Point<T>> p, Polygon<T>& ch) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
-
-	int n = sz(p);
-
-	// x 座標を優先して昇順ソート（x 座標が同じなら y 座標昇順）
-	sort(all(p));
-
-	// 凸包を成す頂点
-	ch.clear();
-
-	// まず x 座標昇順に見ていき，凸包の y 座標の小さい側を得る．
-	int pt = 0;
-	rep(i, n) {
-		// 凸でない限り直前の点を除去することを繰り返す．
-		// 凸かどうかは外積を用いて判定できる．
-		while (pt >= 2 && (ch[pt - 1] - ch[pt - 2]).cross(p[i] - ch[pt - 2]) < 0) {
-			ch.pop_back();
-			pt--;
-		}
-
-		// 今見ている点を暫定的に凸包に加える．
-		ch.push_back(p[i]);
-		pt++;
-	}
-
-	// 次に x 座標降順に見ていき，凸包の y 座標の大きい側を得る．
-	repir(i, n - 2, 0) {
-		// 凸でない限り直前の点を除去することを繰り返す．
-		// 凸かどうかは外積を用いて判定できる．
-		while (pt >= 2 && (ch[pt - 1] - ch[pt - 2]).cross(p[i] - ch[pt - 2]) < 0) {
-			ch.pop_back();
-			pt--;
-		}
-
-		// 今見ている点を暫定的に凸包に加える．
-		ch.push_back(p[i]);
-		pt++;
-	}
-
-	// p[0] が重複してしまっているので取り除く．
-	ch.pop_back();
+inline Point<double> rotate(const Point<double>& p, const Point<double>& c, double th) {
+	Point<double> q;
+	q.x = cos(th) * (p.x - c.x) - sin(th) * (p.y - c.y) + c.x;
+	q.y = sin(th) * (p.x - c.x) + cos(th) * (p.y - c.y) + c.y;
+	return q;
 }
 
 
-//【上からの凸包】O(n log n)
+//【90°回転】O(1)
 /*
-* n 個の点 (x[i], y[i]) の上からの凸包の x 座標について昇順で j 番目の頂点の座標を p[j] に格納する．
-* また p の大きさを返す．strict = false とすると広義凸包，upper = false とすると下からの凸包を格納する．
+* 点 p を点 c を中心に 90°× i だけ回転した点を返す．
 */
 template <class T>
-int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>& p,
-	bool strict = false, bool upper = true)
-{
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
+inline Point<T> rotate90(const Point<T>& p, const Point<T>& c, int i) {
+	Point<T> q;
+	switch (smod(i, 4)) {
+	case 0:
+		q.x = 1 * (p.x - c.x) - 0 * (p.y - c.y) + c.x;
+		q.y = 0 * (p.x - c.x) + 1 * (p.y - c.y) + c.y;
+		break;
+	case 1:
+		q.x = 0 * (p.x - c.x) - 1 * (p.y - c.y) + c.x;
+		q.y = 1 * (p.x - c.x) + 0 * (p.y - c.y) + c.y;
+		break;
+	case 2:
+		q.x = -1 * (p.x - c.x) - 0 * (p.y - c.y) + c.x;
+		q.y = 0 * (p.x - c.x) + (-1) * (p.y - c.y) + c.y;
+		break;
+	case 3:
+		q.x = 0 * (p.x - c.x) - (-1) * (p.y - c.y) + c.x;
+		q.y = -1 * (p.x - c.x) + 0 * (p.y - c.y) + c.y;
+		break;
+	default:;
+	}
+	return q;
+}
 
-	int n = sz(x);
-	p.clear();
 
-	// x 座標について昇順に並べる．
-	map<T, T> x_to_y;
-	rep(i, n) {
-		if (x_to_y.count(x[i])) {
-			if (upper) chmax(x_to_y[x[i]], y[i]);
-			else chmin(x_to_y[x[i]], y[i]);
-		}
-		else x_to_y[x[i]] = y[i];
+//【角の二等分線】O(1)
+/*
+* ∠ a o b の二等分線を返す．
+*/
+template <typename T>
+inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const Point<T>& b) {
+	Point<double> p1 = o;
+	Point<double> p2 = p1 + (a - o).normalize() + (b - o).normalize();
+	return { p1, p2 };
+}
+
+
+//【垂直二等分線】O(1)
+/*
+* 線分 l の垂直二等分線を返す．
+*/
+template <typename T> inline Line<double> vertical_bisector(const Line<T>& l) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_C
+
+	Point<double> p1 = Point<double>(l.first + l.second) / 2.;
+	Point<double> d = l.second - l.first;
+	Point<double> n(-d.y, d.x);
+	Point<double> p2 = p1 + n;
+	return { p1, p2 };
+}
+
+
+//【垂線の足】O(1)
+/*
+* 点 p から直線 l へ降ろした垂線の足を返す．
+*/
+inline Point<double> foot_of_perpendicular(const Point<double>& p, const Line<double>& l) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_A
+
+	auto d = (l.second - l.first).normalize();
+	return l.first + (p - l.first).dot(d) * d;
+}
+
+
+//【対称移動】O(1)
+/*
+* 直線 l に関して点 p を対称移動した点を返す．
+*/
+inline Point<double> symmetrical_move(const Point<double>& p, const Line<double>& l) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_B
+
+	auto d = (l.second - l.first).normalize();
+	auto v = p - l.first;
+	return l.first - v + v.dot(d) * d * 2.0;
+}
+
+
+//【2 直線の交点】O(1)
+/*
+* 2 直線 l1, l2 の交点を返す．
+*/
+template <typename T>
+Point<double> intersection_L_L(const Line<T>& l1, const Line<T>& l2) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_2_C
+
+	double x1 = (double)l1.first.x;
+	double y1 = (double)l1.first.y;
+	double x2 = (double)l1.second.x;
+	double y2 = (double)l1.second.y;
+	double x3 = (double)l2.first.x;
+	double y3 = (double)l2.first.y;
+	double x4 = (double)l2.second.x;
+	double y4 = (double)l2.second.y;
+
+	double x_num = x2 * x3 * y1 - x2 * x4 * y1 - x1 * x3 * y2 + x1 * x4 * y2
+		- x1 * x4 * y3 + x2 * x4 * y3 + x1 * x3 * y4 - x2 * x3 * y4;
+	double y_num = x2 * y1 * y3 - x4 * y1 * y3 - x1 * y2 * y3 + x4 * y2 * y3
+		- x2 * y1 * y4 + x3 * y1 * y4 + x1 * y2 * y4 - x3 * y2 * y4;
+	double dnm = x3 * y1 - x4 * y1 - x3 * y2 + x4 * y2
+		- x1 * y3 + x2 * y3 + x1 * y4 - x2 * y4;
+
+	return { x_num / dnm, y_num / dnm };
+}
+
+
+//【円と直線の交点】O(1)
+/*
+* 円 c と直線 l の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
+*/
+int intersection_C_L(const Circle<ll>& c, const Line<ll>& l, Point<double>& p1, Point<double>& p2) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_D
+	
+	// 円 c の中心が原点にくるよう平行移動
+	Point<ll> o = c.first;
+	Point<ll> a = l.first - o;
+	Point<ll> b = l.second - o;
+
+	// 直線 l の方向ベクトル
+	Point<ll> d = b - a;
+
+	// (0, 0) と l との符号付き距離の分子，分母の二乗，円 c の半径
+	ll num = a.cross(b);
+	ll dnm_sq = d.sqnorm();
+	ll r = c.second;
+
+	// (0, 0) と l との距離が円の半径より大きい場合 → 共有点 0 個
+	if (dnm_sq != 0 && (num * num - 1) / dnm_sq >= r * r) {
+		return 0;
 	}
 
-	// 3 点 P, Q, R のの部分が上に凸かを返す．
-	//		P, Q, R 部分が上に凸
-	//		⇔ 直線 PQ の傾き > 直線 PR の傾き
-	//		⇔ (Q[y] - P[y]) / (Q[x] - P[x]) > (R[y] - P[y]) / (R[x] - P[x])
-	//		⇔ (Q[y] - P[y]) (R[x] - P[x]) > (R[y] - P[y]) (Q[x] - P[x])
-	using PT = pair<T, T>;
-	function<bool(const PT&, const PT&, const PT&)> convexQ = [&](const PT& P, const PT& Q, const PT& R) {
-		T left = (Q.second - P.second) * (R.first - P.first);
-		T right = (R.second - P.second) * (Q.first - P.first);
+	// (0, 0) と l との符号付き距離
+	double dist = num / sqrt(dnm_sq);
 
-		if (!strict && left == right) return true;
+	// 円 c の中心から弦の中点までのベクトル
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (-dist / d.norm());
 
-		return upper ? left > right : left < right;
-	};
-
-	int pt = 0;
-	repe(xy, x_to_y) {
-		// 凸包の直前の 2 点を P, Q，今見ている点を R とし，
-		// P, Q, R 部分が上に凸でない限り Q を除去することを繰り返す．
-		while (pt >= 2 && !convexQ(p[pt - 2], p[pt - 1], xy)) {
-			p.pop_back();
-			pt--;
-		}
-
-		// 今見ている点を暫定的に凸包に加える．
-		p.push_back(xy);
-		pt++;
+	// (0, 0) と l との距離が円の半径に等しい場合 → 接点 1 個
+	if (dnm_sq != 0 && num * num / dnm_sq >= r * r) {
+		p1 = p2 = Point<double>(o) + nn;
+		return 1;
 	}
 
-	return pt;
+	// 弦の中点から一方の交点までのベクトル
+	Point<double> nd = Point<double>(d) * (sqrt(r * r - dist * dist) / d.norm());
+
+	// (0, 0) と l との距離が円の半径より小さい場合 → 交点 2 個
+	p1 = Point<double>(o) + nn + nd;
+	p2 = Point<double>(o) + nn - nd;
+	return 2;
+}
+
+
+//【円と直線の交点（実数）】O(1)
+/*
+* 円 c と直線 l の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
+*/
+int intersection_C_L(const Circle<double>& c, const Line<double>& l, Point<double>& p1, Point<double>& p2) {
+	// verify : https://atcoder.jp/contests/abc157/tasks/abc157_f
+
+	// 円 c の中心が原点にくるよう平行移動
+	Point<double> o = c.first;
+	Point<double> a = l.first - o;
+	Point<double> b = l.second - o;
+
+	// 直線 l の方向ベクトル
+	Point<double> d = b - a;
+
+	// (0, 0) と l との符号付き距離の分子，分母の二乗，円 c の半径
+	double num = a.cross(b);
+	double dnm_sq = d.sqnorm();
+	double r = c.second;
+
+	// (0, 0) と l との距離が円の半径より大きい場合 → 共有点 0 個
+	if (dnm_sq != 0 && (num * num - 1) / dnm_sq >= r * r) {
+		return 0;
+	}
+
+	// (0, 0) と l との符号付き距離
+	double dist = num / sqrt(dnm_sq);
+
+	// 円 c の中心から弦の中点までのベクトル
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (-dist / d.norm());
+
+	// 弦の中点から一方の交点までのベクトル
+	Point<double> nd = Point<double>(d) * (sqrt(r * r - dist * dist) / d.norm());
+
+	// (0, 0) と l との距離が円の半径より小さい場合 → 交点 2 個
+	p1 = Point<double>(o) + nn + nd;
+	p2 = Point<double>(o) + nn - nd;
+	return 2;
+}
+
+
+//【円と円の交点】O(1)
+/*
+* 2 円 c1, c2 の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
+*/
+int intersection_C_C(const Circle<ll>& c1, const Circle<ll>& c2, Point<double>& p1, Point<double>& p2) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_E
+	
+	// 円 c1, c2 の中心と半径
+	Point<ll> o1 = c1.first, o2 = c2.first;
+	ll r1 = c1.second, r2 = c2.second;
+
+	// o1 から o2 へのベクトル，半径の和と差
+	Point<ll> d = o2 - o1;
+	ll r_sum = r1 + r2, r_dif = abs(r1 - r2);
+
+	// 中心間距離が円の半径の和より大きい場合 → 共有点 0 個
+	if (d.sqnorm() > r_sum * r_sum) {
+		return 0;
+	}
+
+	// 中心間距離が円の半径の和に等しい場合 → 外接点 1 個
+	if (d.sqnorm() == r_sum * r_sum) {
+		p1 = p2 = Point<double>(o1) + Point<double>(d) * (r1 / d.norm());
+		return 1;
+	}
+
+	// 中心間距離が円の半径の差より小さい場合 → 共有点 0 個
+	if (d.sqnorm() < r_dif * r_dif) {
+		return 0;
+	}
+
+	// 中心間距離が円の半径の差に等しい場合 → 内接点 1 個
+	if (d.sqnorm() == r_dif * r_dif) {
+		if (r1 > r2) {
+			p1 = p2 = Point<double>(o1) + Point<double>(d) * (r1 / d.norm());
+		}
+		else {
+			p1 = p2 = Point<double>(o1) - Point<double>(d) * (r1 / d.norm());
+		}
+		return 1;
+	}
+
+	// その他の場合 → 交点 2 個
+	double x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
+	double h = sqrt(r1 * r1 - x * x);
+	Point<double> nd = Point<double>(d) * (x / d.norm());
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (h / d.norm());
+	p1 = Point<double>(o1) + nd + nn;
+	p2 = Point<double>(o1) + nd - nn;
+	return 2;
+}
+
+
+//【円と円の交点（実数）】O(1)
+/*
+* 2 円 c1, c2 の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
+*/
+int intersection_C_C(const Circle<double>& c1, const Circle<double>& c2, Point<double>& p1, Point<double>& p2) {
+	// verify : https://atcoder.jp/contests/abc157/tasks/abc157_f
+
+	// 円 c1, c2 の中心と半径
+	Point<double> o1 = c1.first, o2 = c2.first;
+	double r1 = c1.second, r2 = c2.second;
+
+	// o1 から o2 へのベクトル，半径の和と差
+	Point<double> d = o2 - o1;
+	double r_sum = r1 + r2, r_dif = abs(r1 - r2);
+
+	// 中心間距離が円の半径の和より大きい場合 → 共有点 0 個
+	if (d.sqnorm() > r_sum * r_sum) {
+		return 0;
+	}
+
+	// 中心間距離が円の半径の差より小さい場合 → 共有点 0 個
+	if (d.sqnorm() < r_dif * r_dif) {
+		return 0;
+	}
+
+	// その他の場合 → 交点 2 個
+	double x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
+	double h = sqrt(r1 * r1 - x * x);
+	Point<double> nd = Point<double>(d) * (x / d.norm());
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (h / d.norm());
+	p1 = Point<double>(o1) + nd + nn;
+	p2 = Point<double>(o1) + nd - nn;
+	return 2;
+}
+
+
+//【円の接線】O(1)
+/*
+* 点 p を通る円 c の接線の本数を返す．また接点があればその座標を t1, t2 に格納する．
+*/
+int tangent_to_circle(const Point<ll>& p, const Circle<ll>& c, Point<double>& t1, Point<double>& t2) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_F
+	
+	// 円 c の中心と半径
+	Point<ll> o = c.first; ll r = c.second;
+
+	// o から p へのベクトル，半径の和と差
+	Point<ll> d = p - o;
+
+	// p と o の距離が円の半径より小さい場合 → 接線 0 本
+	if (d.sqnorm() < r * r) {
+		return 0;
+	}
+
+	// p と o の距離が円の半径に等しい場合 → 接線 1 本
+	if (d.sqnorm() == r * r) {
+		t1 = t2 = p;
+		return 1;
+	}
+
+	// p と o の距離が円の半径より大きい場合 → 接線 2 本
+	double x = r * r / d.norm();
+	double y = r * sqrt(1 - (double)r * r / d.sqnorm());
+	Point<double> nd = Point<double>(d) * (x / d.norm());
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (y / d.norm());
+	t1 = Point<double>(o) + nd + nn;
+	t2 = Point<double>(o) + nd - nn;
+	return 2;
+}
+
+
+//【二円の共通接線】O(1)
+/*
+* 2 円 c1, c2 の共通接線の本数を返す．また c1 との接点があればその座標を ts に格納する．
+* c1 = c2 のときは -1 を返す．
+*/
+int common_tangent(const Circle<ll>& c1, const Circle<ll>& c2, vector<Point<double>>& ts) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_G
+	
+	ts.clear();
+
+	if (c1 == c2) return -1;
+
+	// 円 c1, c2 の中心と半径
+	Point<ll> o1 = c1.first; ll r1 = c1.second;
+	Point<ll> o2 = c2.first; ll r2 = c2.second;
+
+	// o1 から o2 へのベクトル，半径の和と差
+	Point<ll> d = o2 - o1;
+	ll r_sum = r1 + r2, r_dif = abs(r1 - r2);
+
+	// 中心間距離が円の半径の差より小さい場合 → 共通接線 0 本
+	if (d.sqnorm() < r_dif * r_dif) {
+		return 0;
+	}
+
+	// 中心間距離が円の半径の差に等しい場合 → 共通接線 1 本
+	if (d.sqnorm() == r_dif * r_dif) {
+		ts.push_back(Point<double>(o1) + (r1 > r2 ? 1 : -1) * Point<double>(d) * (r1 / d.norm()));
+		return 1;
+	}
+
+	// 共通外接線を追加
+	double x = r1 * r_dif / d.norm();
+	double y = r1 * sqrt(1 - (double)r_dif * r_dif / d.sqnorm());
+	Point<double> nd = Point<double>(d) * (x / d.norm());
+	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (y / d.norm());
+	ts.push_back(Point<double>(o1) + (r1 > r2 ? 1 : -1) * nd + nn);
+	ts.push_back(Point<double>(o1) + (r1 > r2 ? 1 : -1) * nd - nn);
+
+	// 中心間距離が円の半径の和より大きい場合 → 共通接線 4 本
+	if (d.sqnorm() > r_sum * r_sum) {
+		// 共通内接線を追加
+		double x = r1 * r_sum / d.norm();
+		double y = r1 * sqrt(1 - (double)r_sum * r_sum / d.sqnorm());
+		Point<double> nd = Point<double>(d) * (x / d.norm());
+		Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (y / d.norm());
+		ts.push_back(Point<double>(o1) + nd + nn);
+		ts.push_back(Point<double>(o1) + nd - nn);
+
+		return 4;
+	}
+
+	// 中心間距離が円の半径の和に等しい場合 → 共通接線 3 本
+	if (d.sqnorm() == r_sum * r_sum) {
+		ts.push_back(Point<double>(o1) + Point<double>(d) * (r1 / d.norm()));
+		return 3;
+	}
+
+	// その他の場合 → 共通接線 2 本
+	return 2;
+}
+
+
+//【内接円】O(1)
+/*
+* 三角形 a b c の内接円を返す．
+*/
+template <typename T>
+Circle<double> incircle(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_B
+
+	auto len_a = (b - c).norm();
+	auto len_b = (c - a).norm();
+	auto len_c = (a - b).norm();
+	Point<double> da = a;
+	Point<double> db = b;
+	Point<double> dc = c;
+	auto i = (len_a * da + len_b * db + len_c * dc) / (len_a + len_b + len_c);
+
+	Point<double> d = (b - a).normalize();
+	Point<double> n = { -d.y, d.x };
+	Point<double> p2 = i - a;
+	auto r = abs(p2.dot(n));
+
+	return { i, r };
+}
+
+
+//【外接円】O(1)
+/*
+* 三角形 a b c の外接円を返す．
+*
+* 利用：【垂直二等分線】，【2 直線の交点】
+*/
+template <typename T>
+Circle<double> circircle(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_C
+
+	auto lb = vertical_bisector(Line<double>{ a, b });
+	auto lc = vertical_bisector(Line<double>{ a, c });
+	auto o = intersection_L_L(lb, lc);
+	auto r = (Point<double>(a) - o).norm();
+	return { o, r };
+
+	/* 数学的には合ってるが，共線に近い鈍角三角形のときに誤差が大きくなる．
+	double len_a = (b - c).norm();
+	double len_b = (c - a).norm();
+	double len_c = (a - b).norm();
+	Point<double> da = a;
+	Point<double> db = b;
+	Point<double> dc = c;
+	double w_a = len_a * len_a * (len_b * len_b + len_c * len_c - len_a * len_a);
+	double w_b = len_b * len_b * (len_c * len_c + len_a * len_a - len_b * len_b);
+	double w_c = len_c * len_c * (len_a * len_a + len_b * len_b - len_c * len_c);
+	Point<double> o = (w_a * da + w_b * db + w_c * dc) / (w_a + w_b + w_c);
+	double r = (o - a).norm();
+	return { o, r };
+	*/
 }
 
 
 //【凸多角形の切断】O(n)
 /*
 * 凸 n 角形 poly を有向直線 l で切断した左側の凸多角形を lpoly に返す．
-* 
+*
 * 利用：【2 直線の交点】
 */
 template <typename T>

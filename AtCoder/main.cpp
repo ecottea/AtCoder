@@ -59,13 +59,7 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
-#define popcount (int)__popcnt // 全ビット中の 1 の個数
-#define popcountll (int)__popcnt64
-inline int lsb(unsigned int n) { unsigned long i; _BitScanForward(&i, n); return i; } // 最下位ビットの位置（0-indexed）
-inline int lsbll(unsigned long long n) { unsigned long i; _BitScanForward64(&i, n); return i; }
-inline int msb(unsigned int n) { unsigned long i; _BitScanReverse(&i, n); return i; } // 最上位ビットの位置（0-indexed）
-inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, n); return i; }
-template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
+#include "local.hpp"
 // 提出用（gcc）
 #else
 #define popcount (int)__builtin_popcount
@@ -75,12 +69,6 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define msb(n) (31 - __builtin_clz(n))
 #define msbll(n) (63 - __builtin_clzll(n))
 #define gcd __gcd
-#endif
-
-// デバッグ用
-#ifdef _MSC_VER
-#include "debug.hpp"
-#else
 #define dump(...)
 #define dumpel(v)
 #define input_from_file(f)

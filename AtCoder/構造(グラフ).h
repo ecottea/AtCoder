@@ -1,6 +1,5 @@
 #pragma once
 #include "header.h"
-#include "ビット全探索.h"
 // ■■■■■ グラフ（構造） ■■■■■
 
 

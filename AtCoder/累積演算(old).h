@@ -32,13 +32,13 @@ template <class T> struct Cumulative_sum {
 
 //【二次元累積和】
 /*
-* Cumulative_sum_2d(a) : O(h w)
+* Cumulative_sum_2D(a) : O(h w)
 *	二次元配列 a[0..h)[0..w) で初期化する．
 *
 * sum(x1, y1, x2, y2) : O(1)
 *	Σa[x1..x2)[y1..y2) を返す．
 */
-template <class T> struct Cumulative_sum_2d {
+template <class T> struct Cumulative_sum_2D {
 	// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
 
 	int h, w;
@@ -47,8 +47,8 @@ template <class T> struct Cumulative_sum_2d {
 	vector<vector<T>> acc;
 
 	// コンストラクタ（初期化なし，配列で初期化）
-	Cumulative_sum_2d() : h(0), w(0) {}
-	Cumulative_sum_2d(const vector<vector<T>>& a)
+	Cumulative_sum_2D() : h(0), w(0) {}
+	Cumulative_sum_2D(const vector<vector<T>>& a)
 		: h(sz(a)), w(sz(a[0])), acc(h + 1, vector<T>(w + 1)) {
 		// 元データを仮格納する．
 		rep(i, h) {
@@ -488,7 +488,7 @@ void slide_maximum_2d(const vector<vector<T>>& a, int dh, int dw, vector<vector<
 * 二次元配列 a[0..h)[0..w) に対し min a[i..i+dh)[j..j+dw) を a_min[i][j] に返す．
 */
 template <class T>
-void slide_minimum_2d(const vector<vector<T>>& a, int dh, int dw, vector<vector<T>>& a_min) {
+void slide_minimum_2D(const vector<vector<T>>& a, int dh, int dw, vector<vector<T>>& a_min) {
 	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_f
 
 	int h = sz(a), w = sz(a[0]);

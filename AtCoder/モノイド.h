@@ -76,7 +76,7 @@ S12 e12() { return ~0; }
 
 
 //ygcd ƒ‚ƒmƒCƒhz
-/* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4 */
+/* verify : https://atcoder.jp/contests/abc125/tasks/abc125_c */
 using S15 = ll;
 S15 op15(S15 a, S15 b) { return gcd(a, b); }
 S15 e15() { return 0; }

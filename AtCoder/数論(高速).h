@@ -4,14 +4,14 @@
 // ■■■■■ 高速な数論アルゴリズム ■■■■■
 
 
-//【素数判定／ミラー－ラビン法】O((log n)^3)
+//【素数判定】O((log n)^3)
 /*
 * n が素数かを返す．
 */
 //internal::is_prime_constexpr(int n);
 
 
-//【素数判定／ミラー－ラビン法】O((log n)^3)
+//【素数判定】O((log n)^3)
 /*
 * n が素数かを返す．
 *
@@ -63,7 +63,7 @@ bool miller_rabin(ll n) {
 }
 
 
-//【約数検出／ポラードのρ法】O(n^(1/4))
+//【約数検出】O(n^(1/4))
 /*
 * n の真の約数を何か 1 つ返す．
 *
@@ -162,7 +162,7 @@ ll pollard_rho(ll n) {
 *
 * pps[p] = d : n に素因数 p が d 個含まれていることを表す．
 *
-* 利用：【素数判定／ミラー - ラビン法】，【約数検出／ポラードのρ法】
+* 利用：【素数判定】，【約数検出】
 */
 void factor_integer(ll n, map<ll, int>& pps) {
 	// verify : https://algo-method.com/tasks/553

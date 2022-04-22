@@ -8,7 +8,7 @@
 //【最短経路数】O(h w)
 /*
 * 通過の可否が c[i][j] = '.'['#'] で示された h * w 格子について，
-* c[0][0] から c[h-1][w-1] までの最短格子路の数を返す．
+* c[0][0] から c[h-1][w-1] までの最短路の数を返す．
 *
 *（始点からの格子 DP）
 */
@@ -51,7 +51,7 @@ mint count_lattice_path(const vvc& c) {
 //【最短経路数】O(h w)
 /*
 * 通過の可否が c[i][j] = '.'['#'] で示された h * w 格子について，
-* c[0][0] から c[h-1][w-1] までの最短格子路の数を返す．
+* c[0][0] から c[h-1][w-1] までの最短路の数を返す．
 *
 *（終点からの格子 DP）
 */
@@ -94,7 +94,7 @@ mint count_lattice_path_rev(const vvc& c) {
 //【最短経路数（連続で曲がれない）】O(h w)
 /*
 * h * w 格子について，二連続で曲がることを禁止した場合の
-* c[0][0] から c[h-1][w-1] までの最短格子路の数を返す．
+* c[0][0] から c[h-1][w-1] までの最短路の数を返す．
 *
 *（始点からの格子状態 DP）
 */
@@ -193,7 +193,7 @@ ll maximize_cost_path(const vl& x_, const vl& y_, const vl& c) {
 * h * w の格子の (0, 0) から (h-1, w-1) までの最短路のうち，
 * n 個の禁止点 fb[i] = {r[i], c[i]} を 1 つも通らないものの個数を返す．
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（mint利用）】
 * 
 *（Dummy Path Lemma）
 */
@@ -239,7 +239,7 @@ mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
 *
 * 制約：fm は n! まで計算可能
 *
-* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
@@ -279,7 +279,7 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 
 	x = abs(x); y = abs(y);
 
-	// 明らかに 0 通りの場合．
+	// 明らかに 0 通りの場合
 	if (x + y > n || (n - x - y) % 2 == 1) return 0;
 
 	return fm.binomial(n, (n - x - y) / 2) * fm.binomial(n, (n - x + y) / 2);

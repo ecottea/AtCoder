@@ -41,7 +41,7 @@ void connected_component(const Graph& g, vvi& ccs) {
 
 //【トポロジカルソート】O(|V| + |E|)
 /*
-* DAG g をトポロジカルソートした結果を seq に返す．
+* DAG g をトポロジカルソートした結果の頂点列を seq に返す．
 * g が DAG でない場合は false を返す．
 *
 *（葉からの幅優先探索）
@@ -202,7 +202,7 @@ void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
 
 //【有向グラフの閉路分割】O(|V| + |E|) 
 /*
-* 有向グラフ g をいくつかの単純閉路に分割する．
+* 有向グラフ g をいくつかの単純閉路に分割する（失敗したら false を返す）
 *
 * g : 有向グラフ
 * cycles[i] : 検出した i 番目の閉路の頂点番号を順に格納したリスト
@@ -442,6 +442,8 @@ template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
 * 二部グラフならその彩色例を col に格納する（色は 0, 1 で表す）
 */
 bool bipartite_graphQ(const Graph& g, vi& col) {
+	// verify : https://atcoder.jp/contests/code-festival-2017-qualb/tasks/code_festival_2017_qualb_c
+
 	int n = sz(g);
 
 	// 頂点の色（0,1 は色を，-1 は未探索を表す）

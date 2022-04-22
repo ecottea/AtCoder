@@ -70,7 +70,7 @@ template <class T> ll inversion_number_cc(vector<T>& a) {
 }
 
 
-//【置換の分解】O(n)
+//【置換のサイクル分解】O(n)
 /*
 * [0..n) の置換 p を巡回置換の積に分解して cycles に格納する．
 * p は任意の i を p[i] に動かすような置換を表す．

@@ -34,7 +34,7 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			// これは畳み込みなので，mod998244353 なら高速化できる．
+			// これは畳込みなので，mod998244353 なら高速化できる．
 			vm ndps(ws + wt + 1);
 			repi(i, 1, ws) {
 				repi(j, 0, wt) {
@@ -85,7 +85,7 @@ mint count_subtree(const Graph& g, int r, int k) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			// これは畳み込みなので，mod998244353 なら高速化できる．
+			// これは畳込みなので，mod998244353 なら高速化できる．
 			vm ndps(min(ws + wt, k) + 1);
 			repi(i, 1, min(ws, k)) {
 				repi(j, 0, min(wt, k - i)) {
@@ -317,7 +317,7 @@ void count_nonancestor_set(const Graph& g, int r, vm& cnt) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の頂点集合の個数
-			// これは畳み込みなので，mod998244353 なら高速化できる．
+			// これは畳込みなので，mod998244353 なら高速化できる．
 			vm ndps(ws + wt + 1);
 			repi(i, 0, ws) {
 				repi(j, 0, wt) {

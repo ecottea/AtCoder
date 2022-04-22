@@ -10,7 +10,7 @@
 * X[0..n) をパラメータ (K, p[0..n)) の多項分布に従う確率変数とする．
 * 各 m=[0..n] について Pr( #{i | X[i] > 0} = m ) を pr[m] に格納する．
 * 
-* 利用：【階乗と二項係数（法が大きな素数，mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 	// verify : https://atcoder.jp/contests/abc243/tasks/abc243_f
@@ -22,16 +22,16 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 	// である．ただし便宜上 0 個の 0 乗和は 1 とする．
 	//
 	// i >= 1 かつ j >= 1 のとき，二項定理より漸化式
-	//		dp[i][j][k] = dp[i-1][j][k] + Σt=[0..k] binomial(k,t) p[i-1]^(k-t) dp[i-1][j-1][t]
+	//		dp[i][j][k] = dp[i-1][j][k] + Σt=[0..k] bin(k,t) p[i-1]^(k-t) dp[i-1][j-1][t]
 	// が成り立つ．例えば
 	//	dp[4][3][k]
 	//	= (p[0]+p[1]+p[2])^k + (p[0]+p[1]+p[3])^k + (p[0]+p[2]+p[3])^k + (p[1]+p[2]+p[3])^k
-	//	= (p[0]+p[1]+p[2])^k + Σt=[0..k] binomial(k,t) p[3]^(k-t) ((p[0]+p[1])^t + (p[0]+p[2])^t + (p[1]+p[2])^t)
-	//	= dp[3][3][k] + Σt=[0..k] binomial(k,t) p[3]^(k-t) dp[2][2][t]
+	//	= (p[0]+p[1]+p[2])^k + Σt=[0..k] bin(k,t) p[3]^(k-t) ((p[0]+p[1])^t + (p[0]+p[2])^t + (p[1]+p[2])^t)
+	//	= dp[3][3][k] + Σt=[0..k] bin(k,t) p[3]^(k-t) dp[2][2][t]
 	// となる．よって dp[i][j][k] は DP で求めることができる．
 	//
 	// dp[i][j][k] を用いれば，包除原理より求める確率は
-	//		Pr( #{i | X[i] > 0} = m ) = Σj=[0..m](-1)^(m-j) biomial(n-j, m-j) dp[n][j][K]
+	//		Pr( #{i | X[i] > 0} = m ) = Σj=[0..m](-1)^(m-j) bin(n-j, m-j) dp[n][j][K]
 	// で与えられる．例えば，n = 4 のとき
 	//	Pr( #{i | X[i] > 0} = 3 )
 	//	= (p[0]+p[1]+p[2])^k - ((p[0]+p[1])^k + (p[0]+p[2])^k + (p[1]+p[2])^k) + (p[0]^k + p[1]^k + p[2]^k) - 0
@@ -39,8 +39,8 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 	//	+ (p[0]+p[2]+p[3])^k - ((p[0]+p[2])^k + (p[0]+p[3])^k + (p[2]+p[3])^k) + (p[0]^k + p[2]^k + p[3]^k) - 0
 	//	+ (p[1]+p[2]+p[3])^k - ((p[1]+p[2])^k + (p[1]+p[3])^k + (p[2]+p[3])^k) + (p[1]^k + p[2]^k + p[3]^k) - 0
 	// となる．そして，
-	// (p[0]+p[1])^k が引かれる回数は，他の項 p[2], p[3] の中から残り 1 項を選ぶ場合の数 binomial(4-2, 3-2) 回である．
-	// p[0]^k が足される回数は，他の項 p[1], p[2], p[3] の中から残り 2 項を選ぶ場合の数 binomial(4-1, 3-1) 回である．
+	// (p[0]+p[1])^k が引かれる回数は，他の項 p[2], p[3] の中から残り 1 項を選ぶ場合の数 bin(4-2, 3-2) 回である．
+	// p[0]^k が足される回数は，他の項 p[1], p[2], p[3] の中から残り 2 項を選ぶ場合の数 bin(4-1, 3-1) 回である．
 
 	int n = sz(p);
 	pr = vm(n + 1);

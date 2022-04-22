@@ -25,24 +25,14 @@ template <class T> T state_PIE(const vector<T>& c) {
 }
 
 
-//【状態系包除原理】O(3^n)
+//【状態系包除原理（一括）】O(2^n n)
 /*
 * 集合族 S[0..n) について，添字集合が set で表されるような集合族の交わりの大きさ
-* #(∩i∈set S[i]) が c[set] であるとする．set のみに属する要素の数
-* #((∩i∈set S[i]) - (∪i!∈set S[i])) を res[set] に格納する．
+* #(∩i∈set S[i]) が c[set] であるとする．
+* 
+* set には属するが ~set には属さない要素の個数を c'[set] とおくと，
+* c' は c に上位集合でメビウス変換を施すことで得られる．
 */
-template <class T> void state_PIE(const vector<T>& c, vector<T>& res) {
-	int n = msb(sz(c));
-	res.resize(1LL << n);
-
-	// 各集合 set について，その上位集合 sup を全探索する．
-	repb(set, n) {
-		for (int sup = set; (sup >> n) == 0; sup = (sup + 1) | set) {
-			int sign = (popcount(sup - set) % 2 ? -1 : 1);
-			res[set] += (T)sign * c[sup];
-		}
-	}
-}
 
 
 //【個数系包除原理】O(n)
@@ -52,7 +42,7 @@ template <class T> void state_PIE(const vector<T>& c, vector<T>& res) {
 *
 * 制約：fm は n! まで計算可能であること
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint counting_PIE(const vm& c, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc172/tasks/abc172_e
@@ -73,7 +63,7 @@ mint counting_PIE(const vm& c, const Factorial_mint& fm) {
 
 //【約数系包除原理】
 /*
-*【倍数変換】や【約数変換】のメビウス変換を利用すればよい．
+*【倍数変換，GCD 畳込み】や【約数変換，LCM 畳込み】のメビウス変換を利用すればよい．
 */
 
 
@@ -85,7 +75,7 @@ mint counting_PIE(const vm& c, const Factorial_mint& fm) {
 *
 *（状態系包除原理）
 *
-* 利用：【階乗と二項係数（mint利用）】
+* 利用：【階乗など（法が大きな素数）】
 */
 mint count_points_in_BB(int n, int h, int w, Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc003/tasks/abc003_4

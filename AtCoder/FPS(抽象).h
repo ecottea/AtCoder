@@ -12,10 +12,10 @@
 * FPS<S, add, o, mi, mul, e>(c0) : O(1)
 *	定数多項式 f = c0 で初期化する．
 *
-* FPS<S, add, o, mi, mul, e>(c0, n) : O(d)
+* FPS<S, add, o, mi, mul, e>(c0, n) : O(n)
 *	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
-* FPS<S, add, o, mi, mul, e>(c) : O(|c|)
+* FPS<S, add, o, mi, mul, e>(c) : O(n)
 *	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
@@ -26,25 +26,25 @@
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *	制約 : 商では g(0) = e()
 *
-* f.inv(d) : O(n^2)
+* FPS f.inv(int d) : O(n^2)
 *	1 / f mod x^d を返す．
 *	制約 : f(0) = e()
 *
-* f.quotient(g) : O(n^2)
-* f.reminder(g) : O(n^2)
-* f.quotient_remainder(g) : O(n^2)
+* FPS f.quotient(FPS g) : O(n^2)
+* FPS f.reminder(FPS g) : O(n^2)
+* pair<FPS, FPS> f.quotient_remainder(FPS g) : O(n^2)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
 *
-* f.deg(), f.size() : O(1)
+* int f.deg(), int f.size() : O(1)
 *	多項式 f の次数[+1]を返す．
 *
-* FPS::monomial(d) : O(d)
+* FPS::monomial(int d) : O(d)
 *	単項式 x^d を返す．
 *
-* f.assign(c) : O(n)
+* S f.assign(S c) : O(n)
 *	多項式 f の不定元 x に c を代入した値を返す．
 *
-* f.resize(d) : O(1)
+* f.resize(int d) : O(d)
 *	mod x^d をとる．
 *
 * f.resize() : O(n)
@@ -54,7 +54,7 @@
 *	係数列を d だけ右[左]シフトした多項式を返す．
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
-* power_mod(f, d, g) : O(m^2 log d)　（m = deg g）
+* FPS power_mod(FPS f, ll d, FPS g) : O(m^2 log d)　（m = deg g）
 *	f(x)^d % g(x) を返す．
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
@@ -67,7 +67,7 @@ struct FPS {
 	// コンストラクタ（零元，定数，次数指定付き定数，係数列で初期化）
 	FPS() : n(0) {}
 	FPS(const S& c0) : n(1), c({ c0 }) {}
-	FPS(const S& c0, int n_) : n(n_), c(n) { c[0] = c0; }
+	FPS(const S& c0, int n_) : n(n_), c(n, o()) { c[0] = c0; }
 	FPS(const vector<S>& c_) : n(sz(c_)), c(c_) {}
 
 	// 代入
@@ -238,7 +238,7 @@ struct FPS {
 	FPS& operator*=(const SFPS& g) {
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
-		S g0;
+		S g0 = o();
 		if (it0->first == 0) {
 			g0 = it0->second;
 			it0++;
@@ -308,11 +308,11 @@ struct FPS {
 		return *this;
 	}
 
-	// 高次項の除去
+	// 高次項の除去 or 0 埋め
 	FPS& resize(int d) {
 		// x^d 以上の項を除去する．
 		n = d;
-		c.resize(d);
+		c.resize(d, o());
 		return *this;
 	}
 
@@ -364,14 +364,14 @@ struct FPS {
 };
 
 
-//【展開係数／ボスタン－森法】O(n^2 log d)
+//【展開係数】O(n^2 log d)
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
 * 制約 : deg f < deg g, g[0] = 1
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
-S coef(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul, e>& g, ll d) {
+S bostan_mori(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul, e>& g, ll d) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
 	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
 
@@ -428,7 +428,7 @@ S coef(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul, e>& g,
 	g3.n = sz(g3.c);
 
 	// d を半分にして再帰を回す．
-	return coef(f3, g3, d / 2);
+	return bostan_mori(f3, g3, d / 2);
 }
 
 
@@ -437,7 +437,7 @@ S coef(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul, e>& g,
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 数列 a について，a[n] の値を返す．
 *
-* 利用：【展開係数／ボスタン－森法】
+* 利用：【展開係数】
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
 S linearly_recurrent_sequence(const vector<S>& a, const vector<S>& c, ll n) {
@@ -449,7 +449,261 @@ S linearly_recurrent_sequence(const vector<S>& a, const vector<S>& c, ll n) {
 	FPS<S, add, o, mi, mul, e> Dnm = e() - (C >> 1);
 	FPS<S, add, o, mi, mul, e> Num = (Dnm * A).resize(d);
 
-	return coef(Num, Dnm, n);
+	return bostan_mori(Num, Dnm, n);
 }
+
+
+//【形式的冪級数（半環）】
+/*
+* SemiFPS<S, add, o, mul, e>() : O(1)
+*	零多項式 f = o() で初期化する．
+*   係数は半環 <S, add, o, mul, e> の元とする．
+*
+* SemiFPS<S, add, o, mul, e>(c0) : O(1)
+*	定数多項式 f = c0 で初期化する．
+*
+* SemiFPS<S, add, o, mul, e>(c0, n) : O(d)
+*	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
+*
+* SemiFPS<S, add, o, mul, e>(c) : O(n)
+*	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
+*
+* c + f, f + c : O(1)	f + g : O(n)
+* c * f, f * c : O(n)	f * g : O(n^2)		f * g_sp : O(n k)（k : g の項数）
+*	形式的冪級数としての和，積の結果を返す．
+*	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
+*
+* f.acc(SFPS g_sp) : O(n k)
+*	Σi=[0..∞) g(x)^i を掛ける．
+*	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
+*	制約：g(0) == o()
+*
+* int f.deg(), int f.size() : O(1)
+*	多項式 f の次数[+1]を返す．
+*
+* SemiFPS::monomial(int d) : O(d)
+*	単項式 x^d を返す．
+*
+* S f.assign(S c) : O(n)
+*	多項式 f の不定元 x に c を代入した値を返す．
+*
+* f.resize(int d) : O(d)
+*	mod x^d をとる．
+*
+* f.resize() : O(n)
+*	不要な高次の項を削る．
+*
+* f >> d, f << d : O(n)
+*	係数列を d だけ右[左]シフトした多項式を返す．
+*  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
+*
+* SemiFPS power_mod(SemiFPS f, ll p, int d) : O(d^2 log d)
+*	f(x)^p % x^d を返す．
+*/
+template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
+struct SemiFPS {
+	using SFPS = vector<pair<int, S>>;
+
+	int n; // 係数の個数（次数 + 1）
+	vector<S> c; // 係数列
+
+	// コンストラクタ（零元，定数，次数指定付き定数，係数列で初期化）
+	SemiFPS() : n(0) {}
+	SemiFPS(const S& c0) : n(1), c({ c0 }) {}
+	SemiFPS(const S& c0, int n_) : n(n_), c(n, o()) { c[0] = c0; }
+	SemiFPS(const vector<S>& c_) : n(sz(c_)), c(c_) {}
+
+	// 代入
+	SemiFPS(const SemiFPS& f) = default;
+	SemiFPS& operator=(const SemiFPS& f) = default;
+	SemiFPS& operator=(const S& c0) { n = 1; c = { c0 }; return *this; }
+
+	// アクセス
+	S const& operator[](int i) const { return c[i]; }
+	S& operator[](int i) { return c[i]; }
+
+	// 次数
+	int deg() const { return n - 1; }
+	int size() const { return n; }
+
+	// 加算
+	SemiFPS& operator+=(const SemiFPS& g) {
+		if (n >= g.n) rep(i, g.n) c[i] = add(c[i], g[i]);
+		else {
+			rep(i, n) c[i] = add(c[i], g[i]);
+			repi(i, n, g.n - 1)	c.push_back(g[i]);
+			n = g.n;
+		}
+		return *this;
+	}
+	SemiFPS operator+(const SemiFPS& g) const { return SemiFPS(*this) += g; }
+
+	// 定数加算
+	SemiFPS& operator+=(const S& sc) {
+		if (n == 0) { n = 1; c = { sc }; }
+		else { c[0] = add(c[0], sc); }
+		return *this;
+	}
+	SemiFPS operator+(const S& sc) const { return SemiFPS(*this) += sc; }
+	friend SemiFPS operator+(const S& sc, const SemiFPS& f) { return f + sc; }
+
+	// 定数倍
+	SemiFPS& operator*=(const S& sc) { rep(i, n) c[i] = mul(c[i], sc); return *this; }
+	SemiFPS operator*(const S& sc) const { return SemiFPS(*this) *= sc; }
+	friend SemiFPS operator*(const S& sc, const SemiFPS& f) { return f * sc; }
+
+	// 積
+	SemiFPS& operator*=(const SemiFPS& g) {
+		int m = g.deg();
+		if (m == -1) return *this = SemiFPS();
+		resize(n + m);
+
+		// 後ろからインライン配る DP
+		repir(i, n - 1, 0) {
+			// 上位項に係数倍して配っていく．
+			repi(j, 1, m) {
+				if (i + j >= n) break;
+
+				c[i + j] = add(c[i + j], mul(c[i], g[j]));
+			}
+
+			// 定数項は最後に配るか消去しないといけない．
+			c[i] = mul(c[i], g[0]);
+		}
+
+		return *this;
+	}
+	SemiFPS operator*(const SemiFPS& g) const { return SemiFPS(*this) *= g; }
+
+	// スパース積
+	SemiFPS& operator*=(const SFPS& g) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B
+		 
+		// g の定数項だけ例外処理
+		auto it0 = g.begin();
+		S g0 = o();
+		if (it0->first == 0) {
+			g0 = it0->second;
+			it0++;
+		}
+
+		// 後ろからインライン配る DP
+		repir(i, n - 1, 0) {
+			// 上位項に係数倍して配っていく．
+			for (auto it = it0; it != g.end(); it++) {
+				int j; S gj;
+				tie(j, gj) = *it;
+
+				if (i + j >= n) break;
+
+				c[i + j] = add(c[i + j], mul(c[i], gj));
+			}
+
+			// 定数項は最後に配るか消去しないといけない．
+			c[i] = mul(c[i], g0);
+		}
+
+		return *this;
+	}
+	SemiFPS operator*(const SFPS& g) const { return SemiFPS(*this) *= g; }
+
+	// スパース商
+	SemiFPS& acc(const SFPS& g) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_C
+		 
+		// g の定数項だけ例外処理
+		auto it0 = g.begin();
+		assert(it0->first != 0);
+
+		// 前からインライン配る DP（後ろに累積効果あり）
+		rep(i, n) {
+			// 上位項に係数倍して配っていく．
+			for (auto it = it0; it != g.end(); it++) {
+				int j; S gj;
+				tie(j, gj) = *it;
+
+				if (i + j >= n) break;
+
+				c[i + j] = add(c[i + j], mul(c[i], gj));
+			}
+		}
+
+		return *this;
+	}
+
+	// 係数反転
+	SemiFPS rev() const { SemiFPS h = *this; reverse(all(h.c)); return h; }
+
+	// 単項式
+	static SemiFPS monomial(int d) {
+		SemiFPS mono(o(), d + 1);
+		mono[d] = e();
+		return mono;
+	}
+
+	// 不要な高次項の除去
+	SemiFPS& resize() {
+		// 最高次の係数が非 0 になるまで削る．
+		while (n > 0 && c[n - 1] == o()) {
+			c.pop_back();
+			n--;
+		}
+		return *this;
+	}
+
+	// 高次項の除去 or 0 埋め
+	SemiFPS& resize(int d) {
+		// x^d 以上の項を除去する．
+		n = d;
+		c.resize(d, o());
+		return *this;
+	}
+
+	// 不定元への代入
+	S assign(const S& x) const {
+		S val;
+		repir(i, n - 1, 0) val = add(mul(val, x), c[i]);
+		return val;
+	}
+
+	// 係数のシフト
+	SemiFPS& operator>>=(int d) {
+		n += d;
+		c.insert(c.begin(), d, o());
+		return *this;
+	}
+	SemiFPS& operator<<=(int d) {
+		n -= d;
+		if (n <= 0) { c.clear(); n = 0; }
+		else c.erase(c.begin(), c.begin() + d);
+		return *this;
+	}
+	SemiFPS operator>>(int d) const { return SemiFPS(*this) >>= d; }
+	SemiFPS operator<<(int d) const { return SemiFPS(*this) <<= d; }
+
+	// 累乗の剰余
+	friend SemiFPS power_mod(const SemiFPS& f, ll p, int d) {
+		SemiFPS res(e()), pow2(f);
+		while (p > 0) {
+			if (p & 1LL) res = (res * pow2).resize(d);
+			pow2 = (pow2 * pow2).resize(d);
+			p /= 2;
+		}
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const SemiFPS& f) {
+		if (f.n == 0) os << o();
+		else {
+			rep(i, f.n) {
+				os << f[i] << "x^" << i;
+				if (i < f.n - 1) os << " + ";
+			}
+		}
+		return os;
+	}
+#endif
+};
 
 

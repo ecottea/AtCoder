@@ -364,7 +364,7 @@ template <class T> struct FPS {
 *
 * 制約 : deg f < deg g, g[0] = 1
 */
-template <class T> T coef(const FPS<T>& f, const FPS<T>& g, ll d) {
+template <class T> T bostan_mori(const FPS<T>& f, const FPS<T>& g, ll d) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
 
 	//【方法】
@@ -420,7 +420,7 @@ template <class T> T coef(const FPS<T>& f, const FPS<T>& g, ll d) {
 	g3.n = sz(g3.c);
 
 	// d を半分にして再帰を回す．
-	return coef(f3, g3, d / 2);
+	return bostan_mori(f3, g3, d / 2);
 }
 
 
@@ -438,7 +438,7 @@ T linearly_recurrent_sequence(const vector<T>& a, const vector<T>& c, ll n) {
 	FPS<T> A(a), C(c);
 	FPS<T> Dnm = T::e() - (C >> 1);
 	FPS<T> Num = (Dnm * A).resize(d);
-	return coef(Num, Dnm, n);
+	return bostan_mori(Num, Dnm, n);
 }
 
 

@@ -79,6 +79,9 @@
     <Filter Include="ヘッダー ファイル\代数">
       <UniqueIdentifier>{a4e43b3f-cd28-4954-94a9-975a103cd4fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\組合せ論">
+      <UniqueIdentifier>{a1ad5cc8-853c-42d6-a8c6-f048198ec587}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -93,9 +96,6 @@
       <Filter>ヘッダー ファイル\幾何</Filter>
     </ClInclude>
     <ClInclude Include="判定%28幾何%29.h">
-      <Filter>ヘッダー ファイル\幾何</Filter>
-    </ClInclude>
-    <ClInclude Include="作図.h">
       <Filter>ヘッダー ファイル\幾何</Filter>
     </ClInclude>
     <ClInclude Include="計量.h">
@@ -137,7 +137,7 @@
     <ClInclude Include="区間.h">
       <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
-    <ClInclude Include="平面走査.h">
+    <ClInclude Include="点群.h">
       <Filter>ヘッダー ファイル\幾何</Filter>
     </ClInclude>
     <ClInclude Include="線形計画問題.h">
@@ -173,7 +173,7 @@
     <ClInclude Include="数論.h">
       <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
-    <ClInclude Include="畳み込み.h">
+    <ClInclude Include="畳込み.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="確率.h">
@@ -211,12 +211,6 @@
     </ClInclude>
     <ClInclude Include="二乗の木DP.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
-    </ClInclude>
-    <ClInclude Include="有名数列.h">
-      <Filter>ヘッダー ファイル\計算</Filter>
-    </ClInclude>
-    <ClInclude Include="二項係数.h">
-      <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="mint.h">
       <Filter>ヘッダー ファイル\数論</Filter>
@@ -332,10 +326,10 @@
     <ClInclude Include="整列集合.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
-    <ClInclude Include="全順序.h">
+    <ClInclude Include="全順序%28old%29.h">
       <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
-    <ClInclude Include="累積演算.h">
+    <ClInclude Include="累積演算%28old%29.h">
       <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
     <ClInclude Include="ビット列.h">
@@ -343,9 +337,6 @@
     </ClInclude>
     <ClInclude Include="一変数最適化.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
-    </ClInclude>
-    <ClInclude Include="探索(old).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
     <ClInclude Include="包除原理.h">
       <Filter>ヘッダー ファイル\集合</Filter>
@@ -425,16 +416,13 @@
     <ClInclude Include="前処理(列).h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
-    <ClInclude Include="写像12相.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
     <ClInclude Include="ビット演算.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="ハッシュ.h">
       <Filter>ヘッダー ファイル\アルゴリズム</Filter>
     </ClInclude>
-    <ClInclude Include="作図(基本).h">
+    <ClInclude Include="作図.h">
       <Filter>ヘッダー ファイル\幾何</Filter>
     </ClInclude>
     <ClInclude Include="列挙(文字列).h">
@@ -479,7 +467,7 @@
     <ClInclude Include="桁DP(組).h">
       <Filter>ヘッダー ファイル\数の表示</Filter>
     </ClInclude>
-    <ClInclude Include="debug.hpp">
+    <ClInclude Include="local.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="数え上げ(文字列).h">
@@ -491,8 +479,35 @@
     <ClInclude Include="数え上げ(木).h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="列挙(集合)(old).h">
+    <ClInclude Include="その他%28old%29.h">
       <Filter>ヘッダー ファイル\_old</Filter>
+    </ClInclude>
+    <ClInclude Include="ゼータメビウス変換.h">
+      <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="二項係数.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="写像12相.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="有名数列.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="グラフ(組合せ論).h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="順列(組合せ論).h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="括弧列.h">
+      <Filter>ヘッダー ファイル\文字列</Filter>
+    </ClInclude>
+    <ClInclude Include="全方位木DP(old).h">
+      <Filter>ヘッダー ファイル\_old</Filter>
+    </ClInclude>
+    <ClInclude Include="木DP.h">
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,7 @@
 #pragma once
 
 
-#ifndef HIDDEN_IN_VISUAL_STUDIO // 折りたたみ用
+#ifndef HIDDEN_IN_VS // 折りたたみ用
 
 // 警告の抑制
 #define _CRT_SECURE_NO_WARNINGS
@@ -55,20 +55,14 @@ template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; ret
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
 
 // 演算子オーバーロード
-template <class T, class U> inline istream& operator>> (istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
-template <class T> inline istream& operator>> (istream& is, vector<T>& v) { repea(x, v) is >> x; return is; }
+template <class T, class U> inline istream& operator>>(istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
+template <class T> inline istream& operator>>(istream& is, vector<T>& v) { repea(x, v) is >> x; return is; }
 template <class T> inline vector<T>& operator--(vector<T>& v) { repea(x, v) --x; return v; }
 template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x; return v; }
 
 // 手元環境（Visual Studio）
 #ifdef _MSC_VER
-#define popcount (int)__popcnt // 全ビット中の 1 の個数
-#define popcountll (int)__popcnt64
-inline int lsb(unsigned int n) { unsigned long i; _BitScanForward(&i, n); return i; } // 最下位ビットの位置（0-indexed）
-inline int lsbll(unsigned long long n) { unsigned long i; _BitScanForward64(&i, n); return i; }
-inline int msb(unsigned int n) { unsigned long i; _BitScanReverse(&i, n); return i; } // 最上位ビットの位置（0-indexed）
-inline int msbll(unsigned long long n) { unsigned long i; _BitScanReverse64(&i, n); return i; }
-template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
+#include "local.hpp"
 // 提出用（gcc）
 #else
 #define popcount (int)__builtin_popcount
@@ -78,12 +72,6 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #define msb(n) (31 - __builtin_clz(n))
 #define msbll(n) (63 - __builtin_clzll(n))
 #define gcd __gcd
-#endif
-
-// デバッグ用
-#ifdef _MSC_VER
-#include "debug.hpp"
-#else
 #define dump(...)
 #define dumpel(v)
 #define input_from_file(f)
@@ -93,18 +81,18 @@ template <class T> T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
 #endif // 折りたたみ用
 
 
-//-----------------AtCoder 専用-----------------
+//--------------AtCoder 専用--------------
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
-istream& operator>> (istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-ostream& operator<< (ostream& os, const mint& x) { os << x.val(); return os; }
+istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
-//----------------------------------------------
+//----------------------------------------
 
 
 
@@ -158,15 +146,15 @@ if (msec >= 1950) break;
 
 // Visual Studio の便利な機能
 /*
-* Ctrl + K → Ctrl + F：一括インデント調整
-* Ctrl + R → Ctrl + R：リネーム
-* Ctrl + M → Ctrl + L：一括折りたたみ／展開
-* Ctrl + M → Ctrl + M：折りたたみ／展開（ドラッグ後ならその部分のみ一括）
-* 
-* AtCoder → プロパティ → 構成プロパティ → C/C++ → 詳細設定 → 指定の警告を無効にする
-*	に 26451 を追加することで，配列の添字内での加算などへの警告を抑制できる．
-* 
-* コード -1073741571 のエラーはスタックオーバーフロー．AtCoder 上での実行なら大丈夫．
+Ctrl + K → Ctrl + F：一括インデント調整
+Ctrl + R → Ctrl + R：リネーム
+Ctrl + M → Ctrl + L：一括折りたたみ／展開
+Ctrl + M → Ctrl + M：折りたたみ／展開（ドラッグ後ならその部分のみ一括）
+
+AtCoder → プロパティ → 構成プロパティ → C/C++ → 詳細設定 → 指定の警告を無効にする
+に 26451 を追加することで，配列の添字内での加算などへの警告を抑制できる．
+
+コード -1073741571 のエラーはスタックオーバーフロー．AtCoder 上での実行なら大丈夫．
 */
 
 

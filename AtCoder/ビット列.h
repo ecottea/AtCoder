@@ -57,6 +57,15 @@ void length1(const string& s, vi& len, char one = '1') {
 }
 
 
+//【区間のビット反転】
+/*
+* ビット列の区間 [l1, r1] と [l2, r2] を共にビット反転した結果は，
+* 区間 [l1, r2] と [l2, r1] を共にビット反転した結果に一致する．
+*
+* verify : https://atcoder.jp/contests/jsc2019-qual/tasks/jsc2019_qual_c
+*/
+
+
 //【区間幅固定ビット反転】O(n)
 /*
 * ビット列 s[0..n) について，幅 k の連続部分列 s[i..i+k) に対するビット反転操作を

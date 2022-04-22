@@ -1,6 +1,26 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 畳み込み ■■■■■
+// ■■■■■ 畳込み ■■■■■
+
+
+//【畳込み】O(n m)
+/*
+* a[0..n) と b[0..m) を畳み込んだ数列 c[0..n+m-1) を返す．
+*/
+template <class T> vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
+	// verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
+
+	int n = sz(a), m = sz(b);
+
+	vector<T> c(n + m - 1);
+	rep(i, n + m - 1) {
+		repi(j, max(i - (m - 1), 0), min(i, n - 1)) {
+			c[i] += a[j] * b[i - j];
+		}
+	}
+
+	return c;
+}
 
 
 //【mod 998244353 での畳込み】O((|a| + |b|) log(|a| + |b|))
@@ -13,7 +33,7 @@
 
 //【mod 998244353 での畳込み（やや長い配列）】O((n + m) log(n + m))
 /*
-* a[0..n) と b[0..m) の mod 998244353 での畳み込みを res[0..n+m-1) に格納する．
+* a[0..n) と b[0..m) の mod 998244353 での畳込みを res[0..n+m-1) に格納する．
 *
 * 制約：n + m - 1 <= 16777216 = 2^24
 */
@@ -22,11 +42,11 @@ void convolution998244353_long(vm& a, vm& b, vm& res) {
 
 	//【方法】
 	// ACL の convolution() が結果の大きさ 2^23 以下までしか対応していないので，
-	// もしそれより大きい結果になりそうなら列を等分し，畳み込み結果を統合する．
+	// もしそれより大きい結果になりそうなら列を等分し，畳込み結果を統合する．
 
 	int n = sz(a), m = sz(b);
 
-	// 畳み込み結果の大きさが 2^23 以下なら ACL が対応している．
+	// 畳込み結果の大きさが 2^23 以下なら ACL が対応している．
 	if (n + m - 1 <= (1 << 23)) {
 		res = convolution(a, b);
 		return;
@@ -47,7 +67,7 @@ void convolution998244353_long(vm& a, vm& b, vm& res) {
 	rep(i, n1) a1[i] = a[i];
 	rep(i, n2) a2[i] = a[n1 + i];
 
-	// a を等分することにより畳み込み結果の大きさが 2^23 以下になる場合は b はそのまま
+	// a を等分することにより畳込み結果の大きさが 2^23 以下になる場合は b はそのまま
 	if (n2 + m - 1 <= (1 << 23)) {
 		vm c1 = convolution(a1, b);
 		vm c2 = convolution(a2, b);
@@ -79,14 +99,14 @@ void convolution998244353_long(vm& a, vm& b, vm& res) {
 
 //【mod 998244353 での畳込み（長い配列）】O((n + m)^2)（遅い）
 /*
-* a[0..n) と b[0..m) の mod 998244353 での畳み込みを res[0..n+m-1) に格納する．
+* a[0..n) と b[0..m) の mod 998244353 での畳込みを res[0..n+m-1) に格納する．
 */
 void convolution998244353_long(const vm& a, const vm& b, vm& res) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
 
 	//【方法】
 	// ACL の convolution() が結果の大きさ 2^23 以下までしか対応していないので，
-	// もしそれより大きい結果になりそうなら列を分割し，畳み込み結果を統合する．
+	// もしそれより大きい結果になりそうなら列を分割し，畳込み結果を統合する．
 
 	const int len = (1 << 22);
 	int n = sz(a), m = sz(b);
@@ -108,191 +128,42 @@ void convolution998244353_long(const vm& a, const vm& b, vm& res) {
 
 //【添字 xor での畳込み】
 /*
-* vT convolution_xor(vT a, vT b) : O(n log n)
-*   c[k] = Σ_(i xor j = k) a[i] b[j] なる c[0..n) を返す．
-*
-* fwt_xor(vT& a) : O(n log n)
-*   a[0..n) を高速アダマール変換する．
-*
-* ifwt_xor(vT& A) : O(n log n)
-*   A[0..n) を逆高速アダマール変換する．
-* 
-* 制約 : n は 2 の冪乗
+*【アダマール変換，対称差畳込み】を利用すればよい．
 */
-template <typename T> void fwt_xor(vector<T>& f) {
-	// 具体例：
-	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
-	//	A[1] = a[0] - a[1] + a[2] - a[3] + a[4] - a[5] + a[6] - a[7] + ...
-	//	A[2] = a[0] + a[1] - a[2] - a[3] + a[4] + a[5] - a[6] - a[7] + ...
-	//	A[3] = a[0] - a[1] - a[2] + a[3] + a[4] - a[5] - a[6] + a[7] + ...
-	//	A[4] = a[0] + a[1] + a[2] + a[3] - a[4] - a[5] - a[6] - a[7] + ...
-	//	A[5] = a[0] - a[1] + a[2] - a[3] - a[4] + a[5] - a[6] + a[7] + ...
-	//	A[6] = a[0] + a[1] - a[2] - a[3] - a[4] - a[5] + a[6] + a[7] + ...
-	//	A[7] = a[0] - a[1] - a[2] + a[3] - a[4] + a[5] + a[6] - a[7] + ...
-	//
-	// 係数行列の + の部分だけ書くと，
-	//	+ + + + + + + +
-	//	+   +   +   +  
-	//  + +     + +    
-	//  +     + +     +
-	//  + + + +        
-	//  +   +     +   +
-	//  + +         + +
-	//  +     +   + +  
-	// となり，ギャスケットっぽいがゴミが付いている．
-
-	int n = sz(f);
-    for (int i = 1; i < n; i <<= 1) {
-        rep(j, n) {
-            if ((j & i) == 0) {
-                T x = f[j], y = f[j | i];
-                f[j] = x + y, f[j | i] = x - y;
-            }
-        }
-    }
-}
-template <typename T> void ifwt_xor(vector<T>& f) {
-    int n = sz(f);
-    for (int i = 1; i < n; i <<= 1) {
-        rep(j, n) {
-            if ((j & i) == 0) {
-                T x = f[j], y = f[j | i];
-                f[j] = (x + y) / 2, f[j | i] = (x - y) / 2;
-            }
-        }
-    }
-}
-template <typename T> vector<T> convolution_xor(vector<T> a, vector<T> b) {
-    // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
-	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
-
-    int n = sz(a);
-    fwt_xor(a); fwt_xor(b); // A = fwt_xor(a), B = fwt_xor(b) を計算 : O(n log n)
-    rep(i, n) a[i] *= b[i]; // C[k] = A[k] * B[k] を計算 : O(n)
-    ifwt_xor(a);            // c = ifwt_xor(C) を計算 : O(n log n)
-    return a;
-}
 
 
-//【上位集合，添字 and での畳込み】
+//【添字 and での畳込み】
 /*
-* vT convolution_and(vT a, v T b) : O(n log n)
-*   c[k] = Σ_(i and j = k) a[i] b[j] なる c[0..n) を返す．
-*
-* fwt_and(vT& a) : O(n log n)
-*   A[j] = Σ_(i ⊃ j) a[i] なる A[0..n) に上書きする．
-*  （上位集合での高速ゼータ変換）
-*
-* ifwt_and(vT& A) : O(n log n)
-*   a[j] = Σ_(i ⊃ j) (-1)^(i - j) A[i] なる a[0..n) に上書きする．
-*  （上位集合での高速メビウス変換）
-* 
-* 制約 : n は 2 の冪乗
+*【上位集合でのゼータ・メビウス変換，積集合畳込み】を利用すればよい．
 */
-template <typename T> void fwt_and(vector<T>& f) {
-	// 具体例を書いてみると，次のようにシェルピンスキーのギャスケットのパターンが見える：
-	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
-	//	A[1] =      + a[1]        + a[3]        + a[5]        + a[7] + ...
-	//	A[2] =             + a[2] + a[3]               + a[6] + a[7] + ...
-	//	A[3] =                    + a[3]                      + a[7] + ...
-	//	A[4] =                           + a[4] + a[5] + a[6] + a[7] + ...
-	//	A[5] =                                  + a[5]        + a[7] + ...
-	//	A[6] =                                         + a[6] + a[7] + ...
-	//	A[7] =                                                + a[7] + ...
-	
-	int n = sz(f);
-    for (int i = 1; i < n; i <<= 1) {
-        rep(j, n) {
-            if ((j & i) == 0) f[j] += f[j | i];
-        }
-    }
-}
-template <typename T> void ifwt_and(vector<T>& f) {
-    int n = sz(f);
-    for (int i = 1; i < n; i <<= 1) {
-        rep(j, n) {
-            if ((j & i) == 0) f[j] -= f[j | i];
-        }
-    }
-}
-template <typename T> vector<T> convolution_and(vector<T> a, vector<T> b) {
-    // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
-	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
-
-    int n = sz(a);
-    fwt_and(a); fwt_and(b);
-    rep(i, n) a[i] *= b[i];
-    ifwt_and(a);
-    return a;
-}
 
 
-//【下位集合，添字 or での畳込み】
+//【添字 or での畳込み】
 /*
-* vT convolution_or(vT a, vT b) : O(n log n)
-*   c[k] = Σ_(i or j = k) a[i] b[j] なる c[0..n) を返す．
-*
-* fwt_or(vT& a) : O(n log n)
-*   A[j] = Σ_(i ⊂ j) a[i] なる A[0..n) に上書きする．
-*  （下位集合での高速ゼータ変換）
-*
-* ifwt_or(vT& A) : O(n log n)
-*   a[j] = Σ_(i ⊂ j) (-1)^(i - j) A[i] なる a[0..n) に上書きする．
-*  （下位集合での高速メビウス変換）
-* 
-* 制約 : n は 2 の冪乗
+*【下位集合でのゼータ・メビウス変換，和集合畳込み】を利用すればよい．
 */
-template <typename T> void fwt_or(vector<T>& f) {
-	// 具体例を書いてみると，次のようにシェルピンスキーのギャスケットのパターンが見える：
-	//	A[0] = a[0]
-	//	A[1] = a[0] + a[1]
-	//	A[2] = a[0] +      + a[2]
-	//	A[3] = a[0] + a[1] + a[2] + a[3]
-	//	A[4] = a[0]                      + a[4]
-	//	A[5] = a[0] + a[1]               + a[4] + a[5]
-	//	A[6] = a[0] +      + a[2]        + a[4]        + a[6]
-	//	A[7] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7]
 
-	int n = sz(f);
-    for (int i = 1; i < n; i <<= 1) {
-        rep(j, n) {
-            if ((j & i) == 0) f[j | i] += f[j];
-        }
-    }
-}
-template <typename T> void ifwt_or(vector<T>& f) {
-    int n = sz(f);
-    for (int i = 1; i < n; i <<= 1) {
-        rep(j, n) {
-            if ((j & i) == 0) f[j | i] -= f[j];
-        }
-    }
-}
-template <typename T> vector<T> convolution_or(vector<T> a, vector<T> b) {
-    // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
 
-    int n = sz(a);
-    fwt_or(a); fwt_or(b);
-    rep(i, n) a[i] *= b[i];
-    ifwt_or(a);
-    return a;
-}
+//【添字 or での畳込み（and = 0 制約付き）】
+/*
+*【非交和畳込み】を利用すればよい．
+*/
 
 
 //【添字 min での畳込み】
 /*
-* convolution_min(a, b) : O(n)
+* min_convolution(a, b) : O(n)
 *   c[k] = Σ_(min(i, j) = k) a[i] b[j] なる c を返す．
 *
-* zeta_min(a) : O(n)
+* min_zeta(a) : O(n)
 *   A[j] = Σ_(i >= j) a[i] なる A に上書きする．
 *  （上位ゼータ変換，上からの累積和）
 *
-* mobius_min(A) : O(n)
+* min_mobius(A) : O(n)
 *   A[j] = Σ_(i >= j) a[i] なる a に上書きする．
 *  （上位メビウス変換，下からの差分）
 */
-template <typename T> void zeta_min(vector<T>& f) {
+template <typename T> void min_zeta(vector<T>& f) {
 	// 具体例：
 	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
 	//	A[1] =        a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
@@ -306,7 +177,7 @@ template <typename T> void zeta_min(vector<T>& f) {
 	int n = sz(f);
 	repir(i, n - 2, 0) f[i] += f[i + 1];
 }
-template <typename T> void mobius_min(vector<T>& f) {
+template <typename T> void min_mobius(vector<T>& f) {
 	// 具体例：
 	//	a[0] = A[0] - A[1]
 	//	a[1] =        A[1] - A[2]
@@ -320,31 +191,33 @@ template <typename T> void mobius_min(vector<T>& f) {
 	int n = sz(f);
 	repi(i, 0, n - 2) f[i] -= f[i + 1];
 }
-template <typename T> vector<T> convolution_min(vector<T> a, vector<T> b) {
+template <typename T> vector<T> min_convolution(vector<T> a, vector<T> b) {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
 
 	int n = sz(a);
-	zeta_min(a); zeta_min(b);
+
+	min_zeta(a); min_zeta(b);
 	rep(i, n) a[i] *= b[i];
-	mobius_min(a);
+	min_mobius(a);
+
 	return a;
 }
 
 
 //【添字 max での畳込み】
 /*
-* convolution_max(a, b) : O(n)
+* max_convolution(a, b) : O(n)
 *   c[k] = Σ_(max(i, j) = k) a[i] b[j] なる c を返す．
 *
-* zeta_max(a) : O(n)
+* max_zeta(a) : O(n)
 *   A[j] = Σ_(i <= j) a[i] なる A に上書きする．
 *  （下位ゼータ変換，下からの累積和）
 *
-* mobius_max(A) : O(n)
+* max_mobius(A) : O(n)
 *   A[j] = Σ_(i <= j) a[i] なる a に上書きする．
 *  （下位メビウス変換，上からの差分）
 */
-template <typename T> void zeta_max(vector<T>& f) {
+template <typename T> void max_zeta(vector<T>& f) {
 	// 具体例：
 	//	A[0] = a[0]
 	//	A[1] = a[0] + a[1]
@@ -358,7 +231,7 @@ template <typename T> void zeta_max(vector<T>& f) {
 	int n = sz(f);
 	repi(i, 1, n - 1) f[i] += f[i - 1];
 }
-template <typename T> void mobius_max(vector<T>& f) {
+template <typename T> void max_mobius(vector<T>& f) {
 	// 具体例：
 	//	a[0] =   A[0]
 	//	a[1] = - A[0] + A[1]
@@ -372,13 +245,15 @@ template <typename T> void mobius_max(vector<T>& f) {
 	int n = sz(f);
 	repir(i, n - 1, 1) f[i] -= f[i - 1];
 }
-template <typename T> vector<T> convolution_max(vector<T> a, vector<T> b) {
+template <typename T> vector<T> max_convolution(vector<T> a, vector<T> b) {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
 
 	int n = sz(a);
-	zeta_max(a); zeta_max(b);
+
+	max_zeta(a); max_zeta(b);
 	rep(i, n) a[i] *= b[i];
-	mobius_max(a);
+	max_mobius(a);
+
 	return a;
 }
 
@@ -388,14 +263,14 @@ template <typename T> vector<T> convolution_max(vector<T> a, vector<T> b) {
 * NTT() : O(1)
 *	1 の原始 2^i 乗根（i ≦ 23）を持って初期化を行う．
 *
-* ntt(const vi& a, vi& A) : O(n (log n)^2) ?
+* ntt(const vm& a, vm& A) : O(n (log n)^2) ?
 *	a に対し mod 998244353 で数論変換を行った結果を A に格納する．
 *
-* intt(const vi& A, vi& a) : O(n (log n)^2) ?
+* intt(const vm& A, vm& a) : O(n (log n)^2) ?
 *	A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
 *
 * convolution(a, b) : O(n (log n)^2) ?
-*	a と b の畳み込み積を返す．
+*	a と b の畳込みを返す．
 *
 * 制約 : n は 2 の冪乗
 */
@@ -492,7 +367,7 @@ struct NTT {
 		riffle(b, c, a);
 	}
 
-	// a と b の畳み込み積を返す．
+	// a と b の畳込み積を返す．
 	vm convolution(vm a, vm b) {
 		// verify : https://judge.yosupo.jp/problem/convolution_mod
 
