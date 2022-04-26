@@ -144,6 +144,8 @@ template <class T> void next_greater_positions(const vector<T>& a, int k, vvi& n
 * nxt[j] に格納する．（存在しなければ n）
 */
 template <class T> void next_equal(const vector<T>& a, vi& nxt) {
+	// verify : https://atcoder.jp/contests/agc036/tasks/agc036_b
+
 	int n = sz(a);
 
 	// nxt[i] : j > i かつ a[j] = a[i] となる最小の j（なければ n）

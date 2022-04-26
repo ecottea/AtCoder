@@ -126,6 +126,32 @@ void convolution998244353_long(const vm& a, const vm& b, vm& res) {
 }
 
 
+//【複数の数列の畳込み】O(n (log n)^2)
+/*
+* 数列の集合 a の要素を全て畳込んだ結果（長さは n）を返す．
+*/
+vm multi_convoluion(vvm a) {
+	// verify : https://atcoder.jp/contests/abl/tasks/abl_f
+
+	int m = sz(a);
+
+	// (要素数, 数列の番号) の組を要素数昇順に記録する．
+	priority_queue_rev<pii> q;
+	rep(i, m) q.push({ sz(a[i]), i });
+
+	while (sz(q) >= 2) {
+		int ni, i, nj, j;
+		tie(ni, i) = q.top(); q.pop();
+		tie(nj, j) = q.top(); q.pop();
+
+		a[i] = convolution(a[i], a[j]);
+		q.push({ ni + nj - 1, i });
+	}
+
+	return a[q.top().second];
+}
+
+
 //【添字 xor での畳込み】
 /*
 *【アダマール変換，対称差畳込み】を利用すればよい．
@@ -260,19 +286,27 @@ template <typename T> vector<T> max_convolution(vector<T> a, vector<T> b) {
 
 //【数論変換】
 /*
-* NTT() : O(1)
-*	1 の原始 2^i 乗根（i ≦ 23）を持って初期化を行う．
+* NTT(int n) : O(n)
+*	長さ n 以下の数列を扱えるよう初期化を行う．
 *
-* ntt(const vm& a, vm& A) : O(n (log n)^2) ?
-*	a に対し mod 998244353 で数論変換を行った結果を A に格納する．
+* ntt(const vm& a, vm& A) : O(n log n)
+*	a[0..n) に対し mod 998244353 で数論変換を行った結果を A[0..n) に格納する．
+*	制約 : n は 2 の冪乗
 *
-* intt(const vm& A, vm& a) : O(n (log n)^2) ?
-*	A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
+* intt(const vm& A, vm& a) : O(n log n)
+*	A[0..n) に対し mod 998244353 で逆数論変換を行った結果を a[0..n) に格納する．
+*	制約 : n は 2 の冪乗
 *
-* convolution(a, b) : O(n (log n)^2) ?
-*	a と b の畳込みを返す．
+* vm convolution(vm a, vm b) : O((n + m) log(n + m))
+*	a[0..n) と b[0..m) の畳込みを返す．
 *
-* 制約 : n は 2 の冪乗
+* vm cyclic_convolution(vm a, vm b) : O(n log n)
+*	a[0..n) と b[0..n) の巡回畳込みを返す．
+*	制約 : n は 2 の冪乗
+*
+* vm cyclic_convolution_power(vm a, ll d) : O(n log n + n log d)
+*	a[0..n) を d 個巡回畳込みした結果を返す．
+*	制約 : n は 2 の冪乗
 */
 struct NTT {
 	// 参考 : https://qiita.com/Sen_comp/items/9401382df736e51564c1
@@ -280,40 +314,47 @@ struct NTT {
 	using mint = modint998244353;
 	using vm = vector<mint>;
 
-	// root[i] : 1 の原始 2^i 乗根（i ≦ 23）
-	vm r, r_inv;
+	// N : 扱える数列の長さの上限（N = 2^M）
+	int N, M;
 
-	NTT() : r(24), r_inv(24) {
-		// 1 の原始 2^23 乗根
-		// 998244353 = 2^23 * 119 + 1 なので，原始根 3 の 119 乗を計算することで求まる．
-		r[23] = mint(3).pow(119);
-		r_inv[23] = r[23].inv();
+	// w : 1 の原始 2^M 乗根，w_pow[i] : w^i，w_pow[N-i] : w^(-i)
+	mint w; vm w_pow;
 
-		repir(i, 22, 0) {
-			r[i] = r[i + 1] * r[i + 1];
-			r_inv[i] = r_inv[i + 1] * r_inv[i + 1];
-		}
+	// 長さ n 以下の数列を扱えるよう初期化を行う．
+	NTT(int n) {
+		// n 以上の最小の 2 冪 2^M を求める．
+		M = msb(n - 1) + 1;
+		N = 1 << M;
+
+		// 長さ 2^M の数列を扱うためには，1 の原始 2^M 乗根が必要．
+		// 998244353 = 2^23 * 119 + 1 なので，原始根 3 の 119 * 2^(23-M) 乗を計算することで求まる．
+		w = mint(3).pow(119LL << (23 - M));
+
+		// w の累乗を前計算しておく．
+		w_pow.resize(N + 1);
+		w_pow[0] = 1;
+		repi(i, 1, N) w_pow[i] = w_pow[i - 1] * w;
 	}
 
 	// x を (y, z) に分割する
 	void butterfly(const vm& x, vm& y, vm& z) {
-		int n = sz(x) / 2;
-		y = z = vm(n);
+		int n = sz(x) / 2, m = msb(n) + 1;
+		y.resize(n); z.resize(n);
 
 		rep(i, n) {
 			y[i] = x[i] + x[i + n];
-			z[i] = (x[i] - x[i + n]) * r[msb(n) + 1].pow(i); // ここが遅い
+			z[i] = (x[i] - x[i + n]) * w_pow[(ll)i << (M - m)];
 		}
 	}
 
 	// x を (y, z) に分割する（逆変換用）
 	void butterfly_inv(const vm& x, vm& y, vm& z) {
-		int n = sz(x) / 2;
-		y = z = vm(n);
+		int n = sz(x) / 2, m = msb(n) + 1;
+		y.resize(n); z.resize(n);
 
 		rep(i, n) {
 			y[i] = x[i] + x[i + n];
-			z[i] = (x[i] - x[i + n]) * r_inv[msb(n) + 1].pow(i); // ここが遅い
+			z[i] = (x[i] - x[i + n]) * w_pow[N - (i << (M - m))];
 		}
 	}
 
@@ -330,6 +371,8 @@ struct NTT {
 
 	// 長さが 2 冪の列 a に対し mod 998244353 で数論変換を行った結果を A に格納する．
 	void ntt(const vm& a, vm& A) {
+		assert(sz(a) <= N);
+
 		int n = sz(a);
 		if (n == 1) {
 			A = a;
@@ -338,20 +381,19 @@ struct NTT {
 
 		vm b, c, B, C;
 		butterfly(a, b, c);
-		ntt(b, B);
-		ntt(c, C);
+		ntt(b, B); ntt(c, C);
 		riffle(B, C, A);
 	}
 
 	// 長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
 	void intt(const vm& A, vm& a) {
+		assert(sz(a) <= N);
+
 		intt_sub(A, a);
 
 		// 定数倍の調整
 		mint n_inv = mint(sz(A)).inv();
-		rep(i, sz(A)) {
-			a[i] *= n_inv;
-		}
+		rep(i, sz(A)) a[i] *= n_inv;
 	}
 	void intt_sub(const vm& A, vm& a) {
 		int n = sz(A);
@@ -362,29 +404,63 @@ struct NTT {
 
 		vm b, c, B, C;
 		butterfly_inv(A, B, C);
-		intt_sub(B, b);
-		intt_sub(C, c);
+		intt_sub(B, b); intt_sub(C, c);
 		riffle(b, c, a);
 	}
 
-	// a と b の畳込み積を返す．
+	// a と b の畳込みを返す．
 	vm convolution(vm a, vm b) {
 		// verify : https://judge.yosupo.jp/problem/convolution_mod
+
+		assert(sz(a) + sz(b) - 1 <= N);
 
 		int n = sz(a), m = sz(b);
 
 		int k = 1 << (msb(n + m - 2) + 1);
-		a.resize(k);
-		b.resize(k);
-		vm A, B;
-		ntt(a, A);
-		ntt(b, B);
-		rep(i, sz(A)) A[i] *= B[i];
+		a.resize(k); b.resize(k);
+
+		vm A, B; ntt(a, A); ntt(b, B);
+		rep(i, k) A[i] *= B[i];
 		intt(A, a);
+
 		a.resize(n + m - 1);
 
 		return a;
 	}
+
+	// 長さが 2 冪の列 a と b の巡回畳込みを返す．
+	vm cyclic_convolution(vm a, vm b) {
+		assert(sz(a) == sz(b) && sz(a) <= N);
+
+		int n = sz(a);
+
+		vm A, B; ntt(a, A); ntt(b, B);
+		rep(i, n) A[i] *= B[i];
+		intt(A, a);
+
+		return a;
+	}
+
+	// 長さが 2 冪の列 a を d 個巡回畳込みした結果を返す．
+	vm cyclic_convolution_power(vm a, ll d) {
+		assert(sz(a) <= N);
+
+		int n = sz(a);
+
+		vm A; ntt(a, A);
+		rep(i, n) A[i] = A[i].pow(d);
+		intt(A, a);
+
+		return a;
+	}
 };
+
+
+//【数論変換とシフト】
+/*
+* 長さ 2^m の数列 a の数論変換対が A であるとき，
+* b[i] = a[(i - 1) mod 2^m] の数論変換対は B[i] = ζ^i A[i] である．
+* ここで ζ は数論変換に用いた 1 の原始 2^m 乗根である．
+*/
 
 

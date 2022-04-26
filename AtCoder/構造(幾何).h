@@ -37,7 +37,7 @@
 * T angle(Point<T> p) : O(1)
 *	自身から p までの成す角度を返す．
 */
-template <typename T> struct Point {
+template <class T> struct Point {
 	// 点の x 座標，y 座標
 	T x, y;
 
@@ -96,20 +96,20 @@ template <typename T> struct Point {
 *
 * その他，無向直線，有向線分，無向線分などを表すのにも用いる．
 */
-template <typename T> using Line = pair<Point<T>, Point<T>>;
+template <class T> using Line = pair<Point<T>, Point<T>>;
 
 
 //【平面内の円】
 /*
 * {p, r} : 点 p を中心とする半径 r の円を表す．
 */
-template <typename T> using Circle = pair<Point<T>, T>;
+template <class T> using Circle = pair<Point<T>, T>;
 
 
 //【平面内の多角形】
 /*
 * Polygon(p[0..n]) : これらの点を周る順に頂点にもつ n 角形を表す．
 */
-template <typename T> using Polygon = vector<Point<T>>;
+template <class T> using Polygon = vector<Point<T>>;
 
 

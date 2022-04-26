@@ -32,7 +32,7 @@ template <class G> void tree_dfs(G& g, int st, vi& seq) {
 		// 帰りがけ順の処理を書くのはここだが，今回は必要ない．
 	};
 
-	// st を始点として再帰関数を呼び出す．
+	// 根を始点として再帰関数を呼び出す．
 	dfs(st, -1);
 }
 

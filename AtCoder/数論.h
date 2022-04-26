@@ -5,9 +5,12 @@
 
 //【最大公約数】O(log max(a, b))
 /*
-* gcd(a, b) を返す．
+* gcd(a, b) >= 0 を返す．
 */
 ll euclid(ll a, ll b) {
+	a = abs(a);
+	b = abs(b);
+
 	// 改変しやすいよう再帰を用いずに書く
 	while (b > 0) {
 		a %= b;
@@ -249,6 +252,8 @@ bool primeQ(ll n) {
 * 利用：【素因数分解】
 */
 ll euler_phi(ll n) {
+	// verify : https://judge.yosupo.jp/problem/tetration_mod
+
 	// n を素因数分解した結果を pps に受け取る．
 	map<ll, int> pps;
 	factor_integer(n, pps);
@@ -260,6 +265,15 @@ ll euler_phi(ll n) {
 	}
 	return res;
 }
+
+
+//【オイラーの定理】
+/*
+* gcd(a, m) = 1 のとき，a^φ(m) = 1 (mod m)
+* 任意の a について a^(φ(m) + 1) = a (mod m)
+* 
+* verify : https://atcoder.jp/contests/arc113/tasks/arc113_b
+*/
 
 
 //【カーマイケル関数】O(√n)

@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "ゼータメビウス変換.h"
+#include "畳込み.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
 
@@ -235,6 +236,73 @@ void count_connected_subgraph(const Graph& g, vm& cnt) {
 
 		cnt[set] = cnt_all[set] - sum;
 	}
+}
+
+
+//【異色頂点間を結ぶ完全マッチングの数え上げ】
+/*
+* 頂点の色が c[0..n) で与えられる完全グラフ K_n について，
+* どのマッチングも異色頂点間を結ぶような完全マッチングの個数を返す．
+*
+* 利用：【階乗など（法が大きな素数）】，【複数の数列の畳込み】
+*/
+template <class T> mint count_different_color_matching(const vector<T>& c) {
+	// verify : https://atcoder.jp/contests/abl/tasks/abl_f
+
+	//【方法】
+	// K_n の同色頂点を結ぶ辺集合 E についての状態系包除原理を用いる．
+	// 各 es⊂E について，es に属する辺を全て含む K_n の完全マッチングの個数を c[es] とすれば，
+	// 求める場合の数は
+	//		Σes⊂E (-1)^|es| c[es]
+	//			c[es] = (n - 2 |es|)!! （es に端点を共有する辺が含まれない場合）
+	//			c[es] = 0			   （そうでない場合）
+	// と求められる．
+	//
+	// es⊂E の選び方は多すぎるので，先の式の通りに計算を行うことはできない．
+	// 代わりに |es|=j であり，端点を共有する辺を含まないような es⊂E が何通りあるかを考える．
+	// これが b[j] 通りであると分かれば，求める場合の数は
+	//		Σj=[0..n/2] (-1)^j b[j] (n - 2 j)!!
+	// と表される．
+	//	
+	// b[j] は K_n の同色頂点間を結ぶことだけが許される大きさ j のマッチングの数である．
+	// 各色の頂点数が cnt[0..m) であるとすると，
+	// b[j] は K_cnt[0] + ... + K_cnt[m-1] の大きさ j のマッチングの数である．
+	// これらのグラフ間には共通する頂点は存在しないので，畳込みを使うことができる．
+
+	int n = sz(c);
+	if (n % 2 == 1) return 0;
+
+	unordered_map<T, int> cnt;
+	rep(i, n) cnt[c[i]]++;
+
+	// df[i] : (2i-1)!!
+	vm df(n / 2 + 1);
+	df[0] = 1;
+	repi(i, 1, n / 2) df[i] = df[i - 1] * (2 * i - 1);
+
+	Factorial_mint fm(n);
+
+	// a[i][j] : i 番目の色の頂点について，その中で大きさ j のマッチングを作る場合の数
+	vvm a;
+	repe(p, cnt) {
+		int ni = p.second;
+		a.push_back(vm(ni / 2 + 1));
+
+		repi(j, 0, ni / 2) {
+			a.back()[j] = fm.binomial(ni, 2 * j) * df[j];
+		}
+	}
+
+	// b[j] : 同色の頂点間を結ぶ大きさ j のマッチングを作る場合の数
+	vm b = multi_convoluion(a);
+	b.resize(n / 2 + 1);
+
+	mint res = 0;
+	repi(j, 0, n / 2) {
+		res += (j % 2 == 0 ? 1 : -1) * b[j] * df[n / 2 - j];
+	}
+
+	return res;
 }
 
 

@@ -194,13 +194,15 @@ struct Minimum_cost_bipartite_matching {
 */
 
 
-//【完全二部グラフの最小コスト完全マッチング／ハンガリアン法】O(|S|^3 ?)
+//【完全二部グラフの最小コスト完全マッチング】O(|S|^3 ?)
 /*
 * S[i], T[j] 間のコストが c[i][j] で与えられるコスト付き完全二部グラフ (S, T) について，
 * 完全マッチングのうち最小のコストをもつもののコストを返す．
 * また S[i], T[j] がマッチングを成すことを p[i] = j として格納する．
+* 
+* 利用：【二部グラフの最大マッチング，最小辺被覆，最小点被覆】
 */
-ll minimum_cost_perfect_matching(const vvl& c_, vi& p) {
+ll hungarian(const vvl& c_, vi& p) {
 	// 参考 : http://www.bunkyo.ac.jp/~nemoto/lecture/network/2010/matching1_2010.pdf
 	// verify : https://judge.yosupo.jp/problem/assignment
 

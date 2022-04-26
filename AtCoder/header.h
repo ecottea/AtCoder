@@ -125,12 +125,16 @@ stringstream ss{ str };
 getline(ss, s, ' ');
  
 // x に [l..r] 上の一様乱数を代入する
-mt19937 mt;
+mt19937_64 mt;
 mt.seed((int)time(NULL));
-uniform_int_distribution<> rnd(l, r);
-int x = rnd(mt);
+uniform_int_distribution<ll> rnd(l, r);
+ll x = rnd(mt);
 
-// vi a() で確保したメモリを解法する
+// 配列 a をランダムにシャッフルする
+mt19937_64 mt((int)time(NULL));
+shuffle(all(a), mt);
+
+// vi a() で確保したメモリを開放する
 vi().swap(a)
 
 // 型 T の最小値[最大値] を取得する．
@@ -218,6 +222,7 @@ void zikken() {
 		auto res_naive = naive(n, a);
 		auto res_solve = solve(n, a);
 
+#ifdef _MSC_VER
 		if (res_naive != res_solve) {
 			cout << "----------error!----------" << endl;
 			cout << a << endl;
@@ -225,6 +230,7 @@ void zikken() {
 			cout << res_solve << endl;
 			cout << "--------------------------" << endl;
 		}
+#endif
 	}
 }
 

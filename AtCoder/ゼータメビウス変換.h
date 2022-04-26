@@ -59,7 +59,6 @@ template <typename T> vector<T> and_convolution(vector<T> a, vector<T> b) {
 }
 
 
-
 //【下位集合でのゼータ・メビウス変換，和集合畳込み】
 /*
 * subset_zeta(vT& a) : O(2^n n)
@@ -122,13 +121,13 @@ template <typename T> vector<T> or_convolution(vector<T> a, vector<T> b) {
 *
 * 利用：【下位集合でのゼータ・メビウス変換，和集合畳込み】，【形式的冪級数（可換環）】
 */
-template <typename T> T add_duc(T x, T y) { return x + y; }
-template <typename T> T o_duc() { return 0; }
-template <typename T> T mi_duc(T x) { return -x; }
-template <typename T> T mul_duc(T x, T y) { return x * y; }
-template <typename T> T e_duc() { return 1; }
+template <class T> T add_duc(T x, T y) { return x + y; }
+template <class T> T o_duc() { return 0; }
+template <class T> T mi_duc(T x) { return -x; }
+template <class T> T mul_duc(T x, T y) { return x * y; }
+template <class T> T e_duc() { return 1; }
 #define Add_mul_cring_duc T, add_duc, o_duc, mi_duc, mul_duc, e_duc
-template <typename T> vector<T> disjoint_union_convolution(const vector<T>& a, const vector<T>& b) {
+template <class T> vector<T> disjoint_union_convolution(const vector<T>& a, const vector<T>& b) {
     // 参考 : https://37zigen.com/subset-convolution/
     // verify : https://judge.yosupo.jp/problem/subset_convolution
 

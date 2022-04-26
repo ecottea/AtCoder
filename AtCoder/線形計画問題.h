@@ -232,3 +232,80 @@ struct Ushige_lb1_only {
 };
 
 
+//【整数計画問題（2 変数，1 条件）】O(√e)
+/*
+* 変数 x, y(>=0) についての整数計画問題
+*	maximize :   a x + b y
+*	subject to : c x + d y <= e
+* の解の目的関数値を返し，実行可能解を sx, sy に格納する．
+*
+* 制約：c > 0, d > 0, e >= 0
+*
+*（平方分割）
+*/
+ll integer_programming_2var_1sub(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
+	// verify : https://atcoder.jp/contests/arc139/tasks/arc139_b
+
+	assert(c > 0 && d > 0 && e >= 0);
+
+	ll sx = -1, sy = -1, res = -INFL;
+
+	// 直線 a x + b y = const を左下方向に移動させる場合
+	if (a <= 0 && b <= 0) {
+		// 明らかに原点で最大となる．
+		sx = 0;
+		sy = 0;
+		res = 0;
+	}
+	// 直線 a x + b y = const を左上方向に移動させる場合
+	else if (a <= 0 && b > 0) {
+		// 明らかに y 軸上で最大となる．
+		sx = 0;
+		sy = e / d;
+		res = b * sy;
+	}
+	// 直線 a x + b y = const を右下方向に移動させる場合
+	else if (a > 0 && b <= 0) {
+		// 明らかに x 軸上で最大となる．
+		sx = e / c;
+		sy = 0;
+		res = a * sx;
+	}
+	// 以降は直線 a x + b y = const を右上方向に移動させる場合について考える．
+	else {
+		// a d - b c >= 0 としておく．
+		bool swap_flag = false;
+		if (a * d - b * c < 0) {
+			swap(a, b); swap(c, d);
+			swap_flag = true;
+		}
+
+		// O(e/c) の全探索を採用する場合
+		if (e / c < c) {
+			// x の動ける範囲は 0 <= x <= e/c なので，x を決め打ち全探索する．
+			repi(x, 0, e / c) {
+				ll y = (e - c * x) / d;
+
+				if (chmax(res, a * x + b * y)) { sx = x; sy = y; };
+			}
+		}
+		// O(c) の全探索を採用する場合
+		else {
+			// 最適解 (x0, y0) においては 0 <= y0 < c なので，y を決め打ち全探索する．
+			//（もし y0 >= c だと (x0 + d, y0 - c) の方が目的関数値を大きくする．）
+			repi(y, 0, min(c - 1, e / d)) {
+				ll x = (e - d * y) / c;
+
+				if (chmax(res, a * x + b * y)) { sx = x; sy = y; };
+			}
+		}
+
+		if (swap_flag) swap(sx, sy);
+	}
+
+	if (sx_ != nullptr) *sx_ = sx;
+	if (sy_ != nullptr) *sy_ = sy;
+	return res;
+}
+
+

@@ -68,7 +68,7 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #define lsbll __builtin_ctzll
 #define msb(n) (31 - __builtin_clz(n))
 #define msbll(n) (63 - __builtin_clzll(n))
-#define gcd __gcd
+#define gcd(a, b) abs(__gcd(a, b))
 #define dump(...)
 #define dumpel(v)
 #define input_from_file(f)

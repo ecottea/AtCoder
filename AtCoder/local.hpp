@@ -38,7 +38,15 @@ inline int msbll(unsigned long long n) {
 
 // Å‘åŒö–ñ”
 template <class T> T gcd(T a, T b) {
-	return b ? gcd(b, a % b) : a;
+	a = abs(a);
+	b = abs(b);
+
+	while (b > 0) {
+		a %= b;
+		swap(a, b);
+	}
+
+	return a;
 }
 
 
@@ -81,6 +89,12 @@ inline ostream& operator<< (ostream& os, const set<T>& s) {
 
 template <class T>
 inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) {
+	repe(x, s) os << x << " ";
+	return os;
+}
+
+template <class T>
+inline ostream& operator<< (ostream& os, const multiset<T>& s) {
 	repe(x, s) os << x << " ";
 	return os;
 }

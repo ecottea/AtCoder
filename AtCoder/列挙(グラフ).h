@@ -4,7 +4,7 @@
 // ■■■■■ グラフ上の列挙問題 ■■■■■
 
 
-//【完全グラフの完全マッチングの列挙】O((2n)!! n)
+//【完全グラフの完全マッチングの列挙】O((2n-1)!! n)
 /*
 * 頂点 [0..2n) をもつ完全グラフの完全マッチングを mcs に列挙する．
 * 完全マッチングは n 個の頂点対のリストとして表す．
@@ -31,7 +31,7 @@ void enumerate_perfect_matching(int n, vector<vector<pii>>& mcs) {
 			return;
 		}
 
-		// 頂点 i が使用済みだった場合は次の頂点へ進む．
+		// 頂点 i が使用済だった場合は次の頂点へ進む．
 		if (a[i] != -1) {
 			rf(i + 1);
 			return;
@@ -43,7 +43,7 @@ void enumerate_perfect_matching(int n, vector<vector<pii>>& mcs) {
 
 		// j : 頂点 i とマッチさせる頂点
 		repi(j, i + 1, 2 * n - 1) {
-			// 頂点 j が使用済みだった場合は選べない．
+			// 頂点 j が使用済だった場合は選べない．
 			if (a[j] != -1) continue;
 
 			// 頂点 j を頂点 i とマッチさせる．

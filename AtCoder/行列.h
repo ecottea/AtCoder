@@ -148,7 +148,7 @@ template <class T> struct Matrix {
 * 行基本変形で m * n 行列 mat を階段行列に変形する．
 * 最も右下のピボットの位置 (i, j) を返す．零行列なら (-1, -1) を返す．
 */
-template <class T> pii row_echelon_form(Matrix<T>& mat) {
+template <class T> pii reduced_row_echelon_form(Matrix<T>& mat) {
 	int m = mat.m, n = mat.n;
 	auto& v = mat.v;
 	

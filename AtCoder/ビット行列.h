@@ -7,17 +7,17 @@
 /*
 * ビット行列を表す構造体
 *
-* Matrix<N>(m, n) : O(m N / 64)
+* Bit_matrix<N>(int m, int n) : O(m N / 64)
 *	m * n 零行列で初期化する．
 *	制約：n <= N
 *
-* Matrix<N>(n) : O(n N / 64)
+* Bit_matrix<N>(int n) : O(n N / 64)
 *	n * n 単位行列で初期化する．
 *
-* Matrix<N>(a, n) : O(m N / 64)
+* Bit_matrix<N>(vector<bitset<N>> a, int n) : O(m N / 64)
 *	配列 a の要素で初期化する．
 *
-* push_back(col) : O(N / 64)
+* push_back(bitset<N> col) : O(N / 64)
 *	最下行に col を追加する．
 *
 * A * x : O(m N / 64)
@@ -27,13 +27,13 @@
 * A * B : O(l m n)
 *	l * m 行列 A と m * n 行列 B の積を返す．
 *
-* pow(d) : O(n^3 log d)
+* pow(ll d) : O(n^3 log d)
 *	自身を d 乗した行列を返す．
 *
 * transpose() : O(m n)
 *	自身を転置した行列を返す．
 *
-* prod_transpose(A, B) : O(l m n / 64)
+* prod_transpose(Bit_matrix<N> A, Bit_matrix<N> B) : O(l m n / 64)
 *	l * m 行列 A と n * m 行列 B について，積 A * B^T を返す．
 */
 template <int N> struct Bit_matrix {
@@ -113,31 +113,26 @@ template <int N> struct Bit_matrix {
 };
 
 
-//【階段行列】O(m^2 n / 64)
+//【行簡約階段形】O(m^2 n / 64)
 /*
-* 行基本変形で mat を階段行列に変形する．
-* 最も右下のピボットの位置 (i, j) を返す（零行列なら (-1, -1) を返す）
-* 
-* i + 1 は mat の階数と解釈できる．
+* 行基本変形で mat を行簡約階段形に変形する（ピボットの上下は全て 0．）
+* また i 行目のピボットが何列目かを pjs[i] に格納し，mat の階数を返す．
 *
-*（呼び出すとき row_echelon_form<N> としないと gcc でエラーになるので注意．）
+*（呼び出すとき reduced_row_echelon_form<N> としないと gcc でエラーになるので注意．）
 */
-template <int N> pii row_echelon_form(Bit_matrix<N>& mat) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/1308
+template <int N> int reduced_row_echelon_form(Bit_matrix<N>& mat, vi* pjs = nullptr) {
+	// verify : https://atcoder.jp/contests/abc249/tasks/abc249_g
 
 	int m = mat.m, n = mat.n;
-	auto& v = mat.v;
-
-	// 直前に見つけたピボットの位置
-	int pi = -1, pj = -1;
+	if (pjs != nullptr) pjs->clear();
 
 	// 注目位置を (i, j)（i 行目かつ j 列目）とする．
 	int i = 0, j = 0;
 
 	while (i < m && j < n) {
-		// 同じ列の下方の行から 1 を見つける．
+		// 注目列の下方の行から 1 を見つける．
 		int i2 = i;
-		while (i2 < m && !v[i2][j]) i2++;
+		while (i2 < m && !mat[i2][j]) i2++;
 
 		// 見つからなかったら注目位置を右に移す．
 		if (i2 == m) {
@@ -146,19 +141,23 @@ template <int N> pii row_echelon_form(Bit_matrix<N>& mat) {
 		}
 
 		// 見つかったら i 行目とその行を入れ替える．
-		pi = i;
-		pj = j;
-		swap(v[i], v[i2]);
+		swap(mat[i], mat[i2]);
 
-		// v[i][j] より下方の行の成分が全て 0 になるよう XOR をとる．
-		for (i2++; i2 < m; i2++) {
-			if (v[i2][j]) v[i2] ^= v[i];
+		// i 行目以外の j 列目の成分が全て 0 になるよう XOR をとる．
+		rep(i2, m) {
+			if (i2 == i) continue;
+
+			if (mat[i2][j]) mat[i2] ^= mat[i];
 		}
+
+		// ピボット位置の記録
+		if (pjs != nullptr) pjs->push_back(j);
 
 		// 注目位置を右下に移す．
 		i++; j++;
 	}
-	return { pi, pj };
+
+	return i;
 }
 
 
@@ -304,13 +303,13 @@ template <int N> void find_base(Bit_matrix<N>& mat, vector<bitset<N>>& base) {
 }
 
 
-//【行列の離散対数問題／baby-step giant-step】O(2^(dim(x)/2) dim(x)^3 / 64)
+//【行列の離散対数問題】O(2^(dim(x)/2) dim(x)^3 / 64)
 /*
 * A^d x = y の最小解 d >= 0 を返す．（なければ INFL）
 *
 *（呼び出すとき log<N> としないと gcc でエラーになるので注意．）
 *
-*（平方分割）
+*（baby-step giant-step）
 */
 template <int N>
 ll log(const Bit_matrix<N>& A, const bitset<N>& x, const bitset<N>& y) {
