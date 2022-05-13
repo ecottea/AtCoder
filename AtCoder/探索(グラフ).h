@@ -178,7 +178,7 @@ template <class G> void depth_first_search(G& g, int st, vi& seq) {
 	int n = sz(g);
 	seq.clear();
 
-	// seen[i] : 頂点 i を探索済か
+	// seen[s] : 頂点 s を探索済か
 	vb seen(n);
 
 	function<void(int, int)> dfs = [&](int s, int p) {
@@ -196,7 +196,7 @@ template <class G> void depth_first_search(G& g, int st, vi& seq) {
 			if (seen[t]) continue;
 
 			// 未探索の頂点を探索しにいく．
-			dfs(t);
+			dfs(t, s);
 
 			// 通りがけ順（兼，最後は帰りがけ順）の処理
 			seq.push_back(s);

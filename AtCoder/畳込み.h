@@ -154,19 +154,19 @@ vm multi_convoluion(vvm a) {
 
 //【添字 xor での畳込み】
 /*
-*【アダマール変換，対称差畳込み】を利用すればよい．
+*【対称差畳込み】を利用すればよい．
 */
 
 
 //【添字 and での畳込み】
 /*
-*【上位集合でのゼータ・メビウス変換，積集合畳込み】を利用すればよい．
+*【積集合畳込み】を利用すればよい．
 */
 
 
 //【添字 or での畳込み】
 /*
-*【下位集合でのゼータ・メビウス変換，和集合畳込み】を利用すればよい．
+*【和集合畳込み】を利用すればよい．
 */
 
 
@@ -178,9 +178,6 @@ vm multi_convoluion(vvm a) {
 
 //【添字 min での畳込み】
 /*
-* min_convolution(a, b) : O(n)
-*   c[k] = Σ_(min(i, j) = k) a[i] b[j] なる c を返す．
-*
 * min_zeta(a) : O(n)
 *   A[j] = Σ_(i >= j) a[i] なる A に上書きする．
 *  （上位ゼータ変換，上からの累積和）
@@ -188,6 +185,9 @@ vm multi_convoluion(vvm a) {
 * min_mobius(A) : O(n)
 *   A[j] = Σ_(i >= j) a[i] なる a に上書きする．
 *  （上位メビウス変換，下からの差分）
+* 
+*  min_convolution(a, b) : O(n)
+*   c[k] = Σ_(min(i, j) = k) a[i] b[j] なる c を返す．
 */
 template <typename T> void min_zeta(vector<T>& f) {
 	// 具体例：
@@ -232,9 +232,6 @@ template <typename T> vector<T> min_convolution(vector<T> a, vector<T> b) {
 
 //【添字 max での畳込み】
 /*
-* max_convolution(a, b) : O(n)
-*   c[k] = Σ_(max(i, j) = k) a[i] b[j] なる c を返す．
-*
 * max_zeta(a) : O(n)
 *   A[j] = Σ_(i <= j) a[i] なる A に上書きする．
 *  （下位ゼータ変換，下からの累積和）
@@ -242,6 +239,9 @@ template <typename T> vector<T> min_convolution(vector<T> a, vector<T> b) {
 * max_mobius(A) : O(n)
 *   A[j] = Σ_(i <= j) a[i] なる a に上書きする．
 *  （下位メビウス変換，上からの差分）
+*
+* max_convolution(a, b) : O(n)
+*   c[k] = Σ_(max(i, j) = k) a[i] b[j] なる c を返す．
 */
 template <typename T> void max_zeta(vector<T>& f) {
 	// 具体例：

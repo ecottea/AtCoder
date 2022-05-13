@@ -150,6 +150,8 @@ int tree_diameter_and_midpoint(const Graph& g, pii& ep, pii& ctr) {
 * ‚Ü‚½ st ‚Ì’¸“_ i ‚ª g ‚Ì‚Ç‚Ì’¸“_‚Æ‘Î‰‚·‚é‚©‚ğ id[i] ‚ÉŠi”[‚·‚éD
 */
 int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
+	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_2
+
 	if (v.empty()) {
 		st.clear();
 		id.clear();

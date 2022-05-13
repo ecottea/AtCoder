@@ -23,18 +23,18 @@
 *	値 [l..r) をもつ要素の個数を返す．
 *
 * insert(int v), insert(int v, ll k) : O(log n)
-*	要素 v を 1 個 [k 個] 挿入する．
+*	要素 v を 1 個 [k 個] 追加する．
 *
 * erase(int v), erase(int v, ll k) : O(log n)
 *	要素 v を 1 個 [k 個] 削除する．個数は負数にもなる．
 *
 * int get(ll i) : O(log n)
-*	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
+*	昇順で i 番目（0-indexed）の要素を返す．なければ n を返す．
 *
 * ll lower_bound(int v) : O(log n)
-*	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
+*	v 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed）
 *
-* 利用：【フェニック木】
+* 利用：【フェニック木（アーベル群）】
 */
 ll opdd(ll x, ll y) { return x + y; }
 ll edd() { return 0; }
@@ -97,9 +97,9 @@ struct Dynamic_dictionary {
 };
 
 
-//【区間の動的辞書（集合）】
+//【区間の集合】
 /*
-* Interval_dictionary_set() : O(1)
+* Interval_set() : O(1)
 *	空で初期化する．
 *
 * size() : O(1)
@@ -120,11 +120,11 @@ struct Dynamic_dictionary {
 * erase(l, r) : ならし O(log n)
 *	区間 [l, r) を削除する．
 */
-struct Interval_dictionary_set {
+struct Interval_set {
 	set<pll> lr; // 区間 [l[i], r[i]) の昇順列
 
 	// コンストラクタ（空で初期化）
-	Interval_dictionary_set() {}
+	Interval_set() {}
 
 	// 区間の数を返す．
 	int size() { return sz(lr); }
@@ -219,7 +219,7 @@ struct Interval_dictionary_set {
 	typename set<pll>::iterator end() { return lr.end(); }
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Interval_dictionary_set& d) {
+	friend ostream& operator<<(ostream& os, const Interval_set& d) {
 		repe(p, d.lr) os << p << " ";
 		return os;
 	}
@@ -227,9 +227,9 @@ struct Interval_dictionary_set {
 };
 
 
-//【区間の動的辞書（写像）】
+//【区間からの写像】
 /*
-* Interval_dictionary_map<S, T>(T nil) : O(1)
+* Interval_map<S, T>(T nil) : O(1)
 *	S の全ての値に nil を割り当てる．
 *
 * void set(S l, S r, T v) : ならし O(log n)
@@ -242,14 +242,14 @@ struct Interval_dictionary_set {
 * T get(S x) : O(log n)
 *	x に割り当てられた値を返す．
 */
-template <class S, class T> struct Interval_dictionary_map {
+template <class S, class T> struct Interval_map {
 	// verify : https://codeforces.com/contest/1638/problem/E
 
 	map<pair<S, S>, T> lr_to_v; // 区間 [l[i], r[i]) → v[i]
 	T nil;
 
 	// 全ての値に nil を割り当てる．
-	Interval_dictionary_map(T nil_) : nil(nil_) {}
+	Interval_map(T nil_) : nil(nil_) {}
 
 	// x に割り当てられた値を返す．
 	T get(S x) {
@@ -354,7 +354,7 @@ template <class S, class T> struct Interval_dictionary_map {
 	typename map<pair<S, S>, T>::iterator end() { return lr_to_v.end(); }
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Interval_dictionary_map& d) {
+	friend ostream& operator<<(ostream& os, const Interval_map& d) {
 		repe(p, d.lr_to_v) os << p << " ";
 		return os;
 	}

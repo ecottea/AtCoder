@@ -265,16 +265,17 @@ template <int N> void priority_solve_eq(Bit_matrix<N>& mat, bitset<N>& sol) {
 //【基底の選択】O(m^2 n / 64)
 /*
 * m * n 行列 mat の行ベクトルで張られる空間を V とし，
-* mat の行ベクトルからなる V の基底を base に格納する．
+* mat の第 i 行ベクトル（i ∈ bis）が V の基底となるよう bis に格納する．
+* 基底は i が小さいものを優先して構成する．
 *
 *（呼び出すとき find_base<N> としないと gcc でエラーになるので注意．）
 */
-template <int N> void find_base(Bit_matrix<N>& mat, vector<bitset<N>>& base) {
-	// verify : https://atcoder.jp/contests/arc138/tasks/arc138_d
+template <int N> void find_base(Bit_matrix<N>& mat, vi& bis) {
+	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_a
 
 	int m = mat.m, n = mat.n;
 	auto v = mat.v;
-	base.clear();
+	bis.clear();
 
 	// 未確定の列を記録しておくリスト
 	list<int> rmd;
@@ -293,7 +294,7 @@ template <int N> void find_base(Bit_matrix<N>& mat, vector<bitset<N>>& base) {
 		rmd.erase(it);
 
 		// 1 が残っているなら基底に採用する．
-		base.push_back(mat.v[i]);
+		bis.push_back(i);
 
 		// j 列目に見つかったら j 列目が 1 である他の行と XOR をとる．
 		rep(i2, m) {

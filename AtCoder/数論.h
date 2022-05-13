@@ -228,6 +228,49 @@ void factor_integer(ll n, map<ll, int>& pps) {
 }
 
 
+//y‘fˆö”•ª‰ği•¡”jz
+/*
+* Factor_integer(int n) : O(n log(log n))
+*	n ˆÈ‰º‚Ì©‘R”‚ğ‚‘¬‚É‘fˆö”•ª‰ğ‚·‚é€”õ‚ğs‚¤D
+*
+* factor_integer(int i, map<int, int>& pps) : O(log n)
+*	i ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
+*/
+struct Factor_integer {
+	// verify : https://atcoder.jp/contests/abc215/tasks/abc215_d
+
+	int n;
+
+	// d[i] : i ‚ğŠ„‚èØ‚éÅ¬‚Ì‘f”
+	vi d;
+
+	// n ˆÈ‰º‚Ì©‘R”‚ğ‚‘¬‚É‘fˆö”•ª‰ğ‚·‚é€”õ‚ğs‚¤D
+	Factor_integer(int n_) : n(n_), d(n + 1) {
+		iota(all(d), 0);
+
+		for (int p = 2; p * p <= n; p++) {
+			if (d[p] != p) continue;
+
+			for (int i = p; i <= n; i += p) {
+				d[i] = p;
+			}
+		}
+	}
+
+	// i ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
+	void factor_integer(int i, map<int, int>& pps) {
+		assert(i <= n);
+
+		pps.clear();
+
+		while (i > 1) {
+			pps[d[i]]++;
+			i /= d[i];
+		}
+	}
+};
+
+
 //y‘f””»’èzO(ãn)
 /*
 * n ‚ª‘f”‚©‚ğ•Ô‚·D

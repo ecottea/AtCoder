@@ -8,8 +8,8 @@
 /*
 * ƒ°i=[i0..i1) (a + b i) ‚ğ•Ô‚·D
 */
-mint arithmetic_series(mint a, mint b, ll i0, ll i1) {
-	// verify : https://atcoder.jp/contests/hhkb2020/tasks/hhkb2020_d
+template<class T> T arithmetic_series(T a, T b, ll i0, ll i1) {
+	// verify : https://atcoder.jp/contests/arc035/tasks/arc035_b
 
 	if (i0 >= i1) return 0;
 
@@ -128,7 +128,7 @@ mint powered_geometric_series(mint r, int d) {
 }
 
 
-//yXOR ‚Ì˜az
+//yx ‚Æ‚Ì XOR ‚Ì˜az
 /*
 * Xor_sum(vT a) : O(n log max(a))
 *	a[0..n) ‚Å‰Šú‰»‚·‚éD

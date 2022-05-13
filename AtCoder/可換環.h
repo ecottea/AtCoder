@@ -14,6 +14,7 @@
 
 
 //y‰ÁZ - æZ ‰ÂŠ·ŠÂz
+/* verify : https://judge.yosupo.jp/problem/bitwise_and_convolution */
 using S401 = ll;
 S401 add401(S401 x, S401 y) { return x + y; }
 S401 o401() { return 0; }
@@ -23,7 +24,7 @@ S401 e401() { return 1; }
 #define Add_mul_cring S401, add401, o401, mi401, mul401, e401
 
 
-//yxor - and ‰ÂŠ·ŠÂz
+//yXOR - AND ‰ÂŠ·ŠÂz
 using S402 = unsigned int;
 S402 add402(S402 x, S402 y) { return x ^ y; }
 S402 o402() { return 0; }

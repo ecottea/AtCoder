@@ -26,7 +26,7 @@ S801 e801() { return 1; }
 #define Add_mul_semiring S801, add801, o801, mul801, e801
 
 
-//yxor - and ”¼ŠÂz
+//yXOR - AND ”¼ŠÂz
 using S802 = unsigned int;
 S802 add802(S802 x, S802 y) { return x ^ y; }
 S802 o802() { return 0; }
@@ -138,7 +138,7 @@ S808 e808() { return INFL; }
 #define Max_min_semiring S808, add808, o808, mul808, e808
 
 
-//yor - and ”¼ŠÂz
+//yOR - AND ”¼ŠÂz
 using S809 = unsigned int;
 S809 add809(S809 x, S809 y) { return x | y; }
 S809 o809() { return 0; }
@@ -147,7 +147,7 @@ S809 e809() { return ~0; }
 #define OR_AND_semiring S809, add809, o809, mul809, e809
 
 
-//yand - or ”¼ŠÂz
+//yAND - OR ”¼ŠÂz
 using S810 = unsigned int;
 S810 add810(S810 x, S810 y) { return x & y; }
 S810 o810() { return ~0; }

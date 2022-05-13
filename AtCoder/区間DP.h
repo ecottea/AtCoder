@@ -150,8 +150,6 @@ ll monge_intervalDP(const vl& p) {
 * 探索頻度が p[i] である n 個の要素を葉に持つ順序付き二分探索木を作るときの
 * コスト Σi p[i] depth[i] の最小値を返す．（depth は深さで，根の深さを 0 とする）
 *
-*（Hu-Tucker の貪欲アルゴリズム）
-*
 * 利用：【併合可能ヒープ（昇順）】
 */
 ll hu_tucker(vl p) {

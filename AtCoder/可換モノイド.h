@@ -30,6 +30,7 @@ S502 o502() { return 1; }
 
 
 //ymax ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
 using S503 = int;
 S503 op503(S503 a, S503 b) { return max(a, b); }
 S503 o503() { return -INF; }
@@ -37,6 +38,7 @@ S503 o503() { return -INF; }
 
 
 //ymin ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
 using S504 = int;
 S504 op504(S504 a, S504 b) { return min(a, b); }
 S504 o504() { return INF; }
@@ -51,6 +53,7 @@ S505 o505() { return 0; }
 
 
 //yor ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify: https://atcoder.jp/contests/abc157/tasks/abc157_e */
 using S506 = int;
 S506 op506(S506 a, S506 b) { return a | b; }
 S506 o506() { return 0; }
@@ -65,6 +68,7 @@ S507 o507() { return ~0; }
 
 
 //ygcd ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify : https://atcoder.jp/contests/abc125/tasks/abc125_c */
 using S508 = ll;
 S508 op508(S508 a, S508 b) { return gcd(a, b); }
 S508 o508() { return 0; }
@@ -76,5 +80,38 @@ using S509 = ll;
 S509 op509(S509 a, S509 b) { return a / gcd(a, b) * b; }
 S509 o509() { return 1; }
 #define LCM_cmonoid S509, op509, o509
+
+
+//y‘æ“ñÅ‘å’l ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify: https://atcoder.jp/contests/arc100/tasks/arc100_c */
+using S510 = pair<ll, ll>; // (Å‘å’l, ‘æ“ñÅ‘å’l)
+S510 op510(S510 a, S510 b) {
+	vector<ll> vals(4);
+	vals[0] = a.first;
+	vals[1] = a.second;
+	vals[2] = b.first;
+	vals[3] = b.second;
+	sort(all(vals));
+
+	return { vals[3], vals[2] };
+}
+S510 o510() { return { -INFL, -INFL }; }
+#define Second_max_cmonoid S510, op510, o510
+
+
+//y‘æ“ñÅ¬’l ‰ÂŠ·ƒ‚ƒmƒCƒhz
+using S511 = pair<ll, ll>; // (Å¬’l, ‘æ“ñÅ¬’l)
+S511 op511(S511 a, S511 b) {
+	vector<ll> vals(4);
+	vals[0] = a.first;
+	vals[1] = a.second;
+	vals[2] = b.first;
+	vals[3] = b.second;
+	sort(all(vals));
+
+	return { vals[0], vals[1] };
+}
+S511 o511() { return { INFL, INFL }; }
+#define Second_min_cmonoid S511, op511, o511
 
 

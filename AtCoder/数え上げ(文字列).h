@@ -2,48 +2,44 @@
 #include "header.h"
 #include "FPS(mint).h"
 #include "二項係数.h"
+#include "分析(文字列).h"
 // ■■■■■ 文字列の数え上げ ■■■■■
 
 
-//【1 が k 個連続しないビット列の数え上げ】O(n)
+//【部分文字列の数え上げ】O(n)
 /*
-* 長さ [0..n] のビット列のうち，1 が k 個連続しないものの個数を cnt に格納する．
+* 文字列 s[0..n) の部分文字列の個数を返す（空文字列も s の部分文字列とみなす）
 */
-void count_noncontinuous_bitsequences(int n, int k, vm& cnt) {
-	cnt.resize(n + 1);
+ll count_substring(const string& s) {
+	int n = sz(s);
 
-	// acc[i] : 長さ i 以下のビット列で，最後が '0' のものの個数
-	vm acc(n + 1);
-	acc[0] = 1;
+	auto sa = suffix_array(s);
+	auto la = lcp_array(s, sa);
 
-	repi(i, 1, n) {
-		// "[j個の1]0" を付けられるのは長さが i - 1 - j のものである．
-		// acc[i] - acc[i-1] は j=[0..k) についてこれらを足し合わせたものとなる．
-		acc[i] = acc[i - 1] + (acc[i - 1] - (i - 1 - k >= 0 ? acc[i - 1 - k] : 0));
-	}
+	ll res = n - sa[0];
+	repi(i, 1, n - 1) res += n - sa[i] - la[i - 1];
 
-	repi(i, 0, n) {
-		// 最後に "[j個の1]" を付けられるのは長さが i - j のものである．
-		// j=[0..k) についてこれらを足し合わせたものが求める場合の数となる．
-		cnt[i] = acc[i] - (i - k >= 0 ? acc[i - k] : 0);
-	}
+	return res;
 }
 
 
-//【1 が k 個連続しないビット列の数え上げ】O(k log k log n)
+//【回文部分文字列の数え上げ】O(n)
 /*
-* 長さ n のビット列のうち，1 が k 個連続しないものの個数を返す．
+* s[0..n) の部分文字列のうち回文であるものの個数を返す．
 *
-* 利用：【展開係数／ボスタン－森法】
+* 利用：【最長回文長】
 */
-mint count_noncontinuous_bitsequences(ll n, int k) {
-	if (k == 0) return 0;
+template <class STR> ll count_palindromes(const STR& s) {
+	int n = sz(s);
 
-	// 母関数は (1+z+...+z^(k-1)) / (1-z-...-z^k) である．
-	vm fc(k, 1), gc(k + 1, -1);
-	gc[0] = 1;
+	vi lo, le;
+	manacher(s, lo, le);
 
-	return bostan_mori(MFPS(fc), MFPS(gc), n);
+	ll res = 0;
+	rep(i, n) res += (lo[i] + 1) / 2;
+	rep(i, n - 1) res += le[i] / 2;
+
+	return res;
 }
 
 
@@ -86,6 +82,48 @@ mint count_supersequences(const string& s, int n, int k = 26) {
 	}
 
 	return res;
+}
+
+
+//【1 が k 個連続しないビット列の数え上げ】O(n)
+/*
+* 長さ [0..n] のビット列のうち，1 が k 個連続しないものの個数を cnt に格納する．
+*/
+void count_noncontinuous_bitsequences(int n, int k, vm& cnt) {
+	cnt.resize(n + 1);
+
+	// acc[i] : 長さ i 以下のビット列で，最後が '0' のものの個数
+	vm acc(n + 1);
+	acc[0] = 1;
+
+	repi(i, 1, n) {
+		// "[j個の1]0" を付けられるのは長さが i - 1 - j のものである．
+		// acc[i] - acc[i-1] は j=[0..k) についてこれらを足し合わせたものとなる．
+		acc[i] = acc[i - 1] + (acc[i - 1] - (i - 1 - k >= 0 ? acc[i - 1 - k] : 0));
+	}
+
+	repi(i, 0, n) {
+		// 最後に "[j個の1]" を付けられるのは長さが i - j のものである．
+		// j=[0..k) についてこれらを足し合わせたものが求める場合の数となる．
+		cnt[i] = acc[i] - (i - k >= 0 ? acc[i - k] : 0);
+	}
+}
+
+
+//【1 が k 個連続しないビット列の数え上げ】O(k log k log n)
+/*
+* 長さ n のビット列のうち，1 が k 個連続しないものの個数を返す．
+*
+* 利用：【展開係数／ボスタン－森法】
+*/
+mint count_noncontinuous_bitsequences(ll n, int k) {
+	if (k == 0) return 0;
+
+	// 母関数は (1+z+...+z^(k-1)) / (1-z-...-z^k) である．
+	vm fc(k, 1), gc(k + 1, -1);
+	gc[0] = 1;
+
+	return bostan_mori(MFPS(fc), MFPS(gc), n);
 }
 
 

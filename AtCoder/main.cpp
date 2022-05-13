@@ -68,7 +68,7 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #define lsbll __builtin_ctzll
 #define msb(n) (31 - __builtin_clz(n))
 #define msbll(n) (63 - __builtin_clzll(n))
-#define gcd(a, b) abs(__gcd(a, b))
+#define gcd __gcd
 #define dump(...)
 #define dumpel(v)
 #define input_from_file(f)
@@ -82,8 +82,8 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #include <atcoder/all>
 using namespace atcoder;
 
-//using mint = modint1000000007;
-using mint = modint998244353;
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
@@ -92,9 +92,240 @@ using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
 //----------------------------------------
 
 
+//【遅延評価 binary trie】
+/*
+* Lazy_binary_trie<T>() : O(1)
+*   型 T の整数を扱えるよう空で初期化する．
+* 
+* ll size() : O(1)
+*   要素数を返す．
+* 
+* bool empty() : O(1)
+*   要素が 0 個かを返す．
+* 
+* ll count(T val) : O(B)
+*   要素 val の個数を返す．
+* 
+* insert(T val, ll cnt = 1) : O(B)
+*   値 val を cnt 個追加する．
+* 
+* erase(T val, ll cnt = 1) : O(B)
+*   値 val を cnt 個削除する．
+* 
+* xor_all(T mask): O(1) 
+*   全要素に対して mask との XOR をとる．
+* 
+* T max_element(T mask = 0) : O(B)
+*   mask との XOR をとったときの最大要素を返す．
+* 
+* T min_element(T mask = 0) : O(B)
+*   mask との XOR をとったときの最小要素を返す．
+* 
+* T get(ll i) : O(B)
+*   昇順で i 番目（0-indexed）の要素を返す．
+* 
+* ll lower_bound(T val) : O(B)
+*   val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed）
+* 
+* ll upper_bound(T val) : O(B)
+*   val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed）
+*/
+template<class T> class Lazy_binary_trie {
+    // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/06/022654
+
+    struct Node {
+        ll cnt; // 部分木のもつ要素の個数
+        T lazy; // XOR 待ちの値
+        Node* ch[2]; // 左右の子へのポインタ
+
+        Node() : cnt(0), lazy(0), ch{ nullptr, nullptr } {}
+    };
+
+    Node* root; // 根へのポインタ
+    int B; // 何ビット整数を扱うか
+    T mask_all; // 全要素にかけられた XOR マスク
+    
+    Node* insert_sub(Node* t, T val, ll cnt, int b) {
+        // まだノードがなければ作成する．
+        if (t == nullptr) t = new Node;
+
+        // 個数を増やす．
+        t->cnt += cnt;
+
+        // 自身が葉ならすぐに帰る．
+        if (b < 0) return t;
+
+        // 下位ビットに対応するノードに加算しにいく．
+        T f = (val >> b) & T(1);
+        t->ch[f] = insert_sub(t->ch[f], val, cnt, b - 1);
+
+        // 自身へのポインタを親に返す．
+        return t;
+    }
+
+    Node* erase_sub(Node* t, T val, ll cnt, int b) {
+        // 存在しない要素を削除しようとすればエラーを返す．
+        assert(t != nullptr && t->cnt >= cnt);
+
+        // 個数を減らす．
+        t->cnt -= cnt;
+
+        // 要素が 0 個になったならノードを削除する．
+        if (t->cnt == 0) {
+            delete t;
+            return nullptr;
+        }
+
+        // 自身が葉ならすぐに帰る．
+        if (b < 0) return t;
+
+        // 下位ビットに対応するノードに減算しにいく．
+        T f = (val >> b) & T(1);
+        t->ch[f] = erase_sub(t->ch[f], val, cnt, b - 1);
+
+        // 自身へのポインタを親に返す．
+        return t;
+    }
+
+    T min_element_sub(Node* t, T mask, int b) {
+        assert(t != nullptr);
+
+        // 葉なら 0 を返す．
+        if (b < 0) return 0;
+
+        // 下位ビットに対応するノードの最小値を求めにいく．
+        T f = (mask >> b) & T(1);
+        if (t->ch[f] == nullptr) f ^= T(1);
+        T val = min_element_sub(t->ch[f], mask, b - 1);
+
+        // 自身のビットを設定する．
+        val |= f << b;
+
+        return val;
+    }
+
+    T get_sub(Node* t, ll k, int b) {
+        // 葉なら 0 を返す．
+        if (b < 0) return 0;
+
+        // 左の部分木に含まれる要素の個数をみて適切な子に探索しにいく．
+        ll lk = (t->ch[0] != nullptr ? t->ch[0]->cnt : 0);
+        T val;
+        if (k < lk) val = get_sub(t->ch[0], k, b - 1);
+        else val = get_sub(t->ch[1], k - lk, b - 1) | (1LL << b);
+
+        return val;
+    }
+
+    ll lower_bound_sub(Node* t, T val, int b) {
+        // 葉であるかまたはノードがなければ 0 を返す．
+        if (t == nullptr || b < 0) return 0;
+
+        // val の第 b ビットをみて適切な子に探索しにいく．
+        T f = (val >> b) & T(1);
+        ll res = 0;
+        if (f == 1 && t->ch[0] != nullptr) res += t->ch[0]->cnt;
+        res += lower_bound_sub(t->ch[f], val, b - 1);
+
+        return res;
+    }
+
+public:
+    // 空で初期化する． : O(1)
+    Lazy_binary_trie() : root(nullptr), B((int)sizeof(T) * 8), mask_all(0) {}
+
+    // 要素数を返す． : O(1)
+    ll size() const { 
+        return root != nullptr ? root->cnt : 0;
+    }
+
+    // 要素が 0 個かを返す． : O(1)
+    bool empty() const {
+        return root == nullptr;
+    }
+
+    // 値 val を cnt[=1] 個追加する． : O(B)
+    void insert(T val, ll cnt = 1) {
+        // verify : https://atcoder.jp/contests/arc033/tasks/arc033_3
+
+        root = insert_sub(root, val ^ mask_all, cnt, B - 1);
+    }
+
+    // 値 val を cnt[=1] 個削除する． : O(B)
+    void erase(T val, ll cnt = 1) {
+        // verify : https://atcoder.jp/contests/arc033/tasks/arc033_3
+
+        root = erase_sub(root, val ^ mask_all, cnt, B - 1);
+    }
+
+    // 全要素について mask との XOR をとる． : O(1) 
+    void xor_all(T mask) {
+        mask_all ^= mask;
+    }
+
+    // mask[=0] との XOR をとったときの最大要素を返す． : O(B)
+    T max_element(T mask = 0) {
+        return min_element_sub(root, ~(mask ^ mask_all), B - 1);
+    }
+
+    // mask[=0] との XOR をとったときの最小要素を返す． : O(B)
+    T min_element(T mask = 0) {
+        return min_element_sub(root, mask ^ mask_all, B - 1);
+    }
+
+    // 昇順で i 番目（0-indexed）の要素を返す． : O(B)
+    T get(ll i) {
+        // verify : https://atcoder.jp/contests/arc033/tasks/arc033_3
+
+        assert(0 <= i && i < size());
+        return get_sub(root, i, B - 1);
+    }
+ 
+    // val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
+    ll lower_bound(T val) {
+        return lower_bound_sub(root, val, B - 1);
+    }
+
+    // val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
+    ll upper_bound(T val) {
+        return lower_bound_sub(root, val + 1, B - 1);
+    }
+
+    // 要素 val の個数を返す． : O(B)
+    ll count(T val) {
+        if (!root) return 0;
+        Node* t = root;
+        for (int i = B - 1; i >= 0; i--) {
+            eval(t, i);
+            t = t->ch[(val >> i) & 1LL];
+            if (!t) return 0;
+        }
+        return t->cnt;
+    }
+}; 
+
+
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	
+    Lazy_binary_trie<int> lbt;
+
+    int q;
+    cin >> q;
+
+    rep(hoge, q) {
+        int t, x;
+        cin >> t >> x;
+
+        if (t == 1) {
+            lbt.insert(x);
+        }
+        else {
+            int v = lbt.get(x - 1);
+            cout << v << endl;
+
+            lbt.erase(v);
+        }
+    }
 }

@@ -128,6 +128,39 @@ void tree_getDP(const WGraph& g, int r, vector<T>& dp) {
 };
 
 
+//【木の高さ】O(n)
+/*
+* r を根とする木 g の頂点 i の高さを h[i] に格納する．
+*
+* 利用：【貰う木 DP】
+*/
+// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/4
+using T_hot = int;
+void merge_hot(T_hot& x, const T_hot& y) { chmax(x, y); }
+T_hot e_hot() { return 0; }
+T_hot leaf_hot(int s) { return 0; }
+T_hot apply_hot(const T_hot& x, int s, int t) { return x + 1; }
+void height_of_tree(const Graph& g, int r, vector<T_hot>& h) {
+	tree_getDP<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r, h);
+}
+
+
+//【木の高さ（コスト付き）】O(n)
+/*
+* r を根とするコスト付き木 g の頂点 i の高さを h[i] に格納する．
+*
+* 利用：【貰う木 DP（コスト付き）】
+*/
+using T_hoct = ll;
+void merge_hoct(T_hoct& x, const T_hoct& y) { chmax(x, y); }
+T_hoct e_hoct() { return 0; }
+T_hoct leaf_hoct(int s) { return 0; }
+T_hoct apply_hoct(const T_hoct& x, int s, int t, ll c) { return x + c; }
+void height_of_weighted_tree(const WGraph& g, int r, vector<T_hoct>& h) {
+	tree_getDP<T_hoct, merge_hoct, e_hoct, leaf_hoct, apply_hoct>(g, r, h);
+}
+
+
 //【独立集合の数え上げ】O(n)
 /*
 * 木 g の独立集合（辺を共有しない頂点の集合）の個数を返す．

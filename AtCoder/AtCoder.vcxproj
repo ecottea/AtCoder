@@ -166,7 +166,9 @@
     <ClInclude Include="スコア和%28区間%29.h" />
     <ClInclude Include="スコア和(文字列).h" />
     <ClInclude Include="セグメント木%28抽象%29.h" />
-    <ClInclude Include="ゼータメビウス変換.h" />
+    <ClInclude Include="ゼータメビウス変換(old).h" />
+    <ClInclude Include="ゼータ変換(抽象).h" />
+    <ClInclude Include="ゼータ変換.h" />
     <ClInclude Include="ダブリング.h" />
     <ClInclude Include="ハッシュ.h" />
     <ClInclude Include="ビット列.h" />
@@ -233,9 +235,10 @@
     <ClInclude Include="混合基数.h" />
     <ClInclude Include="確率.h" />
     <ClInclude Include="確率分布.h" />
-    <ClInclude Include="約数倍数変換.h" />
+    <ClInclude Include="約数変換.h" />
     <ClInclude Include="累積演算%28抽象%29.h" />
     <ClInclude Include="累積演算%28old%29.h" />
+    <ClInclude Include="組(最適化).h" />
     <ClInclude Include="組合せゲーム.h" />
     <ClInclude Include="統計量.h" />
     <ClInclude Include="群.h" />
@@ -245,6 +248,7 @@
     <ClInclude Include="計算.h" />
     <ClInclude Include="辞書順.h" />
     <ClInclude Include="部分列DP.h" />
+    <ClInclude Include="順列(最適化).h" />
     <ClInclude Include="順列(組合せ論).h" />
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />

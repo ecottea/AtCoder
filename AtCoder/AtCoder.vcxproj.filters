@@ -407,7 +407,7 @@
     <ClInclude Include="スコア和%28区間%29.h">
       <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
-    <ClInclude Include="約数倍数変換.h">
+    <ClInclude Include="約数変換.h">
       <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="マトロイド.h">
@@ -482,7 +482,7 @@
     <ClInclude Include="その他%28old%29.h">
       <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
-    <ClInclude Include="ゼータメビウス変換.h">
+    <ClInclude Include="ゼータ変換.h">
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
     <ClInclude Include="二項係数.h">
@@ -508,6 +508,18 @@
     </ClInclude>
     <ClInclude Include="木DP.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
+    </ClInclude>
+    <ClInclude Include="ゼータメビウス変換(old).h">
+      <Filter>ヘッダー ファイル\_old</Filter>
+    </ClInclude>
+    <ClInclude Include="ゼータ変換(抽象).h">
+      <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="組(最適化).h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
+    </ClInclude>
+    <ClInclude Include="順列(最適化).h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

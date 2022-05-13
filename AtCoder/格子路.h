@@ -194,8 +194,6 @@ ll maximize_cost_path(const vl& x_, const vl& y_, const vl& c) {
 * n 個の禁止点 fb[i] = {r[i], c[i]} を 1 つも通らないものの個数を返す．
 *
 * 利用：【階乗など（mint利用）】
-* 
-*（Dummy Path Lemma）
 */
 mint dummy_path_lemma(int h, int w, const vector<pii>& fb) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_y

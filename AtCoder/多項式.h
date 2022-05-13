@@ -16,7 +16,7 @@
 *
 * c + f, f + c, f + g : O(1)
 * f - c, c - f, f - g : O(1)
-* c * f, f * c, -f : O(1)
+* c * f, f * c, -f, f / c : O(1)
 *	和，差，定数倍の結果を返す．
 *
 * T f.assign(T c) : O(1)
@@ -64,6 +64,8 @@ template <class T> struct Poly1 {
 	Poly1& operator*=(const T& c) { a *= c; b *= c; return *this; }
 	Poly1 operator*(const T& c) const { return Poly1(*this) *= c; }
 	friend Poly1 operator*(const T& c, const Poly1& f) { return f * c; }
+	Poly1& operator/=(const T& c) { a /= c; b /= c; return *this; }
+	Poly1 operator/(const T& c) const { return Poly1(*this) /= c; }
 	Poly1 operator-() const { return Poly1(*this) *= -1; }
 
 	// 不定元への代入

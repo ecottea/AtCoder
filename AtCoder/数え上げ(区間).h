@@ -59,6 +59,8 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 * 利用：【デカルト木】
 */
 template <class T> void count_min_intervals_dc(const vector<T>& a, unordered_map<T, ll>& cnt) {
+	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
+	
 	//【方法】
 	// min(a[0..n)) = m とすると，最小値が m でない区間は a[i] = m なる a[i] を
 	// 1 つも含まない区間なので，そのような a[i] を境界にして独立に数え上げられる．
@@ -102,6 +104,8 @@ template <class T> void count_min_intervals_dc(const vector<T>& a, unordered_map
 * 利用：【自身より小さい数の次の位置】，【自身より小さい数の前の位置】
 */
 template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
+	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
+
 	int n = sz(a);
 	cnt.clear();
 
@@ -113,10 +117,10 @@ template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T,
 
 	rep(i, n) {
 		if (pl[i] == pleq[i]) {
-			cnt[a[i]] += (nl[i] - pl[i] - 1) * (nl[i] - pl[i]) / 2;
-			cnt[a[i]] -= (i - pleq[i] - 1) * (i - pleq[i]) / 2;
+			cnt[a[i]] += (ll)(nl[i] - pl[i] - 1) * (nl[i] - pl[i]) / 2;
+			cnt[a[i]] -= (ll)(i - pleq[i] - 1) * (i - pleq[i]) / 2;
 		}
-		cnt[a[i]] -= (nleq[i] - i - 1) * (nleq[i] - i) / 2;
+		cnt[a[i]] -= (ll)(nleq[i] - i - 1) * (nleq[i] - i) / 2;
 	}
 }
 

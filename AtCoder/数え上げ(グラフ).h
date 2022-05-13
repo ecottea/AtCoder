@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "ゼータメビウス変換.h"
+#include "ゼータ変換.h"
 #include "畳込み.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
@@ -239,7 +239,7 @@ void count_connected_subgraph(const Graph& g, vm& cnt) {
 }
 
 
-//【異色頂点間を結ぶ完全マッチングの数え上げ】
+//【異色頂点間を結ぶ完全マッチングの数え上げ】O(n (log n)^2)
 /*
 * 頂点の色が c[0..n) で与えられる完全グラフ K_n について，
 * どのマッチングも異色頂点間を結ぶような完全マッチングの個数を返す．

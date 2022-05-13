@@ -9,7 +9,10 @@
 //【ソートの仕方】
 /*
 * 選んだ区間の共通部分が空になるように ○○ する問題の場合は右端で昇順ソート
+* varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
+* 
 * 選んだ区間の和集合が全体になるように ○○ する問題の場合は左端で昇順ソート
+* verify : https://atcoder.jp/contests/arc026/tasks/arc026_3
 */
 
 
@@ -55,7 +58,7 @@ int interval_union(vector<pair<T, T>>& lr, vector<pair<T, T>>& res) {
 * 
 * なお戻り値は「全ての区間 [l[i], r[i]) を切断するための最小切断回数」にも一致する．
 *
-*（ソートして貪欲法）
+*（右端でソートして貪欲法）
 */
 int interval_scheduling(const vl& l, const vl& r) {
 	// varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
@@ -87,14 +90,58 @@ int interval_scheduling(const vl& l, const vl& r) {
 }
 
 
+//【区間スケジューリング問題】O(n log n)
+/*
+* 期間 [l[i], r[i]) に着手すべき n 個の仕事を請け負える最大個数を返す．
+*
+*（左端でソートして DP）
+*/
+int interval_scheduling(const vl& l, const vl& r) {
+	// varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
+
+	int n = sz(l);
+
+	// 仕事を左端昇順にソートする．
+	vector<pll> lr(n);
+	rep(i, n) lr[i] = { l[i], r[i] };
+	sort(all(lr));
+
+	vl l2(n), r2(n);
+	rep(i, n) tie(l2[i], r2[i]) = lr[i];
+
+	// dp[i] : 仕事 [i..n) の中で請け負える仕事の最大個数
+	vi dp(n);
+	dp[n - 1] = 1;
+
+	repir(i, n - 2, 0) {
+		// 仕事 i を請ける場合
+		auto it = lower_bound(all(l2), r2[i]);
+		if (it == l2.end()) {
+			dp[i] = 1;
+		}
+		else {
+			int j = distance(l2.begin(), it);
+			dp[i] = 1 + dp[j];
+		}
+
+		// 仕事 i を請けない場合
+		chmax(dp[i], dp[i + 1]);
+	}
+
+	return dp[0];
+}
+
+
 //【区間スケジューリング問題（期間自由，報酬最大化）】O(n log n + n max(r))
 /*
 * 締め切りが r[i]，所要日数が w[i]，報酬が a[i] の n 個の仕事について，
 * 得られる最大報酬を返す．
 *
-*（ソートして DP）
+*（右端でソートして DP）
 */
 ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) {
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_k
+
 	int n = sz(r);
 
 	// 締め切りの早い順にソートする．

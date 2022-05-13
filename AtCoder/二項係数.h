@@ -44,7 +44,7 @@ struct Factorial_mint {
 		inv_.resize(n + 1);
 		repi(i, 1, n) inv_[i] = fac_[i - 1] * fac_inv_[i];
 	}
-	Factorial_mint() {} // ダミー
+	Factorial_mint() : n_max(0) {} // ダミー
 
 	// n! を返す．O(1)
 	mint factorial(int n) const {
@@ -464,9 +464,24 @@ template <class T> T factorial(int n) {
 }
 
 
+//【順列の数（r が小さい）】O(r)
+/*
+* nPr を返す．
+*/
+template <class T> T permutation(ll n, int r) {
+	// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/3
+
+	assert(n >= r);
+
+	T val = 1;
+	rep(i, r) val *= n - i;
+	return val;
+}
+
+
 //【二項係数（r か n-r が小さい）】O(min(r, n-r))
 /*
-* 二項係数 nCr を返す．
+* nCr を返す．
 */
 template <class T> T binomial(ll n, ll r) {
 	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e

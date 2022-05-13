@@ -11,6 +11,8 @@
 * ccs[i] は i 番目の連結成分の頂点からなるリストである．
 */
 void connected_component(const Graph& g, vvi& ccs) {
+	// verify : https://atcoder.jp/contests/arc032/tasks/arc032_2
+
 	int n = sz(g);
 	ccs.clear();
 

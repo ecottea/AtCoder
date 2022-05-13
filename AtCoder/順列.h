@@ -2,6 +2,7 @@
 #include "header.h"
 #include "座標圧縮.h"
 #include "二項係数.h"
+#include "辞書.h"
 // ■■■■■ 順列，対称群 ■■■■■
 
 
@@ -14,7 +15,7 @@ template <class T> ll inversion_number(vector<T>& a) {
 
 	int n = sz(a);
 
-	// 値 a[i] と添字 i を組にしソートする．
+	// 値 a[i] と位置 i を組にしソートする．
 	vector<pair<T, int>> ai(n);
 	rep(i, n) {
 		ai[i] = { a[i], i };
@@ -23,19 +24,19 @@ template <class T> ll inversion_number(vector<T>& a) {
 
 	ll res = 0;
 
-	// ft[i] : いままでに添字 i の要素が現れたか
+	// ft[i] : いままでに位置 i の要素が現れたか
 	fenwick_tree<int> ft(n);
 
 	// 値について昇順に見ていく．
 	rep(j, n) {
-		// id : 昇順で j 番目の値の添字
-		int id = ai[j].second;
+		// pos : 昇順で j 番目の値の位置
+		int pos = ai[j].second;
 
-		// id より大きい添字をもつ数が今までに何個あったかを加算する．
-		res += ft.sum(id + 1, n);
+		// pos より右に j 未満の要素が今までに何個あったかを加算する．
+		res += ft.sum(pos + 1, n);
 
-		// 添字 id の出現を記録する．
-		ft.add(id, 1);
+		// 位置 pos の要素の出現を記録する．
+		ft.add(pos, 1);
 	}
 
 	return res;
@@ -192,6 +193,28 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 	}
 
 	return dp[(1 << n) - 1];
+}
+
+
+//【階乗進法 → 順列】O(n log n)
+/*
+* 階乗進法表記で上位桁から順に ds[0..n) が並んだ数を num とする．
+* [0..n) の順列で辞書順で num 番目（0-indexed）の順列を p[0..n) に格納する．
+*
+* 利用：【多重集合の動的辞書】
+*/
+void factorial_base_to_permutation(const vi& ds, vi& p) {
+	int n = sz(ds);
+	p.resize(n);
+
+	vi a(n);
+	iota(all(a), 0);
+	Dynamic_dictionary dd(n, a);
+
+	rep(i, n) {
+		p[i] = dd.get(ds[i]);
+		dd.erase(p[i], 1);
+	}
 }
 
 

@@ -123,7 +123,11 @@ getline(cin, str);
 // 空白区切りで文字列 str から s に読み込み
 stringstream ss{ str };
 getline(ss, s, ' ');
- 
+
+// 集合の共通部分，和集合を得る
+set_intersection(all(a), all(b), inserter(res, res.end()));
+set_union(all(a), all(b), inserter(res, res.end()));
+
 // x に [l..r] 上の一様乱数を代入する
 mt19937_64 mt;
 mt.seed((int)time(NULL));
@@ -133,9 +137,6 @@ ll x = rnd(mt);
 // 配列 a をランダムにシャッフルする
 mt19937_64 mt((int)time(NULL));
 shuffle(all(a), mt);
-
-// vi a() で確保したメモリを開放する
-vi().swap(a)
 
 // 型 T の最小値[最大値] を取得する．
 numeric_limits<T>::min(); numeric_limits<T>::max();

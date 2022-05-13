@@ -3,23 +3,6 @@
 // ■■■■■ 文字列の各種性質の分析 ■■■■■
 
 
-//【部分文字列の数え上げ】O(n)
-/*
-* 文字列 s[0..n) の部分文字列の個数を返す（空文字列も s の部分文字列とみなす）
-*/
-ll count_substring(const string& s) {
-	int n = sz(s);
-
-	auto sa = suffix_array(s);
-	auto la = lcp_array(s, sa);
-
-	ll res = n - sa[0];
-	repi(i, 1, n - 1) res += n - sa[i] - la[i - 1];
-
-	return res;
-}
-
-
 //【最長共通接頭尾辞】O(n)
 /*
 * 文字列 s[0..n) について，s[0..i) の接頭辞と接尾辞が
@@ -27,6 +10,7 @@ ll count_substring(const string& s) {
 */
 template <class STR> void morris_pratt(const STR& s, vi& len) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/01/235807
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_B
 
 	//【方法】
 	// j = len[i] まで分かっているときに len[i+1] を求めることを考える．
@@ -59,6 +43,59 @@ template <class STR> void morris_pratt(const STR& s, vi& len) {
 		len[i + 1] = ++j;
 	}
 }
+
+
+//【部分文字列判定】O(n + m)
+/*
+* s[0..n) の部分文字列として w[0..m) が含まれているかどうか調べ，
+* 見つかった場所の先頭位置を昇順に pos に格納する．
+*
+* 利用：【最長共通接頭尾辞】
+*/
+template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_B
+
+	int n = sz(s), m = sz(w);
+	pos.clear();
+
+	// l[j] : w[0..j) の接頭辞と接尾辞が最大何文字一致しているか（j 文字未満）
+	vi l;
+	morris_pratt(w, l);
+
+	int i = 0; // s[i..i+m) を走査中
+	int j = 0; // s[i..i+j) = w[0..j) まで確定
+	while (i + j < n) {
+		// s[i+j] = w[j] の場合
+		if (w[j] == s[i + j]) {
+			// さらに 1 文字先を見に行く．
+			j++;
+
+			// もし w を走査し終えたなら連続部分列として w を発見できたので記録する．
+			if (j == m) pos.push_back(i);
+			else continue;
+		}
+
+		// s[i..i+j) までは走査したので，次は s[i+j..i+j+m) の走査といきたい.
+		// しかし，w[0..j) の最大長 l[j] の接尾辞は w[0..j) の接頭辞に一致していた．
+		// s[i..i+j) = w[0..j) だから，これは s[i..i+j) の接尾辞とも一致している．
+		// よって s[i+j-l[j]..i+j-l[j]+m) = w[0..m) となる可能性は残っている．
+		i = i + j - l[j];
+
+		// 一方で，これは s[i+j-l[j]..i+j-l[j]+m) の長さ l[j] の接頭辞が
+		// w[0..j) の接頭辞に一致していることを意味するので，
+		// s[i+j-l[j]..i+j) = w[0..l[j]) までは確定していることになる． 
+		if (j > 0) j = l[j];
+	}
+}
+
+
+//【最短周期長】
+/*
+* s[0..n) の最長共通接頭尾辞長 len[0..n) が【最長共通接頭尾辞】で得られていれば，
+* s[0..i) の最短周期長は i-len[i] で得られる．
+* 
+* 参考 : https://snuke.hatenablog.com/entry/2015/04/05/184819
+*/
 
 
 //【最長回文長（文字中心）】O(n)
@@ -125,7 +162,7 @@ template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
 	STR s_riffled;
 	s_riffled.resize(2 * n + 1);
 	rep(i, n) s_riffled[2 * i + 1] = s[i];
-	rep(i, n + 1) s_riffled[2 * i] = '_'; // '_' は s に含まれない文字
+	rep(i, n + 1) s_riffled[2 * i] = '$'; // '$' は s に含まれない文字
 
 	vi r;
 	manacher(s_riffled, r);
@@ -183,84 +220,6 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 		}
 		i += k;
 		j -= k;
-	}
-}
-
-
-//【部分文字列判定】O(n + m)
-/*
-* s[0..n) の部分文字列として w[0..m) が含まれているかどうか調べ，
-* 見つかった場所の先頭位置を昇順に pos に格納する．
-*/
-template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos) {
-	//  参考 : https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%8C%E3%83%BC%E3%82%B9%E2%80%93%E3%83%A2%E3%83%AA%E3%82%B9%E2%80%93%E3%83%97%E3%83%A9%E3%83%83%E3%83%88%E6%B3%95
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_B
-
-	int n = sz(s), m = sz(w);
-	pos.clear();
-
-	// 部分マッチテーブル tbl の作成
-	// s[i] から照合を開始して s[i + j] != w[j] となった場合，
-	// 次に照合を開始すべき位置が s[i + j - tbl[j]] であるように構築する．
-	vi tbl(m + 1);
-	tbl[0] = -1; tbl[1] = 0;
-	int i = 2; // いま tbl[i] を計算中であることを表す．
-	int j = 0; // いま w[j] まで見ていることを表す．
-	while (i <= m) {
-		// サブ文字列が w の先頭と一致し続けている場合
-		if (w[i - 1] == w[j]) {
-			// 一致した長さの分だけバックトラッキングしなければならない．
-			tbl[i] = j + 1;
-
-			// それぞれ 1 文字先を見に行く．
-			i++; j++;
-		}
-		// サブ文字列と w の先頭との一致が終わった場合？
-		else if (j > 0) {
-			// 次のサブ文字列を走査するため j を戻す．？
-			j = tbl[j];
-		}
-		// ？
-		else {
-			tbl[i] = 0;
-			i++;
-		}
-	}
-
-	// 連続部分列を探す．
-	i = 0; // いま s[i] から始まる連続部分列を見ていることを表す．
-	j = 0; // いま w[j] まで見ていることを表す．
-	while (i + j < n) {
-		// s で見ている文字 s[i + j] が w で見ている文字 w[j] に一致した場合
-		if (w[j] == s[i + j]) {
-			// さらに 1 文字先を見に行く．
-			j++;
-
-			// もし w を走査し終えたなら連続部分列として w を発見．
-			if (j == m) {
-				pos.push_back(i);
-
-				// 部分マッチテーブルに従い i, j を再設定する．
-				// i = i + j としたいが tbl[j] だけのバックトラッキングが入る．
-				i = i + j - tbl[j];
-
-				// その代わり w との照合を tbl[j] だけ進んだところから始められる．
-				if (j > 0) {
-					j = tbl[j];
-				}
-			}
-		}
-		// s で見ている文字 s[i + j] が w で見ている文字 w[j] に一致しなかった場合
-		else {
-			// 部分マッチテーブルに従い i, j を再設定する．
-			// i = i + j としたいが tbl[j] だけのバックトラッキングが入る．
-			i = i + j - tbl[j];
-
-			// その代わり w との照合を tbl[j] だけ進んだところから始められる．
-			if (j > 0) {
-				j = tbl[j];
-			}
-		}
 	}
 }
 

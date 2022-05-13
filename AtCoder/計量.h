@@ -9,7 +9,7 @@
 /*
 * 点 p と直線 l との距離を返す．
 */
-template <typename T> inline double distance_P_L(const Point<T>& p, const Line<T>& l) {
+template <class T> inline double distance_P_L(const Point<T>& p, const Line<T>& l) {
 	Point<double> d = (l.second - l.first).normalize();
 	Point<double> n(-d.y, d.x);
 	Point<double> p2 = p - l.first;
@@ -24,7 +24,7 @@ template <typename T> inline double distance_P_L(const Point<T>& p, const Line<T
 * 同じ偏角のときは，a への距離より b への距離が大きければ true，さもなくば false を返す．
 * c 自身の偏角は未定義だが，便宜上 +∞ とする．
 */
-template <typename T>
+template <class T>
 bool compare_argument(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
 	// verify : https://judge.yosupo.jp/problem/sort_points_by_argument
 
@@ -76,7 +76,7 @@ bool compare_argument(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
 * 
 * 利用：【偏角の比較】
 */
-template <typename T> void argument_sort(vector<Point<T>>& p, const Point<T>& c) {
+template <class T> void argument_sort(vector<Point<T>>& p, const Point<T>& c) {
 	// verify : https://judge.yosupo.jp/problem/sort_points_by_argument
 
 	auto compare = [&](Point<T> a, Point<T> b) {
@@ -93,7 +93,7 @@ template <typename T> void argument_sort(vector<Point<T>>& p, const Point<T>& c)
 * n 角形は頂点を並べた列として表し，反時計回りのとき面積は正とする．
 * （よって頂点の周る順の判定に用いることもできる．）
 */
-template <typename T> T area_polygon(const Polygon<T>& poly) {
+template <class T> T area_polygon(const Polygon<T>& poly) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_A
 
 	int n = sz(poly);
@@ -229,7 +229,7 @@ double area_intersection_C_C(const Circle<T>& c1, const Circle<T>& c2) {
 }
 
 
-//【凸多角形の直径／キャリパー法】O(n)
+//【凸多角形の直径】O(n)
 /*
 * 凸 n 角形 poly の直径を求める．
 *
@@ -238,7 +238,7 @@ double area_intersection_C_C(const Circle<T>& c1, const Circle<T>& c2) {
 * 戻り値：poly の直径
 * id = {i, j} : 直径の両端の頂点の番号が {i, j} であることを表す．
 */
-template <typename T> double convex_diameter(const Polygon<T>& poly, pii& id) {
+template <class T> double caliper(const Polygon<T>& poly, pii& id) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_B
 
 	int n = sz(poly);

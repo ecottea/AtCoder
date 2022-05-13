@@ -254,3 +254,36 @@ S19 e19() { return S19(); }
 #define Permutation_invcomposite_monoid S19, op19, e19
 
 
+//【第二最大値 モノイド】
+/* verify: https://atcoder.jp/contests/arc100/tasks/arc100_c */
+using S21 = pair<ll, ll>; // (最大値, 第二最大値)
+S21 op21(S21 a, S21 b) {
+	vector<ll> vals(4);
+	vals[0] = a.first;
+	vals[1] = a.second;
+	vals[2] = b.first;
+	vals[3] = b.second;
+	sort(all(vals));
+
+	return { vals[3], vals[2] };
+}
+S21 e21() { return { -INFL, -INFL }; }
+#define Second_max_monoid S21, op21, e21
+
+
+//【第二最小値 モノイド】
+using S22 = pair<ll, ll>; // (最小値, 第二最小値)
+S22 op22(S22 a, S22 b) {
+	vector<ll> vals(4);
+	vals[0] = a.first;
+	vals[1] = a.second;
+	vals[2] = b.first;
+	vals[3] = b.second;
+	sort(all(vals));
+
+	return { vals[0], vals[1] };
+}
+S22 e22() { return { INFL, INFL }; }
+#define Second_min_monoid S22, op22, e22
+
+

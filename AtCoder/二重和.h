@@ -1,13 +1,14 @@
 #pragma once
 #include "header.h"
-#include "–ñ””{”•ÏŠ·.h"
+#include "–ñ”•ÏŠ·.h"
 #include "“ñ€ŒW”.h"
+#include "”‚¦ã‚°(‹æŠÔ).h"
 // ¡¡¡¡¡ “ñd‚Ì˜a‚È‚Ç ¡¡¡¡¡
 
 
 //y‘g‚Ì·‚Ì‘˜azO(n log n)
 /*
-* ƒ°ƒ°i<j |a[j] - a[i]| ‚Ì’l‚ğ•Ô‚·D
+* ƒ°i<j |a[j] - a[i]| ‚Ì’l‚ğ•Ô‚·D
 */
 template <class T> mint difference_sum(vector<T> a) {
 	// verify : https://atcoder.jp/contests/abc058/tasks/arc071_b
@@ -30,10 +31,21 @@ template <class T> mint difference_sum(vector<T> a) {
 
 //y‹æŠÔ‚Ì min ‚Ì‘˜azO(n log n)
 /*
-* ƒ°ƒ°i<j min( a[i..j) ) ‚Ì’l‚ğ•Ô‚·D
-* 
-*y‹æŠÔ‚Ì”‚¦ã‚°iÅ¬’lw’èjz‚ğ—˜—p‚·‚ê‚Î‚æ‚¢D
+* ƒ°i<j min( a[i..j) ) ‚Ì’l‚ğ•Ô‚·D
+*
+* —˜—pFy‹æŠÔ‚Ì”‚¦ã‚°iÅ¬’lw’èjz
 */
+template <class T> T interval_min_sum(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
+
+	unordered_map<T, ll> cnt;
+	count_min_intervals(a, cnt);
+
+	T res = T(0);
+	repe(p, cnt) res += p.first * p.second;
+
+	return res;
+}
 
 
 //y‘g‚Ì XOR ‚Ì˜azO((n + m) log max(a, b))

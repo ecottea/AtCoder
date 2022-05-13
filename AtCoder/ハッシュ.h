@@ -299,7 +299,7 @@ template <class X> struct Zobrist_hash_set {
 	uniform_int_distribution<ll> rnd;
 
 	// コンストラクタ（空集合で初期化）
-	Zobrist_hash_func_mod() : v(0) {
+	Zobrist_hash_set() : v(0) {
 		mt.seed((int)time(NULL));
 		rnd = uniform_int_distribution<ll>(-INFL, INFL);
 	}
@@ -319,7 +319,7 @@ template <class X> struct Zobrist_hash_set {
 	ll get() { return v; }
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Zobrist_hash_func_mod z) {
+	friend ostream& operator<<(ostream& os, Zobrist_hash_set z) {
 		os << "v: " << z.v << endl;
 		return os;
 	}

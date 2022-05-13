@@ -247,6 +247,12 @@ double golden_search_uc(double left, double right, function<double(double)>& f) 
 
 	// 最後の候補を比較し，大きかった方の x を返す．
 	return (v1 > v2) ? m1 : m2;
+
+	/* f の定義の雛形
+	function<double(double)> f = [&](double x) {
+		return x;
+	};
+	*/
 }
 
 
@@ -255,6 +261,8 @@ double golden_search_uc(double left, double right, function<double(double)>& f) 
 * 全域で狭義に下に凸な関数 f(x) の開区間 (left, right) における最小値を与える x を返す．
 */
 double golden_search_lc(double left, double right, function<double(double)>& f) {
+	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_b
+	
 	const double phi = (1 + sqrt(5)) / 2;
 
 	// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点
@@ -299,6 +307,12 @@ double golden_search_lc(double left, double right, function<double(double)>& f) 
 
 	// 最後の候補を比較し，小さかった方の x を返す．
 	return (v1 < v2) ? m1 : m2;
+
+	/* f の定義の雛形
+	function<double(double)> f = [&](double x) {
+		return x;
+	};
+	*/
 }
 
 
@@ -334,6 +348,12 @@ double random_ternary_search_lc(double l, double r, function<double(double)>& f)
 
 	// 最後の候補を比較し，小さかった方の x を返す．
 	return (f(m1) < f(m2)) ? m1 : m2;
+
+	/* f の定義の雛形
+	function<double(double)> f = [&](double x) {
+		return x;
+	};
+	*/
 }
 
 

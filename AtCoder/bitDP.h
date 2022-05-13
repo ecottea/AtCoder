@@ -70,6 +70,7 @@ ll maximize_score_clustering(const vvl& sc) {
 	vector<ll> dp(1LL << n);
 
 	repb(set, n) {
+		// set 全体を 1 つのクラスタとする場合
 		rep(i, n) {
 			if (!(set & (1 << i))) continue;
 

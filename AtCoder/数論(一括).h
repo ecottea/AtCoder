@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
-#include "約数倍数変換.h"
+#include "約数変換.h"
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
@@ -73,6 +73,8 @@ void eratosthenes_interval(ll l, ll r, vl& ps) {
 *（エラトステネスの篩）
 */
 void factor_integer_all(int n, vector<map<int, int>>& pps) {
+	// verify : https://atcoder.jp/contests/abc052/tasks/arc067_a
+
 	pps = vector<map<int, int>>(n + 1);
 
 	// 順に素数で割っていった残りの値を記録しておくためのテーブル

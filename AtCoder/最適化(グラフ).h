@@ -467,7 +467,7 @@ ll chinese_postman_problem(const WGraph& g) {
 }
 
 
-//【最大流問題／フォード－ファルカーソンのアルゴリズム】O(|E| maxflow)
+//【最大流問題】O(|E| maxflow)
 /*
 * コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */

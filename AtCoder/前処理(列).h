@@ -163,6 +163,31 @@ template <class T> void next_equal(const vector<T>& a, vi& nxt) {
 }
 
 
+//【自身と同じ数の前の位置】O(n)
+/*
+* a[0..n) の各要素 a[i] について，j < i かつ a[j] = a[i] となる最大の j を
+* prv[j] に格納する．（存在しなければ -1）
+*/
+template <class T> void prev_equal(const vector<T>& a, vi& prv) {
+	// verify : https://atcoder.jp/contests/agc031/tasks/agc031_b
+
+	int n = sz(a);
+
+	// prv[i] : j < i かつ a[j] = a[i] となる最大の j（なければ -1）
+	prv = vi(n, -1);
+
+	// num_to_pos[x] : 値 x が最後に現れた位置（左から走査する）
+	unordered_map<T, int> num_to_pos;
+
+	rep(i, n) {
+		if (num_to_pos.count(a[i])) {
+			prv[i] = num_to_pos[a[i]];
+		}
+		num_to_pos[a[i]] = i;
+	}
+}
+
+
 //【自身より 1 つ大きい数の次の位置】O(n)
 /*
 * a[0..n) の各要素 a[i] について，j > i かつ a[j] = a[i] + 1 となる最小の j を

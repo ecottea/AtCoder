@@ -9,7 +9,7 @@
 * 
 * §–ñF|b| >= 2
 */
-void integer_digits(ll n, vi& ds, ll b = 10) {
+void integer_digits(ll n, vl& ds, ll b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	ds.clear();
