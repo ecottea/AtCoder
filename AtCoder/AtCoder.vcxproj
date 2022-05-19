@@ -165,11 +165,13 @@
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="スコア和%28区間%29.h" />
     <ClInclude Include="スコア和(文字列).h" />
+    <ClInclude Include="スコア和(集合).h" />
     <ClInclude Include="セグメント木%28抽象%29.h" />
     <ClInclude Include="ゼータメビウス変換(old).h" />
     <ClInclude Include="ゼータ変換(抽象).h" />
     <ClInclude Include="ゼータ変換.h" />
     <ClInclude Include="ダブリング.h" />
+    <ClInclude Include="デザイン.h" />
     <ClInclude Include="ハッシュ.h" />
     <ClInclude Include="ビット列.h" />
     <ClInclude Include="ビット演算.h" />

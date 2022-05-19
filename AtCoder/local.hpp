@@ -181,18 +181,27 @@ inline ostream& operator<< (ostream& os, priority_queue<T, vector<T>, greater<T>
 
 //【デバッグ出力関数】
 // 参考 : https://marycore.jp/prog/cpp/variadic-function/
+
+bool mute_dump = false;
+
 template <typename First>
 void dump(First first) {
+	if (mute_dump) return;
+
 	cerr << "\033[1;36m" << first << "\033[0m" << endl;
 }
 template <typename First, typename... Rest>
 void dump(First first, Rest... rest) {
+	if (mute_dump) return;
+
 	cerr << "\033[1;36m" << first << "\033[0m ";
 	dump(rest...);
 }
 
 template <class T>
 void dumpel(T a) {
+	if (mute_dump) return;
+
 	int i = 0; 
 	cerr << "\033[1;36m";
 	repe(x, a) {

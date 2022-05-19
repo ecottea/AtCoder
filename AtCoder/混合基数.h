@@ -104,3 +104,63 @@ void enumerate_redundant_mixed_radix(const vl& a, ll val, vvl& ds) {
 }
 
 
+//【フィボナッチ進法表示】
+/*
+* Fibonacci_representation(ll n) : O(log n)
+*	n 以下の整数のフィボナッチ進法表示を求められるよう初期化する．
+*
+* ll fibonacci(int i) : O(1)
+*	i 番目のフィボナッチ数 fib[i] を得る（fib[0] = 0, fib[1] = 1 とする．）
+*
+* get_digits(ll n, vi& ds) : O(log n)
+*	n のフィボナッチ進法表示を ds に格納する．（下位から順）
+*	桁の数は {0, 1} であり，1 は連続せず，下 2 桁は常に "00" である．
+*/
+class Fibonacci_representation {
+	// verify : https://atcoder.jp/contests/arc122/tasks/arc122_c
+
+	int m;
+	vl fib;
+
+public:
+	// n 以下の整数のフィボナッチ進法表示を求められるよう初期化する．
+	Fibonacci_representation(ll n) {
+		fib = vl{ 0, 1 }; m = 2;
+		while (fib[m - 1] <= n) {
+			fib.push_back(fib[m - 1] + fib[m - 2]);
+			m++;
+		}
+	}
+
+	// i 番目のフィボナッチ数 fib[i] を得る（fib[0] = 0, fib[1] = 1 とする．）
+	ll fibonacci(int i) {
+		assert(0 <= i && i < m);
+
+		return fib[i];
+	}
+
+	// n のフィボナッチ進法表示を ds に格納する．（下位から順）
+	void get_digits(ll n, vi& ds) {
+		if (n == 0) {
+			ds = vi{ 0 };
+			return;
+		}
+
+		int i = 2;
+		while (fib[i] <= n) i++;
+		ds.resize(i);
+		i--;
+
+		while (i >= 2) {
+			if (fib[i] <= n) {
+				ds[i] = 1;
+				n -= fib[i];
+			}
+			else ds[i] = 0;
+			i--;
+		}
+		ds[1] = ds[0] = 0;
+	}
+};
+
+

@@ -501,11 +501,200 @@ template <class T> T binomial(ll n, ll r) {
 }
 
 
+//【二項係数の累積和（法が小さな奇素数）】
+/*
+* Binomial_sum(int p) : O(p^2)
+*	法を p として初期化する．
+*
+* binomial_sum(ll n, ll r) : O(log n)
+*	Σbin[n][0..r) mod p を返す．
+* 
+* 制約：p は奇素数
+*/
+class Binomial_sum {
+	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
+
+	int p; // 法となる素数
+	vvi bin; // bin[i][j] : binomial(i, j)
+	vvi acc; // acc[i][j] : Σbin[i][0..j)
+	vi pow2; // pow2[i] : 2^i
+
+public:
+	// p を法として初期化する． : O(p^2)
+	Binomial_sum(int p_) : p(p_) {
+		bin = vvi(p, vi(p));
+		acc = vvi(p, vi(p + 1));
+		pow2.resize(p - 1);
+
+		bin[0][0] = 1;
+		repi(i, 1, p - 1) {
+			repi(j, 0, i) {
+				if (j > 0) bin[i][j] += bin[i - 1][j - 1];
+				if (j < i) bin[i][j] += bin[i - 1][j];
+				bin[i][j] %= p;
+			}
+		}
+
+		rep(i, p) {
+			rep(j, p) {
+				acc[i][j + 1] = acc[i][j] + bin[i][j];
+				acc[i][j + 1] %= p;
+			}
+		}
+
+		pow2[0] = 1;
+		repi(i, 1, p - 2) pow2[i] = (pow2[i - 1] * 2) % p;
+	}
+	Binomial_sum() : p(0) {} // ダミー
+
+	// Σbin[n][0..r) を返す． : O(log n)
+	int binomial_sum(ll n, ll r) {
+		if (n == 0) return (int)(r > 0);
+		if (r <= 0) return 0;
+		if (r > n) return pow2[n % (p - 1)];
+
+		// dn, dr : n, r の p 進表示の桁の数（上位から順）
+		vi dn, dr; ll n_ = n, r_ = r;
+		while (n_ > 0) {
+			dn.push_back((int)(n_ % p));
+			dr.push_back((int)(r_ % p));
+			n_ /= p;
+			r_ /= p;
+		}
+		reverse(all(dn));
+		reverse(all(dr));
+		int k = sz(dn);
+
+		int res = 0, mul = 1;
+		rep(i, k) {
+			n -= dn[i] * pow(p, k - 1 - i);
+			res += acc[dn[i]][dr[i]] * pow2[n % (p - 1)] * mul;
+			mul *= bin[dn[i]][dr[i]];
+			res %= p;
+			mul %= p;
+		}
+
+		return res;
+	}
+};
+
+
+//【二項係数の一括計算（法が小さな素数）】O((r - l) + p^2 + log n) (?)
+/*
+* i∈[l..r) について binomial(n, i) mod p を bin[i - l] に格納する．
+* 
+* 制約：p は素数
+*/
+void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
+	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
+
+	r--; // [l..r] にする．
+	bin.clear();
+
+	vvi bin_sml(p, vi(p)); // bin_sml[i][j] : binomial(i, j) mod p
+	bin_sml[0][0] = 1;
+	repi(i, 1, p - 1) {
+		repi(j, 0, i) {
+			if (j > 0) bin_sml[i][j] += bin_sml[i - 1][j - 1];
+			if (j < i) bin_sml[i][j] += bin_sml[i - 1][j];
+			bin_sml[i][j] %= p;
+		}
+	}
+
+	// dn, dl, dr : n, l, r の p 進表示の桁の数（下位から順）
+	vi dn, dl, dr; ll n_ = n, l_ = l, r_ = r;
+	while (n_ > 0) {
+		dn.push_back((int)(n_ % p));
+		dl.push_back((int)(l_ % p));
+		dr.push_back((int)(r_ % p));
+		n_ /= p;
+		l_ /= p;
+		r_ /= p;
+	}
+	int k = sz(dn);
+
+	vvi dp(k + 1);
+	dp[0] = { 1 };
+
+	function<void(int, bool, bool, int)> rfunc = [&](int b, bool lf, bool rf, int mul) {
+		if (b == -1) {
+			bin.push_back(mul);
+			return;
+		}
+
+		if (lf) {
+			// 左右端ともに浮いていないとき
+			if (rf) {
+				if (!dp[b + 1].empty()) {
+					repe(v, dp[b + 1]) {
+						bin.push_back((v * mul) % p);
+					}
+				}
+				else {
+					rep(i, p) {
+						rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+					}
+
+					int m = (int)pow(p, b + 1);
+					dp[b + 1].resize(m);
+					rep(i, p) {
+						rep(j, m / p) {
+							dp[b + 1][i * m / p + j] = (dp[b][j] * bin_sml[dn[b]][i]) % p;
+						}
+					}
+				}
+			}
+			// 右端のみ浮いているとき
+			else {
+				repi(i, 0, dr[b] - 1) {
+					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+				}
+				rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr[b]]) % p);
+			}
+		}
+		else {
+			// 左端のみ浮いているとき
+			if (rf) {
+				rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dl[b]]) % p);
+				repi(i, dl[b] + 1, p - 1) {
+					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+				}
+			}
+			// 左右端ともに浮いているとき
+			else {
+				if (dl[b] == dr[b]) {
+					rfunc(b - 1, false, false, (mul * bin_sml[dn[b]][dl[b]]) % p);
+				}
+				else {
+					rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dl[b]]) % p);
+					repi(i, dl[b] + 1, dr[b] - 1) {
+						rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+					}
+					rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr[b]]) % p);
+				}
+			}
+		}
+	};
+
+	rfunc(k - 1, false, false, 1);
+}
+
+
 //【負の二項定理】
 /*
 * [z^i] (1-z)^n = bin(n-1+i, i) が成り立つ．
 * 
 * verify : https://atcoder.jp/contests/agc036/tasks/agc036_c
+*/
+
+
+//【Lucas の定理】
+/*
+* p を素数とし，n, r が p 進表記で
+*	n = [n[0], n[1], ..., n[k-1]]_(p)
+*	r = [r[0], r[1], ..., r[k-1]]_(p)
+* と表されるとき，以下の合同式が成り立つ：
+*	bin(n, r) = Πi=[0..k) bin(n[i], r[i])  (mod p)
 */
 
 

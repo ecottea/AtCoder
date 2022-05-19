@@ -203,11 +203,10 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 * hall[i][j] : マス (i, j) に穴が空いているなら true，さもなくば false
 * 戻り値 : キングを配置する場合の数
 * 
-*（盤上 DP）
+*（盤上 bitDP）
 */
 mint king_problem(vvb& hall) {
-	int h = sz(hall);
-	int w = sz(hall[0]);
+	int h = sz(hall), w = sz(hall[0]);
 
 	// 直前の m + 1 マスだけ切り出すマスク
 	const ll mask_full = (1 << (w + 1)) - 1;
@@ -221,14 +220,13 @@ mint king_problem(vvb& hall) {
 
 	// dp[i * w + j][pat] : 以下の条件を満たす配置の数
 	//		マス (i, j) の直前の w + 1 マスの配置パターンが pat
-	vector<map<ll, mint>> dp(w * h + 1);
+	vector<unordered_map<ll, mint>> dp(w * h + 1);
 	dp[0][0LL] = 1;
 
 	rep(i, h) {
 		rep(j, w) {
 			repe(p, dp[i * w + j]) {
-				ll pat;
-				mint cnt;
+				ll pat; mint cnt;
 				tie(pat, cnt) = p;
 
 				// (i, j) にコマを置かない場合
@@ -240,7 +238,7 @@ mint king_problem(vvb& hall) {
 				else if (j == w - 1) mask = mask_r;
 				else mask = mask_m;
 
-				// マスクをかけた位置にコマがあるか，
+				// マスクをかけた位置にコマがあるか，または
 				// マス (i, j) が配置不能マスであれば (i, j) にコマを置けない．
 				if ((pat & mask) || hall[i][j]) continue;
 

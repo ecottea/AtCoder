@@ -53,7 +53,7 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 		rep(i, n1) {
 			if (set1 & (1 << i)) {
 				int sub1 = set1 - (1 << i);
-				is_ind1[set1] = is_ind1[set1] & is_ind1[sub1];
+				is_ind1[set1] = is_ind1[set1] && is_ind1[sub1];
 			}
 		}
 	}
@@ -67,20 +67,20 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 
 	// 1 点集合 {s} ⊂ V1 の相手は s と辺で結ばれていない V2 の点集合
 	rep(s, n1) {
-		no_edge[1 << s] = (1 << n2) - 1;
+		no_edge[1LL << s] = (1 << n2) - 1;
 		repe(t, g[s]) {
 			if (t < n1) continue;
 
-			no_edge[1 << s] -= (1 << (t - n1));
+			no_edge[1LL << s] -= (1 << (t - n1));
 		}
 	}
 
 	// 2 点以上の集合 set1 ⊂ V1 については 1 点集合の相手との共通部分を考える．
 	repb(set1, n1) {
 		rep(i, n1) {
-			if (set1 & (1 << i)) {
-				int sub1 = set1 - (1 << i);
-				no_edge[set1] = no_edge[1 << i] & no_edge[sub1];
+			if (set1 & (1LL << i)) {
+				int sub1 = set1 - (1LL << i);
+				no_edge[set1] = no_edge[1LL << i] & no_edge[sub1];
 				break;
 			}
 		}

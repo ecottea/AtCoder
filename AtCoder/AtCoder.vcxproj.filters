@@ -25,9 +25,6 @@
     <Filter Include="ヘッダー ファイル\典型問題">
       <UniqueIdentifier>{3d7ede8b-66a9-4288-8a55-1c2d9a64d7ac}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\行列ベクトル">
-      <UniqueIdentifier>{123631c0-bf2a-494d-8537-b924053d4f00}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\最適化">
       <UniqueIdentifier>{10924012-fe11-45fb-985f-2db4efb5c97f}</UniqueIdentifier>
     </Filter>
@@ -82,6 +79,9 @@
     <Filter Include="ヘッダー ファイル\組合せ論">
       <UniqueIdentifier>{a1ad5cc8-853c-42d6-a8c6-f048198ec587}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\行列">
+      <UniqueIdentifier>{123631c0-bf2a-494d-8537-b924053d4f00}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -108,13 +108,13 @@
       <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
     <ClInclude Include="行列.h">
-      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+      <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
     <ClInclude Include="疎行列.h">
-      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+      <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
     <ClInclude Include="ベクトル.h">
-      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+      <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
     <ClInclude Include="分析%28グラフ%29.h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
@@ -147,7 +147,7 @@
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
     </ClInclude>
     <ClInclude Include="ビット行列.h">
-      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+      <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
     <ClInclude Include="グラフクエリ.h">
       <Filter>ヘッダー ファイル\クエリ処理</Filter>
@@ -315,7 +315,7 @@
       <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
     <ClInclude Include="行列(抽象).h">
-      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+      <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
     <ClInclude Include="累積演算%28抽象%29.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
@@ -411,7 +411,7 @@
       <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="マトロイド.h">
-      <Filter>ヘッダー ファイル\行列ベクトル</Filter>
+      <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
     <ClInclude Include="前処理(列).h">
       <Filter>ヘッダー ファイル\列</Filter>
@@ -520,6 +520,12 @@
     </ClInclude>
     <ClInclude Include="順列(最適化).h">
       <Filter>ヘッダー ファイル\最適化</Filter>
+    </ClInclude>
+    <ClInclude Include="デザイン.h">
+      <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和(集合).h">
+      <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

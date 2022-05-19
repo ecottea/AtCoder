@@ -58,7 +58,7 @@ int interval_union(vector<pair<T, T>>& lr, vector<pair<T, T>>& res) {
 * 
 * なお戻り値は「全ての区間 [l[i], r[i]) を切断するための最小切断回数」にも一致する．
 *
-*（右端でソートして貪欲法）
+*（右端でソートして前から貪欲）
 */
 int interval_scheduling(const vl& l, const vl& r) {
 	// varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
@@ -90,38 +90,43 @@ int interval_scheduling(const vl& l, const vl& r) {
 }
 
 
-//【区間スケジューリング問題】O(n log n)
+//【区間スケジューリング問題（報酬最大化）】O(n log n)
 /*
-* 期間 [l[i], r[i]) に着手すべき n 個の仕事を請け負える最大個数を返す．
+* 着手期間が [l[i], r[i])，報酬が a[i] の n 個の仕事について，得られる最大報酬を返す．
 *
 *（左端でソートして DP）
 */
-int interval_scheduling(const vl& l, const vl& r) {
-	// varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
+template <class S, class T>
+T interval_scheduling(const vector<S>& l, const vector<S>& r, const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/code-formula-2014-final/tasks/code_formula_2014_final_d
+	// 
+	//【方法】
+	// 仕事を頂点とし，その次に請け負える仕事への有向辺をもつグラフを考えれば，
+	// DAG 上のコスト最大パスを求める問題に帰着するので，後ろから DP すれば良い．
 
 	int n = sz(l);
 
 	// 仕事を左端昇順にソートする．
-	vector<pll> lr(n);
-	rep(i, n) lr[i] = { l[i], r[i] };
-	sort(all(lr));
+	vector<tuple<S, S, T>> lra(n);
+	rep(i, n) lra[i] = { l[i], r[i], a[i] };
+	sort(all(lra));
 
-	vl l2(n), r2(n);
-	rep(i, n) tie(l2[i], r2[i]) = lr[i];
+	vector<S> l2(n), r2(n); vector<T> a2(n);
+	rep(i, n) tie(l2[i], r2[i], a2[i]) = lra[i];
 
-	// dp[i] : 仕事 [i..n) の中で請け負える仕事の最大個数
-	vi dp(n);
-	dp[n - 1] = 1;
+	// dp[i] : 仕事 [i..n) の中で得られる最大報酬
+	vector<T> dp(n + 1);
+	dp[n] = 0;
 
-	repir(i, n - 2, 0) {
+	repir(i, n - 1, 0) {
 		// 仕事 i を請ける場合
 		auto it = lower_bound(all(l2), r2[i]);
 		if (it == l2.end()) {
-			dp[i] = 1;
+			dp[i] = a2[i];
 		}
 		else {
 			int j = distance(l2.begin(), it);
-			dp[i] = 1 + dp[j];
+			dp[i] = a2[i] + dp[j];
 		}
 
 		// 仕事 i を請けない場合

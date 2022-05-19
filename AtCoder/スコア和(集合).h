@@ -1,0 +1,91 @@
+#pragma once
+#include "header.h"
+#include "FPS(mint).h"
+// ■■■■■ 部分集合を渡るスコア和 ■■■■■
+
+
+//【部分集合の個数】
+/*
+* Σset⊂[0..n) 1 = 2^n である．
+* 
+* 証明：
+* 部分集合を定めるとき，各 i∈[0..n) について独立に含むか含まないかの 2 通りを選べる．
+*/
+
+
+//【部分集合の大きさの和】
+/*
+* Σset⊂[0..n) |set| = n 2^(n-1) である．
+* 
+* 証明：
+* 各 i∈[0..n) が数えられる回数は，[0..n)-{i} の部分集合の個数と同じ 2^(n-1) 回である．
+*/
+
+
+//【要素和の和（要素数ごと）】O(n)
+/*
+* 与えられた a[0..n) について，各 k=[0..n] についての set⊂[0..n) に関する和
+*	Σ|set|=k Σi∈set a[i]
+* の値を res[k] に格納する．
+*
+* 利用：【階乗など（法が大きな素数）】
+*/
+template <class T> void total_sum(const vector<T>& a, vm& res) {
+	//【方法】
+	// a[i] が res[k] に何回寄与するかを考えると，
+	// i を含む大きさ k の部分集合の個数 bin(n-1, k-1) 回と分かる．
+	//
+	// よって
+	//		res[k]
+	//		= Σi=[0..n) a[i] * bin(n-1, k-1)
+	//		= bin(n-1, k-1) * Σi=[0..n) a[i]
+	// となる．
+
+	int n = sz(a);
+	res.resize(n + 1);
+
+	if (n == 0) return;
+
+	Factorial_mint fm(n);
+	mint a_sum = accumulate(all(a), mint(0));
+
+	repi(k, 0, n) res[k] = a_sum * fm.binomial(n - 1, k - 1);
+}
+
+
+//【要素積の和（要素数ごと）】O(n (log n)^2)
+/*
+* 与えられた a[0..n) について，各 k=[0..n] についての set⊂[0..n) に関する和
+*	Σ|set|=k Πi∈set a[i]
+* の値を res[k] に格納する．
+*
+* 利用：【形式的冪級数（mint）】，【一次式の積の展開（基本対称式）】
+*/
+template <class T> void multiple_sum(const vector<T>& a, vm& res) {
+	//【方法】
+	// 一次式の積
+	//		g(x) = Πi=[0..n) (1 + a[i] x)
+	// を計算したときの x^k の係数として求めることができる．
+
+	int n = sz(a);
+	res.resize(n + 1);
+
+	if (n == 0) {
+		res[0] = 1;
+		return;
+	}
+
+	vm x(n); mint c = 1;
+	rep(i, n) {
+		if (a[i] == 0) continue;
+
+		x[i] = -mint(a[i]).inv();
+		c *= a[i];
+	}
+
+	MFPS g = c * expand(x);
+
+	repi(k, 0, n) res[k] = g[k];
+}
+
+

@@ -85,13 +85,13 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #include <atcoder/all>
 using namespace atcoder;
 
-//using mint = modint1000000007;
-using mint = modint998244353;
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
-using vm = vector<mint>;	using vvm = vector<vm>;		using vvvm = vector<vvm>;
+using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 //----------------------------------------
 
 
@@ -122,7 +122,8 @@ getline(cin, str);
 
 // ‹ó”’‹æØ‚è‚Å•¶š—ñ str ‚©‚ç s ‚É“Ç‚İ‚İ
 stringstream ss{ str };
-getline(ss, s, ' ');
+string s;
+while (getline(ss, s, ' ')) {}
 
 // W‡‚Ì‹¤’Ê•”•ªC˜aW‡‚ğ“¾‚é
 set_intersection(all(a), all(b), inserter(res, res.end()));
@@ -213,6 +214,10 @@ void zikken() {
 	mt.seed((int)time(NULL));
 	uniform_int_distribution<ll> rnd(0LL, 1LL << 62);
 
+#ifdef _MSC_VER
+	mute_dump = true;
+#endif
+
 	rep(hoge, 100) {
 		int n = 100;
 		vi a(n);
@@ -226,13 +231,19 @@ void zikken() {
 #ifdef _MSC_VER
 		if (res_naive != res_solve) {
 			cout << "----------error!----------" << endl;
+			cout << "input:" << endl;
 			cout << a << endl;
+			cout << "results: << endl;
 			cout << res_naive << endl;
 			cout << res_solve << endl;
 			cout << "--------------------------" << endl;
 		}
 #endif
 	}
+
+#ifdef _MSC_VER
+	mute_dump = false;
+#endif
 }
 
 --------------------------------------------------------------- */

@@ -5,95 +5,220 @@
 // ■■■■■ 辞書 ■■■■■
 
 
-//【多重集合の動的辞書】
+//【binary trie】
 /*
-* Dynamic_dictionary(int n) : O(n)
-*	[0..n) を記録可能な辞書を空で初期化する．
+* Binary_trie<T>(int B = 63) : O(1)
+*   型 T の B ビット整数を扱えるよう空で初期化する．
 *
-* Dynamic_dictionary(int n, vi a) : O(n)
-*	[0..n) を記録可能な辞書を多重集合 a で初期化する．
+* ll size() : O(1)
+*   要素数を返す．
 *
-* ll size() : O(log n)
-*	要素の総数を返す．
+* bool empty() : O(1)
+*   要素が 0 個かを返す．
 *
-* ll count(int v) : O(log n)
-*	要素 v の個数を返す．
+* insert(T val, ll cnt = 1) : O(B)
+*   値 val を cnt 個追加する．
 *
-* ll count(int l, int r) : O(log n)
-*	値 [l..r) をもつ要素の個数を返す．
+* erase(T val, ll cnt = 1) : O(B)
+*   値 val を cnt 個削除する．
 *
-* insert(int v), insert(int v, ll k) : O(log n)
-*	要素 v を 1 個 [k 個] 追加する．
+* T max_element(T mask = 0) : O(B)
+*   全要素に対して mask と XOR をとったと仮定し，最大要素を返す．
 *
-* erase(int v), erase(int v, ll k) : O(log n)
-*	要素 v を 1 個 [k 個] 削除する．個数は負数にもなる．
+* T min_element(T mask = 0) : O(B)
+*   全要素に対して mask と XOR をとったと仮定し，最小要素を返す．
 *
-* int get(ll i) : O(log n)
-*	昇順で i 番目（0-indexed）の要素を返す．なければ n を返す．
+* T get(ll i, T mask = 0) : O(B)
+*   全要素に対して mask と XOR をとったと仮定し，昇順で i 番目（0-indexed）の要素を返す．
 *
-* ll lower_bound(int v) : O(log n)
-*	v 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed）
+* ll lower_bound(T val, T mask = 0) : O(B)
+*   全要素に対して mask と XOR をとったと仮定し，
+*   val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed）
 *
-* 利用：【フェニック木（アーベル群）】
+* ll upper_bound(T val, T mask = 0) : O(B)
+*   全要素に対して mask と XOR をとったと仮定し，
+*   val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed）
+*
+* ll count(T val) : O(B)
+*   要素 val の個数を返す．
+*
+* ll count(T l, T r, T mask = 0) : O(B)
+*   全要素に対して mask と XOR をとったと仮定し，値 [l..r) をもつ要素の個数を返す．
 */
-ll opdd(ll x, ll y) { return x + y; }
-ll edd() { return 0; }
-ll invdd(ll x) { return -x; }
-struct Dynamic_dictionary {
-	// verify : https://judge.yosupo.jp/problem/predecessor_problem
-	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_c
+template <class T = ll> class Binary_trie {
+	// 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/06/022654
 
-	int n;
+	struct Node {
+		ll cnt; // 部分木のもつ要素の個数
+		Node* ch[2]; // 左右の子へのポインタ
 
-	// ft[v] : 要素 v の個数
-	using RSQ = Fenwick_tree<ll, opdd, edd, invdd>;
-	RSQ ft;
+		Node() : cnt(0), ch{ nullptr, nullptr } {}
+	};
 
-	// コンストラクタ（何もしない）
-	Dynamic_dictionary() : n(0) {}
+	Node* root; // 根へのポインタ
+	int B; // 何ビット整数を扱うか
 
-	// [0..n) を記録可能な辞書を空で初期化する．
-	Dynamic_dictionary(int n_) : n(n_), ft(n) {}
+	Node* insert_sub(Node* t, T val, ll cnt, int b) {
+		// まだノードがなければ作成する．
+		if (t == nullptr) t = new Node;
 
-	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
-	Dynamic_dictionary(int n_, const vi& a) : n(n_) {
-		vl cnt(n);
-		repe(v, a) cnt[v]++;
-		ft = RSQ(cnt);
+		// 個数を増やす．
+		t->cnt += cnt;
+
+		// 自身が葉ならすぐに帰る．
+		if (b < 0) return t;
+
+		// 下位ビットに対応するノードに加算しにいく．
+		T f = (val >> b) & T(1);
+		t->ch[f] = insert_sub(t->ch[f], val, cnt, b - 1);
+
+		// 自身へのポインタを親に返す．
+		return t;
 	}
 
-	// 要素の総数を返す．
-	ll size() { return ft.prod(0, n); }
+	Node* erase_sub(Node* t, T val, ll cnt, int b) {
+		// 存在しない要素を削除しようとすればエラーを返す．
+		assert(t != nullptr && t->cnt >= cnt);
 
-	// 要素 v の個数を返す．
-	ll count(int v) { return ft.get(v); }
+		// 個数を減らす．
+		t->cnt -= cnt;
 
-	// 値 [l..r) をもつ要素の個数を返す．
-	ll count(int l, int r) { return ft.prod(l, r); }
+		// 要素が 0 個になったならノードを削除する．
+		if (t->cnt == 0) {
+			delete t;
+			return nullptr;
+		}
 
-	// 要素 v を挿入する．
-	void insert(int v) { ft.apply(v, 1); }
-	void insert(int v, ll k) { ft.apply(v, k); }
+		// 自身が葉ならすぐに帰る．
+		if (b < 0) return t;
 
-	// 要素 v を削除する．
-	void erase(int v) { ft.apply(v, -1); }
-	void erase(int v, ll k) { ft.apply(v, -k); }
+		// 下位ビットに対応するノードに減算しにいく．
+		T f = (val >> b) & T(1);
+		t->ch[f] = erase_sub(t->ch[f], val, cnt, b - 1);
 
-	// 昇順で i 番目の要素を返す．
-	int get(ll i) {
-		auto f = [&](ll x) { return x <= i; };
-		return ft.max_right(f);
+		// 自身へのポインタを親に返す．
+		return t;
 	}
 
-	// v が昇順で何番目の要素かを返す．
-	ll lower_bound(int v) { return ft.prod(0, v); }
+	T min_element_sub(Node* t, T mask, int b) {
+		assert(t != nullptr);
 
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Dynamic_dictionary& dd) {
-		rep(v, dd.n) rep(hoge, dd.ft.get(v)) os << v << " ";
-		return os;
+		// 葉なら 0 を返す．
+		if (b < 0) return 0;
+
+		// 下位ビットに対応するノードの最小値を求めにいく．
+		T g = (mask >> b) & T(1);
+		if (t->ch[g] == nullptr) g ^= T(1);
+		T val = min_element_sub(t->ch[g], mask, b - 1);
+
+		// 自身のビットを設定する．
+		val |= g << b;
+
+		return val;
 	}
-#endif
+
+	T get_sub(Node* t, T mask, ll k, int b) {
+		// 葉なら 0 を返す．
+		if (b < 0) return 0;
+
+		// 左の部分木に含まれる要素の個数をみて適切な子に探索しにいく．
+		T g = (mask >> b) & T(1);
+		ll lk = (t->ch[g] != nullptr ? t->ch[g]->cnt : 0);
+		T val;
+		if (k < lk) val = get_sub(t->ch[g], mask, k, b - 1) | (g << b);
+		else val = get_sub(t->ch[g ^ T(1)], mask, k - lk, b - 1) | ((g ^ T(1)) << b);
+
+		return val;
+	}
+
+	ll lower_bound_sub(Node* t, T mask, T val, int b) {
+		// 葉であるかまたはノードがなければ 0 を返す．
+		if (t == nullptr || b < 0) return 0;
+
+		// val の第 b ビットをみて適切な子に探索しにいく．
+		T f = (val >> b) & T(1);
+		T g = (mask >> b) & T(1);
+		ll res = 0;
+		if (f == T(1) && t->ch[g] != nullptr) res += t->ch[g]->cnt;
+		res += lower_bound_sub(t->ch[f ^ g], mask, val, b - 1);
+
+		return res;
+	}
+
+public:
+	// 空で初期化する． : O(1)
+	Binary_trie(int B_ = 63) : root(nullptr), B(B_) {}
+
+	// 要素数を返す． : O(1)
+	ll size() const {
+		return root != nullptr ? root->cnt : 0;
+	}
+
+	// 要素が 0 個かを返す． : O(1)
+	bool empty() const {
+		return root == nullptr;
+	}
+
+	// 値 val を cnt[=1] 個追加する． : O(B)
+	void insert(T val, ll cnt = 1) {
+		// verify : https://codeforces.com/contest/947/problem/C
+
+		root = insert_sub(root, val, cnt, B - 1);
+	}
+
+	// 値 val を cnt[=1] 個削除する． : O(B)
+	void erase(T val, ll cnt = 1) {
+		// verify : https://codeforces.com/contest/947/problem/C
+
+		root = erase_sub(root, val, cnt, B - 1);
+	}
+
+	// mask[=0] との XOR をとったときの最大要素を返す． : O(B)
+	T max_element(T mask = 0) {
+		return min_element_sub(root, ~mask, B - 1);
+	}
+
+	// mask[=0] との XOR をとったときの最小要素を返す． : O(B)
+	T min_element(T mask = 0) {
+		// verify : https://codeforces.com/contest/947/problem/C
+
+		return min_element_sub(root, mask, B - 1);
+	}
+
+	// mask[=0] との XOR をとったときの昇順で i 番目（0-indexed）の要素を返す． : O(B)
+	T get(ll i, T mask = 0) {
+		assert(0 <= i && i < size());
+		return get_sub(root, mask, i, B - 1);
+	}
+
+	// mask[=0] との XOR をとったときの val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
+	ll lower_bound(T val, T mask = 0) {
+		// verify : https://www.spoj.com/problems/SUBXOR/
+
+		return lower_bound_sub(root, mask, val, B - 1);
+	}
+
+	// mask[=0] との XOR をとったときの val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
+	ll upper_bound(T val, T mask = 0) {
+		// verify : https://codeforces.com/contest/966/problem/C
+
+		// val + 1 が B ビット整数に収まらない場合の例外処理
+		if (val == (T(1) << B) - 1) return size();
+
+		return lower_bound_sub(root, mask, val + 1, B - 1);
+	}
+
+	// 要素 val の個数を返す． : O(B)
+	ll count(T val) {
+		return upper_bound(val) - lower_bound(val);
+	}
+
+	// mask[=0] との XOR をとったときの [l..r) に値をもつ要素の個数を返す． : O(B)
+	ll count(T l, T r, T mask = 0) {
+		// verify : https://www.spoj.com/problems/SUBXOR/
+
+		return lower_bound(r, mask) - lower_bound(l, mask);
+	}
 };
 
 
@@ -1436,6 +1561,98 @@ template <class S, class T> struct KDTrie {
 		t->right != nullptr ? os << "(" << t->right->p1 << "," << t->right->p2 << ")" : os << "-";
 		os << endl;
 		print_rf(os, t->right);
+	}
+#endif
+};
+
+
+//【多重集合の動的辞書】
+/*
+* Dynamic_dictionary(int n) : O(n)
+*	[0..n) を記録可能な辞書を空で初期化する．
+*
+* Dynamic_dictionary(int n, vi a) : O(n)
+*	[0..n) を記録可能な辞書を多重集合 a で初期化する．
+*
+* ll size() : O(log n)
+*	要素の総数を返す．
+*
+* ll count(int v) : O(log n)
+*	要素 v の個数を返す．
+*
+* ll count(int l, int r) : O(log n)
+*	値 [l..r) をもつ要素の個数を返す．
+*
+* insert(int v), insert(int v, ll k) : O(log n)
+*	要素 v を 1 個 [k 個] 追加する．
+*
+* erase(int v), erase(int v, ll k) : O(log n)
+*	要素 v を 1 個 [k 個] 削除する．個数は負数にもなる．
+*
+* int get(ll i) : O(log n)
+*	昇順で i 番目（0-indexed）の要素を返す．なければ n を返す．
+*
+* ll lower_bound(int v) : O(log n)
+*	v 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed）
+*
+* 利用：【フェニック木（アーベル群）】
+*/
+ll opdd(ll x, ll y) { return x + y; }
+ll edd() { return 0; }
+ll invdd(ll x) { return -x; }
+struct Dynamic_dictionary {
+	// verify : https://judge.yosupo.jp/problem/predecessor_problem
+	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_c
+
+	int n;
+
+	// ft[v] : 要素 v の個数
+	using RSQ = Fenwick_tree<ll, opdd, edd, invdd>;
+	RSQ ft;
+
+	// コンストラクタ（何もしない）
+	Dynamic_dictionary() : n(0) {}
+
+	// [0..n) を記録可能な辞書を空で初期化する．
+	Dynamic_dictionary(int n_) : n(n_), ft(n) {}
+
+	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
+	Dynamic_dictionary(int n_, const vi& a) : n(n_) {
+		vl cnt(n);
+		repe(v, a) cnt[v]++;
+		ft = RSQ(cnt);
+	}
+
+	// 要素の総数を返す．
+	ll size() { return ft.prod(0, n); }
+
+	// 要素 v の個数を返す．
+	ll count(int v) { return ft.get(v); }
+
+	// 値 [l..r) をもつ要素の個数を返す．
+	ll count(int l, int r) { return ft.prod(l, r); }
+
+	// 要素 v を挿入する．
+	void insert(int v) { ft.apply(v, 1); }
+	void insert(int v, ll k) { ft.apply(v, k); }
+
+	// 要素 v を削除する．
+	void erase(int v) { ft.apply(v, -1); }
+	void erase(int v, ll k) { ft.apply(v, -k); }
+
+	// 昇順で i 番目の要素を返す．
+	int get(ll i) {
+		auto f = [&](ll x) { return x <= i; };
+		return ft.max_right(f);
+	}
+
+	// v が昇順で何番目の要素かを返す．
+	ll lower_bound(int v) { return ft.prod(0, v); }
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Dynamic_dictionary& dd) {
+		rep(v, dd.n) rep(hoge, dd.ft.get(v)) os << v << " ";
+		return os;
 	}
 #endif
 };

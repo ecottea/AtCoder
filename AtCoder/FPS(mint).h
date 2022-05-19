@@ -903,7 +903,7 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 	// ここで
 	//		g(x) = Πi=[0..n) (x - x[i])
 	// とおくと，f(x) は
-	//		f(x) = g(x) Σi=[0..n) y[i] / (g'(x[i]) (x - x[i]))
+	//		f(x) = g(x) Σi=[0..n) y[i] / ( g'(x[i]) (x - x[i]) )
 	// とも表される．
 	//
 	// g(x) は一次式の積の展開なので分割統治で O(n (log n)^2) で計算でき，

@@ -666,3 +666,21 @@ void two_edge_connected_component(const Graph& g, vvi& tecc) {
 */
 
 
+//【DFS 木の性質】
+/*
+* 無向グラフ g の DFS 木 t に含まれない全ての辺 u-v について，
+* u と v は t において先祖と子孫の関係にある．
+* 
+* verify : https://atcoder.jp/contests/abc251/tasks/abc251_f
+*/
+
+
+//【BFS 木の性質】
+/*
+* 無向グラフ g の BFS 木 t に含まれない全ての辺 u-v について，
+* u と v は t において先祖と子孫の関係にない．
+*
+* verify : https://atcoder.jp/contests/abc251/tasks/abc251_f
+*/
+
+
