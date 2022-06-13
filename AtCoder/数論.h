@@ -3,11 +3,13 @@
 // ■■■■■ 数論 ■■■■■
 
 
-//【最大公約数】O(log max(a, b))
+//【最大公約数】O(log min(a, b))
 /*
 * gcd(a, b) >= 0 を返す．
 */
 ll euclid(ll a, ll b) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/1/ALDS1_1_B
+
 	a = abs(a);
 	b = abs(b);
 
@@ -26,7 +28,7 @@ ll euclid(ll a, ll b) {
 * gcd a[0..n) を返す．（空列の gcd は 0 とする）
 */
 ll gcd(const vl& a) {
-	// verify : https://yukicoder.me/problems/no/1884
+	// verify : https://atcoder.jp/contests/arc048/tasks/arc048_c
 
 	int n = sz(a);
 
@@ -138,18 +140,23 @@ ll extended_gcd(ll a, ll b, ll& x, ll& y) {
 //【一次不定方程式】O(log max(|a|, |b|))
 /*
 * a x + b y = c の特殊解 (x, y) を求める．
-*
-* 戻り値 : 解があれば gcd(a, b) > 0，なければ -1
+* 解があれば gcd(a, b) > 0，なければ -1 を返す．
 *
 * 利用：【拡張ユークリッドの互除法】
 */
 ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
+	// verify : https://atcoder.jp/contests/arc091/tasks/arc091_d
+
 	ll g = extended_gcd(a, b, x, y);
 
 	if (c % g != 0) return -1;
 	
 	x *= c / g;
 	y *= c / g;
+
+	// もし x を非負の範囲で最小にしたければ，x = smod(x, b / g) とする．
+	// もし y を非負の範囲で最小にしたければ，y = smod(y, a / g) とする．
+	// verify : https://atcoder.jp/contests/arc091/tasks/arc091_d
 
 	return g;
 }
@@ -179,6 +186,33 @@ void divisors(ll n, vl& ds) {
 	if (i * i == n) ds.push_back(i);
 
 	sort(all(ds));
+}
+
+
+//【約数列挙（素因数分解済）】O(σ(n))
+/*
+* n の素因数分解結果 pps を利用して n の約数全てをリスト divs に昇順に格納する．
+*/
+template <class T> void divisors(map<T, int>& pps, vector<T>& divs) {
+	// verify : https://atcoder.jp/contests/arc068/tasks/arc068_c
+
+	divs = vector<T>({ T(1) });
+	repe(pp, pps) {
+		T p; int d;
+		tie(p, d) = pp;
+
+		vector<T> powp(d);
+		powp[0] = p;
+		rep(i, d - 1) powp[i + 1] = powp[i] * p;
+
+		int m = sz(divs);
+		repir(j, m - 1, 0) {
+			rep(i, d) {
+				divs.push_back(divs[j] * powp[i]);
+			}
+		}
+	}
+	sort(all(divs));
 }
 
 
@@ -453,32 +487,13 @@ void primefactors_and_divisors(ll n, vl& ps, vl& divs) {
 }
 
 
-//【部分集合の gcd】
-/*
-* 与えられた非負整数の集合 U と非負整数 g について，
-*	gcd(S) = g となるような S ⊂ U が存在する
-*	⇔ g の倍数である U の元全ての gcd が g に一致する
-* 
-* verify : https://codeforces.com/contest/1627/problem/D
-*/
-
-
 //【ウィルソンの定理の一般化】
 /*
-* [1..n] で n と互いに素な数の総積を P とする．
+* [1..n] 中の n と互いに素な数の総積を P(n) とする．
 * n = 4 であるか，ある奇素数 p と自然数 k を用いて n = p^k or 2 p^k と表されるとき
-*		P = -1 (mod n)
+*		P(n) = -1 (mod n)
 * その他のとき
-*		P = 1  (mod n)
-*/
-
-
-//【gcd と階差】
-/*
-* 数列 a[0..n) の階差を d[0..n-1)（d[i] = a[i+1] - a[i]）とするとき，
-*		gcd(a[l..r)) = gcd( a[i], gcd(d[l..r-1)) )（i∈[l..r)）
-* 
-* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4
+*		P(n) = 1  (mod n)
 */
 
 

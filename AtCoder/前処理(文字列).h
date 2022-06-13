@@ -76,6 +76,32 @@ void run_length_encodeing(const vector<T>& a, vector<pair<T, int>>& cls) {
 }
 
 
+//【ランレングス符号（区切り位置）】O(n)
+/*
+* a[0..n) をランレングス符号化する．
+* 前から i 番目の連が a[x[i]..x[i+1]) で，その文字が c[i] であったことを格納する．
+*/
+template <class T>
+void run_length_encodeing(const vector<T>& a, vector<T>& c, vi& x) {
+	// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+	int n = sz(a);
+	c.clear(); x = vi{ 0 };
+
+	if (n == 0) return;
+
+	c.emplace_back(a[0]);
+	repi(i, 1, n - 1) {
+		// 最後に読んだ文字と異なる文字の場合
+		if (a[i] != c.back()) {
+			x.emplace_back(i);
+			c.emplace_back(a[i]);
+		}
+	}
+	x.emplace_back(n);
+}
+
+
 //【文字の次の位置】O(n k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，

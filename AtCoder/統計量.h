@@ -25,7 +25,7 @@ template <class T> T doubled_median(const vector<T>& a, const vl& c) {
 
 	int n = sz(a);
 
-	vector<pll> ac(n);
+	vector<pair<T, ll>> ac(n);
 	rep(i, n) ac[i] = { a[i], c[i] };
 	sort(all(ac));
 

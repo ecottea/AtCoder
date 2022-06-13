@@ -16,14 +16,14 @@
 
 
 //y‰ÁZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
-using S501 = int;
+using S501 = ll;
 S501 op501(S501 a, S501 b) { return a + b; }
 S501 o501() { return 0; }
 #define Add_cmonoid S501, op501, o501
 
 
 //yæZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
-using S502 = int;
+using S502 = mint;
 S502 op502(S502 a, S502 b) { return a * b; }
 S502 o502() { return 1; }
 #define Mul_cmonoid S502, op502, o502
@@ -31,17 +31,17 @@ S502 o502() { return 1; }
 
 //ymax ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
-using S503 = int;
+using S503 = ll;
 S503 op503(S503 a, S503 b) { return max(a, b); }
-S503 o503() { return -INF; }
+S503 o503() { return -INFL; }
 #define Max_cmonoid S503, op503, o503
 
 
 //ymin ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
-using S504 = int;
+using S504 = ll;
 S504 op504(S504 a, S504 b) { return min(a, b); }
-S504 o504() { return INF; }
+S504 o504() { return INFL; }
 #define Min_cmonoid S504, op504, o504
 
 

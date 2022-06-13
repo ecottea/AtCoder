@@ -26,11 +26,12 @@
 * mint multinomial(vi r) : O(|r|)
 *	多項係数 nC[r] を返す．（n = Σr）
 */
-struct Factorial_mint {
+class Factorial_mint {
 	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_max;
 	vm fac_, fac_inv_, inv_;
 
+public:
 	// n! までの階乗とその逆数を前計算しておく．O(n)
 	Factorial_mint(int n) : n_max(n) {
 		fac_.resize(n + 1);
@@ -56,7 +57,7 @@ struct Factorial_mint {
 
 	// 1 / n! を返す．O(1)
 	mint factorial_inv(int n) const {
-		// verify : verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
+		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 		
 		assert(0 <= n && n <= n_max);
 		return fac_inv_[n];
@@ -447,6 +448,72 @@ struct Factorial_arbitrary_mod {
 
 		// 中国剰余定理で連立合同式の解を求める．
 		return (int)crt(rgt, pds).first;
+	}
+};
+
+
+//【階乗など（対数）】
+/*
+* Factorial_log(int n_max) : O(n_max)
+*	n_max! まで計算可能として初期化する．
+*
+* mint factorial(int n) : O(1)
+*	log n! を返す．
+*
+* mint permutation(int n, int r) : O(1)
+*	順列の数の対数 log nPr を返す．
+*
+* mint binomial(int n, int r) : O(1)
+*	二項係数の対数 log nCr を返す．
+*
+* mint multinomial(vi r) : O(|r|)
+*	多項係数の対数 log nC[r] を返す．（n = Σr）
+*/
+class Factorial_log {
+	// 階乗，階乗の逆数，逆数の値を保持するテーブル
+	int n_max;
+	vd fac_;
+
+public:
+	// n! までの階乗とその逆数を前計算しておく．O(n)
+	Factorial_log(int n) : n_max(n) {
+		fac_.resize(n + 1);
+		fac_[0] = 0;
+		repi(i, 1, n) fac_[i] = fac_[i - 1] + log(i);
+	}
+	Factorial_log() : n_max(0) {} // ダミー
+
+	// log n! を返す．O(1)
+	double factorial(int n) const {
+		assert(0 <= n && n <= n_max);
+		return fac_[n];
+	}
+
+	// 順列の数の対数 log nPr を返す．O(1)
+	double permutation(int n, int r) const {
+		assert(n <= n_max);
+		if (r < 0 || n - r < 0) return 0;
+		return fac_[n] - fac_[n - r];
+	}
+
+	// 二項係数の対数 log nCr を返す．O(1)
+	double binomial(int n, int r) const {
+		// verify : https://atcoder.jp/contests/arc035/tasks/arc035_d
+
+		assert(n <= n_max);
+		if (r < 0 || n - r < 0) return 0;
+		return fac_[n] - fac_[r] - fac_[n - r];
+	}
+
+	// 多項係数の対数 log nC[r] を返す．O(|r|)
+	double multinomial(const vi& r) const {
+		int n = accumulate(all(r), 0);
+		assert(n <= n_max);
+
+		double res = fac_[n];
+		repe(ri, r) res -= fac_[ri];
+
+		return res;
 	}
 };
 

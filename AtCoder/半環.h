@@ -36,6 +36,7 @@ S802 e802() { return ~0; }
 
 
 //ymin - plus ”¼ŠÂiƒgƒƒsƒJƒ‹”¼ŠÂjz
+/* verify : https://codeforces.com/contest/1681/problem/F */
 using S803 = ll;
 S803 add803(S803 x, S803 y) { return min(x, y); }
 S803 o803() { return INFL; }
@@ -155,4 +156,29 @@ S810 mul810(S810 x, S810 y) { return x | y; }
 S810 e810() { return 0; }
 #define AND_OR_semiring S810, add810, o810, mul810, e810
 
+
+//ygcd - lcm ”¼ŠÂz
+using S811 = ll;
+S811 add811(S811 x, S811 y) { return gcd(x, y); }
+S811 o811() { return 0; }
+S811 mul811(S811 x, S811 y) { return x / gcd(x, y) * y; }
+S811 e811() { return 1; }
+#define GCD_LCM_semiring S811, add811, o811, mul811, e811
+
+
+//ylcm - gcd ”¼ŠÂz
+using S812 = ll;
+S812 add812(S812 x, S812 y) { return x / gcd(x, y) * y; }
+S812 o812() { return 1; }
+S812 mul812(S812 x, S812 y) { return gcd(x, y); }
+S812 e812() { return 0; }
+#define LCM_GCD_semiring S812, add812, o812, mul812, e812
+
+
+//y”¼ŠÂ‚Å‚È‚¢‚à‚Ìz
+/*
+* min - OR ‚Í”¼ŠÂ‚Å‚È‚¢D
+*	2 OR min(1, 2) = 2 OR 1 = 3
+*	min(2 OR 1, 2 OR 2) = min(3, 2) = 2
+*/
 

@@ -8,10 +8,105 @@
 //【長さ k のパスの数え上げ】
 /*
 * 隣接行列を k 乗すれば，全頂点対の長さ k のパス数が O(|V|^3 log k) で求まる．
-* 辺が少なく単一始点でよいなら，行列ベクトル積を繰り返し O(|E| k) で求まる．
 * 
+* 辺が少なく単一始点でよいなら，行列ベクトル積を繰り返し O(|E| k) で求まる． 
 * verify : https://atcoder.jp/contests/abc244/tasks/abc244_e
 */
+
+
+//【最短経路の数え上げ】O(|V| + |E|)
+/*
+* グラフ g に対し，始点 st から各頂点 i への最短距離（到達不能なら INF）を dist[i] に，
+* 最短経路の総数を cnt[i] にそれぞれ格納する．
+*/
+void count_shortest_path(const Graph& g, int st, vm& cnt, vi* dist = nullptr) {
+	// verify : https://atcoder.jp/contests/abc211/tasks/abc211_d
+
+	int n = sz(g);
+
+	// cnt[i] : st から i までの最短経路の総数
+	cnt.resize(n);
+	cnt[st] = 1;
+
+	// dist[i] : st から i までの最短距離
+	if (dist == nullptr) dist = new vi;
+	*dist = vi(n, INF);
+	(*dist)[st] = 0;
+
+	queue<int> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		// 未探索の頂点 s を 1 つ得る．
+		auto s = que.front(); que.pop();
+
+		repe(t, g[s]) {
+			// t が探索済の頂点の場合
+			if ((*dist)[t] != INF) {
+				// 現時点での最短距離と同じなら個数を加算する．
+				if ((*dist)[t] == (*dist)[s] + 1) cnt[t] += cnt[s];
+
+				continue;
+			}
+
+			// スタートからの最短距離を確定する．
+			// 幅優先探索なので，最短だという保証がある．
+			(*dist)[t] = (*dist)[s] + 1;
+			cnt[t] = cnt[s];
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+}
+
+
+//【最短経路の数え上げ（コスト付きグラフ）】O(|V| + |E| log|V|)
+/*
+* 正のコスト付きグラフ g に対し，始点 st から各頂点 i への最短距離（到達不能なら INFL）を
+* dist[i] に，最短経路の総数を cnt[i] にそれぞれ格納する．
+*/
+void count_shortest_path(const WGraph& g, int st, vm& cnt, vl* dist = nullptr) {
+	// verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
+
+	int n = sz(g);
+
+	// cnt[i] : st から i までの最短経路の総数
+	cnt.resize(n);
+
+	// dist[i] : st から i までの最短距離
+	if (dist == nullptr) dist = new vl;
+	*dist = vl(n, INFL);
+
+	// 組 (st からの距離, 注目頂点, 直前の頂点) を入れる優先度付きキューを用意する．
+	// st からの距離がより小さいものを優先的に取り出す．
+	priority_queue_rev<tuple<ll, int, int>> que;
+	que.push({ 0, st, -1 });
+
+	while (!que.empty()) {
+		// 未探索の頂点 s を 1 つ得る．
+		ll d; int s, p;
+		tie(d, s, p) = que.top(); que.pop();
+		mint c = (p == -1 ? 1 : cnt[p]);
+
+		// 既に最短距離が求まっている場合
+		if (d >= (*dist)[s]) {
+			// 現時点での最短距離と同じなら個数を加算する．
+			if (d == (*dist)[s]) cnt[s] += c;
+
+			continue;
+		}
+
+		// 最短距離の決定
+		// 優先度付きキューで距離の小さい順に取り出しており，
+		// かつコストが非負より三角不等式が成立するので最短の保証がある．
+		(*dist)[s] = d;
+		cnt[s] = c;
+
+		// そこから移動できるノードについての情報をキューに追加する．
+		repe(e, g[s]) que.push({ d + e.cost, e.to, s });
+	}
+}
 
 
 //【独立集合の数え上げ】O(2^|V| |V|)
@@ -304,5 +399,41 @@ template <class T> mint count_different_color_matching(const vector<T>& c) {
 
 	return res;
 }
+
+
+//【パスグラフの大きさ k のマッチングの数え上げ】
+/*
+* パスグラフ P_n の大きさ k のマッチングは bin(n-k, k) 通り存在する．
+*
+*（証明）
+* P_(n-k) の k 個の頂点を選ぶ方法は bin(n-k, k) 通り存在する．
+* 選んだ各頂点 i の右隣りに頂点 i' を追加して i と i' を結び，
+* 適当に頂点の番号を振り直せば P_n の大きさ k のマッチングが得られる．
+* 明らかに逆操作も可能であり，これは 1:1 対応である．
+*
+* 参考 : http://oeis.org/A011973
+* verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
+*/
+
+
+//【サイクルグラフの大きさ k のマッチングの数え上げ】
+/*
+* サイクルグラフ C_n(n>=1) の大きさ k のマッチングは n/(n-k) bin(n-k, k) 通り存在する．
+*
+*（証明）
+* マッチングに使われない辺を 1 つ固定（固定の仕方は n 通り）してそこで切り開けば，
+* P_n の大きさ k のマッチングを得ることができる．
+* マッチングに使われない辺は n-k 本あるので，各マッチングは n-k 回重複して数えられる．
+* よって求める場合の数は n/(n-k) bin(n-k, k) となる．
+*
+* 参考 : http://oeis.org/A034807
+* verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
+*/
+
+
+//【全域木に関する数え上げ】
+/*
+* 全域木.h へ
+*/
 
 

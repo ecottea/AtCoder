@@ -155,13 +155,13 @@
     <ClInclude Include="FPS(bit).h" />
     <ClInclude Include="FPS(可換環).h" />
     <ClInclude Include="FPS(抽象).h" />
+    <ClInclude Include="max.h" />
     <ClInclude Include="mint.h" />
     <ClInclude Include="Z-加群.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
     <ClInclude Include="アーベル群.h" />
     <ClInclude Include="クエリ.h" />
-    <ClInclude Include="グラフ(組合せ論).h" />
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="スコア和%28区間%29.h" />
     <ClInclude Include="スコア和(文字列).h" />
@@ -200,6 +200,7 @@
     <ClInclude Include="その他%28old%29.h" />
     <ClInclude Include="列挙(集合).h" />
     <ClInclude Include="前処理(列).h" />
+    <ClInclude Include="割り算.h" />
     <ClInclude Include="包除原理.h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="半環.h" />
@@ -234,6 +235,7 @@
     <ClInclude Include="桁DP%28上から%29.h" />
     <ClInclude Include="桁DP(組).h" />
     <ClInclude Include="構造(木).h" />
+    <ClInclude Include="永続データ構造.h" />
     <ClInclude Include="混合基数.h" />
     <ClInclude Include="確率.h" />
     <ClInclude Include="確率分布.h" />

@@ -100,7 +100,7 @@ template <class T = ll> class Binary_trie {
 		return t;
 	}
 
-	T min_element_sub(Node* t, T mask, int b) {
+	T min_element_sub(Node* t, T mask, int b) const {
 		assert(t != nullptr);
 
 		// 葉なら 0 を返す．
@@ -117,7 +117,7 @@ template <class T = ll> class Binary_trie {
 		return val;
 	}
 
-	T get_sub(Node* t, T mask, ll k, int b) {
+	T get_sub(Node* t, T mask, ll k, int b) const {
 		// 葉なら 0 を返す．
 		if (b < 0) return 0;
 
@@ -131,7 +131,7 @@ template <class T = ll> class Binary_trie {
 		return val;
 	}
 
-	ll lower_bound_sub(Node* t, T mask, T val, int b) {
+	ll lower_bound_sub(Node* t, T mask, T val, int b) const {
 		// 葉であるかまたはノードがなければ 0 を返す．
 		if (t == nullptr || b < 0) return 0;
 
@@ -143,6 +143,18 @@ template <class T = ll> class Binary_trie {
 		res += lower_bound_sub(t->ch[f ^ g], mask, val, b - 1);
 
 		return res;
+	}
+
+	void print_sub(Node* t, T val, int b, ostream& os) const {
+		if (t == nullptr) return;
+
+		if (b < 0) {
+			os << "(" << val << "," << t->cnt << ") ";
+			return;
+		}
+
+		print_sub(t->ch[0], val << 1, b - 1, os);
+		print_sub(t->ch[1], (val << 1) | T(1), b - 1, os);
 	}
 
 public:
@@ -174,32 +186,32 @@ public:
 	}
 
 	// mask[=0] との XOR をとったときの最大要素を返す． : O(B)
-	T max_element(T mask = 0) {
+	T max_element(T mask = 0) const {
 		return min_element_sub(root, ~mask, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの最小要素を返す． : O(B)
-	T min_element(T mask = 0) {
+	T min_element(T mask = 0) const {
 		// verify : https://codeforces.com/contest/947/problem/C
 
 		return min_element_sub(root, mask, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの昇順で i 番目（0-indexed）の要素を返す． : O(B)
-	T get(ll i, T mask = 0) {
+	T get(ll i, T mask = 0) const {
 		assert(0 <= i && i < size());
 		return get_sub(root, mask, i, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
-	ll lower_bound(T val, T mask = 0) {
+	ll lower_bound(T val, T mask = 0) const {
 		// verify : https://www.spoj.com/problems/SUBXOR/
 
 		return lower_bound_sub(root, mask, val, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
-	ll upper_bound(T val, T mask = 0) {
+	ll upper_bound(T val, T mask = 0) const {
 		// verify : https://codeforces.com/contest/966/problem/C
 
 		// val + 1 が B ビット整数に収まらない場合の例外処理
@@ -209,61 +221,54 @@ public:
 	}
 
 	// 要素 val の個数を返す． : O(B)
-	ll count(T val) {
+	ll count(T val) const {
 		return upper_bound(val) - lower_bound(val);
 	}
 
 	// mask[=0] との XOR をとったときの [l..r) に値をもつ要素の個数を返す． : O(B)
-	ll count(T l, T r, T mask = 0) {
+	ll count(T l, T r, T mask = 0) const {
 		// verify : https://www.spoj.com/problems/SUBXOR/
 
 		return lower_bound(r, mask) - lower_bound(l, mask);
 	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Binary_trie& bt) {
+		bt.print_sub(bt.root, T(0), bt.B - 1, os);
+		return os;
+	}
+#endif
 };
 
 
 //【区間の集合】
 /*
-* Interval_set() : O(1)
-*	空で初期化する．
+* Interval_set(bool marge = true) : O(1)
+*	空で初期化する．ちょうど接する区間を併合するかを marge に渡す．
 *
-* size() : O(1)
+* int size() : O(1)
 *	区間の数を返す．
 *
-* get(x) : O(log n)
+* pll get(ll x) : O(log n)
 *	x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
 *
-* get_right(x) : O(log n)
+* pll get_right(ll x) : O(log n)
 *	x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
 *
-* get_left(x) : O(log n)
+* pll get_left(ll x) : O(log n)
 *	x の 1 つ左にある区間 [l, r) を返す（なければ {-1, -1} を返す）
 *
-* insert(l, r) : ならし O(log n)
+* insert(ll l, ll r) : ならし O(log n)
 *	区間 [l, r) を追加する．
 *
-* erase(l, r) : ならし O(log n)
+* erase(ll l, ll r) : ならし O(log n)
 *	区間 [l, r) を削除する．
 */
-struct Interval_set {
-	set<pll> lr; // 区間 [l[i], r[i]) の昇順列
-
-	// コンストラクタ（空で初期化）
-	Interval_set() {}
-
-	// 区間の数を返す．
-	int size() { return sz(lr); }
-
-	// x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
-	pll get(ll x) {
-		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_d
-
-		auto it = get_iter(x);
-		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
-	}
+class Interval_set {
+	bool marge;
 
 	// x が含まれる区間を指すイテレータを返す（なければ lr.end() を返す）
-	typename set<pll>::iterator get_iter(ll x) {
+	typename set<pll>::iterator get_iter(ll x) const {
 		auto it = lr.lower_bound({ x, INFL });
 		if (it == lr.begin()) return lr.end();
 		it--;
@@ -271,25 +276,13 @@ struct Interval_set {
 		else return lr.end();
 	}
 
-	// x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
-	pll get_right(ll x) {
-		auto it = get_right_iter(x);
-		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
-	}
-
 	// x の 1 つ右にある区間を指すイテレータを返す（なければ lr.end() を返す）
-	typename set<pll>::iterator get_right_iter(ll x) {
+	typename set<pll>::iterator get_right_iter(ll x) const {
 		return lr.lower_bound({ x, INFL });
 	}
 
-	// x の 1 つ左にある区間 [l, r) を返す（なければ {-1, -1} を返す）
-	pll get_left(ll x) {
-		auto it = get_left_iter(x);
-		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
-	}
-
 	// x の 1 つ左にある区間を指すイテレータを返す（なければ lr.end() を返す）
-	typename set<pll>::iterator get_left_iter(ll x) {
+	typename set<pll>::iterator get_left_iter(ll x) const {
 		auto it = lr.lower_bound({ x, INFL });
 		if (it == lr.begin()) return lr.end();
 		it--;
@@ -300,15 +293,49 @@ struct Interval_set {
 		return it;
 	}
 
+	typename set<pll>::iterator begin() const { return lr.begin(); }
+	typename set<pll>::iterator end() const { return lr.end(); }
+
+public:
+	set<pll> lr; // 区間 [l[i], r[i]) の昇順列
+
+	// コンストラクタ（空で初期化）
+	Interval_set(bool marge_ = true) : marge(marge_) {}
+
+	// 区間の数を返す．
+	int size() const { return sz(lr); }
+
+	// x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
+	pll get(ll x) const {
+		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_d
+
+		auto it = get_iter(x);
+		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+	}
+
+	// x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+	pll get_right(ll x) const {
+		auto it = get_right_iter(x);
+		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+	}
+
+	// x の 1 つ左にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+	pll get_left(ll x) const {
+		auto it = get_left_iter(x);
+		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+	}
+
 	// 区間 [l, r) を追加する．
 	void insert(ll l, ll r) {
+		// verify : https://atcoder.jp/contests/abc254/tasks/abc254_g
+
 		if (l >= r) return;
 
-		auto it_l = get_iter(l - 1);
-		if (it_l == lr.end()) it_l = get_right_iter(l - 1);
+		auto it_l = get_iter(l - (int)marge);
+		if (it_l == lr.end()) it_l = get_right_iter(l - (int)marge);
 
-		auto it_r = get_iter(r);
-		if (it_r == lr.end()) it_r = get_left_iter(r);
+		auto it_r = get_iter(r - (int)(!marge));
+		if (it_r == lr.end()) it_r = get_left_iter(r - (int)(!marge));
 
 		if (it_l != lr.end() && it_r != lr.end()) {
 			chmin(l, it_l->first);
@@ -340,9 +367,6 @@ struct Interval_set {
 		if (r2 > r) lr.insert({ r, r2 });
 	}
 
-	typename set<pll>::iterator begin() { return lr.begin(); }
-	typename set<pll>::iterator end() { return lr.end(); }
-
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Interval_set& d) {
 		repe(p, d.lr) os << p << " ";
@@ -367,20 +391,9 @@ struct Interval_set {
 * T get(S x) : O(log n)
 *	x に割り当てられた値を返す．
 */
-template <class S, class T> struct Interval_map {
-	// verify : https://codeforces.com/contest/1638/problem/E
-
+template <class S, class T> class Interval_map {
 	map<pair<S, S>, T> lr_to_v; // 区間 [l[i], r[i]) → v[i]
 	T nil;
-
-	// 全ての値に nil を割り当てる．
-	Interval_map(T nil_) : nil(nil_) {}
-
-	// x に割り当てられた値を返す．
-	T get(S x) {
-		auto it = get_iter(x);
-		return it == lr_to_v.end() ? nil : it->second;
-	}
 
 	// x が含まれる区間を指すイテレータを返す（なければ lr_to_v.end() を返す）
 	typename map<pair<S, S>, T>::iterator get_iter(S x) {
@@ -408,9 +421,23 @@ template <class S, class T> struct Interval_map {
 		return it;
 	}
 
+public:
+	// 全ての値に nil を割り当てる．
+	Interval_map(T nil_) : nil(nil_) {}
+
+	// x に割り当てられた値を返す．
+	T get(S x) {
+		// verify : https://codeforces.com/contest/1638/problem/E
+
+		auto it = get_iter(x);
+		return it == lr_to_v.end() ? nil : it->second;
+	}
+
 	// 区間 [l..r) に値 v を割り当てる．
 	// また [l..r) に含まれていた区間の情報を ls, rs, vs に格納する．
 	void set(S l, S r, T v, vector<S>* ls = nullptr, vector<S>* rs = nullptr, vector<T>* vs = nullptr) {
+		// verify : https://atcoder.jp/contests/abc255/tasks/abc255_h
+
 		// 左端 l がぶつかる区間を調べる．
 		bool n_l_flag = false; S nl_l, nr_l; T nv_l;
 		auto it_l = get_iter(l);
@@ -508,7 +535,7 @@ struct Trie_tree_set {
 	// 参考 : https://algo-logic.info/trie-tree/
 	// verify : https://codeforces.com/contest/1629/problem/D
 
-	const int K = 26; // 文字数
+	static const int K = 26; // 文字数
 
 	int n;		// g のノード数
 	Graph g;	// トライ木
@@ -744,38 +771,38 @@ template <class T> struct Trie_tree_map {
 
 //【ウェーブレット行列】
 /*
-* Wavelet_matrix(vl a) : O(n log n log(max a))
-*	非負整数列 a で初期化する．
+* Wavelet_matrix(vl a) : O(n log n log A)
+*	非負整数列 a で初期化する．（A = max(a) とおく．）
 *
 * ll get(int i) : O(log(max a))
 *	昇順で i 番目の要素を返す．
 *
-* ll get(int l, int r, int i) : O(log(max a))
+* ll get(int l, int r, int i) : O(log A))
 *	a[l..r) の中で昇順で i 番目の要素を返す．
 *
-* int count(int l, int r, ll v) : O(log(max a))
+* int count(int l, int r, ll v) : O(log A)
 *	a[l..r) に v が何個あるかを返す．
 *
-* int count(int l, int r, ll v0, ll v1) : O(log(max a))
+* int count(int l, int r, ll v0, ll v1) : O(log A)
 *	a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
 *
-* int position(ll v, int c) : O(log(n) log(max a))
+* int position(ll v, int c) : O(log n log A)
 *	昇順で c 番目の v の位置を返す．
 *
-* frequency(int l, int r, int c, vector<pli>& freq) : O(min(r - l, max a) log(max a))
+* frequency(int l, int r, int c, vector<pli>& freq) : O(min(r - l, A) log A)
 *	a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組のリストを freq に格納する．
 *
 * ll sum(int l, int r) : O(1)
 *	a[l..r) の和を返す．
 *
-* ll sum(int l, int r, ll v0, ll v1) : O(log(max a))
+* ll sum(int l, int r, ll v0, ll v1) : O(log A)
 *	a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
 *
-* intersection(int l1, int r1, int l2, int r2, vector<tuple<ll, int, int>>& freq) : O(min((r1 - l1) + (r2 - l2), max a) log(max a))
+* intersection(int l1, int r1, int l2, int r2, vector<tuple<ll, int, int>>& freq) : O(min((r1 - l1) + (r2 - l2), A) log A)
 *	a[l1..r1) と a[l2..r2) に共通する要素を求め，
 *	その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
 */
-struct Wavelet_matrix {
+class Wavelet_matrix {
 	// 参考 : https://miti-7.hatenablog.com/entry/2018/04/28/152259
 
 	int n; // 要素数
@@ -786,8 +813,67 @@ struct Wavelet_matrix {
 	unordered_map<ll, int> id; // 値 → 安定ソートが終わったときの最左位置
 	vvl acc; // acc[j] : 第 j ビットについての安定ソート後の a の累積和
 
-	// コンストラクタ（初期化なし，多重集合 t で初期化）
-	Wavelet_matrix() : n(0), k(0) {}
+	// a[0..r) に v が何個あるかを返す．
+	int count_sub(int r, ll v) {
+		// 一つも無ければすぐに 0 を返す．
+		if (!id.count(v)) return 0;
+
+		// 最上位ビットから順に見ていく
+		repir(j, k - 1, 0) {
+			// 注目ビットに応じて次の位置を求めていく．
+			if (v & (1LL << j)) {
+				r = num_zeros[j] + bs_acc[1][j][r];
+			}
+			else {
+				r = bs_acc[0][j][r];
+			}
+		}
+
+		return r - id[v];
+	}
+
+	// a[l..r) の中で [0..v) に値をもつ要素の個数を返す．
+	int count_rsub(int l, int r, ll v) {
+		if (msbll(v) >= k) return r - l;
+
+		int cnt = 0;
+		repir(j, k - 1, 0) {
+			if (v & (1LL << j)) {
+				cnt += bs_acc[0][j][r] - bs_acc[0][j][l];
+				r = num_zeros[j] + bs_acc[1][j][r];
+				l = num_zeros[j] + bs_acc[1][j][l];
+			}
+			else {
+				r = bs_acc[0][j][r];
+				l = bs_acc[0][j][l];
+			}
+		}
+
+		return cnt;
+	}
+
+	// a[l..r) の中で [0..v) に値をもつ要素の和を返す．
+	ll sum_rsub(int l, int r, ll v) {
+		if (msbll(v) >= k) return acc[k][r] - acc[k][l];
+
+		ll res = 0;
+		repir(j, k - 1, 0) {
+			if (v & (1LL << j)) {
+				res += acc[j][bs_acc[0][j][r]] - acc[j][bs_acc[0][j][l]];
+				r = num_zeros[j] + bs_acc[1][j][r];
+				l = num_zeros[j] + bs_acc[1][j][l];
+			}
+			else {
+				r = bs_acc[0][j][r];
+				l = bs_acc[0][j][l];
+			}
+		}
+
+		return res;
+	}
+
+public:
+	// 非負整数列 t で初期化する．
 	Wavelet_matrix(const vl& t)
 		: n(sz(t)), k(msbll(*max_element(all(t))) + 1),
 		bs(k, vb(n)), bs_acc(2, vvi(k, vi(n + 1))), num_zeros(k), acc(k + 1, vl(n + 1))
@@ -796,9 +882,7 @@ struct Wavelet_matrix {
 
 		// ビットと組にして安定ソートするためのリスト
 		vector<pair<bool, ll>> bt(n);
-		rep(i, n) {
-			bt[i].second = t[i];
-		}
+		rep(i, n) bt[i].second = t[i];
 
 		// j : 注目ビット位置（上位ビットから順に見ていく）
 		repir(j, k - 1, 0) {
@@ -807,9 +891,7 @@ struct Wavelet_matrix {
 				bs[j][i] = bt[i].first = (bt[i].second & (1LL << j));
 
 				// ビット 0, 1 それぞれの個数の累積和を求めておく．
-				rep(b, 2) {
-					bs_acc[b][j][i + 1] = bs_acc[b][j][i];
-				}
+				rep(b, 2) bs_acc[b][j][i + 1] = bs_acc[b][j][i];
 				if (bs[j][i]) {
 					bs_acc[1][j][i + 1]++;
 				}
@@ -837,6 +919,8 @@ struct Wavelet_matrix {
 		}
 	}
 
+	Wavelet_matrix() : n(0), k(0) {} // ダミー
+
 	// 昇順で i 番目の要素を返す．
 	ll get(int i) {
 		ll res = 0;
@@ -863,25 +947,6 @@ struct Wavelet_matrix {
 		// verify : https://judge.yosupo.jp/problem/static_range_frequency
 
 		return count_sub(r, v) - count_sub(l, v);
-	}
-
-	// a[0..r) に v が何個あるかを返す．
-	int count_sub(int r, ll v) {
-		// 一つも無ければすぐに 0 を返す．
-		if (!id.count(v)) return 0;
-
-		// 最上位ビットから順に見ていく
-		repir(j, k - 1, 0) {
-			// 注目ビットに応じて次の位置を求めていく．
-			if (v & (1LL << j)) {
-				r = num_zeros[j] + bs_acc[1][j][r];
-			}
-			else {
-				r = bs_acc[0][j][r];
-			}
-		}
-
-		return r - id[v];
 	}
 
 	// 昇順で c 番目の v の位置を返す．
@@ -935,6 +1000,8 @@ struct Wavelet_matrix {
 		priority_queue<tuple<int, int, int, int, ll>> q;
 		q.push({ r - l, k - 1, l, r, 0 });
 
+		// 出現頻度の高い値が多ければ c に応じて早めに打ち切られるが，
+		// そうでなければ最悪 a[l..r) を調べ尽くしてしまう．
 		while (!q.empty()) {
 			int w, j;
 			ll v;
@@ -962,17 +1029,6 @@ struct Wavelet_matrix {
 		return acc[k][r] - acc[k][l];
 	}
 
-	//// a[l..r) の和を返す． O(min(r - l, max a) log(max a))
-	//ll sum(int l, int r) {
-	//	vector<pli> freq;
-	//	frequency(l, r, INF, freq);
-	//	ll res = 0;
-	//	repe(p, freq) {
-	//		res += p.first * p.second;
-	//	}
-	//	return res;
-	//}
-
 	// a[l1..r1) と a[l2..r2) に共通する要素を求め，
 	// その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
 	void intersection(int l1, int r1, int l2, int r2, vector<tuple<ll, int, int>>& freq) {
@@ -982,14 +1038,10 @@ struct Wavelet_matrix {
 		q.push({ k - 1, l1, r1, l2, r2, 0 });
 
 		while (!q.empty()) {
-			int j;
-			ll v;
-			tie(j, l1, r1, l2, r2, v) = q.front();
-			q.pop();
+			int j; ll v;
+			tie(j, l1, r1, l2, r2, v) = q.front(); q.pop();
 
-			if (l1 == r1 || l2 == r2) {
-				continue;
-			}
+			if (l1 == r1 || l2 == r2) continue;
 
 			if (j == -1) {
 				freq.push_back({ v, r1 - l1, r2 - l2 });
@@ -1012,52 +1064,22 @@ struct Wavelet_matrix {
 
 	// a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
 	int count(int l, int r, ll v0, ll v1) {
+		// verify : https://atcoder.jp/contests/arc097/tasks/arc097_c
+
+		chmax(v0, 0LL); chmin(v1, (1LL << k) - 1);
+		if (v0 >= v1) return 0;
+
 		return count_rsub(l, r, v1) - count_rsub(l, r, v0);
-	}
-
-	// a[l..r) の中で [0..v) に値をもつ要素の個数を返す．
-	int count_rsub(int l, int r, ll v) {
-		if (msbll(v) >= k) return r - l;
-
-		int cnt = 0;
-		repir(j, k - 1, 0) {
-			if (v & (1LL << j)) {
-				cnt += bs_acc[0][j][r] - bs_acc[0][j][l];
-				r = num_zeros[j] + bs_acc[1][j][r];
-				l = num_zeros[j] + bs_acc[1][j][l];
-			}
-			else {
-				r = bs_acc[0][j][r];
-				l = bs_acc[0][j][l];
-			}
-		}
-
-		return cnt;
 	}
 
 	// a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
 	ll sum(int l, int r, ll v0, ll v1) {
+		// verify : https://yukicoder.me/problems/no/924
+
+		chmax(v0, 0LL); chmin(v1, (1LL << k) - 1);
+		if (v0 >= v1) return 0;
+
 		return sum_rsub(l, r, v1) - sum_rsub(l, r, v0);
-	}
-
-	// a[l..r) の中で [0..v) に値をもつ要素の和を返す．
-	ll sum_rsub(int l, int r, ll v) {
-		if (msbll(v) >= k) return acc[k][r] - acc[k][l];
-
-		ll res = 0;
-		repir(j, k - 1, 0) {
-			if (v & (1LL << j)) {
-				res += acc[j][bs_acc[0][j][r]] - acc[j][bs_acc[0][j][l]];
-				r = num_zeros[j] + bs_acc[1][j][r];
-				l = num_zeros[j] + bs_acc[1][j][l];
-			}
-			else {
-				r = bs_acc[0][j][r];
-				l = bs_acc[0][j][l];
-			}
-		}
-
-		return res;
 	}
 };
 

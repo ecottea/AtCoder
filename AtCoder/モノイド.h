@@ -16,16 +16,26 @@
 
 
 //y‰ÁZ ƒ‚ƒmƒCƒhz
-using S1 = int;
+/* verify : https://atcoder.jp/contests/arc035/tasks/arc035_d */
+using S1 = ll;
 S1 op1(S1 a, S1 b) { return a + b; }
 S1 e1() { return 0; }
 #define Add_monoid S1, op1, e1
 
 
+//y‘g‚Ì‰ÁZ ƒ‚ƒmƒCƒhz
+/* verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_f */
+using S23 = pli;
+S23 op23(S23 a, S23 b) { return { a.first + b.first, a.second + b.second }; }
+S23 e23() { return { 0, 0 }; }
+#define Add_monoid S23, op23, e23
+
+
 //yæZ ƒ‚ƒmƒCƒhz
-using S2 = int;
+/* verify : https://codeforces.com/contest/1681/problem/E */
+using S2 = Matrix<mint>;
 S2 op2(S2 a, S2 b) { return a * b; }
-S2 e2() { return 1; }
+S2 e2() { return Matrix<mint>(3); }
 #define Mul_monoid S2, op2, e2
 
 
@@ -39,17 +49,17 @@ S20 e20() { return Matrix<mint>(3); }
 
 //ymax ƒ‚ƒmƒCƒhz
 /* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
-using S3 = int;
+using S3 = ll;
 S3 op3(S3 a, S3 b) { return max(a, b); }
-S3 e3() { return -INF; }
+S3 e3() { return -INFL; }
 #define Max_monoid S3, op3, e3
 
 
 //ymin ƒ‚ƒmƒCƒhz
 /* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
-using S4 = int;
+using S4 = ll;
 S4 op4(S4 a, S4 b) { return min(a, b); }
-S4 e4() { return INF; }
+S4 e4() { return INFL; }
 #define Min_monoid S4, op4, e4
 
 

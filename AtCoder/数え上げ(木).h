@@ -1,12 +1,13 @@
 #pragma once
 #include "header.h"
-#include "構造(グラフ).h"
 // ■■■■■ 木の数え上げ ■■■■■
 
 
 //【森の連結成分の数】
 /*
 * 森 g の連結成分の個数は，(g の頂点数) - (g の辺数) に等しい．
+* 
+* verify : https://atcoder.jp/contests/agc015/tasks/agc015_c
 */
 
 

@@ -29,6 +29,18 @@
 #define repbc(set, n, r) for(int set = (1 << int(r)) - 1, lb, nx; set < (1 << int(n)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
 
 
+//【i 番目のグレイコード】
+/*
+* i 番目（0-indexed）のグレイコード c = g(i) は以下の式で得られる：
+*	c = i XOR (i >> 1)
+* 
+* 逆に g(i) = c となるような i は以下の式で得られる：
+*	i = c XOR (c >> 1) XOR (c >> 2) XOR ...
+* 
+* verify : https://atcoder.jp/contests/agc031/tasks/agc031_c
+*/
+
+
 //【2 選択和数え上げ問題】O(2^n n)
 /*
 * 長さ n の列 a, b と目標値 sum が与えられる．

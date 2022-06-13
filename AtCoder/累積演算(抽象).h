@@ -3,7 +3,7 @@
 // ■■■■■ 累積演算（抽象代数上） ■■■■■
 
 
-//【累積積（群）】
+//【累積可逆積（群）】
 /*
 * Cumulative_prod<S, op, e, inv>(a) : O(n)
 *	配列 a[0..n) で初期化する．
@@ -12,7 +12,7 @@
 * prod(l, r) : O(1)
 *	Πa[l..r) を返す．（空なら e() を返す，範囲外の値は e() とみなす）
 */
-template <class S, S(*mul)(S, S), S(*e)(), S(*inv_)(S)>
+template <class S, S(*mul)(S, S), S(*e)(), S(*inv)(S)>
 struct Cumulative_prod {
 	// verify : https://judge.yosupo.jp/problem/static_range_sum
 
@@ -22,8 +22,7 @@ struct Cumulative_prod {
 	// acc_inv[i] : a[i - 1]^(-1) ... a[1]^(-1) a[0]^(-1)
 	vector<S> acc, acc_inv;
 
-	// コンストラクタ（初期化なし，配列で初期化）
-	Cumulative_prod() : n(0) {}
+	// コンストラクタ（配列で初期化）
 	Cumulative_prod(const vector<S>& a) : n(sz(a)), acc(n + 1), acc_inv(n + 1) {
 		acc[0] = acc_inv[0] = e();
 		rep(i, n) {
@@ -31,6 +30,7 @@ struct Cumulative_prod {
 			acc_inv[i + 1] = op(inv(a[i]), acc_inv[i]);
 		}
 	}
+	Cumulative_prod() : n(0) {}
 
 	// Πa[l..r) を返す．
 	S prod(int l, int r) {
@@ -53,7 +53,7 @@ struct Cumulative_prod {
 *	Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す，範囲外の値は o() とみなす）
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
-struct Cumulative_sum_2D {
+class Cumulative_sum_2D {
 	// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
 
 	int h, w;
@@ -61,8 +61,8 @@ struct Cumulative_sum_2D {
 	// acc[i][j] : Σa[0..i)[0..j)
 	vector<vector<S>> acc;
 
-	// コンストラクタ（初期化なし，配列で初期化）
-	Cumulative_sum_2D() : h(0), w(0) {}
+public:
+	// 二次元配列 a[0..h)[0..w) で初期化する．
 	Cumulative_sum_2D(const vector<vector<S>>& a)
 		: h(sz(a)), w(sz(a[0])), acc(h + 1, vector<S>(w + 1, o())) {
 		// 元データを仮格納する．
@@ -86,6 +86,7 @@ struct Cumulative_sum_2D {
 			}
 		}
 	}
+	Cumulative_sum_2D() : h(0), w(0) {}
 
 	// Σa[x1..x2)[y1..y2) を返す．
 	S sum(int x1, int y1, int x2, int y2) {
@@ -448,15 +449,15 @@ void slide_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vector<vector<
 
 //【Sparse Table（冪等可換モノイド）】
 /*
-* Sparse_table<S, op, o>(a) : O(n log n)
+* Sparse_table<S, op, o>(vS a) : O(n log n)
 *	配列 a[0..n) で初期化する
 *	要素は冪等可換モノイド <S, op, o> の元とする．
 *
-* sum(l, r) : O(1)
+* S sum(int l, int r) : O(1)
 *	Σa[l..r) を返す．（空なら o() を返す）
 */
 template <class S, S(*op)(S, S), S(*o)()>
-struct Sparse_table {
+class Sparse_table {
 	// 参考 : https://tookunn.hatenablog.com/entry/2016/07/13/211148
 	// verify : https://codeforces.com/contest/689/problem/D
 
@@ -465,6 +466,7 @@ struct Sparse_table {
 	// acc[j][i] : Σa[i..i+2^j)
 	vector<vector<S>> acc;
 
+public:
 	// コンストラクタ（初期化なし，配列で初期化）
 	Sparse_table() : n(0), m(0) {}
 	Sparse_table(const vector<S>& a) : n(sz(a)), m(msb(n) + 1), acc(m, vector<S>(n)) {
@@ -492,6 +494,47 @@ struct Sparse_table {
 			rep(i, st.n) os << st.acc[j][i] << " ";
 			os << "\n";
 		}
+		return os;
+	}
+#endif
+};
+
+
+//【間引き Sparse Table（冪等可換モノイド）】
+/*
+* Sparse_table_mod<S, op, o>(vS a, int m) : O(n log n)
+*	配列 a[0..n) と法 m で初期化する
+*	要素は冪等可換モノイド <S, op, o> の元とする．
+*
+* S sum(int l, int r, int k) : O(1)
+*	set = {i∈[l..r) | i=k (mod m)} とし，Σa[set] を返す．（空なら o() を返す）
+*
+* 利用：【Sparse Table（冪等可換モノイド）】
+*/
+template <class S, S(*op)(S, S), S(*o)()>
+class Thinning_sparse_table {
+	// verify : https://atcoder.jp/contests/arc080/tasks/arc080_c
+
+	int m;
+	vector<Sparse_table<S, op, o>> sts;
+
+public:
+	// 配列 a[0..n) と法 m で初期化する
+	Thinning_sparse_table(const vector<S>& a, int m_) : m(m_), sts(m) {
+		vector<vector<S>> a2(m);
+		rep(i, sz(a)) a2[i % m].push_back(a[i]);
+		rep(j, m) sts[j] = Sparse_table<S, op, o>(a2[j]);
+	}
+	Thinning_sparse_table() : m(1) {}
+
+	// set = {x∈[l..r) | x mod m = k} とし，Σa[set] を返す．（空なら o() を返す）
+	S sum(int l, int r, int k) {
+		return sts[k].sum((l - k + m - 1) / m, (r - k + m - 1) / m);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Thinning_sparse_table& stm) {
+		rep(j, stm.m) os << stm.sts[j] << "\n";
 		return os;
 	}
 #endif
@@ -576,6 +619,74 @@ struct Sparse_table_2D {
 		return os;
 	}
 #endif
+};
+
+
+//【線形加重累積和（Z-加群）】
+/*
+* Linear_weighted_cumulative_sum<S, op, o, inv, mul>(vS v) : O(n)
+*	配列 v[0..n) で初期化する．
+*	要素は Z-加群 <S, op, o, inv, mul> の元とする．
+*
+* sum(int l, int r, ll a, ll b) : O(1)
+*	Σj∈[l..r) (a j + b) v[j] を返す．（空なら o() を返す，範囲外の値は o() とみなす）
+*
+* sum_right(int l, int r, ll w0, ll w1) : O(1)
+*	v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+*
+* sum_left(int r, int l, ll w0, ll w1) : O(1)
+*	v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S), S(*mul)(ll, S)>
+class Linear_weighted_cumulative_sum {
+	int n;
+
+	// acc[0][i] : Σj∈[0..i) v[j]
+	// acc[1][i] : Σj∈[0..i) j v[j]
+	vector<vector<S>> acc;
+
+public:
+	// 配列 a[0..n) で初期化する．
+	Linear_weighted_cumulative_sum(const vector<S>& v) : n(sz(v)), acc(2, vector<S>(n + 1)) {
+		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
+
+		acc[0][0] = acc[1][0] = o();
+		rep(i, n) {
+			acc[0][i + 1] = op(acc[0][i], v[i]);
+			acc[1][i + 1] = op(acc[1][i], mul(i, v[i]));
+		}
+	}
+	Linear_weighted_cumulative_sum() : n(0) {}
+
+	// Σj∈[l..r) (a j + b) v[j] を返す．
+	S sum(int l, int r, ll a, ll b) {
+		chmax(l, 0);  chmin(r, n);
+		if (l >= r) return o();
+
+		S res = mul(a, op(acc[1][r], inv(acc[1][l])));
+		res += mul(b, op(acc[0][r], inv(acc[0][l])));
+		return res;
+	}
+
+	// v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+	S sum_right(int l, int r, ll w0, ll w1) {
+		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
+
+		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
+		ll a = w1 - w0;
+		ll b = w0 - a * l;
+		return sum(l, r, a, b);
+	}
+
+	// v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+	S sum_left(int r, int l, ll w0, ll w1) {
+		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
+
+		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
+		ll a = w0 - w1;
+		ll b = w0 - a * r;
+		return sum(l + 1, r + 1, a, b);
+	}
 };
 
 

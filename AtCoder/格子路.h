@@ -311,8 +311,8 @@ void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
 		// マス (x, y) の 4 近傍を調べる．
 		rep(k, 4) {
 			// (nx, ny) : (x, y) の近傍の座標
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
+			int nx = x + DX[k];
+			int ny = y + DY[k];
 
 			// 範囲外または壁マスなら何もしない．
 			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
@@ -359,8 +359,8 @@ void solve_maze(const vvc& c, const vector<pii>& s, vvi& dist, const char wall =
 		// マス (x, y) の 4 近傍を調べる．
 		rep(k, 4) {
 			// (nx, ny) : (x, y) の近傍の座標
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
+			int nx = x + DX[k];
+			int ny = y + DY[k];
 
 			// 範囲外または壁マスなら何もしない．
 			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {

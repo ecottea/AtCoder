@@ -46,6 +46,8 @@ void breadth_first_search(const Graph& g, int st, vi& dist) {
 * s が st のいずれからも到達不能な頂点の場合は dist[s] = INF となる．
 */
 void multi_bfs(const Graph& g, const vi& st, vi& dist) {
+	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_c
+
 	int n = sz(g);
 
 	dist = vi(n, INF); // スタートからの最短距離を保持するテーブル

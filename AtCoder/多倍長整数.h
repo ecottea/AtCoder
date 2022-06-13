@@ -69,6 +69,44 @@ string sub(const string& s, const string& t, int b = 10) {
 }
 
 
+//【乗算（文字列）】O((n + m) log(n + m))
+/*
+* b 進表記で表された数 s[0..n) と t[0..m) の積を返す．
+*/
+string mul(const string& s, const string& t, int base = 10) {
+	// verify : https://atcoder.jp/contests/arc057/tasks/arc057_c
+
+	if (s == "0" || t == "0") return "0";
+
+	int n = sz(s), m = sz(t);
+
+	vl a(n), b(m);
+	rep(i, n) a[i] = s[n - 1 - i] - '0';
+	rep(j, m) b[j] = t[m - 1 - j] - '0';
+
+	vl c = convolution_ll(a, b);
+
+	int k = 0;
+	for (; k < n + m - 2; k++) {
+		c[k + 1] += c[k] / base;
+		c[k] %= base;
+	}
+	while (c[k] >= base) {
+		c.push_back(c[k] / base);
+		c[k] %= base;
+		k++;
+	}
+
+	string res;
+	while (k >= 0) {
+		res += (char)(c[k] + '0');
+		k--;
+	}
+
+	return res;
+}
+
+
 //【比較（文字列）】O(min(n, m))
 /*
 * b 進表記で表された数 s[0..n), t[0..m) について，s[0..n) op t[0..m) かを返す．
@@ -77,6 +115,7 @@ string sub(const string& s, const string& t, int b = 10) {
 bool comp(const string& s, const string& op, const string& t) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/6/NTL/all/NTL_2_A
 
+	assert(op == ">" || op == ">=" || op == "=" || op == "<=" || op == "<");
 	int n = sz(s), m = sz(t);
 
 	if (op[0] == '=') return s == t;
@@ -149,6 +188,23 @@ void decrement(string& s, int b = 10) {
 	if (n >= 2 && s[0] == '0') {
 		s.erase(s.begin());
 	}
+}
+
+
+//【前 0 除去】O(n)
+/*
+* 数 s[0..n) に不要な前 0 があればそれらを取り除く．
+*/
+void shrink(string& s) {
+	// verify : https://atcoder.jp/contests/arc057/tasks/arc057_c
+
+	int i = 0;
+	for (; i < sz(s); i++) {
+		if (s[i] != '0') break;
+	}
+
+	if (i == sz(s)) s = "0";
+	else s.erase(s.begin(), s.begin() + i);
 }
 
 

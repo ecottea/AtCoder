@@ -1,13 +1,14 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "木DP.h"
 // ■■■■■ 組合せゲーム ■■■■■
 
 
 //【局面のニム値】O(?)（遅いので実験用）
 /*
-* 初期局面 p から遷移可能な局面とそのニム値を nim に格納する．
-* nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納する．
+* 初期局面 p から遷移可能な局面とそのニム値のリストを nim に格納する．
+* nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納するものとする．
 */
 template <class T>
 void calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt, map<T, int>& nim) {
@@ -293,6 +294,24 @@ void cyclic_impartial_game(Graph& g, vi& res) {
 		}
 	}
 	// 後退解析が終わっても勝敗が決定されていない局面は全て引き分け．
+}
+
+
+//【木の辺の切断ゲーム】O(n)
+/*
+* r を根とする木 g について，交互に辺を切断して着手不能に陥ったほうが負けのゲームを行う．
+* 部分木 s でゲームを開始した場合のニム値を nimber[s] に格納する．
+*
+* 利用：【貰う木 DP】
+*/
+// verify : https://atcoder.jp/contests/agc017/tasks/agc017_d
+using T_ecgot = int;
+void merge_ecgot(T_ecgot& x, const T_ecgot& y) { x ^= y; }
+T_ecgot e_ecgot() { return 0; }
+T_ecgot leaf_ecgot(int s) { return 0; }
+T_ecgot apply_ecgot(const T_ecgot& x, int s, int t) { return x + 1; }
+void edge_cut_game_on_tree(const Graph& g, int r, vector<T_ecgot>& nimber) {
+	tree_getDP<T_ecgot, merge_ecgot, e_ecgot, leaf_ecgot, apply_ecgot>(g, r, nimber);
 }
 
 

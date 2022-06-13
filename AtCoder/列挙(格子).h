@@ -32,8 +32,8 @@ void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
 
 				// “_ (x, y) ‚Ì 4 ‹ß–T (nx, ny) ‚É‚Â‚¢‚Ä
 				rep(j, 4) {
-					int nx = x + dx4[j];
-					int ny = y + dy4[j];
+					int nx = x + DX[j];
+					int ny = y + DY[j];
 					pii np = { nx, ny };
 
 					// ‚à‚µ (nx, ny) ‚ª poly ‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚½‚ç‰½‚à‚µ‚È‚¢D

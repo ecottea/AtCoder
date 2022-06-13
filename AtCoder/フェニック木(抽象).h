@@ -5,12 +5,12 @@
 
 //【フェニック木（アーベル群）】
 /*
-* Fenwick_tree(n) : O(n)
-*	要素数 n かつ初期値 e で初期化する．
-*	要素はアーベル群 (S, op, e, inv) の元とする．
+* Fenwick_tree<S, op, o, inv>(n) : O(n)
+*	要素数 n かつ初期値 o で初期化する．
+*	要素はアーベル群 (S, op, o, inv) の元とする．
 *
-* Fenwick_tree(a) : O(n)
-*	配列 a で初期化する．
+* Fenwick_tree<S, op, o, inv>(a) : O(n)
+*	配列 a[0..n) で初期化する．
 *
 * set(i, x) : O(log n) // 遅いので apply が使えるならそちらを使うべき
 *	v[i] = x とする．
@@ -19,16 +19,16 @@
 *	v[i] を返す．
 *
 * prod(l, r) : O(log n)
-*	op( v[l..r) ) を返す．空なら e() を返す．
+*	op( v[l..r) ) を返す．空なら o() を返す．
 *
 * apply(i, x) : O(log n)
 *	v[i] = op(v[i], x) とする．
 *
 * max_right<f>() : O(log n)
 *	f( op( v[0..r) ) ) = true となる最大の r を返す．
-*   f : S → bool で f(e()) = true かつ単調とする．
+*   f : S → bool で f(o()) = true かつ単調とする．
 */
-template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S)>
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 struct Fenwick_tree {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
 	// verify : https://judge.yosupo.jp/problem/point_add_range_sum
@@ -42,8 +42,8 @@ struct Fenwick_tree {
 	// コンストラクタ（初期化なし）
 	Fenwick_tree() {}
 
-	// 要素数 n かつ初期値 e で初期化
-	Fenwick_tree(int n_) : n(n_ + 1), v(n, e()) {}
+	// 要素数 n かつ初期値 o で初期化
+	Fenwick_tree(int n_) : n(n_ + 1), v(n, o()) {}
 
 	// 配列 a で初期化
 	Fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(n) {
@@ -73,7 +73,7 @@ struct Fenwick_tree {
 		return prod(i, i + 1);
 	}
 
-	// op( v[l..r) ) を返す．空なら e を返す．（l, r : 0-indexed）
+	// op( v[l..r) ) を返す．空なら o を返す．（l, r : 0-indexed）
 	S prod(int l, int r) const {
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
@@ -81,9 +81,9 @@ struct Fenwick_tree {
 		return prod_sub(r) - prod_sub(l);
 	}
 
-	// op( v[1..r] ) を返す．空なら e を返す．（r : 1-indexed）
+	// op( v[1..r] ) を返す．空なら o を返す．（r : 1-indexed）
 	S prod_sub(int r) const {
-		S res = e();
+		S res = o();
 
 		// 子に向かって累積 op() をとっていく．
 		while (r > 0) {
@@ -111,7 +111,7 @@ struct Fenwick_tree {
 
 	// f( op( v[0, r) ) ) = true となる最大の r を返す．（r : 0-indexed）
 	int max_right(const function<bool(S)>& f) const {
-		S x = e();
+		S x = o();
 
 		// 注目している閉区間は [l+1, r] で幅は len
 		int l = 0;
@@ -139,9 +139,9 @@ struct Fenwick_tree {
 
 //【遅延評価フェニック木（Z-加群）】
 /*
-* Lazy_fenwick_tree<S, op, e, inv, mul>(int n) : O(n)
-*	要素数 n かつ初期値 e で初期化する．
-*	要素は Z 加群 (S, op, e, inv, mul) の元とする．
+* Lazy_fenwick_tree<S, op, o, inv, mul>(int n) : O(n)
+*	要素数 n かつ初期値 o で初期化する．
+*	要素は Z 加群 (S, op, o, inv, mul) の元とする．
 *
 * Lazy_fenwick_tree<S, op, e, inv, mul>(vS a) : O(n)
 *	配列 a で初期化する．
@@ -153,7 +153,7 @@ struct Fenwick_tree {
 *	v[i] を返す．
 *
 * S prod(int l, int r) : O(log n)
-*	op( v[l..r) ) を返す．空なら e() を返す．
+*	op( v[l..r) ) を返す．空なら o() を返す．
 *
 * apply(int i, S x) : O(log n)
 *	v[i] = op(v[i], x) とする．
@@ -161,7 +161,7 @@ struct Fenwick_tree {
 * apply(int l, int r, S x) : O(log n)
 *	v[l..r) = op(v[l..r), x) とする．
 */
-template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S), S(*mul)(ll, S)>
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S), S(*mul)(ll, S)>
 struct Lazy_fenwick_tree {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_G
@@ -177,11 +177,11 @@ struct Lazy_fenwick_tree {
 	// コンストラクタ（初期化なし）
 	Lazy_fenwick_tree() : n(0) {}
 
-	// 要素数 n かつ初期値 e で初期化
-	Lazy_fenwick_tree(int n_) : n(n_ + 1), v(2, vector<S>(n, e())) {}
+	// 要素数 n かつ初期値 o で初期化
+	Lazy_fenwick_tree(int n_) : n(n_ + 1), v(2, vector<S>(n, o())) {}
 
 	// 配列 a で初期化
-	Lazy_fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(2, vector<S>(n, e())) {
+	Lazy_fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(2, vector<S>(n, o())) {
 		// 配列の値を仮登録する．
 		rep(i, n - 1) v[0][i + 1] = v_[i];
 
@@ -206,7 +206,7 @@ struct Lazy_fenwick_tree {
 		return prod(i, i + 1);
 	}
 
-	// op( v[l..r) ) を返す．空なら e を返す．（l, r : 0-indexed）
+	// op( v[l..r) ) を返す．空なら o を返す．（l, r : 0-indexed）
 	S prod(int l, int r) const {
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
@@ -214,14 +214,14 @@ struct Lazy_fenwick_tree {
 		return op(prod_sub(r), inv(prod_sub(l)));
 	}
 
-	// op( v[1..r] ) を返す．空なら e を返す．（r : 1-indexed）
+	// op( v[1..r] ) を返す．空なら o を返す．（r : 1-indexed）
 	S prod_sub(int r) const {
 		return op(prod_sub(r, 0), mul(r, prod_sub(r, 1)));
 	}
 
-	// op( v[d][1..r] ) を返す．空なら e を返す．（r : 1-indexed）
+	// op( v[d][1..r] ) を返す．空なら o を返す．（r : 1-indexed）
 	S prod_sub(int r, int d) const {
-		S res = e();
+		S res = o();
 
 		// 子に向かって累積 op() をとっていく．
 		while (r > 0) {
@@ -288,11 +288,11 @@ template <class T> using RASQ = Lazy_fenwick_tree<T, op8<T>, e8<T>, inv8<T>, mul
 
 //【二次元フェニック木（アーベル群）】
 /*
-* Fenwick_tree_2D<S, op, e, inv>(int h, int w) : O(h w)
-*	要素数 h * w かつ初期値 e で初期化する．
-*	要素はアーベル群 (S, op, e, inv) の元とする．
+* Fenwick_tree_2D<S, op, o, inv>(int h, int w) : O(h w)
+*	要素数 h * w かつ初期値 o で初期化する．
+*	要素はアーベル群 (S, op, o, inv) の元とする．
 *
-* Fenwick_tree_2D<S, op, e, inv>(vvS a) : O(h w)
+* Fenwick_tree_2D<S, op, o, inv>(vvS a) : O(h w)
 *	二次元配列 a で初期化する．
 *
 * apply(int x, int y, S val) : O(log h log w)
@@ -305,9 +305,9 @@ template <class T> using RASQ = Lazy_fenwick_tree<T, op8<T>, e8<T>, inv8<T>, mul
 *	v[x][y] を返す．
 *
 * S prod(int x1, int y1, int x2, int y2) : O(log h log w)
-*	op( v[x1..x2)[y1..y2) ) を返す．空なら e() を返す．
+*	op( v[x1..x2)[y1..y2) ) を返す．空なら o() を返す．
 */
-template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S)>
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 struct Fenwick_tree_2D {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
 	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2842
@@ -321,12 +321,12 @@ struct Fenwick_tree_2D {
 	// コンストラクタ（初期化なし）
 	Fenwick_tree_2D() {}
 
-	// 要素数 h * w かつ初期値 e で初期化
-	Fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(h, vector<S>(w, e())) {}
+	// 要素数 h * w かつ初期値 o で初期化
+	Fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(h, vector<S>(w, o())) {}
 
 	// 配列 a で初期化
 	Fenwick_tree_2D(const vector<vector<S>>& v_) : h(sz(v_) + 1), w(sz(v_[0]) + 1),
-		v(h, vector<S>(w, e())) {
+		v(h, vector<S>(w, o())) {
 		// 配列の値を仮登録する．
 		rep(i, h - 1) {
 			rep(j, w - 1) {
@@ -366,11 +366,11 @@ struct Fenwick_tree_2D {
 		return prod(x, y, x + 1, y + 1);
 	}
 
-	// op( v[x1..x2)[y1..y2) ) を返す．空なら e を返す．（x1, y1, x2, y2 : 0-indexed）
+	// op( v[x1..x2)[y1..y2) ) を返す．空なら o を返す．（x1, y1, x2, y2 : 0-indexed）
 	S prod(int x1, int y1, int x2, int y2) const {
 		// 0-indexed での半開長方形 [x1..x2) * [y1..y2) は，
 		// 1-indexed での閉長方形 [x1+1..x2] * [y1+1..y2] に対応する．
-		S res = e();
+		S res = o();
 		res = op(res, prod_sub(x2, y2));
 		res = op(res, inv(prod_sub(x2, y1)));
 		res = op(res, inv(prod_sub(x1, y2)));
@@ -378,9 +378,9 @@ struct Fenwick_tree_2D {
 		return res;
 	}
 
-	// op( v[1..x][1..y] ) を返す．空なら e を返す．（x, y : 1-indexed）
+	// op( v[1..x][1..y] ) を返す．空なら o を返す．（x, y : 1-indexed）
 	S prod_sub(int x, int y) const {
-		S res = e();
+		S res = o();
 
 		// 子に向かって累積 op() をとっていく．
 		// i, j の最下位ビットから 1 を減算することで次の位置を得る．
@@ -423,12 +423,12 @@ struct Fenwick_tree_2D {
 
 //【二次元遅延評価フェニック木（Z 加群）】
 /*
-* Lazy_fenwick_tree_2D<S, op, e, inv, mul>(int h, int w) : O(h w)
-*	要素数 h * w かつ初期値 e で初期化する．
-*	要素は Z 加群 (S, op, e, inv, mul) の元とする．
+* Lazy_fenwick_tree_2D<S, op, o, inv, mul>(int h, int w) : O(h w)
+*	要素数 h * w かつ初期値 o で初期化する．
+*	要素は Z-加群 (S, op, o, inv, mul) の元とする．
 *
-* Lazy_fenwick_tree_2D<S, op, e, inv, mul>(vvS a) : O(h w)
-*	二次元配列 a で初期化する．
+* Lazy_fenwick_tree_2D<S, op, o, inv, mul>(vvS a) : O(h w)
+*	二次元配列 a[0..h)[0..w) で初期化する．
 *
 * apply(int x, int y, S val) : O(log h log w)
 *	v[x][y] = op(v[x][y], val) とする．
@@ -443,9 +443,9 @@ struct Fenwick_tree_2D {
 *	v[x][y] を返す．
 *
 * S prod(int x1, int y1, int x2, int y2) : O(log h log w)
-*	op( v[x1..x2)[y1..y2) ) を返す．空なら e() を返す．
+*	op( v[x1..x2)[y1..y2) ) を返す．空なら o() を返す．
 */
-template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S), S(*mul)(ll, S)>
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S), S(*mul)(ll, S)>
 struct Lazy_fenwick_tree_2D {
 	// verify : https://codeforces.com/contest/869/problem/E
 
@@ -459,10 +459,10 @@ struct Lazy_fenwick_tree_2D {
 	vvvS v;
 
 	// 要素数 h * w かつ初期値 e で初期化
-	Lazy_fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(4, vvS(h, vS(w, e()))) {}
+	Lazy_fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(4, vvS(h, vS(w, o()))) {}
 
 	// 配列 a で初期化
-	Lazy_fenwick_tree_2D(const vector<vector<S>>& v_) : h(sz(v_) + 1), w(sz(v_[0]) + 1), v(4, vvS(h, vS(w, e()))) {
+	Lazy_fenwick_tree_2D(const vector<vector<S>>& v_) : h(sz(v_) + 1), w(sz(v_[0]) + 1), v(4, vvS(h, vS(w, o()))) {
 		// 配列の値を仮登録する．
 		rep(i, h - 1) {
 			rep(j, w - 1) {
@@ -502,11 +502,11 @@ struct Lazy_fenwick_tree_2D {
 		return prod(x, y, x + 1, y + 1);
 	}
 
-	// op( v[x1..x2)[y1..y2) ) を返す．空なら e を返す．（x1, y1, x2, y2 : 0-indexed）
+	// op( v[x1..x2)[y1..y2) ) を返す．空なら o を返す．（x1, y1, x2, y2 : 0-indexed）
 	S prod(int x1, int y1, int x2, int y2) const {
 		// 0-indexed での半開長方形 [x1..x2) * [y1..y2) は，
 		// 1-indexed での閉長方形 [x1+1..x2] * [y1+1..y2] に対応する．
-		S res = e();
+		S res = o();
 		res = op(res, prod_sub(x2, y2));
 		res = op(res, inv(prod_sub(x2, y1)));
 		res = op(res, inv(prod_sub(x1, y2)));
@@ -514,9 +514,9 @@ struct Lazy_fenwick_tree_2D {
 		return res;
 	}
 
-	// op( v[1..x][1..y] ) を返す．空なら e を返す．（x, y : 1-indexed）
+	// op( v[1..x][1..y] ) を返す．空なら o を返す．（x, y : 1-indexed）
 	S prod_sub(int x, int y) const {
-		S res = e();
+		S res = o();
 		res = op(res, prod_sub(x, y, 0));
 		res = op(res, mul(x, prod_sub(x, y, 1)));
 		res = op(res, mul(y, prod_sub(x, y, 2)));
@@ -524,9 +524,9 @@ struct Lazy_fenwick_tree_2D {
 		return res;
 	}
 
-	// op( v[d][1..x][1..y] ) を返す．空なら e を返す．（x, y : 1-indexed）
+	// op( v[d][1..x][1..y] ) を返す．空なら o を返す．（x, y : 1-indexed）
 	S prod_sub(int x, int y, int d) const {
-		S res = e();
+		S res = o();
 
 		// 子に向かって累積 op() をとっていく．
 		// i, j の最下位ビットから 1 を減算することで次の位置を得る．

@@ -291,24 +291,25 @@ ll knapsack01_problem_minimize_weight(const vi& v, const vl& w, int V, vb& sel) 
 }
 
 
-//【ナップサック問題（重さが小）】O(N W)
+//【ナップサック問題（重さが小）】O(n w_max)
 /*
-* 価値 v[i] と重さ w[i] の定まった N 個の品物から，重さ w 以下で
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
 * また各品物を何個選んだかの一例を sel に格納する．
 *
 *（重さを状態とした状態 DP）
 */
-ll knapsack_problem(const vl& v, const vi& w, int W, vi& sel) {
-	int N = sz(v); // 品物の個数
+ll knapsack_problem(const vl& v, const vi& w, int w_max, vi* sel = nullptr) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_C
 
-	// dp[i][j] : i 番目の品物までで重さ j 以下で実現できる最大価値
-	// v[i], w[i] は 0-indexed で dp[i] は 1-indexed なので注意．
-	vvl dp(N + 1, vl(W + 1));
+	int n = sz(v); // 品物の個数
+
+	// dp[i][j] : 品物 [0..i) の中で重さ j 以下で実現できる最大価値
+	vvl dp(n + 1, vl(w_max + 1));
 
 	// DP で ナップサック問題を解く．
-	repi(i, 1, N) {
-		repi(j, 1, W) {
+	repi(i, 1, n) {
+		repi(j, 1, w_max) {
 			// i 番目の品物を選ばない場合
 			dp[i][j] = dp[i - 1][j];
 
@@ -324,22 +325,25 @@ ll knapsack_problem(const vl& v, const vi& w, int W, vi& sel) {
 	}
 
 	// DP 復元を行う．
-	sel = vi(N);
-	int i = N, j = W;
-	while (i >= 1) {
-		// i 番目の品物を選んだ場合と選ばなかった場合で価値の差があれば選んだ証拠．
-		if (dp[i][j] > dp[i - 1][j]) {
-			// 選んでいたなら 1 個分記録し，重さを減じておく．
-			sel[i - 1]++;
-			j -= w[i - 1];
-		}
-		else {
-			// 選んでいなかったなら 1 つ前の品物について調べに行く．
-			i--;
+	if (sel != nullptr) {
+		*sel = vi(n);
+		int i = n, j = w_max;
+
+		while (i >= 1) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で価値の差があれば選んだ証拠．
+			if (dp[i][j] > dp[i - 1][j]) {
+				// 選んでいたなら 1 個分記録し，重さを減じておく．
+				(*sel)[i - 1]++;
+				j -= w[i - 1];
+			}
+			else {
+				// 選んでいなかったなら 1 つ前の品物について調べに行く．
+				i--;
+			}
 		}
 	}
 
-	return dp[N][W];
+	return dp[n][w_max];
 }
 
 
@@ -348,7 +352,8 @@ ll knapsack_problem(const vl& v, const vi& w, int W, vi& sel) {
 * 価値 v[i] と重さ w[i] の定まった N 個の品物から，重さ W 以下で
 * 価値が最大になるよう品物を選んだときの価値 V を返す．
 * また各品物を何個選んだかの一例を sel に格納する．
-* （価値を状態とした状態 DP）
+* 
+*（価値を状態とした状態 DP）
 */
 ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 	int N = sz(v); // 品物の個数
@@ -424,7 +429,8 @@ ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 * 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V で
 * 重さが最小になるよう品物を選んだときの重さを返す（不可能なら -1 を返す．）
 * また可能なら各品物を何個選んだかの一例を sel に格納する．
-* （価値を状態とした状態 DP）
+* 
+*（価値を状態とした状態 DP）
 */
 ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
 	int N = sz(v); // 品物の個数
@@ -485,7 +491,8 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
 /*
 * 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V で
 * 重さが最小になるよう品物を選んだときの個数を返す（不可能なら -1 を返す．）
-* （価値を状態としたインライン状態 DP）
+* 
+*（価値を状態としたインライン状態 DP）
 */
 ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
 	int N = sz(v); // 品物の個数
@@ -739,5 +746,59 @@ ll knapsack01_problem(const vl& v, const vi& w, const vi& c, int w_max, int c_ma
 
 	return dp[w_max][c_max];
 }
+
+
+//【0-1 ナップサック問題（重さが小）と max-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，max-plus 半環上で
+*		f(x) := Π_i (0 x^0 + v[i] x^w[i])
+* と定めれば，重さ W での価値の最大値は
+*		[x^W] f(x)
+* で求められる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B
+*/
+
+
+//【ナップサック問題（重さが小）と max-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が無数にあるとき，max-plus 半環上で
+*		f(x) := Π_i 1 / (0 x^0 - v[i] x^w[i])
+* と定めれば，重さ W での価値の最大値は
+*		[x^W] f(x)
+* で求められる．
+* 
+* f(x) の計算には負元が必要に見えるが，実際は累積和で計算できるので問題ない．
+*
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_C
+*/
+
+
+//【個数制限付きナップサック問題（重さが小）と max-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が m[i] 個あるとき，max-plus 半環上で
+*		f(x) := Π_i (0 x^0 + v[i] x^w[i] + ... + (v[i] x^w[i])^m[i])
+* と定めれば，重さ W での価値の最大値は
+*		[x^W] f(x)
+* で求められる．
+* 
+* f(x) を等比数列の和の公式を用いて
+*	f(x) = Π_i (0 x^0 - (v[i] x^w[i])^(m[i]+1)) / (0 x^0 - v[i] x^w[i])
+* と直したくなるが，これの計算には負元が必要になるので使えない．
+* 
+* max-plus 半環は冪等半環なので，2 冪個ずつ分けて積をとるテクニックなら使える．
+*/
+
+
+//【0-1 ナップサック問題（価値が小）と min-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，min-plus 半環上で
+*		f(x) := Π_i (0 x^0 + w[i] x^v[i])
+* と定めれば，価値 V での重さの最小値は
+*		[x^V] f(x)
+* で求められる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_F
+*/
 
 

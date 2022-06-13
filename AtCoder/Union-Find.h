@@ -37,9 +37,10 @@ struct Union_find {
 	//	根の場合は属する連結成分の大きさの -1 倍（負）を表す．
 	vi parent_or_size;
 
-	// コンストラクタ（初期化なし，大きさ n で初期化）
-	Union_find() : n(0), m(0) {}
+	// 非連結で大きさ n の Union-Find を構築する．
 	Union_find(int n_) : n(n_), m(n), parent_or_size(n, -1) {}
+
+	Union_find() : n(0), m(0) {} // ダミー
 
 	// 頂点 a, b を結合する．
 	void merge(int a, int b) {
@@ -224,116 +225,14 @@ template <class T> struct Weighted_union_find {
 
 //【部分永続 Union-Find】
 /*
-* 各時刻での履歴を残しながら頂点の統合と連結判定を行う．
-* 時刻とは，それまでに呼ばれた merge() の回数を意味する．
-*
-* Partially_persistent_union_find(n) : O(n)
-*	非連結で大きさ n の部分永続 Union-Find を構築する．
-*
-* merge(a, b) : O(log n)
-*	頂点 a と頂点 b を統合する．
-*
-* same(a, b, t) : O(log n)
-*	時刻 t に頂点 a と頂点 b が同じ連結成分に属していたかを返す．
-*
-* leader(a, t) : O(log n)
-*	時刻 t に頂点 a が属していた連結成分の親を返す．
-*
-* size(a, t) : O(log n)
-*	時刻 t に頂点 a が属していた連結成分の大きさを返す．
+* 永続データ構造.h へ
 */
-struct Partially_persistent_union_find {
-	// 参考 : https://misteer.hatenablog.com/entry/persistentUF
 
-	// 頂点の個数
-	int n;
 
-	// 現在時刻（過去に何回 merge() が呼ばれたか）
-	int now;
-
-	// parent[i] : 頂点 i の親（i が根なら i 自身）
-	vi parent;
-
-	// rank[i] : 頂点 i を根とする木の高さ（最も遠い葉までの距離）
-	vi rank;
-
-	// time[i] : 頂点 i の親が更新された時刻（i が親なら INF）
-	vi time;
-
-	// num[i] : 頂点 i を含む連結成分の時刻 t における頂点数が c であったことを
-	//	(t, c) の形で t について狭義昇順に記録したリスト
-	//	ただし全てではなく，「統合された側の根」にのみ情報を記録する．
-	vector<vector<pii>> num;
-
-	// コンストラクタ（初期化なし，大きさ n で初期化）
-	Partially_persistent_union_find() : n(0), now(0) {}
-	Partially_persistent_union_find(int n_)
-		: n(n_), now(0), parent(n), rank(n, 1), time(n, INF), num(n)
-	{
-		rep(i, n) {
-			parent[i] = i;
-			num[i].push_back({ 0, 1 });
-		}
-	}
-
-	// 頂点 a, b を結合する．
-	void merge(int a, int b) {
-		// verify : https://atcoder.jp/contests/code-thanks-festival-2017-open/tasks/code_thanks_festival_2017_h
-
-		// 現在時刻を進める．
-		now++;
-
-		// ra[rb] : 頂点 a[b] の属する連結成分の根
-		int ra = leader(a, now);
-		int rb = leader(b, now);
-
-		// 根が同じであれば既に連結であるから何もしない．
-		if (ra == rb) return;
-
-		// 根が異なる場合，大きい[小さい] 連結成分の根を改めて ra[rb] とする．
-		if (rank[ra] < rank[rb]) swap(ra, rb);
-
-		// rb を根とする連結成分を ra を根とする連結成分に統合する．
-		num[ra].push_back({ now, size(ra, now) + size(rb, now) });
-		parent[rb] = ra;
-		if (rank[ra] == rank[rb]) rank[ra]++;
-		time[rb] = now;
-	}
-
-	// 時刻 t に頂点 a, b が同じ連結成分に属していたかを返す．
-	bool same(int a, int b, int t) {
-		// verify : https://atcoder.jp/contests/code-thanks-festival-2017-open/tasks/code_thanks_festival_2017_h
-
-		// 根が同じなら連結である．
-		return leader(a, t) == leader(b, t);
-	}
-
-	// 時刻 t に頂点 a が属する連結成分の根を返す．
-	int leader(int a, int t) {
-		// 頂点 a の親が更新される以前の場合
-		if (t < time[a]) {
-			// a 自身が根である．
-			return a;
-		}
-		// 頂点 a の親が更新された以降の場合
-		else {
-			// a の親の親を再帰的に探しに行く．
-			// 通常の Union-Find であれば経路圧縮を行うが，履歴をたどるには
-			// 一度更新された親はそのままであってほしいので今回は行わない．
-			return leader(parent[a], t);
-		}
-	}
-
-	// 時刻 t に頂点 a が属する連結成分の大きさを返す．
-	int size(int a, int t) {
-		// ra : a の属する連結成分の根
-		int ra = leader(a, t);
-
-		// 時刻 t またはその直前の情報を得る．
-		auto it = lower_bound(all(num[ra]), make_pair(t, INF));
-		return prev(it)->second;
-	}
-};
+//【永続 Union-Find】
+/*
+* 永続データ構造.h へ
+*/
 
 
 //【Union-Find（偶奇判定付き）】

@@ -95,7 +95,7 @@ ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p) {
 
 //【XOR の最大化】
 /*
-* 集合 a[0..n) について max_(S ⊂ a[0..n)) (XOR S) を求めるには，
+* 集合 a[0..n) について max_(set ⊂ a[0..n)) (XOR set) を求めるには，
 * 右辺を 11..11 にして【連立一次方程式（優先度付き）】を利用すればよい．
 * 
 * verify : https://atcoder.jp/contests/abc141/tasks/abc141_f

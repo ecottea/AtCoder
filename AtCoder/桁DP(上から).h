@@ -419,7 +419,7 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 *（桁 DP，smaller フラグ，leading-zero フラグ）
 */
 void digits_distribution(const string& num, vm& cnt, int b = 10) {
-	// verify : https://atcoder.jp/contests/abc029/tasks/abc029_d
+	// verify : https://yukicoder.me/problems/no/1953
 
 	int n = sz(num);
 	cnt.resize(b);

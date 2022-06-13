@@ -6,16 +6,13 @@
 
 //【グリッド → グラフ】O(h w)
 /*
-* h 行 w 列のグリッドから nb 近傍を連結としたグラフ g を構築する．
+* h 行 w 列のグリッドから 4 近傍を連結としたグラフ g を構築する．
 * 壁マスは wall，空きマスはその他とする．
 * i 行目の j 列目にあるマス (i, j) はグラフ頂点 i * w + j に対応する．
 */
 template <class T>
-void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb = 4) {
+void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#') {
 	int h = sz(c), w = sz(c[0]);
-
-	const vi& dx = (nb == 4 ? dx4 : dx8);
-	const vi& dy = (nb == 4 ? dy4 : dy8);
 
 	g = Graph(h * w);
 	rep(x, h) {
@@ -24,10 +21,10 @@ void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#', int nb = 
 			if (c[x][y] == wall) continue;
 
 			// 今考えている近傍それぞれについて
-			rep(k, nb) {
-				// 近傍のマスの座標
-				int nx = x + dx[k];
-				int ny = y + dy[k];
+			rep(k, 4) {
+				// 4 近傍のマスの座標
+				int nx = x + DX[k];
+				int ny = y + DY[k];
 
 				// 範囲外だったり空きマスでなかったら辺は追加しない．
 				if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
@@ -64,6 +61,18 @@ void wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, Gra
 			if (y < w - 1 && wy[x][y] != wall) g[x * w + y].push_back(x * w + (y + 1));
 		}
 	}
+}
+
+
+//【隣接行列 → グラフ】O(|V|^2)
+/*
+* 隣接行列 e[0..n)[0..n) で辺 i→j の存在が e[i][j]=ex で表されるとし，
+* 対応する有向グラフを g に格納する．
+*/
+template <class T> void construct_graph(const vector<vector<T>>& e, T ex, Graph& g) {
+	int n = sz(e);
+	g = Graph(n);
+	rep(i, n) rep(j, n) if (e[i][j] == ex) g[i].push_back(j);
 }
 
 
@@ -117,6 +126,61 @@ void complement_graph(const Graph& g, Graph& cg) {
 
 		rep(t, n) {
 			if (e[t]) cg[s].push_back(t);
+		}
+	}
+}
+
+
+//【誘導部分グラフ】O(|V| + |E|)
+/*
+* グラフ g について，頂点集合を vs とする誘導部分グラフを g2 に格納する．
+*/
+template <class G> void induced_subgraph(const G& g, const vi& vs, G& g2) {
+	// verify : https://atcoder.jp/contests/abc253/tasks/abc253_h
+
+	int n = sz(g), n2 = sz(vs);
+
+	vi id(n, -1);
+	rep(i, n2) id[vs[i]] = i;
+
+	g2 = G(n2);
+
+	rep(s, n) {
+		if (id[s] == -1) continue;
+
+		repe(t, g[s]) {
+			if (id[t] == -1) continue;
+
+			g2[id[s]].push_back(id[t]);
+		}
+	}
+}
+
+
+//【辺の除去】O(|V| + |E|)
+/*
+* グラフ g から辺の集合 es を除去したグラフを g2 に格納する．
+* 辺 e∈es は始点 s と終点 t の順序対 (s, t) で表す．
+*/
+template <class G> void eliminate_edge(const G& g, const vector<pii>& es, G& g2) {
+	// verify : https://atcoder.jp/contests/agc032/tasks/agc032_c
+
+	int n = sz(g);
+	g2 = G(n);
+
+	vector<unordered_set<int>> el(n);
+	repe(e, es) {
+		int s, t;
+		tie(s, t) = e;
+
+		el[s].insert(t);
+	}
+
+	rep(s, n) {
+		repe(t, g[s]) {
+			if (el[s].count(t)) continue;
+
+			g2[s].push_back(t);
 		}
 	}
 }

@@ -23,10 +23,8 @@ using Graph = vvi;
 
 // 定数の定義
 const double PI = acos(-1);
-const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
-const vi dy4 = { 0, 1, 0, -1 };
-const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
-const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
+const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
+const vi DY = { 0, 1, 0, -1 };
 const int INF = 1001001001; const ll INFL = 4004004004004004004LL;
 const double EPS = 1e-12; // 許容誤差に応じて調整
 
@@ -38,6 +36,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define sz(x) ((int)(x).size())
 #define distance (int)distance
 #define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
+#define YES(b) {cout << ((b) ? "YES\n" : "NO\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -130,8 +129,7 @@ set_intersection(all(a), all(b), inserter(res, res.end()));
 set_union(all(a), all(b), inserter(res, res.end()));
 
 // x に [l..r] 上の一様乱数を代入する
-mt19937_64 mt;
-mt.seed((int)time(NULL));
+mt19937_64 mt((int)time(NULL));
 uniform_int_distribution<ll> rnd(l, r);
 ll x = rnd(mt);
 

@@ -25,7 +25,7 @@
 //y—v‘f˜a‚Ì˜ai—v‘f”‚²‚ÆjzO(n)
 /*
 * —^‚¦‚ç‚ê‚½ a[0..n) ‚É‚Â‚¢‚ÄCŠe k=[0..n] ‚É‚Â‚¢‚Ä‚Ì set¼[0..n) ‚ÉŠÖ‚·‚é˜a
-*	ƒ°|set|=k ƒ°i¸set a[i]
+*		ƒ°|set|=k ƒ°i¸set a[i]
 * ‚Ì’l‚ğ res[k] ‚ÉŠi”[‚·‚éD
 *
 * —˜—pFyŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
@@ -40,6 +40,11 @@ template <class T> void total_sum(const vector<T>& a, vm& res) {
 	//		= ƒ°i=[0..n) a[i] * bin(n-1, k-1)
 	//		= bin(n-1, k-1) * ƒ°i=[0..n) a[i]
 	// ‚Æ‚È‚éD
+	
+	//y•â‘«z
+	// ‚±‚ê‚ç‘S‚Ä‚ğ‰Á‚¦‚ ‚í‚¦‚ê‚Î
+	//		ƒ°set¼[0..n) ƒ°i¸set a[i] = 2^(n-1) ƒ°a[0..n)
+	// ‚ğ“¾‚éD
 
 	int n = sz(a);
 	res.resize(n + 1);

@@ -10,16 +10,14 @@
 /*
 * a[0..n) の転倒数を返す．
 */
-template <class T> ll inversion_number(vector<T>& a) {
+template <class T> ll inversion_number(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/arc075/tasks/arc075_c
 
 	int n = sz(a);
 
 	// 値 a[i] と位置 i を組にしソートする．
 	vector<pair<T, int>> ai(n);
-	rep(i, n) {
-		ai[i] = { a[i], i };
-	}
+	rep(i, n) ai[i] = { a[i], i };
 	sort(all(ai));
 
 	ll res = 0;
@@ -49,7 +47,7 @@ template <class T> ll inversion_number(vector<T>& a) {
 *
 * 利用：【座標圧縮】
 */
-template <class T> ll inversion_number_cc(vector<T>& a) {
+template <class T> ll inversion_number_cc(const vector<T>& a) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_D
 
 	int n = sz(a);
@@ -58,9 +56,11 @@ template <class T> ll inversion_number_cc(vector<T>& a) {
 	vi b;
 	int m = coordinate_compression(a, b);
 
-	// fw[i] : 今まで見てきた範囲に値 i が何個あったか．
+	// fw[i] : 今まで見てきた範囲に値 i が何個あったか（∈ {0, 1}）
 	fenwick_tree<int> fw(m);
 	ll res = 0;
+
+	// 位置について昇順に見ていく．
 	rep(i, n) {
 		fw.add(b[i], 1);
 

@@ -90,6 +90,8 @@ template <class T> void rotate270(const vector<vector<T>>& a, vector<vector<T>>&
 * a[0..h)[0..w) ‚ğ“]’u‚µ‚½‚à‚Ì‚ğ b ‚ÉŠi”[‚·‚éD
 */
 template <class T> void transpose(const vector<vector<T>>& a, vector<vector<T>>& b) {
+	// verify : https://yukicoder.me/problems/no/1974
+
 	int h = sz(a), w = sz(a[0]);
 
 	b = vector<vector<T>>(w, vector<T>(h));

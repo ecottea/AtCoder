@@ -38,7 +38,7 @@ template <typename T> struct Multiple_transform {
 		//	A[1] = a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + a[8] + ...
 		//	A[2] =        a[2]        + a[4]        + a[6]        + a[8] + ...
 		//	A[3] =               a[3]               + a[6]               + ...
-		//	A[4] =                      a[4]                        a[8] + ...
+		//	A[4] =                      a[4]                      + a[8] + ...
 		//	A[5] =                             a[5]                      + ...
 		//	A[6] =                                    a[6]               + ...
 		//	A[7] =                                           a[7]        + ...
@@ -145,20 +145,20 @@ template <typename T> struct Divisor_transform {
 
 //【倍数変換（添字約数制限）】
 /*
-* Limited_multiple_transform(ps, divs) : O(1)
+* Limited_multiple_transform(vl ps, vl divs) : O(1)
 *   定数 n を定め，n の素因数の昇順列を ps，約数の昇順列を divs とする．
 *	添字集合を n の約数集合として初期化する．
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
-* multiple_zeta(a) : O(σ(n) ω(n))
+* multiple_zeta(umap<ll, T>& a) : O(σ(n) ω(n))
 *   A[j] = Σ_(j | i) a[i] なる A に上書きする．
 *  （倍数ゼータ変換，約数への累積和）
 *
-* multiple_mobius(A) : O(σ(n) ω(n))
+* multiple_mobius(umap<ll, T>& A) : O(σ(n) ω(n))
 *   A[j] = Σ_(j | i) a[i] なる a に上書きする．
 *  （倍数メビウス変換，倍数への差分）
 
-* gcd_convolution(a, b) : O(σ(n) ω(n))
+* umap<ll, T> gcd_convolution(umap<ll, T> a, umap<ll, T> b) : O(σ(n) ω(n))
 *   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
 */
 template <typename T> struct Limited_multiple_transform {
@@ -210,20 +210,20 @@ template <typename T> struct Limited_multiple_transform {
 
 //【約数変換（添字約数制限）】
 /*
-* Limited_divisor_transform(ps, divs) : O(1)
+* Limited_divisor_transform(vl ps, vl divs) : O(1)
 *   定数 n を定め，n の素因数の昇順列を ps，約数の昇順列を divs とする．
 *	添字集合を n の約数集合として初期化する．
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
-* divisor_zeta(a) : O(σ(n) ω(n))
+* divisor_zeta(umap<ll, T>& a) : O(σ(n) ω(n))
 *   A[j] = Σ_(i | j) a[i] なる A に上書きする．
 *  （約数ゼータ変換，倍数への累積和）
 *
-* divisor_mobius(A) : O(σ(n) ω(n))
+* divisor_mobius(umap<ll, T>& A) : O(σ(n) ω(n))
 *   A[j] = Σ_(i | j) a[i] なる a に上書きする．
 *  （約数メビウス変換，約数への差分）
 *
-* lcm_convolution(a, b) : O(σ(n) ω(n))
+* umap<ll, T> lcm_convolution(umap<ll, T>& a, umap<ll, T>& b) : O(σ(n) ω(n))
 *   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
 */
 template <typename T> struct Limited_divisor_transform {

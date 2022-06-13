@@ -20,10 +20,8 @@ using Graph = vvi;
 
 // 定数の定義
 const double PI = acos(-1);
-const vi dx4 = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
-const vi dy4 = { 0, 1, 0, -1 };
-const vi dx8 = { 1, 1, 0, -1, -1, -1, 0, 1 }; // 8 近傍
-const vi dy8 = { 0, 1, 1, 1, 0, -1, -1, -1 };
+const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
+const vi DY = { 0, 1, 0, -1 };
 const int INF = 1001001001; const ll INFL = 4004004004004004004LL;
 const double EPS = 1e-12; // 許容誤差に応じて調整
 
@@ -33,8 +31,10 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 // 汎用マクロの定義
 #define all(a) (a).begin(), (a).end()
 #define sz(x) ((int)(x).size())
-#define distance (int)distance
+#define lbpos(a, x) (int)distance((a).begin(), lower_bound(all(a), x))
+#define ubpos(a, x) (int)distance((a).begin(), upper_bound(all(a), x))
 #define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
+#define YES(b) {cout << ((b) ? "YES\n" : "NO\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -62,12 +62,12 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #include "local.hpp"
 // 提出用（gcc）
 #else
-#define popcount (int)__builtin_popcount
-#define popcountll (int)__builtin_popcountll
-#define lsb __builtin_ctz
-#define lsbll __builtin_ctzll
-#define msb(n) (31 - __builtin_clz(n))
-#define msbll(n) (63 - __builtin_clzll(n))
+inline int popcount(int n) { return __builtin_popcount(n); }
+inline int popcount(ll n) { return __builtin_popcountll(n); }
+inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
+inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
+inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
+inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define gcd __gcd
 #define dump(...)
 #define dumpel(v)
@@ -82,8 +82,8 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
@@ -92,27 +92,31 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 //----------------------------------------
 
 
-//【グラフの入力】O(|V| + |E|)
+//【座標圧縮】O(n log n)
 /*
-* 始点 終点の組からなる入力を受け取り，n 頂点 m 辺のグラフを構成する．
+* 大きさ n の多重集合 a を 0 以上 |a| 未満の範囲に座標圧縮した結果を a_cp に格納する．
+* また xs[j] に圧縮された座標 j に対応する元の座標を格納する．
+* 戻り値として |a| を返す．
 *
-* n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* undirected : 無向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
+* a に重複する要素がなければ，a_cp[i] は a[i] が昇順で何番目かを表し，
+* xs[j] は昇順で j 番目の要素が何かを表す．
 */
-void read_graph(int n, int m, Graph& g, bool undirected = true, bool one_indexed = true) {
-	g = Graph(n);
-	rep(i, m) {
-		int a, b;
-		cin >> a >> b;
+template <typename T>
+int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* xs = nullptr) {
+	// verify : https://atcoder.jp/contests/abc036/tasks/abc036_c
 
-		if (one_indexed) { a--; b--; }
+	int n = sz(a);
+	if (xs == nullptr) xs = new vector<T>;
 
-		g[a].push_back(b);
-		if (undirected) g[b].push_back(a);
-	}
+	// *xs : a の x 座標のユニークな昇順列
+	*xs = a;
+	uniq(*xs);
+
+	// a[i] が xs において何番目かを求める．
+	a_cp.resize(n);
+	rep(i, n) a_cp[i] = lbpos(*xs, a[i]);
+
+	return sz(*xs);
 }
 
 
@@ -120,11 +124,14 @@ int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	int n, m;
-	cin >> n >> m;
+	int n;
+	cin >> n;
 
-	Graph g;
-	read_graph(n, m, g);
+	vl a(n);
+	cin >> a;
 
+	vi b;
+	coordinate_compression(a, b);
 
+	rep(i, n) cout << b[i] << "\n";
 }

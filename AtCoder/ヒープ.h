@@ -349,7 +349,7 @@ template <class T> struct Separated_multiset {
 };
 
 
-//【多重集合（大小分離，和）】
+//【多重集合の和（大小分離）】
 /*
 * Separated_multiset_sum() : O(1)
 *	空で初期化する．
@@ -532,6 +532,110 @@ template <class T> struct Separated_multiset_sum {
 		os << "l: " << sms.sl << endl;
 		os << "h: " << sms.sh << endl;
 		os << "sum: " << sms.suml << " " << sms.sumh << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【二分ヒープ】
+/*
+* Binary_heap<T>() : O(1)
+*	空ヒープで初期化する．
+*	制約：T は比較可能な型
+*
+* Binary_heap<T>(vT a) : O(n log n)
+*	配列 a[0..n) で初期化する．
+*
+* int size() : O(1)
+*	ヒープ内の要素数を返す．
+*
+* bool empty() : O(1)
+*	ヒープが空かを返す．
+*
+* void push(T val) : O(log n)
+*	ヒープに値 val を追加する．
+*
+* T top() : O(1)
+*	ヒープ内の最大要素を返す．
+*
+* void pop() : O(log n)
+*	ヒープ内の最大要素を削除する．
+*/
+template <class T> class Binary_heap {
+	int n; // 格納されているデータの個数
+	vector<T> v; // v[1] を根とする完全二分木（v[0] は使わない）
+
+	void push_sub(int i) {
+		if (i == 1) return;
+
+		int p = i / 2;
+		if (v[p] < v[i]) {
+			swap(v[p], v[i]);
+			push_sub(p);
+		}
+	}
+
+	void pop_sub(int i) {
+		int l = 2 * i, r = 2 * i + 1;
+
+		int i_max = i;
+		if (l <= n && v[l] > v[i_max]) i_max = l;
+		if (r <= n && v[r] > v[i_max]) i_max = r;
+
+		if (i_max != i) {
+			swap(v[i], v[i_max]); num_swaps++;
+			pop_sub(i_max);
+		}
+	}
+
+public:
+	// 空で初期化する．
+	Binary_heap() : n(0), v(10) {}
+
+	// 配列 a[0..n) で初期化する．
+	Binary_heap(const vector<T>& a) : n(sz(a)), v(n + 10) {
+		repi(i, 1, n) v[i] = a[i - 1];
+		repir(i, n / 2, 1) pop_sub(i);
+	}
+
+	// ヒープ内の要素数を返す．
+	int size() {
+		return n;
+	}
+
+	// ヒープが空かを返す．
+	bool empty() {
+		return n == 0;
+	}
+
+	// ヒープに値 val を追加する．
+	void push(T val) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_9_C
+
+		if (sz(v) == ++n) v.resize((int)(1.1 * n));
+		v[n] = val;
+		push_sub(n);
+	}
+
+	// ヒープ内の最大要素を返す．
+	T top() {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_9_C
+
+		return v[1];
+	}
+
+	// ヒープ内の最大要素を削除する．
+	void pop() {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_9_C
+
+		v[1] = v[n--];
+		pop_sub(1);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Binary_heap& q) {
+		os << q.v << endl;
 		return os;
 	}
 #endif

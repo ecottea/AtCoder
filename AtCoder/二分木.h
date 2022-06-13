@@ -23,12 +23,14 @@ struct Binary_Tree {
 		int height = -1; // 高さ（最も遠い葉へのパスの長さ）
 		int weight = -1; // 重さ（自身を根とする部分木の頂点の数）
 
+#ifdef _MSC_VER
 		// 出力
 		friend ostream& operator<<(ostream& os, const Node& v) {
 			os << "(p:" << v.parent << ", l:" << v.left << ", r:" << v.right <<
 				", d:" << v.depth << ", h:" << v.height << ", w:" << v.weight << ')';
 			return os;
 		}
+#endif
 	};
 
 	int n; // 頂点の数
@@ -255,13 +257,13 @@ void polish_notation_tree(const string& str, Binary_Tree& bt, vector<string>& te
 *
 * 利用：【二分木】
 */
-void huffman_tree(const vi& p, Binary_Tree& bt) {
+template <class T> void huffman_tree(const vector<T>& p, Binary_Tree& bt) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_15_D
 
 	int n = sz(p);
 
 	// 出現頻度の低い順に文字を取り出す優先度付きキュー
-	priority_queue_rev<pii> q;
+	priority_queue_rev<pair<T, int>> q;
 
 	// s[i] の左の子が l[i]，右の子が r[i] であることの記録用
 	vi s, l, r;
@@ -281,7 +283,7 @@ void huffman_tree(const vi& p, Binary_Tree& bt) {
 	int i = n;
 	while (sz(q) > 1) {
 		// 出現頻度の低い文字 2 つを得る．
-		int p1, p2, i1, i2;
+		T p1, p2; int i1, i2;
 		tie(p1, i1) = q.top(); q.pop();
 		tie(p2, i2) = q.top(); q.pop();
 

@@ -32,16 +32,18 @@ S pow(const S& x, ll n) {
 * int apply(int x, ll k) : O(log(k_max))
 *	s^k[x] を返す．
 *
+* ll max_right(int x, function<bool(int)>& okQ) : O(log(k_max))
+*	okQ(s^k[x]) = true かつ okQ(s^(k+1)[x]) = false なる k を返す．
+*
 *（ダブリング）
 */
-struct Map_composite {
-	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_f
-
+class Map_composite {
 	int n, K;
 
 	// dp[i][j] : s^(2^i)[j]
 	vvi dp;
 
+public:
 	// [0..n) 上の写像 i -> s[i] で初期化する．
 	Map_composite(const vi& s, ll k_max = 1LL << 62) : n(sz(s)), K(msbll(k_max) + 1), dp(K, vi(n)) {
 		// s^(2^0)[j] = s[j]
@@ -56,13 +58,30 @@ struct Map_composite {
 	}
 
 	// s^k[x] を返す．
-	int apply(int x, ll k) {
+	int apply(int x, ll k) const {
+		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_f
+
 		rep(i, K) {
 			if (k & (1LL << i)) {
 				x = dp[i][x];
 			}
 		}
 		return x;
+	}
+
+	// okQ[s^k[x]] = true かつ okQ[s^(k+1)[x]] = false なる k を返す．
+	ll max_right(int x, function<bool(int)>& okQ) const {
+		// verify : https://atcoder.jp/contests/arc060/tasks/arc060_c
+
+		ll res = 0;
+		repir(i, K - 1, 0) {
+			res <<= 1;
+			if (okQ(dp[i][x])) {
+				res++;
+				x = dp[i][x];
+			}
+		}
+		return res;
 	}
 
 #ifdef _MSC_VER
@@ -127,7 +146,7 @@ template <class T> struct Map_accumulate {
 	}
 
 	// Σt=[0..k) f(s^t[x]) を返す．
-	T accumulate(T x, ll k) {
+	T accumulate(T x, ll k) const {
 		// 例：
 		// f(s^0[x]) + f(s^1[x]) + f(s^2[x]) + f(s^3[x]) + f(s^4[x]) + f(s^5[x])
 		// = f(s^0[x]) + f(s^1[x])

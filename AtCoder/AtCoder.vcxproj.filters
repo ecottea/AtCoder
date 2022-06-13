@@ -200,9 +200,6 @@
     <ClInclude Include="分析%28木%29.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="二分木.h">
-      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
-    </ClInclude>
     <ClInclude Include="構造(木).h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
@@ -494,9 +491,6 @@
     <ClInclude Include="有名数列.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
-    <ClInclude Include="グラフ(組合せ論).h">
-      <Filter>ヘッダー ファイル\組合せ論</Filter>
-    </ClInclude>
     <ClInclude Include="順列(組合せ論).h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
@@ -521,11 +515,23 @@
     <ClInclude Include="順列(最適化).h">
       <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
-    <ClInclude Include="デザイン.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
     <ClInclude Include="スコア和(集合).h">
       <Filter>ヘッダー ファイル\集合</Filter>
+    </ClInclude>
+    <ClInclude Include="二分木.h">
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
+    </ClInclude>
+    <ClInclude Include="割り算.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="max.h">
+      <Filter>ヘッダー ファイル\計算</Filter>
+    </ClInclude>
+    <ClInclude Include="永続データ構造.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="デザイン.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

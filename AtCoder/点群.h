@@ -418,7 +418,7 @@ template <class T> double minimum_bitonic_tour(vector<Point<T>>& p) {
 }
 
 
-//【直線群の交点からのマンハッタン距離の和の最小化】O(n log n log(1/EPS))
+//【直線群の交点からのマンハッタン距離の和の最小化】O(n log(n) log(1/EPS))
 /*
 * n 本の直線 a[i] x + b[i] y = c[i] の交点の多重集合 S について，S の点との
 * マンハッタン距離の和が最小になる点 (x, y) のうち，両座標が最も小さいものを返す．
@@ -700,24 +700,6 @@ ll maximize_manhattan_distance(const vl& x, const vl& y) {
 
 	return res;
 }
-
-
-//【マンハッタン距離の 45°回転表現】
-/*
-* 点 (x1, y1) と点 (x2, y2) のマンハッタン距離は次のようにも表される：
-*	|x2 - x1| + |y2 - y1| = max( |(x1 + y1) - (x2 + y2)|, |(x1 - y1) - (x2 - y2)| )
-*
-*（証明）
-*	|x2 - x1| + |y2 - y1|
-*	= max(x1 - x2, x2 - x1) + max(y1 - y2, y2 - y1)
-*	= max((x1 - x2) + (y1 - y2), (x1 - x2) + (y2 - y1),
-*		  (x2 - x1) + (y1 - y2), (x2 - x1) + (y2 - y1)) （(max, +) 分配法則）
-*	= max( (x1 + y1) - (x2 + y2),  (x1 - y1) - (x2 - y2),
-*		  -(x1 - y1) + (x2 - y2), -(x1 + y1) + (x2 + y2))
-*	= max( |(x1 + y1) - (x2 + y2)|, |(x1 - y1) - (x2 - y2)| )
-*
-* verify : https://atcoder.jp/contests/abc178/tasks/abc178_e
-*/
 
 
 //【2 点間距離の最大値と円被覆】

@@ -9,30 +9,38 @@ using namespace std;
 //【GCC のビルトイン関数との互換用】
 
 // 全ビット中の 1 の個数
-#define popcount (int)__popcnt
-#define popcountll (int)__popcnt64
+inline int popcount(int n) {
+	return (int)__popcnt(n);
+}
+inline int popcount(ll n) {
+	return (int)__popcnt64(n);
+}
 
 // 最下位ビットの位置（0-indexed）
-inline int lsb(unsigned int n) {
+inline int lsb(int n) {
+	if (n == 0) return -1;
 	unsigned long i;
-	_BitScanForward(&i, n);
+	_BitScanForward(&i, (unsigned int)n);
 	return i;
 } 
-inline int lsbll(unsigned long long n) {
+inline int lsb(ll n) {
+	if (n == 0) return -1;
 	unsigned long i;
-	_BitScanForward64(&i, n);
+	_BitScanForward64(&i, (unsigned long long)n);
 	return i;
 }
 
 // 最上位ビットの位置（0-indexed）
-inline int msb(unsigned int n) {
+inline int msb(int n) {
+	if (n == 0) return -1;
 	unsigned long i;
-	_BitScanReverse(&i, n);
+	_BitScanReverse(&i, (unsigned int)n);
 	return i;
 } 
-inline int msbll(unsigned long long n) {
+inline int msb(ll n) {
+	if (n == 0) return -1;
 	unsigned long i;
-	_BitScanReverse64(&i, n);
+	_BitScanReverse64(&i, (unsigned long long)n);
 	return i;
 }
 
@@ -180,7 +188,7 @@ inline ostream& operator<< (ostream& os, priority_queue<T, vector<T>, greater<T>
 
 
 //【デバッグ出力関数】
-// 参考 : https://marycore.jp/prog/cpp/variadic-function/
+/* 参考: https://marycore.jp/prog/cpp/variadic-function/ */
 
 bool mute_dump = false;
 
@@ -188,13 +196,13 @@ template <typename First>
 void dump(First first) {
 	if (mute_dump) return;
 
-	cerr << "\033[1;36m" << first << "\033[0m" << endl;
+	cerr << "\033[1;32m" << first << "\033[0m" << endl;
 }
 template <typename First, typename... Rest>
 void dump(First first, Rest... rest) {
 	if (mute_dump) return;
 
-	cerr << "\033[1;36m" << first << "\033[0m ";
+	cerr << "\033[1;32m" << first << "\033[0m ";
 	dump(rest...);
 }
 
@@ -203,7 +211,7 @@ void dumpel(T a) {
 	if (mute_dump) return;
 
 	int i = 0; 
-	cerr << "\033[1;36m";
+	cerr << "\033[1;32m";
 	repe(x, a) {
 		cerr << i++ << ": " << x << endl;
 	}

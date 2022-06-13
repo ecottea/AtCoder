@@ -5,8 +5,6 @@
 
 //【行列（半環）】
 /*
-* 半環上の行列を表す構造体
-*
 * Matrix<S, add, o, mul, e>(m, n) : O(m n)
 *	m * n 零行列で初期化する．
 *   成分は半環 <S, add, o, mul, e> の元とする．
@@ -38,7 +36,7 @@ struct Matrix {
 	vector<vector<S>> v; // 行列の成分
 
 	// コンストラクタ（初期化なし，零行列，単位行列，二次元配列）
-	Matrix() {}
+	Matrix() : m(0), n(0) {}
 	Matrix(const int& m_, const int& n_) : m(m_), n(n_), v(m_, vector<S>(n_, o())) {}
 	Matrix(const int& n_) : m(n_), n(n_), v(n_, vector<S>(n_, o())) {
 		rep(i, n) v[i][i] = e();
@@ -84,20 +82,24 @@ struct Matrix {
 
 	// 行列ベクトル積 : O(m n)
 	vector<S> operator*(const vector<S>& x) const {
-		vector<S> y(m);
+		vector<S> y(m, o());
 		rep(i, m) rep(j, n)	y[i] = add(y[i], mul(v[i][j], x[j]));
 		return y;
 	}
 
 	// ベクトル行列積 : O(m n)
 	friend vector<S> operator*(const vector<S>& x, const Matrix& a) {
-		vector<S> y(a.n);
+		// verify : https://codeforces.com/contest/1681/problem/E
+
+		vector<S> y(a.n, o());
 		rep(i, a.m) rep(j, a.n) y[j] = add(y[j], mul(x[i], a.v[i][j]));
 		return y;
 	}
 
 	// 積：O(n^3)
 	Matrix operator*(const Matrix& b) const {
+		// verify : https://codeforces.com/contest/1681/problem/E
+
 		Matrix res(m, b.n);
 		rep(i, res.m) rep(j, res.n) rep(k, n)
 			res.v[i][j] = add(res.v[i][j], mul(v[i][k], b.v[k][j]));

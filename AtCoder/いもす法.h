@@ -8,16 +8,16 @@
 /*
 * [0, n) 内の半開区間に一定の値を加算する．
 *
-* Imos(n) : O(n)
+* Imos<T>(int n) : O(n)
 *	半開区間 [0, n) を 0 で初期化する．
 *
-* set(l, r, val) : O(1)
+* set(int l, int r, T val) : O(1)
 *	半開区間 [l, r) に val を加算する準備を行う．
 *
-* sum() : O(n)
+* T sum() : O(n)
 *	実際の加算を行う．
 *
-* v[i] : O(1)
+* T [int i] : O(1)
 *	加算後の位置 i の値を得る．
 */
 template <class T> struct Imos {

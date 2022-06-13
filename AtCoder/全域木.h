@@ -131,13 +131,14 @@ void spanning_forest(const Graph& g, Graph& sf, vi* v = nullptr) {
 }
 
 
-//【全域木の数え上げ／行列木定理】O(|V|^3)
+//【全域木の数え上げ】O(|V|^3)
 /*
 * 自己ループのない無向グラフ g（多重辺は可）の全域木の個数を返す．
 *
 * 利用：【行列】，【行列式】
 */
-mint count_spanning_tree(const Graph& g) {
+mint matrix_tree_theorem(const Graph& g) {
+	// 参考 : https://mizuwater0.hatenablog.com/entry/2018/11/25/233547
 	// verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_g
 
 	int n = sz(g);
@@ -386,5 +387,15 @@ void mst_tree(const WGraph& g, Graph& fst, vi& rs) {
 		}
 	}
 }
+
+
+//【全域森と基本閉路】
+/*
+* 無向グラフ G=(V,E) の全域森 T を 1 つ固定し，T^c=E-T とおく．
+* 各 e∈T^c に対し，E∪{e} にはただ 1 つの基本閉路 C(e) が存在する．
+* 
+* どの 2 つも辺を共有しない G の閉路の和集合全体を C(G) と表すと，
+* 対称差 △ を演算として {C(e) | e∈T^c} は F2 上のベクトル空間 C(G) の基底となる．
+*/
 
 

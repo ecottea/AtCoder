@@ -5,12 +5,12 @@
 
 //【座標圧縮】O(n log n)
 /*
-* 大きさ n の集合 a を 0 以上 |a| 未満の範囲に座標圧縮した結果を a_cp に格納する．
+* 大きさ n の多重集合 a を 0 以上 |a| 未満の範囲に座標圧縮した結果を a_cp に格納する．
 * また xs[j] に圧縮された座標 j に対応する元の座標を格納する．
 * 戻り値として |a| を返す．
 *
-* a に重複する要素がなければ，a_cp[i] は a[i] が小さい方から何番目かを表し，
-* xs[j] は小さい方から j 番目の要素が何かを表す．
+* a に重複する要素がなければ，a_cp[i] は a[i] が昇順で何番目かを表し，
+* xs[j] は昇順で j 番目の要素が何かを表す．
 */
 template <typename T>
 int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* xs = nullptr) {
@@ -25,9 +25,7 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* xs = nullptr
 
 	// a[i] が xs において何番目かを求める．
 	a_cp.resize(n);
-	rep(i, n) {
-		a_cp[i] = distance(xs->begin(), lower_bound(all(*xs), a[i]));
-	}
+	rep(i, n) a_cp[i] = lbpos(*xs, a[i]);
 
 	return sz(*xs);
 }
@@ -41,12 +39,12 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* xs = nullptr
 */
 template <typename T>
 int coordinate_compression_interval(const vector<T>& x1, const vector<T>& x2,
-	vi& x1_cp, vi& x2_cp, vl* xs = nullptr)
+	vi& x1_cp, vi& x2_cp, vector<T>* xs = nullptr)
 {
 	// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
 
 	int n = sz(x1);
-	if (xs == nullptr) xs = new vl;
+	if (xs == nullptr) xs = new vector<T>;
 
 	// x 座標だけを抜き出す．
 	xs->clear();
@@ -61,8 +59,8 @@ int coordinate_compression_interval(const vector<T>& x1, const vector<T>& x2,
 	// 各区間の端の座標が xs において何番目かを求める．
 	x1_cp.resize(n); x2_cp.resize(n);
 	rep(i, n) {
-		x1_cp[i] = distance(xs->begin(), lower_bound(all(*xs), x1[i]));
-		x2_cp[i] = distance(xs->begin(), lower_bound(all(*xs), x2[i]));
+		x1_cp[i] = lbpos(*xs, x1[i]);
+		x2_cp[i] = lbpos(*xs, x2[i]);
 	}
 
 	return sz(*xs);

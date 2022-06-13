@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "永続データ構造.h"
 // ■■■■■ クエリ処理 ■■■■■
 
 
@@ -61,6 +62,65 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 		res[j] = sol;
 	}
 }
+
+
+//【静的矩形和（アーベル群）】
+/*
+* Static_rectangle_sum(vl x, vl y, vS v) : O(n log n)
+*	値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
+*
+* S sum(ll x1, ll y1, ll x2, ll y2) : O(log n)
+*	[x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
+*
+* 利用：【完全永続セグメント木（モノイド）】，【座標圧縮】
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+class Static_rectangle_sum {
+	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
+	// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+	// x[y] 座標の昇順列（x 座標は全て，y 座標はユニーク）
+	vl xs, ys;
+
+	// x 座標を時刻とみなした，圧縮後の y 座標に関する永続セグメント木
+	Persistent_segtree<S, op, o> seg;
+
+public:
+	// 値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
+	Static_rectangle_sum(const vl& x, const vl& y, const vector<S>& v) {
+		int n = sz(x);
+		xs.resize(n);
+
+		// y 座標を座標圧縮しておく．
+		vi y_cp;
+		int m = coordinate_compression(y, y_cp, &ys);
+
+		// 点群を x 座標昇順にソートする
+		vector<pli> xi(n);
+		rep(i, n) xi[i] = { x[i], i };
+		sort(all(xi));
+
+		// x 座標を時刻とみなして永続セグメント木に乗せる．
+		seg = Persistent_segtree<S, op, o>(m);
+		rep(t, n) {
+			int i;
+			tie(xs[t], i) = xi[t];
+
+			S val = seg.get(y_cp[i], t);
+			seg.set(y_cp[i], op(val, v[i]), t);
+		}
+	}
+
+	// [x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
+	S sum(ll x1, ll y1, ll x2, ll y2) const {
+		int t1 = distance(xs.begin(), lower_bound(all(xs), x1));
+		int t2 = distance(xs.begin(), lower_bound(all(xs), x2));
+		int j1 = distance(ys.begin(), lower_bound(all(ys), y1));
+		int j2 = distance(ys.begin(), lower_bound(all(ys), y2));
+
+		return op(seg.prod(j1, j2, t2), inv(seg.prod(j1, j2, t1)));
+	}
+};
 
 
 //【Convex-Hull Trick（挿入単調，クエリ単調）】

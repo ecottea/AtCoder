@@ -87,8 +87,8 @@ template <int N> bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1
 
 			// 押したマスの 4 近傍も点灯状態が反転する．
 			rep(k, 4) {
-				int nx = x + dx4[k];
-				int ny = y + dy4[k];
+				int nx = x + DX[k];
+				int ny = y + DY[k];
 
 				if (nx < 0 || h <= nx || ny < 0 || w <= ny) {
 					continue;
@@ -217,8 +217,8 @@ int solve_15puzzle(const vvi& a_, int h = 4, int w = 4, int max_step = 45) {
 
 		// (nx, ny) : 空きマスを移動できる 4 近傍
 		rep(k, 4) {
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
+			int nx = x + DX[k];
+			int ny = y + DY[k];
 
 			if (nx < 0 || nx >= h || ny < 0 || ny >= w) {
 				continue;
@@ -268,8 +268,8 @@ int ice_path(const vl& x, const vl& y, ll sx, ll sy, ll tx, ll ty) {
 		y_to_x[y[i]].push_back(x[i]);
 
 		rep(k, 4) {
-			ll nx = x[i] + dx4[k];
-			ll ny = y[i] + dy4[k];
+			ll nx = x[i] + DX[k];
+			ll ny = y[i] + DY[k];
 
 			if (stone.count(nx * w + ny)) continue;
 			if (xy_to_i.count(nx * w + ny)) continue;

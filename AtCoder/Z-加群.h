@@ -14,6 +14,7 @@
 
 
 //y‰ÁZ Z-‰ÁŒQz
+/* verify : https://atcoder.jp/contests/abc253/tasks/abc253_f */
 using S301 = ll;
 S301 op301(S301 x, S301 y) { return x + y; }
 S301 o301() { return 0; }

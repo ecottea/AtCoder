@@ -120,11 +120,63 @@ ll largest_square(vvi& a) {
 }
 
 
+//【ボンバーマン】O(h w)
+/*
+* 壁が wall で表された盤面 c[0..h)[0..w) において，位置 c[i][j] に最も近い
+* 上[下] の壁の位置の x 座標を u[i][j][ d[i][j] ] に，
+* 左[右] の壁の位置の y 座標を l[i][j][ r[i][j] ] にそれぞれ格納する．
+*/
+template <class T> void bomberman(const vector<vector<T>>& c, vvi& u, vvi& d, vvi& l, vvi& r, T wall = '#') {
+	// verify : https://atcoder.jp/contests/hhkb2020/tasks/hhkb2020_e
+
+	int h = sz(c), w = sz(c[0]);
+	u = vvi(h, vi(w)); d = vvi(h, vi(w)); l = vvi(h, vi(w)); r = vvi(h, vi(w));
+
+	// 上方向に最も近い壁の x 座標を求める．
+	rep(j, w) {
+		int pos = -1;
+		rep(i, h) {
+			if (c[i][j] == wall) pos = i;
+			u[i][j] = pos;
+		}
+	}
+
+	// 下方向に最も近い壁の x 座標を求める．
+	rep(j, w) {
+		int pos = h;
+		repir(i, h - 1, 0) {
+			if (c[i][j] == wall) pos = i;
+			d[i][j] = pos;
+		}
+	}
+
+	// 左方向に最も近い壁の y 座標を求める．
+	rep(i, h) {
+		int pos = -1;
+		rep(j, w) {
+			if (c[i][j] == wall) pos = j;
+			l[i][j] = pos;
+		}
+	}
+
+	// 右方向に最も近い壁の y 座標を求める．
+	rep(i, h) {
+		int pos = w;
+		repir(j, w - 1, 0) {
+			if (c[i][j] == wall) pos = j;
+			r[i][j] = pos;
+		}
+	}
+}
+
+
 //【単純多角形判定】O(h w)
 /*
 * 盤面 c[0..h)[0..w) で，外部が o，内部がそれ以外で表された多角形が単純であるかを返す．
 */
 bool simple_polygonQ(const vvc& c_, char o = '.') {
+	// verify : https://atcoder.jp/contests/abc219/tasks/abc219_e
+
 	int h = sz(c_) + 2;
 	int w = sz(c_[0]) + 2;
 
@@ -166,8 +218,8 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 		// マス (x, y) の 4 近傍を調べる．
 		rep(k, 4) {
 			// (nx, ny) : (x, y) の近傍の座標
-			int nx = x + dx4[k];
-			int ny = y + dy4[k];
+			int nx = x + DX[k];
+			int ny = y + DY[k];
 
 			// 盤面の外に出たり，異種のマスへ移動することはない．
 			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] != c[x][y]) {
@@ -285,8 +337,8 @@ template <class T> void defect_repair(vector<vector<T>>& c, T defect = -1) {
 
 				// 欠損マスの 4 近傍について
 				rep(i, 4) {
-					int nx = x + dx4[i];
-					int ny = y + dy4[i];
+					int nx = x + DX[i];
+					int ny = y + DY[i];
 
 					if (nx < 0 || h <= nx || ny < 0 || w <= ny || seen[nx][ny]) {
 						continue;

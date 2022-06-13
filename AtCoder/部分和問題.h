@@ -161,15 +161,13 @@ template <size_t A> bool construction_partial_sum_fast(const vi& a, int v, vi& i
 }
 
 
-//y•”•ª˜a–â‘èi—ñ‹“jzO(n v / 64)iv = ƒ°a[i]j
+//y•”•ª˜a–â‘èi—ñ‹“jzO(n m / 64)
 /*
-* ’·‚³ n ‚Ì”ñ•‰®”‚Ì—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä i ‚ªì‚ê‚é‚©‚ğ res[i] ‚ÉŠi”[‚·‚éD
+* ”ñ•‰®”—ñ a[0..n) ‚Ì•”•ª˜a‚Æ‚µ‚Ä i ‚ªì‚ê‚é‚©‚ğ res[i]¸res[0..m) ‚ÉŠi”[‚·‚éD
 *
-* §–ñFA ‚Í ƒ°a[i] + 1 ˆÈã‚Ì’è”D
-* 
 *iƒrƒbƒg‰‰Z‚Å‚‘¬‰»‚µ‚½ bool DPj
 */
-template <size_t A> void enumerate_partial_sum(const vi& a, bitset<A>& res) {
+template <size_t m> void enumerate_partial_sum(const vi& a, bitset<m>& res) {
 	// verify : https://algo-method.com/tasks/337
 
 	int n = sz(a);
@@ -180,6 +178,27 @@ template <size_t A> void enumerate_partial_sum(const vi& a, bitset<A>& res) {
 
 	// ”z‚é DP
 	rep(i, n) res = res | (res << a[i]);
+}
+
+
+//y•”•ª˜a–â‘èiƒyƒAC—ñ‹“jzO(n m / 64)
+/*
+* —^‚¦‚ç‚ê‚½”ñ•‰®”—ñ a[0..n), b[0..n) ‚É‚Â‚¢‚ÄCŠe i ‚É‚Â‚¢‚Ä a[i] ‚Æ b[i] ‚Ì
+* ‚¢‚¸‚ê‚©ˆê•û‚ğ‘I‚ñ‚Å“¾‚ç‚ê‚é˜a‚Æ‚µ‚Ä j ‚ªì‚ê‚é‚©‚ğ res[j]¸res[0..m) ‚ÉŠi”[‚·‚éD
+*
+*iƒrƒbƒg‰‰Z‚Å‚‘¬‰»‚µ‚½ bool DPj
+*/
+template <size_t m> void enumerate_pair_partial_sum(const vi& a, const vi& b, bitset<m>& res) {
+	// verify : https://atcoder.jp/contests/arc099/tasks/arc099_c
+
+	int n = sz(a);
+
+	// res_i[j] : a[0..i), b[0..i) ‚Ì’†‚Å˜a‚ğ‚¿‚å‚¤‚Ç j ‚É‚Å‚«‚é‚©
+	res.reset();
+	res[0] = 1;
+
+	// ”z‚é DP
+	rep(i, n) res = (res << b[i]) | (res << a[i]);
 }
 
 

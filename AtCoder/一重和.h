@@ -34,7 +34,10 @@ template<class T> T arithmetic_series(T a, T b, ll i0, ll i1) {
 *（ダブリング）
 */
 mint geometric_series(mint r, ll n) {
-	// おなじみの公式では r-1 による割り算を必要とするのでまずい．
+	// verify : https://atcoder.jp/contests/arc050/tasks/arc050_c
+
+	//【方法】
+	// おなじみの公式では r-1 による割り算を必要としてまずいのでダブリングする．
 
 	// pow2 = r^(2^i), sumpow2 = 1 + r + ... + r^((2^i) - 1)
 	mint res(0), pow2 = r, sumpow2 = 1;
@@ -64,7 +67,8 @@ mint geometric_series(mint r, ll i0, ll i1) {
 * 利用：【等比数列の和】
 */
 mint arithmetic_geometric_series(mint r, ll n) {
-	// おなじみの公式では r-1 による割り算を必要とするのでまずい．
+	//【方法】
+	// おなじみの公式では r-1 による割り算を必要としてまずいのでダブリングする．
 
 	// pow2 = 2^i, powr = r^(2^i)
 	// sumpowr1 = 0 * 1 + 1 * r + ... + ((2^i) - 1) * r^((2^i) - 1)

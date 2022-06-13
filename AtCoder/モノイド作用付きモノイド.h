@@ -118,8 +118,8 @@ F106 id106() { return 0; }
 * f composition g : 合成した一次関数 f o g を返す．
 */
 // verify : https://judge.yosupo.jp/problem/range_affine_range_sum
-using S107 = pair<mint, mint>; // 斉次ベクトル (v, c)
-using F107 = pair<mint, mint>; // 斉次行列 (a, b; 0, 1)
+using S107 = pair<mint, mint>; // ベクトル (v, c)
+using F107 = pair<mint, mint>; // 行列 (a, b; 0, 1)
 S107 op107(S107 x, S107 y) {
 	mint vx, vy, cx, cy;
 	tie(vx, cx) = x; // ベクトル (vx, cx)
@@ -157,8 +157,8 @@ F107 id107() { return { 1, 0 }; }
 * f mapping x : c 個の元の和で値 v + c f をとっている状態にする．
 * f composition g : 合成した一次関数 f o g を返す．
 */
-using S108 = pair<ll, ll>; // 斉次ベクトル (v, c)
-using F108 = ll; // 斉次行列 (1, f; 0, 1)
+using S108 = pair<ll, ll>; // ベクトル (v, c)
+using F108 = ll; // 行列 (1, f; 0, 1)
 S108 op108(S108 x, S108 y) {
 	ll vx, vy, cx, cy;
 	tie(vx, cx) = x; // ベクトル (vx, cx)
@@ -192,8 +192,8 @@ F108 id108() { return 0; }
 * f composition g : 合成した零次関数 f o g を返す．
 */
 // verify : https://atcoder.jp/contests/abc237/tasks/abc237_g
-using S109 = pair<ll, ll>; // 斉次ベクトル (v, c)
-using F109 = ll; // 斉次行列 (0, f; 0, 1)
+using S109 = pair<ll, ll>; // ベクトル (v, c)
+using F109 = ll; // 行列 (0, f; 0, 1)
 S109 op109(S109 x, S109 y) {
 	ll vx, vy, cx, cy;
 	tie(vx, cx) = x; // ベクトル (vx, cx)
@@ -241,8 +241,8 @@ F110 id110() { return ~0; }
 * f mapping x : トロピカル一次関数への代入 f(x)
 * f composition g : 合成したトロピカル一次関数 f o g を返す．
 */
-using S111 = ll; // 斉次ベクトル (x, 0)
-using F111 = pll; // 斉次行列 (a, b; -∞, 0)
+using S111 = ll; // ベクトル (x, 0)
+using F111 = pll; // 行列 (a, b; -∞, 0)
 S111 op111(S111 x, S111 y) { return max(x, y); }
 S111 e111() { return -INFL; }
 S111 mapping111(F111 f, S111 x) {

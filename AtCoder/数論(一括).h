@@ -145,6 +145,7 @@ void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
 */
 template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
+	// verify : https://atcoder.jp/contests/arc068/tasks/arc068_c
 
 	s.resize(n + 1);
 	s[0] = 0;
@@ -182,6 +183,7 @@ void euler_phi(int n, vi& phi) {
 */
 void mobius_mu(int n, vi& mu) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
+	// verify : https://yukicoder.me/problems/no/1514
 
 	mu = vi(n + 1, 0);
 	mu[1] = 1;

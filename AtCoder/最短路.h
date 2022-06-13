@@ -13,8 +13,10 @@ void breadth_first_search(const Graph& g, int st, vi& dist) {
 	// verify : https://algo-method.com/tasks/414
 
 	int n = sz(g);
-	dist = vi(n, INF); // スタートからの最短距離を保持するテーブル
+
+	dist = vi(n, INF); // スタートからの最短距離を保持するテーブル : O(n)
 	dist[st] = 0;
+
 	queue<int> que; // 次に探索する頂点を入れておくキュー
 	que.push(st);
 
@@ -78,16 +80,17 @@ void binary_bfs(const WGraph& g, int st, vi& dist) {
 
 //【単一始点最短路／ダイクストラ法】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g に対し，始点 st から各頂点 i への最小コストを cost[i] に格納する．
+* 非負のコスト付きグラフ g に対し，始点 st から各頂点 i への最短距離を dist[i] に格納する．
+* 頂点 i に到達不能の場合は dist[i] = INFL とする．
 */
-void dijkstra(const WGraph& g, int st, vl& cost) {
+void dijkstra(const WGraph& g, int st, vl& dist) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_A
 
 	int n = sz(g);
-	cost = vl(n, INFL); // スタートからの最小コストを保持するテーブル
+	dist = vl(n, INFL); // スタートからの最短距離を保持するテーブル
 
-	// 組 (スタートからのコスト, 頂点番号) を入れる優先度付きキューを用意する．
-	// スタートからのコストがより小さいものを優先的に取り出す．
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキューを用意する．
+	// スタートからの距離がより小さいものを優先的に取り出す．
 	priority_queue_rev<pli> que;
 	que.push({ 0, st });
 
@@ -95,13 +98,13 @@ void dijkstra(const WGraph& g, int st, vl& cost) {
 		ll c; int s;
 		tie(c, s) = que.top(); que.pop();
 
-		// もし既に最小コストが求まっているなら何もしない．
-		if (c >= cost[s]) continue;
+		// もし既に最短距離が求まっているなら何もしない．
+		if (c >= dist[s]) continue;
 
-		// 最小コストの決定
-		// 優先度付きキューでコストの小さい順に取り出しており，
+		// 最短距離の決定
+		// 優先度付きキューで距離の小さい順に取り出しており，
 		// かつコストが非負より三角不等式が成立するので最短の保証がある．
-		cost[s] = c;
+		dist[s] = c;
 
 		// そこから移動できるノードについての情報をキューに追加する．
 		repe(e, g[s]) que.push({ c + e.cost, e.to });
@@ -112,14 +115,14 @@ void dijkstra(const WGraph& g, int st, vl& cost) {
 //【単一始点最短路（頂点コスト）／ダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 頂点に非負のコスト vc が与えられたグラフ g に対し，
-* 始点 st から各頂点 i への最小コストを cost[i] に格納する．
+* 始点 st から各頂点 i への最短距離を dist[i] に格納する．
 */
-void dijkstra(const Graph& g, const vl& vc, int st, vl& cost) {
+void dijkstra(const Graph& g, const vl& vc, int st, vl& dist) {
 	int n = sz(g);
-	cost = vl(n, INFL); // スタートからの最小コストを保持するテーブル
+	dist = vl(n, INFL); // スタートからの最短距離を保持するテーブル
 
-	// 組 (スタートからのコスト, 頂点番号) を入れる優先度付きキューを用意する．
-	// スタートからのコストがより小さいものを優先的に取り出す．
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキューを用意する．
+	// スタートからの距離がより小さいものを優先的に取り出す．
 	priority_queue_rev<pli> que;
 	que.push({ vc[st], st });
 
@@ -127,12 +130,12 @@ void dijkstra(const Graph& g, const vl& vc, int st, vl& cost) {
 		ll c; int s;
 		tie(c, s) = que.top(); que.pop();
 
-		// もし既に最小コストが求まっているなら無視
-		if (c >= cost[s]) continue;
+		// もし既に最短距離が求まっているなら無視
+		if (c >= dist[s]) continue;
 
-		// 最小コストの決定
-		// 優先度付きキューでコストの小さい順に取り出しているので最小の保証がある．
-		cost[s] = c;
+		// 最短距離の決定
+		// 優先度付きキューで距離の小さい順に取り出しているので最小の保証がある．
+		dist[s] = c;
 
 		// そこから移動できるノードについての情報をキューに追加する．
 		repe(t, g[s]) que.push({ c + vc[t], t });
@@ -143,11 +146,11 @@ void dijkstra(const Graph& g, const vl& vc, int st, vl& cost) {
 //【ポテンシャル付きダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 負閉路のないコスト付きグラフ g に対し，実行可能ポテンシャル u を与え，
-* 始点 st から各頂点 i への最小コストを cost[i] に格納する．
+* 始点 st から各頂点 i への最短距離を dist[i] に格納する．
 *
 * 条件：g[s][t].cost >= u[t] - u[s]
 */
-void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
+void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& dist) {
 	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_e
 
 	//【方法】
@@ -167,7 +170,7 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
 	// 参考：https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
 
 	int n = sz(g);
-	cost = vl(n, INFL);
+	dist = vl(n, INFL);
 
 	priority_queue_rev<pli> que;
 	que.push({ 0, st });
@@ -176,9 +179,9 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
 		ll c; int s;
 		tie(c, s) = que.top(); que.pop();
 
-		if (c >= cost[s]) continue;
+		if (c >= dist[s]) continue;
 
-		cost[s] = c;
+		dist[s] = c;
 
 		repe(e, g[s]) {
 			ll r = e.cost - (u[e.to] - u[s]);
@@ -187,35 +190,70 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& cost) {
 	}
 
 	rep(i, n) {
-		cost[i] += u[i] - u[st];
+		dist[i] += u[i] - u[st];
 	}
 }
 
 
 //【ペナルティ付きダイクストラ法】
 /*
-* これまでのコストに依存してコストが追加でかかってくる状況でも
+* これまでの距離に依存してコストが追加でかかってくる状況でも
 * それを加味すればダイクストラ法を使うことができる．
 * 
 * verify : https://atcoder.jp/contests/abc192/tasks/abc192_e
 */
 
 
+//【最短路木】O(|V| + |E| log|V|)
+/*
+* 非負のコスト付きグラフ g に対し，始点 st を根とする有向最短路木を gt に格納する．
+*/
+void dijkstra_tree(const WGraph& g, int st, WGraph& gt) {
+	// verify : https://atcoder.jp/contests/abc252/tasks/abc252_e
+
+	int n = sz(g);
+	gt = WGraph(n);
+	vl cost(n, INFL); // スタートからの最短距離を保持するテーブル
+
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキューを用意する．
+	// スタートからの距離がより小さいものを優先的に取り出す．
+	priority_queue_rev<tuple<ll, int, WEdge>> que;
+	que.push({ 0, -1, {st, 0LL} });
+
+	while (!que.empty()) {
+		ll c; int s; WEdge e;
+		tie(c, s, e) = que.top(); que.pop();
+
+		// もし既に最短距離が求まっているなら何もしない．
+		if (c >= cost[e.to]) continue;
+
+		// 最短距離の決定
+		// 優先度付きキューで距離の小さい順に取り出しており，
+		// かつコストが非負より三角不等式が成立するので最短の保証がある．
+		cost[e.to] = c;
+		if (s != -1) gt[s].push_back(e);
+
+		// そこから移動できるノードについての情報をキューに追加する．
+		repe(e2, g[e.to]) que.push({ c + e2.cost, e.to, e2 });
+	}
+}
+
+
 //【単一始点最短路（負コスト可）／ベルマン－フォード法】O(|E| |V|)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，
-* st から各頂点 i への最小コストを cost[i] に格納する．
+* st から各頂点 i への最短距離を dist[i] に格納する．
 * もし st から到達可能な負のコストをもつ閉路があれば false を返す．
 */
-bool bellman_ford(const WGraph& g, int st, vl& cost) {
+bool bellman_ford(const WGraph& g, int st, vl& dist) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_B
 
 	//【補足】
 	// min-plus 半環上のスパース行列とベクトルの積の反復とも思える．
 
 	int n = sz(g);
-	cost = vl(n, INFL); // スタートからの最小コストを保持するテーブル
-	cost[st] = 0;
+	dist = vl(n, INFL); // スタートからの最短距離を保持するテーブル
+	dist[st] = 0;
 
 	rep(i, n) {
 		bool updated = false;
@@ -223,22 +261,22 @@ bool bellman_ford(const WGraph& g, int st, vl& cost) {
 		// 全ての辺についての操作
 		rep(s, n) {
 			repe(e, g[s]) {
-				// もし (始点へのコスト) + (辺のコスト) < (終点へのコスト) なら
-				// (終点へのコスト) を更新する．
+				// もし (始点への距離) + (辺のコスト) < (終点への距離) なら
+				// (終点への距離) を更新する．
 				// INFL からは何を引いても INFL になるようにしているので，
 				// st から到達可能な負閉路しか検出しない．
-				if (cost[s] != INFL && cost[s] + e.cost < cost[e.to]) {
-					cost[e.to] = cost[s] + e.cost;
+				if (dist[s] != INFL && dist[s] + e.cost < dist[e.to]) {
+					dist[e.to] = dist[s] + e.cost;
 					updated = true;
 				}
 			}
 		}
 
-		// もしコストの更新が起こらなければ最小コスト確定
+		// もし距離の更新が起こらなければ最短距離確定
 		if (!updated) return true;
 	}
 
-	// もし全ての辺についての操作を |V| 回繰り返してもコストの更新があったなら，
+	// もし全ての辺についての操作を |V| 回繰り返しても距離の更新があったなら，
 	// st から到達可能な負の閉路を持っているので false を返す．
 	return false;
 }
@@ -247,10 +285,10 @@ bool bellman_ford(const WGraph& g, int st, vl& cost) {
 //【全頂点対最短路（負コスト可）／ワーシャル－フロイド法】O(|V|^3)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，
-* 頂点 i から頂点 j への最小コストを cost[i][j] に格納する．
+* 頂点 i から頂点 j への最短距離を dist[i][j] に格納する．
 * もし g が負の閉路をもっていれば false を返す．
 */
-bool warshall_floyd(const WGraph& g, vvl& cost) {
+bool warshall_floyd(const WGraph& g, vvl& dist) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_C
 
 	//【補足】
@@ -258,14 +296,14 @@ bool warshall_floyd(const WGraph& g, vvl& cost) {
 
 	int n = sz(g);
 
-	// cost[i][j] : 頂点 i から頂点 j までの最短距離
-	cost = vvl(n, vl(n, INFL));
+	// dist[i][j] : 頂点 i から頂点 j までの最短距離
+	dist = vvl(n, vl(n, INFL));
 
-	rep(s, n) cost[s][s] = 0;
+	rep(s, n) dist[s][s] = 0;
 	rep(s, n) {
 		repe(e, g[s]) {
 			// 多重辺に対応するため chmin を用いている．
-			chmin(cost[s][e.to], e.cost);
+			chmin(dist[s][e.to], e.cost);
 		}
 	}
 
@@ -274,19 +312,19 @@ bool warshall_floyd(const WGraph& g, vvl& cost) {
 		rep(i, n) {
 			rep(j, n) {
 				// 通れない場合は加算しないようにしてオーバーフローに注意する．
-				if (cost[i][k] == INFL || cost[k][j] == INFL) continue;
+				if (dist[i][k] == INFL || dist[k][j] == INFL) continue;
 
-				// 新しく通れるようになった k を通る方がコストが小さければ更新
+				// 新しく通れるようになった k を通る方が距離が小さければ更新
 				// （一時配列に退避させず計算してしまっているので途中は間違った値
 				// になっているが，より小さい値になるだけなので最後には合う．）
-				chmin(cost[i][j], cost[i][k] + cost[k][j]);
+				chmin(dist[i][j], dist[i][k] + dist[k][j]);
 			}
 		}
 	}
 
 	// 負の閉路を持っていれば false を返す．
 	rep(i, n) {
-		if (cost[i][i] < 0) return false;
+		if (dist[i][i] < 0) return false;
 	}
 	return true;
 }
@@ -418,21 +456,21 @@ int shortest_cycle(const Graph& g, int st, vi* path = nullptr) {
 }
 
 
-//【コスト最小パス】O(|V| + |E| log|V|)
+//【最短パス（コスト付きグラフ）】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g の始点 st から終点 gl までのコスト最小パスのコストを返す．
-* 到達不能なら INFL を返す．必要なら path にコスト最小パス上の頂点の列を格納する．
+* 非負のコスト付きグラフ g の始点 st から終点 gl までの最短パスの長さを返す．
+* 到達不能なら INFL を返す．必要なら path に最短パス上の頂点の列を格納する．
 *
 *（ダイクストラ法）
 */
 ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 	int n = sz(g);
 
-	vl cost(n, INFL); // st からの最小コストを保持するテーブル
+	vl cost(n, INFL); // st からの最短距離を保持するテーブル
 	vi parent(n); // 1 つ手前の頂点を記録しておくテーブル（復元用）
 
-	// 組 (スタートからのコスト, 頂点番号, 直前の頂点) を入れる優先度付きキューを用意する．
-	// スタートからのコストがより小さいものを優先的に取り出す．
+	// 組 (スタートからの距離, 頂点番号, 直前の頂点) を入れる優先度付きキューを用意する．
+	// スタートからの距離がより小さいものを優先的に取り出す．
 	priority_queue_rev<tuple<ll, int, int>> que;
 	que.push({ 0, st, -1 });
 
@@ -440,10 +478,10 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 		ll c; int s, p;
 		tie(c, s, p) = que.top(); que.pop();
 
-		// もし既に最小コストが求まっているなら何もしない．
+		// もし既に最短距離が求まっているなら何もしない．
 		if (c >= cost[s]) continue;
 
-		// 最小コストの決定
+		// 最短距離の決定
 		cost[s] = c;
 		parent[s] = p;
 
@@ -478,21 +516,21 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 }
 
 
-//【コスト最小サイクル】O(|V| + |E| log|V|)
+//【最短サイクル（コスト付きグラフ）】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付き有向グラフ g の頂点 st を通るコスト最小サイクルのコストを返す．
-* 存在しないなら INFL を返す．必要なら path にコスト最小サイクル上の頂点の列を格納する．
+* 非負のコスト付き有向グラフ g の頂点 st を通る最短サイクルの長さを返す．
+* 存在しないなら INFL を返す．必要なら path に最短サイクル上の頂点の列を格納する．
 *
 *（ダイクストラ法）
 */
 ll minimum_cost_cycle(const WGraph& g, int st, vi* path = nullptr) {
 	int n = sz(g);
 
-	vl cost(n, INFL); // st からの最小コストを保持するテーブル
+	vl cost(n, INFL); // st からの最短距離を保持するテーブル
 	vi parent(n); // 1 つ手前の頂点を記録しておくテーブル（復元用）
 
-	// 組 (スタートからのコスト, 頂点番号, 直前の頂点) を入れる優先度付きキューを用意する．
-	// スタートからのコストがより小さいものを優先的に取り出す．
+	// 組 (スタートからの距離, 頂点番号, 直前の頂点) を入れる優先度付きキューを用意する．
+	// スタートからの距離がより小さいものを優先的に取り出す．
 	priority_queue_rev<tuple<ll, int, int>> que;
 	repe(e, g[st]) {
 		que.push({ e.cost, e.to, st });
@@ -502,11 +540,11 @@ ll minimum_cost_cycle(const WGraph& g, int st, vi* path = nullptr) {
 		ll c; int s, p;
 		tie(c, s, p) = que.top(); que.pop();
 
-		// もし既に最小コストが求まっているなら何もしない．
+		// もし既に最短距離が求まっているなら何もしない．
 		if (c >= cost[s]) continue;
 
-		// 最小コストの決定
-		// 優先度付きキューでコストの小さい順に取り出しており，
+		// 最短距離の決定
+		// 優先度付きキューで距離の小さい順に取り出しており，
 		// かつコストが非負より三角不等式が成立するので最短の保証がある．
 		cost[s] = c;
 		parent[s] = p;
@@ -542,11 +580,11 @@ ll minimum_cost_cycle(const WGraph& g, int st, vi* path = nullptr) {
 }
 
 
-//【コスト最小パス（負コスト可）】O(|E| |V|)
+//【最短パス（負コスト可）】O(|E| |V|)
 /*
-* コスト付きグラフ g（負のコストも可）の始点 st から終点 gl までのコスト最小パスのコストを返す．
-* 到達不能なら INFL，コストに下限がなければ -INFL を返す．
-* 必要なら path にコスト最小パス上の頂点の列を格納する．
+* コスト付きグラフ g（負のコストも可）の始点 st から終点 gl までの最短パスの長さを返す．
+* 到達不能なら INFL，距離に下限がなければ -INFL を返す．
+* 必要なら path に最短パス上の頂点の列を格納する．
 *
 *（ベルマン－フォード法）
 */
@@ -555,12 +593,12 @@ ll minimum_cost_path_nc(const WGraph& g, int st, int gl, vi* path = nullptr) {
 
 	int n = sz(g);
 
-	vl cost(n, INFL); cost[st] = 0; // st からの最小コスト
-	vi parent(n, -1); // そこまでのコスト最小パスにおいて直前に通る頂点（復元用）
-	vb updated(n); // コストの更新があったか
+	vl cost(n, INFL); cost[st] = 0; // st からの最短距離
+	vi parent(n, -1); // そこまでの最短パスにおいて直前に通る頂点（復元用）
+	vb updated(n); // 距離の更新があったか
 	bool updated_any = false;
 
-	// ベルマン－フォード法で各頂点までの最小コストを求める．
+	// ベルマン－フォード法で各頂点までの最短距離を求める．
 	rep(i, n) {
 		updated = vb(n);
 		updated_any = false;
@@ -571,7 +609,7 @@ ll minimum_cost_path_nc(const WGraph& g, int st, int gl, vi* path = nullptr) {
 				// st から未到達の頂点の先は一旦無視する．
 				if (cost[s] == INFL) continue;
 
-				// コストの更新
+				// 距離の更新
 				if (cost[s] + e.cost < cost[e.to]) {
 					cost[e.to] = cost[s] + e.cost;
 					parent[e.to] = s;
@@ -580,7 +618,7 @@ ll minimum_cost_path_nc(const WGraph& g, int st, int gl, vi* path = nullptr) {
 			}
 		}
 
-		// もしコストの更新が起こらなければ全体の最小コストが確定したことになる．
+		// もし距離の更新が起こらなければ全体の最短距離が確定したことになる．
 		if (!updated_any) break;
 	}
 
@@ -589,7 +627,7 @@ ll minimum_cost_path_nc(const WGraph& g, int st, int gl, vi* path = nullptr) {
 
 	// st から到達可能な負閉路が存在した場合
 	if (updated_any) {
-		// コストの更新のあった全頂点を始点にして BFS を行う．
+		// 距離の更新のあった全頂点を始点にして BFS を行う．
 		queue<int> q;
 		rep(s, n) {
 			if (updated[s]) q.push(s);
@@ -602,7 +640,7 @@ ll minimum_cost_path_nc(const WGraph& g, int st, int gl, vi* path = nullptr) {
 			if (seen[s]) continue;
 			seen[s] = true;
 
-			// コストの更新のあった頂点から gl に到達可能なら下限なしが確定する．
+			// 距離の更新のあった頂点から gl に到達可能なら下限なしが確定する．
 			if (s == gl) return -INFL;
 
 			repe(t, g[s]) q.push(t);
@@ -690,19 +728,21 @@ int shortest_path(const IGraph& g, int st, int gl, vi& path) {
 
 //【最近傍探索】O(|V| + |E|)
 /*
-* 無向グラフ g とその頂点集合 v について，頂点 i と最も近い v の頂点の 1 つを nn[i] に，
+* 無向グラフ g とその頂点集合 vs について，頂点 i と最も近い vs の頂点の 1 つを nn[i] に，
 * i と nn[i] との距離を dist[i] にそれぞれ格納する（なければそれぞれ -1, INF）
 * 
 *（幅優先探索）
 */
-void nearest_neighbor(const Graph& g, const vi& v, vi& nn, vi& dist) {
+void nearest_neighbor(const Graph& g, const vi& vs, vi& nn, vi& dist) {
+	// verify : https://atcoder.jp/contests/agc024/tasks/agc024_d
+
 	int n = sz(g);
 
 	nn = vi(n, -1);
 	dist = vi(n, INF);
 	queue<int> q;
 
-	repe(s, v) {
+	repe(s, vs) {
 		q.push(s);
 		nn[s] = s;
 		dist[s] = 0;
@@ -723,27 +763,27 @@ void nearest_neighbor(const Graph& g, const vi& v, vi& nn, vi& dist) {
 }
 
 
-//【コスト最小近傍探索】O(|V| + |E| log|V|)
+//【最近傍探索（コスト付きグラフ）】O(|V| + |E| log|V|)
 /*
-* コスト付き無向グラフ g とその頂点集合 v について，
-* 頂点 i と最も近い v の頂点の 1 つを nn[i] に，
-* i と nn[i] との距離を cost[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
+* コスト付き無向グラフ g とその頂点集合 vs について，
+* 頂点 i と最も近い vs の頂点の 1 つを nn[i] に，
+* i と nn[i] との距離を dist[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
 *
 *（ダイクストラ法）
 */
-void nearest_neighbor(const WGraph& g, const vi& v, vi& nn, vl& cost) {
+void nearest_neighbor(const WGraph& g, const vi& vs, vi& nn, vl& dist) {
 	// verify : https://atcoder.jp/contests/joi2012ho/tasks/joi2012ho5
 	
 	int n = sz(g);
 
 	nn = vi(n, -1);
-	cost = vl(n, INFL);
+	dist = vl(n, INFL);
 	priority_queue_rev<pli> q;
 
-	repe(s, v) {
+	repe(s, vs) {
 		q.push({ 0LL, s });
 		nn[s] = s;
-		cost[s] = 0LL;
+		dist[s] = 0LL;
 	}
 
 	while (!q.empty()) {
@@ -751,37 +791,37 @@ void nearest_neighbor(const WGraph& g, const vi& v, vi& nn, vl& cost) {
 		tie(c, s) = q.top(); q.pop();
 
 		repe(e, g[s]) {
-			if (c + e.cost >= cost[e.to]) continue;
+			if (c + e.cost >= dist[e.to]) continue;
 
-			cost[e.to] = c + e.cost;
+			dist[e.to] = c + e.cost;
 			nn[e.to] = nn[s];
 
-			q.push({ cost[e.to], e.to });
+			q.push({ dist[e.to], e.to });
 		}
 	}
 }
 
 
-//【コスト昇順 k-近傍探索】O(|V| + k |E| log|V|)
+//【k-近傍探索】O(|V| + k |E| log|V|)
 /*
 * コスト付き無向グラフ g とその頂点集合 vs について，
 * 頂点 i と近い方から k 個の vs の頂点を knn[i] に，
-* i と knn[i] との距離を cost[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
+* i と knn[i] との距離を dist[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
 *
 *（ダイクストラ法）
 */
-void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& cost) {
+void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& dist) {
 	// verify : https://atcoder.jp/contests/abc245/tasks/abc245_g
 
 	int n = sz(g);
 
 	knn = vvi(n, vi(k, -1));
-	cost = vvl(n, vl(k, INFL));
+	dist = vvl(n, vl(k, INFL));
 
-	// iv_to_cost[i][v] : v から i までの最小コスト
+	// iv_to_cost[i][v] : v から i までの最短距離
 	vector<unordered_map<int, ll>> iv_to_cost(n);
 
-	// q ∋ {c, i, vi} : vi から i へのコストが c であることを記録する．
+	// q ∋ {c, i, vi} : vi から i への距離が c であることを記録する．
 	priority_queue_rev<tuple<ll, int, int>> q;
 	repe(v, vs) q.push({ 0LL, v, v });
 
@@ -792,10 +832,10 @@ void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& cos
 		// k 近傍を調べ終わっていたら何もしない．
 		if (sz(iv_to_cost[s]) == k) continue;
 
-		// 既に v からの最小コストが求まっているなら何もしない．
+		// 既に v からの最短距離が求まっているなら何もしない．
 		if (iv_to_cost[s].count(v)) continue;
 
-		// 最小コストの更新
+		// 最短距離の更新
 		iv_to_cost[s][v] = c;
 
 		// s の先を調べる
@@ -807,7 +847,7 @@ void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& cos
 		int j = 0;
 		repe(p, iv_to_cost[i]) {
 			knn[i][j] = p.first;
-			cost[i][j] = p.second;
+			dist[i][j] = p.second;
 			j++;
 		}
 	}

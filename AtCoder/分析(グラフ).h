@@ -164,16 +164,17 @@ void strongly_connected_component(const Graph& g, vvi& ccs) {
 }
 
 
-//【頂点の縮約】O(|V| + |E| log|V|)
+//【頂点の縮約】O(|V| + |E|)
 /*
 * グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として
 * 縮約したグラフを gc に格納する．
-* 
+*
 * 特に強連結成分についての縮約を行えば DAG が得られる．
 */
 void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
-	int n = sz(g);
-	int m = sz(p);
+	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_3
+
+	int n = sz(g), m = sz(p);
 
 	// id[v] : 頂点 v の属する成分
 	vi id(n);
@@ -183,8 +184,8 @@ void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
 		}
 	}
 
-	// 多重辺や自己ループを防ぐため一旦辺の集合を set でもつ．
-	vector<set<int>> gc_set(m);
+	// 多重辺や自己ループを防ぐため一旦辺の集合を unordered_set でもつ．
+	vector<unordered_set<int>> gc_set(m);
 	rep(s, n) {
 		repe(t, g[s]) {
 			gc_set[id[s]].insert(id[t]);
@@ -283,7 +284,7 @@ bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
 
 //【無向グラフの閉路抽出】O(|V| + |E|)
 /*
-* 無向グラフ g の閉路を何か 1 つ見つける．
+* 無向グラフ g の単純閉路を何か 1 つ見つける．
 *
 * g : 無向グラフ
 * cycle : 検出した閉路の頂点番号を順に格納したリスト（閉路なしなら空リスト）
@@ -348,7 +349,7 @@ template <class G> void cycle_detection(const G& g, vi& cycle) {
 
 //【有向グラフの閉路抽出】O(|V| + |E|)
 /*
-* 有向グラフ g の閉路を何か 1 つ見つける．
+* 有向グラフ g の単純閉路を何か 1 つ見つける．
 *
 * g : 有向グラフ
 * cycle : 検出した閉路の頂点番号を順に格納したリスト（閉路なしなら空リスト）
@@ -485,8 +486,8 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 * i 番目の連結成分 cc[i] が二部グラフかどうかを b[i] に格納する．
 * 二部グラフの部分についてはその彩色例を col に格納する（色は 0, 1 で表す）
 */
-void bipartite_graphQ(const WGraph& g, vvi& cc, vb& b, vi& col) {
-	// veriy : https://codeforces.com/contest/1635/problem/E
+template <class G> void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
+	// veriy : https://atcoder.jp/contests/arc099/tasks/arc099_c
 
 	int n = sz(g);
 	cc.clear(); b.clear();

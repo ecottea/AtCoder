@@ -33,6 +33,11 @@ template <class STR> void morris_pratt(const STR& s, vi& len) {
 	// もし s[len[j]] = s[i] なら k = len[j] と選べばよく，そうでなければ
 	// j ← len[j] として同じ操作を繰り返せば良い．
 
+	//【例】
+	// i:		0 1 2 3 4 5 6 7 8 9
+	// s[i-1] :   a b a b a b c a a
+	// len[i] : - 0 0 1 2 3 4 0 1 1
+
 	int n = sz(s);
 	len.resize(n + 1);
 	len[0] = -1;
@@ -91,8 +96,14 @@ template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos
 
 //【最短周期長】
 /*
-* s[0..n) の最長共通接頭尾辞長 len[0..n) が【最長共通接頭尾辞】で得られていれば，
+* s[0..n) の最長共通接頭尾辞長 len(0..n] が【最長共通接頭尾辞】で得られていれば，
 * s[0..i) の最短周期長は i-len[i] で得られる．
+* 
+* 例：
+*	i:			0 1 2 3 4 5 6 7 8 9
+*	s[i-1]:		  a b a b a b c a a
+*	len[i]:		- 0 0 1 2 3 4 0 1 1
+*	i-len[i]:	- 1 2 2 2 2 2 7 7 8
 * 
 * 参考 : https://snuke.hatenablog.com/entry/2015/04/05/184819
 */
@@ -172,6 +183,15 @@ template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
 }
 
 
+//【回文を連結した回文】
+/*
+* 回文 s, t を連結した s+t が回文であるとき，g = gcd(|s|, |t|) とおくと，
+* s, t は共に周期 g をもち，その 1 周期も回文となる．
+* 
+* verify : https://atcoder.jp/contests/arc048/tasks/arc048_c
+*/
+
+
 //【Z アルゴリズム】O(n)
 /*
 * 文字列 s[0..n) について，s[i..n) と s の最長共通接頭辞の長さを z[i] に格納する．
@@ -199,6 +219,11 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 	//		⇔ z[i + k] >= j - k
 	// である．よって次の j は j - k にすればよい．
 
+	//【例】
+	// i:		0 1 2 3 4 5 6 7 8 9
+	// s[i] :	a a a b a a a a b
+	// z[i] :	9 2 1 0 3 4 2 1 0
+	
 	int n = sz(s);
 	z.resize(n);
 	z[0] = n;
@@ -222,5 +247,278 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 		j -= k;
 	}
 }
+
+
+//【Z アルゴリズム（接尾辞）】O(n)
+/*
+* 文字列 s[0..n) について，s[0..i] と s の最長共通接尾辞の長さを z[i] に格納する．
+*/
+template <class STR> vi z_algorithm_suffix(STR s) {
+	// verify : https://atcoder.jp/contests/arc055/tasks/arc055_c
+
+	reverse(all(s));
+	vi zs = z_algorithm(s);
+	reverse(all(zs));
+	return zs;
+}
+
+
+//【部分文字列判定（複数回）】
+/*
+* String_search(string s) : O(|s|)
+*   文字列 s に対する検索ができるように初期化する．
+*
+* int search(string p) : O(|p| log |s|)
+*   s[i..i+m) = p[0..m) なる i を返す（存在しなければ -1）
+*/
+class String_search {
+	int n;
+	string s;
+	vi sa; // s の接尾辞配列
+
+public:
+	String_search(const string& s_) : n(sz(s_)), s(s_) {
+		sa = suffix_array(s);
+	}
+
+	int search(const string& p) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_D
+
+		int m = sz(p);
+
+		int ok = 0, ng = n;
+		int i_ok = 0, i_ng = 0;
+		while (i_ok < m && sa[ok] + i_ok < n && s[sa[ok] + i_ok] == p[i_ok]) i_ok++;
+		if (i_ok == m) return sa[ok];
+
+		while (abs(ok - ng) > 1) {
+			int mid = (ok + ng) / 2;
+			int i_mid = min(i_ok, i_ng);
+
+			while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
+
+			if (i_mid == m) {
+				ok = mid;
+				i_ok = i_mid;
+				break;
+			}
+
+			if (sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid]) {
+				ok = mid;
+				i_ok = i_mid;
+			}
+			else {
+				ng = mid;
+				i_ng = i_mid;
+			}
+		}
+
+		if (i_ok == m) return sa[ok];
+		else return -1;
+	}
+};
+
+
+//【複数文字列検索】
+/*
+* Aho_corasick(vector<string> pats) : O(Σ|pats|)
+*	パターン文字列の集合 pats を検索できるよう初期化する．
+*
+* find(string s, vb& ex) : O(|s| + Σ|pats|)
+*	文字列 s 中に pats[i] が存在するかを ex[i] に格納する．
+*	制約：1 度しか実行できない．
+*/
+class Aho_corasick {
+	static const int C = 26; // 文字の種類数
+	static const char A = 'a'; // 最初の文字
+
+	struct Node {
+		Node* parent; // 親へのポインタ
+		vector<Node*> childs; // 子へのポインタ（C 分木）
+		vi pat_ids; // この文字で終わるパターンの番号
+		Node* suf; // 最長接尾辞へのポインタ
+		bool seen; // 探索済か（find 用）
+
+		Node(Node* parent_ = nullptr, int pat_id_ = -1, Node* suf_ = nullptr)
+			: parent(parent_), childs(C), suf(suf_), seen(false) {}
+	};
+
+	int n; // パターン数
+	Node* root; // 根へのポインタ
+
+	void create_trie_tree(const vector<string>& pats) {
+		rep(i, n) {
+			Node* p = root;
+
+			// pats[i] の文字 c を先頭から順に見ていく
+			repe(c, pats[i]) {
+				// 未登録の文字だった場合は新たにノードを追加
+				if (p->childs[c - A] == nullptr) {
+					p->childs[c - A] = new Node(p);
+				}
+
+				p = p->childs[c - A];
+			}
+			p->pat_ids.push_back(i);
+		}
+	}
+
+public:
+	Aho_corasick(const vector<string>& pats) : n(sz(pats)), root(new Node()) {
+		// まずトライ木を構築する．
+		create_trie_tree(pats);
+
+		// BFS で最長接尾辞へのポインタを繋ぐ．
+		queue<Node*> q;
+		q.push(root);
+
+		while (!q.empty()) {
+			Node* p = q.front(); q.pop();
+
+			// 各文字 c について
+			rep(c, C) {
+				// 子が居ない場合は何もしない．
+				if (p->childs[c] == nullptr) continue;
+
+				Node* pp = p->suf;
+				while (pp != nullptr && pp->childs[c] == nullptr) pp = pp->suf;
+
+				if (pp == nullptr) p->childs[c]->suf = root;
+				else p->childs[c]->suf = pp->childs[c];
+
+				q.push(p->childs[c]);
+			}
+		}
+	}
+
+	void find(const string& s, vb& ex) {
+		ex.assign(n, false);
+
+		queue<Node*> q;
+
+		Node* p = root;
+		repe(c, s) {
+			while (p != nullptr && p->childs[c - A] == nullptr) p = p->suf;
+
+			if (p == nullptr) p = root;
+			else p = p->childs[c - A];
+
+			q.push(p);
+		}
+
+		while (!q.empty()) {
+			Node* p = q.front(); q.pop();
+			if (p == nullptr) continue;
+
+			if (p->seen) continue;
+			p->seen = true;
+
+			repe(id, p->pat_ids) ex[id] = true;
+
+			q.push(p->parent);
+			q.push(p->suf);
+		}
+	}
+};
+
+
+//【複数文字列検索（文字種が多い）】
+/*
+* Aho_corasick(vector<string> pats) : O(Σ|pats|)
+*	パターン文字列の集合 pats を検索できるよう初期化する．
+*
+* find(string s, vb& ex) : O(|s| + Σ|pats|)
+*	文字列 s 中に pats[i] が存在するかを ex[i] に格納する．
+*	制約：1 度しか実行できない．
+*/
+class Aho_corasick {
+	struct Node {
+		Node* parent; // 親へのポインタ
+		unordered_map<char, Node*> childs; // 子へのポインタ
+		vi pat_ids; // この文字で終わるパターンの番号
+		Node* suf; // 最長接尾辞へのポインタ
+		bool seen; // 探索済か（find 用）
+
+		Node(Node* parent_ = nullptr, int pat_id_ = -1, Node* suf_ = nullptr)
+			: parent(parent_), suf(suf_), seen(false) {}
+	};
+
+	int n; // パターン数
+	Node* root; // 根へのポインタ
+
+	void create_trie_tree(const vector<string>& pats) {
+		rep(i, n) {
+			Node* p = root;
+
+			// pats[i] の文字 c を先頭から順に見ていく
+			repe(c, pats[i]) {
+				// 未登録の文字だった場合は新たにノードを追加
+				if (!p->childs.count(c)) {
+					p->childs[c] = new Node(p);
+				}
+
+				p = p->childs[c];
+			}
+			p->pat_ids.push_back(i);
+		}
+	}
+
+public:
+	Aho_corasick(const vector<string>& pats) : n(sz(pats)), root(new Node()) {
+		// まずトライ木を構築する．
+		create_trie_tree(pats);
+
+		// BFS で最長接尾辞へのポインタを繋ぐ．
+		queue<Node*> q;
+		q.push(root);
+
+		while (!q.empty()) {
+			Node* p = q.front(); q.pop();
+
+			// 各文字 c について
+			repe(ccp, p->childs) {
+				char c; Node* cp;
+				tie(c, cp) = ccp;
+
+				Node* pp = p->suf;
+				while (pp != nullptr && !pp->childs.count(c)) pp = pp->suf;
+
+				if (pp == nullptr) cp->suf = root;
+				else cp->suf = pp->childs[c];
+
+				q.push(cp);
+			}
+		}
+	}
+
+	void find(const string& s, vb& ex) {
+		ex.assign(n, false);
+
+		queue<Node*> q;
+
+		Node* p = root;
+		repe(c, s) {
+			while (p != nullptr && !p->childs.count(c)) p = p->suf;
+
+			if (p == nullptr) p = root;
+			else p = p->childs[c];
+
+			q.push(p);
+		}
+
+		while (!q.empty()) {
+			Node* p = q.front(); q.pop();
+			if (p == nullptr) continue;
+
+			if (p->seen) continue;
+			p->seen = true;
+
+			repe(id, p->pat_ids) ex[id] = true;
+
+			q.push(p->parent);
+			q.push(p->suf);
+		}
+	}
+};
 
 

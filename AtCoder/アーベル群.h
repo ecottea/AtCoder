@@ -17,6 +17,7 @@
 
 
 //y‰ÁZ ƒA[ƒxƒ‹ŒQz
+/* verify : https://atcoder.jp/contests/agc015/tasks/agc015_c */
 using S201 = ll;
 S201 op201(S201 a, S201 b) { return a + b; }
 S201 o201() { return 0; }

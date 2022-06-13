@@ -10,16 +10,19 @@
 *	要素はモノイド (S, op, e) の元とする．
 *
 * Segtree<S, op, e>(vS v) : O(n)
-*	配列 v の要素で初期化する．
+*	配列 v[0..n) の要素で初期化する．
 *
-* set(i, x) : O(log n)
+* set(int i, S x) : O(log n)
 *	v[i] = x とする．
 *
-* get(i) : O(1)
+* S get(int i) : O(1)
 *	v[i] を返す．
 *
-* prod(l, r) : O(log n)
+* S prod(int l, int r) : O(log n)
 *	op( v[l..r) ) を返す．空なら e() を返す．
+*
+* S all_prod() : O(1)
+*	op( v[0..n) ) を返す．
 *
 * int max_right(int l, function<bool(S)> f) : O(log n)
 *	f( op( v[l..r) ) ) = true となる最大の r を返す．
@@ -101,7 +104,7 @@ struct Segtree {
 		return prod_rf(l, r, 1, 0, n);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl.kr) : ノード v[k] が表す区間
 	S prod_rf(int l, int r, int k, int kl, int kr) const {
 		// 範囲外なら単位元 e() を返す．
 		if (kr <= l || r <= kl) {
@@ -122,13 +125,13 @@ struct Segtree {
 	// op( v[0..n) ) を返す．
 	S all_prod() const { return prod_rf(0, n, 1, 0, n); }
 
-	// f( op( v[l, r) ) ) = true となる最大の r を返す．
+	// f( op( v[l..r) ) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& f) const {
 		S x = e();
 		return max_right_rf(l, actual_n, x, 1, 0, n, f);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	int max_right_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& f) const {
 		// 範囲外の場合
 		if (kr <= l || r <= kl) {
@@ -156,13 +159,13 @@ struct Segtree {
 		return max_right_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, f);
 	}
 
-	// f( op( v[l, r) ) ) = true となる最小の l を返す．
+	// f( op( v[l..r) ) ) = true となる最小の l を返す．
 	int min_left(int r, const function<bool(S)>& f) const {
 		S x = e();
 		return min_left_rf(0, r, x, 1, 0, n, f) + 1;
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	int min_left_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& f) const {
 		// 範囲外の場合
 		if (kr <= l || r <= kl) {
@@ -285,9 +288,7 @@ struct Lazy_segtree {
 	// 遅延させていた評価を行う．：O(1)
 	void eval(int k) {
 		// 遅延させていた評価がなければ何もしない．
-		if (lazy[k] == id()) {
-			return;
-		}
+		if (lazy[k] == id()) return;
 
 		// 葉でなければ子に伝搬する．
 		if (k < n) {
@@ -306,7 +307,7 @@ struct Lazy_segtree {
 		set_rf(i, x, 1, 0, n);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	void set_rf(int i, S x, int k, int kl, int kr) {
 		// まず自身の評価を行っておく．
 		eval(k);
@@ -340,7 +341,7 @@ struct Lazy_segtree {
 		return prod_rf(l, r, 1, 0, n);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	S prod_rf(int l, int r, int k, int kl, int kr) {
 		// まず自身の評価を行っておく．
 		eval(k);
@@ -398,13 +399,13 @@ struct Lazy_segtree {
 		v[k] = op(v[k * 2], v[k * 2 + 1]);
 	}
 
-	// g( op( v[l, r) ) ) = true となる最大の r を返す．
+	// g( op( v[l..r) ) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& g) {
 		S x = e();
 		return max_right_rf(l, actual_n, x, 1, 0, n, g);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	int max_right_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
 		// まず自身の評価を行っておく．
 		eval(k);
@@ -435,13 +436,13 @@ struct Lazy_segtree {
 		return max_right_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
 	}
 
-	// g( op( v[l, r) ) ) = true となる最小の l を返す．
+	// g( op( v[l..r) ) ) = true となる最小の l を返す．
 	int min_left(int r, const function<bool(S)>& g) {
 		S x = e();
 		return min_left_rf(0, r, x, 1, 0, n, g) + 1;
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	int min_left_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
 		// まず自身の評価を行っておく．
 		eval(k);
@@ -481,6 +482,108 @@ struct Lazy_segtree {
 	}
 #endif
 };
+
+
+//【間引きセグメント木（モノイド）】
+/*
+* Segtree_mod<S, op, e>(int n, int m) : O(n)
+*	v[0..n) = e() と法 m で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*
+* Segtree_mod<S, op, e>(vS v) : O(n)
+*	配列 v[0..n) と法 m で初期化する．
+*
+* set(int i, S x) : O(log n)
+*	v[i] = x とする．
+*
+* S get(int i) : O(1)
+*	v[i] を返す．
+*
+* S prod(int l, int r, int k) : O(log n)
+*	set = {i∈[l..r) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+*
+* S all_prod(int k) : O(1)
+*	set = {i∈[0..n) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+*
+* int max_right(int l, function<bool(S)> f, int k) : O(log n)
+*	set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最大の r(=k (mod m)) を返す．
+*   制約：f(e()) = true，f は単調
+*
+* int min_left(int r, function<bool(S)> f, int k) : O(log n)
+*	set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最小の l(=k (mod m)) を返す．
+*	制約：f(e()) = true，f は単調
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Thinning_segtree {
+	int n, m;
+	vector<segtree<S, op, e>> segs;
+
+public:
+	// v[0..n) = e() と法 m で初期化する．
+	Thinning_segtree(int n_, int m_) : n(n_), m(m_), segs(m) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		rep(j, m) segs[j] = segtree<S, op, e>((n + m - 1 - j) / m);
+	}
+
+	// 配列 v[0..n) と法 m で初期化する．
+	Thinning_segtree(vector<S>& v, int m_) : n(sz(v)), m(m_), segs(m) {
+		vector<vector<S>> v2(m);
+		rep(i, n) v2[i % m].push_back(v[i]);
+		rep(j, m) segs[j] = segtree<S, op, e>(v2[j]);
+	}
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		segs[i % m].set(i / m, x);
+	}
+
+	// v[i] を返す．
+	S get(int i) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		return segs[i % m].get(i / m);
+	}
+
+	// set = {i∈[l..r) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+	S prod(int l, int r, int k) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		return segs[k % m].prod((l - k + m - 1) / m, (r - k + m - 1) / m);
+	}
+
+	// set = {i∈[0..n) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+	S all_prod(int k) {
+		return prod(0, n, k);
+	}
+
+	// set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最大の r(=k (mod m)) を返す．
+	int max_right(int l, const function<bool(S)>& f, int k) {
+		k %= m;
+		return segs[k].max_right((l - k + m - 1) / m, f) * m + k;
+	}
+
+	// set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最小の l(=k (mod m)) を返す．
+	int min_left(int r, const function<bool(S)>& f, int k) {
+		k %= m;
+		return segs[k].min_left((r - k + m - 1) / m, f) * m + k;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Thinning_segtree segm) {
+		rep(i, segm.n) os << segm.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【永続セグメント木（モノイド）】
+/*
+* 永続データ構造.h へ
+*/
 
 
 //【遅延評価セグメント木（モノイド比例作用付きモノイド）】
@@ -788,9 +891,6 @@ struct Proportional_lazy_segtree {
 template <class T, T(*lb)(), T(*ub)(),
 	class S, S(*op)(S, S), S(*e)()>
 struct Segtree_map {
-	// 参考 : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
-	// 参考 : https://algo-logic.info/segment-tree/
-
 	// セグメント木のノード
 	struct Node {
 		pair<T, T> key;
@@ -879,6 +979,8 @@ struct Segtree_map {
 
 	// v[key] = x とする．
 	void set(const T& key, const S& x) {
+		// verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_f
+
 		if (root == nullptr) {
 			root = new Node({ key, key }, x, -INF);
 			n++;
@@ -943,6 +1045,8 @@ struct Segtree_map {
 
 	// v[key] を返す．なければ e() を返す．
 	S get(const T& key) {
+		// verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_f
+
 		return prod(key, key);
 	}
 
@@ -992,6 +1096,8 @@ struct Segtree_map {
 
 	// key が [l, r] の範囲の v の要素全ての op() の結果を返す．
 	S prod(const T& l, const T& r) {
+		// verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_f
+
 		// 木が空なら単位元を返す．
 		if (root == nullptr) {
 			return e();

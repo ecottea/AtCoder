@@ -139,7 +139,7 @@ struct Ushige_ub_only {
 *	n 変数で初期化する．
 *
 * set_ub(a, b, d) : O(1)
-*	v[b] - v[a] <= d という制約を追加する．（d = 0, 1）
+*	v[b] - v[a] <= d という制約を追加する．（d ∈ {0, 1}）
 *
 * maximize_diff(a, diff) : O(n + m)（m : 制約の数）
 *	v[b] - v[a] の最大値（無いなら INFL）を diff[b] に格納する．

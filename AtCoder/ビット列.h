@@ -109,6 +109,45 @@ bool interval_flip(const string& s, int k, char one = '1') {
 }
 
 
+//【0-1 間距離の和の最小化】O(n)
+/*
+* 0,1 を各 n 個含むビット列 s[0..2n) について，(0,1) のペアを n 個作る．
+* s[i]='0' と s[j]='1' をペアにするとコスト |j-i| がかかるとし，コストの総和の最小値を返す．
+* またそれを実現するようなペアの作り方が何通りあるかを cnt に格納する．
+*/
+ll minimize_01distance_sum(const string& s, mint* cnt = nullptr, char one = '1') {
+	// verify : https://atcoder.jp/contests/agc037/tasks/agc037_b
+
+	//【方法】
+	// ('0','1') を (-1,1) に置き換えて累積和 acc を計算していく．
+	// 累積和 acc が負[正] のときは相手の居ない '0'['1'] が |acc| 個余っているので，
+	// もし '1'['0'] を見たらそれらからペアの相手を選択するのが一律で最善である．
+
+	int n2 = sz(s);
+	if (cnt == nullptr) cnt = new mint;
+	*cnt = 1;
+
+	ll sc = 0; int acc = 0;
+	rep(i, n2) {
+		if (acc < 0 && s[i] == one) {
+			*cnt *= -acc;
+			sc += i;
+		}
+		else if (acc > 0 && s[i] != one) {
+			*cnt *= acc;
+			sc += i;
+		}
+		else {
+			sc -= i;
+		}
+
+		acc += (s[i] == one ? 1 : -1);
+	}
+
+	return sc;
+}
+
+
 //【隣接互換での 1 の連続】O(n log n)（n = popcount(s)）
 /*
 * ビット列 s に対して隣接ビットの交換を k 回以下行えるとき，

@@ -118,7 +118,7 @@ int weakly_longest_increasing_subsequence(const vector<T>& a) {
 * —˜—pFyÀ•Wˆ³kz
 */
 int op_lis(int a, int b) { return max(a, b); }
-int e_lis() { return 0; }
+int e_lis() { return 0; } // ’PˆÊŒ³‚ª -INF ‚Å‚È‚­ 0 ‚Å‚ ‚é‚±‚Æ‚É’ˆÓ
 template <class T>
 int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/problems/DPL_1_D
@@ -136,9 +136,9 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 	//	dp_0[0..3) = [0, 0, 0, 0]
 	//	dp_1[0..3) = [0, 0, 0, 1] (max(0, 0, 0) + 1 = 1)
 	//	dp_2[0..3) = [0, 1, 0, 1] (max(0)       + 1 = 1)
-	//	dp_2[0..3) = [0, 1, 2, 1] (max(0, 1)    + 1 = 2)
 	//	dp_3[0..3) = [0, 1, 2, 1] (max(0, 1)    + 1 = 2)
-	//	dp_4[0..3) = [1, 1, 2, 1] (max()        + 1 = 1)
+	//	dp_4[0..3) = [0, 1, 2, 1] (max(0, 1)    + 1 = 2)
+	//	dp_5[0..3) = [1, 1, 2, 1] (max()        + 1 = 1)
 
 	// j = b[i] ‚ğ‡‚ÉŒ©‚Ä‚¢‚­
 	rep(i, n) {

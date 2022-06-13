@@ -6,12 +6,33 @@
 // ■■■■■ 区間 ■■■■■
 
 
+//【区間の重なり判定】
+/*
+* 閉区間 [l1, r1] と [l2, r2] が共通部分をもつ ⇔ max(l1, l2) <= min(r1, r2)
+* verify : https://codeforces.com/contest/1680/problem/A
+* 
+* 半開区間 [l1, r1) と [l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
+*
+* 開区間 (l1, r1) と (l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
+* verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
+*/
+
+
+//【区間の重なりの長さ】
+/*
+* 閉区間 [l1, r1] と [l2, r2] の共通部分の長さは以下の式で与えられる：
+*	min(min(r1, r2) - max(l1, l2), 0)
+*
+* verify : https://atcoder.jp/contests/abc070/tasks/abc070_b
+*/
+
+
 //【ソートの仕方】
 /*
-* 選んだ区間の共通部分が空になるように ○○ する問題の場合は右端で昇順ソート
+* 選んだ区間の共通部分が空になるようにする問題の場合は右端で昇順ソート
 * varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
 * 
-* 選んだ区間の和集合が全体になるように ○○ する問題の場合は左端で昇順ソート
+* 選んだ区間の和集合が全体になるようにする問題の場合は左端で昇順ソート
 * verify : https://atcoder.jp/contests/arc026/tasks/arc026_3
 */
 
@@ -215,6 +236,43 @@ ll light_placement(const vector<T>& l_, const vector<T>& r_, const vl& c) {
 	}
 
 	return seg.get(m - 1);
+}
+
+
+//【最長共通区間】O(n log n)
+/*
+* 左端 l[0..n)，右端 r[0..n) をもつ n 個の実数上の区間について，
+* 異なる 2 つの区間の共通部分の長さの最大値を返す（なければ 0）
+* またそれを実現する区間 (l[i1], r[i1]), (l[i2], r[i2]) の例を i1, i2 に格納する（なければ -1）
+*/
+ll maximize_interval_intersection(const vl& l, const vl& r, int* i1 = nullptr, int* i2 = nullptr) {
+	// verify : https://atcoder.jp/contests/arc119/tasks/arc119_e
+
+	int n = sz(l);
+
+	// 区間を左端昇順にソートする．
+	vector<pll> lr(n);
+	rep(i, n) lr[i] = { l[i], r[i] };
+	sort(all(lr));
+
+	ll res = 0, r_max = 0; int ri_max = -1; pii i12{ -1, -1 };
+
+	// 区間 (l[i], r[i]) と今までみた区間との共通部分を考える．
+	rep(i, n) {
+		ll l, r;
+		tie(l, r) = lr[i];
+
+		// l[i] は今までみた区間のどの左端よりも右にあるので，
+		// その中で右端が最大のものと組にするのが最善である．
+		if (chmax(res, min(r, r_max) - l)) i12 = { ri_max, i };
+
+		// 右端の最大値を更新する．
+		if (chmax(r_max, r)) ri_max = i;
+	}
+
+	if (i1 != nullptr) tie(*i1, *i2) = i12;
+
+	return res;
 }
 
 

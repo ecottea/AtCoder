@@ -177,6 +177,8 @@ struct MFPS {
 //		return mul_other(g);
 	}
 	MFPS& mul_other(const MFPS& g) {
+		// verify : // verify : https://atcoder.jp/contests/arc059/tasks/arc059_c
+
 		int m = g.deg();
 		if (m == -1) return *this = MFPS();
 		resize(n + m);
@@ -843,6 +845,7 @@ void multipoint_evaluation(const MFPS& f, const vm& x, vm& y) {
 */
 mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 	// 参考 : https://37zigen.com/lagrange-interpolation/
+	// verify : https://atcoder.jp/contests/arc033/tasks/arc033_4
 
 	//【方法】
 	// ラグランジュ基底関数を

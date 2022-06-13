@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "木DP.h"
 // ■■■■■ 二部グラフのマッチング ■■■■■
 
 
@@ -330,15 +331,14 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 }
 
 
-//【二部グラフの完全マッチングの数え上げ】O(2^|S| |S|)
+//【二部グラフの完全マッチングの数え上げ】O(2^n n)
 /*
-* |S| = |T| なる二部グラフ (S, T) の完全マッチングの個数を返す．
-*
-* e[i][j] : S[i] と T[j] の間に辺が存在するなら true, なければ false．
+* |S| = |T| = n なる二部グラフ (S, T) の完全マッチングの個数を返す．
+* e[i][j] : S[i] と T[j] の間に辺が存在するなら ex, なければ その他の値．
 *
 *（bit DP）
 */
-mint count_perfect_matching(vvb& e) {
+template <class T> mint count_perfect_matching(const vector<vector<T>>& e, T ex) {
 	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231035
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_o
 
@@ -363,7 +363,7 @@ mint count_perfect_matching(vvb& e) {
 		// 頂点 i が j ∈ set とマッチしている場合についてループ．
 		rep(j, n) {
 			// (i, j) に辺がなかったり，j が set に属していなければ何もしない．
-			if (!e[i][j] || !(set & (1 << j))) continue;
+			if (e[i][j] != ex || !(set & (1 << j))) continue;
 
 			// i と j がマッチしている場合の数を加算する．
 			dp[set] += rf(set - (1 << j));
@@ -375,6 +375,38 @@ mint count_perfect_matching(vvb& e) {
 	// set = T として再帰関数に投げる．
 	return rf((1 << n) - 1);
 }
+
+
+//【木の最大マッチング】O(n)
+/*
+* 木 g の最大マッチングの大きさを返す．
+*
+* 利用：【貰う木 DP】
+*/
+// verify : https://atcoder.jp/contests/agc014/tasks/agc014_d
+using T_tbm = int;
+void merge_tbm(T_tbm& x, const T_tbm& y) { x += y; }
+T_tbm e_tbm() { return 0; }
+T_tbm leaf_tbm(int s) { return 0; }
+T_tbm apply_tbm(const T_tbm& x, int s, int t) { return (T_tbm)(x == 0); }
+int tree_bipartite_matching(const Graph& g) {
+	vector<T_tbm> dp;
+	tree_getDP<T_tbm, merge_tbm, e_tbm, leaf_tbm, apply_tbm>(g, 0, dp);
+	
+	int res = 0;
+	rep(i, sz(g)) res += (int)(dp[i] > 0);
+	return res;
+}
+
+
+//【パーマネント】
+/*
+* 【二部グラフの完全マッチングの数え上げ】の戻り値は
+* 0,1 を成分にもつ二部隣接行列 e[0..n)[0..n) のパーマネント perm(e) とも解釈できる．
+* 
+* mod 2 では perm(e) = det(e) であり，det(e) は O(n^3) で計算できる．
+* verify : https://atcoder.jp/contests/arc054/tasks/arc054_c
+*/
 
 
 //【ホールの結婚定理】

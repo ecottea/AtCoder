@@ -9,6 +9,7 @@
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
 template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
+	// 参考 : https://twitter.com/meguru_comp/status/697008509376835584
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_4_D
 
 	// 境界が決定するまで
@@ -371,8 +372,8 @@ void parallel_binary_search(vector<T>& ok, vector<T>& ng,
 	// verify : https://atcoder.jp/contests/code-thanks-festival-2017-open/tasks/code_thanks_festival_2017_h
 
 	//【使い所】
-	// 解が単調性を持っていることが分かっているが，ランダムアクセスができず
-	// 愚直に二分探索を繰り返すと O(N Q) がかかってしまう場合（Union-Find など）
+	// 解が単調性を持っていることが分かっているが，ランダムアクセスができず，
+	// 愚直に二分探索を繰り返すと O(N Q) がかかってしまう場合．（Union-Find など）
 	// どうせ線形探索に O(N) かかるのなら Q 個のクエリをまとめて処理できるので，
 	// 線形探索の回数を O(log Q) に抑えることで全体 O(N log Q) を実現する．
 	
