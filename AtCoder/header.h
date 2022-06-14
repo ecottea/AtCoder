@@ -34,7 +34,8 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 // 汎用マクロの定義
 #define all(a) (a).begin(), (a).end()
 #define sz(x) ((int)(x).size())
-#define distance (int)distance
+#define lbpos(a, x) (int)distance((a).begin(), std::lower_bound(all(a), x))
+#define ubpos(a, x) (int)distance((a).begin(), std::upper_bound(all(a), x))
 #define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
 #define YES(b) {cout << ((b) ? "YES\n" : "NO\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
@@ -64,12 +65,12 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #include "local.hpp"
 // 提出用（gcc）
 #else
-#define popcount (int)__builtin_popcount
-#define popcountll (int)__builtin_popcountll
-#define lsb __builtin_ctz
-#define lsbll __builtin_ctzll
-#define msb(n) (31 - __builtin_clz(n))
-#define msbll(n) (63 - __builtin_clzll(n))
+inline int popcount(int n) { return __builtin_popcount(n); }
+inline int popcount(ll n) { return __builtin_popcountll(n); }
+inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
+inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
+inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
+inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define gcd __gcd
 #define dump(...)
 #define dumpel(v)

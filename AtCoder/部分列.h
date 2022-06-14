@@ -39,7 +39,7 @@ int longest_increasing_subsequence(const vector<T>& a) {
 
 	rep(i, n) {
 		// 右端が a[i] 以上であるような増加部分列の最小長さ j を得る．
-		int j = distance(dp.begin(), lower_bound(all(dp), a[i]));
+		int j = lbpos(dp, a[i]);
 
 		// 長さ j の増加部分列の右端を a[i] に置き換える．
 		dp[j] = a[i];
@@ -88,7 +88,7 @@ int weakly_longest_increasing_subsequence(const vector<T>& a) {
 
 	rep(i, n) {
 		// 右端が a[i] より大きい増加部分列の最小長さ j を得る．
-		int j = distance(dp.begin(), upper_bound(all(dp), a[i]));
+		int j = ubpos(dp, a[i]);
 
 		// 長さ j の増加部分列の右端に a[i] に置き換える．
 		// これより短いものは右端を a[i] に置き換えても得しないので無視できる．

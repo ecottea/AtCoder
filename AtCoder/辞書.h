@@ -834,7 +834,7 @@ class Wavelet_matrix {
 
 	// a[l..r) の中で [0..v) に値をもつ要素の個数を返す．
 	int count_rsub(int l, int r, ll v) {
-		if (msbll(v) >= k) return r - l;
+		if (msb(v) >= k) return r - l;
 
 		int cnt = 0;
 		repir(j, k - 1, 0) {
@@ -854,7 +854,7 @@ class Wavelet_matrix {
 
 	// a[l..r) の中で [0..v) に値をもつ要素の和を返す．
 	ll sum_rsub(int l, int r, ll v) {
-		if (msbll(v) >= k) return acc[k][r] - acc[k][l];
+		if (msb(v) >= k) return acc[k][r] - acc[k][l];
 
 		ll res = 0;
 		repir(j, k - 1, 0) {
@@ -875,7 +875,7 @@ class Wavelet_matrix {
 public:
 	// 非負整数列 t で初期化する．
 	Wavelet_matrix(const vl& t)
-		: n(sz(t)), k(msbll(*max_element(all(t))) + 1),
+		: n(sz(t)), k(msb(*max_element(all(t))) + 1),
 		bs(k, vb(n)), bs_acc(2, vvi(k, vi(n + 1))), num_zeros(k), acc(k + 1, vl(n + 1))
 	{
 		// verify : https://judge.yosupo.jp/problem/static_range_frequency
@@ -956,12 +956,10 @@ public:
 		int i = id[v] + c;
 		rep(j, k) {
 			if (v & (1LL << j)) {
-				auto it = upper_bound(all(bs_acc[1][j]), i - num_zeros[j]);
-				i = distance(bs_acc[1][j].begin(), it) - 1;
+				i = ubpos(bs_acc[1][j], i - num_zeros[j]) - 1;
 			}
 			else {
-				auto it = upper_bound(all(bs_acc[0][j]), i);
-				i = distance(bs_acc[0][j].begin(), it) - 1;
+				i = ubpos(bs_acc[0][j], i - num_zeros[j]) - 1;
 			}
 		}
 
@@ -1128,7 +1126,7 @@ struct Substring_dictionary {
 		// i 番目の部分文字列がどの接尾辞 s[sa[k]..n) の接頭辞かを探す．O(log n)
 		auto it = lower_bound(all(cnt), i);
 		if (it == cnt.end()) return "";
-		int k = distance(cnt.begin(), it);
+		int k = (int)distance(cnt.begin(), it);
 
 		// i から cnt[k] に足りない分だけ後ろの文字を削ったものが求める部分文字列．
 		// c++ は s.substr(i, w) : s[i..i+w) なので注意．
@@ -1187,20 +1185,14 @@ struct Outer_sum_dictionary {
 	// S の v 未満の要素の個数を返す．
 	ll lower_bound(ll v) {
 		ll cnt = 0;
-		rep(i, n) {
-			auto it = std::lower_bound(all(b), v - a[i]);
-			cnt += distance(b.begin(), it);
-		}
+		rep(i, n) cnt += lbpos(b, v - a[i]);
 		return cnt;
 	}
 
 	// S の v 以下の要素の個数を返す．
 	ll upper_bound(ll v) {
 		ll cnt = 0;
-		rep(i, n) {
-			auto it = std::upper_bound(all(b), v - a[i]);
-			cnt += distance(b.begin(), it);
-		}
+		rep(i, n) cnt += ubpos(b, v - a[i]);			
 		return cnt;
 	}
 
@@ -1220,8 +1212,7 @@ struct Outer_sum_dictionary {
 		// sum : v 未満の要素の和, cnt : v 未満の要素の個数
 		ll sum = 0, cnt = 0;
 		rep(i, n) {
-			auto it = std::lower_bound(all(b), v - a[i]);
-			int d = distance(b.begin(), it);
+			int d = lbpos(b, v - a[i]);
 			sum += a[i] * d + acc_b[d];
 			cnt += d;
 		}
@@ -1304,23 +1295,17 @@ struct Outer_mul_dictionary {
 		ll cnt = 0;
 		if (v > 0) {
 			cnt += (ll)m * n - (ll)np * mp - (ll)nn * mn;
-			repe(x, ap) {
-				auto it = std::lower_bound(all(bp), (v + x - 1) / x);
-				cnt += distance(bp.begin(), it);
-			}
-			repe(x, an) {
-				auto it = std::lower_bound(all(bn), (v + x - 1) / x);
-				cnt += distance(bn.begin(), it);
-			}
+			repe(x, ap) cnt += lbpos(bp, (v + x - 1) / x);
+			repe(x, an) cnt += lbpos(bn, (v + x - 1) / x); 
 		}
 		else if (v < 0) {
 			repe(x, ap) {
 				auto it = std::upper_bound(all(bn), -v / x);
-				cnt += distance(it, bn.end());
+				cnt += (ll)distance(it, bn.end());
 			}
 			repe(x, an) {
 				auto it = std::upper_bound(all(bp), -v / x);
-				cnt += distance(it, bp.end());
+				cnt += (ll)distance(it, bp.end());
 			}
 		}
 		else {

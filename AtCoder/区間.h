@@ -146,7 +146,7 @@ T interval_scheduling(const vector<S>& l, const vector<S>& r, const vector<T>& a
 			dp[i] = a2[i];
 		}
 		else {
-			int j = distance(l2.begin(), it);
+			int j = (int)distance(l2.begin(), it);
 			dp[i] = a2[i] + dp[j];
 		}
 
@@ -342,7 +342,7 @@ int maximize_interval_nest(const vl& l, vl r) {
 
 	rep(i, n) {
 		// 右端の座標圧縮
-		int j = distance(r.begin(), lower_bound(all(r), lr[i].second));
+		int j = lbpos(r, lr[i].second);
 
 		// j を右端にもてるのは，それまでの右端が j より大きいもののみ．
 		// よってその中での最長減少部分列の長さを求め，それに 1 を加える．

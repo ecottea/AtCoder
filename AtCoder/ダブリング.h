@@ -45,7 +45,7 @@ class Map_composite {
 
 public:
 	// [0..n) ã‚ÌÊ‘œ i -> s[i] ‚Å‰Šú‰»‚·‚éD
-	Map_composite(const vi& s, ll k_max = 1LL << 62) : n(sz(s)), K(msbll(k_max) + 1), dp(K, vi(n)) {
+	Map_composite(const vi& s, ll k_max = 1LL << 62) : n(sz(s)), K(msb(k_max) + 1), dp(K, vi(n)) {
 		// s^(2^0)[j] = s[j]
 		rep(j, n) dp[0][j] = s[j];
 
@@ -121,7 +121,7 @@ template <class T> struct Map_accumulate {
 
 	// [0..n) ã‚ÌÊ‘œ i -> s[i] ‚ÆŠÖ” i -> f[i] ‚Å‰Šú‰»‚·‚éD
 	Map_accumulate(const vi& s, const vT& f, ll k_max = 1LL << 62)
-		: n(sz(s)), K(msbll(k_max) + 1), dp(K, vi(n)), dp_acc(K, vT(n))
+		: n(sz(s)), K(msb(k_max) + 1), dp(K, vi(n)), dp_acc(K, vT(n))
 	{
 		// s^(2^0)[j] = s[j]
 		rep(j, n) dp[0][j] = s[j];
@@ -185,7 +185,7 @@ mint count_restricted_multiplier(ll n, const vi& c, int b) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_e
 
 	int k = sz(c);
-	const int m = msbll(n) + 1;
+	const int m = msb(n) + 1;
 
 	// pow10[i] : 10^(2^i) mod b
 	vi pow10(m + 1);

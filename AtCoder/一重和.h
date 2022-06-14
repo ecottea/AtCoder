@@ -149,7 +149,7 @@ template <class T> struct Xor_sum {
 	// a[0..n) ‚Å‰Šú‰»‚·‚éD
 	Xor_sum(const vector<T>& a) {
 		T a_max = *max_element(all(a));
-		if (a_max > 0) d = msbll((ll)a_max) + 1;
+		if (a_max > 0) d = msb((ll)a_max) + 1;
 		else d = 0;
 
 		cnt = vvi(d, vi(2));
@@ -205,7 +205,7 @@ struct Mod_sum_query {
 
 		for (ll v = m; v <= a[n - 1]; v += m) {
 			// ’Êí‚Ì˜a‚Æ‚­‚ç‚×‚Ä‰½ŒÂ m ‚ğˆø‚©‚ê‚é‚©‚ğ“ñ•ª’Tõ‚Å‹‚ß‚ê‚Î—Ç‚¢D
-			res -= (ll)m * distance(lower_bound(all(a), v), a.end());
+			res -= m * (ll)distance(lower_bound(all(a), v), a.end());
 		}
 
 		return res;
@@ -218,11 +218,11 @@ struct Mod_sum_query {
 
 		for (ll v = m; v < a[n - 1]; v += m) {
 			// ’Êí‚Ì˜a‚Æ‚­‚ç‚×‚Ä‰½ŒÂ m ‚ğˆø‚©‚ê‚é‚©‚ğ“ñ•ª’Tõ‚Å‹‚ß‚ê‚Î—Ç‚¢D
-			sum -= (ll)m * distance(lower_bound(all(a), v + 1), a.end());
+			sum -= m * (ll)distance(lower_bound(all(a), v + 1), a.end());
 		}
 
 		// •s‘«•ª‚ğ•Ô‚·D
-		return (ll)m * n - sum;
+		return m * (ll)n - sum;
 	}
 };
 

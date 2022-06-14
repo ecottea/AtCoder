@@ -224,7 +224,7 @@
     <ClInclude Include="数え上げ(木).h" />
     <ClInclude Include="数論(一括).h" />
     <ClInclude Include="数論%28old%29.h" />
-    <ClInclude Include="整列集合.h" />
+    <ClInclude Include="全順序集合.h" />
     <ClInclude Include="最短路.h" />
     <ClInclude Include="有名パズル.h" />
     <ClInclude Include="期待値.h" />
@@ -295,6 +295,7 @@
     <ClInclude Include="部分和問題.h" />
     <ClInclude Include="ビット全探索.h" />
     <ClInclude Include="数論%28高速%29.h" />
+    <ClInclude Include="全順序モノイド.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />

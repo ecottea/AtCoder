@@ -103,10 +103,10 @@ pii coordinate_compression_rectangle(
 	x1_cp.resize(n); y1_cp.resize(n);
 	x2_cp.resize(n); y2_cp.resize(n);
 	rep(i, n) {
-		x1_cp[i] = distance(xs->begin(), lower_bound(all(*xs), x1[i]));
-		y1_cp[i] = distance(ys->begin(), lower_bound(all(*ys), y1[i]));
-		x2_cp[i] = distance(xs->begin(), lower_bound(all(*xs), x2[i]));
-		y2_cp[i] = distance(ys->begin(), lower_bound(all(*ys), y2[i]));
+		x1_cp[i] = lbpos(*xs, x1[i]);
+		y1_cp[i] = lbpos(*ys, y1[i]);
+		x2_cp[i] = lbpos(*xs, x2[i]);
+		y2_cp[i] = lbpos(*ys, y2[i]);
 	}
 
 	return { sz(*xs), sz(*ys) };
@@ -154,12 +154,12 @@ tuple<int, int, int> coordinate_compression_rectangular(
 	x1_cp.resize(n); y1_cp.resize(n); z1_cp.resize(n);
 	x2_cp.resize(n); y2_cp.resize(n); z2_cp.resize(n);
 	rep(i, n) {
-		x1_cp[i] = distance(xs->begin(), lower_bound(all(*xs), x1[i]));
-		y1_cp[i] = distance(ys->begin(), lower_bound(all(*ys), y1[i]));
-		z1_cp[i] = distance(zs->begin(), lower_bound(all(*zs), z1[i]));
-		x2_cp[i] = distance(xs->begin(), lower_bound(all(*xs), x2[i]));
-		y2_cp[i] = distance(ys->begin(), lower_bound(all(*ys), y2[i]));
-		z2_cp[i] = distance(zs->begin(), lower_bound(all(*zs), z2[i]));
+		x1_cp[i] = lbpos(*xs, x1[i]);
+		y1_cp[i] = lbpos(*ys, y1[i]);
+		z1_cp[i] = lbpos(*zs, z1[i]);
+		x2_cp[i] = lbpos(*xs, x2[i]);
+		y2_cp[i] = lbpos(*ys, y2[i]);
+		z2_cp[i] = lbpos(*zs, z2[i]);
 	}
 
 	return { sz(*xs), sz(*ys), sz(*zs) };

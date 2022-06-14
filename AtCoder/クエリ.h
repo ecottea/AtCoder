@@ -113,10 +113,10 @@ public:
 
 	// [x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
 	S sum(ll x1, ll y1, ll x2, ll y2) const {
-		int t1 = distance(xs.begin(), lower_bound(all(xs), x1));
-		int t2 = distance(xs.begin(), lower_bound(all(xs), x2));
-		int j1 = distance(ys.begin(), lower_bound(all(ys), y1));
-		int j2 = distance(ys.begin(), lower_bound(all(ys), y2));
+		int t1 = lbpos(xs, x1);
+		int t2 = lbpos(xs, x2);
+		int j1 = lbpos(ys, y1);
+		int j2 = lbpos(ys, y2);
 
 		return op(seg.prod(j1, j2, t2), inv(seg.prod(j1, j2, t1)));
 	}

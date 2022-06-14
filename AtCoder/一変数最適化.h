@@ -57,7 +57,7 @@ template <class T> double minimize_squared_sum(const vector<T>& a) {
 */
 ll minimize_xor_sum(const vl& a) {
 	int n = sz(a);
-	int m = msbll(*max_element(all(a))) + 1;
+	int m = msb(*max_element(all(a))) + 1;
 
 	//【方法】
 	// 2 進数表記したときの桁 j ごとに独立に考えることができる．
@@ -89,7 +89,7 @@ ll maximize_xor_sum(const vl& a, ll k) {
 	// verify : https://atcoder.jp/contests/abc117/tasks/abc117_d
 
 	int n = sz(a);
-	int m = msbll(max(*max_element(all(a)), k)) + 1;
+	int m = msb(max(*max_element(all(a)), k)) + 1;
 
 	//【方法】
 	// 2 進数表記したときの上の桁から貪欲に考える．

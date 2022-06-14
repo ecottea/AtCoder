@@ -54,8 +54,6 @@ struct Cumulative_prod {
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 class Cumulative_sum_2D {
-	// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
-
 	int h, w;
 
 	// acc[i][j] : Σa[0..i)[0..j)
@@ -90,6 +88,8 @@ public:
 
 	// Σa[x1..x2)[y1..y2) を返す．
 	S sum(int x1, int y1, int x2, int y2) {
+		// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
+		
 		chmax(x1, 0);
 		chmax(y1, 0);
 		chmin(x2, h);
@@ -339,55 +339,96 @@ struct Cumulative_lossy_sum_2D {
 };
 
 
-//【スライド最小値（整列集合）】O(n)
+//【スライド最小値（全順序集合）】O(n)
 /*
-* 配列 a[0..n) に対し min a[i..i+w) を a_min[i] に返す．
+* 配列 a[0..n) に対し min a(i-w..i] を a_min[i] に格納する．
+* 要素は全順序集合 <S, comp(≦), inf> の元とする．（範囲外の値は inf とみなす）
 */
-template <class S, bool(*comp)(S, S), S(*inf)()>
-void slide_minimum(const vector<S>& a, int w, vector<S>& a_min) {
+template <class S, bool(*cmp)(S, S), S(*inf)()>
+void sliding_window_minimum(const vector<S>& a, int w, vector<S>& a_min) {
 	// 参考：https://qiita.com/kuuso1/items/318d42cd089a49eeb332
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_3_D
 
 	int n = sz(a);
-	a_min.resize(n + 1 - w);
+	a_min.resize(n);
 
-	// 現在の最小値の位置と，今後最小値になりうる数の位置を入れておくデック
+	// 現在の最小値の位置と，今後最小値になりうる数の位置を昇順に入れておくデック
 	deque<int> q;
 
+	// a[0..7) = [4, 2, 3, 1, 5, 7, 6], w = 3 のときの遷移例
+	//        i:  0  1  2  3  4  5  6
+	//	a[0..0]: [4]					q: [0]
+	//	a[0..1]: [4, 2]					q: [1]
+	//	a[0..2]: [4, 2, 3]				q: [1, 2]
+	//  a(0..3]:    [2, 3, 1]			q: [3]
+	//  a(1..4]:       [3, 1, 5]		q: [3, 4]
+	//  a(2..5]:          [1, 5, 7]		q: [3, 4, 5]
+	//  a(3..6]:             [5, 7, 6]	q: [4, 6]
+
 	rep(i, n) {
-		// 現在の最小値が注目区間の外に出たらデックの先頭から除去する．
-		if (!q.empty() && q.front() <= i - w) {
-			q.pop_front();
-		}
+		// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+		if (!q.empty() && q.front() <= i - w) q.pop_front();
 
-		// 新しく区間に入る数より大きい数は最小値とはなりえないので
-		// デックの末尾から除去する．
-		while (!q.empty() && comp(a[i], a[q.back()])) {
-			q.pop_back();
-		}
+		// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
+		while (!q.empty() && cmp(a[i], a[q.back()])) q.pop_back();
 
-		// 新しく区間に入る数は，今後最小値となる可能性があるので
-		// デックの末尾に追加する．
+		// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
 		q.push_back(i);
 
-		// 注目区間の幅が w になっていれば結果を記録する．
-		if (i >= w - 1) {
-			a_min[i - w + 1] = a[q.front()];
+		// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+		a_min[i] = a[q.front()];
+	}
+}
+
+
+//【間引きスライド最小値（全順序集合）】O(n)
+/*
+* 配列 a[0..n) に対し，a_min[i] に以下の値（m 個おきでの直前 w 個の最小値）を格納する：
+*		min( a[i], a[i-m], a[i-2m], ..., a[i-(w-1)m] )
+* 要素は全順序集合 <S, cmp(≦), inf> の元とする．（範囲外の値は inf とみなす）
+*/
+template <class S, bool(*cmp)(S, S), S(*inf)()>
+void thinning_sliding_window_minimum(const vector<S>& a, int w, int m, vector<S>& a_min) {
+	int n = sz(a);
+	a_min.resize(n);
+
+	// 添字が ir (mod m) のところだけに対してスライド最小値のアルゴリズムを適用する．
+	rep(ir, min(m, n)) {
+		// 現在の最小値の位置と，今後最小値になりうる数の位置を昇順に入れておくデック
+		deque<int> q;
+
+		repi(iq, 0, (n - 1 - ir) / m) {
+			int i = iq * m + ir;
+
+			// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+			if (!q.empty() && q.front() <= i - w * m) q.pop_front();
+
+			// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
+			while (!q.empty() && cmp(a[i], a[q.back()])) q.pop_back();
+
+			// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
+			q.push_back(i);
+
+			// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+			a_min[i] = a[q.front()];
 		}
 	}
 }
 
 
-//【二次元スライド最小値（整列集合）】O(h w)
+//【二次元スライド最小値（全順序集合）】O(h w)
 /*
-* 二次元配列 a[0..h)[0..w) に対し min a[i..i+dh)[j..j+dw) を a_min[i][j] に返す．
+* 二次元配列 a[0..h)[0..w) に対し min a(i-dh..i](j-dw..j] を a_min[i][j] に格納する．
+* 要素は全順序集合 <S, cmp(≦), inf> の元とする．（範囲外の値は inf とみなす）
 */
-template <class S, bool(*comp)(S, S), S(*inf)()>
-void slide_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vector<vector<S>>& a_min) {
+template <class S, bool(*cmp)(S, S), S(*inf)()>
+void sliding_window_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vector<vector<S>>& a_min) {
 	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_f
 
+	assert(dh > 0 && dw > 0);
 	int h = sz(a), w = sz(a[0]);
-	vector<vector<S>> a_tmp(h - dh + 1, vector<S>(w));
-	a_min = vector<vector<S>>(h - dh + 1, vector<S>(w - dw + 1));
+	vector<vector<S>> a_tmp(h, vector<S>(w));
+	a_min = vector<vector<S>>(h, vector<S>(w));
 
 	// 縦方向のスライド最小値を求め a_tmp に格納する．
 	rep(j, w) {
@@ -395,53 +436,37 @@ void slide_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vector<vector<
 		deque<int> q;
 
 		rep(i, h) {
-			// 現在の最小値が注目区間の外に出たらデックの先頭から除去する．
-			if (!q.empty() && q.front() <= i - dh) {
-				q.pop_front();
-			}
+			// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+			if (!q.empty() && q.front() <= i - dh) q.pop_front();
 
-			// 新しく区間に入る数より大きい数は最小値とはなりえないので
-			// デックの末尾から除去する．
-			while (!q.empty() && comp(a[i][j], a[q.back()][j])) {
-				q.pop_back();
-			}
+			// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
+			while (!q.empty() && cmp(a[i][j], a[q.back()][j])) q.pop_back();
 
-			// 新しく区間に入る数は，今後最小値となる可能性があるので
-			// デックの末尾に追加する．
+			// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
 			q.push_back(i);
 
-			// 注目区間の幅が dh になっていれば結果を記録する．
-			if (i >= dh - 1) {
-				a_tmp[i - dh + 1][j] = a[q.front()][j];
-			}
+			// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+			a_tmp[i][j] = a[q.front()][j];
 		}
 	}
 
 	// 横方向のスライド最小値を求め a_min に格納する
-	repi(i, 0, h - dh) {
+	rep(i, h) {
 		// 現在の最小値の位置と，今後最小値になりうる数の位置を入れておくデック
 		deque<int> q;
 
 		rep(j, w) {
-			// 現在の最小値が注目区間の外に出たらデックの先頭から除去する．
-			if (!q.empty() && q.front() <= j - dw) {
-				q.pop_front();
-			}
+			// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+			if (!q.empty() && q.front() <= j - dw) q.pop_front();
 
-			// 新しく区間に入る数より大きい数は最小値とはなりえないので
-			// デックの末尾から除去する．
-			while (!q.empty() && comp(a_tmp[i][j], a_tmp[i][q.back()])) {
-				q.pop_back();
-			}
+			// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
+			while (!q.empty() && cmp(a_tmp[i][j], a_tmp[i][q.back()])) q.pop_back();
 
-			// 新しく区間に入る数は，今後最小値となる可能性があるので
-			// デックの末尾に追加する．
+			// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
 			q.push_back(j);
 
-			// 注目区間の幅が dw になっていれば結果を記録する．
-			if (j >= dw - 1) {
-				a_min[i][j - dw + 1] = a_tmp[i][q.front()];
-			}
+			// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+			a_min[i][j] = a_tmp[i][q.front()];
 		}
 	}
 }

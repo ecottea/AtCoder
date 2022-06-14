@@ -96,7 +96,7 @@ ll knapsack01_problem_giveDP(const vl& v, const vi& w, int w_max, vb* sel = null
 }
 
 
-//【0-1 ナップサック問題（価値が小）】O(n Σv[i])
+//【0-1 ナップサック問題（価値の和が小）】O(n Σv[i])
 /*
 * 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
@@ -347,10 +347,10 @@ ll knapsack_problem(const vl& v, const vi& w, int w_max, vi* sel = nullptr) {
 }
 
 
-//【ナップサック問題（価値が小）】O(N V)
+//【ナップサック問題（価値の和が小）】O(N Σv[i])
 /*
 * 価値 v[i] と重さ w[i] の定まった N 個の品物から，重さ W 以下で
-* 価値が最大になるよう品物を選んだときの価値 V を返す．
+* 価値が最大になるよう品物を選んだときの価値を返す．
 * また各品物を何個選んだかの一例を sel に格納する．
 * 
 *（価値を状態とした状態 DP）
@@ -397,7 +397,7 @@ ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 		}
 	}
 
-	// 重さ w 以下で実現できた中での最大の合計価値を得る．
+	// 重さ W 以下で実現できた中での最大の合計価値を得る．
 	int j = V;
 	while (j >= 0 && dp[N][j] > W) {
 		j--;
@@ -527,11 +527,88 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
 }
 
 
+//【個数制限付きナップサック問題（重さが小）】O(n w_max) 
+/*
+* 価値 v[i]，重さ w[i]，最大個数 m[i] の定まった n 個の品物から，
+* 重さ w_max 以下で価値が最大になるよう品物を選んだときの価値を返す．
+* また品物 i を何個選んだかを sel[i] に格納する．
+*/
+ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int w_max, vi* sel = nullptr) {
+	// 参考 : https://tjkendev.github.io/procon-library/python/dp/knapsack1.html
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_G
+
+	//【方法】
+	// dp[i][j] を品物 [0..i) の中で重さ j 以下で実現できる最大価値と定めると，DP 遷移は
+	//		dp[i+1][j]
+	//		= max_k∈[0..m[i]] (dp[i][j - k w[i]] + k v[i])
+	//		= max_k∈[0..m[i]] (dp[i][j - k w[i]] - (j - k) v[i] + j v[i])
+	//		= max_k∈[0..m[i]] (dp[i][j - k w[i]] - (j - k) v[i]) + j v[i]
+	// となる．これは w[i] 個ごとに間引いたスライド最大値アルゴリズムで求められる．
+
+	int n = sz(v);
+
+	// dp[i][j] : 品物 [0..i) の中で重さ j 以下で実現できる最大価値
+	vvl dp(n + 1, vl(w_max + 1));
+
+	// 配る DP
+	rep(i, n) {
+		// 重さが jr (mod w[i]) のところだけを見ていく．
+		rep(jr, w[i]) {
+			// 現在の最大値の位置と，今後最大値になりうる数の位置を昇順に入れておくデック
+			deque<int> q;
+
+			repi(jq, 0, (w_max - jr) / w[i]) {
+				int j = jq * w[i] + jr;
+
+				// 現在の最大値が注目区間の外に出たら，デックの先頭から削除する．
+				if (!q.empty() && q.front() <= j - (m[i] + 1) * w[i]) q.pop_front();
+
+				// 新しく区間に入る数以下の数は，今後最大値とはなりえないのでデックの末尾から削除する．
+				while (!q.empty()) {
+					ll dp2_j = dp[i][j] - jq * v[i];
+					ll dp2_back = dp[i][q.back()] - q.back() / w[i] * v[i];
+					if (dp2_j < dp2_back) break;
+
+					q.pop_back();
+				}
+
+				// 新しく区間に入る数は，常に今後最大値となる可能性があるのでデックの末尾に追加する．
+				q.push_back(j);
+
+				// 現時点での最大値を知るには，デックの先頭が指す位置を見れば良い．
+				dp[i + 1][j] = dp[i][q.front()] - q.front() / w[i] * v[i] + jq * v[i];
+			}
+		}
+	}
+
+	// DP 復元を行う．
+	if (sel != nullptr) {
+		*sel = vi(n);
+		int i = n, j = w_max;
+
+		while (i >= 1) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で価値の差があれば選んだ証拠．
+			if (dp[i][j] > dp[i - 1][j]) {
+				// 選んでいたなら 1 個分記録し，重さを減じておく．
+				(*sel)[i - 1]++;
+				j -= w[i - 1];
+			}
+			else {
+				// 選んでいなかったなら 1 つ前の品物について調べに行く．
+				i--;
+			}
+		}
+	}
+
+	return dp[n][w_max];
+}
+
+
 //【個数制限付きナップサック問題（重さが小）】O(N W log m) 
 /*
 * 価値 v[i]，重さ w[i]，最大個数 m[i] の定まった N 個の品物から，
 * 重さ W 以下で価値が最大になるよう品物を選んだときの価値を返す．
-* また各品物を何個選んだかの一例を sel に格納する．
+* また品物 i を何個選んだかを sel[i] に格納する．
 *
 * 利用：【0-1 ナップサック問題（重さが小，貰う DP）】
 */
@@ -542,17 +619,14 @@ ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& se
 
 	// 品物を 1, 2, 4, 8, ... 個ずつセットにして 1 つの品物とみなす．
 	// i 番目のセットがどの品物だったかを kind[i] に記録する．
-	vl v2;
-	vi w2;
-	vi kind;
+	vl v2; vi w2, kind;
 	rep(i, N) {
 		ll m_i = m[i];
 		ll c = 1;
 		while (c < m_i) {
 			// 重さが W を超えたセットは無意味なので追加しない．
-			if (w[i] * c > (ll)W) {
-				goto NEXT_LOOP;
-			}
+			if (w[i] * c > (ll)W) goto NEXT_LOOP;
+			
 			v2.push_back(v[i] * c);
 			w2.push_back(w[i] * (int)c);
 			kind.push_back(i);
@@ -582,7 +656,93 @@ ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& se
 }
 
 
-//【個数制限付きナップサック問題（価値が小）】O(N Σv[i]m[i] log m) 
+//【個数制限付きナップサック問題（価値の和が小）】O(n Σv[i]m[i]) 
+/*
+* 価値 v[i]，重さ w[i]，最大個数 m[i] の定まった n 個の品物から，
+* 重さ w_max 以下で価値が最大になるよう品物を選んだときの価値を返す．
+* また品物 i を何個選んだかを sel[i] に格納する．
+*/
+int knapsack_problem_limited(const vi& v, const vl& w, const vi& m, ll w_max, vi* sel = nullptr) {
+	// 参考 : https://tjkendev.github.io/procon-library/python/dp/knapsack2.html
+
+	//【方法】
+	// dp[i][j] を品物 [0..i) の中で価値 j を実現できる最小重さと定めると，DP 遷移は
+	//		dp[i+1][j]
+	//		= min_k∈[0..m[i]] (dp[i][j - k v[i]] + k w[i])
+	//		= min_k∈[0..m[i]] (dp[i][j - k v[i]] - (j - k) w[i] + j w[i])
+	//		= min_k∈[0..m[i]] (dp[i][j - k v[i]] - (j - k) w[i]) + j w[i]
+	// となる．これは v[i] 個ごとに間引いたスライド最小値アルゴリズムで求められる．
+
+	int n = sz(v);
+
+	int v_max = 0;
+	rep(i, n) v_max += v[i] * m[i];
+
+	// dp[i][j] : 品物 [0..i) の中で価値 j を実現できる最小重さ
+	vvl dp(n + 1, vl(v_max + 1, INFL));
+	dp[0][0] = 0;
+
+	// 配る DP
+	rep(i, n) {
+		if (v[i] <= 0) continue;
+
+		// 価値が jr (mod v[i]) のところだけを見ていく．
+		rep(jr, v[i]) {
+			// 現在の最小値の位置と，今後最大値になりうる数の位置を昇順に入れておくデック
+			deque<int> q;
+
+			repi(jq, 0, (v_max - jr) / v[i]) {
+				int j = jq * v[i] + jr;
+
+				// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+				if (!q.empty() && q.front() <= j - (m[i] + 1) * v[i]) q.pop_front();
+
+				// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
+				while (!q.empty()) {
+					ll dp2_j = dp[i][j] - jq * w[i];
+					ll dp2_back = dp[i][q.back()] - q.back() / v[i] * w[i];
+					if (dp2_j > dp2_back) break;
+
+					q.pop_back();
+				}
+
+				// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
+				q.push_back(j);
+
+				// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+				dp[i + 1][j] = dp[i][q.front()] - q.front() / v[i] * w[i] + jq * w[i];
+			}
+		}
+	}
+
+	// 重さ w_max 以下で実現できた中での最大の合計価値を得る．
+	int j = v_max;
+	while (j >= 0 && dp[n][j] > w_max) j--;
+	int res = j;
+
+	// DP 復元を行う．
+	if (sel != nullptr) {
+		sel->resize(n);
+		int i = n;
+		while (i >= 1) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
+			if (dp[i][j] != dp[i - 1][j]) {
+				// 選んでいたなら 1 個分記録し，価値を減じておく．
+				(*sel)[i - 1]++;
+				j -= v[i - 1];
+			}
+			else {
+				// 選んでいなかったなら 1 つ前の品物について調べに行く．
+				i--;
+			}
+		}
+	}
+
+	return res;
+}
+
+
+//【個数制限付きナップサック問題（価値の和が小）】O(N Σv[i]m[i] log m) 
 /*
 * 価値 v[i]，重さ w[i]，最大個数 m[i] の定まった N 個の品物から，
 * 重さ W 以下で価値が最大になるよう品物を選んだときの価値を返す．
@@ -628,6 +788,127 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll W, vi& sel
 	rep(i, sz(v2)) {
 		if (chosen2[i]) {
 			sel[kind[i]] += v2[i] / v[kind[i]];
+		}
+	}
+
+	return res;
+}
+
+
+//【個数制限付きナップサック問題（単価が小）】O(n^2 max(v)^2) 
+/*
+* 価値 v[i]，重さ w[i]，最大個数 m[i] の定まった n 個の品物から，
+* 重さ w_max 以下で価値が最大になるよう品物を選んだときの価値を返す．
+* また品物 i を何個選んだかを sel[i] に格納する．
+*/
+ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll w_max, vl* sel = nullptr) {
+	// 参考 : https://tjkendev.github.io/procon-library/python/dp/knapsack2.html
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_I
+
+	//【方法】
+	// 品物の個数を m2[i] = min(m[i], max(v)) に制限すれば，
+	// 価値の和が小さい場合の個数制限付きナップサック問題として解ける．
+	// その解それぞれに対し，残る重さを単位価値について貪欲に埋めていく．
+
+	int n = sz(v);
+
+	// m2[i] : 制限後の品物 i の個数
+	vi m2(n);
+	int v_m = *max_element(all(v));
+	rep(i, n) m2[i] = (int)min(m[i], (ll)v_m);
+
+	// 価値の和が小さい場合の個数制限付きナップサック問題を解く．
+	int v_max = 0;
+	rep(i, n) v_max += v[i] * m2[i];
+
+	// dp[i][j] : 品物 [0..i) の中で価値 j を実現できる最小重さ
+	vvl dp(n + 1, vl(v_max + 1, INFL));
+	dp[0][0] = 0;
+
+	// 配る DP
+	rep(i, n) {
+		if (v[i] <= 0) continue;
+
+		// 価値が jr (mod v[i]) のところだけを見ていく．
+		rep(jr, v[i]) {
+			// 現在の最小値の位置と，今後最大値になりうる数の位置を昇順に入れておくデック
+			deque<int> q;
+
+			repi(jq, 0, (v_max - jr) / v[i]) {
+				int j = jq * v[i] + jr;
+
+				// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+				if (!q.empty() && q.front() <= j - (m2[i] + 1) * v[i]) q.pop_front();
+
+				// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
+				while (!q.empty()) {
+					ll dp2_j = dp[i][j] - jq * w[i];
+					ll dp2_back = dp[i][q.back()] - q.back() / v[i] * w[i];
+					if (dp2_j > dp2_back) break;
+
+					q.pop_back();
+				}
+
+				// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
+				q.push_back(j);
+
+				// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+				dp[i + 1][j] = dp[i][q.front()] - q.front() / v[i] * w[i] + jq * w[i];
+			}
+		}
+	}
+
+	// 単位重さあたりの価値と番号の組（昇順）
+	vector<pair<double, int>> val_per_weight(n);
+	rep(i, n) val_per_weight[i] = { (double)v[i] / w[i], i };
+	sort(all(val_per_weight), greater<pair<double, int>>());
+
+	ll res = -INFL; int j_res = -1;
+
+	// 残る重さを単位価値について貪欲に埋めていく．
+	repi(j, 0, v_max) {
+		// w1 : 残り重さ
+		ll w1 = w_max - dp[n][j];
+		if (w1 < 0) continue;
+
+		ll v1 = 0;
+		rep(i1, n) {
+			int i = val_per_weight[i1].second;
+
+			ll c = min(w1 / w[i], m[i] - m2[i]);
+			v1 += c * v[i];
+			w1 -= c * w[i];
+		}
+
+		if (chmax(res, j + v1)) j_res = j;
+	}
+
+	// DP 復元を行う．
+	if (sel != nullptr) {
+		sel->resize(n);
+		int i = n, j = j_res;
+		while (i >= 1) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
+			if (dp[i][j] != dp[i - 1][j]) {
+				// 選んでいたなら 1 個分記録し，価値を減じておく．
+				(*sel)[i - 1]++;
+				j -= v[i - 1];
+			}
+			else {
+				// 選んでいなかったなら 1 つ前の品物について調べに行く．
+				i--;
+			}
+		}
+
+		// w1 : 残り重さ
+		ll w1 = w_max - dp[n][j_res];
+
+		rep(i1, n) {
+			int i = val_per_weight[i1].second;
+
+			ll c = min(w1 / w[i], m[i] - m2[i]);
+			w1 -= c * w[i];
+			(*sel)[i] += c;
 		}
 	}
 
@@ -785,8 +1066,6 @@ ll knapsack01_problem(const vl& v, const vi& w, const vi& c, int w_max, int c_ma
 * f(x) を等比数列の和の公式を用いて
 *	f(x) = Π_i (0 x^0 - (v[i] x^w[i])^(m[i]+1)) / (0 x^0 - v[i] x^w[i])
 * と直したくなるが，これの計算には負元が必要になるので使えない．
-* 
-* max-plus 半環は冪等半環なので，2 冪個ずつ分けて積をとるテクニックなら使える．
 */
 
 

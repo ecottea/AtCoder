@@ -114,7 +114,7 @@ int sum_xor(const vi& a, const vi& b) {
 		// 各 a[i] ごとに下位桁からの繰り上がりが起こる回数を数える．
 		rep(i, n) {
 			auto it = lower_bound(all(b_masked), (1 << k) - a_masked[i]);
-			cnt += distance(it, b_masked.end());
+			cnt += (ll)distance(it, b_masked.end());
 		}
 
 		// これらの和の偶奇に応じて xor 結果のビットが求まる．

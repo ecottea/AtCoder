@@ -370,7 +370,7 @@ ll count_intersection(const vl& x1, const vl& y1, const vl& x2, const vl& y2) {
 				// y À•W‚ª y1 ˆÈã y2 ˆÈ‰º‚Ì‚à‚Ì‚ğ”‚¦‚éD
 				auto it1 = sx.lower_bound(x2_or_y1);
 				auto it2 = sx.upper_bound(y2);
-				res += distance(it1, it2);
+				res += (ll)distance(it1, it2);
 			}
 		}
 	}

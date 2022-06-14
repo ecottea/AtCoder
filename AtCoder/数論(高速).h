@@ -92,7 +92,7 @@ ll pollard_rho(ll n) {
 
 	if (!(n & 1)) return 2;
 
-	int m = 1 << (msbll(n) / 8);
+	int m = 1 << (msb(n) / 8);
 	mll::set_mod(n); // n ‚Í‡¬”‚¾‚ªŠ„‚èŽZ‚ÍŽg‚í‚È‚¢‚Ì‚Å–â‘è‚È‚¢
 
 	const int c_max = 99; // c ‚ðÅ‘å‚Ç‚±‚Ü‚ÅŽŽ‚·‚©

@@ -320,7 +320,7 @@
     <ClInclude Include="可換モノイド.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
-    <ClInclude Include="整列集合.h">
+    <ClInclude Include="全順序集合.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="全順序%28old%29.h">
@@ -532,6 +532,9 @@
     </ClInclude>
     <ClInclude Include="デザイン.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="全順序モノイド.h">
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
