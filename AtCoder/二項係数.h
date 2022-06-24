@@ -23,34 +23,31 @@
 * mint binomial(int n, int r) : O(1)
 *	二項係数 nCr を返す．
 *
-* mint multinomial(vi r) : O(|r|)
-*	多項係数 nC[r] を返す．（n = Σr）
+* mint multinomial(vi rs) : O(|rs|)
+*	多項係数 nC[rs] を返す．（n = Σrs）
 */
 class Factorial_mint {
 	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_max;
-	vm fac_, fac_inv_, inv_;
+	vm fac_, fac_inv_;
 
 public:
 	// n! までの階乗とその逆数を前計算しておく．O(n)
-	Factorial_mint(int n) : n_max(n) {
-		fac_.resize(n + 1);
+	Factorial_mint(int n) : n_max(n), fac_(n + 1), fac_inv_(n + 1) {
+		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
+
 		fac_[0] = 1;
 		repi(i, 1, n) fac_[i] = fac_[i - 1] * i;
 
-		fac_inv_.resize(n + 1);
 		fac_inv_[n] = fac_[n].inv();
 		repir(i, n - 1, 0) fac_inv_[i] = fac_inv_[i + 1] * (i + 1);
-
-		inv_.resize(n + 1);
-		repi(i, 1, n) inv_[i] = fac_[i - 1] * fac_inv_[i];
 	}
 	Factorial_mint() : n_max(0) {} // ダミー
 
 	// n! を返す．O(1)
 	mint factorial(int n) const {
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
-		
+
 		assert(0 <= n && n <= n_max);
 		return fac_[n];
 	}
@@ -58,13 +55,18 @@ public:
 	// 1 / n! を返す．O(1)
 	mint factorial_inv(int n) const {
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
-		
+
 		assert(0 <= n && n <= n_max);
 		return fac_inv_[n];
 	}
 
 	// 1 / n を返す．O(1)
-	mint inv(int n) const { assert(0 < n && n <= n_max); return inv_[n]; }
+	mint inv(int n) const {
+		// verify : https://atcoder.jp/contests/exawizards2019/tasks/exawizards2019_d
+
+		assert(0 < n && n <= n_max);
+		return fac_[n - 1] * fac_inv_[n];
+	}
 
 	// 順列の数 nPr を返す．O(1)
 	mint permutation(int n, int r) const {
@@ -84,12 +86,15 @@ public:
 	}
 
 	// 多項係数 nC[r] を返す．O(|r|)
-	mint multinomial(const vi& r) const {
-		int n = accumulate(all(r), 0);
+	mint multinomial(const vi& rs) const {
+		int n = accumulate(all(rs), 0);
 		assert(n <= n_max);
 
 		mint res = fac_[n];
-		repe(ri, r) res *= fac_inv_[ri];
+		repe(r, rs) {
+			if (r < 0 || n - r < 0) return 0;
+			res *= fac_inv_[r];
+		}
 
 		return res;
 	}
@@ -773,6 +778,8 @@ void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
 *	bin(i+0, 0): 1  1  1  1  1  1  1  1 ...
 *	bin(i+1, 1): 1  2  3  4  5  6  7  8 ...
 *	bin(i+2, 2): 1  3  6 10 15 21 28 36 ...
+* 
+* verify : https://atcoder.jp/contests/abc256/tasks/abc256_f
 */
 
 

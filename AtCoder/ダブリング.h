@@ -46,6 +46,8 @@ class Map_composite {
 public:
 	// [0..n) ã‚ÌÊ‘œ i -> s[i] ‚Å‰Šú‰»‚·‚éD
 	Map_composite(const vi& s, ll k_max = 1LL << 62) : n(sz(s)), K(msb(k_max) + 1), dp(K, vi(n)) {
+		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_f
+
 		// s^(2^0)[j] = s[j]
 		rep(j, n) dp[0][j] = s[j];
 

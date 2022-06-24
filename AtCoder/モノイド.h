@@ -28,7 +28,7 @@ S001 e001() { return 0; }
 using S023 = pli;
 S023 op023(S023 a, S023 b) { return { a.first + b.first, a.second + b.second }; }
 S023 e023() { return { 0, 0 }; }
-#define Add_monoid S023, op023, e023
+#define Pairadd_monoid S023, op023, e023
 
 
 //yæZ ƒ‚ƒmƒCƒhz
@@ -44,7 +44,7 @@ S002 e002() { return Matrix<mint>(3); }
 using S020 = Matrix<mint>;
 S020 op020(S020 a, S020 b) { return b * a; }
 S020 e020() { return Matrix<mint>(3); }
-#define Invmul_monoid S020, op020, e020
+#define InvMul_monoid S020, op020, e020
 
 
 //ymax ƒ‚ƒmƒCƒhz
@@ -104,14 +104,14 @@ S016 e016() { return 1; }
 using S005 = int;
 S005 e005() { return INF; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S005 op005(S005 a, S005 b) { return a == e005() ? b : a; }
-#define Lupdate_monoid S005, op005, e005
+#define LUpdate_monoid S005, op005, e005
 
 
 //y‰E•ÏX ƒ‚ƒmƒCƒhz
 using S006 = int;
 S006 e006() { return INF; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S006 op006(S006 a, S006 b) { return b == e006() ? a : b; }
-#define Rupdate_monoid S006, op006, e006
+#define RUpdate_monoid S006, op006, e006
 
 
 //y•¶š—ñ˜AŒ‹ ƒ‚ƒmƒCƒhz
@@ -138,7 +138,7 @@ S008 op008(S008 f, S008 g) {
 	return { a * c, a * d + b };
 }
 S008 e008() { return { 1, 0 }; } // e(x) = x = 1 x + 0
-#define Affine_composite_monoid S008, op008, e008
+#define AffineComposite_monoid S008, op008, e008
 
 
 //yƒAƒtƒBƒ“•ÏŠ·‚Ì‹t‡¬ ƒ‚ƒmƒCƒhz
@@ -157,7 +157,7 @@ S009 op009(S009 f, S009 g) {
 	return { a * c, a * d + b };
 }
 S009 e009() { return { 1, 0 }; } // e(x) = x = 1 x + 0
-#define Affine_invcomposite_monoid S009, op009, e009
+#define AffineInvcomposite_monoid S009, op009, e009
 
 
 //yƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“•ÏŠ·‚Ì‡¬ ƒ‚ƒmƒCƒhz
@@ -177,7 +177,7 @@ S013 op013(S013 f, S013 g) {
 	return { a + c, max(a + d, b) };
 }
 S013 e013() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -‡)
-#define Tropical_affine_composite_monoid S013, op013, e013
+#define TropicalAffineComposite_monoid S013, op013, e013
 
 
 //yƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“•ÏŠ·‚Ì‹t‡¬ ƒ‚ƒmƒCƒhz
@@ -196,7 +196,7 @@ S014 op014(S014 f, S014 g) {
 	return { a + c, max(a + d, b) };
 }
 S014 e014() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -‡)
-#define Tropical_affine_invcomposite_monoid S014, op014, e014
+#define TropicalAffineInvcomposite_monoid S014, op014, e014
 
 
 //yƒrƒbƒg—ñã “]“|” ƒ‚ƒmƒCƒhz
@@ -240,7 +240,7 @@ S018 op018(S018 a, S018 b) {
 	return res;
 }
 S018 e018() { return S018(); }
-#define Permutation_composite_monoid S018, op018, e018
+#define PermutationComposite_monoid S018, op018, e018
 
 
 //y’uŠ·‚Ì‹t‡¬ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
@@ -261,7 +261,7 @@ S019 op019(S019 a, S019 b) {
 	return res;
 }
 S019 e019() { return S019(); }
-#define Permutation_invcomposite_monoid S019, op019, e019
+#define PermutationInvcomposite_monoid S019, op019, e019
 
 
 //y‘æ“ñÅ‘å’l ƒ‚ƒmƒCƒhz
@@ -278,7 +278,7 @@ S021 op021(S021 a, S021 b) {
 	return { vals[3], vals[2] };
 }
 S021 e021() { return { -INFL, -INFL }; }
-#define Second_max_monoid S021, op021, e021
+#define SecondMax_monoid S021, op021, e021
 
 
 //y‘æ“ñÅ¬’l ƒ‚ƒmƒCƒhz
@@ -294,6 +294,6 @@ S022 op022(S022 a, S022 b) {
 	return { vals[0], vals[1] };
 }
 S022 e022() { return { INFL, INFL }; }
-#define Second_min_monoid S022, op022, e022
+#define SecondMin_monoid S022, op022, e022
 
 

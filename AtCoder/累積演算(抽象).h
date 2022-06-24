@@ -5,14 +5,14 @@
 
 //【累積可逆積（群）】
 /*
-* Cumulative_prod<S, op, e, inv>(a) : O(n)
+* Cumulative_prod<S, op, e, inv>(vS a) : O(n)
 *	配列 a[0..n) で初期化する．
 *	要素は群 <S, op, e, inv> の元とする．
 *
-* prod(l, r) : O(1)
-*	Πa[l..r) を返す．（空なら e() を返す，範囲外の値は e() とみなす）
+* S prod(int l, int r) : O(1)
+*	Πa[l..r) を返す．（空なら e() を返す．範囲外の値は e() とみなす）
 */
-template <class S, S(*mul)(S, S), S(*e)(), S(*inv)(S)>
+template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S)>
 struct Cumulative_prod {
 	// verify : https://judge.yosupo.jp/problem/static_range_sum
 
@@ -22,23 +22,63 @@ struct Cumulative_prod {
 	// acc_inv[i] : a[i - 1]^(-1) ... a[1]^(-1) a[0]^(-1)
 	vector<S> acc, acc_inv;
 
-	// コンストラクタ（配列で初期化）
+	// 配列 a[0..n) で初期化する．
 	Cumulative_prod(const vector<S>& a) : n(sz(a)), acc(n + 1), acc_inv(n + 1) {
-		acc[0] = acc_inv[0] = e();
-		rep(i, n) {
-			acc[i + 1] = op(acc[i], a[i]);
-			acc_inv[i + 1] = op(inv(a[i]), acc_inv[i]);
-		}
-	}
-	Cumulative_prod() : n(0) {}
+		// acc[0] = e()
+		acc[0] = e();
 
-	// Πa[l..r) を返す．
+		// acc[i + 1] = acc[i] a[i]
+		rep(i, n) acc[i + 1] = op(acc[i], a[i]);
+
+		// acc_inv[n] = acc[n]^(-1)
+		acc_inv[n] = inv(acc[n]);
+
+		// acc_inv[i] = a[i] acc_inv[i + 1]
+		repir(i, n - 1, 0) acc_inv[i] = op(a[i], acc_inv[i + 1]);
+	}
+	Cumulative_prod() : n(0) {} // ダミー
+
+	// Πa[l..r) を返す．（空なら e() を返す．範囲外の値は e() とみなす）
 	S prod(int l, int r) {
+		chmax(l, 0); chmin(r, n);
 		if (l >= r) return e();
 
 		// a[l] ... a[r - 1]
 		// = (a[l - 1]^(-1) ... a[0]^(-1)) (a[0] ... a[l - 1] a[l] ... a[r - 1])
-		return op(acc_inv[max(l, 0)], acc[min(r, n)]);
+		return op(acc_inv[l], acc[r]);
+	}
+};
+
+
+//【間引き累積可逆積（群）】
+/*
+* Thinning_cumulative_prod<S, op, e, inv>(vS a, int m) : O(n)
+*	配列 a[0..n) と法 m で初期化する．
+*	要素は群 <S, op, e, inv> の元とする．
+*
+* S prod(int l, int r, int k) : O(1)
+*	set = {i∈[l..r) | i=k (mod m)} とし，Πa[set] を返す．（空なら e() を返す）
+*
+* 利用：【累積可逆積（群）】
+*/
+template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S)>
+struct Thinning_cumulative_prod {
+	// verify : https://atcoder.jp/contests/aising2019/tasks/aising2019_d
+
+	int m; // 法
+	vector<Cumulative_prod<S, op, e, inv>> cps;
+
+	// 配列 a[0..n) と法 m で初期化する．
+	Thinning_cumulative_prod(const vector<S>& a, int m_) : m(m_), cps(m) {
+		vector<vector<S>> a2(m);
+		rep(i, sz(a)) a2[i % m].push_back(a[i]);
+		rep(j, m) cps[j] = Cumulative_prod<S, op, e, inv>(a2[j]);
+	}
+	Thinning_cumulative_prod() : m(1) {} // ダミー
+
+	// set = {i∈[l..r) | i=k (mod m)} とし，Πa[set] を返す．（空なら e() を返す）
+	S prod(int l, int r, int k) {
+		return cps[k].prod((l - k + m - 1) / m, (r - k + m - 1) / m);
 	}
 };
 
@@ -160,95 +200,6 @@ struct Cumulative_lossy_prod {
 };
 
 
-//【平方分割（モノイド）】
-/*
-* Quadratic_division<S, op, e>(int n) : O(n)
-*	v[0..n) = e() で初期化する．
-*	要素はモノイド (S, op, e) の元とする．
-*
-* Quadratic_division<S, op, e>(vS v) : O(n)
-*	配列 v の要素で初期化する．
-*
-* set(int i, S x) : O(√n)
-*	v[i] = x とする．
-*
-* S get(int i) : O(1)
-*	v[i] を返す．
-*
-* S prod(int l, int r) : O(√n)
-*	op( v[l..r) ) を返す．空なら e() を返す．
-*/
-template <class S, S(*op)(S, S), S(*e)()>
-struct Quadratic_division {
-	// verify : https://judge.yosupo.jp/problem/point_set_range_composite
-
-	using vS = vector<S>;
-
-	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
-	vector<S> v, v_mul;
-
-	// コンストラクタ（e() で初期化）
-	Quadratic_division(int n_) : n(n_) {
-		w = (int)(sqrt(n) + EPS);
-		m = (n + w - 1) / w;
-
-		v = vS(n, e());
-		v_mul = vS(m, e());
-	}
-
-	// コンストラクタ（配列で初期化）
-	Quadratic_division(vector<S>& v_) : Quadratic_division(sz(v_)) {
-		v = v_;
-		v_mul = vS(m, e());
-		rep(i, n) {
-			int j = i / w;
-			v_mul[j] = op(v_mul[j], v[i]);
-		}
-	}
-
-	// v[i] = x とする．
-	void set(int i, S x) {
-		// 要素 v[i] の更新
-		v[i] = x;
-
-		// v[i] を含むブロックの総積を再計算する．
-		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
-		v_mul[j] = e();
-		repi(i, i_min, i_max) v_mul[j] = op(v_mul[j], v[i]);
-	}
-
-	// v[i] を返す．
-	S get(int i) const { return v[i]; }
-
-	// op( v[l..r) ) を返す．空なら e() を返す．
-	S prod(int l, int r) const {
-		S res = e();
-
-		int j_min = l / w + 1, j_max = r / w - 1;
-
-		if (j_min <= j_max) {
-			repi(i, l, j_min * w - 1) res = op(res, v[i]);
-			repi(j, j_min, j_max) res = op(res, v_mul[j]);
-			repi(i, (j_max + 1) * w, r - 1) res = op(res, v[i]);
-		}
-		else {
-			repi(i, l, r - 1) res = op(res, v[i]);
-		}
-
-		return res;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
-		rep(i, qd.n) {
-			os << qd.get(i) << " ";
-		}
-		return os;
-	}
-#endif
-};
-
-
 //【二次元累積非可逆和（可換モノイド）】
 /*
 * Cumulative_lossy_sum_2D<S, op, o>(a) : O(h w)
@@ -339,12 +290,101 @@ struct Cumulative_lossy_sum_2D {
 };
 
 
+//【平方分割（モノイド）】
+/*
+* Quadratic_division<S, op, e>(int n) : O(n)
+*	v[0..n) = e() で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*
+* Quadratic_division<S, op, e>(vS v) : O(n)
+*	配列 v の要素で初期化する．
+*
+* set(int i, S x) : O(√n)
+*	v[i] = x とする．
+*
+* S get(int i) : O(1)
+*	v[i] を返す．
+*
+* S prod(int l, int r) : O(√n)
+*	op( v[l..r) ) を返す．空なら e() を返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+struct Quadratic_division {
+	// verify : https://judge.yosupo.jp/problem/point_set_range_composite
+
+	using vS = vector<S>;
+
+	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
+	vector<S> v, v_mul;
+
+	// コンストラクタ（e() で初期化）
+	Quadratic_division(int n_) : n(n_) {
+		w = (int)(sqrt(n) + EPS);
+		m = (n + w - 1) / w;
+
+		v = vS(n, e());
+		v_mul = vS(m, e());
+	}
+
+	// コンストラクタ（配列で初期化）
+	Quadratic_division(vector<S>& v_) : Quadratic_division(sz(v_)) {
+		v = v_;
+		v_mul = vS(m, e());
+		rep(i, n) {
+			int j = i / w;
+			v_mul[j] = op(v_mul[j], v[i]);
+		}
+	}
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		// 要素 v[i] の更新
+		v[i] = x;
+
+		// v[i] を含むブロックの総積を再計算する．
+		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
+		v_mul[j] = e();
+		repi(i, i_min, i_max) v_mul[j] = op(v_mul[j], v[i]);
+	}
+
+	// v[i] を返す．
+	S get(int i) const { return v[i]; }
+
+	// op( v[l..r) ) を返す．空なら e() を返す．
+	S prod(int l, int r) const {
+		S res = e();
+
+		int j_min = l / w + 1, j_max = r / w - 1;
+
+		if (j_min <= j_max) {
+			repi(i, l, j_min * w - 1) res = op(res, v[i]);
+			repi(j, j_min, j_max) res = op(res, v_mul[j]);
+			repi(i, (j_max + 1) * w, r - 1) res = op(res, v[i]);
+		}
+		else {
+			repi(i, l, r - 1) res = op(res, v[i]);
+		}
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
+		rep(i, qd.n) {
+			os << qd.get(i) << " ";
+		}
+		return os;
+	}
+#endif
+};
+
+
 //【スライド最小値（全順序集合）】O(n)
 /*
 * 配列 a[0..n) に対し min a(i-w..i] を a_min[i] に格納する．
-* 要素は全順序集合 <S, comp(≦), inf> の元とする．（範囲外の値は inf とみなす）
+* 要素は全順序集合 <S, leq, inf> の元とする．（範囲外の値は inf とみなす）
 */
-template <class S, bool(*cmp)(S, S), S(*inf)()>
+template <class S, bool(*leq)(S, S), S(*inf)()>
 void sliding_window_minimum(const vector<S>& a, int w, vector<S>& a_min) {
 	// 参考：https://qiita.com/kuuso1/items/318d42cd089a49eeb332
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_3_D
@@ -370,7 +410,7 @@ void sliding_window_minimum(const vector<S>& a, int w, vector<S>& a_min) {
 		if (!q.empty() && q.front() <= i - w) q.pop_front();
 
 		// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
-		while (!q.empty() && cmp(a[i], a[q.back()])) q.pop_back();
+		while (!q.empty() && leq(a[i], a[q.back()])) q.pop_back();
 
 		// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
 		q.push_back(i);
@@ -385,9 +425,9 @@ void sliding_window_minimum(const vector<S>& a, int w, vector<S>& a_min) {
 /*
 * 配列 a[0..n) に対し，a_min[i] に以下の値（m 個おきでの直前 w 個の最小値）を格納する：
 *		min( a[i], a[i-m], a[i-2m], ..., a[i-(w-1)m] )
-* 要素は全順序集合 <S, cmp(≦), inf> の元とする．（範囲外の値は inf とみなす）
+* 要素は全順序集合 <S, leq, inf> の元とする．（範囲外の値は inf とみなす）
 */
-template <class S, bool(*cmp)(S, S), S(*inf)()>
+template <class S, bool(*leq)(S, S), S(*inf)()>
 void thinning_sliding_window_minimum(const vector<S>& a, int w, int m, vector<S>& a_min) {
 	int n = sz(a);
 	a_min.resize(n);
@@ -404,7 +444,7 @@ void thinning_sliding_window_minimum(const vector<S>& a, int w, int m, vector<S>
 			if (!q.empty() && q.front() <= i - w * m) q.pop_front();
 
 			// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
-			while (!q.empty() && cmp(a[i], a[q.back()])) q.pop_back();
+			while (!q.empty() && leq(a[i], a[q.back()])) q.pop_back();
 
 			// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
 			q.push_back(i);
@@ -419,9 +459,9 @@ void thinning_sliding_window_minimum(const vector<S>& a, int w, int m, vector<S>
 //【二次元スライド最小値（全順序集合）】O(h w)
 /*
 * 二次元配列 a[0..h)[0..w) に対し min a(i-dh..i](j-dw..j] を a_min[i][j] に格納する．
-* 要素は全順序集合 <S, cmp(≦), inf> の元とする．（範囲外の値は inf とみなす）
+* 要素は全順序集合 <S, leq, inf> の元とする．（範囲外の値は inf とみなす）
 */
-template <class S, bool(*cmp)(S, S), S(*inf)()>
+template <class S, bool(*leq)(S, S), S(*inf)()>
 void sliding_window_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vector<vector<S>>& a_min) {
 	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_f
 
@@ -440,7 +480,7 @@ void sliding_window_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vecto
 			if (!q.empty() && q.front() <= i - dh) q.pop_front();
 
 			// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
-			while (!q.empty() && cmp(a[i][j], a[q.back()][j])) q.pop_back();
+			while (!q.empty() && leq(a[i][j], a[q.back()][j])) q.pop_back();
 
 			// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
 			q.push_back(i);
@@ -460,7 +500,7 @@ void sliding_window_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vecto
 			if (!q.empty() && q.front() <= j - dw) q.pop_front();
 
 			// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
-			while (!q.empty() && cmp(a_tmp[i][j], a_tmp[i][q.back()])) q.pop_back();
+			while (!q.empty() && leq(a_tmp[i][j], a_tmp[i][q.back()])) q.pop_back();
 
 			// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
 			q.push_back(j);
@@ -540,7 +580,7 @@ template <class S, S(*op)(S, S), S(*o)()>
 class Thinning_sparse_table {
 	// verify : https://atcoder.jp/contests/arc080/tasks/arc080_c
 
-	int m;
+	int m; // 法
 	vector<Sparse_table<S, op, o>> sts;
 
 public:

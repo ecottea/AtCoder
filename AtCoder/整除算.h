@@ -1,13 +1,13 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 余り付き割り算，gcd 等 ■■■■■
+// ■■■■■ 整数除算，GCD 等 ■■■■■
 
 
 //【商列挙】O(√n)
 /*
 * i=[1..n] に対し，n/i の商が q となる i の範囲が [i1..i2) であることを
 * {q, {i1, i2}} として q について降順に qi に格納する．
-* 各範囲においては余りは公差 n/i の等差数列を成す．
+* 各範囲においては余りは公差 q の等差数列を成す．
 */
 void quotient_range(ll n, vector<pair<ll, pll>>& qi) {
 	// verify : https://atcoder.jp/contests/abc230/tasks/abc230_e
@@ -31,7 +31,7 @@ void quotient_range(ll n, vector<pair<ll, pll>>& qi) {
 
 	//（例）
 	// 例えば n = 15 のときは以下のように分類できる：
-	//		商 n/i	i の範囲	余り n%i
+	//		商 n/i	i の範囲		余り n%i
 	//		15		[1..2)		[0]
 	//		7		[2..3)		[1]
 	//		5		[3..4)		[0]
@@ -48,7 +48,7 @@ void quotient_range(ll n, vector<pair<ll, pll>>& qi) {
 
 	// そうでない部分は q ごとにまとめて考える．
 	repir(q, m, 1) {
-		ll i0 = n / (q + 1) + 1;
+		ll i0 = n / (q + 1LL) + 1;
 		ll i1 = n / q + 1;
 		qi.push_back({ q, {i0, i1} });
 	}
@@ -103,6 +103,15 @@ void quotient_range(ll n, vector<pair<ll, pll>>& qi) {
 /*
 * a, b の正負によらず，数学的な floor(a / b) は以下の式で計算できる：
 *		a / b - (int)(a % b < 0)
+*/
+
+
+//【切り捨て除算の結合法則】
+/*
+* 切り捨て除算は結合法則を満たす．すなわち以下の式が成り立つ：
+*		floor(floor(a / b) / c) = floor(a / (b * c))
+* 
+* verify : https://atcoder.jp/contests/abc256/tasks/abc256_h
 */
 
 

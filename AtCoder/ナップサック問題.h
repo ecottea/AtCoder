@@ -827,7 +827,10 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll w_max, vl*
 
 	// ”z‚é DP
 	rep(i, n) {
-		if (v[i] <= 0) continue;
+		if (v[i] <= 0) {
+			repi(j, 0, v_max) dp[i + 1][j] = dp[i][j];
+			continue;
+		}
 
 		// ‰¿’l‚ª jr (mod v[i]) ‚Ì‚Æ‚±‚ë‚¾‚¯‚ðŒ©‚Ä‚¢‚­D
 		rep(jr, v[i]) {

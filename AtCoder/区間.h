@@ -2,25 +2,25 @@
 #include "header.h"
 #include "二分木.h"
 #include "座標圧縮.h"
-#include "モノイド作用付きモノイド.h"
+#include "モノイド(モノイド作用付き).h"
 // ■■■■■ 区間 ■■■■■
 
 
-//【区間の重なり判定】
+//【実区間の重なり判定】
 /*
-* 閉区間 [l1, r1] と [l2, r2] が共通部分をもつ ⇔ max(l1, l2) <= min(r1, r2)
+* 実閉区間 [l1, r1] と [l2, r2] が共通部分をもつ ⇔ max(l1, l2) <= min(r1, r2)
 * verify : https://codeforces.com/contest/1680/problem/A
 * 
-* 半開区間 [l1, r1) と [l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
+* 実半開区間 [l1, r1) と [l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
 *
-* 開区間 (l1, r1) と (l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
+* 実開区間 (l1, r1) と (l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
 * verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
 */
 
 
-//【区間の重なりの長さ】
+//【実区間の重なりの長さ】
 /*
-* 閉区間 [l1, r1] と [l2, r2] の共通部分の長さは以下の式で与えられる：
+* 実閉区間 [l1, r1] と [l2, r2] の共通部分の長さは以下の式で与えられる：
 *	min(min(r1, r2) - max(l1, l2), 0)
 *
 * verify : https://atcoder.jp/contests/abc070/tasks/abc070_b
@@ -120,7 +120,7 @@ int interval_scheduling(const vl& l, const vl& r) {
 template <class S, class T>
 T interval_scheduling(const vector<S>& l, const vector<S>& r, const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/code-formula-2014-final/tasks/code_formula_2014_final_d
-	// 
+	
 	//【方法】
 	// 仕事を頂点とし，その次に請け負える仕事への有向辺をもつグラフを考えれば，
 	// DAG 上のコスト最大パスを求める問題に帰着するので，後ろから DP すれば良い．
@@ -206,10 +206,14 @@ ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) 
 * 区間 [l[i], r[i]) を照らせるコスト c[i] の電灯が n 個ある．
 * ∪[l[i], r[i]) を照らすために必要な最小コストを返す．
 *
-* 利用：【座標圧縮（区間）】，【chmin 作用付き min モノイド】
+* 利用：【座標圧縮（区間）】
 */
-template <class T>
-ll light_placement(const vector<T>& l_, const vector<T>& r_, const vl& c) {
+ll op_lp(ll x, ll y) { return min(x, y); }
+ll e_lp() { return INFL; }
+ll act_lp(ll f, ll x) { return min(f, x); }
+ll comp_lp(ll f, ll g) { return min(f, g); }
+ll id_lp() { return INFL; }
+ll light_placement(const vl& l_, const vl& r_, const vl& c) {
 	// verify : https://atcoder.jp/contests/arc026/tasks/arc026_3
 
 	int n = sz(l_);
@@ -224,7 +228,7 @@ ll light_placement(const vector<T>& l_, const vector<T>& r_, const vl& c) {
 	sort(all(lrc));
 
 	// seg_i[j] : 電灯 i までで位置 j より左を照らすための最小コスト
-	lazy_segtree<Chmin_min_mlop_monoid> seg(m);
+	lazy_segtree<ll, op_lp, e_lp, ll, act_lp, comp_lp, id_lp> seg(m);
 	seg.set(0, 0);
 
 	// 配る DP

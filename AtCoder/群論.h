@@ -97,7 +97,6 @@ void order_distribution(ll n, unordered_map<ll, ll>& cnt) {
 }
 
 
-
 //yŒİŠ·‚Å¶¬‚³‚ê‚é‘ÎÌŒQ‚Ì•”•ªŒQz
 /*
 * ‘ÎÌŒQ S_n ‚ÌŒİŠ·‚ÌW‡ E ‚Å¶¬‚³‚ê‚é•”•ªŒQ H ‚ÍŸ‚Ì‚æ‚¤‚ÉŒˆ’è‚Å‚«‚éF

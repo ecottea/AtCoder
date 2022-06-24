@@ -81,6 +81,8 @@ template <class T> void construct_graph(const vector<vector<T>>& e, T ex, Graph&
 * 有向グラフ g の辺の向きを逆にしたグラフを g_rev に格納する．
 */
 void reverse_graph(const Graph& g, Graph& g_rev) {
+	// verify : https://atcoder.jp/contests/nikkei2019-qual/tasks/nikkei2019_qual_d
+
 	int n = sz(g);
 	g_rev = Graph(n);
 

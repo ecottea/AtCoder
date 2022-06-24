@@ -203,6 +203,152 @@ template <typename T> struct Skew_heap_rev {
 };
 
 
+//【併合可能遅延ヒープ（モノイド作用付き全順序集合）】
+/*
+* Lazy_skew_heap<S, leq, inf, F, act, comp, id>() : O(1)
+*	降順に取り出されるヒープを空で初期化する
+*	要素はモノイド左作用付き全順序集合 (S, leq(≦), inf, F, act, comp, id) の元とする．
+*
+* bool empty() : O(1)
+*	ヒープが空かを返す．
+*
+* int size() : O(1)
+*	ヒープの大きさを返す．
+*
+* S top() : O(1)
+*	ヒープ内の最大値を返す．
+*
+* push(S val) : O(log n)
+*	ヒープに値 val を追加する．
+*
+* pop() : O(log n)
+*	ヒープ内の最大値を削除する．
+*
+* merge(Lazy_skew_heap& hp) : O(log n)
+*	ヒープ hp を自身に併合する．
+*
+* apply(F val) : O(1)
+*	ヒープ内の全要素に val を作用させる．
+*/
+template <class S, bool(*leq)(S, S), S(*inf)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Lazy_skew_heap {
+	// 参考 : https://joisino.hatenablog.com/entry/2017/01/11/230141
+
+	struct Node {
+		Node* l, * r;
+		S v;
+		F lazy;
+
+		Node(S v_) : l(nullptr), r(nullptr), v(v_), lazy(id()) {}
+
+		void eval() {
+			if (l != nullptr) l->lazy = comp(lazy, l->lazy);
+			if (r != nullptr) r->lazy = comp(lazy, r->lazy);
+			v = act(lazy, v);
+			lazy = id();
+		}
+
+		friend Node* meld(Node* a, Node* b) {
+			if (a == nullptr) return b;
+			if (b == nullptr) return a;
+
+			// a >= b となるよう並び替える
+			if (leq(act(a->lazy, a->v), act(b->lazy, b->v))) swap(a, b);
+
+			// b の方が小さいので，a の左の子とマージしておけば大小関係は保たれる．
+			a->eval();
+			a->l = meld(a->l, b);
+
+			// このままだと毎回左の子が成長していってまずいので，左右の子を交換する．
+			swap(a->l, a->r);
+
+			return a;
+		}
+	};
+
+	Node* root;
+	int n;
+
+public:
+	// 空で初期化
+	Lazy_skew_heap() : root(nullptr), n(0) {}
+
+	// ヒープが空かを返す．
+	bool empty() const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
+
+		return root == nullptr;
+	}
+
+	// ヒープの大きさを返す．
+	int size() const {
+		return n;
+	}
+
+	// ヒープに値 val を追加する．
+	void push(S val) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
+
+		Node* p = new Node(val);
+		root = meld(root, p);
+		n++;
+	}
+
+	// ヒープ内の最大値を返す．
+	S top() const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
+
+		if (root == nullptr) return inf();
+		return act(root->lazy, root->v);
+	}
+
+	// ヒープ内の最大値を削除する．
+	void pop() {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
+
+		assert(root != nullptr);
+		Node* p = root;
+		p->eval();
+		root = meld(root->r, root->l);
+		delete p;
+		n--;
+	}
+
+	// ヒープ hp を併合する．
+	void merge(Lazy_skew_heap& hp) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
+
+		if (root == hp.root) return;
+		n += sz(hp);
+		root = meld(root, hp.root);
+		hp.root = nullptr;
+	}
+
+	// ヒープ内の全要素に val を作用させる．
+	void apply(F val) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
+
+		if (root == nullptr) return;
+		root->lazy = comp(val, root->lazy);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Lazy_skew_heap& q) {
+		q.print_rf(os, q.root, id());
+		return os;
+	}
+private:
+	void print_rf(ostream& os, const Node* pt, F lazy) const {
+		if (pt == nullptr) return;
+		lazy = comp(lazy, pt->lazy);
+		os << act(lazy, pt->v) << " ";
+		print_rf(os, pt->l, lazy);
+		print_rf(os, pt->r, lazy);
+	}
+#endif
+};
+
+
 //【多重集合（大小分離）】
 /*
 * Separated_multiset() : O(1)

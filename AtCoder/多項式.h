@@ -45,6 +45,8 @@ template <class T> struct Poly1 {
 	// ”äŠr
 	bool operator==(const Poly1& g) const { return a == g.a && b == g.b; }
 	bool operator!=(const Poly1& g) const { return !(*this == g); }
+	bool operator==(const T& c) const { return a == 0 && b == c; }
+	bool operator!=(const T& c) const { return !(*this == c); }
 
 	// ‰ÁŽZ
 	Poly1& operator+=(const Poly1& g) { a += g.a; b += g.b; return *this; }

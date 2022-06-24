@@ -7,11 +7,11 @@
 
 //【部分和問題（数え上げ）】O(n v)
 /*
-* 長さ n の非負整数の列 a の部分和として v を作る方法が何通りあるかを返す．
-* 
+* 非負整数列 a[0..n) の部分和として i∈[0..v] を作る方法が何通りあるかを cnt[i] に格納する．
+*
 *（和を状態にもつ状態 DP）
 */
-mint count_partial_sum(const vi& a, int v) {
+void count_partial_sum(const vi& a, int v, vm& cnt) {
 	// 参考 : https://qiita.com/suisen_cp/items/794f24d31852b97d58a6
 
 	int n = sz(a);
@@ -27,16 +27,14 @@ mint count_partial_sum(const vi& a, int v) {
 			dp[i + 1][j] = dp[i][j];
 
 			// i 番目の数が j より大きいと選べない．
-			if (j < a[i]) {
-				continue;
-			}
+			if (j < a[i]) continue;
 
 			// i 番目の数を選ぶ場合を加算する．
 			dp[i + 1][j] += dp[i][j - a[i]];
 		}
 	}
 
-	return dp[n][v];
+	cnt = dp[n];
 }
 
 
@@ -47,7 +45,7 @@ mint count_partial_sum(const vi& a, int v) {
 *
 * 利用：【形式的冪級数（mint）】，【階乗など（法が大きな素数）】
 */
-void count_partial_sum(const vi& a, int v, vm& cnt) {
+void count_partial_sum_fps(const vi& a, int v, vm& cnt) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 	// verify : https://judge.yosupo.jp/problem/sharp_p_subset_sum
 

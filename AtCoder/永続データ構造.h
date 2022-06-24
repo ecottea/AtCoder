@@ -8,19 +8,19 @@
 * 各時刻での履歴を残しながら頂点の統合と連結判定を行う．
 * 時刻とは，それまでに呼ばれた merge() の回数を意味する．
 *
-* Partially_persistent_union_find(n) : O(n)
+* Partially_persistent_union_find(int n) : O(n)
 *	非連結で大きさ n の部分永続 Union-Find を構築する．
 *
-* merge(a, b) : O(log n)
+* merge(int a, int b) : O(log n)
 *	頂点 a と頂点 b を統合する．
 *
-* same(a, b, t) : O(log n)
+* bool same(int a, int b, int t) : O(log n)
 *	時刻 t に頂点 a と頂点 b が同じ連結成分に属していたかを返す．
 *
-* leader(a, t) : O(log n)
+* int leader(int a, int t) : O(log n)
 *	時刻 t に頂点 a が属していた連結成分の親を返す．
 *
-* size(a, t) : O(log n)
+* int size(int a, int t) : O(log n)
 *	時刻 t に頂点 a が属していた連結成分の大きさを返す．
 */
 struct Partially_persistent_union_find {
@@ -46,8 +46,7 @@ struct Partially_persistent_union_find {
 	//	ただし全てではなく，「統合された側の根」にのみ情報を記録する．
 	vector<vector<pii>> num;
 
-	// コンストラクタ（初期化なし，大きさ n で初期化）
-	Partially_persistent_union_find() : n(0), now(0) {}
+	// 非連結で大きさ n の部分永続 Union-Find を構築する．
 	Partially_persistent_union_find(int n_)
 		: n(n_), now(0), parent(n), rank(n, 1), time(n, INF), num(n)
 	{
@@ -56,6 +55,7 @@ struct Partially_persistent_union_find {
 			num[i].push_back({ 0, 1 });
 		}
 	}
+	Partially_persistent_union_find() : n(0), now(0) {} // ダミー
 
 	// 頂点 a, b を結合する．
 	void merge(int a, int b) {

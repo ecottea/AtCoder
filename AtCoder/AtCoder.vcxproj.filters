@@ -70,9 +70,6 @@
     <Filter Include="ヘッダー ファイル\確率統計">
       <UniqueIdentifier>{36597baf-90fc-48c6-a94a-085803720106}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\_old">
-      <UniqueIdentifier>{105e03a8-7561-4890-8b11-66c02a5a18b1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\代数">
       <UniqueIdentifier>{a4e43b3f-cd28-4954-94a9-975a103cd4fe}</UniqueIdentifier>
     </Filter>
@@ -230,7 +227,7 @@
     <ClInclude Include="モノイド.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
-    <ClInclude Include="モノイド作用付きモノイド.h">
+    <ClInclude Include="モノイド%28モノイド作用付き%29.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="アーベル群.h">
@@ -248,7 +245,7 @@
     <ClInclude Include="ヒープ.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
-    <ClInclude Include="辞書.h">
+    <ClInclude Include="辞書%28静的%29.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
     <ClInclude Include="Union-Find.h">
@@ -296,21 +293,6 @@
     <ClInclude Include="挿入DP.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
-    <ClInclude Include="セグメント木%28モノイド%29.h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
-    <ClInclude Include="フェニック木%28アーベル群%29.h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
-    <ClInclude Include="区間木%28特殊化%29.h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
-    <ClInclude Include="行列(半環).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
-    <ClInclude Include="FPS(可換環).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
     <ClInclude Include="行列(抽象).h">
       <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
@@ -323,12 +305,6 @@
     <ClInclude Include="全順序集合.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
-    <ClInclude Include="全順序%28old%29.h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
-    <ClInclude Include="累積演算%28old%29.h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
     <ClInclude Include="ビット列.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
@@ -337,12 +313,6 @@
     </ClInclude>
     <ClInclude Include="包除原理.h">
       <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
-    <ClInclude Include="数論%28old%29.h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
-    <ClInclude Include="桁DP(old).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
     <ClInclude Include="桁DP%28上から%29.h">
       <Filter>ヘッダー ファイル\数の表示</Filter>
@@ -394,12 +364,6 @@
     </ClInclude>
     <ClInclude Include="前処理%28文字列%29.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
-    </ClInclude>
-    <ClInclude Include="座標圧縮(old).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
-    <ClInclude Include="抽象データ構造(old).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
     <ClInclude Include="スコア和%28区間%29.h">
       <Filter>ヘッダー ファイル\列%28区間%29</Filter>
@@ -476,9 +440,6 @@
     <ClInclude Include="数え上げ(木).h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="その他%28old%29.h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
     <ClInclude Include="ゼータ変換.h">
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
@@ -497,14 +458,8 @@
     <ClInclude Include="括弧列.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
-    <ClInclude Include="全方位木DP(old).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
-    </ClInclude>
     <ClInclude Include="木DP.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
-    </ClInclude>
-    <ClInclude Include="ゼータメビウス変換(old).h">
-      <Filter>ヘッダー ファイル\_old</Filter>
     </ClInclude>
     <ClInclude Include="ゼータ変換(抽象).h">
       <Filter>ヘッダー ファイル\集合</Filter>
@@ -521,7 +476,7 @@
     <ClInclude Include="二分木.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="割り算.h">
+    <ClInclude Include="整除算.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="max.h">
@@ -533,8 +488,14 @@
     <ClInclude Include="デザイン.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
-    <ClInclude Include="全順序モノイド.h">
+    <ClInclude Include="全順序集合%28モノイド作用付き%29.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="モノイド(不完全モノイド作用付き).h">
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="辞書%28動的%29.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

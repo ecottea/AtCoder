@@ -10,12 +10,13 @@
 * ‚·‚È‚í‚¿CW‡ S ‚Æ‚»‚Ìã‚Ì“ñ€‰‰Z * : S ~ S ¨ S ‚Å
 *	Œ‹‡—¥ : Ía, b, c ¸ SC (a b) c = a (b c)
 *	’PˆÊŒ³ : Ía ¸ S,        a e = e a = a
-*	‹tŒ³   : Ía ¸ S,        a inv(a) = inv(a) a = e
+*	‹tŒ³   : Ía ¸ S,        a a^(-1) = a^(-1) a = e
 * ‚ğ–‚½‚·‚à‚Ì‚Æ‚·‚éD
 */
 
 
 //y‰ÁZ ŒQz
+/* verify : https://atcoder.jp/contests/aising2019/tasks/aising2019_d */
 using S601 = ll;
 S601 op601(S601 a, S601 b) { return a + b; }
 S601 o601() { return 0; }

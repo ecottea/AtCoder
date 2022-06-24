@@ -3,6 +3,34 @@
 // ■■■■■ 文字列の列挙 ■■■■■
 
 
+//【任意文字列の列挙】O(n |cs|^n)
+/*
+* 文字集合 cs の要素からなる長さ n の文字列全てを strs に格納する．
+*/
+void all_strings(int n, const vc& cs, vector<string>& strs) {
+	strs.clear();
+	string s;
+
+	// l : 長さ
+	function<void(int)> rf = [&](int l) {
+		// 長さが n の場合は記録
+		if (l == n) {
+			strs.push_back(s);
+			return;
+		}
+
+		// c : s[l]
+		repe(c, cs) {
+			s.push_back(c);
+			rf(l + 1);
+			s.pop_back();
+		}
+	};
+
+	rf(0);
+}
+
+
 //【1 の連続しないビット列の列挙】O(fibonacci(n) n) = O(1.6^n n)
 /*
 * 長さ n のビット列のうち 1 が連続しないものを seqs に格納する．
@@ -11,6 +39,7 @@ void enumerate_noncontinuous_bitsequences(int n, vl& seqs) {
 	ll b = 0;
 	seqs.clear();
 
+	// len : 残り長さ, d : 直前の桁の数
 	function<void(int, int)> rf = [&](int len, int d) {
 		// 残りの長さが 0 の場合
 		if (len == 0) {

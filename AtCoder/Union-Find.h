@@ -7,25 +7,25 @@
 /*
 * 頂点の統合と連結判定を行う．
 *
-* Union_find(n) : O(n)
+* Union_find(int n) : O(n)
 *	非連結で大きさ n の Union-Find を構築する．
 *
-* merge(a, b) : O(α(n))
+* merge(int a, int b) : O(α(n))
 *	頂点 a と頂点 b を統合する．
 *
-* same(a, b) : O(α(n))
+* bool same(int a, int b) : O(α(n))
 *	頂点 a と頂点 b が同じ連結成分に属するかを返す．
 *
-* leader(a) : O(α(n))
+* int leader(int a) : O(α(n))
 *	頂点 a の属する連結成分の親を返す．
 *
-* size(a) : O(α(n))
+* int size(int a) : O(α(n))
 *	頂点 a の属する連結成分の大きさを返す．
 *
-* size() : O(1)
+* int size() : O(1)
 *	連結成分の個数を返す．
 *
-* groups() : O(n)
+* vvi groups() : O(n α(n))
 *	連結成分のリストを返す．
 */
 struct Union_find {
@@ -123,22 +123,22 @@ struct Union_find {
 /*
 * 頂点間の差の指定と差の計算を行う．
 *
-* Weighted_union_find(n) : O(n)
+* Weighted_union_find<T>(int n) : O(n)
 *	非連結で大きさ n の重み付き Union-Find を構築する．
 * 
-* set_diff(a, b, d) : O(α(n))
+* bool set_diff(int a, int b, T d) : O(α(n))
 *	v[b] - v[a] = d という関係を追加する．失敗は false を返す．
 * 
-* same(a, b) : O(α(n))
+* bool same(int a, int b) : O(α(n))
 *	頂点 a と頂点 b が同じ連結成分に属するかを返す．
 *
-* get_diff(a, b) : O(α(n))
+* T get_diff(int a, int b) : O(α(n))
 *	v[b] - v[a] を返す．（差が未確定なら戻り値は未定義とする）
 * 
-* leader(a) : O(α(n))
+* int leader(int a) : O(α(n))
 *	頂点 a の属する連結成分の親を返す．
 * 
-* size(a) : O(α(n))
+* int size(int a) : O(α(n))
 *	頂点 a の属する連結成分の大きさを返す．
 */
 template <class T> struct Weighted_union_find {
@@ -239,19 +239,19 @@ template <class T> struct Weighted_union_find {
 /*
 * 頂点の統合と偶奇性を考慮した連結判定を行う．
 *
-* Parity_union_find(n) : O(n)
+* Parity_union_find(int n) : O(n)
 *	非連結な頂点 [0..n) で初期化する．
 *
-* merge_even(a, b) : O(α(n))
+* merge_even(int a, int b) : O(α(n))
 *	頂点 a と頂点 b を長さ 2 の辺で結ぶ．（統合とみなせる）
 *
-* merge_odd(a, b) : O(α(n))
+* merge_odd(int a, int b) : O(α(n))
 *	頂点 a と頂点 b を長さ 1 の辺で結ぶ．
 *
-* same_even(a, b) : O(α(n))
+* bool same_even(int a, int b) : O(α(n))
 *	頂点 a, b 間の距離が偶数かを返す．（非連結なら false を返す）
 *
-* same_odd(a, b) : O(α(n))
+* bool same_odd(int a, int b) : O(α(n))
 *	頂点 a, b 間の距離が奇数かを返す．（非連結なら false を返す）
 */
 struct Parity_union_find {

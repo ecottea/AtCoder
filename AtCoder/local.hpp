@@ -65,18 +65,6 @@ inline ostream& operator<<(ostream& os, const pair<T, U>& p) {
 	return os;
 }
 
-template <class T, class U, class V>
-inline ostream& operator<<(ostream& os, const tuple<T, U, V>& t) {
-	os << "(" << get<0>(t) << "," << get<1>(t) << "," << get<2>(t) << ")";
-	return os;
-}
-
-template <class T, class U, class V, class W>
-inline ostream& operator<< (ostream& os, const tuple<T, U, V, W>& t) {
-	os << "(" << get<0>(t) << "," << get<1>(t) << "," << get<2>(t) << "," << get<3>(t) << ")";
-	return os;
-}
-
 template <class T>
 inline ostream& operator<< (ostream& os, const vector<T>& v) {
 	repe(x, v) os << x << " ";
@@ -178,6 +166,34 @@ inline ostream& operator<< (ostream& os, priority_queue<T, vector<T>, greater<T>
 		os << q.top() << " ";
 		q.pop();
 	}
+	return os;
+}
+
+// ŽQl : https://www.delftstack.com/ja/howto/cpp/cpp-tuple-in-cpp/
+template<class Tuple, size_t N>
+struct TuplePrinter {
+	static void print(const Tuple& t)
+	{
+		TuplePrinter<Tuple, N - 1>::print(t);
+		cout << "," << get<N - 1>(t);
+	}
+};
+
+template<class Tuple>
+struct TuplePrinter<Tuple, 1> {
+	static void print(const Tuple& t)
+	{
+		cout << get<0>(t);
+	}
+};
+
+template<class... Args>
+inline ostream& operator<< (ostream& os, const tuple<Args...>& t)
+{
+	cout << "(";
+	TuplePrinter<decltype(t), sizeof...(Args)>::print(t);
+	cout << ")";
+
 	return os;
 }
 

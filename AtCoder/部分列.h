@@ -379,7 +379,7 @@ template <class STR> bool subsequenceQ(const STR& s, const STR& t) {
 /*
 * s[0..n) の部分列のうち t[0..m) に一致するものの個数を返す．
 *
-*（配る DP）
+*（耳 DP）
 */
 template <class T> mint count_subsequences(const vector<T>& s, const vector<T>& t) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_h

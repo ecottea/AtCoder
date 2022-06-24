@@ -263,6 +263,71 @@ template <class STR> vi z_algorithm_suffix(STR s) {
 }
 
 
+//【ワイルドカード付き文字列検索】O((n + m) log(n + m))
+/*
+* 任意文字とマッチする文字 '?' および英小文字からなる文字列 s[0..n), p[0..m) について，
+* s[i..i+m) = p[0..m) となる i を昇順に pos に格納する．
+*/
+void wildcard_matching(const string& s, const string& p, vi& pos) {
+	// 参考 : https://ei1333.hateblo.jp/entry/2021/01/02/000716
+	// verify : https://atcoder.jp/contests/panasonic2020/tasks/panasonic2020_e
+
+	//【方法】
+	// 文字列 s[0..n) を元に数列 sa[0..n), sb[0..n) を
+	//		sa[i] = 0, sb[i] = 0  (s[i] = '?' のとき)
+	//		sa[i] = s[i] - 'a' + 1, sb[i] = 1  (s[i] != '?' のとき)
+	// と定め，p[0..m) についても同様に pa, pb を定める．
+	//
+	// このとき文字列の一致は
+	//		s[i..i+m) = p[0..m) ⇔ Σk∈[0..m) sb[i+k] pb[k] (sa[i+k] - pa[k])^2 = 0
+	// と言い換えられる．
+	//
+	// Σ の中身は
+	//		sb[i+k] pb[k] (sa[i+k] - pa[k])^2
+	//		= sb[i+k] pb[k] sa[i+k]^2 - 2 sb[i+k] pb[k] sa[i+k] pa[k] + sb[i+k] pb[k] pa[k]^2
+	//		= (sa[i+k]^2 sb[i+k]) pb[k] - 2 (sa[i+k] sb[i+k])(pa[k] pb[k]) + sb[i+k] (pa[k]^2 pb[k])
+	// と書き直すことができる．よって，
+	//		sab[i] = sa[i] sb[i]
+	//		saab[i] = sa[i]^2 sb[i]
+	// などとおき，p をあらかじめ逆順にしていたことにすれば，畳込みで一括計算することができる．
+
+	using mint = modint998244353;
+	using vm = vector<mint>;
+
+	int n = sz(s), m = sz(p);
+	pos.clear();
+
+	vm sb(n), sab(n), saab(n);
+	rep(i, n) {
+		mint a = (s[i] == '?' ? 0 : s[i] - 'a' + 1);
+		mint b = (s[i] == '?' ? 0 : 1);
+
+		sb[i] = b;
+		sab[i] = a * b;
+		saab[i] = a * a * b;
+	}
+
+	vm pb(m), pab(m), paab(m);
+	rep(j, m) {
+		mint a = (p[m - 1 - j] == '?' ? 0 : p[m - 1 - j] - 'a' + 1);
+		mint b = (p[m - 1 - j] == '?' ? 0 : 1);
+
+		pb[j] = b;
+		pab[j] = a * b;
+		paab[j] = a * a * b;
+	}
+
+	vm c1 = convolution(saab, pb);
+	vm c2 = convolution(sab, pab);
+	vm c3 = convolution(sb, paab);
+
+	repi(i, m - 1, n - 1) {
+		mint val = c1[i] - 2 * c2[i] + c3[i];
+		if (val == 0) pos.push_back(i - m + 1);
+	}
+}
+
+
 //【部分文字列判定（複数回）】
 /*
 * String_search(string s) : O(|s|)
@@ -329,6 +394,8 @@ public:
 *	制約：1 度しか実行できない．
 */
 class Aho_corasick {
+	// 参考 : https://naoya-2.hatenadiary.org/entry/20090405/aho_corasick
+
 	static const int C = 26; // 文字の種類数
 	static const char A = 'a'; // 最初の文字
 
@@ -422,16 +489,18 @@ public:
 };
 
 
-//【複数文字列検索（文字種が多い）】
+//【複数文字列検索（文字が多種）】
 /*
-* Aho_corasick(vector<string> pats) : O(Σ|pats|)
+* Aho_corasick_large(vector<string> pats) : O(Σ|pats|)
 *	パターン文字列の集合 pats を検索できるよう初期化する．
 *
 * find(string s, vb& ex) : O(|s| + Σ|pats|)
 *	文字列 s 中に pats[i] が存在するかを ex[i] に格納する．
 *	制約：1 度しか実行できない．
 */
-class Aho_corasick {
+class Aho_corasick_large {
+	// 参考 : https://naoya-2.hatenadiary.org/entry/20090405/aho_corasick
+	
 	struct Node {
 		Node* parent; // 親へのポインタ
 		unordered_map<char, Node*> childs; // 子へのポインタ
@@ -464,7 +533,7 @@ class Aho_corasick {
 	}
 
 public:
-	Aho_corasick(const vector<string>& pats) : n(sz(pats)), root(new Node()) {
+	Aho_corasick_large(const vector<string>& pats) : n(sz(pats)), root(new Node()) {
 		// まずトライ木を構築する．
 		create_trie_tree(pats);
 

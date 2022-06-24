@@ -43,7 +43,7 @@ void connected_component(const Graph& g, vvi& ccs) {
 
 //【トポロジカルソート】O(|V| + |E|)
 /*
-* DAG g をトポロジカルソートした結果の頂点列を seq に返す．
+* DAG g をトポロジカルソートした結果の i 番目の頂点を seq[i] に格納する．
 * g が DAG でない場合は false を返す．
 *
 *（葉からの幅優先探索）
@@ -539,28 +539,23 @@ template <class G> void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 * b[i] = {s, e} : i 番目に見つけた橋の始点が s，終点への辺が e
 */
 template <class E>
-void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
+void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* b = nullptr) {
 	// 参考 : https://algo-logic.info/articulation-points/
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
 
 	int n = sz(g);
-	a.clear();
-	b.clear();
+	if (a != nullptr) a->clear();
+	if (b != nullptr) b->clear();
 
 	// e_cnt[s * n + t] : 頂点 s, t を結ぶ辺の本数
 	unordered_map<ll, int> e_cnt;
-	rep(s, n) {
-		repe(t, g[s]) {
-			e_cnt[(ll)s * n + t]++;
-		}
-	}
+	rep(s, n) repe(t, g[s]) e_cnt[(ll)s * n + t]++;
 
 	// in[s] : DFS で頂点 s を何番目に探索したか
 	// low[s] : s から後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
 	// （後退辺とは，DFS でなぞられなかった g の辺のことをいう）
-	vi in(n), low(n);
-	vb seen(n);
+	vi in(n), low(n); vb seen(n);
 
 	int time = 0;
 	int r; // 暫定的な根
@@ -595,7 +590,7 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 
 				// 橋であれば記録する（多重辺は橋にはなりえない）
 				if (in[s] < low[t] && e_cnt[(ll)s * n + t] == 1) {
-					b.push_back({ s, t });
+					if (b != nullptr) b->push_back({ s, t });
 				}
 
 				// 関節点かどうかの判定用
@@ -608,7 +603,7 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 		if (s == r) ap = (ccnt >= 2);
 
 		// 関節点であれば記録する．
-		if (ap) a.push_back(s);
+		if (ap) if (a != nullptr) a->push_back(s);
 	};
 
 	// 適当な点を根（始点）として DFS を行う．
@@ -623,19 +618,21 @@ void lowlink(const vector<vector<E>>& g, vi& a, vector<pair<int, E>>& b) {
 
 //【二辺連結成分分解】O(|V| + |E|)
 /*
-* 無向グラフ g を二辺連結成分分解し，結果を tecc に返す．
-* tecc[i] は i 番目の二辺連結成分の頂点からなるリストである．
+* 無向グラフ g を二辺連結成分分解し，i 番目の二辺連結成分の頂点集合を ccs[i] に格納する．
+*	二辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
 *
 * 利用：【グラフの関節点と橋】，【連結成分分解】
 */
-void two_edge_connected_component(const Graph& g, vvi& tecc) {
+void two_edge_connected_component(const Graph& g, vvi& ccs) {
 	// verify : https://judge.yosupo.jp/problem/two_edge_connected_components
+
+	//【方法】
+	// 橋を全て除去してから連結成分分解すればよい．
 
 	int n = sz(g);
 
-	vi a;
 	vector<pii> b;
-	lowlink(g, a, b);
+	lowlink(g, nullptr, &b);
 
 	unordered_set<ll> bridges;
 	repe(e, b) {
@@ -647,15 +644,13 @@ void two_edge_connected_component(const Graph& g, vvi& tecc) {
 	}
 
 	Graph g2(n);
-	rep(s, n) {
-		repe(t, g[s]) {
-			if (!bridges.count((ll)s * n + t)) {
-				g2[s].push_back(t);
-			}
+	rep(s, n) repe(t, g[s]) {
+		if (!bridges.count((ll)s * n + t)) {
+			g2[s].push_back(t);
 		}
 	}
 
-	connected_component(g2, tecc);
+	connected_component(g2, ccs);
 }
 
 
@@ -684,4 +679,12 @@ void two_edge_connected_component(const Graph& g, vvi& tecc) {
 * verify : https://atcoder.jp/contests/abc251/tasks/abc251_f
 */
 
+
+//【Functional Graph】
+/*
+* 任意の頂点の出次数が 1 であるような有向グラフを Functional Graph という．
+* G が Functional Graph であるとき，G の各弱連結成分には閉路がただ 1 つ存在する．
+* 
+* verify : https://atcoder.jp/contests/abc256/tasks/abc256_e
+*/
 

@@ -3,6 +3,7 @@
 #include "構造(グラフ).h"
 #include "行列.h"
 #include "分析(グラフ).h"
+#include "ヒープ.h"
 // ■■■■■ 全域木 ■■■■■
 
 
@@ -397,5 +398,103 @@ void mst_tree(const WGraph& g, Graph& fst, vi& rs) {
 * どの 2 つも辺を共有しない G の閉路の和集合全体を C(G) と表すと，
 * 対称差 △ を演算として {C(e) | e∈T^c} は F2 上のベクトル空間 C(G) の基底となる．
 */
+
+
+//【有向最小全域木】O(|E| log |V|)
+/*
+* コスト付き有向グラフ g の r を根とする有向最小全域木のコストを返す（なければ -1）
+*
+* 利用：【併合可能遅延ヒープ（モノイド作用付き全順序集合）】
+*/
+bool leq_dmst(pli a, pli b) { return a >= b; }
+pli inf_dmst() { return { -INFL, -1 }; }
+pli act_dmst(ll f, pli x) { return { f + x.first, x.second }; }
+ll comp_dmst(ll f, ll g) { return f + g; }
+ll id_dmst() { return 0; }
+ll directed_minimum_spanning_tree(const WGraph& g, int r, WGraph* mst = nullptr) {
+	// 参考 : https://joisino.hatenablog.com/entry/2017/01/11/230141
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
+
+	int n = sz(g);
+
+	// seen[v] : 頂点 v の走査状態
+	const int ROOT = 2, PATH = 1, FREE = 0;
+	vi seen(n, FREE);
+	seen[r] = ROOT;
+
+	// 閉路の縮約用
+	dsu uf(n);
+
+	// qs[t] : t に入ってくる辺の (縮約後のコスト, 始点) をコスト昇順に記録したキュー
+	vector<Lazy_skew_heap<pli, leq_dmst, inf_dmst, ll, act_dmst, comp_dmst, id_dmst>> qs(n);
+	rep(s, n) repe(e, g[s]) qs[e.to].push({ e.cost, s });
+
+	// 有向最小全域木に使われる辺の (縮約後のコスト，始点) のリスト
+	vector<pli> mst_rev(n);
+
+	// 走査中のパス
+	vi path;
+
+	// 最小コスト
+	ll res = 0;
+
+	function<bool(int)> rf = [&](int t) {
+		// 頂点 t を縮約された成分の代表の頂点に置き換える．
+		t = uf.leader(t);
+
+		// 根 r と繋がったら終了．
+		if (seen[t] == ROOT) {
+			repe(v, path) seen[v] = ROOT;
+			path.clear();
+			return true;
+		}
+		seen[t] = PATH;
+		path.push_back(t);
+
+		// 自己ループを無視する．
+		while (!qs[t].empty() && uf.same(qs[t].top().second, t)) qs[t].pop();
+
+		// t に入ってくる辺が無ければ失敗．
+		if (qs[t].empty()) return false;
+
+		// t に入ってくるコスト c が最小の辺 s→t を得る．
+		ll c; int s;
+		tie(c, s) = qs[t].top(); qs[t].pop();
+
+		// s→t を暫定的に使う辺に追加する．
+		res += c;
+		mst_rev[t] = { c, s };
+
+		// s→t を含めてもサイクルが出来なかったなら s の処理へ．
+		if (seen[s] != PATH) return rf(s);
+
+		// s→t を含むサイクルが出来た場合
+		int v = t;
+		do {
+			// サイクル内で v に入ってくる辺 e を使うのをやめ v に外から入ってくる辺 e' を使うなら，
+			// 辺 e' のコストが辺 e のコストの分だけ小さくなったものとみなせる．
+			qs[v].apply(-mst_rev[v].first);
+
+			// サイクルを縮約していく．
+			uf.merge(v, t);
+			qs[t].merge(qs[v]);
+
+			// サイクル内の 1 つ前の頂点へ．
+			v = uf.leader(mst_rev[v].second);
+		} while (!uf.same(v, t));
+
+		// t の属する縮約成分の代表 lt の元に情報を集約する．
+		int lt = uf.leader(t);
+		qs[lt].merge(qs[t]); // O(1)
+
+		// 改めて t の処理を行う．
+		return rf(t);
+	};
+
+	// 全ての頂点が根に繋がるまで処理を行う．
+	rep(t, n) rf(t);
+
+	return res;
+}
 
 

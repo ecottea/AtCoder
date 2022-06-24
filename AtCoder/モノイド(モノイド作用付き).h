@@ -5,26 +5,26 @@
 
 //【モノイド左作用付きモノイド】
 /*
-* モノイド左作用付きモノイド (S, op, e, F, mapping, composition, id) を表す．
+* モノイド左作用付きモノイド (S, op, e, F, act, comp, id) を表す．
 *
-* すなわち，(S, op, e), (F, composition, id) がそれぞれモノイドであり，
+* すなわち，(S, op, e), (F, comp, id) がそれぞれモノイドであり，
 * F の S への左作用 * : F × S → S が
-*	準同型 : ∀x, y ∈ S，∀f ∈ F,  f(x y) = f(x) f(y)
-*	合成   : ∀x ∈ S, ∀f, g ∈ F,  (f g)(x) = f(g(x))
-*   恒等射 : ∀x ∈ S,               id(x) = x
+*	準同型 : ∀x, y ∈ S，∀f ∈ F,	f(x y) = f(x) f(y)
+*	合成   : ∀x ∈ S, ∀f, g ∈ F,	(f g)(x) = f(g(x))
+*   恒等射 : ∀x ∈ S,				id(x) = x
 * を満たすものとする．
 */
 
 
-//【乗算 作用付き 加算 モノイド】
+//【乗算 作用付き 総和 モノイド】
 using S101 = mint;
 S101 op101(S101 x, S101 y) { return x + y; }
 S101 e101() { return 0; }
 using F101 = mint;
-S101 mapping101(F101 f, S101 x) { return f * x; }
-F101 composition101(F101 f, F101 g) { return f * g; }
+S101 act101(F101 f, S101 x) { return f * x; }
+F101 comp101(F101 f, F101 g) { return f * g; }
 F101 id101() { return 1; }
-#define Mul_Add_amonoid S101, op101, e101, F101, mapping101, composition101, id101
+#define Mul_Sum_amonoid S101, op101, e101, F101, act101, comp101, id101
 
 
 //【chmin 作用付き min モノイド】
@@ -33,10 +33,10 @@ using S115 = ll;
 S115 op115(S115 x, S115 y) { return min(x, y); }
 S115 e115() { return INFL; }
 using F115 = ll;
-S115 mapping115(F115 f, S115 x) { return min(f, x); }
-F115 composition115(F115 f, F115 g) { return min(f, g); }
+S115 act115(F115 f, S115 x) { return min(f, x); }
+F115 comp115(F115 f, F115 g) { return min(f, g); }
 F115 id115() { return INFL; }
-#define Chmin_min_amonoid S115, op115, e115, F115, mapping115, composition115, id115
+#define Chmin_Min_amonoid S115, op115, e115, F115, act115, comp115, id115
 
 
 //【chmax 作用付き max モノイド】
@@ -45,10 +45,10 @@ using S116 = ll;
 S116 op116(S116 x, S116 y) { return max(x, y); }
 S116 e116() { return -INFL; }
 using F116 = ll;
-S116 mapping116(F116 f, S116 x) { return max(f, x); }
-F116 composition116(F116 f, F116 g) { return max(f, g); }
+S116 act116(F116 f, S116 x) { return max(f, x); }
+F116 comp116(F116 f, F116 g) { return max(f, g); }
 F116 id116() { return -INFL; }
-#define Chmax_max_amonoid S116, op116, e116, F116, mapping116, composition116, id116
+#define Chmax_Max_amonoid S116, op116, e116, F116, act116, comp116, id116
 
 
 //【変更 作用付き 左変更 モノイド】
@@ -57,9 +57,9 @@ S102 e102() { return INF + 2; } // 使わない値なら何でも OK
 S102 op102(S102 x, S102 y) { return x == e102() ? y : x; }
 using F102 = int;
 F102 id102() { return INF + 1; } // 使わない値なら何でも OK
-S102 mapping102(F102 f, S102 x) { return f == id102() ? x : f; }
-F102 composition102(F102 f, F102 g) { return f == id102() ? g : f; }
-#define Update_Lupdate_amonoid S102, op102, e102, F102, mapping102, composition102, id102
+S102 act102(F102 f, S102 x) { return f == id102() ? x : f; }
+F102 comp102(F102 f, F102 g) { return f == id102() ? g : f; }
+#define Update_LUpdate_amonoid S102, op102, e102, F102, act102, comp102, id102
 
 
 //【変更 作用付き max モノイド】
@@ -68,9 +68,9 @@ S103 op103(S103 x, S103 y) { return max(x, y); }
 S103 e103() { return -INF; }
 using F103 = int;
 F103 id103() { return INF + 1; } // 使わない値なら何でも OK
-S103 mapping103(F103 f, S103 x) { return f == id103() ? x : f; }
-F103 composition103(F103 f, F103 g) { return f == id103() ? g : f; }
-#define Update_max_amonoid S103, op103, e103, F103, mapping103, composition103, id103
+S103 act103(F103 f, S103 x) { return f == id103() ? x : f; }
+F103 comp103(F103 f, F103 g) { return f == id103() ? g : f; }
+#define Update_sum_amonoid S103, op103, e103, F103, act103, comp103, id103
 
 
 //【変更 作用付き min モノイド】
@@ -80,9 +80,9 @@ S104 op104(S104 x, S104 y) { return min(x, y); }
 S104 e104() { return INF; }
 using F104 = int;
 F104 id104() { return INF + 1; } // 使わない値なら何でも OK
-S104 mapping104(F104 f, S104 x) { return f == id104() ? x : f; }
-F104 composition104(F104 f, F104 g) { return f == id104() ? g : f; }
-#define Update_min_amonoid S104, op104, e104, F104, mapping104, composition104, id104
+S104 act104(F104 f, S104 x) { return f == id104() ? x : f; }
+F104 comp104(F104 f, F104 g) { return f == id104() ? g : f; }
+#define Update_min_amonoid S104, op104, e104, F104, act104, comp104, id104
 
 
 //【加算 作用付き max モノイド】
@@ -91,10 +91,10 @@ using S105 = ll;
 S105 op105(S105 x, S105 y) { return max(x, y); }
 S105 e105() { return -INFL; }
 using F105 = ll;
-S105 mapping105(F105 f, S105 x) { return f + x; }
-F105 composition105(F105 f, F105 g) { return f + g; }
+S105 act105(F105 f, S105 x) { return f + x; }
+F105 comp105(F105 f, F105 g) { return f + g; }
 F105 id105() { return 0; }
-#define Add_max_amonoid S105, op105, e105, F105, mapping105, composition105, id105
+#define Add_sum_amonoid S105, op105, e105, F105, act105, comp105, id105
 
 
 //【加算 作用付き min モノイド】
@@ -103,19 +103,19 @@ using S106 = ll;
 S106 op106(S106 x, S106 y) { return min(x, y); }
 S106 e106() { return INFL; }
 using F106 = ll;
-S106 mapping106(F106 f, S106 x) { return f + x; }
-F106 composition106(F106 f, F106 g) { return f + g; }
+S106 act106(F106 f, S106 x) { return f + x; }
+F106 comp106(F106 f, F106 g) { return f + g; }
 F106 id106() { return 0; }
-#define Add_min_amonoid S106, op106, e106, F106, mapping106, composition106, id106
+#define Add_min_amonoid S106, op106, e106, F106, act106, comp106, id106
 
 
-//【アフィン変換 作用付き 加算 モノイド】
+//【アフィン 作用付き 総和 モノイド】
 /*
 * S ∋ x = {v, c} : c 個の元の和で値 v をとっていることを表す．
 * F ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．
 * x op y : cx + cy 個の元の和で値 vx + vy をとっている状態にする．
-* f mapping x : c 個の元の和で値 f(v) をとっている状態にする．
-* f composition g : 合成した一次関数 f o g を返す．
+* f act x : c 個の元の和で値 f(v) をとっている状態にする．
+* f comp g : 合成した一次関数 f o g を返す．
 */
 // verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 using S107 = pair<mint, mint>; // ベクトル (v, c)
@@ -129,7 +129,7 @@ S107 op107(S107 x, S107 y) {
 	return { vx + vy, cx + cy };
 }
 S107 e107() { return { 0, 0 }; }
-S107 mapping107(F107 f, S107 x) {
+S107 act107(F107 f, S107 x) {
 	mint v, c, a, b;
 	tie(v, c) = x; // ベクトル (v, c)
 	tie(a, b) = f; // 行列 (a, b; 0, 1)
@@ -137,7 +137,7 @@ S107 mapping107(F107 f, S107 x) {
 	// (a, b; 0, 1).(v, c) = (a v + b c, c)
 	return { a * v + b * c, c };
 }
-F107 composition107(F107 f, F107 g) {
+F107 comp107(F107 f, F107 g) {
 	mint a, b, c, d;
 	tie(a, b) = f; // 行列 (a, b; 0, 1)
 	tie(c, d) = g; // 行列 (c, d; 0, 1)
@@ -146,16 +146,16 @@ F107 composition107(F107 f, F107 g) {
 	return { a * c, a * d + b };
 }
 F107 id107() { return { 1, 0 }; }
-#define Affine_add_amonoid S107, op107, e107, F107, mapping107, composition107, id107
+#define Affine_add_amonoid S107, op107, e107, F107, act107, comp107, id107
 
 
-//【加算 作用付き 加算 モノイド】
+//【加算 作用付き 総和 モノイド】
 /*
 * S ∋ x = {v, c} : c 個の元の和で値 v をとっていることを表す．
 * F ∋ f : 一次関数 x ← 1 x + f を表す．
 * x op y : cx + cy 個の元の和で値 vx + vy をとっている状態にする．
-* f mapping x : c 個の元の和で値 v + c f をとっている状態にする．
-* f composition g : 合成した一次関数 f o g を返す．
+* f act x : c 個の元の和で値 v + c f をとっている状態にする．
+* f comp g : 合成した一次関数 f o g を返す．
 */
 using S108 = pair<ll, ll>; // ベクトル (v, c)
 using F108 = ll; // 行列 (1, f; 0, 1)
@@ -168,28 +168,28 @@ S108 op108(S108 x, S108 y) {
 	return { vx + vy, cx + cy };
 }
 S108 e108() { return { 0, 0 }; }
-S108 mapping108(F108 f, S108 x) {
+S108 act108(F108 f, S108 x) {
 	ll v, c;
 	tie(v, c) = x; // ベクトル (v, c)
 
 	// (1, f; 0, 1).(v, c) = (v + f c, c)
 	return { v + f * c, c };
 }
-F108 composition108(F108 f, F108 g) {
+F108 comp108(F108 f, F108 g) {
 	// (1, f; 0, 1).(1, g; 0, 1) = (1, f + g; 0, 1)
 	return f + g;
 }
 F108 id108() { return 0; }
-#define Add_add_amonoid S108, op108, e108, F108, mapping108, composition108, id108
+#define Add_add_amonoid S108, op108, e108, F108, act108, comp108, id108
 
 
-//【変更 作用付き 加算 モノイド】
+//【変更 作用付き 総和 モノイド】
 /*
 * S ∋ x = {v, c} : c 個の元の和で値 v をとっていることを表す．
 * F ∋ f : 零次関数 x ← 0 x + f を表す．
 * x op y : cx + cy 個の元の和で値 vx + vy をとっている状態にする．
-* f mapping x : c 個の元の和で値 c f をとっている状態にする．
-* f composition g : 合成した零次関数 f o g を返す．
+* f act x : c 個の元の和で値 c f をとっている状態にする．
+* f comp g : 合成した零次関数 f o g を返す．
 */
 // verify : https://atcoder.jp/contests/abc237/tasks/abc237_g
 using S109 = pair<ll, ll>; // ベクトル (v, c)
@@ -204,7 +204,7 @@ S109 op109(S109 x, S109 y) {
 }
 S109 e109() { return { 0, 0 }; }
 F109 id109() { return INFL + 1; } // 使わない値なら何でも OK
-S109 mapping109(F109 f, S109 x) {
+S109 act109(F109 f, S109 x) {
 	if (f == id109()) return x;
 
 	ll v, c;
@@ -213,13 +213,13 @@ S109 mapping109(F109 f, S109 x) {
 	// (0, f; 0, 1).(v, c) = (f c, c)
 	return { f * c, c };
 }
-F109 composition109(F109 f, F109 g) {
+F109 comp109(F109 f, F109 g) {
 	if (f == id109()) return g;
 
 	// (0, f; 0, 1).(0, g; 0, 1) = (0, f; 0, 1)
 	return f;
 }
-#define Update_add_amonoid S109, op109, e109, F109, mapping109, composition109, id109
+#define Update_add_amonoid S109, op109, e109, F109, act109, comp109, id109
 
 
 //【and 作用付き xor モノイド】
@@ -227,32 +227,32 @@ using S110 = int;
 S110 op110(S110 x, S110 y) { return x ^ y; }
 S110 e110() { return 0; }
 using F110 = int;
-S110 mapping110(F110 f, S110 x) { return f & x; }
-F110 composition110(F110 f, F110 g) { return f & g; }
+S110 act110(F110 f, S110 x) { return f & x; }
+F110 comp110(F110 f, F110 g) { return f & g; }
 F110 id110() { return ~0; }
-#define AND_XOR_amonoid S110, op110, e110, F110, mapping110, composition110, id110
+#define AND_XOR_amonoid S110, op110, e110, F110, act110, comp110, id110
 
 
-//【トロピカルアフィン変換 作用付き max モノイド】
+//【トロピカルアフィン 作用付き max モノイド】
 /*
 * S ∋ x : トロピカル加法（max）が冪等なので斉次座標を持つ必要がない．
 * F ∋ f = {a, b} : トロピカル一次関数 f(x) = max(a + x, b) を表す．
 * x op y : トロピカル加法 max(x, y)
-* f mapping x : トロピカル一次関数への代入 f(x)
-* f composition g : 合成したトロピカル一次関数 f o g を返す．
+* f act x : トロピカル一次関数への代入 f(x)
+* f comp g : 合成したトロピカル一次関数 f o g を返す．
 */
 using S111 = ll; // ベクトル (x, 0)
 using F111 = pll; // 行列 (a, b; -∞, 0)
 S111 op111(S111 x, S111 y) { return max(x, y); }
 S111 e111() { return -INFL; }
-S111 mapping111(F111 f, S111 x) {
+S111 act111(F111 f, S111 x) {
 	ll a, b;
 	tie(a, b) = f; // 行列 (a, b; -∞, 0)
 
 	// (a, b; -∞, 0).(x, 0) = (max(a + x, b), 0)
 	return max(a + x, b);
 }
-F111 composition111(F111 f, F111 g) {
+F111 comp111(F111 f, F111 g) {
 	ll a, b, c, d;
 	tie(a, b) = f; // 行列 (a, b; -∞, 0)
 	tie(c, d) = g; // 行列 (c, d; -∞, 0)
@@ -261,18 +261,18 @@ F111 composition111(F111 f, F111 g) {
 	return { a + c, max(a + d, b) };
 }
 F111 id111() { return { 0, -INFL }; }
-#define Tropical_affine_max_amonoid S111, op111, e111, F111, mapping111, composition111, id111
+#define TropicalAffine_sum_amonoid S111, op111, e111, F111, act111, comp111, id111
 
 
-//【ビット列上 xor 作用付き 転倒数 モノイド】
+//【XOR 作用付き 転倒数 モノイド】
 /*
 * S ∋ x = {inv, c0, c1} : 列 x の転倒数，0 の個数，1 の個数の組
-* F ∋ f : f との xor をとる作用を表す
+* F ∋ f : f との XOR をとる作用を表す
 * x op y : 列 x, y を連結した列
-* f mapping x : 列 x の各要素と f との xor をとった列
-* f composition g : f xor g
+* f act x : 列 x の各要素と f との XOR をとった列
+* f comp g : f XOR g
 */
-// verify : https://atcoder.jp/contests/practice12/tasks/practice12_l
+// verify : https://atcoder.jp/contests/practice2/tasks/practice2_l
 using S112 = tuple<ll, ll, ll>;
 using F112 = bool;
 S112 op112(S112 x, S112 y) {
@@ -289,7 +289,7 @@ S112 op112(S112 x, S112 y) {
 	return { inv, c0, c1 };
 }
 S112 e112() { return { 0LL, 0, 0 }; }
-S112 mapping112(F112 f, S112 x) {
+S112 act112(F112 f, S112 x) {
 	if (!f) return x;
 
 	ll inv, c0, c1;
@@ -302,32 +302,32 @@ S112 mapping112(F112 f, S112 x) {
 
 	return { inv, c1, c0 };
 }
-F112 composition112(F112 f, F112 g) {
+F112 comp112(F112 f, F112 g) {
 	return f ^ g;
 }
 F112 id112() { return false; }
-#define XOR_inversion_amonoid S112, op112, e112, F112, mapping112, composition112, id112
+#define XOR_inversion_amonoid S112, op112, e112, F112, act112, comp112, id112
 
 
-//【乗算 作用付き gcd モノイド】
+//【乗算 作用付き GCD モノイド】
 using S113 = ll;
 S113 op113(S113 x, S113 y) { return gcd(x, y); }
 S113 e113() { return 0; }
 using F113 = ll;
-S113 mapping113(F113 f, S113 x) { return f * x; }
-F113 composition113(F113 f, F113 g) { return f * g; }
+S113 act113(F113 f, S113 x) { return f * x; }
+F113 comp113(F113 f, F113 g) { return f * g; }
 F113 id113() { return 1; }
-#define Mul_GCD_amonoid S113, op113, e113, F113, mapping113, composition113, id113
+#define Mul_GCD_amonoid S113, op113, e113, F113, act113, comp113, id113
 
 
-//【乗算 作用付き lcm モノイド】
+//【乗算 作用付き LCM モノイド】
 using S114 = ll;
 S114 op114(S114 x, S114 y) { return x / gcd(x, y) * y; }
 S114 e114() { return 1; }
 using F114 = ll;
-S114 mapping114(F114 f, S114 x) { return f * x; }
-F114 composition114(F114 f, F114 g) { return f * g; }
+S114 act114(F114 f, S114 x) { return f * x; }
+F114 comp114(F114 f, F114 g) { return f * g; }
 F114 id114() { return 1; }
-#define Mul_LCM_amonoid S114, op114, e114, F114, mapping114, composition114, id114
+#define Mul_LCM_amonoid S114, op114, e114, F114, act114, comp114, id114
 
 

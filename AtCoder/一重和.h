@@ -6,7 +6,7 @@
 
 //【等差数列の和】O(1)
 /*
-* Σi=[i0..i1) (a + b i) を返す．
+* Σi∈[i0..i1) (a + b i) を返す．
 */
 template<class T> T arithmetic_series(T a, T b, ll i0, ll i1) {
 	// verify : https://atcoder.jp/contests/arc035/tasks/arc035_b
@@ -23,13 +23,25 @@ template<class T> T arithmetic_series(T a, T b, ll i0, ll i1) {
 }
 
 
+//【等差数列の積】
+/*
+* 公差が 0 でない等差数列の積は，
+*		Πi∈[i0..i1) (a + b i)
+*		= b^(i1-i0) Πi∈[i0..i1) (a/b + i)
+*		= b^(i1-i0) (a/b + i1 - 1)! / (a/b + i0 - 1)!
+* と変形して階乗の計算に帰着できる．
+* 
+* verify : https://atcoder.jp/contests/m-solutions2019/tasks/m_solutions2019_e
+*/
+
+
 //【等比数列の和】
 /*
 * geometric_series(r, n) : O(log n)
-*	Σi=[0..n) r^i を返す．
+*	Σi∈[0..n) r^i を返す．
 *
 * geometric_series(r, i0, i1) : O(log max(i0, i1))
-*	Σi=[i0..i1) r^i を返す．
+*	Σi∈[i0..i1) r^i を返す．
 * 
 *（ダブリング）
 */
@@ -57,10 +69,10 @@ mint geometric_series(mint r, ll i0, ll i1) {
 //【等差×等比型数列の和】O(log n)
 /*
 * arithmetic_geometric_series(r, n) : O(log n)
-*	Σi=[0..n) i r^i を返す．
+*	Σi∈[0..n) i r^i を返す．
 *
 * arithmetic_geometric_series(a, b, r, i0, i1) : O(log max(i0, i1))
-*	Σi=[i0..i1) (a i + b) r^i を返す．
+*	Σi∈[i0..i1) (a i + b) r^i を返す．
 *
 *（ダブリング）
 * 
@@ -101,7 +113,7 @@ mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
 
 //【累乗×等比型数列の無限和】O(d log d)
 /*
-* Σi=[0..∞) i^d r^i を返す．
+* Σi∈[0..∞) i^d r^i を返す．
 *
 * 制約 : r != 1
 * 
@@ -138,7 +150,7 @@ mint powered_geometric_series(mint r, int d) {
 *	a[0..n) で初期化する．
 *
 * ll sum(T x) : O(log max(a))
-*	Σi=[0..n) a[i] XOR x の値を返す．
+*	Σi∈[0..n) a[i] XOR x の値を返す．
 */
 template <class T> struct Xor_sum {
 	// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c

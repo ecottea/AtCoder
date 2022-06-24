@@ -9,7 +9,7 @@
 * 
 * §–ñF|b| >= 2
 */
-void integer_digits(ll n, vl& ds, ll b = 10) {
+void integer_digits(ll n, vi& ds, int b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	ds.clear();
@@ -22,7 +22,7 @@ void integer_digits(ll n, vl& ds, ll b = 10) {
 
 	// mod |b| ‚ğæ‚ê‚ÎÅ‰ºˆÊŒ…‚©‚ç‡‚ÉŒˆ’è‚µ‚Ä‚¢‚­D
 	while (n != 0) {
-		ll d = smod(n, abs(b));
+		int d = smod(n, abs(b));
 		ds.push_back(d);
 		n = (n - d) / b;
 	}

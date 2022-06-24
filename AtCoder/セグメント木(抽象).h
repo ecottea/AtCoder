@@ -206,84 +206,51 @@ struct Segtree {
 
 //【遅延評価セグメント木（モノイド作用付きモノイド）】
 /*
-* Lazy_segtree<S, op, e, F, mapping, composition, id>(n) : O(n)
+* Lazy_segtree<S, op, e, F, act, comp, id>(int n) : O(n)
 *	v[0..n) = e() で初期化する．
-*	要素は左作用付きモノイド (S, op, e, F, mapping, composition, id) の元とする．
+*	要素は左作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
 *
-* Lazy_segtree<S, op, e, F, mapping, composition, id>(v) : O(n)
-*	配列 v の要素で初期化する．
+* Lazy_segtree<S, op, e, F, act, comp, id>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．
 *
-* set(i, x) : O(log n)
+* set(int i, S x) : O(log n)
 *	v[i] = x とする．
 *
-* get(i) : O(log n)
+* S get(int i) : O(log n)
 *	v[i] を返す．
 *
-* prod(l, r) : O(log n)
-*	op( v[l..r) ) を返す．空なら e() を返す．
+* S prod(int l, int r) : O(log n)
+*	Πv[l..r) を返す．空なら e() を返す．
 *
-* apply(i, f) : O(log n)
+* apply(int i, F f) : O(log n)
 *	v[i] = f( v[i] ) とする．
 *
-* apply(l, r, f) : O(log n)
+* apply(int l, int r, F f) : O(log n)
 *	v[l..r) = f( v[l..r) ) とする．
 *
-* max_right<g>(l) : O(log n)
-*	g( op( v[l..r) ) ) = true となる最大の r を返す．
-*   g : S → bool で g(e()) = true かつ単調とする．
+* int max_right(int l, function<bool(S)> g) : O(log n)
+*	g( Πv[l..r) ) = true となる最大の r を返す．
+*   制約：g( e() ) = true かつ g は単調
 *
-* min_left<g>(r) : O(log n)
-*	g( op( v[l..r) ) ) = true となる最小の l を返す．
+* int min_left(int r, function<bool(S)> g) : O(log n)
+*	g( Πv[l..r) ) = true となる最小の l を返す．
+*	制約：g( e() ) = true かつ g は単調
 */
 template <class S, S(*op)(S, S), S(*e)(),
-	class F, S(*mapping)(F, S), F(*composition)(F, F), F(*id)()>
-struct Lazy_segtree {
+	class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Lazy_segtree {
 	// 参考：https://algo-logic.info/segment-tree/
 
-	// 完全二分木の葉の数（必ず 2 冪）
-	int n;
+	int n; // 完全二分木の葉の数（必ず 2 冪）
 	int actual_n; // 実際の要素数
 
-	// 完全二分木を実現する大きさ 2 * n の配列
+	// 完全二分木を実現する大きさ 2 * n の配列（ v[0] は使用しない．）
 	// 根は v[1] で，v[i] の親は v[i / 2]，左右の子は v[2 * i], v[2 * i + 1] である．
 	// 0-indexed での i 番目のデータは，葉である v[i + n] に入っている．
-	// v[0] は使用しない．
 	vector<S> v;
 
 	// 遅延評価用の完全二分木
 	vector<F> lazy;
-
-	// コンストラクタ（初期化なし）
-	Lazy_segtree() : n(0), actual_n(0) {}
-
-	// コンストラクタ（単位元で初期化）：O(N)
-	Lazy_segtree(int n_) : actual_n(n_) {
-		// 要素数以上となる最小の 2 冪を求め，n とする．
-		int pow2 = 1;
-		while (pow2 < n_) {
-			pow2 *= 2;
-		}
-		n = pow2;
-
-		// 完全二分木を実現する大きさ 2 * n の配列を確保する．
-		v = vector<S>(2 * n, e());
-		lazy = vector<F>(2 * n, id());
-	}
-
-	// コンストラクタ（配列で初期化）
-	Lazy_segtree(vector<S>& v_) : Lazy_segtree(sz(v_)) {
-		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
-
-		// 全ての葉にデータを設定する．
-		rep(i, sz(v_)) {
-			v[i + n] = v_[i];
-		}
-
-		// 全てのノードに正しい値を設定する．
-		repir(i, n - 1, 1) {
-			v[i] = op(v[i * 2], v[i * 2 + 1]);
-		}
-	}
 
 	// 遅延させていた評価を行う．：O(1)
 	void eval(int k) {
@@ -293,29 +260,22 @@ struct Lazy_segtree {
 		// 葉でなければ子に伝搬する．
 		if (k < n) {
 			// 左作用を考えているのでこの向きに合成する．
-			lazy[k * 2] = composition(lazy[k], lazy[k * 2]);
-			lazy[k * 2 + 1] = composition(lazy[k], lazy[k * 2 + 1]);
+			lazy[k * 2] = comp(lazy[k], lazy[k * 2]);
+			lazy[k * 2 + 1] = comp(lazy[k], lazy[k * 2 + 1]);
 		}
 
 		// 自身を評価する．
-		v[k] = mapping(lazy[k], v[k]);
+		v[k] = act(lazy[k], v[k]);
 		lazy[k] = id();
 	}
 
-	// v[i] = x とする．
-	void set(int i, S x) {
-		set_rf(i, x, 1, 0, n);
-	}
-
 	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	void set_rf(int i, S x, int k, int kl, int kr) {
+	void set_sub(int i, S x, int k, int kl, int kr) {
 		// まず自身の評価を行っておく．
 		eval(k);
 
 		// 範囲外なら何もしない．
-		if (kr <= i || i < kl) {
-			return;
-		}
+		if (kr <= i || i < kl) return;
 
 		// 葉まで降りてきたら値を代入して帰る．
 		if (kl == i && kr == i + 1) {
@@ -324,9 +284,132 @@ struct Lazy_segtree {
 		}
 
 		// 左右の子を見に行く．
-		set_rf(i, x, k * 2, kl, (kl + kr) / 2);
-		set_rf(i, x, k * 2 + 1, (kl + kr) / 2, kr);
+		set_sub(i, x, k * 2, kl, (kl + kr) / 2);
+		set_sub(i, x, k * 2 + 1, (kl + kr) / 2, kr);
 		v[k] = op(v[k * 2], v[k * 2 + 1]);
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	S prod_sub(int l, int r, int k, int kl, int kr) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外なら単位元 e() を返す．
+		if (kr <= l || r <= kl) return e();
+
+		// 完全に範囲内なら葉まで降りず自身の値を返す．
+		if (l <= kl && kr <= r) return v[k];
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		S vl = prod_sub(l, r, k * 2, kl, (kl + kr) / 2);
+		S vr = prod_sub(l, r, k * 2 + 1, (kl + kr) / 2, kr);
+		return op(vl, vr);
+	}
+
+	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	void apply_sub(int l, int r, F f, int k, int kl, int kr) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外なら何もしない．
+		if (kr <= l || r <= kl) return;
+
+		// 完全に範囲内なら自身の値を更新する．
+		if (l <= kl && kr <= r) {
+			// 左作用を考えているのでこの向きに合成する．
+			lazy[k] = comp(f, lazy[k]);
+
+			// return 直後に親から v[k] を参照される可能性があるので eval() が必要．
+			eval(k);
+
+			return;
+		}
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		apply_sub(l, r, f, k * 2, kl, (kl + kr) / 2);
+		apply_sub(l, r, f, k * 2 + 1, (kl + kr) / 2, kr);
+		v[k] = op(v[k * 2], v[k * 2 + 1]);
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	int max_right_sub(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外の場合
+		if (kr <= l || r <= kl) return r;
+
+		// g( op( v[kl, kr) ) ) = true の場合
+		if (g(op(x, v[k]))) {
+			x = op(x, v[k]);
+			return r;
+		}
+
+		// 自身が葉であればその位置を返す．
+		if (k >= n) return k - n;
+
+		// まず左の部分木を見に行き，見つかったならそれを返す．
+		int pos = max_right_sub(l, r, x, k * 2, kl, (kl + kr) / 2, g);
+		if (pos != r) return pos;
+
+		// 見つからなかったなら右の部分木も見にいき，結果を返す．
+		return max_right_sub(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	int min_left_sub(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外の場合
+		if (kr <= l || r <= kl) return l - 1;
+
+		// g( op( v[kl, kr) ) ) = true の場合
+		if (g(op(v[k], x))) {
+			x = op(v[k], x);
+			return l - 1;
+		}
+
+		// 自身が葉であればその位置を返す．
+		if (k >= n) return k - n;
+
+		// まず右の部分木を見に行き，見つかったならそれを返す．
+		int pos = min_left_sub(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
+		if (pos != l - 1) return pos;
+
+		// 見つからなかったなら左の部分木も見にいき，結果を返す．
+		return min_left_sub(l, r, x, k * 2, kl, (kl + kr) / 2, g);
+	}
+
+public:
+	// v[0..n) = e() で初期化する．
+	Lazy_segtree(int n_) : actual_n(n_) {
+		// 要素数以上となる最小の 2 冪を求め，n とする．
+		int pow2 = 1;
+		while (pow2 < n_) pow2 *= 2;
+		n = pow2;
+
+		// 完全二分木を実現する大きさ 2 * n の配列を確保する．
+		v = vector<S>(2 * n, e());
+		lazy = vector<F>(2 * n, id());
+	}
+
+	// 配列 v[0..n) の要素で初期化する．
+	Lazy_segtree(vector<S>& v_) : Lazy_segtree(sz(v_)) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+
+		// 全ての葉にデータを設定する．
+		rep(i, sz(v_)) v[i + n] = v_[i];
+
+		// 全てのノードに正しい値を設定する．
+		repir(i, n - 1, 1) v[i] = op(v[i * 2], v[i * 2 + 1]);
+	}
+
+	Lazy_segtree() : n(0), actual_n(0) {} // ダミー
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		set_sub(i, x, 1, 0, n);
 	}
 
 	// v[i] を返す．
@@ -338,28 +421,7 @@ struct Lazy_segtree {
 	S prod(int l, int r) {
 		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 
-		return prod_rf(l, r, 1, 0, n);
-	}
-
-	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	S prod_rf(int l, int r, int k, int kl, int kr) {
-		// まず自身の評価を行っておく．
-		eval(k);
-
-		// 範囲外なら単位元 e() を返す．
-		if (kr <= l || r <= kl) {
-			return e();
-		}
-
-		// 完全に範囲内なら葉まで降りず自身の値を返す．
-		if (l <= kl && kr <= r) {
-			return v[k];
-		}
-
-		// 一部の範囲のみを含むなら子を見に行く．
-		S vl = prod_rf(l, r, k * 2, kl, (kl + kr) / 2);
-		S vr = prod_rf(l, r, k * 2 + 1, (kl + kr) / 2, kr);
-		return op(vl, vr);
+		return prod_sub(l, r, 1, 0, n);
 	}
 
 	// v[i] = f( v[i] ) とする．
@@ -371,113 +433,24 @@ struct Lazy_segtree {
 	void apply(int l, int r, F f) {
 		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 
-		apply_rf(l, r, f, 1, 0, n);
-	}
-
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
-	void apply_rf(int l, int r, F f, int k, int kl, int kr) {
-		// まず自身の評価を行っておく．
-		eval(k);
-
-		// 範囲外なら何もしない．
-		if (kr <= l || r <= kl) {
-			return;
-		}
-
-		// 完全に範囲内なら自身の値を更新する．
-		if (l <= kl && kr <= r) {
-			// 左作用を考えているのでこの向きに合成する．
-			lazy[k] = composition(f, lazy[k]);
-			eval(k);
-
-			return;
-		}
-
-		// 一部の範囲のみを含むなら子を見に行く．
-		apply_rf(l, r, f, k * 2, kl, (kl + kr) / 2);
-		apply_rf(l, r, f, k * 2 + 1, (kl + kr) / 2, kr);
-		v[k] = op(v[k * 2], v[k * 2 + 1]);
+		apply_sub(l, r, f, 1, 0, n);
 	}
 
 	// g( op( v[l..r) ) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& g) {
 		S x = e();
-		return max_right_rf(l, actual_n, x, 1, 0, n, g);
-	}
-
-	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	int max_right_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
-		// まず自身の評価を行っておく．
-		eval(k);
-
-		// 範囲外の場合
-		if (kr <= l || r <= kl) {
-			return r;
-		}
-
-		// g( op( v[kl, kr) ) ) = true の場合
-		if (g(op(x, v[k]))) {
-			x = op(x, v[k]);
-			return r;
-		}
-
-		// 自身が葉であればその位置を返す．
-		if (k >= n) {
-			return k - n;
-		}
-
-		// まず左の部分木を見に行き，見つかったならそれを返す．
-		int pos = max_right_rf(l, r, x, k * 2, kl, (kl + kr) / 2, g);
-		if (pos != r) {
-			return pos;
-		}
-
-		// 見つからなかったなら右の部分木も見にいき，結果を返す．
-		return max_right_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
+		return max_right_sub(l, actual_n, x, 1, 0, n, g);
 	}
 
 	// g( op( v[l..r) ) ) = true となる最小の l を返す．
 	int min_left(int r, const function<bool(S)>& g) {
 		S x = e();
-		return min_left_rf(0, r, x, 1, 0, n, g) + 1;
-	}
-
-	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	int min_left_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
-		// まず自身の評価を行っておく．
-		eval(k);
-
-		// 範囲外の場合
-		if (kr <= l || r <= kl) {
-			return l - 1;
-		}
-
-		// g( op( v[kl, kr) ) ) = true の場合
-		if (g(op(v[k], x))) {
-			x = op(v[k], x);
-			return l - 1;
-		}
-
-		// 自身が葉であればその位置を返す．
-		if (k >= n) {
-			return k - n;
-		}
-
-		// まず右の部分木を見に行き，見つかったならそれを返す．
-		int pos = min_left_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
-		if (pos != l - 1) {
-			return pos;
-		}
-
-		// 見つからなかったなら左の部分木も見にいき，結果を返す．
-		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, g);
+		return min_left_sub(0, r, x, 1, 0, n, g) + 1;
 	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Lazy_segtree seg) {
-		rep(i, seg.actual_n) {
-			os << seg.get(i) << " ";
-		}
+		rep(i, seg.actual_n) os << seg.get(i) << " ";
 		return os;
 	}
 #endif
@@ -486,11 +459,11 @@ struct Lazy_segtree {
 
 //【間引きセグメント木（モノイド）】
 /*
-* Segtree_mod<S, op, e>(int n, int m) : O(n)
+* Thinning_segtree<S, op, e>(int n, int m) : O(n)
 *	v[0..n) = e() と法 m で初期化する．
 *	要素はモノイド (S, op, e) の元とする．
 *
-* Segtree_mod<S, op, e>(vS v) : O(n)
+* Thinning_segtree<S, op, e>(vS v) : O(n)
 *	配列 v[0..n) と法 m で初期化する．
 *
 * set(int i, S x) : O(log n)
@@ -500,17 +473,17 @@ struct Lazy_segtree {
 *	v[i] を返す．
 *
 * S prod(int l, int r, int k) : O(log n)
-*	set = {i∈[l..r) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+*	set = {i∈[l..r) | i=k (mod m)} とし，Πv[set] を返す．空なら e() を返す．
 *
 * S all_prod(int k) : O(1)
-*	set = {i∈[0..n) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+*	set = {i∈[0..n) | i=k (mod m)} とし，Πv[set] を返す．空なら e() を返す．
 *
 * int max_right(int l, function<bool(S)> f, int k) : O(log n)
-*	set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最大の r(=k (mod m)) を返す．
+*	set = {i∈[l..r) | i=k (mod m)} とし，f( Πv[set] ) = true となる最大の r(=k (mod m)) を返す．
 *   制約：f(e()) = true，f は単調
 *
 * int min_left(int r, function<bool(S)> f, int k) : O(log n)
-*	set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最小の l(=k (mod m)) を返す．
+*	set = {i∈[l..r) | i=k (mod m)} とし，f( Πv[set] ) = true となる最小の l(=k (mod m)) を返す．
 *	制約：f(e()) = true，f は単調
 */
 template <class S, S(*op)(S, S), S(*e)()>
@@ -586,119 +559,85 @@ public:
 */
 
 
-//【遅延評価セグメント木（モノイド比例作用付きモノイド）】
+//【Segment tree beats!（不完全モノイド作用付きモノイド）】
 /*
-* Proportional_lazy_segtree<S, op, e, F, mapping, composition, id, pow>(n) : O(n)
+* Lazy_segtree<S, op, e, F, act, comp, id, fail>(int n) : O(n)
 *	v[0..n) = e() で初期化する．
-*	要素は比例作用付きモノイド (S, op, e, F, mapping, composition, id, pow) の元とする．
-*	作用の影響は要素数に比例し pow(f,l)(op v[i..i+l)) = op(f v[i..i+l)) となる．
+*	要素は不完全左作用付きモノイド (S, op, e, F, act, comp, id, fail) の元とする．
 *
-* Proportional_lazy_segtree<S, op, e, F, mapping, composition, id, pow>(v) : O(n)
-*	配列 v の要素で初期化する．
+* Lazy_segtree<S, op, e, F, act, comp, id, fail>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．
 *
-* set(i, x) : O(log n)
+* set(int i, S x) : O(α log n)
 *	v[i] = x とする．
 *
-* get(i) : O(log n)
+* S get(int i) : O(α log n)
 *	v[i] を返す．
 *
-* prod(l, r) : O(log n)
-*	op( v[l..r) ) を返す．空なら e() を返す．
+* S prod(int l, int r) : O(α log n)
+*	Πv[l..r) を返す．空なら e() を返す．
 *
-* apply(i, f) : O(log n)
+* apply(int i, F f) : O(α log n)
 *	v[i] = f( v[i] ) とする．
 *
-* apply(l, r, f) : O(log n)
+* apply(int l, int r, F f) : O(α log n)
 *	v[l..r) = f( v[l..r) ) とする．
 *
-* max_right<g>(l) : O(log n)
-*	g( op( v[l..r) ) ) = true となる最大の r を返す．
-*   g : S → bool で g(e()) = true かつ単調とする．
+* int max_right(int l, function<bool(S)> g) : O(α log n)
+*	g( Πv[l..r) ) = true となる最大の r を返す．
+*   制約：g( e() ) = true かつ g は単調
 *
-* min_left<g>(r) : O(log n)
-*	g( op( v[l..r) ) ) = true となる最小の l を返す．
+* int min_left(int r, function<bool(S)> g) : O(α log n)
+*	g( Πv[l..r) ) = true となる最小の l を返す．
+*	制約：g( e() ) = true かつ g は単調
 */
 template <class S, S(*op)(S, S), S(*e)(),
-	class F, S(*mapping)(F, S), F(*composition)(F, F), F(*id)(), F(*pow)(F, int)>
-struct Proportional_lazy_segtree {
-	// 参考：https://algo-logic.info/segment-tree/
+	class F, S(*act)(F, S), F(*comp)(F, F), F(*id)(), S(*fail)()>
+class Segtree_beats {
+	// 参考 : https://rsm9.hatenablog.com/entry/2021/02/01/220408
 
-	// 完全二分木の葉の数（必ず 2 冪）
-	int n;
+	int n; // 完全二分木の葉の数（必ず 2 冪）
 	int actual_n; // 実際の要素数
 
-	// 完全二分木を実現する大きさ 2 * n の配列
+	// 完全二分木を実現する大きさ 2 * n の配列（ v[0] は使用しない．）
 	// 根は v[1] で，v[i] の親は v[i / 2]，左右の子は v[2 * i], v[2 * i + 1] である．
 	// 0-indexed での i 番目のデータは，葉である v[i + n] に入っている．
-	// v[0] は使用しない．
 	vector<S> v;
 
 	// 遅延評価用の完全二分木
 	vector<F> lazy;
 
-
-	// コンストラクタ（初期化なし）
-	Proportional_lazy_segtree() : n(0), actual_n(0) {}
-
-	// コンストラクタ（最大値で初期化）：O(N)
-	Proportional_lazy_segtree(int n_) : actual_n(n_) {
-		// 要素数以上となる最小の 2 冪を求め，n とする．
-		int pow2 = 1;
-		while (pow2 < n_) {
-			pow2 *= 2;
-		}
-		n = pow2;
-
-		// 完全二分木を実現する大きさ 2 * n の配列を確保する．
-		v = vector<S>(2 * n, e());
-		lazy = vector<F>(2 * n, id());
-	}
-
-	// コンストラクタ（配列で初期化）
-	Proportional_lazy_segtree(vector<S>& v_) : Proportional_lazy_segtree(sz(v_)) {
-		// 全ての葉にデータを設定する．
-		rep(i, sz(v_)) {
-			v[i + n] = v_[i];
-		}
-
-		// 全てのノードに正しい値を設定する．
-		repir(i, n - 1, 1) {
-			v[i] = op(v[i * 2], v[i * 2 + 1]);
-		}
-	}
-
 	// 遅延させていた評価を行う．：O(1)
-	void eval(int k, int len) {
+	void eval(int k) {
 		// 遅延させていた評価がなければ何もしない．
-		if (lazy[k] == id()) {
-			return;
-		}
+		if (lazy[k] == id()) return;
 
 		// 葉でなければ子に伝搬する．
 		if (k < n) {
-			lazy[k * 2] = composition(lazy[k], lazy[k * 2]);
-			lazy[k * 2 + 1] = composition(lazy[k], lazy[k * 2 + 1]);
+			// 左作用を考えているのでこの向きに合成する．
+			lazy[k * 2] = comp(lazy[k], lazy[k * 2]);
+			lazy[k * 2 + 1] = comp(lazy[k], lazy[k * 2 + 1]);
 		}
 
 		// 自身を評価する．
-		v[k] = mapping(pow(lazy[k], len), v[k]);
+		v[k] = act(lazy[k], v[k]);
 		lazy[k] = id();
+
+		// 評価に失敗した場合は子ノードの値から再計算する．
+		if (v[k] == fail()) {
+			eval(k * 2);
+			eval(k * 2 + 1);
+			v[k] = op(v[k * 2], v[k * 2 + 1]);
+		}
 	}
 
-	// v[i] = x とする．
-	void set(int i, S x) {
-		set_rf(i, x, 1, 0, n);
-	}
-
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
-	void set_rf(int i, S x, int k, int kl, int kr) {
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	void set_sub(int i, S x, int k, int kl, int kr) {
 		// まず自身の評価を行っておく．
-		eval(k, kr - kl);
+		eval(k);
 
 		// 範囲外なら何もしない．
-		if (kr <= i || i < kl) {
-			return;
-		}
+		if (kr <= i || i < kl) return;
 
 		// 葉まで降りてきたら値を代入して帰る．
 		if (kl == i && kr == i + 1) {
@@ -707,9 +646,132 @@ struct Proportional_lazy_segtree {
 		}
 
 		// 左右の子を見に行く．
-		set_rf(i, x, k * 2, kl, (kl + kr) / 2);
-		set_rf(i, x, k * 2 + 1, (kl + kr) / 2, kr);
+		set_sub(i, x, k * 2, kl, (kl + kr) / 2);
+		set_sub(i, x, k * 2 + 1, (kl + kr) / 2, kr);
 		v[k] = op(v[k * 2], v[k * 2 + 1]);
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	S prod_sub(int l, int r, int k, int kl, int kr) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外なら単位元 e() を返す．
+		if (kr <= l || r <= kl) return e();
+
+		// 完全に範囲内なら葉まで降りず自身の値を返す．
+		if (l <= kl && kr <= r) return v[k];
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		S vl = prod_sub(l, r, k * 2, kl, (kl + kr) / 2);
+		S vr = prod_sub(l, r, k * 2 + 1, (kl + kr) / 2, kr);
+		return op(vl, vr);
+	}
+
+	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	void apply_sub(int l, int r, F f, int k, int kl, int kr) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外なら何もしない．
+		if (kr <= l || r <= kl) return;
+
+		// 完全に範囲内なら自身の値を更新する．
+		if (l <= kl && kr <= r) {
+			// 左作用を考えているのでこの向きに合成する．
+			lazy[k] = comp(f, lazy[k]);
+
+			// return 直後に親から v[k] を参照される可能性があるので eval() が必要．
+			eval(k);
+
+			return;
+		}
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		apply_sub(l, r, f, k * 2, kl, (kl + kr) / 2);
+		apply_sub(l, r, f, k * 2 + 1, (kl + kr) / 2, kr);
+		v[k] = op(v[k * 2], v[k * 2 + 1]);
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	int max_right_sub(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外の場合
+		if (kr <= l || r <= kl) return r;
+
+		// g( op( v[kl, kr) ) ) = true の場合
+		if (g(op(x, v[k]))) {
+			x = op(x, v[k]);
+			return r;
+		}
+
+		// 自身が葉であればその位置を返す．
+		if (k >= n) return k - n;
+
+		// まず左の部分木を見に行き，見つかったならそれを返す．
+		int pos = max_right_sub(l, r, x, k * 2, kl, (kl + kr) / 2, g);
+		if (pos != r) return pos;
+
+		// 見つからなかったなら右の部分木も見にいき，結果を返す．
+		return max_right_sub(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	int min_left_sub(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 範囲外の場合
+		if (kr <= l || r <= kl) return l - 1;
+
+		// g( op( v[kl, kr) ) ) = true の場合
+		if (g(op(v[k], x))) {
+			x = op(v[k], x);
+			return l - 1;
+		}
+
+		// 自身が葉であればその位置を返す．
+		if (k >= n) return k - n;
+
+		// まず右の部分木を見に行き，見つかったならそれを返す．
+		int pos = min_left_sub(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
+		if (pos != l - 1) return pos;
+
+		// 見つからなかったなら左の部分木も見にいき，結果を返す．
+		return min_left_sub(l, r, x, k * 2, kl, (kl + kr) / 2, g);
+	}
+
+public:
+	// v[0..n) = e() で初期化する．
+	Segtree_beats(int n_) : actual_n(n_) {
+		// 要素数以上となる最小の 2 冪を求め，n とする．
+		int pow2 = 1;
+		while (pow2 < n_) pow2 *= 2;
+		n = pow2;
+
+		// 完全二分木を実現する大きさ 2 * n の配列を確保する．
+		v = vector<S>(2 * n, e());
+		lazy = vector<F>(2 * n, id());
+	}
+
+	// 配列 v[0..n) の要素で初期化する．
+	Segtree_beats(vector<S>& v_) : Segtree_beats(sz(v_)) {
+		// verify : https://atcoder.jp/contests/abc256/tasks/abc256_h
+
+		// 全ての葉にデータを設定する．
+		rep(i, sz(v_)) v[i + n] = v_[i];
+
+		// 全てのノードに正しい値を設定する．
+		repir(i, n - 1, 1) v[i] = op(v[i * 2], v[i * 2 + 1]);
+	}
+
+	Segtree_beats() : n(0), actual_n(0) {} // ダミー
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		set_sub(i, x, 1, 0, n);
 	}
 
 	// v[i] を返す．
@@ -719,28 +781,9 @@ struct Proportional_lazy_segtree {
 
 	// op( v[l..r) ) を返す．空なら e() を返す．
 	S prod(int l, int r) {
-		return prod_rf(l, r, 1, 0, n);
-	}
+		// verify : https://atcoder.jp/contests/abc256/tasks/abc256_h
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
-	S prod_rf(int l, int r, int k, int kl, int kr) {
-		// まず自身の評価を行っておく．
-		eval(k, kr - kl);
-
-		// 範囲外なら単位元 e() を返す．
-		if (kr <= l || r <= kl) {
-			return e();
-		}
-
-		// 完全に範囲内なら葉まで降りず自身の値を返す．
-		if (l <= kl && kr <= r) {
-			return v[k];
-		}
-
-		// 一部の範囲のみを含むなら子を見に行く．
-		S vl = prod_rf(l, r, k * 2, kl, (kl + kr) / 2);
-		S vr = prod_rf(l, r, k * 2 + 1, (kl + kr) / 2, kr);
-		return op(vl, vr);
+		return prod_sub(l, r, 1, 0, n);
 	}
 
 	// v[i] = f( v[i] ) とする．
@@ -750,112 +793,26 @@ struct Proportional_lazy_segtree {
 
 	// v[l..r) = f( v[l..r) ) とする．
 	void apply(int l, int r, F f) {
-		apply_rf(l, r, f, 1, 0, n);
+		// verify : https://atcoder.jp/contests/abc256/tasks/abc256_h
+
+		apply_sub(l, r, f, 1, 0, n);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
-	void apply_rf(int l, int r, F f, int k, int kl, int kr) {
-		// まず自身の評価を行っておく．
-		eval(k, kr - kl);
-
-		// 範囲外なら何もしない．
-		if (kr <= l || r <= kl) {
-			return;
-		}
-
-		// 完全に範囲内なら自身の値を更新する．
-		if (l <= kl && kr <= r) {
-			lazy[k] = composition(f, lazy[k]);
-			eval(k, kr - kl);
-
-			return;
-		}
-
-		// 一部の範囲のみを含むなら子を見に行く．
-		apply_rf(l, r, f, k * 2, kl, (kl + kr) / 2);
-		apply_rf(l, r, f, k * 2 + 1, (kl + kr) / 2, kr);
-		v[k] = op(v[k * 2], v[k * 2 + 1]);
-	}
-
-	// g( op( v[l, r) ) ) = true となる最大の r を返す．
+	// g( op( v[l..r) ) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& g) {
 		S x = e();
-		return max_right_rf(l, actual_n, x, 1, 0, n, g);
+		return max_right_sub(l, actual_n, x, 1, 0, n, g);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
-	int max_right_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
-		// まず自身の評価を行っておく．
-		eval(k, kr - kl);
-
-		// 範囲外の場合
-		if (kr <= l || r <= kl) {
-			return r;
-		}
-
-		// g( op( v[kl, kr) ) ) = true の場合
-		if (g(op(x, v[k]))) {
-			x = op(x, v[k]);
-			return r;
-		}
-
-		// 自身が葉であればその位置を返す．
-		if (k >= n) {
-			return k - n;
-		}
-
-		// まず左の部分木を見に行き，見つかったならそれを返す．
-		int pos = max_right_rf(l, r, x, k * 2, kl, (kl + kr) / 2, g);
-		if (pos != r) {
-			return pos;
-		}
-
-		// 見つからなかったなら右の部分木も見にいき，結果を返す．
-		return max_right_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
-	}
-
-	// g( op( v[l, r) ) ) = true となる最小の l を返す．
+	// g( op( v[l..r) ) ) = true となる最小の l を返す．
 	int min_left(int r, const function<bool(S)>& g) {
 		S x = e();
-		return min_left_rf(0, r, x, 1, 0, n, g) + 1;
-	}
-
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
-	int min_left_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
-		// まず自身の評価を行っておく．
-		eval(k, kr - kl);
-
-		// 範囲外の場合
-		if (kr <= l || r <= kl) {
-			return l - 1;
-		}
-
-		// g( op( v[kl, kr) ) ) = true の場合
-		if (g(op(v[k], x))) {
-			x = op(v[k], x);
-			return l - 1;
-		}
-
-		// 自身が葉であればその位置を返す．
-		if (k >= n) {
-			return k - n;
-		}
-
-		// まず右の部分木を見に行き，見つかったならそれを返す．
-		int pos = min_left_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
-		if (pos != l - 1) {
-			return pos;
-		}
-
-		// 見つからなかったなら左の部分木も見にいき，結果を返す．
-		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, g);
+		return min_left_sub(0, r, x, 1, 0, n, g) + 1;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Proportional_lazy_segtree seg) {
-		rep(i, seg.actual_n) {
-			os << seg.get(i) << " ";
-		}
+	friend ostream& operator<<(ostream& os, Segtree_beats seg) {
+		rep(i, seg.actual_n) os << seg.get(i) << " ";
 		return os;
 	}
 #endif
@@ -1221,9 +1178,9 @@ struct Segtree_map {
 
 //【連想遅延評価セグメント木（モノイド作用付きモノイド）】
 /*
-* Lazy_segtree_map<T, lb, ub, S, op, e, F, mapping, composition, id>() : O(1)
+* Lazy_segtree_map<T, lb, ub, S, op, e, F, act, comp, id>() : O(1)
 *	空のセグメント木で初期化する．
-*	要素は作用付きモノイド (S, op, e, F, mapping, composition, id) の元とする．
+*	要素は作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
 *	key は比較可能な型 T で (lb..ub) の範囲の値をとる．
 *
 * set(key, x) : O(log n)
@@ -1253,7 +1210,7 @@ struct Segtree_map {
 */
 template <class T, T(*lb)(), T(*ub)(),
 	class S, S(*op)(S, S), S(*e)(),
-	class F, S(*mapping)(F, S), F(*composition)(F, F), F(*id)()>
+	class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 struct Lazy_segtree_map {
 	// 参考 : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
 	// 参考 : https://algo-logic.info/segment-tree/
@@ -1291,12 +1248,12 @@ struct Lazy_segtree_map {
 
 		// 葉でなければ子に伝搬する．
 		if (t.left != nullptr) {
-			t.left->lazy = composition(t.lazy, t.left->lazy);
-			t.right->lazy = composition(t.lazy, t.right->lazy);
+			t.left->lazy = comp(t.lazy, t.left->lazy);
+			t.right->lazy = comp(t.lazy, t.right->lazy);
 		}
 
 		// 自身を評価する．
-		t.val = mapping(t.lazy, t.val);
+		t.val = act(t.lazy, t.val);
 		t.lazy = id();
 	}
 
@@ -1541,7 +1498,7 @@ struct Lazy_segtree_map {
 
 		// 完全に範囲内なら自身の値を更新する．
 		if (l <= t->key.first && t->key.second <= r) {
-			t->lazy = composition(f, t->lazy);
+			t->lazy = comp(f, t->lazy);
 			eval(*t);
 
 			return;
@@ -1656,9 +1613,9 @@ struct Lazy_segtree_map {
 
 //【平行移動可能連想遅延評価セグメント木（モノイド作用付きモノイド）】
 /*
-* Lazy_segtree_map_shiftable<T, lb, ub, add, zero, S, op, e, F, mapping, composition, id>() : O(1)
+* Lazy_segtree_map_shiftable<T, lb, ub, add, zero, S, op, e, F, act, comp, id>() : O(1)
 *	空のセグメント木で初期化する．
-*	要素は作用付きモノイド (S, op, e, F, mapping, composition, id) の元とする．
+*	要素は作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
 *	キーは比較可能な型 T で (lb..ub) の範囲の値をとり，add で平行移動（零元は zero）できる．
 *
 * set(key, x) : O(log n)
@@ -1714,7 +1671,7 @@ struct Lazy_segtree_map {
 */
 template <class T, T(*lb)(), T(*ub)(), T(*add)(T, T), T(*zero)(),
 	class S, S(*op)(S, S), S(*e)(),
-	class F, S(*mapping)(F, S), F(*composition)(F, F), F(*id)()>
+	class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 struct Lazy_segtree_map_shiftable {
 	// 参考 : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
 	// 参考 : https://algo-logic.info/segment-tree/
@@ -1754,12 +1711,12 @@ struct Lazy_segtree_map_shiftable {
 		if (t.lazy != id()) {
 			// 葉でなければ子に伝搬する．
 			if (t.left != nullptr) {
-				t.left->lazy = composition(t.lazy, t.left->lazy);
-				t.right->lazy = composition(t.lazy, t.right->lazy);
+				t.left->lazy = comp(t.lazy, t.left->lazy);
+				t.right->lazy = comp(t.lazy, t.right->lazy);
 			}
 
 			// 自身を評価する．
-			t.val = mapping(t.lazy, t.val);
+			t.val = act(t.lazy, t.val);
 			t.lazy = id();
 		}
 
@@ -2024,7 +1981,7 @@ struct Lazy_segtree_map_shiftable {
 
 		// 完全に範囲内なら自身の値を更新する．
 		if (l <= t->key.first && t->key.second <= r) {
-			t->lazy = composition(f, t->lazy);
+			t->lazy = comp(f, t->lazy);
 			eval(*t);
 
 			return;
@@ -2243,7 +2200,7 @@ struct Lazy_segtree_map_shiftable {
 
 		if (t->left == nullptr) {
 			pair<T, T> key_(add(t->key.first, t->sft), add(t->key.second, t->sft));
-			S val_(mapping(t->lazy, t->val));
+			S val_(act(t->lazy, t->val));
 			cout << "key:" << key_ << ", val:" << val_ << endl;
 		}
 
