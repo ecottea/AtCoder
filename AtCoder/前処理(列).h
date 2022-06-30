@@ -9,7 +9,7 @@
 * eq = true とすると「自身以下の数の次の位置」を格納する．
 */
 template <class T> void next_less_position(const vector<T>& a, vi& nxt_les, bool eq = false) {
-	// verify : https://yukicoder.me/problems/no/1031
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
 
 	int n = sz(a);
 	nxt_les = vi(n, n);
@@ -61,7 +61,7 @@ template <class T> void next_greater_position(const vector<T>& a, vi& nxt_grt, b
 * eq = true とすると「自身以下の数の前の位置」を格納する．
 */
 template <class T> void prev_less_position(const vector<T>& a, vi& prv_les, bool eq = false) {
-	// verify : https://yukicoder.me/problems/no/1031
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
 
 	int n = sz(a);
 	prv_les = vi(n, -1);
@@ -118,7 +118,7 @@ template <class T> void next_greater_positions(const vector<T>& a, int k, vvi& n
 	int n = sz(a);
 	nxt_grt = vvi(n);
 
-	// 奥まで走査できる優先度付きキューとして set を用いる．
+	// 奥の要素にアクセスできる優先度付きキューとして set を用いる．
 	set<pair<T, int>> q;
 
 	rep(i, n) {

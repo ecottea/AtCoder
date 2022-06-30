@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "ビット全探索.h"
-// ■■■■■ bit DP ■■■■■
+// ■■■■■ 最適化（集合の分割） ■■■■■
 
 
 //【直径最小化クラスタリング】O(3^n k)
@@ -17,7 +17,7 @@ ll minimize_diameter_clustering(const vvl& dist, int k) {
 	int n = sz(dist);
 
 	// dp[set][c] : 点集合 set を c 個に分割するときの最小直径
-	vvl dp(1LL << n, vl(k + 1, INFL));
+	vvl dp(1LL << n, vl(k + 1LL, INFL));
 
 	// 点集合 set の直径 dp[set][1] を前計算しておく．O(2^n n^2)
 	repb(set, n) {
@@ -48,7 +48,7 @@ ll minimize_diameter_clustering(const vvl& dist, int k) {
 		}
 	}
 
-	return dp[(1 << n) - 1][k];
+	return dp[(1LL << n) - 1][k];
 }
 
 
@@ -67,7 +67,7 @@ ll maximize_score_clustering(const vvl& sc) {
 	int n = sz(sc);
 
 	// dp[set] : 部分集合 set での得点の最大値
-	vector<ll> dp(1LL << n);
+	vl dp(1LL << n);
 
 	repb(set, n) {
 		// set 全体を 1 つのクラスタとする場合
@@ -87,7 +87,7 @@ ll maximize_score_clustering(const vvl& sc) {
 		}
 	}
 
-	return dp[(1 << n) - 1];
+	return dp[(1LL << n) - 1];
 }
 
 

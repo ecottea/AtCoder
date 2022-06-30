@@ -553,8 +553,8 @@ void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* 
 	rep(s, n) repe(t, g[s]) e_cnt[(ll)s * n + t]++;
 
 	// in[s] : DFS で頂点 s を何番目に探索したか
-	// low[s] : s から後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
-	// （後退辺とは，DFS でなぞられなかった g の辺のことをいう）
+	// low[s] : s から DFS 木を逆走せず後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
+	//			後退辺とは，DFS でなぞられなかった g の辺のことをいう．
 	vi in(n), low(n); vb seen(n);
 
 	int time = 0;
@@ -567,17 +567,23 @@ void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* 
 		low[s] = in[s];
 		seen[s] = true;
 
-		bool ap = false; // 関節点か
+		bool is_ap = false; // 関節点か
 		int ccnt = 0; // 子の個数
 
 		repe(t, g[s]) {
 			// 親に戻る辺と自己ループは通らない．
-			// （自己ループは連結性に影響を与えないので無視できる）
+			//	自己ループは連結性に影響を与えないので無視できる
 			if (t == p || t == s) continue;
 
 			// t を既に訪れていた場合
 			if (seen[t]) {
-				// 後退辺なので in[t] で low[s] を更新する．
+				// s→t または t→s は後退辺なので in[t] で low[s] を更新する．
+				//	s→t が後退辺のとき：
+				//		t から DFS 木の辺を辿って他の頂点 v に行けたとしても，
+				//		必ず in[t] < in[v] となっているので無視できる．
+				//	t→s が後退辺のとき：
+				//		s→t は DFS 木に対するショートカットとなるので，
+				//		必ず in[s] < in[t] となり更新は起こらないので安心．
 				chmin(low[s], in[t]);
 			}
 			// t をまだ訪れていない場合
@@ -585,25 +591,25 @@ void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* 
 				// 再帰的になぞりにいく．
 				dfs(t, s);
 
-				// DFS 木の辺なので low[t] で low[s] を更新する．
+				// s→t は DFS 木の辺なので low[t] で low[s] を更新する．
 				chmin(low[s], low[t]);
 
-				// 橋であれば記録する（多重辺は橋にはなりえない）
+				// 橋であれば記録する（ただし多重辺は橋にはなりえない）
 				if (in[s] < low[t] && e_cnt[(ll)s * n + t] == 1) {
 					if (b != nullptr) b->push_back({ s, t });
 				}
 
 				// 関節点かどうかの判定用
-				ap |= (in[s] <= low[t]);
+				is_ap |= (in[s] <= low[t]);
 				ccnt++;
 			}
 		}
 
 		// 根の場合の例外処理
-		if (s == r) ap = (ccnt >= 2);
+		if (s == r) is_ap = (ccnt >= 2);
 
 		// 関節点であれば記録する．
-		if (ap) if (a != nullptr) a->push_back(s);
+		if (is_ap) if (a != nullptr) a->push_back(s);
 	};
 
 	// 適当な点を根（始点）として DFS を行う．

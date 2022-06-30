@@ -185,9 +185,6 @@
     <ClInclude Include="区間DP.h">
       <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
-    <ClInclude Include="bitDP.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
     <ClInclude Include="ビット全探索.h">
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
@@ -392,9 +389,6 @@
     <ClInclude Include="ダブリング.h">
       <Filter>ヘッダー ファイル\アルゴリズム</Filter>
     </ClInclude>
-    <ClInclude Include="不等式.h">
-      <Filter>ヘッダー ファイル\最適化</Filter>
-    </ClInclude>
     <ClInclude Include="多倍長整数.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
@@ -496,6 +490,9 @@
     </ClInclude>
     <ClInclude Include="辞書%28動的%29.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="分割%28最適化%29.h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

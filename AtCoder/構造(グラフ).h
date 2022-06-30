@@ -125,17 +125,18 @@ void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
 * id : 辺の番号
 */
 struct IEdge {
-	// verify : https://yukicoder.me/problems/no/1254
+	// verify : https://atcoder.jp/contests/arc143/tasks/arc143_d
 
 	int to; // 行き先の頂点番号
 	int id; // 辺の番号
+	bool dir; // 順方向か
 
 	// コストなしグラフで呼ばれたとき用
 	operator int() const { return to; }
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const IEdge& e) {
-		os << '(' << e.to << ',' << e.id << ')';
+		os << '(' << e.to << ',' << e.id << ',' << e.dir << ')';
 		return os;
 	}
 #endif
@@ -147,7 +148,7 @@ struct IEdge {
 * IGraph g
 * g[v] : 頂点 v から出る辺を並べたリスト
 * 
-* verify : https://yukicoder.me/problems/no/1254
+* verify : https://atcoder.jp/contests/arc143/tasks/arc143_d
 */
 using IGraph = vector<vector<IEdge>>;
 
@@ -163,8 +164,6 @@ using IGraph = vector<vector<IEdge>>;
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
 void read_graph(int n, int m, IGraph& g, bool undirected = true, bool one_indexed = true) {
-	// verify : https://yukicoder.me/problems/no/1254
-
 	g = IGraph(n);
 	rep(i, m) {
 		int a, b;
@@ -172,8 +171,8 @@ void read_graph(int n, int m, IGraph& g, bool undirected = true, bool one_indexe
 
 		if (one_indexed) { a--; b--; }
 
-		g[a].push_back({ b, i });
-		if (undirected) g[b].push_back({ a, i });
+		g[a].push_back({ b, i, true });
+		if (undirected) g[b].push_back({ a, i, false });
 	}
 }
 

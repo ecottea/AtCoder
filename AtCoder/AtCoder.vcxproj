@@ -148,7 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
-    <ClInclude Include="bitDP.h" />
+    <ClInclude Include="分割%28最適化%29.h" />
     <ClInclude Include="DAG.h" />
     <ClInclude Include="local.hpp" />
     <ClInclude Include="FPS%28mint%29.h" />
@@ -176,7 +176,6 @@
     <ClInclude Include="マトロイド.h" />
     <ClInclude Include="モノイド(不完全モノイド作用付き).h" />
     <ClInclude Include="一変数最適化.h" />
-    <ClInclude Include="不等式.h" />
     <ClInclude Include="二分探索.h" />
     <ClInclude Include="二部マッチング.h" />
     <ClInclude Include="作図.h" />

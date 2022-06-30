@@ -34,7 +34,7 @@
 * T cross(Point<T> p) : O(1)
 *	自身と p との外積を返す．
 * 
-* T angle(Point<T> p) : O(1)
+* double angle(Point<T> p) : O(1)
 *	自身から p までの成す角度を返す．
 */
 template <class T> struct Point {

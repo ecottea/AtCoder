@@ -1,11 +1,66 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 組の最小化[最大化] ■■■■■
+// ■■■■■ 組，区間の最小化[最大化] ■■■■■
+
+
+//【組の差の最大化】O(n)
+/*
+* a[0..n) に対して以下の値を返す：
+*		max_(i < j) (a[j] - a[i])
+* また最大値を与える (i, j) を ids に格納する．
+*/
+template <class T> T maximize_pair_diff(const vector<T>& a, pii* ids = nullptr) {
+	//【方法】
+	// 累積 min をもちながら左から線形走査すればいい．
+
+	int n = sz(a);
+	T res = numeric_limits<T>::min(), a_min = a[0]; int i_min = 0;
+	if (ids == nullptr) ids = new pii;
+
+	repi(i, 1, n - 1) {
+		if (chmax(res, a[i] - a_min)) *ids = { i_min, i };
+		if (chmin(a_min, a[i])) i_min = i;
+	}
+
+	return res;
+}
+
+
+//【区間の和の最大化】O(n)
+/*
+* a[0..n) に対して以下の値を返す：
+*		max_(i < j) Σa[i..j)
+* また最大値を与える (i, j) を ids に格納する．
+*/
+ll maximize_interval_sum(const vl& a, pii* ids = nullptr) {
+	// verify : https://atcoder.jp/contests/dwango2016-prelims/tasks/dwango2016qual_d
+
+	//【方法】
+	// 累積和 acc[i] = Σa[0..i) を導入すれば，求める値は以下のように表される：
+	//		max_(i < j) (acc[j] - acc[i])
+	// すなわち【組の差の最大化】に帰着する．
+
+	int n = sz(a);
+
+	vl acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + a[i];
+
+	ll res = -INFL, acc_min = acc[0]; int i_min = 0;
+	if (ids == nullptr) ids = new pii;
+
+	repi(i, 1, n) {
+		if (chmax(res, acc[i] - acc_min)) *ids = { i_min, i };
+		if (chmin(acc_min, acc[i])) i_min = i;
+	}
+
+	return res;
+}
 
 
 //【組の LCM の最小化】O(A log A)（A = max(a)）
 /*
-* a[0..n) > 0 に対して min_(i<j) LCM(a[i], a[j]) を返す．
+* a[0..n) > 0 に対して以下の値を返す：
+*		min_(i < j) LCM(a[i], a[j])
 * また最小値を与える (i, j) を ids に格納する．
 */
 ll minimize_pair_lcm(const vi& a, pii& ids) {

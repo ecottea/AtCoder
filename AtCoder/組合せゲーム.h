@@ -315,3 +315,70 @@ void edge_cut_game_on_tree(const Graph& g, int r, vector<T_ecgot>& nimber) {
 }
 
 
+//【ニム積】
+/*
+* Nim_product() : O(64^2 * log(64)^2)
+*	初期化を行う．
+*
+* ull prod(ull x, ull y) : O(64^2)
+*	x と y のニム積を返す．
+*/
+class Nim_product {
+	// 参考 : ON NUMBERS AND GAMES(John H. Conway) (pp.52-53)
+
+	using ull = unsigned long long;
+
+	// p[i][j] : 2^i と 2^j のニム積
+	vector<vector<ull>> p;
+
+public:
+	Nim_product() : p(64, vector<ull>(64)) {
+		// verify : https://judge.yosupo.jp/problem/nim_product_64
+
+		rep(i, 64) p[0][i] = p[i][0] = 1ULL << i;
+
+		repi(i, 1, 63) repi(j, 1, 63) {
+			repir(b, 5, 0) {
+				if ((i & (1 << b)) && (j & (1 << b))) {
+					int i2 = i - (1 << b);
+					int j2 = j - (1 << b);
+					ull p2 = p[i2][j2];
+
+					p[i][j] = p2 << (1LL << b);
+					rep(k, 1LL << b) if (p2 & (1ULL << k)) p[i][j] ^= p[(1LL << b) - 1][k];
+					break;
+				}
+				else if (i & (1 << b)) {
+					int i2 = i - (1 << b);
+					ull p2 = p[i2][j];
+
+					p[i][j] = p2 << (1LL << b);
+					break;
+				}
+				else if (j & (1 << b)) {
+					int j2 = j - (1 << b);
+					ull p2 = p[i][j2];
+
+					p[i][j] = p2 << (1LL << b);
+					break;
+				}
+			}
+		}
+	}
+
+	ull prod(ull x, ull y) {
+		// verify : https://judge.yosupo.jp/problem/nim_product_64
+
+		ull res = 0;
+		rep(i, 64) {
+			if (!(x & (1ULL << i))) continue;
+			rep(j, 64) {
+				if (!(y & (1ULL << j))) continue;
+				res ^= p[i][j];
+			}
+		}
+		return res;
+	}
+};
+
+

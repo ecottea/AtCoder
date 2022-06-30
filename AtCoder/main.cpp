@@ -82,8 +82,8 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
@@ -92,143 +92,84 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 //----------------------------------------
 
 
-//【任意文字列の列挙】O(n |cs|^n)
+//【ニム積】
 /*
-* 文字集合 cs の要素からなる長さ n の文字列全てを strs に格納する．
+* Nim_product() : O(64^2 * log(64)^2)
+*	初期化を行う．
+* 
+* ull prod(ull x, ull y) : O(64^2)
+*	x と y のニム積を返す． 
 */
-void all_strings(int n, const vc& cs, vector<string>& strs) {
-	strs.clear();
-	string s;
+class Nim_product {
+	using ull = unsigned long long;
 
-	// l : 長さ
-	function<void(int)> rf = [&](int l) {
-		// 長さが n の場合は記録
-		if (l == n) {
-			strs.push_back(s);
-			return;
-		}
+	// p[i][j] : 2^i と 2^j のニム積
+	vector<vector<ull>> p;
 
-		// c : s[l]
-		repe(c, cs) {
-			s.push_back(c);
-			rf(l + 1);
-			s.pop_back();
-		}
-	};
+public:
+	Nim_product() : p(64, vector<ull>(64)) {
+		// verify : https://judge.yosupo.jp/problem/nim_product_64
 
-	rf(0);
-}
+		rep(i, 64) p[0][i] = p[i][0] = 1ULL << i;
 
+		repi(i, 1, 63) repi(j, 1, 63) {
+			repir(b, 5, 0) {
+				if ((i & (1 << b)) && (j & (1 << b))) {
+					int i2 = i - (1 << b);
+					int j2 = j - (1 << b);
+					ull p2 = p[i2][j2];
 
-// O(n 2^n)
-int TLE(const string& s, int k) {
-	int n = sz(s);
-	int c_min = INF;
-	
-	repb(set, n - 1) {
-		vi cnt(k);
-
-		bool ok = true;
-		cnt[s[0] - 'a']++;
-
-		rep(i, n - 1) {
-			if (set & (1 << i)) {
-				int odd = 0;
-				rep(j, k) if (cnt[j] % 2 == 1) odd++;
-
-				if (odd >= 2) {
-					ok = false;
+					p[i][j] = p2 << (1LL << b);
+					rep(k, 1LL << b) if (p2 & (1ULL << k)) p[i][j] ^= p[(1LL << b) - 1][k];
 					break;
 				}
+				else if (i & (1 << b)) {
+					int i2 = i - (1 << b);
+					ull p2 = p[i2][j];
 
-				cnt.assign(k, 0);
+					p[i][j] = p2 << (1LL << b);
+					break;
+				}
+				else if (j & (1 << b)) {
+					int j2 = j - (1 << b);
+					ull p2 = p[i][j2];
+
+					p[i][j] = p2 << (1LL << b);
+					break;
+				}
 			}
-			cnt[s[i + 1] - 'a']++;
 		}
-		int odd = 0;
-		rep(j, k) if (cnt[j] % 2 == 1) odd++;
-		if (odd >= 2) ok = false;
-
-		if (!ok) continue;
-
-		chmin(c_min, popcount(set) + 1);
 	}
 
-	return c_min;
-}
+	ull prod(ull x, ull y) {
+		// verify : https://judge.yosupo.jp/problem/nim_product_64
 
-
-void zikken() {
-	int n = 5, k = 3;
-
-	vc cs(k);
-	iota(all(cs), 'a');
-
-	vector<string> strs;
-	all_strings(n, cs, strs);
-
-	int c_max = -INF; string s_max;
-
-	repe(s, strs) {
-		int c_min = TLE(s, k);
-
-		if (chmax(c_max, c_min)) s_max = s;
+		ull res = 0;
+		rep(i, 64) {
+			if (!(x & (1ULL << i))) continue;
+			rep(j, 64) {
+				if (!(y & (1ULL << j))) continue;
+				res ^= p[i][j];
+			}
+		}
+		return res;
 	}
-
-	dump(c_max, s_max);
-}
-/*
-文字が 2 種類の場合：
-1 a
-2 ab
-1 aaa
-2 aaab
-1 aaaaa
-2 aaaaab
-1 aaaaaaa
-
-文字が 3 種類の場合：
-1 a
-2 ab
-3 abc
-4 abca
-3 aaabc
-4 aaabca
-3 aaaaabc
-4 aaaaabca
-
-文字が 4 種類の場合：
-1 a
-2 ab
-3 abc
-4 abca
-5 abcad
-6 abcadb
-7 abcadba
-6 aaabcadb
-7 aaabcadba
-
-文字が 5 種類の場合：
-1 a
-2 ab
-3 abc
-4 abca
-5 abcad
-6 abcadb
-7 abcadba
-8 abcadbae
-
-文字が 6 種類の場合の一例：
-13 fabfcafdbfecf
-16 fabfcafdbfecfabf
-*/
+};
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-//	zikken(); return 0;
+	int t;
+	cin >> t;
 
-	int c = TLE("eabecaedbecbe", 5);
-	dump(c);
+	Nim_product np;
+	using ull = unsigned long long;
+
+	rep(i, t) {
+		ull a, b;
+		cin >> a >> b;
+
+		cout << np.prod(a, b) << endl;
+	}
 }

@@ -754,7 +754,7 @@ void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
 
 //y•‰‚Ì“ñ€’è—z
 /*
-* [z^i] (1-z)^n = bin(n-1+i, i) ‚ª¬‚è—§‚ÂD
+* [z^i] (1-z)^(-n) = bin(n-1+i, i) ‚ª¬‚è—§‚ÂD
 * 
 * verify : https://atcoder.jp/contests/agc036/tasks/agc036_c
 */
