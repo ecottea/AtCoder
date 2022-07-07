@@ -134,7 +134,7 @@ public:
 
 	// i 番目のフィボナッチ数 fib[i] を得る（fib[0] = 0, fib[1] = 1 とする．）
 	ll fibonacci(int i) {
-		assert(0 <= i && i < m);
+		Assert(0 <= i && i < m);
 
 		return fib[i];
 	}

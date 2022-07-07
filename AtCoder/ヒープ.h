@@ -306,7 +306,7 @@ public:
 	void pop() {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_2_B
 
-		assert(root != nullptr);
+		Assert(root != nullptr);
 		Node* p = root;
 		p->eval();
 		root = meld(root->r, root->l);
@@ -351,7 +351,7 @@ private:
 
 //【多重集合（大小分離）】
 /*
-* Separated_multiset() : O(1)
+* Separated_multiset<T>() : O(1)
 *	空で初期化する．
 *
 * bool empty_l(), empty_h() : O(1)
@@ -423,7 +423,7 @@ template <class T> struct Separated_multiset {
 	bool erase_l(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
 		
-		assert(nl > 0);
+		Assert(nl > 0);
 
 		auto it_l = sl.lower_bound(val);
 		if (it_l != sl.end() && *it_l == val) {
@@ -446,7 +446,7 @@ template <class T> struct Separated_multiset {
 	bool erase_h(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
 		
-		assert(nh > 0);
+		Assert(nh > 0);
 
 		auto it_h = sh.lower_bound(val);
 		if (it_h != sh.end() && *it_h == val) {
@@ -469,7 +469,7 @@ template <class T> struct Separated_multiset {
 
 	// 多重集合の大きさを 1 減らす．
 	void decrese_l() {
-		assert(nl > 0);
+		Assert(nl > 0);
 
 		sh.insert(*sl.rbegin());
 		sl.erase(prev(sl.end()));
@@ -477,7 +477,7 @@ template <class T> struct Separated_multiset {
 		nl--; nh++;
 	}
 	void decrese_h() {
-		assert(nh > 0);
+		Assert(nh > 0);
 
 		sl.insert(*sh.begin());
 		sh.erase(sh.begin());
@@ -507,13 +507,13 @@ template <class T> struct Separated_multiset {
 *	多重集合の大きさを返す．
 *
 * void insert_l(T val), insert_h(T val) : O(log n)
-*	多重集合に値 val を追加する．set_l <= set_h は自動的に保たれる．
+*	多重集合に値 val を 1 つ追加する．set_l <= set_h は自動的に保たれる．
 *
 * T max_l(), min_h() : O(log n)
 *	多重集合内の最大値[最小値]を返す．
 *
 * bool erase_l(T val), erase_h(T val) : O(log n)
-*	多重集合内の値 val を削除する．要素がなければ false を返す．
+*	多重集合内の値 val を 1 つ削除する．どちらにも要素がなければ false を返す．
 *
 * void decrease_l(), decrease_r() : O(log n)
 *	多重集合の大きさを 1 減らす．逆側は 1 増える．
@@ -581,7 +581,9 @@ template <class T> struct Separated_multiset_sum {
 
 	// 多重集合内の値 val を削除する．
 	bool erase_l(const T& val) {
-		assert(nl > 0);
+		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
+
+		Assert(nl > 0);
 
 		auto it_l = sl.lower_bound(val);
 		if (it_l != sl.end() && *it_l == val) {
@@ -612,7 +614,7 @@ template <class T> struct Separated_multiset_sum {
 		return false;
 	}
 	bool erase_h(const T& val) {
-		assert(nh > 0);
+		Assert(nh > 0);
 
 		auto it_h = sh.lower_bound(val);
 		if (it_h != sh.end() && *it_h == val) {
@@ -644,14 +646,17 @@ template <class T> struct Separated_multiset_sum {
 	}
 
 	// 多重集合内の和を返す．
-	T sum_l() const { return suml; }
+	T sum_l() const { 
+		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
+		return suml;
+	}
 	T sum_h() const { return sumh; }
 
 	// 多重集合の大きさを 1 減らす．
 	void decrese_l() {
 		// verify : https://atcoder.jp/contests/abc249/tasks/abc249_f
 
-		assert(nl > 0);
+		Assert(nl > 0);
 
 		T v = *sl.rbegin();
 		sl.erase(prev(sl.end()));
@@ -662,7 +667,7 @@ template <class T> struct Separated_multiset_sum {
 		nl--; nh++;
 	}
 	void decrese_h() {
-		assert(nh > 0);
+		Assert(nh > 0);
 
 		T v = *sh.begin();
 		sh.erase(sh.begin());

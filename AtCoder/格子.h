@@ -177,16 +177,11 @@ template <class T> void bomberman(const vector<vector<T>>& c, vvi& u, vvi& d, vv
 bool simple_polygonQ(const vvc& c_, char o = '.') {
 	// verify : https://atcoder.jp/contests/abc219/tasks/abc219_e
 
-	int h = sz(c_) + 2;
-	int w = sz(c_[0]) + 2;
+	int h = sz(c_) + 2, w = sz(c_[0]) + 2;
 
 	// 外周に空マスを追加しておく．
 	vvc c(h, vc(w, o));
-	rep(i, h - 2) {
-		rep(j, w - 2) {
-			c[i + 1][j + 1] = c_[i][j];
-		}
-	}
+	rep(i, h - 2) rep(j, w - 2) c[i + 1][j + 1] = c_[i][j];
 
 	// 探索済みかどうか
 	vvb seen(h, vb(w));
@@ -212,8 +207,7 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 	// 幅優先探索を行う．
 	while (!q.empty()) {
 		int x, y;
-		tie(x, y) = q.front();
-		q.pop();
+		tie(x, y) = q.front(); q.pop();
 
 		// マス (x, y) の 4 近傍を調べる．
 		rep(k, 4) {
@@ -238,11 +232,7 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 	// 多角形内のマスで未探索のマスがあるなら多角形が非連結または自己交差あり．
 	// 多角形外のマスで未探索のマスがあるなら多角形に穴が空いているまたは自己交差あり．
 	// どちらにせよ単純多角形ではないので false を返す．
-	rep(i, h) {
-		rep(j, w) {
-			if (!seen[i][j]) return false;
-		}
-	}
+	rep(i, h) rep(j, w) if (!seen[i][j]) return false;
 
 	return true;
 }

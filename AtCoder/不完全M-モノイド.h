@@ -261,10 +261,10 @@ SA04 actA04(FA04 f, SA04 x) {
 
 	// x が二種類の要素からなる場合，それぞれに対して f(x) を計算できる．
 	if (xl2 == xu) {
-		assert(xl == xu2);
+		Assert(xl == xu2);
 		ll l = max(min(fa, xl), fb) + fc;
 		ll u = max(min(fa, xu), fb) + fc;
-		assert(l < u);
+		Assert(l < u);
 		ll s = l * xcl + u * xcu;
 		return SA04{ l, u, u, l, s, xc, xcl, xcu };
 	}
@@ -274,7 +274,7 @@ SA04 actA04(FA04 f, SA04 x) {
 		ll l = max(min(fa, xl), fb) + fc;
 		ll m = max(min(fa, xl2), fb) + fc;
 		ll u = max(min(fa, xu), fb) + fc;
-		assert(l < u);
+		Assert(l < u);
 		ll l2 = (l < m ? m : u);
 		ll u2 = (u > m ? m : l);
 		ll s = l * xcl + m * (xc - xcl - xcu) + u * xcu;
@@ -286,7 +286,7 @@ SA04 actA04(FA04 f, SA04 x) {
 	// b < l2 かつ u2 < a の場合，min, max の作用を受ける可能性があるのは l, u のみであり，
 	// その後 [b..a] の範囲の要素全てに c が加算される．
 	if (fb < xl2 && xu2 < fa) {
-		assert(xl2 < xu2);
+		Assert(xl2 < xu2);
 		ll l, u, l2 = xl2 + fc, u2 = xu2 + fc, s = xs + fc * xc;
 		if (fb <= xl) {
 			l = xl + fc;
@@ -302,9 +302,9 @@ SA04 actA04(FA04 f, SA04 x) {
 			u = fa + fc;
 			s -= (xu - fa) * xcu;
 		}
-		assert(l < l2);
-		assert(l2 < u2);
-		assert(u2 < u);
+		Assert(l < l2);
+		Assert(l2 < u2);
+		Assert(u2 < u);
 		return SA04{ l, u, l2, u2, s, xc, xcl, xcu };
 	}
 

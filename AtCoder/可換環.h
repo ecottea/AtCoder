@@ -1,13 +1,13 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 可換環 ■■■■■
+// ■■■■■ 環 ■■■■■
 
 
-//【可換環】
+//【環】
 /*
-* 可換環 (S, add, o, mi, mul, e) を表す．
+* 環 (S, add, o, mi, mul, e) を表す．
 *
-* すなわち，(S, add, o, mi) がアーベル群，(S, mul, e) が可換モノイドで，
+* すなわち，(S, add, o, mi) がアーベル群，(S, mul, e) がモノイドで，
 *	分配律 : ∀a, b, c ∈ S， a(b + c) = a b + a c, (a + b)c = a c + b c
 * を満たすものとする．
 */

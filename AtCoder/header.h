@@ -25,11 +25,11 @@ using Graph = vvi;
 const double PI = acos(-1);
 const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi DY = { 0, 1, 0, -1 };
-const int INF = 1001001001; const ll INFL = 4004004004004004004LL;
-const double EPS = 1e-12; // 許容誤差に応じて調整
+int INF = 1001001001; ll INFL = 4004004004004004004LL;
+double EPS = 1e-12; // 許容誤差に応じて調整
 
 // 入出力高速化
-struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(15); } } fastIOtmp;
+struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(18); } } fastIOtmp;
 
 // 汎用マクロの定義
 #define all(a) (a).begin(), (a).end()
@@ -146,6 +146,11 @@ auto start = chrono::system_clock::now();
 auto now = chrono::system_clock::now();
 auto msec = chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
 if (msec >= 1950) break;
+
+// いろいろ高速化
+#pragma GCC target("avx2")
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
 */
 
 

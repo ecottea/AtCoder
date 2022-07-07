@@ -115,7 +115,7 @@ string mul(const string& s, const string& t, int base = 10) {
 bool comp(const string& s, const string& op, const string& t) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/6/NTL/all/NTL_2_A
 
-	assert(op == ">" || op == ">=" || op == "=" || op == "<=" || op == "<");
+	Assert(op == ">" || op == ">=" || op == "=" || op == "<=" || op == "<");
 	int n = sz(s), m = sz(t);
 
 	if (op[0] == '=') return s == t;
@@ -172,7 +172,7 @@ void increment(string& s, int b = 10) {
 void decrement(string& s, int b = 10) {
 	// verify : https://atcoder.jp/contests/joi2012yo/tasks/joi2012yo_f
 
-	assert(s[0] != '0');
+	Assert(s[0] != '0');
 
 	int n = sz(s);
 

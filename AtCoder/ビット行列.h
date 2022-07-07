@@ -32,9 +32,6 @@
 *
 * transpose() : O(m n)
 *	自身を転置した行列を返す．
-*
-* prod_transpose(Bit_matrix<N> A, Bit_matrix<N> B) : O(l m n / 64)
-*	l * m 行列 A と n * m 行列 B について，積 A * B^T を返す．
 */
 template <int N> struct Bit_matrix {
 	int m, n; // 行数, 列数（行列のサイズは m * n）
@@ -93,14 +90,7 @@ template <int N> struct Bit_matrix {
 		rep(i, res.m) rep(j, res.n) res[i][j] = v[j][i];
 		return res;
 	}
-
-	// 転置との積（A * B^T）
-	friend Bit_matrix prod_transpose(const Bit_matrix& A, const Bit_matrix& B) {
-		Bit_matrix res(A.m, B.m);
-		rep(i, res.m) rep(j, res.n) res[i][j] = (A[i] & B[j]).count() % 2;
-		return res;
-	}
-
+		
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Bit_matrix& a) {
 		rep(i, a.m) {
@@ -111,6 +101,17 @@ template <int N> struct Bit_matrix {
 	}
 #endif
 };
+
+
+//【転置との積】: O(l m n / 64)
+/*
+* l * m 行列 A と n * m 行列 B について，積 A * B^T を返す．
+*/
+template <int N> Bit_matrix<N> prod_transpose(const Bit_matrix<N>& A, const Bit_matrix<N>& B) {
+	Bit_matrix<N> res(A.m, B.m);
+	rep(i, res.m) rep(j, res.n) res[i][j] = (A[i] & B[j]).count() % 2;
+	return res;
+}
 
 
 //【行簡約階段形】O(m^2 n / 64)

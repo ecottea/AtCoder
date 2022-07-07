@@ -9,13 +9,13 @@
 *	零多項式 f = o() で初期化する．
 *   係数は可換環 <S, add, o, mi, mul, e> の元とする．
 *
-* FPS<S, add, o, mi, mul, e>(c0) : O(1)
+* FPS<S, add, o, mi, mul, e>(S c0) : O(1)
 *	定数多項式 f = c0 で初期化する．
 *
-* FPS<S, add, o, mi, mul, e>(c0, n) : O(n)
+* FPS<S, add, o, mi, mul, e>(S c0, int n) : O(n)
 *	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
-* FPS<S, add, o, mi, mul, e>(c) : O(n)
+* FPS<S, add, o, mi, mul, e>(vS c) : O(n)
 *	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
@@ -34,6 +34,7 @@
 * FPS f.reminder(FPS g) : O(n^2)
 * pair<FPS, FPS> f.quotient_remainder(FPS g) : O(n^2)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
+*	制約 : g の最高次の係数は e()
 *
 * int f.deg(), int f.size() : O(1)
 *	多項式 f の次数[+1]を返す．
@@ -55,7 +56,7 @@
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
 * FPS power_mod(FPS f, ll d, FPS g) : O(m^2 log d)　（m = deg g）
-*	f(x)^d % g(x) を返す．
+*	f(x)^d mod g(x) を返す．
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
 struct FPS {
@@ -121,20 +122,18 @@ struct FPS {
 	FPS operator-(const S& sc) const { return FPS(*this) -= sc; }
 	friend FPS operator-(const S& sc, const FPS& f) { return FPS(sc) - f; }
 
-	// マイナス元
-	FPS operator-() const {
-		FPS res(*this);
-		rep(i, n) c[i] = mi(c[i]);
-		return res;
-	}
-
 	// 定数倍
 	FPS& operator*=(const S& sc) { rep(i, n) c[i] = mul(c[i], sc); return *this; }
 	FPS operator*(const S& sc) const { return FPS(*this) *= sc; }
 	friend FPS operator*(const S& sc, const FPS& f) { return f * sc; }
 
+	// 加法逆元
+	FPS operator-() const { return FPS(*this) *= mi(e()); }
+
 	// 積
 	FPS& operator*=(const FPS& g) {
+		// verify : https://atcoder.jp/contests/arc059/tasks/arc059_c
+
 		int m = g.deg();
 		if (m == -1) return *this = FPS();
 		resize(n + m);
@@ -158,34 +157,7 @@ struct FPS {
 
 	// 除算
 	FPS inv(int d) const {
-		// 参考：https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
-
-		//【方法】
-		// 1 / f mod x^d を求めることは，
-		//		f g = 1 (mod x^d)
-		// なる g を求めることである．
-		// この d の部分を 1, 2, 4, ..., 2^i と倍々にして求めていく．
-		//
-		// d = 1 のときについては
-		//		g = 1 / f[0] (mod x^1)
-		// である．
-		//
-		// 次に，
-		//		g = h (mod x^k)
-		// が求まっているとして
-		//		g mod x^(2 k)
-		// を求める．最初の式を変形していくことで
-		//		g - h = 0 (mod x^k)
-		//		⇒ (g - h)^2 = 0 (mod x^(2 k))
-		//		⇔ g^2 - 2 g h + h^2 = 0 (mod x^(2 k))
-		//		⇒ f g^2 - 2 f g h + f h^2 = 0 (mod x^(2 k))
-		//		⇔ g - 2 h + f h^2 = 0 (mod x^(2 k)) 　(f g = 1 (mod x^d) より)
-		//		⇔ g = (2 - f h) h (mod x^(2 k))
-		// を得る．
-		//
-		// この手順を d <= 2^i となる i まで繰り返し，d 次以上の項を削除すればよい．
-
-		assert(c[0] == e());
+		Assert(c[0] == e());
 
 		FPS g(e());
 		for (int k = 1; k < d; k *= 2) {
@@ -200,29 +172,6 @@ struct FPS {
 
 	// 余り付き除算
 	FPS quotient(const FPS& g) const {
-		// 参考 : https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
-
-		//【方法】
-		// f(x) = g(x) q(x) + r(x) となる q(x) を求める．
-		// f の次数は n - 1, g の次数は m - 1 とする．(n >= m)
-		// 従って q の次数は n - m，r の次数は m - 2 となる．
-		// 
-		// f^R で f の係数列を逆順にした多項式を表す．すなわち
-		//		f^R(x) := f(1/x) x^(n-1)
-		// である．他の多項式も同様とする．
-		//
-		// 最初の式で x → 1/x と置き換えると，
-		//		f(1/x) = g(1/x) q(1/x) + r(1/x)
-		//		⇔ f(1/x) x^(n-1) = g(1/x) q(1/x) x^(n-1) + r(1/x) x^(n-1)
-		//		⇔ f(1/x) x^(n-1) = g(1/x) x^(m-1) q(1/x) x^(n-m) + r(1/x) x^(m-2) x^(n-m+1)
-		//		⇔ f^R(x) = g^R(x) q^R(x) + r^R(x) x^(n-m+1)
-		//		⇒ f^R(x) = g^R(x) q^R(x) (mod x^(n-m+1))
-		// 	    ⇒ q^R(x) = f^R(x) / g^R(x)  (mod x^(n-m+1))
-		// を得る．
-		// 	   
-		// これで q を mod x^(n-m+1) で正しく求めることができることになるが，
-		// q の次数は n - m であったから，q 自身を正しく求めることができた．
-
 		if (n < g.n) return FPS();
 		return ((this->rev() / g.rev()).resize(n - g.n + 1)).rev();
 	}
@@ -266,9 +215,11 @@ struct FPS {
 
 	// スパース商
 	FPS& operator/=(const SFPS& g) {
+		// verify : https://atcoder.jp/contests/arc059/tasks/arc059_c
+
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
-		assert(it0->first == 0 && it0->second == e());
+		Assert(it0->first == 0 && it0->second == e());
 		it0++;
 
 		// 前からインライン配る DP（後ろに累積効果あり）
@@ -300,7 +251,6 @@ struct FPS {
 
 	// 不要な高次項の除去
 	FPS& resize() {
-		// 最高次の係数が非 0 になるまで削る．
 		while (n > 0 && c[n - 1] == o()) {
 			c.pop_back();
 			n--;
@@ -310,7 +260,6 @@ struct FPS {
 
 	// 高次項の除去 or 0 埋め
 	FPS& resize(int d) {
-		// x^d 以上の項を除去する．
 		n = d;
 		c.resize(d, o());
 		return *this;
@@ -364,7 +313,7 @@ struct FPS {
 };
 
 
-//【展開係数】O(n^2 log d)
+//【展開係数（可換環）】O(n^2 log d)
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
@@ -396,7 +345,7 @@ S bostan_mori(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul,
 	//
 	// これを繰り返せば d を半分ずつに減らしていくことができる．
 
-	assert(g[0] == e());
+	Assert(g.n >= 1 && g[0] == e());
 
 	// d = 0 のときは定数項を返す．
 	if (d == 0) return f[0];
@@ -432,7 +381,7 @@ S bostan_mori(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul,
 }
 
 
-//【線形漸化式】O(d^2 log n)
+//【線形漸化式（可換環）】O(d^2 log n)
 /*
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 数列 a について，a[n] の値を返す．
@@ -613,7 +562,7 @@ struct SemiFPS {
 		 
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
-		assert(it0->first != 0);
+		Assert(it0->first != 0);
 
 		// 前からインライン配る DP（後ろに累積効果あり）
 		rep(i, n) {

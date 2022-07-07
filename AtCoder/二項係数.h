@@ -48,7 +48,7 @@ public:
 	mint factorial(int n) const {
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 
-		assert(0 <= n && n <= n_max);
+		Assert(0 <= n && n <= n_max);
 		return fac_[n];
 	}
 
@@ -56,7 +56,7 @@ public:
 	mint factorial_inv(int n) const {
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 
-		assert(0 <= n && n <= n_max);
+		Assert(0 <= n && n <= n_max);
 		return fac_inv_[n];
 	}
 
@@ -64,13 +64,13 @@ public:
 	mint inv(int n) const {
 		// verify : https://atcoder.jp/contests/exawizards2019/tasks/exawizards2019_d
 
-		assert(0 < n && n <= n_max);
+		Assert(0 < n && n <= n_max);
 		return fac_[n - 1] * fac_inv_[n];
 	}
 
 	// 順列の数 nPr を返す．O(1)
 	mint permutation(int n, int r) const {
-		assert(n <= n_max);
+		Assert(n <= n_max);
 
 		if (r < 0 || n - r < 0) return 0;
 		return fac_[n] * fac_inv_[n - r];
@@ -80,7 +80,7 @@ public:
 	mint binomial(int n, int r) const {
 		// verify : https://atcoder.jp/contests/abc034/tasks/abc034_c
 
-		assert(n <= n_max);
+		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
 		return fac_[n] * fac_inv_[r] * fac_inv_[n - r];
 	}
@@ -88,7 +88,7 @@ public:
 	// 多項係数 nC[r] を返す．O(|r|)
 	mint multinomial(const vi& rs) const {
 		int n = accumulate(all(rs), 0);
-		assert(n <= n_max);
+		Assert(n <= n_max);
 
 		mint res = fac_[n];
 		repe(r, rs) {
@@ -121,6 +121,8 @@ struct Factorial_small_prime_mod {
 
 	// (p-1)! までの階乗を法を p として前計算しておく．
 	Factorial_small_prime_mod(int p_) : p(p_) {
+		// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
+
 		mint_p::set_mod(p);
 
 		fac_ = vector<mint_p>(p);
@@ -162,6 +164,8 @@ struct Factorial_small_prime_mod {
 
 	// 二項係数 nCr mod p を返す．
 	int binomial(ll n, ll r) {
+		// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
+
 		if (r < 0 || n - r < 0) {
 			return 0;
 		}
@@ -270,7 +274,7 @@ struct Factorial_arbitrary_small_mod {
 
 	// n! mod m を返す．
 	int factorial(ll n) const {
-		assert(n >= 0);
+		Assert(n >= 0);
 
 		// n! の情報を得る．
 		vl pw, rm;
@@ -410,7 +414,7 @@ struct Factorial_arbitrary_mod {
 
 	// n! mod m を返す．
 	int factorial(int n) const {
-		assert(0 <= n && n <= n_max);
+		Assert(0 <= n && n <= n_max);
 
 		// n! の情報を得る．
 		vi pw; vl rm;
@@ -429,7 +433,7 @@ struct Factorial_arbitrary_mod {
 
 	// 二項係数 nCr mod m を返す．
 	int binomial(int n, int r) const {
-		assert(n <= n_max);
+		Assert(n <= n_max);
 
 		if (r < 0 || n - r < 0) return 0;
 
@@ -490,13 +494,13 @@ public:
 
 	// log n! を返す．O(1)
 	double factorial(int n) const {
-		assert(0 <= n && n <= n_max);
+		Assert(0 <= n && n <= n_max);
 		return fac_[n];
 	}
 
 	// 順列の数の対数 log nPr を返す．O(1)
 	double permutation(int n, int r) const {
-		assert(n <= n_max);
+		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
 		return fac_[n] - fac_[n - r];
 	}
@@ -505,7 +509,7 @@ public:
 	double binomial(int n, int r) const {
 		// verify : https://atcoder.jp/contests/arc035/tasks/arc035_d
 
-		assert(n <= n_max);
+		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
 		return fac_[n] - fac_[r] - fac_[n - r];
 	}
@@ -513,7 +517,7 @@ public:
 	// 多項係数の対数 log nC[r] を返す．O(|r|)
 	double multinomial(const vi& r) const {
 		int n = accumulate(all(r), 0);
-		assert(n <= n_max);
+		Assert(n <= n_max);
 
 		double res = fac_[n];
 		repe(ri, r) res -= fac_[ri];
@@ -543,7 +547,7 @@ template <class T> T factorial(int n) {
 template <class T> T permutation(ll n, int r) {
 	// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/3
 
-	assert(n >= r);
+	Assert(n >= r);
 
 	T val = 1;
 	rep(i, r) val *= n - i;

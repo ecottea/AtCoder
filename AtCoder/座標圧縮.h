@@ -5,9 +5,8 @@
 
 //【座標圧縮】O(n log n)
 /*
-* 大きさ n の多重集合 a を 0 以上 |a| 未満の範囲に座標圧縮した結果を a_cp に格納する．
+* 大きさ n の多重集合 a を 0 以上 |a| 未満の範囲に座標圧縮した結果を a_cp に格納し，その要素数を返す．
 * また xs[j] に圧縮された座標 j に対応する元の座標を格納する．
-* 戻り値として |a| を返す．
 *
 * a に重複する要素がなければ，a_cp[i] は a[i] が昇順で何番目かを表し，
 * xs[j] は昇順で j 番目の要素が何かを表す．
@@ -165,4 +164,28 @@ tuple<int, int, int> coordinate_compression_rectangular(
 	return { sz(*xs), sz(*ys), sz(*zs) };
 }
 
+
+//【座標圧縮（全順序集合）】O(n log n)
+/*
+* a[0..n) を全順序 cmp を用いて座標圧縮した結果を a_cp[0..m) に格納し，m を返す．
+* また xs[j] に圧縮された座標 j に対応する元の座標を格納する．
+*/
+template <typename T>
+int coordinate_compression(const vector<T>& a, vi& a_cp, function<bool(T, T)>& cmp, vector<T>* xs = nullptr) {
+	// verify : https://atcoder.jp/contests/tenka1-2014-quala/tasks/tenka1_2014_qualA_d
+
+	int n = sz(a);
+	a_cp.resize(n);
+	if (xs == nullptr) xs = new vector<T>;
+
+	// *xs : a のユニークな昇順列
+	*xs = a;
+	sort(all(*xs), cmp);
+	xs->erase(unique(all(*xs)), xs->end());
+
+	// a[i] が xs において何番目かを求める．
+	rep(i, n) a_cp[i] = (int)distance(xs->begin(), lower_bound(all(*xs), a[i], cmp));
+
+	return sz(*xs);
+}
 

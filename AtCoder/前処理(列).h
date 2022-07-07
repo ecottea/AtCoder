@@ -35,7 +35,7 @@ template <class T> void next_less_position(const vector<T>& a, vi& nxt_les, bool
 * eq = true とすると「自身以上の数の次の位置」を格納する．
 */
 template <class T> void next_greater_position(const vector<T>& a, vi& nxt_grt, bool eq = false) {
-	// verify : https://yukicoder.me/problems/no/1031
+	// verify : https://atcoder.jp/contests/code-festival-2014-qualb/tasks/code_festival_qualB_d
 
 	int n = sz(a);
 	nxt_grt = vi(n, n);
@@ -87,7 +87,7 @@ template <class T> void prev_less_position(const vector<T>& a, vi& prv_les, bool
 * eq = true とすると「自身以上の数の前の位置」を格納する．
 */
 template <class T> void prev_greater_position(const vector<T>& a, vi& prv_grt, bool eq = false) {
-	// verify : https://yukicoder.me/problems/no/1031
+	// verify : https://atcoder.jp/contests/code-festival-2014-qualb/tasks/code_festival_qualB_d
 
 	int n = sz(a);
 	prv_grt = vi(n, -1);

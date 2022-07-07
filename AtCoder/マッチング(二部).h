@@ -377,6 +377,16 @@ template <class T> mint count_perfect_matching(const vector<vector<T>>& e, T ex)
 }
 
 
+//【パーマネント】
+/*
+* 【二部グラフの完全マッチングの数え上げ】の戻り値は
+* 0,1 を成分にもつ二部隣接行列 e[0..n)[0..n) のパーマネント perm(e) とも解釈できる．
+*
+* mod 2 では perm(e) = det(e) であり，det(e) は O(n^3) で計算できる．
+* verify : https://atcoder.jp/contests/arc054/tasks/arc054_c
+*/
+
+
 //【木の最大マッチング】O(n)
 /*
 * 木 g の最大マッチングの大きさを返す．
@@ -397,16 +407,6 @@ int tree_bipartite_matching(const Graph& g) {
 	rep(i, sz(g)) res += (int)(dp[i] > 0);
 	return res;
 }
-
-
-//【パーマネント】
-/*
-* 【二部グラフの完全マッチングの数え上げ】の戻り値は
-* 0,1 を成分にもつ二部隣接行列 e[0..n)[0..n) のパーマネント perm(e) とも解釈できる．
-* 
-* mod 2 では perm(e) = det(e) であり，det(e) は O(n^3) で計算できる．
-* verify : https://atcoder.jp/contests/arc054/tasks/arc054_c
-*/
 
 
 //【ホールの結婚定理】
@@ -440,5 +440,108 @@ int tree_bipartite_matching(const Graph& g) {
 * 
 * verify：https://atcoder.jp/contests/arc076/tasks/arc076_d
 */
+
+
+//【点と区間の最大マッチング】O(n log n + m log m)
+/*
+* n 個の点 xs[i] と m 個の区間 [ls[j]..rs[j]) がある．
+* ls[j] <= xs[i] < rs[j] を満たす組 (i, j) の最大個数を返し，組 (i, j) を ps に格納する．
+*/
+int point_interval_matching(const vl& xs, const vl& ls, const vl& rs, vector<pii>* ps = nullptr) {
+	// verify : https://atcoder.jp/contests/code-festival-2014-morning-easy/tasks/code_festival_morning_easy_d
+
+	int n = sz(xs), m = sz(ls);
+
+	// 点を昇順にソートする．
+	multiset<pli> xi;
+	rep(i, n) xi.insert({ xs[i], i });
+
+	// 区間を右端昇順にソートする．
+	vector<pli> rj(m);
+	rep(j, m) rj[j] = { rs[j], j };
+	sort(all(rj));
+
+	int res = 0;
+
+	// 区間の右端昇順に点とマッチングさせていく．
+	rep(j, m) {
+		ll r; int id;
+		tie(r, id) = rj[j];
+		ll l = ls[id];
+
+		// 区間内の点のうち最も左にあるものを見つける（無ければマッチング失敗）
+		auto it = xi.lower_bound({ l, -INF });
+		if (it == xi.end() || it->first >= r) continue;
+
+		if (ps != nullptr) ps->push_back({ it->second, id });
+		xi.erase(it);
+		res++;
+	}
+
+	return res;
+}
+
+
+//【合コン最大マッチング】O(n log n + m log m)
+/*
+* n 人の男性それぞれの年収が inc_m[i], 女性への希望年収が dst_m[i] 以上であるとする．
+* m 人の女性それぞれの年収が inc_w[j], 男性への希望年収が dst_w[j] 以上であるとする．
+* これらの条件のもとで成立するカップル数の最大値を返し，成立したカップルを男女順に p に格納する．
+*/
+ll op_gm(ll a, ll b) { return min(a, b); }
+ll e_gm() { return INFL; }
+int gokon_matching(const vl& inc_m, const vl& dst_m, const vl& inc_w, const vl& dst_w, vector<pii>* p = nullptr)
+{
+	// verify : https://atcoder.jp/contests/arc046/tasks/arc046_c
+
+	int n = sz(inc_m), m = sz(inc_w);
+
+	// 男女それぞれを年収昇順にソートする．
+	vector<pli> incid_m(n), incid_w(m);
+	rep(i, n) incid_m[i] = { inc_m[i], i };
+	rep(j, m) incid_w[j] = { inc_w[j], j };
+	sort(all(incid_m));
+	sort(all(incid_w));
+
+	vl im(n), dm(n), iw(m), dw(m); vi idm(n), idw(m);
+	rep(i, n) {
+		idm[i] = incid_m[i].second;
+		im[i] = inc_m[idm[i]];
+		dm[i] = dst_m[idm[i]];
+	}
+	rep(j, m) {
+		idw[j] = incid_w[j].second;
+		iw[j] = inc_w[idw[j]];
+		dw[j] = dst_w[idw[j]];
+	}
+
+	// 女性の希望年収
+	segtree<ll, op_gm, e_gm> seg(dw);
+
+	int res = 0;
+
+	// 年収の低い男性から順に相手の女性を見つけていく．
+	rep(i, n) {
+		// 男性 i の希望年収以上の中で最低の年収をもつ女性 j0 を探す．
+		int j0 = lbpos(iw, dm[i]);
+
+		// そのような女性が居なければ男性 i とはカップル不成立として次へ．
+		if (j0 == m) continue;
+
+		// j : 男性 i の希望年収以上をもつ女性の中で，男 i の年収で満足できる最低年収の女性
+		function<bool(ll)> f = [&](ll x) { return x > im[i]; };
+		int j = seg.max_right(j0, f);
+
+		// そのような女性が居なければ男性 i とはカップル不成立として次へ．
+		if (j == m) continue;
+
+		// 男性 i と女性 j がカップルになったので，浮気防止のため女性 j の要求水準を INFL にしておく．
+		seg.set(j, INFL);
+		if (p != nullptr) p->push_back({ idm[i], idw[j] });
+		res++;
+	}
+
+	return res;
+}
 
 

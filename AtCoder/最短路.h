@@ -9,7 +9,7 @@
 * グラフ g に対し，始点 st から各頂点 i への最短経路長を dist[i] に格納する．
 * i が st から到達不能な頂点の場合は dist[i] = INF となる．
 */
-void breadth_first_search(const Graph& g, int st, vi& dist) {
+template <class G> void breadth_first_search(const G& g, int st, vi& dist) {
 	// verify : https://algo-method.com/tasks/414
 
 	int n = sz(g);
@@ -84,68 +84,38 @@ void binary_bfs(const WGraph& g, int st, vi& dist) {
 * 頂点 i に到達不能の場合は dist[i] = INFL とする．
 */
 void dijkstra(const WGraph& g, int st, vl& dist) {
+	// 参考 : https://snuke.hatenablog.com/entry/2021/02/22/102734
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_A
 
 	int n = sz(g);
-	dist = vl(n, INFL); // スタートからの最短距離を保持するテーブル
+	dist = vl(n, INFL); // スタートからの最短距離
+	dist[st] = 0;
 
-	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキューを用意する．
-	// スタートからの距離がより小さいものを優先的に取り出す．
-	priority_queue_rev<pli> que;
-	que.push({ 0, st });
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
+	priority_queue_rev<pli> q;
+	q.push({ 0, st });
 
-	while (!que.empty()) {
+	while (!q.empty()) {
 		ll c; int s;
-		tie(c, s) = que.top(); que.pop();
+		tie(c, s) = q.top(); q.pop();
 
-		// もし既に最短距離が求まっているなら何もしない．
-		if (c >= dist[s]) continue;
-
-		// 最短距離の決定
-		// 優先度付きキューで距離の小さい順に取り出しており，
-		// かつコストが非負より三角不等式が成立するので最短の保証がある．
-		dist[s] = c;
-
-		// そこから移動できるノードについての情報をキューに追加する．
-		repe(e, g[s]) que.push({ c + e.cost, e.to });
-	}
-}
-
-
-//【単一始点最短路（頂点コスト）／ダイクストラ法】O(|V| + |E| log|V|)
-/*
-* 頂点に非負のコスト vc が与えられたグラフ g に対し，
-* 始点 st から各頂点 i への最短距離を dist[i] に格納する．
-*/
-void dijkstra(const Graph& g, const vl& vc, int st, vl& dist) {
-	int n = sz(g);
-	dist = vl(n, INFL); // スタートからの最短距離を保持するテーブル
-
-	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキューを用意する．
-	// スタートからの距離がより小さいものを優先的に取り出す．
-	priority_queue_rev<pli> que;
-	que.push({ vc[st], st });
-
-	while (!que.empty()) {
-		ll c; int s;
-		tie(c, s) = que.top(); que.pop();
-
-		// もし既に最短距離が求まっているなら無視
-		if (c >= dist[s]) continue;
-
-		// 最短距離の決定
-		// 優先度付きキューで距離の小さい順に取り出しているので最小の保証がある．
-		dist[s] = c;
-
-		// そこから移動できるノードについての情報をキューに追加する．
-		repe(t, g[s]) que.push({ c + vc[t], t });
+		// すでにより短い距離に更新されていたなら何もしない．（忘れると O(|V|^2)）
+		if (dist[s] < c) continue;
+		
+		repe(e, g[s]) {
+			// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
+			if (dist[s] + e.cost < dist[e.to]) {
+				dist[e.to] = dist[s] + e.cost;
+				q.push({ dist[e.to], e.to });
+			}
+		}
 	}
 }
 
 
 //【ポテンシャル付きダイクストラ法】O(|V| + |E| log|V|)
 /*
-* 負閉路のないコスト付きグラフ g に対し，実行可能ポテンシャル u を与え，
+* 負閉路のないコスト付きグラフ g に対し，実行可能ポテンシャル u[0..n) を与え，
 * 始点 st から各頂点 i への最短距離を dist[i] に格納する．
 *
 * 条件：g[s][t].cost >= u[t] - u[s]
@@ -166,32 +136,38 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& dist) {
 	// なお，負のコストの辺がある場合に通常のダイクストラ法を使うと，
 	//		負の閉路に行ける → 無限ループ
 	//		負の閉路に行けない → 正しい答えは出るが，最悪計算量 O(2^|V|)
-	// となるのでだめ．
+	// となるのでどちらにせよだめ．
 	// 参考：https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
 
 	int n = sz(g);
-	dist = vl(n, INFL);
+	dist = vl(n, INFL); // スタートからの最短距離
+	dist[st] = 0;
 
-	priority_queue_rev<pli> que;
-	que.push({ 0, st });
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
+	priority_queue_rev<pli> q;
+	q.push({ 0, st });
 
-	while (!que.empty()) {
+	while (!q.empty()) {
 		ll c; int s;
-		tie(c, s) = que.top(); que.pop();
+		tie(c, s) = q.top(); q.pop();
 
-		if (c >= dist[s]) continue;
-
-		dist[s] = c;
-
+		// すでにより短い距離に更新されていたなら何もしない．
+		if (dist[s] < c) continue;
+		
 		repe(e, g[s]) {
+			// r : 経路依存のコスト
 			ll r = e.cost - (u[e.to] - u[s]);
-			que.push({ c + r, e.to });
+
+			// より少ないコストで辿り着けるなら距離を更新し，その先も探索する．
+			if (dist[s] + r < dist[e.to]) {
+				dist[e.to] = dist[s] + r;
+				q.push({ dist[e.to], e.to });
+			}
 		}
 	}
 
-	rep(i, n) {
-		dist[i] += u[i] - u[st];
-	}
+	// 場所依存のコスト Δu を加算する．
+	rep(i, n) dist[i] += u[i] - u[st];
 }
 
 
@@ -213,28 +189,41 @@ void dijkstra_tree(const WGraph& g, int st, WGraph& gt) {
 
 	int n = sz(g);
 	gt = WGraph(n);
-	vl cost(n, INFL); // スタートからの最短距離を保持するテーブル
+	vl dist(n, INFL); // スタートからの最短距離
+	dist[st] = 0;
 
-	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキューを用意する．
-	// スタートからの距離がより小さいものを優先的に取り出す．
-	priority_queue_rev<tuple<ll, int, WEdge>> que;
-	que.push({ 0, -1, {st, 0LL} });
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
+	priority_queue_rev<pli> q;
+	q.push({ 0, st });
 
-	while (!que.empty()) {
-		ll c; int s; WEdge e;
-		tie(c, s, e) = que.top(); que.pop();
+	// 終点 → (直前の頂点, 直前の辺)
+	vector<pair<int, WEdge>> t_to_se(n);
 
-		// もし既に最短距離が求まっているなら何もしない．
-		if (c >= cost[e.to]) continue;
+	while (!q.empty()) {
+		ll c; int s;
+		tie(c, s) = q.top(); q.pop();
 
-		// 最短距離の決定
-		// 優先度付きキューで距離の小さい順に取り出しており，
-		// かつコストが非負より三角不等式が成立するので最短の保証がある．
-		cost[e.to] = c;
-		if (s != -1) gt[s].push_back(e);
+		// すでにより短い距離に更新されていたなら何もしない．
+		if (dist[s] < c) continue;
 
-		// そこから移動できるノードについての情報をキューに追加する．
-		repe(e2, g[e.to]) que.push({ c + e2.cost, e.to, e2 });
+		repe(e, g[s]) {
+			// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
+			if (dist[s] + e.cost < dist[e.to]) {
+				dist[e.to] = dist[s] + e.cost;
+				t_to_se[e.to] = { s, e };
+				q.push({ dist[e.to], e.to });
+			}
+		}
+	}
+
+	// 全ての頂点 t について，直前に通った辺を集めて最短路木を構築する．
+	rep(t, n) {
+		if (t == st) continue;
+
+		int s; WEdge e;
+		tie(s, e) = t_to_se[t];
+
+		gt[s].push_back(e);
 	}
 }
 
@@ -464,38 +453,40 @@ int shortest_cycle(const Graph& g, int st, vi* path = nullptr) {
 *（ダイクストラ法）
 */
 ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
+	// verify : https://judge.yosupo.jp/problem/shortest_path
+
 	int n = sz(g);
 
-	vl cost(n, INFL); // st からの最短距離を保持するテーブル
-	vi parent(n); // 1 つ手前の頂点を記録しておくテーブル（復元用）
+	vl dist(n, INFL); // st からの最短距離
+	dist[st] = 0;
+	vi parent(n); // 1 つ手前の頂点（復元用）
 
-	// 組 (スタートからの距離, 頂点番号, 直前の頂点) を入れる優先度付きキューを用意する．
-	// スタートからの距離がより小さいものを優先的に取り出す．
-	priority_queue_rev<tuple<ll, int, int>> que;
-	que.push({ 0, st, -1 });
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
+	priority_queue_rev<pli> q;
+	q.push({ 0, st });
 
-	while (!que.empty()) {
-		ll c; int s, p;
-		tie(c, s, p) = que.top(); que.pop();
-
-		// もし既に最短距離が求まっているなら何もしない．
-		if (c >= cost[s]) continue;
-
-		// 最短距離の決定
-		cost[s] = c;
-		parent[s] = p;
+	while (!q.empty()) {
+		ll c; int s;
+		tie(c, s) = q.top(); q.pop();
 
 		// ゴールに辿り着いたなら終了
 		if (s == gl) break;
 
-		// そこから移動できるノードについての情報をキューに追加する．
+		// すでにより短い距離に更新されていたなら何もしない．
+		if (dist[s] < c) continue;
+
 		repe(e, g[s]) {
-			que.push({ c + e.cost, e.to, s });
+			// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
+			if (dist[s] + e.cost < dist[e.to]) {
+				dist[e.to] = dist[s] + e.cost;
+				parent[e.to] = s;
+				q.push({ dist[e.to], e.to });
+			}
 		}
 	}
 
 	// st から gl まで到達不能の場合
-	ll d = cost[gl];
+	ll d = dist[gl];
 	if (d == INFL) return INFL;
 
 	// 必要なら経路復元を行う．
@@ -574,6 +565,67 @@ ll minimum_cost_cycle(const WGraph& g, int st, vi* path = nullptr) {
 
 		path->push_back(st);
 		reverse(all(*path));
+	}
+
+	return d;
+}
+
+
+//【最短パス（参照付きグラフ）】O(|V| + |E|)
+/*
+* グラフ g の始点 st から終点 gl までの最短パスの長さを返す（到達不能なら INF）
+* また path に最短パス上の辺番号の列を格納する．
+*
+*（幅優先探索）
+*/
+int shortest_path(const IGraph& g, int st, int gl, vi& path) {
+	// verify : https://atcoder.jp/contests/abc218/tasks/abc218_f
+
+	int n = sz(g);
+
+	vi dist(n, INF); // st からの最短距離を保持するテーブル
+	dist[st] = 0;
+
+	vi p(n); // 1 つ手前の頂点を記録しておくテーブル（復元用）
+	p[st] = -1;
+
+	vi e(n); // 直前に通った辺番号を記録しておくテーブル（復元用）
+	e[st] = -1;
+
+	queue<int> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		auto s = que.front(); que.pop();
+
+		if (s == gl) break;
+
+		repe(t, g[s]) {
+			// 発見済みの頂点なら何もしない．
+			if (dist[t] != INF) continue;
+
+			// スタートからの最短距離を確定する．
+			dist[t] = dist[s] + 1;
+			p[t] = s;
+			e[t] = t.id;
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+
+	// st から gl まで到達不能の場合
+	int d = dist[gl];
+	if (d == INF) return INF;
+
+	// 経路復元を行う．
+	path = vi(d);
+
+	int t = gl, i = d - 1;
+
+	while (t != st) {
+		path[i--] = e[t];
+		t = p[t];
 	}
 
 	return d;
@@ -665,67 +717,6 @@ ll minimum_cost_path_nc(const WGraph& g, int st, int gl, vi* path = nullptr) {
 }
 
 
-//【最短パス（参照付きグラフ）】O(|V| + |E|)
-/*
-* グラフ g の始点 st から終点 gl までの最短パスの長さを返す（到達不能なら INF）
-* また path に最短パス上の辺番号の列を格納する．
-*
-*（幅優先探索）
-*/
-int shortest_path(const IGraph& g, int st, int gl, vi& path) {
-	// verify : https://atcoder.jp/contests/abc152/tasks/abc152_f
-
-	int n = sz(g);
-
-	vi dist(n, INF); // st からの最短距離を保持するテーブル
-	dist[st] = 0;
-
-	vi p(n); // 1 つ手前の頂点を記録しておくテーブル（復元用）
-	p[st] = -1;
-
-	vi e(n); // 直前に通った辺番号を記録しておくテーブル（復元用）
-	e[st] = -1;
-
-	queue<int> que; // 次に探索する頂点を入れておくキュー
-	que.push(st);
-
-	while (!que.empty()) {
-		auto s = que.front(); que.pop();
-
-		if (s == gl) break;
-
-		repe(t, g[s]) {
-			// 発見済みの頂点なら何もしない．
-			if (dist[t] != INF) continue;
-
-			// スタートからの最短距離を確定する．
-			dist[t] = dist[s] + 1;
-			p[t] = s;
-			e[t] = t.id;
-
-			// 未探索の頂点として t を追加する．
-			que.push(t);
-		}
-	}
-
-	// st から gl まで到達不能の場合
-	int d = dist[gl];
-	if (d == INF) return INF;
-
-	// 経路復元を行う．
-	path = vi(d);
-
-	int t = gl, i = d - 1;
-
-	while (t != st) {
-		path[i--] = e[t];
-		t = p[t];
-	}
-
-	return d;
-}
-
-
 //【最近傍探索】O(|V| + |E|)
 /*
 * 無向グラフ g とその頂点集合 vs について，頂点 i と最も近い vs の頂点の 1 つを nn[i] に，
@@ -773,7 +764,7 @@ void nearest_neighbor(const Graph& g, const vi& vs, vi& nn, vi& dist) {
 */
 void nearest_neighbor(const WGraph& g, const vi& vs, vi& nn, vl& dist) {
 	// verify : https://atcoder.jp/contests/joi2012ho/tasks/joi2012ho5
-	
+
 	int n = sz(g);
 
 	nn = vi(n, -1);
@@ -781,14 +772,16 @@ void nearest_neighbor(const WGraph& g, const vi& vs, vi& nn, vl& dist) {
 	priority_queue_rev<pli> q;
 
 	repe(s, vs) {
-		q.push({ 0LL, s });
+		q.push({ 0, s });
 		nn[s] = s;
-		dist[s] = 0LL;
+		dist[s] = 0;
 	}
 
 	while (!q.empty()) {
 		int s; ll c;
 		tie(c, s) = q.top(); q.pop();
+
+		if (dist[s] < c) continue;
 
 		repe(e, g[s]) {
 			if (c + e.cost >= dist[e.to]) continue;

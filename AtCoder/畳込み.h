@@ -371,7 +371,7 @@ struct NTT {
 
 	// ’·‚³‚ª 2 ™p‚Ì—ñ a ‚É‘Î‚µ mod 998244353 ‚Å”˜_•ÏŠ·‚ğs‚Á‚½Œ‹‰Ê‚ğ A ‚ÉŠi”[‚·‚éD
 	void ntt(const vm& a, vm& A) {
-		assert(sz(a) <= N);
+		Assert(sz(a) <= N);
 
 		int n = sz(a);
 		if (n == 1) {
@@ -387,7 +387,7 @@ struct NTT {
 
 	// ’·‚³‚ª 2 ™p‚Ì—ñ A ‚É‘Î‚µ mod 998244353 ‚Å‹t”˜_•ÏŠ·‚ğs‚Á‚½Œ‹‰Ê‚ğ a ‚ÉŠi”[‚·‚éD
 	void intt(const vm& A, vm& a) {
-		assert(sz(a) <= N);
+		Assert(sz(a) <= N);
 
 		intt_sub(A, a);
 
@@ -412,7 +412,7 @@ struct NTT {
 	vm convolution(vm a, vm b) {
 		// verify : https://judge.yosupo.jp/problem/convolution_mod
 
-		assert(sz(a) + sz(b) - 1 <= N);
+		Assert(sz(a) + sz(b) - 1 <= N);
 
 		int n = sz(a), m = sz(b);
 
@@ -430,7 +430,7 @@ struct NTT {
 
 	// ’·‚³‚ª 2 ™p‚Ì—ñ a ‚Æ b ‚Ì„‰ñô‚İ‚ğ•Ô‚·D
 	vm cyclic_convolution(vm a, vm b) {
-		assert(sz(a) == sz(b) && sz(a) <= N);
+		Assert(sz(a) == sz(b) && sz(a) <= N);
 
 		int n = sz(a);
 
@@ -443,7 +443,7 @@ struct NTT {
 
 	// ’·‚³‚ª 2 ™p‚Ì—ñ a ‚ğ d ŒÂ„‰ñô‚İ‚µ‚½Œ‹‰Ê‚ğ•Ô‚·D
 	vm cyclic_convolution_power(vm a, ll d) {
-		assert(sz(a) <= N);
+		Assert(sz(a) <= N);
 
 		int n = sz(a);
 

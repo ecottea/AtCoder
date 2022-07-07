@@ -148,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
+    <ClInclude Include="マッチング(一般).h" />
     <ClInclude Include="分割%28最適化%29.h" />
     <ClInclude Include="DAG.h" />
     <ClInclude Include="local.hpp" />
@@ -159,7 +160,6 @@
     <ClInclude Include="Z-加群.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
-    <ClInclude Include="アーベル群.h" />
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="スコア和%28区間%29.h" />
@@ -174,10 +174,10 @@
     <ClInclude Include="ビット列.h" />
     <ClInclude Include="ビット演算.h" />
     <ClInclude Include="マトロイド.h" />
-    <ClInclude Include="モノイド(不完全モノイド作用付き).h" />
+    <ClInclude Include="不完全M-モノイド.h" />
     <ClInclude Include="一変数最適化.h" />
     <ClInclude Include="二分探索.h" />
-    <ClInclude Include="二部マッチング.h" />
+    <ClInclude Include="マッチング%28二部%29.h" />
     <ClInclude Include="作図.h" />
     <ClInclude Include="全域木.h" />
     <ClInclude Include="写像12相.h" />
@@ -185,7 +185,7 @@
     <ClInclude Include="ヒープ.h" />
     <ClInclude Include="フェニック木%28抽象%29.h" />
     <ClInclude Include="モノイド.h" />
-    <ClInclude Include="モノイド%28モノイド作用付き%29.h" />
+    <ClInclude Include="M-モノイド.h" />
     <ClInclude Include="二乗の木DP.h" />
     <ClInclude Include="二重和.h" />
     <ClInclude Include="全方位木DP.h" />
@@ -200,7 +200,6 @@
     <ClInclude Include="包除原理.h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="半環.h" />
-    <ClInclude Include="可換モノイド.h" />
     <ClInclude Include="可換環.h" />
     <ClInclude Include="周期性.h" />
     <ClInclude Include="変形%28格子%29.h" />
@@ -242,6 +241,7 @@
     <ClInclude Include="計算.h" />
     <ClInclude Include="辞書順.h" />
     <ClInclude Include="部分列DP.h" />
+    <ClInclude Include="M-集合.h" />
     <ClInclude Include="順列(最適化).h" />
     <ClInclude Include="順列(組合せ論).h" />
     <ClInclude Include="順列.h" />
@@ -282,14 +282,11 @@
     <ClInclude Include="部分和問題.h" />
     <ClInclude Include="ビット全探索.h" />
     <ClInclude Include="数論%28高速%29.h" />
-    <ClInclude Include="全順序集合%28モノイド作用付き%29.h" />
+    <ClInclude Include="M-全順序集合.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt" />
     <Text Include="output.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,71 +4,6 @@
 // ■■■■■ グラフ上の列挙問題 ■■■■■
 
 
-//【完全グラフの完全マッチングの列挙】O((2n-1)!! n)
-/*
-* 頂点 [0..2n) をもつ完全グラフの完全マッチングを mcs に列挙する．
-* 完全マッチングは n 個の頂点対のリストとして表す．
-*/
-void enumerate_perfect_matching(int n, vector<vector<pii>>& mcs) {
-	// verify : https://atcoder.jp/contests/abc236/tasks/abc236_d
-
-	mcs.clear();
-
-	// a[i] : 頂点 i が何番目のマッチングに属しているか（未使用なら -1）
-	vi a(2 * n, -1);
-
-	// k : 次に定めるのが何番目のマッチングか
-	int k = 0;
-
-	// mc : 作成途中のマッチング
-	vector<pii> mc(n);
-
-	// 頂点 i 以降のマッチングを見つける
-	function<void(int)> rf = [&](int i) {
-		// 全ての頂点をマッチし終えたら結果を格納する．
-		if (i == 2 * n) {
-			mcs.push_back(mc);
-			return;
-		}
-
-		// 頂点 i が使用済だった場合は次の頂点へ進む．
-		if (a[i] != -1) {
-			rf(i + 1);
-			return;
-		}
-
-		// 頂点 i を k 番目のマッチングの片方に選ぶ．
-		a[i] = k;
-		mc[k].first = i;
-
-		// j : 頂点 i とマッチさせる頂点
-		repi(j, i + 1, 2 * n - 1) {
-			// 頂点 j が使用済だった場合は選べない．
-			if (a[j] != -1) continue;
-
-			// 頂点 j を頂点 i とマッチさせる．
-			a[j] = k;
-			mc[k].second = j;
-			k++;
-
-			// 次の頂点に進む．
-			rf(i + 1);
-
-			// 頂点 j を未使用に戻しておく．
-			k--;
-			a[j] = -1;
-		}
-
-		// 頂点 i を未使用に戻しておく．
-		a[i] = -1;
-
-		return;
-	};
-
-	rf(0);
-}
-
-
 //【連結成分の列挙】O(deg(v)^k |V| k)
 /*
 * 無向グラフ g の大きさ k の連結成分を ccs に列挙する．
@@ -367,5 +302,11 @@ void enumerate_clique(const Graph& g, vvi& cs) {
 		}
 	}
 }
+
+
+//【完全グラフの完全マッチングの列挙】
+/*
+* マッチング(一般).h へ
+*/
 
 

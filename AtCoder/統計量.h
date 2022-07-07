@@ -32,7 +32,7 @@ template <class T> T doubled_median(const vector<T>& a, const vl& c) {
 	// acc : 累積度数
 	vl acc(n + 1);
 	rep(i, n) acc[i + 1] = acc[i] + ac[i].second;
-	assert(acc[n] > 0);
+	Assert(acc[n] > 0);
 
 	// 累積度数が総度数の半分になるところを探す．
 	repi(i, 1, n) {

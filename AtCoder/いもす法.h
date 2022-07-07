@@ -6,8 +6,6 @@
 
 //【いもす法】
 /*
-* [0, n) 内の半開区間に一定の値を加算する．
-*
 * Imos<T>(int n) : O(n)
 *	半開区間 [0, n) を 0 で初期化する．
 *
@@ -20,13 +18,13 @@
 * T [int i] : O(1)
 *	加算後の位置 i の値を得る．
 */
-template <class T> struct Imos {
+template <class T> class Imos {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
-	// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
 
 	int n;
 	vector<T> v;
 
+public:
 	// [0, n) 上の a を 0 で初期化する．
 	Imos(int n_) : n(n_), v(n + 1) {}
 
@@ -36,16 +34,17 @@ template <class T> struct Imos {
 
 	// 半開区間 [l, r) に val を加算する準備を行う．
 	void set(int l, int r, T val) {
+		// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
+
 		v[l] += val;
 		v[r] -= val;
 	}
 
 	// 実際の加算を行う．
 	vector<T>& sum() {
-		rep(i, n) {
-			v[i + 1] += v[i];
-		}
+		// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
 
+		rep(i, n) v[i + 1] += v[i];
 		return v;
 	}
 

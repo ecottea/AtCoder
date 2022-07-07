@@ -108,7 +108,7 @@ struct Ushige_ub_only {
 	Ushige_ub_only(int n_) : n(n_), g(n_) {}
 
 	void set_ub(int a, int b, ll d) {
-		assert(d >= 0);
+		Assert(d >= 0);
 		
 		// 差の上限に対応する重みを持つ辺を張る．
 		g[a].push_back({ b, d });
@@ -156,7 +156,7 @@ struct Ushige_ub01_only {
 	Ushige_ub01_only(int n_) : n(n_), g(n_) {}
 
 	void set_ub(int a, int b, int d) {
-		assert(d == 0 || d == 1);
+		Assert(d == 0 || d == 1);
 
 		// 差の上限に対応する重みを持つ辺を張る．
 		g[a].push_back({ b, d });
@@ -246,7 +246,7 @@ struct Ushige_lb1_only {
 ll integer_programming_2var_1sub(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
 	// verify : https://atcoder.jp/contests/arc139/tasks/arc139_b
 
-	assert(c > 0 && d > 0 && e >= 0);
+	Assert(c > 0 && d > 0 && e >= 0);
 
 	ll sx = -1, sy = -1, res = -INFL;
 

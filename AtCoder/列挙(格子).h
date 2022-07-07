@@ -65,7 +65,7 @@ void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
 	}
 
 	/* 確認用
-	int main() {
+	void zikken() {
 		cout << fixed << setprecision(12);
 
 		int n;
@@ -93,4 +93,63 @@ void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
 	}
 	*/
 }
+
+
+//【ドミノ-モノミノのタイリングの列挙】
+/*
+* h * w の盤面にドミノ d 個とモノミノ h w - 2 d 個を敷き詰める方法を boards に列挙する．
+* i 番目に敷き詰められたタイルを番号 i で表す．
+*/
+void enumerate_domino_monomino_tiling(int h, int w, int d, vvvi& boards) {
+	//verify : https://atcoder.jp/contests/abc196/tasks/abc196_d
+
+	vvi board(h, vi(w, -1));
+
+	// (i, j): 注目位置，a : 1x2 タイルの残り数，b : 1x1 タイルの残り数
+	function<void(int, int, int, int, int)> dfs = [&](int i, int j, int a, int b, int id) {
+		dump(i, j, a, b);
+
+		// 完成していれば記録
+		if (i == h) {
+			boards.push_back(board);
+			return;
+		}
+
+		// 右まで走査しきったら 1 つ下の行へ
+		if (j == w) {
+			dfs(i + 1, 0, a, b, id);
+			return;
+		}
+
+		// すでにタイルが敷かれていたら 1 つ右のマスへ
+		if (board[i][j] >= 0) {
+			dfs(i, j + 1, a, b, id);
+			return;
+		}
+
+		// 1x1 タイルを敷く場合
+		if (b > 0) {
+			board[i][j] = id;
+			dfs(i, j + 1, a, b - 1, id + 1);
+			board[i][j] = -1;
+		}
+
+		// 1x2 タイルを敷く場合
+		if (a > 0 && j < w - 1 && board[i][j + 1] == -1) {
+			board[i][j] = board[i][j + 1] = id;
+			dfs(i, j + 2, a - 1, b, id + 1);
+			board[i][j] = board[i][j + 1] = -1;
+		}
+
+		// 2x1 タイルを敷く場合
+		if (a > 0 && i < h - 1 && board[i + 1][j] == -1) {
+			board[i][j] = board[i + 1][j] = id;
+			dfs(i, j + 1, a - 1, b, id + 1);
+			board[i][j] = board[i + 1][j] = -1;
+		}
+	};
+
+	dfs(0, 0, d, h * w - 2 * d, 0);
+}
+
 

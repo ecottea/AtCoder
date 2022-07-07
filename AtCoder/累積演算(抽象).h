@@ -379,6 +379,93 @@ struct Quadratic_division {
 };
 
 
+//【平方分割（モノイド作用付き集合）】
+/*
+* Quadratic_division<S, F, act, comp, id>(int n) : O(n id)
+*	v[0..n) = id() で初期化する．
+*	要素は M-集合 (S, F, act, comp, id) の元とする．
+*
+* Quadratic_division<S, F, act, comp, id>(vF v) : O(n comp)
+*	配列 v[0..n) の要素で初期化する．
+*
+* set(int i, F f) : O(√n comp) // 何度も呼ぶと遅い
+*	v[i] = f とする．
+*
+* F get(int i) : O(id)
+*	v[i] を返す．
+*
+* S prod(int l, int r, S x) : O(√n act)
+*	v[r-1] ... v[l] x を返す．空なら x を返す．
+*/
+template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+struct Quadratic_division {
+	using vF = vector<F>;
+
+	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
+	vector<F> v, v_mul;
+
+	// コンストラクタ（e() で初期化）
+	Quadratic_division(int n_) : n(n_) {
+		w = (int)(sqrt(n) + 0.001);
+		m = (n + w - 1) / w;
+
+		v = vF(n, id());
+		v_mul = vF(m, id());
+	}
+
+	// コンストラクタ（配列で初期化）
+	Quadratic_division(vector<F>& v_) : Quadratic_division(sz(v_)) {
+		// verify : https://atcoder.jp/contests/arc027/tasks/arc027_4
+
+		v = v_;
+		v_mul = vF(m, id());
+		rep(i, n) {
+			int j = i / w;
+			v_mul[j] = comp(v_mul[j], v[i]);
+		}
+	}
+
+	// v[i] = x とする．
+	void set(int i, F x) {
+		// 要素 v[i] の更新
+		v[i] = x;
+
+		// v[i] を含むブロックの総積を再計算する．
+		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
+		v_mul[j] = id();
+		repi(i, i_min, i_max) v_mul[j] = comp(v_mul[j], v[i]);
+	}
+
+	// v[i] を返す．
+	F get(int i) const { return v[i]; }
+
+	// v[l..r) x を返す．空なら x を返す．
+	S prod(int l, int r, S x) const {
+		// verify : https://atcoder.jp/contests/arc027/tasks/arc027_4
+
+		int j_min = l / w + 1, j_max = r / w - 1;
+
+		if (j_min <= j_max) {
+			repi(i, l, j_min * w - 1) x = act(v[i], x);
+			repi(j, j_min, j_max) x = act(v_mul[j], x);
+			repi(i, (j_max + 1) * w, r - 1) x = act(v[i], x);
+		}
+		else {
+			repi(i, l, r - 1) x = act(v[i], x);
+		}
+
+		return x;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
+		rep(i, qd.n) os << qd.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
 //【スライド最小値（全順序集合）】O(n)
 /*
 * 配列 a[0..n) に対し min a(i-w..i] を a_min[i] に格納する．
@@ -465,7 +552,7 @@ template <class S, bool(*leq)(S, S), S(*inf)()>
 void sliding_window_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vector<vector<S>>& a_min) {
 	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_f
 
-	assert(dh > 0 && dw > 0);
+	Assert(dh > 0 && dw > 0);
 	int h = sz(a), w = sz(a[0]);
 	vector<vector<S>> a_tmp(h, vector<S>(w));
 	a_min = vector<vector<S>>(h, vector<S>(w));

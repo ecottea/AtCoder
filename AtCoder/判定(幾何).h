@@ -99,8 +99,7 @@ inline bool intersectQ_L_OS(const Line<T>& l, const Line<T>& s) {
 	T op0 = (l.second - l.first).cross(s.first - l.first);
 	T op1 = (l.second - l.first).cross(s.second - l.first);
 
-	return (op0 > 0 && op1 < 0) || (op0 < 0 && op1 > 0)
-		|| (op0 == 0 && op1 == 0);
+	return (op0 > 0 && op1 < 0) || (op0 < 0 && op1 > 0) || (op0 == 0 && op1 == 0);
 }
 
 

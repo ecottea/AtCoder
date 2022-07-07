@@ -3,6 +3,7 @@
 #include "二分木.h"
 #include "座標圧縮.h"
 #include "モノイド(モノイド作用付き).h"
+#include "ダブリング.h"
 // ■■■■■ 区間 ■■■■■
 
 
@@ -73,31 +74,39 @@ int interval_union(vector<pair<T, T>>& lr, vector<pair<T, T>>& res) {
 }
 
 
+//【区間スケジューリング問題の双対】
+/*
+* 与えられた区間の集合 S について，
+* 互いに共通部分をもたないように選べる区間 I ∈ S の最大個数と，
+* 全ての区間が少なくとも 1 つの点を含むような点群 V の大きさの最小値は一致する．
+*/
+ 
+
 //【区間スケジューリング問題】O(n log n)
 /*
 * 期間 [l[i], r[i]) に着手すべき n 個の仕事を請け負える最大個数を返す．
-* 
-* なお戻り値は「全ての区間 [l[i], r[i]) を切断するための最小切断回数」にも一致する．
 *
 *（右端でソートして前から貪欲）
 */
-int interval_scheduling(const vl& l, const vl& r) {
+template <class T>
+int interval_scheduling(const vector<T>& l, const vector<T>& r) {
 	// varify : https://atcoder.jp/contests/typical-algorithm/tasks/typical_algorithm_b
 
 	int n = sz(l);
+	if (n == 0) return 0;
 
 	// 締め切りの早い順にソートする．
-	vector<pll> rl(n);
+	vector<pair<T, T>> rl(n);
 	rep(i, n) rl[i] = { r[i], l[i] };
 	sort(all(rl));
 
 	int res = 0;
 
-	ll t = -INFL; // 現在
+	T t = numeric_limits<T>::min(); // 現在
 
 	// 締め切りの早い順に仕事を見ていく．
 	rep(i, n) {
-		ll l, r;
+		T l, r;
 		tie(r, l) = rl[i];
 
 		// 仕事の開始日が現在以降の場合はその仕事を請ける．
@@ -198,6 +207,57 @@ ll maximize_floating_interval_scheduling(const vi& r, const vi& w, const vl& a) 
 	}
 
 	return dp[m][n];
+}
+
+
+//【巡回区間スケジューリング問題】O(n log n)
+/*
+* 一年が m 日であるとし，毎年期間 [l[i], r[i]) に着手すべき n 個の仕事を請け負える最大個数を返す．
+*
+* 利用：【写像の合成】
+*/
+template <class T>
+int cyclic_interval_scheduling(T m, const vector<T>& l, const vector<T>& r) {
+	// verify : https://atcoder.jp/contests/jag2013summer-warmingup/tasks/icpc2013summer_warmingUp_a
+
+	int n = sz(l);
+	int res = 0;
+	if (n == 0) return res;
+
+	// 締め切りの早い順にソートする．
+	vector<pair<T, T>> rl;
+	rep(i, n) {
+		// 一年中休めない仕事は例外処理する．
+		if (l[i] == r[i]) {
+			res = 1;
+			continue;
+		}
+
+		T nr = r[i] + (T)(l[i] > r[i]) * m;
+		rl.emplace_back(nr, l[i]);
+		rl.emplace_back(nr + m, l[i] + m);
+	}
+	sort(all(rl));
+	dump(rl);
+
+	n = sz(rl) / 2;
+	if (n == 0) return res;
+
+	// nx[i] : 仕事 i をこなしたあと，最も早く次の仕事をこなす場合に請け負う仕事
+	vi nx(2 * n, 2 * n - 1); int pt = 0;
+	rep(i, 2 * n) while (rl[pt].first <= rl[i].second) nx[pt++] = i;
+	dump(nx);
+
+	// 最初に請け負う仕事 i を決め打ちし，ダブリングを用いて請け負える最大仕事数を求める．
+	Map_composite mc(nx, n);
+	rep(i, n) {
+		function<bool(int)> okQ = [&](int x) {
+			return rl[x].first <= rl[i].second + m;
+		};
+		chmax(res, 1 + (int)mc.max_right(i, okQ));
+	}
+
+	return res;
 }
 
 
@@ -479,7 +539,8 @@ ll interval_pinning(const vector<pii>& lr, const vl& a) {
 *
 * 利用：【デカルト木】
 */
-template <class T> void greater_interval(const vector<T>& a, vi& l, vi& r, bool greater = true) {
+template <class T>
+void greater_interval(const vector<T>& a, vi& l, vi& r, bool greater = true) {
 	// verify : https://yukicoder.me/problems/no/1031
 
 	int n = sz(a);

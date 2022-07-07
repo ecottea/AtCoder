@@ -95,7 +95,7 @@ template <ll MOD> struct static_modint {
 
 	// 逆元（0^(-1) は未定義）
 	static_modint inv() const {
-		assert(v != 0);
+		Assert(v != 0);
 		return pow(MOD - 2);
 	}
 
@@ -202,7 +202,7 @@ struct mll {
 	mll inv() const { return pow(MOD - 2); }
 
 	// 法の設定，確認
-	static void set_mod(ll MOD_) { assert(MOD_ > 0); MOD = MOD_; }
+	static void set_mod(ll MOD_) { Assert(MOD_ > 0); MOD = MOD_; }
 	static ll mod() { return (ll)MOD; }
 
 	// 値の確認

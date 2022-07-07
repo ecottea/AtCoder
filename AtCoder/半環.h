@@ -26,7 +26,7 @@ S801 e801() { return 1; }
 #define Add_mul_semiring S801, add801, o801, mul801, e801
 
 
-//yXOR - AND ”¼ŠÂz
+//yXOR - AND ‰ÂŠÂ”¼ŠÂz
 using S802 = unsigned int;
 S802 add802(S802 x, S802 y) { return x ^ y; }
 S802 o802() { return 0; }
@@ -35,7 +35,7 @@ S802 e802() { return ~0; }
 #define XOR_AND_semiring S802, add802, o802, mul802, e802
 
 
-//ymin - plus ”¼ŠÂiƒgƒƒsƒJƒ‹”¼ŠÂjz
+//ymin - plus ‰ÂŠÂ”¼ŠÂiƒgƒƒsƒJƒ‹”¼ŠÂjz
 /* verify : https://codeforces.com/contest/1681/problem/F */
 using S803 = ll;
 S803 add803(S803 x, S803 y) { return min(x, y); }
@@ -45,7 +45,7 @@ S803 e803() { return 0; }
 #define Min_plus_semiring S803, add803, o803, mul803, e803
 
 
-//ymax - plus ”¼ŠÂiƒgƒƒsƒJƒ‹”¼ŠÂjz
+//ymax - plus ‰ÂŠÂ”¼ŠÂiƒgƒƒsƒJƒ‹”¼ŠÂjz
 /* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B */
 using S804 = ll;
 S804 add804(S804 x, S804 y) { return max(x, y); }
@@ -113,7 +113,7 @@ S806 e806() { return { 0, -INFL }; }
 #define Tropical_affine_max_invcmposite_semiring S806, add806, o806, mul806, e806
 
 
-//ymin - max ”¼ŠÂz
+//ymin - max ‰ÂŠÂ”¼ŠÂz
 /*
 * Å‘å’l‚ÌÅ¬‰»‚Å—p‚¢‚éD
 * 
@@ -127,7 +127,7 @@ S807 e807() { return -INFL; }
 #define Min_max_semiring S807, add807, o807, mul807, e807
 
 
-//ymax - min ”¼ŠÂz
+//ymax - min ‰ÂŠÂ”¼ŠÂz
 /*
 * Å¬’l‚ÌÅ‘å‰»‚Å—p‚¢‚éD
 */
@@ -139,7 +139,7 @@ S808 e808() { return INFL; }
 #define Max_min_semiring S808, add808, o808, mul808, e808
 
 
-//yOR - AND ”¼ŠÂz
+//yOR - AND ‰ÂŠÂ”¼ŠÂz
 using S809 = unsigned int;
 S809 add809(S809 x, S809 y) { return x | y; }
 S809 o809() { return 0; }
@@ -148,7 +148,7 @@ S809 e809() { return ~0; }
 #define OR_AND_semiring S809, add809, o809, mul809, e809
 
 
-//yAND - OR ”¼ŠÂz
+//yAND - OR ‰ÂŠÂ”¼ŠÂz
 using S810 = unsigned int;
 S810 add810(S810 x, S810 y) { return x & y; }
 S810 o810() { return ~0; }
@@ -157,7 +157,7 @@ S810 e810() { return 0; }
 #define AND_OR_semiring S810, add810, o810, mul810, e810
 
 
-//ygcd - lcm ”¼ŠÂz
+//ygcd - lcm ‰ÂŠÂ”¼ŠÂz
 using S811 = ll;
 S811 add811(S811 x, S811 y) { return gcd(x, y); }
 S811 o811() { return 0; }
@@ -166,7 +166,7 @@ S811 e811() { return 1; }
 #define GCD_LCM_semiring S811, add811, o811, mul811, e811
 
 
-//ylcm - gcd ”¼ŠÂz
+//ylcm - gcd ‰ÂŠÂ”¼ŠÂz
 using S812 = ll;
 S812 add812(S812 x, S812 y) { return x / gcd(x, y) * y; }
 S812 o812() { return 1; }

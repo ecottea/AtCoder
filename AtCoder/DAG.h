@@ -2,7 +2,7 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "最短路.h"
-#include "二部マッチング.h"
+#include "マッチング(二部).h"
 // ■■■■■ DAG（有向非巡回グラフ） ■■■■■
 
 
@@ -40,11 +40,44 @@
 
 //【パスの個数】O(|V| + |E|)
 /*
+* DAG g の頂点 s から gl までのパスの個数を cnt[s] に格納する．
+*
+*（DAG 上の DP）
+*/
+void count_path(const Graph& g, int gl, vm& cnt) {
+	// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_b
+
+	int n = sz(g);
+
+	// cnt[s] : 頂点 s からのパスの個数
+	cnt.resize(n);
+	vb seen(n);
+
+	cnt[gl] = 1;
+	seen[gl] = true;
+
+	function<mint(int)> dfs = [&](int s) {
+		if (seen[s]) return cnt[s];
+		seen[s] = true;
+
+		// s → t と進む場合
+		repe(t, g[s]) cnt[s] += dfs(t);
+
+		return cnt[s];
+	};
+
+	// 各頂点 s についての情報を計算する．
+	rep(s, n) dfs(s);
+}
+
+
+//【パスの個数】O(|V| + |E|)
+/*
 * DAG g の頂点 s からのパス（不動も可）の個数を cnt[s] に格納する．
 *
 *（DAG 上の DP）
 */
-void count_path(const Graph& g, vm& cnt) {
+void count_all_path(const Graph& g, vm& cnt) {
 	int n = sz(g);
 
 	// cnt[s] : 頂点 s からのパスの個数

@@ -293,7 +293,7 @@ struct Factor_integer {
 
 	// i ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
 	void factor_integer(int i, map<int, int>& pps) {
-		assert(i <= n);
+		Assert(i <= n);
 
 		pps.clear();
 
@@ -415,7 +415,7 @@ int mobius_mu(ll n) {
 int integer_exponent(ll n, ll p) {
 	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_a
 
-	assert(n != 0);
+	Assert(n != 0);
 
 	int res = 0;
 	while (n % p == 0) {

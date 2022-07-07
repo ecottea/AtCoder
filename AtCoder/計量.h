@@ -19,76 +19,67 @@ template <class T> inline double distance_P_L(const Point<T>& p, const Line<T>& 
 
 //【偏角の比較】O(1)
 /*
-* 点 a と点 b の点 c からの (-π,π] 範囲の偏角を比較する．
+* 点 a と点 b の点 c からの e 方向 θ を基準とした [θ,θ+2π) 範囲の偏角を比較する．
 * a の偏角より b の偏角が大きければ true，小さければ false を返す．
 * 同じ偏角のときは，a への距離より b への距離が大きければ true，さもなくば false を返す．
 * c 自身の偏角は未定義だが，便宜上 +∞ とする．
 */
 template <class T>
-bool compare_argument(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
+bool compare_argument(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0 }, Point<T> c = Point<T>{ 0, 0 }) {
 	// verify : https://judge.yosupo.jp/problem/sort_points_by_argument
 
-	// もし a = c なら，a の偏角(∞) を b の偏角(≦∞)が超えることはない．
-	if (a == c) {
-		return false;
-	}
+	// c が原点にくるように平行移動しておく．
+	a -= c; b -= c; Point<T> O = Point<T>{ 0, 0 }; // O : 原点
 
-	// もし b = c なら，a の偏角(＜∞) より b の偏角(∞) が大きい． 
-	if (b == c) {
-		return true;
-	}
+	// もし a = O なら，a の偏角(∞) を b の偏角(≦∞)が超えることはない．
+	if (a == O) return false;
 
-	// 以降は a, b は c と異なるものとして考えて良い．
+	// もし b = O なら，a の偏角(＜∞) より b の偏角(∞) が大きい． 
+	if (b == O) return true;
 
-	// 偏角が正 (0, π] の範囲にあるか
-	bool posQ_a = (a.y > 0 || (a.y == 0 && a.x < 0));
-	bool posQ_b = (b.y > 0 || (b.y == 0 && b.x < 0));
+	// 以降は a, b は O と異なるものとして考えて良い．
+
+	// 偏角が [θ, θ+π) の範囲にあるか
+	T op_a = e.cross(a), op_b = e.cross(b);
+	T ip_a = e.dot(a), ip_b = e.dot(b);
+	bool la = op_a > 0 || (op_a == 0 && ip_a > 0);
+	bool lb = op_b > 0 || (op_b == 0 && ip_b > 0);
 
 	// 象限に注目するだけで判定可能なケースを判定する．
-	if (!posQ_a && posQ_b) {
-		return true;
-	}
-	if (posQ_a && !posQ_b) {
-		return false;
-	}
+	if (la && !lb) return true;
+	if (!la && lb) return false;
 
-	// 以降は a, b の c からの位置ベクトルの成す角は π 未満と考えて良い．
+	// 以降は a, b の O からの位置ベクトルの成す角は π 未満と考えて良い．
 
-	// 半平面内であれば c からの位置ベクトルで貼られる平行四辺形の符号付き面積の符号で判定．
-	ll area = (a - c).cross(b - c);
-	bool res;
-	if (area != 0) {
-		res = area > 0;
-	}
-	else {
-		// 同じ偏角のときは距離で判定．
-		res = (a - c).sqnorm() < (b - c).sqnorm();
-	}
-	return res;
+	// 半平面内であれば a, b の O からの位置ベクトルの外積で判定可能．
+	ll op = a.cross(b);
+	if (op != 0) return op > 0;
+	else return a.sqnorm() < b.sqnorm(); // 同じ偏角なら距離で判定する．
 }
 
 
 //【偏角ソート】O(n log n)
 /*
-* n 点のリスト p を点 c からの (-π,π] 範囲の偏角昇順にソートする．
+* n 点のリスト p を点 c からの e 方向 θ を基準とした [θ,θ+2π) 範囲の偏角昇順にソートする．
 * 同じ偏角だった場合は c からの距離昇順とする．
 * c 自身の偏角は未定義だが，便宜上 +∞ とする．
-* 
+*
 * 利用：【偏角の比較】
 */
-template <class T> void argument_sort(vector<Point<T>>& p, const Point<T>& c) {
+template <class T>
+void argument_sort(vector<Point<T>>& p, Point<T> e = Point<T>{ 1, 0 }, Point<T> c = Point<T>{ 0, 0 }) {
 	// verify : https://judge.yosupo.jp/problem/sort_points_by_argument
 
-	auto compare = [&](Point<T> a, Point<T> b) {
-		return compare_argument(a, b, c);
+	auto cmp = [&](Point<T> a, Point<T> b) {
+		return compare_argument(a, b, e, c);
 	};
-	sort(all(p), compare);
+	sort(all(p), cmp);
 }
 
 
 //【多角形の面積】O(n)
 /*
-* n 角形 poly の符号付き面積を返す．
+* n 角形 poly の符号付き面積の 2 倍を返す．
 *
 * n 角形は頂点を並べた列として表し，反時計回りのとき面積は正とする．
 * （よって頂点の周る順の判定に用いることもできる．）
@@ -100,7 +91,8 @@ template <class T> T area_polygon(const Polygon<T>& poly) {
 	T res = 0;
 	rep(i, n) res += poly[i].cross(poly[(i + 1) % n]);
 
-	return res / 2;
+	// 面積の 2 倍を返しているので注意．
+	return res;
 }
 
 

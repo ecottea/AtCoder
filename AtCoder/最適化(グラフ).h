@@ -8,19 +8,6 @@
 // ■■■■■ グラフ上の最適化問題 ■■■■■
 
 
-//【貪欲に選べるマッチング】
-/*
-* コストなし無向グラフ g において以下が成り立つ：
-*		マッチング s-t を含む最大マッチングが存在しない
-*		⇒ ある s', t' が存在し，マッチング s-s', t-t' が作れる
-* 対偶をとれば，
-*		s, t いずれかのマッチング相手が他に居なければ s-t を作るのが最善
-* が言えるので，貪欲にマッチングを構築することができる．
-* 
-* verify : https://atcoder.jp/contests/agc029/tasks/agc029_b
-*/
-
-
 //【最大独立集合問題】O(2^(|V|/2) |V|)
 /*
 * 無向グラフ g の最大独立集合の 1 つを vs に格納し，その大きさを返す．
@@ -370,50 +357,6 @@ ll shortest_hamiltonian_path(const WGraph& g) {
 	rep(s, n) chmin(res, rf(s, (1 << n) - 1 - (1 << s)));
 
 	return (res == INFL ? -1 : res);
-}
-
-
-//【最小コスト完全マッチング】O(2^|V| |V|)
-/*
-* コスト付きグラフ g の隣接行列 adj を元に，g の最小コスト完全マッチングのコストを返す．
-*
-*（bit DP）
-*/
-ll minimum_cost_matching(const vvl& adj) {
-	int n = sz(adj);
-	if (n % 2 == 1) {
-		return -INFL;
-	}
-
-	// dp[set] : set に含まれる頂点で作れる完全マッチングの最小コスト
-	vl dp(1LL << n, INF);
-	vb seen(1LL << n);
-	dp[0] = 0;
-	seen[0] = true;
-
-	// set : 考慮すべき頂点の集合
-	function<ll(int)> rf = [&](int set) {
-		// 計算済ならその値を返す．
-		if (seen[set]) {
-			return dp[set];
-		}
-		seen[set] = true;
-
-		// s : set で最も番号の小さい頂点
-		int s = lsb(set);
-
-		// t : s とペアになる set の頂点
-		repi(t, s + 1, n - 1) {
-			if (set & (1 << t)) {
-				chmin(dp[set], rf(set - (1 << s) - (1 << t)) + adj[s][t]);
-			}
-		}
-
-		return dp[set];
-	};
-
-	// 全頂点に対して最小コストを計算する．
-	return rf((1 << n) - 1);
 }
 
 

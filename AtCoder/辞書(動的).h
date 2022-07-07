@@ -78,7 +78,7 @@ template <class T = ll> class Binary_trie {
 
 	Node* erase_sub(Node* t, T val, ll cnt, int b) {
 		// 存在しない要素を削除しようとすればエラーを返す．
-		assert(t != nullptr && t->cnt >= cnt);
+		Assert(t != nullptr && t->cnt >= cnt);
 
 		// 個数を減らす．
 		t->cnt -= cnt;
@@ -101,7 +101,7 @@ template <class T = ll> class Binary_trie {
 	}
 
 	T min_element_sub(Node* t, T mask, int b) const {
-		assert(t != nullptr);
+		Assert(t != nullptr);
 
 		// 葉なら 0 を返す．
 		if (b < 0) return 0;
@@ -199,7 +199,7 @@ public:
 
 	// mask[=0] との XOR をとったときの昇順で i 番目（0-indexed）の要素を返す． : O(B)
 	T get(ll i, T mask = 0) const {
-		assert(0 <= i && i < size());
+		Assert(0 <= i && i < size());
 		return get_sub(root, mask, i, B - 1);
 	}
 
@@ -315,6 +315,8 @@ public:
 
 	// x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
 	pll get_right(ll x) const {
+		// verify : https://atcoder.jp/contests/code-festival-2015-qualb/tasks/codefestival_2015_qualB_d
+
 		auto it = get_right_iter(x);
 		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
 	}

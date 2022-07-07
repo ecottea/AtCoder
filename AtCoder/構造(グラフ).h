@@ -40,6 +40,8 @@ void read_graph(int n, int m, Graph& g,	bool undirected = true, bool one_indexed
 * cost : 辺のコスト
 */
 struct WEdge {
+	// verify : https://judge.yosupo.jp/problem/shortest_path
+
 	int to; // 行き先の頂点番号
 	ll cost; // 辺のコスト
 
@@ -59,7 +61,9 @@ struct WEdge {
 /*
 * WGraph g
 * g[v] : 頂点 v から出る辺を並べたリスト
-*/
+* 
+* verify : https://judge.yosupo.jp/problem/shortest_path
+*/ 
 using WGraph = vector<vector<WEdge>>;
 
 
@@ -74,6 +78,8 @@ using WGraph = vector<vector<WEdge>>;
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
 void read_graph(int n, int m, WGraph& g, bool undirected = true, bool one_indexed = true) {
+	// verify : https://judge.yosupo.jp/problem/shortest_path
+	
 	g = WGraph(n);
 	rep(i, m) {
 		int a, b; ll c;
@@ -83,38 +89,6 @@ void read_graph(int n, int m, WGraph& g, bool undirected = true, bool one_indexe
 
 		g[a].push_back({ b, c });
 		if (undirected) g[b].push_back({ a, c });
-	}
-}
-
-
-//【コスト付きグラフの入力（コストは別）】O(|V| + |E|)
-/*
-* 始点 終点 コストの組からなる入力を受け取り，n 頂点 m 辺のグラフを構築する．
-* 辺へのコストの割り当ては別で記録する．
-*
-* n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* c : 辺 (s, t) のコストを c[s][t] に格納する
-* undirected : 無向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
-*/
-void read_graph(int n, int m, Graph& g, vector<unordered_map<int, ll>>& c,
-	bool undirected = true, bool one_indexed = true) {
-	g = Graph(n);
-	c = vector<unordered_map<int, ll>>(n);
-	rep(i, m) {
-		int a, b; ll x;
-		cin >> a >> b >> x;
-
-		if (one_indexed) { a--; b--; }
-
-		g[a].push_back(b);
-		c[a][b] = x;
-		if (undirected) {
-			g[b].push_back(a);
-			c[b][a] = x;
-		}
 	}
 }
 

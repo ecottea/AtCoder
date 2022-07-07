@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "s—ñ.h"
 // ¡¡¡¡¡ ŒQ ¡¡¡¡¡
 
 
@@ -15,29 +16,29 @@
 */
 
 
-//y‰ÁZ ŒQz
+//y‰ÁZ ƒA[ƒxƒ‹ŒQz
 /* verify : https://atcoder.jp/contests/aising2019/tasks/aising2019_d */
 using S601 = ll;
 S601 op601(S601 a, S601 b) { return a + b; }
-S601 o601() { return 0; }
+S601 e601() { return 0; }
 S601 inv601(S601 a) { return -a; }
-#define Add_group S601, op601, o601, inv601
+#define Add_cgroup S601, op601, e601, inv601
 
 
-//yæZ ŒQz
+//yæZ ƒA[ƒxƒ‹ŒQz
 using S602 = mint;
 S602 op602(S602 a, S602 b) { return a * b; }
-S602 o602() { return 1; }
+S602 e602() { return 1; }
 S602 inv602(S602 a) { return a.inv(); }
-#define Mul_group S602, op602, o602, inv602
+#define Mul_cgroup S602, op602, e602, inv602
 
 
-//yxor ŒQz
+//yXOR ƒA[ƒxƒ‹ŒQz
 using S603 = int;
 S603 op603(S603 a, S603 b) { return a ^ b; }
-S603 o603() { return 0; }
+S603 e603() { return 0; }
 S603 inv603(S603 a) { return a; }
-#define XOR_group S603, op603, o603, inv603
+#define XOR_cgroup S603, op603, e603, inv603
 
 
 //y‰Â‹tƒAƒtƒBƒ“•ÏŠ·‚Ì‡¬ ŒQz
@@ -65,7 +66,7 @@ S604 inv604(S604 f) {
 	// f(x) = a x + b Ì x = (1/a) f(x) - b/a
 	return { a.inv(), -b / a };
 }
-#define Affine_composite_group S604, op604, e604, inv604
+#define AffineComposite_group S604, op604, e604, inv604
 
 
 //yƒrƒbƒg—ñã “]“|” ŒQz
@@ -127,7 +128,7 @@ S606 inv606(S606 a) {
 
 	return res;
 }
-#define Permutation_composite_group S606, op606, e606, inv606
+#define PermutationComposite_group S606, op606, e606, inv606
 
 
 //y’uŠ·‚Ì‹t‡¬ ŒQziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
@@ -156,6 +157,6 @@ S607 inv607(S607 a) {
 
 	return res;
 }
-#define Permutation_invcomposite_group S607, op607, e607, inv607
+#define PermutationInvComposite_group S607, op607, e607, inv607
 
 

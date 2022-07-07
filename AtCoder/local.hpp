@@ -6,6 +6,9 @@
 using namespace std;
 
 
+#define Assert assert
+
+
 //【GCC のビルトイン関数との互換用】
 
 // 全ビット中の 1 の個数
@@ -46,8 +49,8 @@ inline int msb(ll n) {
 
 // 最大公約数
 template <class T> T gcd(T a, T b) {
-	a = abs(a);
-	b = abs(b);
+	// gcc の __gcd では負の数を入れるとバグる．
+	Assert(a >= 0 && b >= 0);
 
 	while (b > 0) {
 		a %= b;

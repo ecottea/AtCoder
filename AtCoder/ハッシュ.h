@@ -76,7 +76,7 @@ template <class STR> struct Rolling_hash {
 
 	// s[l, r) のハッシュ値の取得
 	ll get(int l, int r) {
-		assert(0 <= l && l <= r && r <= n);
+		Assert(0 <= l && l <= r && r <= n);
 		return (ll(rh1.get(l, r)) << 32) + ll(rh2.get(l, r));
 	}
 

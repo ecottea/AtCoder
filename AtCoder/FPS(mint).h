@@ -6,20 +6,18 @@
 // ■■■■■ 形式的冪級数 ■■■■■
 
 
-//【形式的冪級数（mint）】
+//【形式的冪級数（mod 998244353）】
 /*
-* mod 998244353 以外だと積などが遅くなる（O(n^2)）ので注意．
-*
 * MFPS() : O(1)
 *	零多項式 f = 0 で初期化する．
 *
-* MFPS(c0) : O(1)
+* MFPS(mint c0) : O(1)
 *	定数多項式 f = c0 で初期化する．
 *
-* MFPS(c0, n) : O(n)
+* MFPS(mint c0, int n) : O(n)
 *	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
-* MFPS(c) : O(n)
+* MFPS(vm c) : O(n)
 *	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
@@ -30,28 +28,26 @@
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *	制約 : 商では g(0) != 0
 *
-* f.inv(d) : O(n log n)
+* MFPS f.inv(int d) : O(n log n)
 *	1 / f mod x^d を返す．
 *	制約 : f(0) != 0
 *
-* f.quotient(g) : O(n log n)
-* f.reminder(g) : O(n log n)
-* f.quotient_remainder(g) : O(n log n)
+* MFPS f.quotient(MFPS g) : O(n log n)
+* MFPS f.reminder(MFPS g) : O(n log n)
+* pair<MFPS, MFPS> f.quotient_remainder(MFPS g) : O(n log n)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
+*	制約 : g の最高次の係数は 0 でない
 *
-* f.pow(k, d) : O(n log n)
-*	f(x)^k mod x^d を返す．
-*
-* f.deg(), f.size() : O(1)
+* int f.deg(), int f.size() : O(1)
 *	多項式 f の次数[項数]を返す．
 *
-* MFPS::monomial(d) : O(d)
+* MFPS::monomial(int d) : O(d)
 *	単項式 x^d を返す．
 *
-* f.assign(c) : O(n)
+* mint f.assign(mint c) : O(n)
 *	多項式 f の不定元 x に c を代入した値を返す．
 *
-* f.resize(d) : O(1)
+* f.resize(int d) : O(1)
 *	mod x^d をとる．
 *
 * f.resize() : O(n)
@@ -61,22 +57,8 @@
 *	係数列を d だけ右[左]シフトした多項式を返す．
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
-* power_mod(f, d, g) : O(m log m log d)　（m = deg g）
+* MFPS power_mod(MFPS f, ll d, MFPS g) : O(m log m log d)　（m = deg g）
 *	f(x)^d mod g(x) を返す．
-*
-* derivative(f) : O(n)
-*	f'(x) を返す．
-*
-* integral(f) : O(n)
-*	∫ f(x) dx を返す．（定数項は 0 とする）
-*
-* log(f, d) : O(n log n)
-*	log f(x) mod x^d を返す．
-*	制約 : f(0) = 1
-*
-* exp(f, d) : O(n log n)
-*	exp f(x) mod x^d を返す．
-*	制約 : f(0) = 0;
 */
 struct MFPS {
 	using SMFPS = vector<pair<int, mint>>;
@@ -172,32 +154,7 @@ struct MFPS {
 	MFPS operator/(const int& sc) const { return MFPS(*this) /= sc; }
 
 	// 積
-	MFPS& operator*=(const MFPS& g) {
-		c = convolution(c, g.c); n = sz(c); return *this; // mod 998244353 用
-//		return mul_other(g);
-	}
-	MFPS& mul_other(const MFPS& g) {
-		// verify : // verify : https://atcoder.jp/contests/arc059/tasks/arc059_c
-
-		int m = g.deg();
-		if (m == -1) return *this = MFPS();
-		resize(n + m);
-
-		// 後ろからインライン配る DP
-		repir(i, n - 1, 0) {
-			// 上位項に係数倍して配っていく．
-			repi(j, 1, m) {
-				if (i + j >= n) break;
-
-				c[i + j] += c[i] * g[j];
-			}
-
-			// 定数項は最後に配るか消去しないといけない．
-			c[i] *= g[0];
-		}
-
-		return *this;
-	}
+	MFPS& operator*=(const MFPS& g) { c = convolution(c, g.c); n = sz(c); return *this; }
 	MFPS operator*(const MFPS& g) const { return MFPS(*this) *= g; }
 
 	// 除算
@@ -230,6 +187,8 @@ struct MFPS {
 		//
 		// この手順を d <= 2^i となる i まで繰り返し，d 次以上の項を削除すればよい．
 
+		Assert(c[0] != 0);
+
 		MFPS g(c[0].inv());
 		for (int k = 1; k < d; k *= 2) {
 			g = (2 - *this * g) * g;
@@ -244,7 +203,8 @@ struct MFPS {
 	// 余り付き除算
 	MFPS quotient(const MFPS& g) const {
 		// 参考 : https://nyaannyaan.github.io/library/fps/formal-power-series.hpp
-
+		// verify : https://judge.yosupo.jp/problem/division_of_polynomials
+		
 		//【方法】
 		// f(x) = g(x) q(x) + r(x) となる q(x) を求める．
 		// f の次数は n - 1, g の次数は m - 1 とする．(n >= m)
@@ -269,7 +229,13 @@ struct MFPS {
 		if (n < g.n) return MFPS();
 		return ((this->rev() / g.rev()).resize(n - g.n + 1)).rev();
 	}
-	MFPS reminder(const MFPS& g) const { return (*this - this->quotient(g) * g).resize(g.n - 1); }
+
+	MFPS reminder(const MFPS& g) const {
+		// verify : https://judge.yosupo.jp/problem/division_of_polynomials
+
+		return (*this - this->quotient(g) * g).resize(g.n - 1);
+	}
+
 	pair<MFPS, MFPS> quotient_remainder(const MFPS& g) const {
 		// verify : https://judge.yosupo.jp/problem/division_of_polynomials
 
@@ -313,7 +279,7 @@ struct MFPS {
 	MFPS& operator/=(const SMFPS& g) {
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
-		assert(it0->first == 0 && it0->second != 0);
+		Assert(it0->first == 0 && it0->second != 0);
 		mint g0_inv = it0->second.inv();
 		it0++;
 
@@ -358,9 +324,8 @@ struct MFPS {
 		return *this;
 	}
 
-	// 高次項の除去
+	// x^d 以上の項を除去する．
 	MFPS& resize(int d) {
-		// x^d 以上の項を除去する．
 		n = d;
 		c.resize(d);
 		return *this;
@@ -399,97 +364,6 @@ struct MFPS {
 		return res;
 	}
 
-	// 微分
-	friend MFPS derivative(const MFPS& f) {
-		MFPS res;
-		repi(i, 1, f.n - 1) res.c.push_back(f[i] * i);
-		res.n = sz(res.c);
-		return res;
-	}
-
-	// 不定積分
-	friend MFPS integral(const MFPS& f) {
-		MFPS res(0);
-		repi(i, 0, f.n - 1) res.c.push_back(f[i] / (i + 1));
-		res.n = sz(res.c);
-		return res;
-	}
-
-	// 対数関数
-	friend MFPS log(const MFPS& f, int d) {
-		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
-		// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
-
-		return integral((derivative(f) * f.inv(d - 1)).resize(d - 1));
-	}
-
-	// 指数関数
-	friend MFPS exp(const MFPS& f, int d) {
-		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
-		// verify : https://judge.yosupo.jp/problem/exp_of_formal_power_series
-
-		//【方法】
-		// g(x) = exp(f(x)) とおき，方程式
-		//		log g(x) = f(x)
-		// に対してニュートン法を用いる．
-		// 
-		// f(0) = 0 なので，mod x^1 では
-		//		log(1) ≡ f(x) mod x^1
-		// が成り立つ．
-		//
-		// mod x^k で
-		//		log h(x) ≡ f(x) mod x^k
-		// が成り立っていると仮定すると，ニュートン法より
-		//		g = h - (log h - f) / (log h)'
-		//   ⇔ g = h (f + 1 - log h)
-		// と置くと
-		//		log g(x) ≡ f(x) mod x^(2 k)
-		// が成り立つ．
-		//
-		// これを繰り返せば所望の g が求まる．
-
-		// ニュートン法で log g = f なる g を見つける．
-		MFPS g(1);
-		for (int k = 1; k < d; k *= 2) {
-			g = g * (f + 1 - log(g, 2 * k));
-			g.resize(2 * k);
-		}
-		g.resize(d);
-
-		return g;
-	}
-
-	// 累乗
-	MFPS pow(ll k, int d) const {
-		// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
-		// verify : https://judge.yosupo.jp/problem/pow_of_formal_power_series
-
-		// 最低次の項を見つける．
-		int i0 = 0;
-		while (i0 < n && c[i0] == 0) i0++;
-
-		// f = 0 なら f^k = 0 である．
-		if (i0 == n) return MFPS(0, d);
-
-		// 最低次の項の係数を記録する．
-		mint c0 = c[i0];
-
-		// 定数項が 1 になるようシフトかつ定数除算した多項式を得る．
-		MFPS fs = (*this << i0) / c0;
-		ll ds = d - k * i0;
-
-		// 最終的に k * i0 次以上の項しか残らないことに注意し，0 になるケースを処理する．
-		if (ds <= 0) return MFPS(0, d);
-
-		// f^k = exp(k log f(x)) を用いて f^k を計算する．
-		MFPS gs = exp(mint(k) * log(fs, (int)ds), (int)ds);
-
-		// シフトと定数除算した分を元に戻す．
-		MFPS g = (gs * c0.pow(k)) >> ((int)k * i0);
-
-		return g;
-	}
-
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const MFPS& f) {
 		if (f.n == 0) os << 0;
@@ -503,6 +377,134 @@ struct MFPS {
 	}
 #endif
 };
+
+
+//【微分】O(n)
+/*
+* f'(x) を返す．
+*/
+MFPS derivative(const MFPS& f) {
+	// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
+
+	MFPS res;
+	repi(i, 1, f.n - 1) res.c.push_back(f[i] * i);
+	res.n = sz(res.c);
+	return res;
+}
+
+
+//【不定積分】O(n)
+/*
+* ∫ f(x) dx を返す．（定数項は 0 とする）
+*/
+MFPS integral(const MFPS& f) {
+	// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
+
+	MFPS res(0);
+	repi(i, 0, f.n - 1) res.c.push_back(f[i] / (i + 1));
+	res.n = sz(res.c);
+	return res;
+}
+
+
+//【対数関数】O(n log n)
+/*
+* log f(x) mod x^d を返す．
+* 制約 : f(0) = 1
+*
+* 利用：【微分】，【不定積分】
+*/
+MFPS log(const MFPS& f, int d) {
+	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+	// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
+
+	return integral((derivative(f) * f.inv(d - 1)).resize(d - 1));
+}
+
+
+//【指数関数】O(n log n)
+/*
+* log f(x) mod x^d を返す．
+* 制約 : f(0) = 0
+*
+* 利用：【対数関数】
+*/
+MFPS exp(const MFPS& f, int d) {
+	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+	// verify : https://judge.yosupo.jp/problem/exp_of_formal_power_series
+
+	//【方法】
+	// g(x) = exp(f(x)) とおき，方程式
+	//		log g(x) = f(x)
+	// に対してニュートン法を用いる．
+	// 
+	// f(0) = 0 なので，mod x^1 では
+	//		log(1) ≡ f(x) mod x^1
+	// が成り立つ．
+	//
+	// mod x^k で
+	//		log h(x) ≡ f(x) mod x^k
+	// が成り立っていると仮定すると，ニュートン法より
+	//		g = h - (log h - f) / (log h)'
+	//   ⇔ g = h (f + 1 - log h)
+	// と置くと
+	//		log g(x) ≡ f(x) mod x^(2 k)
+	// が成り立つ．
+	//
+	// これを繰り返せば所望の g が求まる．
+
+	// ニュートン法で log g = f なる g を見つける．
+	MFPS g(1);
+	for (int k = 1; k < d; k *= 2) {
+		g = g * (f + 1 - log(g, 2 * k));
+		g.resize(2 * k);
+	}
+	g.resize(d);
+
+	return g;
+}
+
+
+//【累乗】O(n log n)
+/*
+* f(x)^k mod x^d を返す．（0^0 = 1 とする）
+*
+* 利用：【指数関数】，【対数関数】
+*/
+MFPS pow(const MFPS& f, ll k, int d) {
+	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+	// verify : https://judge.yosupo.jp/problem/pow_of_formal_power_series
+
+	int n = sz(f);
+
+	// k = 0 なら f^k = 1 である．
+	if (k == 0) return MFPS(1, d);
+
+	// i0 : 最低次の項の次数
+	int i0 = 0;
+	while (i0 < n && f[i0] == 0) i0++;
+
+	// f = 0 なら f^k = 0 である．
+	if (i0 == n) return MFPS(0, d);
+
+	// 最低次の項の係数を記録する．
+	mint c0 = f[i0];
+
+	// 定数項が 1 になるようシフトかつ定数除算した多項式を得る．
+	MFPS fs = (f << i0) / c0;
+
+	// 最終的に k * i0 次以上の項しか残らないことに注意し，0 になるケースを処理する．
+	if (i0 >= (d + k - 1) / k) return MFPS(0, d);
+	int ds = (int)(d - k * i0);
+
+	// f^k = exp(k log f(x)) を用いて f^k を計算する．
+	MFPS gs = exp(mint(k) * log(fs, ds), ds);
+
+	// シフトと定数除算した分を元に戻す．
+	MFPS g = (gs * c0.pow(k)) >> (int)(k * i0);
+
+	return g;
+}
 
 
 //【平方根】O(n log n)
@@ -607,18 +609,14 @@ mint bostan_mori(const MFPS& f, const MFPS& g, ll d) {
 	//
 	// これを繰り返せば d を半分ずつに減らしていくことができる．
 
+	Assert(g.n >= 1 && g[0] != 0);
+
 	// d = 0 のときは定数項を返す．
-	if (d == 0) {
-		return f[0] / g[0];
-	}
+	if (d == 0) return f[0] / g[0];
 
 	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
 	MFPS f2, g2 = g;
-	rep(i, g2.n) {
-		if (i % 2 == 1) {
-			g2[i] *= -1;
-		}
-	}
+	rep(i, g2.n) if (i % 2 == 1) g2[i] *= -1;
 	f2 = f * g2;
 	g2 *= g;
 
@@ -635,9 +633,7 @@ mint bostan_mori(const MFPS& f, const MFPS& g, ll d) {
 		}
 	}
 	f3.n = sz(f3.c);
-	rep(i, g.n) {
-		g3.c.push_back(g2[2 * i]);
-	}
+	rep(i, g.n) g3.c.push_back(g2[2 * i]);
 	g3.n = sz(g3.c);
 
 	// d を半分にして再帰を回す．
@@ -1059,4 +1055,13 @@ int log(const MFPS& a, MFPS b, const MFPS& f) {
 	return INF;
 }
 
+
+//【1 個おきの係数和】
+/*
+* 形式的べき級数 f(x) = Σi a[i] x^i について，
+*	Σi:偶数 a[i] = (f(x) + f(-x)) / 2
+*	Σi:奇数 a[i] = (f(x) - f(-x)) / 2
+* 
+* verify : https://atcoder.jp/contests/code-festival-2014-morning-middle/tasks/code_festival_morning_med_c
+*/
 

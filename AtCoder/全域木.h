@@ -153,7 +153,7 @@ mint matrix_tree_theorem(const Graph& g) {
 	rep(s, n - 1) {
 		mat[s][s] = sz(g[s]);
 		repe(t, g[s]) {
-			assert(s != t); // 自己ループは許さない
+			Assert(s != t); // 自己ループは許さない
 
 			if (t < n - 1) {
 				mat[s][t]--;
@@ -206,7 +206,7 @@ mint count_spanning_forest(const Graph& g) {
 	rep(s, n) {
 		mat[s][s] = sz(g[s]);
 		repe(t, g[s]) {
-			assert(s != t); // 自己ループは許さない
+			Assert(s != t); // 自己ループは許さない
 
 			mat[s][t]--;
 		}

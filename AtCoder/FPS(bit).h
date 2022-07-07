@@ -110,7 +110,7 @@ template <int N> struct BFPS {
 
 	// 除算
 	BFPS inv(int d) const {
-		assert(n >= 1 && c[0]);
+		Assert(n >= 1 && c[0]);
 		BFPS res(1, d);
 		bitset<N> mul(c);
 		repi(i, 1, d - 1) {
@@ -155,7 +155,7 @@ template <int N> struct BFPS {
 	BFPS& operator/=(const SFPS& g) {
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
-		assert(*it0 == 0);
+		Assert(*it0 == 0);
 		it0++;
 
 		// 前からインライン配る DP（後ろに累積効果あり）
@@ -234,7 +234,7 @@ template <int N> struct BFPS {
 template <int N> bool bostan_mori(const BFPS<N>& f, const BFPS<N>& g, ll d) {
 	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
 
-	assert(g.n >= 1 && g[0]);
+	Assert(g.n >= 1 && g[0]);
 
 	// d = 0 のときは定数項を返す．
 	if (d == 0) return f[0];

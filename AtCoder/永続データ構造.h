@@ -167,28 +167,28 @@ public:
 
 	// t 番目の履歴のスタックの大きさを返す．
 	int size(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return stk[t].size;
 	}
 	int size() { return size(n - 1); }
 
 	// t 番目の履歴が空スタックかを返す．
 	bool empty(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return t == 0;
 	}
 	bool empty() { return empty(n - 1); }
 
 	// t 番目の履歴のスタックの先頭の値を返す（t = 0 のとき値は未定義）
 	T top(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return stk[t].val;
 	}
 	T top() { return top(n - 1); }
 
 	// t 番目の履歴に対し val を先頭に積んだスタックを最新の履歴として記録し，履歴番号を返す．
 	int push(T val, int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		stk.push_back(Node(val, stk[t].size + 1, t));
 		return n++;
 	}
@@ -196,7 +196,7 @@ public:
 
 	// t 番目の履歴に対し先頭要素を積む前のスタックの履歴番号を返す．
 	int pop(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return stk[t].prev;
 	}
 	int pop() { return pop(n - 1); }
@@ -272,31 +272,31 @@ public:
 
 	// t 番目の履歴のキューの大きさを返す．
 	int size(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return his_len[t];
 	}
 
 	// t 番目の履歴が空キューかを返す．
 	bool empty(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return size(t) == 0;
 	}
 
 	// t 番目の履歴のキューの先頭の値を返す．
 	T front(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return his_p[t]->next(his_len[t] - 1)->val;
 	}
 
 	// t 番目の履歴のキューの末尾の値を返す．
 	T back(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		return his_p[t]->val;
 	}
 
 	// t 番目の履歴に対し val を末尾に追加したキューを最新の履歴として記録し，履歴番号を返す．
 	int push(T val, int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		Node* p = new Node(val, his_p[t]);
 		his_p.push_back(p);
 		his_len.push_back(his_len[t] + 1);
@@ -305,7 +305,7 @@ public:
 
 	// t 番目の履歴に対し先頭要素を削除したキューを最新の履歴として記録し，履歴番号を返す．
 	int pop(int t) {
-		assert(0 <= t && t < n);
+		Assert(0 <= t && t < n);
 		his_p.push_back(his_p[t]);
 		his_len.push_back(his_len[t] - 1);
 		return n++;
@@ -504,16 +504,16 @@ public:
 	int set(int i, S x, int t) {
 		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
 
-		assert(0 <= i && i < n);
-		assert(t < T);
+		Assert(0 <= i && i < n);
+		Assert(t < T);
 		his.push_back(set_rf(his[t], i, x));
 		return T++;
 	}
 
 	// t 番目の履歴の v[i] を返す．
 	S get(int i, int t) const {
-		assert(0 <= i && i < n);
-		assert(t < T);
+		Assert(0 <= i && i < n);
+		Assert(t < T);
 		return get_rf(his[t], i);
 	}
 
@@ -521,8 +521,8 @@ public:
 	S prod(int l, int r, int t) const {
 		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
 
-		assert(0 <= l && r <= n);
-		assert(t < T);
+		Assert(0 <= l && r <= n);
+		Assert(t < T);
 		if (l >= r) return e();
 		return prod_rf(his[t], l, r);
 	}
@@ -531,7 +531,7 @@ public:
 	S all_prod(int t) const {
 		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
 
-		assert(t < T);
+		Assert(t < T);
 		return prod(0, n, t);
 	}
 
@@ -666,8 +666,8 @@ public:
 	int set(int i, S x, int t) {
 		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
 
-		assert(0 <= i && i < n);
-		assert(t < T);
+		Assert(0 <= i && i < n);
+		Assert(t < T);
 		his.push_back(set_rf(his[t], i, x));
 		return T++;
 	}
@@ -676,8 +676,8 @@ public:
 	S get(int i, int t) const {
 		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
 
-		assert(0 <= i && i < n);
-		assert(t < T);
+		Assert(0 <= i && i < n);
+		Assert(t < T);
 		return get_rf(his[t], i);
 	}
 
@@ -749,7 +749,7 @@ struct Persistent_union_find {
 	int merge(int a, int b, int t) {
 		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
 
-		assert(0 <= t && t < T);
+		Assert(0 <= t && t < T);
 
 		// 頂点 a, b の属する連結成分の根 ra, rb を得る．
 		int ra = leader(a, t);
@@ -782,7 +782,7 @@ struct Persistent_union_find {
 	bool same(int a, int b, int t) {
 		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
 
-		assert(0 <= t && t < T);
+		Assert(0 <= t && t < T);
 
 		// 根が同じなら連結である．
 		return leader(a, t) == leader(b, t);
@@ -792,7 +792,7 @@ struct Persistent_union_find {
 	int leader(int a, int t) {
 		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
 
-		assert(0 <= t && t < T);
+		Assert(0 <= t && t < T);
 
 		// a が根であれば自分自身を返す．
 		int pa = parent_or_size.get(a, times[t]);
@@ -806,7 +806,7 @@ struct Persistent_union_find {
 
 	// t 番目の履歴の頂点 a の属する連結成分の大きさを返す．
 	int size(int a, int t) {
-		assert(0 <= t && t < T);
+		Assert(0 <= t && t < T);
 
 		// a の根を調べ，そこに記録されている大きさの情報を返す．
 		return -parent_or_size.get(leader(a, t), times[t]);
@@ -814,14 +814,14 @@ struct Persistent_union_find {
 
 	// t 番目の履歴の連結成分の個数を返す．
 	int size(int t) {
-		assert(0 <= t && t < T);
+		Assert(0 <= t && t < T);
 
 		return ms[t];
 	}
 
 	// t 番目の履歴の連結成分のリストを返す．
 	vvi groups(int t) {
-		assert(0 <= t && t < T);
+		Assert(0 <= t && t < T);
 
 		vvi res(ms[t]); vi r_to_i(n, -1); int i = 0;
 		rep(a, n) {
