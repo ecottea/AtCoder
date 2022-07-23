@@ -193,7 +193,7 @@ struct Ushige_ub01_only {
 *	min(v) = 0 で max(v) を最小とする v[i] の一例を val[i] に格納する．
 *	制約を満たすことが不可能なら false を返す．
 *
-* 利用：【トポロジカルソート】，【最長パス】
+* 利用：【トポロジカルソート】,【最長パス】
 */
 struct Ushige_lb1_only {
 	// verify : https://codeforces.com/contest/1635/problem/E

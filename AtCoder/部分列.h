@@ -14,7 +14,7 @@
 
 //【最長増加部分列】O(n log n)
 /*
-* 列 a[0..n) の（狭義）最長増加部分列の長さを返す．
+* 数列 a[0..n) の（狭義）最長増加部分列の長さを返す．
 *
 *（二分探索で高速化したインライン DP）
 */
@@ -27,7 +27,7 @@ int longest_increasing_subsequence(const vector<T>& a) {
 	// dp_i[j] : a[0..i) までで，長さが j である増加部分列の右端の値の最小値
 	//	短い増加部分列はそれより長い増加部分列の部分列なので，広義単調増加性がある．
 	vector<T> dp(n + 1, numeric_limits<T>::max());
-	dp[0] = numeric_limits<T>::min();
+	dp[0] = numeric_limits<T>::lowest();
 
 	// a[0..5) = [4, 2, 3, 3, 1] のときの遷移例
 	//	dp_0[0..5] = [-INF, INF, INF, INF, INF, INF]
@@ -63,7 +63,7 @@ int longest_increasing_subsequence(const vector<T>& a) {
 
 //【最長増加部分列（広義）】O(n log n)
 /*
-* 列 a[0..n) の広義最長増加部分列の長さを返す．
+* 数列 a[0..n) の広義最長増加部分列の長さを返す．
 *
 *（二分探索で高速化したインライン DP）
 */
@@ -76,7 +76,7 @@ int weakly_longest_increasing_subsequence(const vector<T>& a) {
 	// dp_i[j] : a[0..i) までで，長さが j である広義増加部分列の右端の値の最小値
 	//	短い増加部分列はそれより長い増加部分列の部分列なので，広義単調増加性がある．
 	vector<T> dp(n + 1, numeric_limits<T>::max());
-	dp[0] = numeric_limits<T>::min();
+	dp[0] = numeric_limits<T>::lowest();
 
 	// a[0..5) = [4, 2, 3, 3, 1] のときの遷移例
 	//	dp_0[0..5] = [-INF, INF, INF, INF, INF, INF]
@@ -111,7 +111,7 @@ int weakly_longest_increasing_subsequence(const vector<T>& a) {
 
 //【最長増加部分列】O(n log n)
 /*
-* 列 a[0..n) の（狭義）最長増加部分列の長さを返す．またその一例を lis に構成する．
+* 数列 a[0..n) の（狭義）最長増加部分列の長さを返す．またその一例を lis に構成する．
 * 
 *（セグメント木で高速化したインライン DP）
 *
@@ -177,7 +177,7 @@ int longest_increasing_subsequence(const vector<T>& a, vector<T>* lis = nullptr)
 
 //【コスト最大増加部分列】O(n log n)
 /*
-* 非負コスト c[0..n) が与えられた列 a[0..n) のコスト最大増加部分列のコストを返す．
+* 非負コスト c[0..n) が与えられた数列 a[0..n) のコスト最大増加部分列のコストを返す．
 *
 *（セグメント木で高速化したインライン DP）
 *
@@ -446,6 +446,22 @@ template <class T> mint count_common_subsequences(const vector<T>& s, const vect
 	}
 
 	return dp[n][m];
+}
+
+
+//【貪欲増加部分列】O(n)
+/*
+* 数列 a[0..n) の左から貪欲に選んだ増加部分列の長さを返す．
+*/
+template <class T> int greedy_increasing_subsequence(const vector<T>& a) {
+	int n = sz(a);
+
+	T v = numeric_limits<T>::lowest();
+	int len = 0;
+
+	rep(i, n) if (chmax(v, a[i])) len++;
+
+	return len;
 }
 
 

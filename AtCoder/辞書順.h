@@ -45,7 +45,7 @@ string smallest_subsequence(const string& s, int m) {
 	int i = 0;
 	rep(j, m) {
 		rep(c, k) {
-			// 今の長さ j と今後確保できる最大長 n - nxt[i][c] の和が m 以上なら選ぶ．
+			// いまの長さ j と今後確保できる最大長 n - nxt[i][c] の和が m 以上なら選ぶ．
 			if (j + (n - nxt[i][c]) >= m) {
 				res += c + 'a';
 				i = nxt[i][c] + 1;
@@ -306,13 +306,13 @@ string minimum_string_concat(vector<string> s, int k) {
 
 	int n = sz(s);
 
-	// 連結した時どっち向きの方が辞書順で小さいかで半順序を定義する．
+	// 連結した時どっち向きの方が辞書順で小さいかで全順序を定義する．
 	auto compare = [&](const string& a, const string& b) {
 		return a + b < b + a;
 	};
 
-	// 先の半順序で s をソートする．
-	// 半順序が推移律を満たすことにより
+	// 先の全順序で s をソートする．
+	// 全順序が推移律を満たすことにより
 	//		∀i < j, s[i] + s[j] <= s[j] + s[i]
 	// が成り立つので，この順での連結のみを考えれば良い．
 	sort(all(s), compare);
@@ -330,11 +330,6 @@ string minimum_string_concat(vector<string> s, int k) {
 			// この更新式で大丈夫なのは，文字列の連結 "+" と辞書順比較 "<" の間に
 			//		A + B < A + C ⇔ B < C
 			// なる関係がある（"+" と "<" が左両立する）からである．
-			//
-			// なお，
-			//		A + C < B + C ⇔ A < B
-			// は成り立たないので dp テーブルの持ち方には要注意！
-			// 反例： bac < bc かつ ba > b
 		}
 	}
 

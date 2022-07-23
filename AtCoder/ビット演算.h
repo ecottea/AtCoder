@@ -36,7 +36,7 @@
 /*
 * XOR[0..n) を返す．
 */
-ll acc_xor(ll n) {
+ll acc_XOR(ll n) {
 	// verify : https://atcoder.jp/contests/abc121/tasks/abc121_d
 
 	//【方法】
@@ -60,5 +60,13 @@ ll acc_xor(ll n) {
 
 	return res;
 }
+
+
+//【連続自然数の部分集合の OR】
+/*
+* [1..n] の部分集合の OR で作れる数の集合は ub=2^(msb(n)+1) として [1..ub) である．
+* 
+* verify : https://atcoder.jp/contests/agc015/tasks/agc015_d
+*/
 
 

@@ -139,7 +139,8 @@ mt19937_64 mt((int)time(NULL));
 shuffle(all(a), mt);
 
 // 型 T の最小値[最大値] を取得する．
-numeric_limits<T>::min(); numeric_limits<T>::max();
+numeric_limits<T>::lowest();
+numeric_limits<T>::max();
 
 // 時間計測して TLE 寸前に終了
 auto start = chrono::system_clock::now();
@@ -237,7 +238,7 @@ void zikken() {
 			cout << "----------error!----------" << endl;
 			cout << "input:" << endl;
 			cout << a << endl;
-			cout << "results: << endl;
+			cout << "results:" << endl;
 			cout << res_naive << endl;
 			cout << res_solve << endl;
 			cout << "--------------------------" << endl;

@@ -2,7 +2,7 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "木DP.h"
-// ■■■■■ 組合せゲーム ■■■■■
+// ■■■■■ 不偏ゲーム ■■■■■
 
 
 //【局面のニム値】O(?)（遅いので実験用）
@@ -63,6 +63,8 @@ struct Nimber {
 
 	// ニム値 v をもつ局面を 1 つ追加する．
 	void insert(int v) {
+		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+
 		// ニム値 v の局面数を 1 増やす．
 		cnt[v]++;
 
@@ -103,6 +105,8 @@ struct Nimber {
 
 	// ニム値 v をもつ局面を 1 つ削除する．
 	void erase(int v) {
+		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+
 		// ニム値 v をもつ局面がなければ何もしない．
 		if (cnt[v] == 0) return;
 
@@ -123,9 +127,21 @@ struct Nimber {
 
 	// 現在記録されている局面のニム値の最小除外数を返す．
 	int mex() {
+		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+
 		if (lrs.empty() || lrs.begin()->first > 0) return 0;
 		return lrs.begin()->second + 1;
 	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Nimber nm) {
+		vi res;
+		repe(p, nm.cnt) rep(hoge, p.second) res.push_back(p.first);
+		sort(all(res));
+		repe(v, res) os << v << " ";
+		return os;
+	}
+#endif
 };
 
 
@@ -186,7 +202,7 @@ void selection_nim(const vi& c, int n, vi& nimber) {
 }
 
 	
-// 【正規型不偏ゲーム】O((|V| + |E|) log|V|)　
+// 【DAG 上のコマ移動ゲーム】O((|V| + |E|) log|V|)　
 /*
 * ゲームのルール：
 * DAG g のある頂点 v にコマが置かれている．
@@ -221,7 +237,7 @@ void impartial_game(Graph& g, vi& nimber) {
 }
 
 
-// 【非有限正規型不偏ゲーム】O(|V| + |E|)
+// 【有向グラフ上のコマ移動ゲーム】O(|V| + |E|)
 /*
 * ゲームのルール：
 * 有向グラフ（閉路可） g のある頂点 v にコマが置かれている．

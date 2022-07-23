@@ -12,6 +12,7 @@ template <class T> vector<T> naive_convolution(const vector<T>& a, const vector<
 
 	int n = sz(a), m = sz(b);
 
+	// c[i] = ƒ°j¸[0..i] a[j] b[i-j]  (Íi¸[0..n+m-1))
 	vector<T> c(n + m - 1);
 	rep(i, n + m - 1) {
 		repi(j, max(i - (m - 1), 0), min(i, n - 1)) {
@@ -20,6 +21,49 @@ template <class T> vector<T> naive_convolution(const vector<T>& a, const vector<
 	}
 
 	return c;
+}
+
+
+//yã‘¤ôž‚Ýz
+/*
+* —^‚¦‚ç‚ê‚½ a[0..n], b[0..n] ‚É‘Î‚µ‚Ä
+*		c[i] = ƒ°j¸[i..n] a[n+i-j] b[j]
+* ‚È‚é c[0..n] ‚ð‹‚ß‚½‚¢ê‡Cconvolution(a, b)[n..2n] ‚ðŽæ“¾‚·‚ê‚Î‚æ‚¢D
+* 
+* verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
+*/
+
+
+//yŽ©ŒÈôž‚ÝzO(n^2 log k)
+/*
+* a[0..n) ‚ð k ŒÂô‚Ýž‚ñ‚¾”—ñ c[0..n) ‚ð•Ô‚·D
+*
+* —˜—pFyôž‚Ýz
+*
+*iŒJ‚è•Ô‚µ“ñæ–@j
+*/
+template <class T> vector<T> naive_self_convolution(const vector<T>& a, ll k) {
+	// verify : https://atcoder.jp/contests/arc059/tasks/arc059_d
+
+	int n = sz(a);
+
+	vector<T> res(n);
+	res[0] = 1;
+
+	vector<T> pow2(a);
+	while (k > 0) {
+		if ((k & 1) != 0) {
+			res = naive_convolution(res, pow2);
+			res.resize(n);
+		}
+
+		pow2 = naive_convolution(pow2, pow2);
+		pow2.resize(n);
+
+		k /= 2;
+	}
+
+	return res;
 }
 
 

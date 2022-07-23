@@ -67,7 +67,9 @@ ll minimum_cost_matching(const vvl& adj) {
 * 頂点の色が c[0..n) で与えられる完全グラフ K_n について，
 * どのマッチングも異色頂点間を結ぶような完全マッチングの個数を返す．
 *
-* 利用：【階乗など（法が大きな素数）】，【複数の数列の畳込み】
+* 利用：【階乗など（法が大きな素数）】,【複数の数列の畳込み】
+* 
+*（個数ごとの状態系包除原理）
 */
 template <class T> mint count_different_color_matching(const vector<T>& c) {
 	// verify : https://atcoder.jp/contests/abl/tasks/abl_f
@@ -216,6 +218,71 @@ void enumerate_perfect_matching(int n, vector<vector<pii>>& mcs) {
 
 		// 頂点 i を未使用に戻しておく．
 		a[i] = -1;
+
+		return;
+	};
+
+	rf(0);
+}
+
+
+//【大きさ k のマッチングの列挙】O(√perm(|V|, 2k) k)
+/*
+* 無向グラフ g の大きさ k のマッチングを mcs に列挙する．
+* マッチングは n 個の頂点対のリストとして表す．
+*/
+void enumerate_matching(const Graph& g, int k, vector<vector<pii>>& mcs) {
+	// verify : https://atcoder.jp/contests/arc095/tasks/arc095_c
+
+	int n = sz(g);
+	mcs.clear();
+
+	// used[v] : 頂点 v をマッチングに使用しているか
+	int used = 0;
+
+	// mc : 作成途中のマッチング
+	vector<pii> mc;
+
+	// 頂点 s 以降のマッチングを見つける
+	function<void(int)> rf = [&](int s) {
+		// マッチングの大きさが k になったら結果を格納して打ち切る．
+		if (sz(mc) == k) {
+			mcs.push_back(mc);
+			return;
+		}
+
+		// 残りの頂点を全て使ってもマッチングの大きさが k に満たない場合は打ち切る．
+		if (sz(mc) + (n - s - popcount(used >> s)) / 2 < k) return;
+
+		// 頂点 s を新たなマッチングに使用しない場合
+		rf(s + 1);
+
+		// 頂点 s が使用済だった場合はこれで終わり．
+		if (used & (1 << s)) return;
+
+		// 頂点 s を j 番目のマッチングの片方に選ぶ．
+		used += (1 << s);
+		mc.emplace_back(s, -1);
+
+		// t : 頂点 s とマッチさせる頂点
+		repe(t, g[s]) {
+			// 頂点 t が走査済または使用済だった場合は選べない．
+			if (t < s || used & (1 << t)) continue;
+
+			// 頂点 t を頂点 s とマッチさせる．
+			used += (1 << t);
+			mc.back().second = t;
+
+			// 次の頂点に進む．
+			rf(s + 1);
+
+			// 頂点 t を未使用に戻しておく．
+			used -= (1 << t);
+		}
+
+		// 頂点 s を未使用に戻しておく．
+		mc.pop_back();
+		used -= (1 << s);
 
 		return;
 	};

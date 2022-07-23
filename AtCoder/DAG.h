@@ -90,10 +90,8 @@ void count_all_path(const Graph& g, vm& cnt) {
 
 		cnt[s] = 1; // 不動の場合に対応
 
-		repe(t, g[s]) {
-			// s → t と進む場合
-			cnt[s] += dfs(t);
-		}
+		// s → t と進む場合
+		repe(t, g[s]) cnt[s] += dfs(t);
 
 		return cnt[s];
 	};
@@ -123,69 +121,60 @@ void longest_path(const Graph& g, vi& len) {
 		seen[s] = true;
 		len[s] = 0;
 		
-		repe(t, g[s]) {
-			// s → t と進む場合
-			chmax(len[s], dfs(t) + 1);
-		}
+		// s → t と進む場合
+		repe(t, g[s]) chmax(len[s], dfs(t) + 1);
 
 		return len[s];
 	};
 
 	// 各頂点 s についての情報を計算する．
-	rep(s, n) {
-		if (!seen[s]) dfs(s);
-	}
+	rep(s, n) if (!seen[s]) dfs(s);
 }
 
 
-//【コスト最大パス（頂点コスト，始点任意）】O(|V| + |E|)
+//【スコア最大パス（頂点スコア，始点任意）】O(|V| + |E|)
 /*
-* 頂点コスト w の与えられた DAG g のパス（長さ 0 も可）で，
-* パスに属する頂点のコストの和の最大値を返す．
+* 頂点 i に非負スコア w[i] の与えられた DAG g のパス（長さ 0 も可）で，
+* 頂点 s からのパスの最大スコアを sc[s] に格納する．
 *
 *（DAG 上の DP）
 */
-ll highest_cost_path(const Graph& g, const vl& w) {
+void highest_score_path(const Graph& g, const vl& w, vl& sc) {
 	int n = sz(g);
 
-	// dp[s] : 頂点 s からの最大コスト
-	vl dp(n);
+	// sc[s] : 頂点 s からのパスの最大スコア
+	sc = vl(n, 0);
 	vb seen(n);
 
 	function<ll(int)> dfs = [&](int s) {
-		if (seen[s]) return dp[s];
+		if (seen[s]) return sc[s];
 		seen[s] = true;
-		dp[s] = 0;
 		
-		repe(t, g[s]) {
-			// s → t と進む場合
-			chmax(dp[s], dfs(t));
-		}
-		dp[s] += w[s];
+		// s → t と進む場合
+		repe(t, g[s]) chmax(sc[s], dfs(t));
 
-		return dp[s];
+		sc[s] += w[s];
+
+		return sc[s];
 	};
 
 	// 各頂点 s についての情報を計算する．
-	ll res = 0;
-	rep(s, n) chmax(res, dfs(s));
-
-	return res;
+	rep(s, n) dfs(s);
 }
 
 
-//【コスト最大パス（頂点コスト，始点固定）】O(|V| + |E|)
+//【スコア最大パス（頂点スコア，始点固定）】O(|V| + |E|)
 /*
-* 頂点コスト w の与えられた DAG g の r からのパス（長さ 0 も可）で，
-* パスに属する頂点のコストの和を最大とするパスの頂点列を path に格納する．
-* またそのパスのコストを返す．
+* 頂点 i に非負スコア w[i] の与えられた DAG g の r からのパス（長さ 0 も可）で，
+* パスに属する頂点のスコアの和を最大とするパスの頂点列を path に格納する．
+* またそのパスのスコアを返す．
 *
 *（DAG 上の DP）
 */
-ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
+ll highest_score_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 	int n = sz(g);
 
-	// dp[s] : 頂点 s からの最大コスト
+	// dp[s] : 頂点 s からの最大スコア
 	vl dp(n);
 	vb seen(n);
 	vi next(n, -1);
@@ -197,9 +186,7 @@ ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 		// s から行ける頂点 t の情報を元に s の情報を計算する．
 		dp[s] = 0;
 		repe(t, g[s]) {
-			if (chmax(dp[s], dfs(t))) {
-				next[s] = t;
-			}
+			if (chmax(dp[s], dfs(t))) next[s] = t;
 		}
 		dp[s] += w[s];
 
@@ -213,46 +200,36 @@ ll highest_cost_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 	if (path != nullptr) {
 		path->clear();
 
-		for (int s = r; s != -1; s = next[s]) {
-			path->push_back(s);
-		}
+		for (int s = r; s != -1; s = next[s]) path->push_back(s);
 	}
 
 	return res;
 }
 
 
-//【コスト最大パスの組（頂点コスト，始点任意）】O(|V|^3)
+//【スコア最大パスの組（頂点スコア，始点任意）】O(|V|^3)
 /*
-* 頂点コスト w の与えられた DAG g（トポロジカルソート済）のパスの組で，
-* いずれかのパスに属している頂点のコストの和の最大値を返す．
+* 頂点 i に非負スコア w[i] の与えられた DAG g（トポロジカルソート済）のパスの組で，
+* いずれかのパスに属している頂点のスコアの和の最大値を返す．
 *
 *（DAG 上の二次元 DP）
 *
 * 利用：【幅優先探索】
 */
-ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
+ll highest_score_twinpath(const Graph& g_, const vl& w_) {
 	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/26/172626
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_graph
 
 	int n = sz(g_);
 
-	// 全頂点への有向辺をもちコストが 0 の頂点 0 を追加する．
+	// 全頂点への有向辺をもちスコアが 0 の頂点 0 を追加する．
 	Graph g(n + 1);
-	repi(t, 1, n) {
-		g[0].push_back(t);
-	}
-	rep(s, n) {
-		repe(t, g_[s]) {
-			g[s + 1].push_back(t + 1);
-		}
-	}
+	repi(t, 1, n) g[0].push_back(t);
+	rep(s, n) repe(t, g_[s]) g[s + 1].push_back(t + 1);
 
 	vl w(n + 1);
 	w[0] = 0;
-	rep(s, n) {
-		w[s + 1] = w_[s];
-	}
+	rep(s, n) w[s + 1] = w_[s];
 
 	n++;
 
@@ -262,12 +239,10 @@ ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
 		vi dist;
 		breadth_first_search(g, s, dist);
 
-		rep(t, n) {
-			downQ[s][t] = (dist[t] < INF);
-		}
+		rep(t, n) downQ[s][t] = (dist[t] < INF);
 	}
 
-	// dp[s1][s2] : 頂点 s1 < s2 からのパスの組の最大コスト
+	// dp[s1][s2] : 頂点 s1 < s2 からのパスの組の最大スコア
 	vvl dp(n, vl(n));
 	vvb seen(n, vb(n));
 
@@ -278,16 +253,12 @@ ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
 		dp[s1][s2] = w[s1] + w[s2];
 
 		// s2 から行ける頂点 t2 の情報を元に (s1, s2) の情報を計算する．
-		repe(t2, g[s2]) {
-			chmax(dp[s1][s2], dfs(s1, t2) + w[s2]);
-		}
+		repe(t2, g[s2]) chmax(dp[s1][s2], dfs(s1, t2) + w[s2]);
 
 		// s1 から行ける頂点 t1 の情報を元に (s1, s2) の情報を計算する．
 		// ただし s1 からは s2 を飛び越えるような移動しか認めないこととする．
 		repi(t1, s2 + 1, n - 1) {
-			if (downQ[s1][t1]) {
-				chmax(dp[s1][s2], dfs(s2, t1) + w[s1]);
-			}
+			if (downQ[s1][t1]) chmax(dp[s1][s2], dfs(s2, t1) + w[s1]);
 		}
 
 		return dp[s1][s2];
@@ -296,11 +267,8 @@ ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
 	dfs(0, 0);
 
 	ll res = 0;
-	rep(s2, n) {
-		rep(s1, s2) {
-			chmax(res, dp[s1][s2]);
-		}
-	}
+	rep(s2, n) rep(s1, s2) chmax(res, dp[s1][s2]);
+
 	return res;
 }
 
@@ -314,16 +282,12 @@ ll highest_cost_twinpath(const Graph& g_, const vl& w_) {
 * 利用：【二部グラフの最大マッチング】
 */
 int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
-	// 参考：https://kyopro.hateblo.jp/entry/2018/06/04/000659
+	// 参考 : https://kyopro.hateblo.jp/entry/2018/06/04/000659
 
 	int n = sz(g);
 
 	Bipartite_matching bm(n, n);
-	rep(s, n) {
-		repe(t, g[s]) {
-			bm.add_edge(s, t);
-		}
-	}
+	rep(s, n) repe(t, g[s]) bm.add_edge(s, t);
 
 	int res = n - bm.flow();
 

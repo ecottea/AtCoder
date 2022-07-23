@@ -1,10 +1,11 @@
 #pragma once
 #include "header.h"
 #include "二分木.h"
+#include "前処理(列).h"
 // ■■■■■ 数え上げ（区間） ■■■■■
 
 
-//【区間の数え上げ（区間端範囲制約）】O(n log n)
+//【区間端範囲制約を満たす区間の数え上げ】O(n log n)
 /*
 * [0..n) の区間 [l..r] (l <= r) で，l_min[r] <= l <= l_max[r] かつ
 * r_min[l] <= r <= r_max[l] を満たすものの個数を返す．
@@ -17,8 +18,8 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 
 	vvi r_min_to_ls(n), r_max_to_ls(n);
 	rep(l, n) {
-		// r_max[l] < l であるような条件は満たせないから無視する．
-		if (r_max[l] < l) continue;
+		// r_max[l] < l であるような条件は満たせない．
+		if (r_max[l] < l) return 0;
 
 		// r_min[l] < l は r_min[l] = l だったことにして問題ない．
 		r_min_to_ls[max(r_min[l], l)].push_back(l);
@@ -33,32 +34,26 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 	// 区間の右端 r を昇順に見ていく．
 	rep(r, n) {
 		// 新たに r = r_min[l] なる l を許す．
-		repe(l, r_min_to_ls[r]) {
-			ft.add(l, 1);
-		}
+		repe(l, r_min_to_ls[r]) ft.add(l, 1);
 
 		// r を右端とする区間の個数を加算する．
-		if (l_min[r] <= r) {
-			res += ft.sum(l_min[r], min(l_max[r], r) + 1);
-		}
+		if (l_min[r] <= r) res += ft.sum(l_min[r], min(l_max[r], r) + 1);
 
 		// 以降は r = r_max[l] なる l を許さない．
-		repe(l, r_max_to_ls[r]) {
-			ft.add(l, -1);
-		}
+		repe(l, r_max_to_ls[r]) ft.add(l, -1);
 	}
 
 	return res;
 }
 
 
-//【区間の数え上げ（最小値指定）】O(n log n)
+//【最小値の指定された区間の数え上げ】O(n log n)
 /*
 * 列 a[0..n) について，最小値が m の区間 a[l..r) (l < r) の個数を cnt[m] に格納する．
 *
 * 利用：【デカルト木】
 */
-template <class T> void count_min_intervals_dc(const vector<T>& a, unordered_map<T, ll>& cnt) {
+template <class T> void count_min_intervals_dt(const vector<T>& a, unordered_map<T, ll>& cnt) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
 	
 	//【方法】
@@ -97,11 +92,11 @@ template <class T> void count_min_intervals_dc(const vector<T>& a, unordered_map
 }
 
 
-//【区間の数え上げ（最小値指定）】O(n log n)
+//【最小値の指定された区間の数え上げ】O(n log n)
 /*
 * 列 a[0..n) について，最小値が m の区間 a[l..r) (l < r) の個数を cnt[m] に格納する．
 *
-* 利用：【自身より小さい数の次の位置】，【自身より小さい数の前の位置】
+* 利用：【自身より小さい数の次の位置】,【自身より小さい数の前の位置】
 */
 template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
@@ -125,7 +120,42 @@ template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T,
 }
 
 
-//【隣接和をとる操作で得られる列】
+//【区間被覆の数え上げ】O(n log n + m + n log m)
+/*
+* 与えられた [0..m) 上の n 個の区間 [l[i], r[i]) に対し，
+* 全区間 [0..m) を被覆するような区間の選び方が何通りあるかを返す．
+*/
+mint op_cic(mint x, mint y) { return x + y; }
+mint e_cic() { return 0; }
+mint count_interval_covering(int m, const vi& l, const vi& r) {
+	int n = sz(l);
+
+	// 右端の小さい順にソートする．
+	vector<pii> rl(n);
+	rep(i, n) rl[i] = { r[i], l[i] };
+	sort(all(rl));
+
+	// seg_i[j] : [0..i) 番目の区間で [0..j) を被覆する方法の数
+	segtree<mint, op_cic, e_cic> seg(m + 1);
+	seg.set(0, 1);
+
+	// 貰う DP
+	rep(i, n) {
+		int r, l;
+		tie(r, l) = rl[i];
+
+		// cnt : 今までの区間で [0..l) を被覆する方法の数
+		mint cnt = seg.prod(l, m + 1);
+
+		// これに [l..r) を重ねれば [0..r) を被覆することができる．
+		seg.set(r, seg.get(r) + cnt);
+	}
+
+	return seg.get(m);
+}
+
+
+//【隣接和をとる操作で得られる列の数え上げ】
 /*
 * a[0..n) に対し，隣接する 2 数をその和に置き換えるという操作を考える．
 * 操作を 0 回以上の任意回行って得られる列が何通りあるかを返す．
@@ -204,9 +234,7 @@ mint count_adjacent_sum_contraction_seq(const vl& a) {
 	}
 
 	// 貰う DP
-	repi(i, 1, n - 1) {
-		dp[i + 1] = 2 * dp[i] - dp[k[i]];
-	}
+	repi(i, 1, n - 1) dp[i + 1] = 2 * dp[i] - dp[k[i]];
 
 	return dp[n];
 }

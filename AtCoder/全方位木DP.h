@@ -649,7 +649,7 @@ void distance_sum(Graph& g, vl& dist) {
 /*
 * 頂点 s から始めて連結性を保ったまま辺の追加を行い木 g を構築する方法の数を cnt[s] に格納する．
 *
-* 利用：【全方位木 DP】，【階乗など（法が大きな素数）】
+* 利用：【全方位木 DP】,【階乗など（法が大きな素数）】
 */
 using T_cctc = pair<mint, int>; // (構築方法の数, 辺の数)
 Factorial_mint fm_cctc;

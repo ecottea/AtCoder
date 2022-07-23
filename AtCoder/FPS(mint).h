@@ -379,6 +379,348 @@ struct MFPS {
 };
 
 
+//【形式的冪級数（法が大きな素数）】
+/*
+* MFPS() : O(1)
+*	零多項式 f = 0 で初期化する．
+*
+* MFPS(mint c0) : O(1)
+*	定数多項式 f = c0 で初期化する．
+*
+* MFPS(mint c0, int n) : O(n)
+*	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
+*
+* MFPS(vm c) : O(n)
+*	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
+*
+* c + f, f + c : O(1)	f + g : O(n)
+* f - c : O(1)			c - f, f - g, -f : O(n)
+* c * f, f * c : O(n)	f * g : O(n^2)		f * g_sp : O(n k)（k : g の項数）
+* f / c : O(n)			f / g : O(n^2)		f / g_sp : O(n k)（k : g の項数）
+*	形式的冪級数としての和，差，積，商の結果を返す．
+*	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
+*	制約 : 商では g(0) != 0
+*
+* MFPS f.inv(int d) : O(n^2)
+*	1 / f mod x^d を返す．
+*	制約 : f(0) != 0
+*
+* MFPS f.quotient(MFPS g) : O(n^2)
+* MFPS f.reminder(MFPS g) : O(n^2)
+* pair<MFPS, MFPS> f.quotient_remainder(MFPS g) : O(n^2)
+*	多項式としての f を g で割った商，余り，商と余りの組を返す．
+*	制約 : g の最高次の係数は 0 でない
+*
+* int f.deg(), int f.size() : O(1)
+*	多項式 f の次数[項数]を返す．
+*
+* MFPS::monomial(int d) : O(d)
+*	単項式 x^d を返す．
+*
+* mint f.assign(mint c) : O(n)
+*	多項式 f の不定元 x に c を代入した値を返す．
+*
+* f.resize(int d) : O(1)
+*	mod x^d をとる．
+*
+* f.resize() : O(n)
+*	不要な高次の項を削る．
+*
+* f >> d, f << d : O(n)
+*	係数列を d だけ右[左]シフトした多項式を返す．
+*  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
+*
+* MFPS power_mod(MFPS f, ll d, MFPS g) : O(m^2 log d)　（m = deg g）
+*	f(x)^d mod g(x) を返す．
+*/
+struct MFPS {
+	using SMFPS = vector<pair<int, mint>>;
+
+	int n; // 係数の個数（次数 + 1）
+	vm c; // 係数列
+
+	// コンストラクタ（0，定数，係数列で初期化）
+	MFPS() : n(0) {}
+	MFPS(const mint& c0) : n(1), c({ c0 }) {}
+	MFPS(const int& c0) : n(1), c({ mint(c0) }) {}
+	MFPS(const mint& c0, int d) : n(d), c(n) { c[0] = c0; }
+	MFPS(const int& c0, int d) : n(d), c(n) { c[0] = c0; }
+	MFPS(const vm& c_) : n(sz(c_)), c(c_) {}
+	MFPS(const vi& c_) : n(sz(c_)), c(n) { rep(i, n) c[i] = c_[i]; }
+
+	// 代入
+	MFPS(const MFPS& f) = default;
+	MFPS& operator=(const MFPS& f) = default;
+	MFPS& operator=(const mint& c0) { n = 1; c = { c0 }; return *this; }
+
+	// 比較
+	bool operator==(const MFPS& g) const { return c == g.c; }
+	bool operator!=(const MFPS& g) const { return c != g.c; }
+
+	// アクセス
+	mint const& operator[](int i) const { return c[i]; }
+	mint& operator[](int i) { return c[i]; }
+
+	// 次数
+	int deg() const { return n - 1; }
+	int size() const { return n; }
+
+	// 加算
+	MFPS& operator+=(const MFPS& g) {
+		if (n >= g.n) rep(i, g.n) c[i] += g.c[i];
+		else {
+			rep(i, n) c[i] += g.c[i];
+			repi(i, n, g.n - 1)	c.push_back(g.c[i]);
+			n = g.n;
+		}
+		return *this;
+	}
+	MFPS operator+(const MFPS& g) const { return MFPS(*this) += g; }
+
+	// 定数加算
+	MFPS& operator+=(const mint& sc) {
+		if (n == 0) { n = 1; c = { sc }; }
+		else { c[0] += sc; }
+		return *this;
+	}
+	MFPS operator+(const mint& sc) const { return MFPS(*this) += sc; }
+	friend MFPS operator+(const mint& sc, const MFPS& f) { return f + sc; }
+	MFPS& operator+=(const int& sc) { *this += mint(sc); return *this; }
+	MFPS operator+(const int& sc) const { return MFPS(*this) += sc; }
+	friend MFPS operator+(const int& sc, const MFPS& f) { return f + sc; }
+
+	// 減算
+	MFPS& operator-=(const MFPS& g) {
+		if (n >= g.n) rep(i, g.n) c[i] -= g.c[i];
+		else {
+			rep(i, n) c[i] -= g.c[i];
+			repi(i, n, g.n - 1) c.push_back(-g.c[i]);
+			n = g.n;
+		}
+		return *this;
+	}
+	MFPS operator-(const MFPS& g) const { return MFPS(*this) -= g; }
+
+	// 定数減算
+	MFPS& operator-=(const mint& sc) { *this += -sc; return *this; }
+	MFPS operator-(const mint& sc) const { return MFPS(*this) -= sc; }
+	friend MFPS operator-(const mint& sc, const MFPS& f) { return -(f - sc); }
+	MFPS& operator-=(const int& sc) { *this += -sc; return *this; }
+	MFPS operator-(const int& sc) const { return MFPS(*this) -= sc; }
+	friend MFPS operator-(const int& sc, const MFPS& f) { return -(f - sc); }
+
+	// 加法逆元
+	MFPS operator-() const { return MFPS(*this) *= -1; }
+
+	// 定数倍
+	MFPS& operator*=(const mint& sc) { rep(i, n) c[i] *= sc; return *this; }
+	MFPS operator*(const mint& sc) const { return MFPS(*this) *= sc; }
+	friend MFPS operator*(const mint& sc, const MFPS& f) { return f * sc; }
+	MFPS& operator*=(const int& sc) { *this *= mint(sc); return *this; }
+	MFPS operator*(const int& sc) const { return MFPS(*this) *= sc; }
+	friend MFPS operator*(const int& sc, const MFPS& f) { return f * sc; }
+
+	// 右からの定数除算
+	MFPS& operator/=(const mint& sc) { *this *= sc.inv(); return *this; }
+	MFPS operator/(const mint& sc) const { return MFPS(*this) /= sc; }
+	MFPS& operator/=(const int& sc) { *this /= mint(sc); return *this; }
+	MFPS operator/(const int& sc) const { return MFPS(*this) /= sc; }
+
+	// 積
+	MFPS& operator*=(const MFPS& g) {
+		// verify : https://atcoder.jp/contests/agc009/tasks/agc009_e
+
+		int m = g.deg();
+		if (m == -1) return *this = MFPS();
+		resize(n + m);
+
+		// 後ろからインライン配る DP
+		repir(i, n - 1, 0) {
+			// 上位項に係数倍して配っていく．
+			repi(j, 1, m) {
+				if (i + j >= n) break;
+
+				c[i + j] += c[i] * g[j];
+			}
+
+			// 定数項は最後に配るか消去しないといけない．
+			c[i] *= g[0];
+		}
+
+		return *this;
+	}
+	MFPS operator*(const MFPS& g) const { return MFPS(*this) *= g; }
+
+	// 除算
+	MFPS inv(int d) const {
+		Assert(c[0] != 0);
+
+		MFPS g(c[0].inv());
+		for (int k = 1; k < d; k *= 2) {
+			g = (2 - *this * g) * g;
+			g.resize(2 * k);
+		}
+
+		return g.resize(d);
+	}
+	MFPS& operator/=(const MFPS& g) { return *this *= g.inv(n); }
+	MFPS operator/(const MFPS& g) const { return MFPS(*this) /= g; }
+
+	// 余り付き除算
+	MFPS quotient(const MFPS& g) const {
+		if (n < g.n) return MFPS();
+		return ((this->rev() / g.rev()).resize(n - g.n + 1)).rev();
+	}
+
+	MFPS reminder(const MFPS& g) const {
+		return (*this - this->quotient(g) * g).resize(g.n - 1);
+	}
+
+	pair<MFPS, MFPS> quotient_remainder(const MFPS& g) const {
+		pair<MFPS, MFPS> res;
+		res.first = this->quotient(g);
+		res.second = (*this - res.first * g).resize(g.n - 1);
+		return res;
+	}
+
+	// スパース積
+	MFPS& operator*=(const SMFPS& g) {
+		// g の定数項だけ例外処理
+		auto it0 = g.begin();
+		mint g0 = 0;
+		if (it0->first == 0) {
+			g0 = it0->second;
+			it0++;
+		}
+
+		// 後ろからインライン配る DP
+		repir(i, n - 1, 0) {
+			// 上位項に係数倍して配っていく．
+			for (auto it = it0; it != g.end(); it++) {
+				int j; mint gj;
+				tie(j, gj) = *it;
+
+				if (i + j >= n) break;
+
+				c[i + j] += c[i] * gj;
+			}
+
+			// 定数項は最後に配るか消去しないといけない．
+			c[i] *= g0;
+		}
+
+		return *this;
+	}
+	MFPS operator*(const SMFPS& g) const { return MFPS(*this) *= g; }
+
+	// スパース商
+	MFPS& operator/=(const SMFPS& g) {
+		// verify : https://atcoder.jp/contests/agc009/tasks/agc009_e
+
+		// g の定数項だけ例外処理
+		auto it0 = g.begin();
+		Assert(it0->first == 0 && it0->second != 0);
+		mint g0_inv = it0->second.inv();
+		it0++;
+
+		// 前からインライン配る DP（後ろに累積効果あり）
+		rep(i, n) {
+
+			// 定数項は最初に配らないといけない．
+			c[i] *= g0_inv;
+
+			// 上位項に係数倍して配っていく．
+			for (auto it = it0; it != g.end(); it++) {
+				int j; mint gj;
+				tie(j, gj) = *it;
+
+				if (i + j >= n) break;
+
+				c[i + j] -= c[i] * gj;
+			}
+		}
+
+		return *this;
+	}
+	MFPS operator/(const SMFPS& g) const { return MFPS(*this) /= g; }
+
+	// 係数反転
+	MFPS rev() const { MFPS h = *this; reverse(all(h.c)); return h; }
+
+	// 単項式
+	static MFPS monomial(int d) {
+		MFPS mono(0, d + 1);
+		mono[d] = 1;
+		return mono;
+	}
+
+	// 不要な高次項の除去
+	MFPS& resize() {
+		// 最高次の係数が非 0 になるまで削る．
+		while (n > 0 && c[n - 1] == 0) {
+			c.pop_back();
+			n--;
+		}
+		return *this;
+	}
+
+	// x^d 以上の項を除去する．
+	MFPS& resize(int d) {
+		// verify : https://atcoder.jp/contests/agc009/tasks/agc009_e
+
+		n = d;
+		c.resize(d);
+		return *this;
+	}
+
+	// 不定元への代入
+	mint assign(const mint& x) const {
+		mint val = 0;
+		repir(i, n - 1, 0) val = val * x + c[i];
+		return val;
+	}
+
+	// 係数のシフト
+	MFPS& operator>>=(int d) {
+		n += d;
+		c.insert(c.begin(), d, 0);
+		return *this;
+	}
+	MFPS& operator<<=(int d) {
+		n -= d;
+		if (n <= 0) { c.clear(); n = 0; }
+		else c.erase(c.begin(), c.begin() + d);
+		return *this;
+	}
+	MFPS operator>>(int d) const { return MFPS(*this) >>= d; }
+	MFPS operator<<(int d) const { return MFPS(*this) <<= d; }
+
+	// 累乗の剰余
+	friend MFPS power_mod(const MFPS& f, ll d, const MFPS& g) {
+		MFPS res(1), pow2(f);
+		while (d > 0) {
+			if (d & 1LL) res = (res * pow2).reminder(g);
+			pow2 = (pow2 * pow2).reminder(g);
+			d /= 2;
+		}
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const MFPS& f) {
+		if (f.n == 0) os << 0;
+		else {
+			rep(i, f.n) {
+				os << f[i].val() << "x^" << i;
+				if (i < f.n - 1) os << " + ";
+			}
+		}
+		return os;
+	}
+#endif
+};
+
+
 //【微分】O(n)
 /*
 * f'(x) を返す．
@@ -396,12 +738,16 @@ MFPS derivative(const MFPS& f) {
 //【不定積分】O(n)
 /*
 * ∫ f(x) dx を返す．（定数項は 0 とする）
+*
+* 制約：fm は (deg(f) + 1)! まで計算可能であること
+*
+* 利用：【階乗など（法が大きな素数）】
 */
-MFPS integral(const MFPS& f) {
+MFPS integral(const MFPS& f, const Factorial_mint& fm) {
 	// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
 
 	MFPS res(0);
-	repi(i, 0, f.n - 1) res.c.push_back(f[i] / (i + 1));
+	repi(i, 0, f.n - 1) res.c.push_back(f[i] * fm.inv(i + 1));
 	res.n = sz(res.c);
 	return res;
 }
@@ -410,26 +756,28 @@ MFPS integral(const MFPS& f) {
 //【対数関数】O(n log n)
 /*
 * log f(x) mod x^d を返す．
-* 制約 : f(0) = 1
 *
-* 利用：【微分】，【不定積分】
+* 制約 : f(0) = 1，fm は d! まで計算可能であること
+*
+* 利用：【微分】,【不定積分】,【階乗など（法が大きな素数）】
 */
-MFPS log(const MFPS& f, int d) {
+MFPS log(const MFPS& f, int d, const Factorial_mint& fm) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 	// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
 
-	return integral((derivative(f) * f.inv(d - 1)).resize(d - 1));
+	return integral((derivative(f) * f.inv(d - 1)).resize(d - 1), fm);
 }
 
 
 //【指数関数】O(n log n)
 /*
 * log f(x) mod x^d を返す．
-* 制約 : f(0) = 0
 *
-* 利用：【対数関数】
+* 制約 : f(0) = 0，fm は (2d)! まで計算可能であること
+*
+* 利用：【対数関数】,【階乗など（法が大きな素数）】
 */
-MFPS exp(const MFPS& f, int d) {
+MFPS exp(const MFPS& f, int d, const Factorial_mint& fm) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 	// verify : https://judge.yosupo.jp/problem/exp_of_formal_power_series
 
@@ -456,7 +804,7 @@ MFPS exp(const MFPS& f, int d) {
 	// ニュートン法で log g = f なる g を見つける．
 	MFPS g(1);
 	for (int k = 1; k < d; k *= 2) {
-		g = g * (f + 1 - log(g, 2 * k));
+		g = g * (f + 1 - log(g, 2 * k, fm));
 		g.resize(2 * k);
 	}
 	g.resize(d);
@@ -469,9 +817,11 @@ MFPS exp(const MFPS& f, int d) {
 /*
 * f(x)^k mod x^d を返す．（0^0 = 1 とする）
 *
-* 利用：【指数関数】，【対数関数】
+* 制約 : fm は (2d)! まで計算可能であること
+*
+* 利用：【指数関数】,【対数関数】,【階乗など（法が大きな素数）】
 */
-MFPS pow(const MFPS& f, ll k, int d) {
+MFPS pow(const MFPS& f, ll k, int d, const Factorial_mint& fm) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 	// verify : https://judge.yosupo.jp/problem/pow_of_formal_power_series
 
@@ -498,7 +848,7 @@ MFPS pow(const MFPS& f, ll k, int d) {
 	int ds = (int)(d - k * i0);
 
 	// f^k = exp(k log f(x)) を用いて f^k を計算する．
-	MFPS gs = exp(mint(k) * log(fs, ds), ds);
+	MFPS gs = exp(mint(k) * log(fs, ds, fm), ds, fm);
 
 	// シフトと定数除算した分を元に戻す．
 	MFPS g = (gs * c0.pow(k)) >> (int)(k * i0);
@@ -511,7 +861,7 @@ MFPS pow(const MFPS& f, ll k, int d) {
 /*
 * √f(x) mod x^d の 1 つを返す．（なければ find = false を格納する）
 *
-* 利用：【平方剰余／トネリ－シャンクスのアルゴリズム】
+* 利用：【平方剰余】
 */
 MFPS sqrt(const MFPS& f, int d, bool& find) {
 	// 参考 : https://nyaannyaan.github.io/library/fps/fps-sqrt.hpp
@@ -782,7 +1132,7 @@ MFPS taylor_shift(const MFPS& f, mint c, const Factorial_mint& fm) {
 
 //【一次式の積の展開（基本対称式）】O(n (log n)^2)
 /*
-* (x - x[0]) ... (x - x[n-1]) を返す．
+* Πi∈[0..n) (x - x[i]) を返す．
 * 
 * 戻り値の i 次の項の係数は，x[0..n) の符号付き n - i 次基本対称式になる．
 */
@@ -802,6 +1152,53 @@ MFPS expand(const vm& x) {
 	}
 
 	return f[0];
+}
+
+
+//【多項式の積の展開】O(n (log n)^2)
+/*
+* 多項式 fs[i] の積（次数は n）を返す．
+*/
+MFPS expand(vector<MFPS> fs) {
+	// verify : https://atcoder.jp/contests/abc231/tasks/abc231_g
+
+	int m = sz(fs);
+
+	// (次数, 多項式の番号) の組を要素数昇順に記録する．
+	priority_queue_rev<pii> q;
+	rep(i, m) q.push({ fs[i].deg(), i });
+
+	while (sz(q) >= 2) {
+		int di, i, dj, j;
+		tie(di, i) = q.top(); q.pop();
+		tie(dj, j) = q.top(); q.pop();
+
+		fs[i] *= fs[j];
+		q.push({ di + dj, i });
+	}
+
+	return fs[q.top().second];
+}
+
+
+//【有理式の通分】O(n (log n)^2)
+/*
+* 有理式 num[i] / dnm[i] の和（分子[分母] の次数は n 以下）の (分子, 分母) の組を返す．
+*/
+pair<MFPS, MFPS> reduction(vector<MFPS> num, vector<MFPS> dnm) {
+	// verify : https://judge.yosupo.jp/problem/polynomial_interpolation
+
+	int n = sz(num);
+
+	// 2 冪個ずつ足していく（分割統治法）
+	for (int k = 1; k < n; k *= 2) {
+		for (int i = 0; i + k < n; i += 2 * k) {
+			num[i] = num[i] * dnm[i + k] + num[i + k] * dnm[i];
+			dnm[i] *= dnm[i + k];
+		}
+	}
+
+	return make_pair(num[0], dnm[0]);
 }
 
 
@@ -888,7 +1285,7 @@ mint lagrange_interpolation(int a, int b, const vm& y, mint c) {
 /*
 * n 点での値 f(x[i]) = y[i] から定まる n - 1 次多項式 f(x) を返す．
 *
-* 利用：【一次式の積の展開】，【多点評価】
+* 利用：【微分】,【一次式の積の展開】,【多点評価】,【有理式の通分】
 */
 MFPS lagrange_interpolation(const vm& x, const vm& y) {
 	// 参考 : https://37zigen.com/lagrange-interpolation/
@@ -910,9 +1307,8 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 	// よって
 	//		a[i] = y[i] / g'(x[i])
 	// とおけば，後は
-	//		Σi=[0..n) a[i] / (x - x[i])
-	// を O(n (log n)^2) で計算できればよいが，
-	// これは有理式として分母分子を持ちながら分割統治で通分すればよい．
+	//		f(x) / g(x) = Σi=[0..n) a[i] / (x - x[i])
+	// を計算できればよく，これも分割統治で通分すれば O(n (log n)^2) で計算できる．
 
 	int n = sz(x);
 
@@ -927,15 +1323,7 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 		dnm[i] = MFPS(vm({ -x[i], 1 }));
 	}
 
-	// 2 冪個ずつ足していく（分割統治法）
-	for (int k = 1; k < n; k *= 2) {
-		for (int i = 0; i + k < n; i += 2 * k) {
-			num[i] = num[i] * dnm[i + k] + num[i + k] * dnm[i];
-			dnm[i] *= dnm[i + k];
-		}
-	}
-
-	return num[0];
+	return reduction(num, dnm).first;
 }
 
 
@@ -945,7 +1333,7 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 *
 * 制約 : fm は n 以上の最小の 2 冪までの階乗計算が可能であること（2n で良い）
 *
-* 利用：【階乗など（法が大きな素数）】，【平行移動】
+* 利用：【階乗など（法が大きな素数）】,【平行移動】
 */
 MFPS falling_factorial(int n, const Factorial_mint& fm) {
 	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind
@@ -964,21 +1352,6 @@ MFPS falling_factorial(int n, const Factorial_mint& fm) {
 
 	return res;
 }
-
-
-//【ラグランジュの反転公式】
-/*
-* f(x) と g(x) が互いに逆関数であり，条件
-*	[x^0]f(x) = [x^0]g(x) = 0, [x^1]f(x) != 0, [x^1]g(x) != 0
-* を満たすとき，以下の等式が成り立つ：
-*	[x^n]g(x) = (1/n) [x^(n-1)]((x / f(x))^n)
-* 
-*（使い所）
-* f(x) = (x の式) とは書けていないが x = (f(x) の式) という表示が得られている場合．
-* 特に木の数え上げにおいて有用である．
-* 
-* verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
-*/
 
 
 //【拡張ユークリッドの互除法】O(deg(a) deg(b)) (?) // TODO：遅いので作り直す
@@ -1055,13 +1428,4 @@ int log(const MFPS& a, MFPS b, const MFPS& f) {
 	return INF;
 }
 
-
-//【1 個おきの係数和】
-/*
-* 形式的べき級数 f(x) = Σi a[i] x^i について，
-*	Σi:偶数 a[i] = (f(x) + f(-x)) / 2
-*	Σi:奇数 a[i] = (f(x) - f(-x)) / 2
-* 
-* verify : https://atcoder.jp/contests/code-festival-2014-morning-middle/tasks/code_festival_morning_med_c
-*/
 

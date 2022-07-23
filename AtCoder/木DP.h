@@ -101,7 +101,7 @@ void tree_getDP(const WGraph& g, int r, vector<T>& dp) {
 			if (t == p) continue;
 			is_leef = false;
 
-			// 部分木 t をについての答えを計算する．
+			// 部分木 t についての答えを計算する．
 			dfs(t, s);
 
 			// 部分木 t に対して辺 s-t を接続した場合の部分木 s についての答えを得て，

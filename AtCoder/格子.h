@@ -238,62 +238,77 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 }
 
 
-//【キング配置問題】O(h w 1.6^w)
+//【互いの効きに入らないキング配置の数え上げ】O(h w 1.6^w + 2^w)
 /*
-* h * w の穴あき盤に互いの効きに入らないようにキングを配置する方法が何通りあるかを返す．
+* c[0..h)[0..w) 上に互いの効きに入らないようにキングを配置する方法が何通りあるかを返す．
+* ただし c[i][j] = ng であるようなマス (i, j) にはキングを配置できない．
 *
-* hall[i][j] : マス (i, j) に穴が空いているなら true，さもなくば false
-* 戻り値 : キングを配置する場合の数
-* 
-*（盤上 bitDP）
+*（格子上スライド bitDP）
 */
-mint king_problem(vvb& hall) {
-	int h = sz(hall), w = sz(hall[0]);
+template <class T> mint nonattacking_king_placement(vector<vector<T>>& c, T ng = '#') {
+	// 参考 : https://twitter.com/e869120/status/1386138990361726978
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_w
 
-	// 直前の m + 1 マスだけ切り出すマスク
-	const ll mask_full = (1 << (w + 1)) - 1;
+	int h = sz(c), w = sz(c[0]);
+
+	// 直前の w + 1 マスだけ切り出すマスク
+	const int mask = (1 << (w + 1)) - 1;
 
 	// マスの位置が左端，中央，右端それぞれの場合に応じて
 	// キングが配置されていてはいけない場所だけを切り出すマスク
 	//（w = 1 がコーナーケースになるので注意）
-	const ll mask_l = (w > 1 ? (3LL << (w - 2)) : 1);	// 0110..00
-	const ll mask_m = (7LL << (w - 2)) + 1;				// 1110..01
-	const ll mask_r = (3LL << (w - 1)) + 1;				// 1100..01
+	const int fb_l = (w > 1 ? (3 << (w - 2)) : 1);	// 0110..00
+	const int fb_m = (7 << (w - 2)) + 1;			// 1110..01
+	const int fb_r = (3 << (w - 1)) + 1;			// 1100..01
 
-	// dp[i * w + j][pat] : 以下の条件を満たす配置の数
-	//		マス (i, j) の直前の w + 1 マスの配置パターンが pat
-	vector<unordered_map<ll, mint>> dp(w * h + 1);
-	dp[0][0LL] = 1;
+	// pats : 注目マスの直前の w+1 マスの配置パターンとしてありうるものの昇順列
+	//（O(2^w) かかっているが，ちゃんとバックトラッキングで書けば O(1.6^w) にできる）
+	vi pats;
+	repb(pat, w + 1) if (popcount(pat & (pat << 1)) <= 1) pats.push_back(pat);
+	int n = sz(pats);
 
-	rep(i, h) {
-		rep(j, w) {
-			repe(p, dp[i * w + j]) {
-				ll pat; mint cnt;
-				tie(pat, cnt) = p;
-
-				// (i, j) にコマを置かない場合
-				dp[i * w + j + 1][(2 * pat) & mask_full] += cnt;
-
-				// 左端，中央，右端に応じて使うマスクを切り替える．
-				ll mask;
-				if (j == 0) mask = mask_l;
-				else if (j == w - 1) mask = mask_r;
-				else mask = mask_m;
-
-				// マスクをかけた位置にコマがあるか，または
-				// マス (i, j) が配置不能マスであれば (i, j) にコマを置けない．
-				if ((pat & mask) || hall[i][j]) continue;
-
-				// (i, j) にコマを置く場合
-				dp[i * w + j + 1][(2 * pat + 1) & mask_full] += cnt;
-			}
-		}
+	// nxt0[k] : k 番目のパターンについて，コマを置かない場合に何番目のパターンに遷移するか
+	// nxt1[k] : k 番目のパターンについて，コマを置く場合に何番目のパターンに遷移するか
+	vi nxt0(n), nxt1(n);
+	rep(k, n) {
+		nxt0[k] = lbpos(pats, (pats[k] << 1) & mask);
+		nxt1[k] = lbpos(pats, ((pats[k] << 1) + 1) & mask);
 	}
 
-	mint res = 0;
-	repe(v, dp[h * w]) res += v.second;
+	// dp_(i,j)[k] : マス (i, j) の直前の w+1 マスの配置パターンが k 番目である配置の数
+	vm dp(n);
+	dp[0] = 1;
 
-	return res;
+	//【注意】
+	// DP テーブルを unordered_map で持ちたいところだが，
+	// w = 24 くらいまでいくと unordered_map の要素数が 190000 個ほどになり，
+	// もはや O(1) でアクセスできるとはみなせなくなり計算量が悪化する．
+
+	// 左上から始めて右方向（突き当たったら下方向）に走査していく．
+	rep(i, h) rep(j, w) {
+		vm ndp(n);
+
+		rep(k, n) {
+			// (i, j) にコマを置かない場合
+			ndp[nxt0[k]] += dp[k];
+
+			// マス (i, j) が配置不能マスであれば (i, j) にコマを置けない．
+			if (c[i][j] == ng) continue;
+
+			// (i, j) にコマを置く場合
+			// 中央，左端，右端に応じて使うマスクを切り替える．
+			int fb = fb_m;
+			if (j == 0) fb = fb_l;
+			else if (j == w - 1) fb = fb_r;
+
+			// マスクをかけた位置にコマがなければ (i, j) にコマを置ける．
+			if (!(pats[k] & fb)) ndp[nxt1[k]] += dp[k];
+		}
+
+		dp = move(ndp);
+	}
+
+	return accumulate(all(dp), mint(0));
 }
 
 

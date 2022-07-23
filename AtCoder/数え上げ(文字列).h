@@ -87,7 +87,7 @@ mint count_supersequences(const string& s, int n, int k = 26) {
 
 //【1 が k 個連続しないビット列の数え上げ】O(n)
 /*
-* 長さ [0..n] のビット列のうち，1 が k 個連続しないものの個数を cnt に格納する．
+* 長さ [0..n] のビット列のうち，1 が k 個連続しないものの個数を cnt[k] に格納する．
 */
 void count_noncontinuous_bitsequences(int n, int k, vm& cnt) {
 	cnt.resize(n + 1);
@@ -110,11 +110,11 @@ void count_noncontinuous_bitsequences(int n, int k, vm& cnt) {
 }
 
 
-//【1 が k 個連続しないビット列の数え上げ】O(k log k log n)
+//【1 が k 個連続しないビット列の数え上げ（mod998244353）】O(k log k log n)
 /*
 * 長さ n のビット列のうち，1 が k 個連続しないものの個数を返す．
 *
-* 利用：【展開係数／ボスタン－森法】
+* 利用：【展開係数】
 */
 mint count_noncontinuous_bitsequences(ll n, int k) {
 	if (k == 0) return 0;

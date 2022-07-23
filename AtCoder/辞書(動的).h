@@ -644,7 +644,7 @@ template <class T> class Trie_tree_map {
 	T nil;
 
 public:
-	Trie_tree_map() : n(1), g(1, vi(K, -1)), chars(1), cnt(1), vals(1), nil(numeric_limits<T>::min()) {}
+	Trie_tree_map() : n(1), g(1, vi(K, -1)), chars(1), cnt(1), vals(1), nil(numeric_limits<T>::lowest()) {}
 	Trie_tree_map(T nil_) : n(1), g(1, vi(K, -1)), chars(1), cnt(1), vals(1), nil(nil_) {}
 
 	void set(const string& str, T val) {

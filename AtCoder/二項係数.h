@@ -466,16 +466,16 @@ struct Factorial_arbitrary_mod {
 * Factorial_log(int n_max) : O(n_max)
 *	n_max! ‚Ü‚ÅŒvZ‰Â”\‚Æ‚µ‚Ä‰Šú‰»‚·‚éD
 *
-* mint factorial(int n) : O(1)
+* double factorial(int n) : O(1)
 *	log n! ‚ğ•Ô‚·D
 *
-* mint permutation(int n, int r) : O(1)
+* double permutation(int n, int r) : O(1)
 *	‡—ñ‚Ì”‚Ì‘Î” log nPr ‚ğ•Ô‚·D
 *
-* mint binomial(int n, int r) : O(1)
+* double binomial(int n, int r) : O(1)
 *	“ñ€ŒW”‚Ì‘Î” log nCr ‚ğ•Ô‚·D
 *
-* mint multinomial(vi r) : O(|r|)
+* double multinomial(vi r) : O(|r|)
 *	‘½€ŒW”‚Ì‘Î” log nC[r] ‚ğ•Ô‚·Din = ƒ°rj
 */
 class Factorial_log {
@@ -562,12 +562,12 @@ template <class T> T permutation(ll n, int r) {
 template <class T> T binomial(ll n, ll r) {
 	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e
 
+	Assert(n >= 0);
+
 	T val = 1;
 	chmin(r, n - r);
 
-	if (r < 0) {
-		return n == 0 ? 1 : 0;
-	}
+	if (r < 0) return 0;
 
 	rep(i, r) {
 		val *= n - i;
@@ -655,16 +655,101 @@ public:
 };
 
 
-//y“ñ€ŒW”‚ÌˆêŠ‡ŒvZi–@‚ª¬‚³‚È‘f”jzO((r - l) + p^2 + log n) (?)
+//y“ñ€ŒW”in ‚ªŒÅ’èCr ‚ª¬‚³‚¢C–@‚ª‘å‚«‚È‘f”jzO(r)
 /*
-* i¸[l..r) ‚É‚Â‚¢‚Ä binomial(n, i) mod p ‚ğ bin[i - l] ‚ÉŠi”[‚·‚éD
+* i¸[0..r] ‚É‚Â‚¢‚Ä binomial(n, i) ‚ğ bin[i] ‚ÉŠi”[‚·‚éD
+*/
+void binomial_fixed_n(ll n, int r, vm& bin) {
+	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
+
+	Assert(n >= 0);
+
+	bin.resize(r + 1);
+
+	// perm[i] : nPi
+	vm perm(r + 1);
+	perm[0] = 1;
+	repi(i, 1, r) perm[i] = perm[i - 1] * (n + 1 - i);
+
+	// fac[i] : i!
+	vm fac(r + 1);
+	fac[0] = 1;
+	repi(i, 1, r) fac[i] = fac[i - 1] * i;
+
+	// fac_inv[i] : 1 / i!
+	vm fac_inv(r + 1);
+	fac_inv[r] = fac[r].inv(); // mint ‚Ì–@‚Í r ‚æ‚è‘å‚«‚­‚È‚¢‚Æ‚¢‚¯‚È‚¢
+	repir(i, r - 1, 0) fac_inv[i] = fac_inv[i + 1] * (i + 1);
+
+	// bin(n, i) = nPi / i!
+	repi(i, 0, r) bin[i] = perm[i] * fac_inv[i];
+}
+
+
+//y“ñ€ŒW”ir ‚ªŒÅ’è‚Å¬‚³‚¢C–@‚ª‘å‚«‚È‘f”jzO((n2 - n1) + r)
+/*
+* i¸[n1..n2) ‚É‚Â‚¢‚Ä binomial(i, r) ‚ğ bin[i - n1] ‚ÉŠi”[‚·‚éD
+*/
+void binomial_fixed_r(ll n1, ll n2, int r, vm& bin) {
+	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
+
+	Assert(n1 >= 0 && n1 <= n2);
+
+	int dn = (int)(n2 - n1);
+	bin.resize(dn);
+	if (dn == 0) return;
+
+	// p[i] : n2Pii‚½‚¾‚µ mint::mod ‚Ì”{”‚Í 1 ‚É’u‚«Š·‚¦‚éj
+	vm p(dn + r + 1);
+	p[0] = 1;
+	repi(i, 1, dn + r) {
+		mint mul = n2 + 1 - i;
+		if (mul == 0) mul = 1;
+
+		p[i] = p[i - 1] * mul;
+	}
+
+	// p_inv[i] : 1 / n2Pii‚½‚¾‚µ mint::mod ‚Ì”{”‚Í 1 ‚É’u‚«Š·‚¦‚éj
+	vm p_inv(dn + r + 1);
+	p_inv[dn + r] = p[dn + r].inv();
+	repir(i, dn + r - 1, 0) {
+		mint mul = n2 - i;
+		if (mul == 0) mul = 1;
+
+		p_inv[i] = p_inv[i + 1] * mul;
+	}
+
+	// perm[i] : (n1+i)Pr = (n2-dn+i)Pr = n2P(r+dn-i) / n2P(dn-i)
+	vm perm(dn);
+	rep(i, dn) {
+		// [n1+i..n1+i-r) ‚É mint::mod ‚Ì”{”‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚Æ‚±‚ë‚Í 0 ‚É‚·‚éD
+		if (mint(n1 + i).val() >= mint(n1 + i - r).val()) {
+			perm[i] = p[r + dn - i] * p_inv[dn - i];
+		}
+	}
+
+	// fac : r!
+	mint fac = 1;
+	repi(i, 1, r) fac *= i;
+
+	// fac_inv : 1 / r!
+	mint fac_inv = fac.inv();
+
+	// bin(i, r) = iPr / r!
+	rep(i, dn) bin[i] = perm[i] * fac_inv;
+}
+
+
+//y“ñ€ŒW”in ‚ªŒÅ’èC–@‚ª¬‚³‚È‘f”jzO((r2 - r1) + p^2 + log n) (?)
+/*
+* i¸[r1..r2) ‚É‚Â‚¢‚Ä binomial(n, i) mod p ‚ğ bin[i - r1] ‚ÉŠi”[‚·‚éD
 * 
 * §–ñFp ‚Í‘f”
 */
-void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
+void binomial_fixed_n(ll n, ll r1, ll r2, int p, vi& bin) {
 	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
 
-	r--; // [l..r] ‚É‚·‚éD
+	r2--; // •Â‹æŠÔ [r1..r2] ‚É‚·‚éD
 	bin.clear();
 
 	vvi bin_sml(p, vi(p)); // bin_sml[i][j] : binomial(i, j) mod p
@@ -677,15 +762,15 @@ void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
 		}
 	}
 
-	// dn, dl, dr : n, l, r ‚Ì p i•\¦‚ÌŒ…‚Ì”i‰ºˆÊ‚©‚ç‡j
-	vi dn, dl, dr; ll n_ = n, l_ = l, r_ = r;
+	// dn, dr1, dr2 : n, r1, r2 ‚Ì p i•\¦‚ÌŒ…‚Ì”i‰ºˆÊ‚©‚ç‡j
+	vi dn, dr1, dr2; ll n_ = n, r1_ = r1, r2_ = r2;
 	while (n_ > 0) {
 		dn.push_back((int)(n_ % p));
-		dl.push_back((int)(l_ % p));
-		dr.push_back((int)(r_ % p));
+		dr1.push_back((int)(r1_ % p));
+		dr2.push_back((int)(r2_ % p));
 		n_ /= p;
-		l_ /= p;
-		r_ /= p;
+		r1_ /= p;
+		r2_ /= p;
 	}
 	int k = sz(dn);
 
@@ -722,31 +807,31 @@ void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
 			}
 			// ‰E’[‚Ì‚İ•‚‚¢‚Ä‚¢‚é‚Æ‚«
 			else {
-				repi(i, 0, dr[b] - 1) {
+				repi(i, 0, dr2[b] - 1) {
 					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
 				}
-				rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr[b]]) % p);
+				rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr2[b]]) % p);
 			}
 		}
 		else {
 			// ¶’[‚Ì‚İ•‚‚¢‚Ä‚¢‚é‚Æ‚«
 			if (rf) {
-				rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dl[b]]) % p);
-				repi(i, dl[b] + 1, p - 1) {
+				rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dr1[b]]) % p);
+				repi(i, dr1[b] + 1, p - 1) {
 					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
 				}
 			}
 			// ¶‰E’[‚Æ‚à‚É•‚‚¢‚Ä‚¢‚é‚Æ‚«
 			else {
-				if (dl[b] == dr[b]) {
-					rfunc(b - 1, false, false, (mul * bin_sml[dn[b]][dl[b]]) % p);
+				if (dr1[b] == dr2[b]) {
+					rfunc(b - 1, false, false, (mul * bin_sml[dn[b]][dr1[b]]) % p);
 				}
 				else {
-					rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dl[b]]) % p);
-					repi(i, dl[b] + 1, dr[b] - 1) {
+					rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dr1[b]]) % p);
+					repi(i, dr1[b] + 1, dr2[b] - 1) {
 						rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
 					}
-					rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr[b]]) % p);
+					rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr2[b]]) % p);
 				}
 			}
 		}
@@ -754,14 +839,6 @@ void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
 
 	rfunc(k - 1, false, false, 1);
 }
-
-
-//y•‰‚Ì“ñ€’è—z
-/*
-* [z^i] (1-z)^(-n) = bin(n-1+i, i) ‚ª¬‚è—§‚ÂD
-* 
-* verify : https://atcoder.jp/contests/agc036/tasks/agc036_c
-*/
 
 
 //yLucas ‚Ì’è—z
@@ -799,7 +876,7 @@ void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
 //y“ñ€ŒW”‚Ì“ñŸŒ³—İÏ˜az
 /*
 * ƒpƒXƒJƒ‹‚ÌOŠpŒ`‚É‚¨‚¯‚é“ñŸŒ³—İÏ˜a‚ÍˆÈ‰º‚Ì®‚Å‹‚ß‚ç‚ê‚éF
-*	ƒ°i=[i0..i1)ƒ°j=[j0..j1) bin(i + j, i)
+*	ƒ°i¸[i0..i1)ƒ°j¸[j0..j1) bin(i + j, i)
 *	= bin(i1 + j1, i1) - bin(i1 + j0, i1) - bin(i0 + j1, i0) + bin(i0 + j0, i0)
 * 
 * verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
@@ -818,7 +895,7 @@ void range_binomial(int p, ll n, ll l, ll r, vi& bin) {
 //y“ñ€ŒW”‚ÌüŒ`‰Ád˜az
 /*
 * “ñ€ŒW”‚ÆˆêŸ®‚ÌÏ‚Ì˜a‚É‚Â‚¢‚ÄCˆÈ‰º‚Ì®‚ª¬‚è—§‚ÂF
-*	ƒ°r=[0..n] (a r + b) nCr = (a n + 2 b) 2^(n-1)
+*	ƒ°r=[0..n] (a r + b) bin(n, r) = (a n + 2 b) 2^(n-1)
 * 
 * verify : https://atcoder.jp/contests/abc150/tasks/abc150_e
 */

@@ -239,7 +239,7 @@ void heavy_light_decomposition(TREE& rt, vi& in, vi& out, vi& pos, vi& top) {
 * sum(v1, v2) : O((log n)^2)
 *	頂点 v1 から v2 までの辺の値の和を返す．
 *
-* 利用：【根付き木の HL 分解】，【区間加算／区間総和クエリ】
+* 利用：【根付き木の HL 分解】,【区間加算／区間総和クエリ】
 */
 template <class TREE> struct Tree_edge_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
@@ -394,7 +394,7 @@ template <class TREE> struct Tree_edge_add_sum_query {
 * sum(v1, v2) : O((log n)^2)
 *	頂点 v1 から v2 までの頂点（両端含む）の値の和を返す．
 *
-* 利用：【根付き木の HL 分解】，【区間加算／区間総和クエリ】
+* 利用：【根付き木の HL 分解】,【区間加算／区間総和クエリ】
 */
 struct Tree_vertex_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3

@@ -14,7 +14,7 @@ template <class T> T maximize_pair_diff(const vector<T>& a, pii* ids = nullptr) 
 	// —İÏ min ‚ğ‚à‚¿‚È‚ª‚ç¶‚©‚çüŒ`‘–¸‚·‚ê‚Î‚¢‚¢D
 
 	int n = sz(a);
-	T res = numeric_limits<T>::min(), a_min = a[0]; int i_min = 0;
+	T res = numeric_limits<T>::lowest(), a_min = a[0]; int i_min = 0;
 	if (ids == nullptr) ids = new pii;
 
 	repi(i, 1, n - 1) {

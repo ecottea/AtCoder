@@ -365,7 +365,7 @@ template <class X, class Y> struct Zobrist_hash_pmap {
 	// コンストラクタ（空の部分写像で初期化）
 	Zobrist_hash_pmap(const Y& nullY_) : v(0), i_cnt(0), nullY(nullY_) {
 		mt.seed((int)time(NULL));
-		rnd = uniform_int_distribution<ll>(numeric_limits<ll>::min(), numeric_limits<ll>::max());
+		rnd = uniform_int_distribution<ll>(numeric_limits<ll>::lowest(), numeric_limits<ll>::max());
 	}
 
 	// f(x) = y を追加（または変更）する．
@@ -553,6 +553,8 @@ template <class X> struct Zobrist_hash_func {
 
 	// コンストラクタ（零関数で初期化）
 	Zobrist_hash_func() : v(0) {
+		// verify : https://atcoder.jp/contests/abc259/tasks/abc259_e
+
 		mt.seed((int)time(NULL));
 		rnd = uniform_int_distribution<ll>(numeric_limits<int>::min(), numeric_limits<int>::max());
 	}
@@ -573,12 +575,18 @@ template <class X> struct Zobrist_hash_func {
 
 	// f(x) = y とする．
 	void set(const X& x, int y) {
+		// verify : https://atcoder.jp/contests/abc259/tasks/abc259_e
+
 		add(x, y - x_to_y[x]);
 		x_to_y[x] = y;
 	}
 
 	// 現時点での関数 f のハッシュ値を返す．
-	ll get() { return v; }
+	ll get() { 
+		// verify : https://atcoder.jp/contests/abc259/tasks/abc259_e
+		
+		return v;
+	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_func z) {

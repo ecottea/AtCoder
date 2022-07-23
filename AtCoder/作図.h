@@ -430,7 +430,7 @@ Circle<double> incircle(const Point<T>& a, const Point<T>& b, const Point<T>& c)
 /*
 * 三角形 a b c の外接円を返す．
 *
-* 利用：【垂直二等分線】，【2 直線の交点】
+* 利用：【垂直二等分線】,【2 直線の交点】
 */
 template <typename T>
 Circle<double> circircle(const Point<T>& a, const Point<T>& b, const Point<T>& c) {

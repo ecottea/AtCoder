@@ -304,3 +304,63 @@ S022 e022() { return { INFL, INFL }; }
 #define SecondMin_cmonoid S022, op022, e022
 
 
+//【混合トロピカルアフィン変換の合成 モノイド】
+/*
+* S ∋ f = {a, b, c} : 混合トロピカル一次関数 f(x) = max(min(a + x, b), c) を表す．
+* f op g : 合成した混合トロピカル一次関数 f o g を返す．
+*/
+using S025 = tuple<ll, ll, ll>; // {add, min, max}
+S025 op025(S025 f, S025 g) {
+	ll fa, fb, fc, ga, gb, gc;
+	tie(fa, fb, fc) = f; // f(x) = max(min(fa + x, fb), fc)
+	tie(ga, gb, gc) = g; // g(x) = max(min(ga + x, gb), gc)
+
+	// まず + が min, max の上に分配的であることを利用して
+	//		(f o g)(x)
+	//		= max(min(fa + max(min(ga + x, gb), gc), fb), fc)
+	//		= max(min(max(min(fa + ga + x, fa + gb), fa + gc), fb), fc)
+	// となる．
+	//		x' = fa + ga + x
+	//		gb' = fa + gb
+	//		gc' = fa + gc
+	// とおき，残る部分を max-min 半環において計算すると，
+	//		(x' gb' + gc')fb + fc
+	//		= x' (gb' fb) + (gc' fb + fc)
+	// となる．よって
+	//		A = fa + ga
+	//		B = min(fa + gb, fb)
+	//		C = max(min(fa + gc ,fb), fc)
+	// とおけば，
+	//		(f o g)(x) = max(min(A + x, B), C)
+	// となる．
+
+	ll A = fa + ga;
+	ll B = min(fa + gb, fb);
+	ll C = max(min(fa + gc, fb), fc);
+	return S025{ A, B, C };
+}
+S025 e025() { return S025{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ∞), -∞)
+#define MixedTropicalAffineComposite_monoid S025, op025, e025
+
+
+//【混合トロピカルアフィン変換の逆合成 モノイド】
+/*
+* S ∋ f = {a, b, c} : 混合トロピカル一次関数 f(x) = max(min(a + x, b), c) を表す．
+* f op g : 合成した混合トロピカル一次関数 g o f を返す．
+*/
+// verify : https://atcoder.jp/contests/arc082/tasks/arc082_d
+using S026 = tuple<ll, ll, ll>; // {add, min, max}
+S026 op026(S026 f, S026 g) {
+	ll fa, fb, fc, ga, gb, gc;
+	tie(fa, fb, fc) = g;
+	tie(ga, gb, gc) = f;
+
+	ll A = fa + ga;
+	ll B = min(fa + gb, fb);
+	ll C = max(min(fa + gc, fb), fc);
+	return S026{ A, B, C };
+}
+S026 e026() { return S026{ 0, INFL, -INFL }; }
+#define MixedTropicalAffineInvcomposite_monoid S026, op026, e026
+
+

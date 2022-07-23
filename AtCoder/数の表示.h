@@ -86,6 +86,15 @@ ll digit_sum(ll n, ll b = 10) {
 }
 
 
+//【数字和と繰り上がり】
+/*
+* b 進表記での数字和を s で表す．a + b の b 進での繰り上がりが k 回あるとき以下が成り立つ：
+*	s(a + b) = s(a) + s(b) - (b - 1)k
+* 
+* verify : https://atcoder.jp/contests/arc144/tasks/arc144_a
+*/
+
+
 //【数字根】
 /*
 * 正の数 n を b 進表記したときの数字根は以下で与えられる：

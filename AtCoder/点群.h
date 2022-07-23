@@ -12,7 +12,7 @@
 /*
 * 点の集合 s, t が同じ向きで合同かどうかを返す．
 *
-* 利用：【偏角ソート】，【部分文字列判定】
+* 利用：【偏角ソート】,【部分文字列判定】
 */
 template <typename T>
 bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
@@ -105,7 +105,7 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 /*
 * 点の集合 s, t が同じ向きで相似であれば，s から t への倍率を返す（相似でなければ -1 を返す）
 *
-* 利用：【偏角ソート】，【部分文字列判定】
+* 利用：【偏角ソート】,【部分文字列判定】
 */
 template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t) {
 	int n = sz(s);
@@ -425,7 +425,7 @@ template <class T> double minimum_bitonic_tour(vector<Point<T>>& p) {
 *
 * 制約：平行な線分の組は存在しない，軸平行な線分は存在しない，交点の座標の絶対値は INF 以下．
 *
-* 利用：【二分探索（実数）】，【転倒数】
+* 利用：【二分探索（実数）】,【転倒数】
 */
 pair<double, double> minimize_manhattan_sum(const vd& a, const vd& b, const vd& c) {
 	// verify : https://atcoder.jp/contests/tenka1-2017/tasks/tenka1_2017_e

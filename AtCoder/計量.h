@@ -84,7 +84,7 @@ void argument_sort(vector<Point<T>>& p, Point<T> e = Point<T>{ 1, 0 }, Point<T> 
 * n 角形は頂点を並べた列として表し，反時計回りのとき面積は正とする．
 * （よって頂点の周る順の判定に用いることもできる．）
 */
-template <class T> T area_polygon(const Polygon<T>& poly) {
+template <class T> T doubled_area_polygon(const Polygon<T>& poly) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_A
 
 	int n = sz(poly);

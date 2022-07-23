@@ -7,7 +7,7 @@
 /*
 * i=[1..n] に対し，n/i の商が q となる i の範囲が [i1..i2) であることを
 * {q, {i1, i2}} として q について降順に qi に格納する．
-* 各範囲においては余りは公差 q の等差数列を成す．
+* 各範囲においては余りは公差 -q の等差数列を成す．
 */
 void quotient_range(ll n, vector<pair<ll, pll>>& qi) {
 	// verify : https://atcoder.jp/contests/abc230/tasks/abc230_e

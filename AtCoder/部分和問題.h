@@ -38,12 +38,12 @@ void count_partial_sum(const vi& a, int v, vm& cnt) {
 }
 
 
-//【部分和問題（数え上げ）】O(n + v log v)
+//【部分和問題（数え上げ，mod998244353）】O(n + v log v)
 /*
 * 各 j=[0..v] について，正整数の列 a[0..n) の部分和として j を作る方法が
 * 何通りあるかを cnt[j] に格納する．
 *
-* 利用：【形式的冪級数（mint）】，【階乗など（法が大きな素数）】
+* 利用：【形式的冪級数（mod 998244353）】,【指数関数】,【階乗など（法が大きな素数）】
 */
 void count_partial_sum_fps(const vi& a, int v, vm& cnt) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
@@ -58,7 +58,7 @@ void count_partial_sum_fps(const vi& a, int v, vm& cnt) {
 	//		log(1 + x^a[i]) = Σk=[1..∞) (-1)^(k-1) 1/k x^(k * a[i])
 	// であり，これはスパースなので高速に和が計算できる．
 
-	Factorial_mint fm(v);
+	Factorial_mint fm(2 * (v + 1));
 
 	unordered_map<int, int> c;
 	repe(x, a) c[x]++;
@@ -69,7 +69,7 @@ void count_partial_sum_fps(const vi& a, int v, vm& cnt) {
 			f[k * p.first] += p.second * (k & 1 ? 1 : -1) * fm.inv(k);
 		}
 	}
-	f = exp(f, v + 1);
+	f = exp(f, v + 1, fm);
 	cnt = f.c;
 }
 

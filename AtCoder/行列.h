@@ -505,7 +505,7 @@ template <class T> void hessenberg_reduction(Matrix<T>& a) {
 /*
 * 正方行列 A = a[0..n)[0..n) の特性多項式 |xI - A| を f に格納する．
 *
-* 利用：【形式的冪級数（mint）】，【ヘッセンベルグ縮約】
+* 利用：【形式的冪級数（mod 998244353）】,【ヘッセンベルグ縮約】
 */
 void characteristic_polynomial(Matrix<mint> a, MFPS& f) {
 	// verify : https://judge.yosupo.jp/problem/characteristic_polynomial

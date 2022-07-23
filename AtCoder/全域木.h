@@ -136,7 +136,7 @@ void spanning_forest(const Graph& g, Graph& sf, vi* v = nullptr) {
 /*
 * 自己ループのない無向グラフ g（多重辺は可）の全域木の個数を返す．
 *
-* 利用：【行列】，【行列式】
+* 利用：【行列】,【行列式】
 */
 mint matrix_tree_theorem(const Graph& g) {
 	// 参考 : https://mizuwater0.hatenablog.com/entry/2018/11/25/233547
@@ -189,7 +189,7 @@ mint matrix_tree_theorem(const Graph& g) {
 *
 *（行列木定理）
 *
-* 利用：【行列】，【行列式】，【連結成分分解】
+* 利用：【行列】,【行列式】,【連結成分分解】
 */
 mint count_spanning_forest(const Graph& g) {
 	int n = sz(g);

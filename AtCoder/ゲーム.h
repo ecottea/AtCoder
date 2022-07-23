@@ -4,10 +4,10 @@
 // ■■■■■ ゲーム ■■■■■
 
 
-//【グラフ上の点取りゲーム】O(|V| + |E|)　
+//【DAG 上のコマ移動ゲーム】O(|V| + |E|)　
 /*
 * ゲームのルール：
-* コスト付き有向非巡回グラフ g のある頂点 v にコマが置かれている．
+* コスト付き DAG g のある頂点 v にコマが置かれている．
 * 先手と後手は交互にコマを辺で繋がれた頂点のいずれかへ動かし，辺のコスト分の得点を得る．
 * コマが移動不可能になったとき，自分がより高い点数を得ていることを目指す．
 *
@@ -96,28 +96,6 @@ ll card_flipping_game(const vl& a, ll x, ll y, int k, function<ll(ll, ll)>& sc) 
 	}
 
 	return dpx[0].get(0);
-}
-
-
-//【mint → 有理数】（実験用）
-/*
-* mint の値をそれっぽい有理数に変換する．
-*/
-void mint_to_frac() {
-	unordered_map<int, pii> nd;
-
-	repi(j, 1, 1024) {
-		mint j_inv = mint(j).inv();
-
-		repi(i, 1, 1024) {
-			int v = (i * j_inv).val();
-
-			if (!nd.count(v)) nd[v] = { i, j };
-		}
-	}
-
-	dump(nd[748683265]);
-	dump(nd[457528662]);
 }
 
 

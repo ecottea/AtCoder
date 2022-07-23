@@ -545,3 +545,12 @@ int gokon_matching(const vl& inc_m, const vl& dst_m, const vl& inc_w, const vl& 
 }
 
 
+//【二部グラフの完全マッチングと順列】
+/*
+* |S| = |T| = n なる二部グラフ (S, T) の完全マッチング M は，
+* (S(i), T(p[i])) ∈ M なる [0..n) の順列 p[0..n) と一対一に対応する．
+* 
+* 参考 : https://drken1215.hatenablog.com/entry/2019/10/05/173700
+*/
+
+

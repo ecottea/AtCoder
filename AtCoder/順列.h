@@ -2,8 +2,8 @@
 #include "header.h"
 #include "座標圧縮.h"
 #include "二項係数.h"
-#include "辞書.h"
-// ■■■■■ 順列，対称群 ■■■■■
+#include "辞書(動的).h"
+// ■■■■■ 順列，置換など ■■■■■
 
 
 //【転倒数】O(n log n)
@@ -101,57 +101,6 @@ void permutation_decomposition(const vi& p, vvi& cycles) {
 }
 
 
-//【順列の数え上げ（隣接大小関係指定）】O(n^2)
-/*
-* '<', '>', '?' からなる長さ n-1 の文字列 s で指定される
-* 大小関係を満たすような長さ n の順列の個数を返す．
-*
-*（挿入 DP）
-*/
-mint count_permutations(const string& s) {
-	// verify : https://atcoder.jp/contests/dp/tasks/dp_t
-
-	int n = sz(s) + 1;
-
-	// dp[i][j] : 以下の条件を満たす長さ i + j の順列が何通りあるか．
-	//	 i : 直前の桁より小さい数が何個使えるか
-	//	 j : 直前の桁より大きい数が何個使えるか
-	vvm dp(n, vm(n));
-	rep(i, n) dp[i][n - 1 - i] = 1;
-
-	// k = i + j
-	repir(k, n - 2, 0) {
-		// 直前より大きい数字を使う場合
-		if (s[n - 2 - k] == '<') {
-			// 右からの累積和を計算する
-			dp[0][k] += dp[0][k + 1];
-			repi(i, 1, k) {
-				int j = k - i;
-				dp[i][j] += dp[i][j + 1] + dp[i - 1][j + 1];
-			}
-		}
-		// 直前より小さい数字を使う場合
-		else if (s[n - 2 - k] == '>') {
-			// 左からの累積和を計算する
-			dp[k][0] += dp[k + 1][0];
-			repi(j, 1, k) {
-				int i = k - j;
-				dp[i][j] += dp[i + 1][j] + dp[i + 1][j - 1];
-			}
-		}
-		// 自由に数字を使える場合
-		else {
-			// 総和を計算する．
-			mint sum = 0;
-			repi(i, 0, k + 1) sum += dp[i][k + 1 - i];
-			repi(i, 0, k) dp[i][k - i] = sum;
-		}
-	}
-
-	return dp[0][0];
-}
-
-
 //【順列全探索 → bitDP】O(2^n n)
 /*
 * a[0..n) に対して，1 回の操作でコスト x で a[i]++, a[i]--，コスト y で swap(a[i], a[i+1])
@@ -164,8 +113,7 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 
 	// a のどの要素を b のどの要素に対応させるかで決め打ち順列全探索を行えば，
 	// コストが (要素の差の和) x + (順列の転倒数) y であることは容易に分かる．
-	// これで間に合わない場合でも，b に対応させていく順番を固定することで
-	// bitDP を用いて高速化できる．
+	// これで間に合わない場合でも，b に対応させていく順番を固定することで bitDP を用いて高速化できる．
 
 	// dp[set] : a[set] を b[0..|set|) に一致させるための最小コスト
 	vl dp(1LL << n, INFL);
@@ -204,15 +152,36 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 * 利用：【多重集合の動的辞書】
 */
 void factorial_base_to_permutation(const vi& ds, vi& p) {
+	// verify : https://atcoder.jp/contests/arc047/tasks/arc047_c
+
+	//【例】
+	// 階乗進法表記で "1010" と表される数は，
+	//		[1, 0, 1, 0].[3!, 2!, 1!, 0!] = 6 + 0 + 1 + 0 = 7
+	// である．[0..4) の順列のうち辞書順で 7 番目のものは，
+	//		0: [0, 1, 2, 3]
+	//		1: [0, 1, 3, 2]
+	//		2: [0, 2, 1, 3]
+	//		3: [0, 2, 3, 1]
+	//		4: [0, 3, 1, 2]
+	//		5: [0, 3, 2, 1]
+	//		6: [1, 0, 2, 3]
+	//		7: [1, 0, 3, 2]
+	// より p[0..4) = [1, 0, 3, 2] である．
+
 	int n = sz(ds);
 	p.resize(n);
 
-	vi a(n);
-	iota(all(a), 0);
-	Dynamic_dictionary dd(n, a);
+	vi ini(n);
+	iota(all(ini), 0);
+
+	// dd : [0..n) の中で残っている数を昇順に記録した辞書
+	Dynamic_dictionary dd(n, ini);
 
 	rep(i, n) {
+		// [0..n) の中で残っている数のうち ds[i] 番目のものを選ぶ．
 		p[i] = dd.get(ds[i]);
+
+		// 選んだ数は消去しておく．
 		dd.erase(p[i], 1);
 	}
 }

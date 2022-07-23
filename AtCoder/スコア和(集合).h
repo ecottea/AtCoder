@@ -64,7 +64,7 @@ template <class T> void total_sum(const vector<T>& a, vm& res) {
 *	Σ|set|=k Πi∈set a[i]
 * の値を res[k] に格納する．
 *
-* 利用：【形式的冪級数（mint）】，【一次式の積の展開（基本対称式）】
+* 利用：【形式的冪級数（mod 998244353）】,【一次式の積の展開（基本対称式）】
 */
 template <class T> void multiple_sum(const vector<T>& a, vm& res) {
 	//【方法】

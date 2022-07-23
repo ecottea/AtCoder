@@ -416,7 +416,7 @@ template <class T> struct Separated_multiset {
 	}
 
 	// 多重集合内の最大値[最小値]を返す．
-	T max_l() const { return nl > 0 ? *sl.rbegin() : numeric_limits<T>::min(); }
+	T max_l() const { return nl > 0 ? *sl.rbegin() : numeric_limits<T>::lowest(); }
 	T min_h() const { return nh > 0 ? *sh.begin() : numeric_limits<T>::max(); }
 
 	// 多重集合内の値 val を削除する．
@@ -576,7 +576,7 @@ template <class T> struct Separated_multiset_sum {
 	}
 
 	// 多重集合内の最大値[最小値]を返す．
-	T max_l() const { return nl > 0 ? *sl.rbegin() : numeric_limits<T>::min(); }
+	T max_l() const { return nl > 0 ? *sl.rbegin() : numeric_limits<T>::lowest(); }
 	T min_h() const { return nh > 0 ? *sh.begin() : numeric_limits<T>::max(); }
 
 	// 多重集合内の値 val を削除する．

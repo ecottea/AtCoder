@@ -14,14 +14,14 @@
 
 
 //y‰ÁZ - æZ ‰ÂŠ·ŠÂz
-/* verify : https://judge.yosupo.jp/problem/bitwise_and_convolution */
+/* verify : https://atcoder.jp/contests/arc059/tasks/arc059_c */
 using S401 = ll;
 S401 add401(S401 x, S401 y) { return x + y; }
 S401 o401() { return 0; }
 S401 mi401(S401 x) { return -x; }
 S401 mul401(S401 x, S401 y) { return x * y; }
 S401 e401() { return 1; }
-#define Add_mul_cring S401, add401, o401, mi401, mul401, e401
+#define Add_Mul_cring S401, add401, o401, mi401, mul401, e401
 
 
 //yXOR - AND ‰ÂŠ·ŠÂz

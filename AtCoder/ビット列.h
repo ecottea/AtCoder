@@ -12,7 +12,7 @@
 *	(b) 初項と差分
 *	(c) -1 と 1 の列
 *	(d) -1 と 1 の列の累積和（区間内の 0, 1 の個数の偏りが分かる）
-*	(e) 1 がある位置を並べた列
+*	(e) 1 がある位置を並べた列（2 列の swap 距離が分かる）
 *	(f) i 番目の 1 がある位置の位置 i からの偏差を並べた列（1 の連が判別できる）
 *	(g) 0 で区切られた 1 の連の長さを並べた列
 * などがある．
@@ -29,6 +29,7 @@
 * 
 * verify : 
 *	(d) : https://atcoder.jp/contests/agc056/tasks/agc056_c
+*	(e) : https://atcoder.jp/contests/tkppc6-2/tasks/tkppc6_2_b
 *	(f) : https://atcoder.jp/contests/abc229/tasks/abc229_g
 *	(g) : https://atcoder.jp/contests/agc046/tasks/agc046_c
 */
@@ -54,6 +55,62 @@ void length1(const string& s, vi& len, char one = '1') {
 		}
 	}
 	len.push_back(l);
+}
+
+
+//【2 連の変換の swap への帰着】
+/*
+* ビット列 a に対する
+*		[00] → [11], [11] → [00]
+* という遷移は，a の奇数ビットだけを反転させることにより swap と等価になる．
+* 
+* verify : https://atcoder.jp/contests/tkppc6-2/tasks/tkppc6_2_b
+*/
+
+
+//【隣からの和の swap への帰着】
+/*
+* 3 項間の遷移
+*		a[i] += a[i-1] + a[i+1]
+* は，
+*		b[i] = a[i] + a[i+1]
+* とおくことで，
+*		b[i] += b[i] + b[i+1]	⇔ b[i] ← b[i+1]
+*		b[i+1] += b[i] + b[i+1]	⇔ b[i+1] ← b[i]
+* なる 2 項間の遷移に書き換えられ，これは swap(b[i], b[i+1]) と等価である．
+* 
+* verify : https://yukicoder.me/problems/no/2018
+*/
+
+
+//【最小 swap 回数】O(n)
+/*
+* ビット列 s[0..n) に対し，隣接要素の swap を繰り返すことで t[0..n) に変化させるときの
+* swap の最小回数を返す（不可能なら INFL）
+*/
+ll swap_distance(const string& s, const string& t, char one = '1') {
+	// verify : https://atcoder.jp/contests/tkppc6-2/tasks/tkppc6_2_b
+
+	int n = sz(s);
+	if (sz(t) != n) return INFL;
+
+	// a[i] : s[0..n) における i 番目の 1 の位置
+	// b[i] : t[0..n) における i 番目の 1 の位置
+	vi a, b;
+	rep(i, n) {
+		if (s[i] == one) a.push_back(i);
+		if (t[i] == one) b.push_back(i);
+	}
+
+	int m = sz(a);
+	if (sz(b) != m) return INFL;
+
+	ll res = 0;
+
+	// 1 同士の swap をしても無駄なので，追い越しはせず 1 を順に対応させていくのが最善
+	rep(j, m) res += abs(a[j] - b[j]);
+
+	return res;
 }
 
 

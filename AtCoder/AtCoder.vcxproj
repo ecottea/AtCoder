@@ -148,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
+    <ClInclude Include="スコア和(順列).h" />
     <ClInclude Include="マッチング(一般).h" />
     <ClInclude Include="分割%28最適化%29.h" />
     <ClInclude Include="DAG.h" />
@@ -176,7 +177,6 @@
     <ClInclude Include="マトロイド.h" />
     <ClInclude Include="不完全M-モノイド.h" />
     <ClInclude Include="一変数最適化.h" />
-    <ClInclude Include="二分探索.h" />
     <ClInclude Include="マッチング%28二部%29.h" />
     <ClInclude Include="作図.h" />
     <ClInclude Include="全域木.h" />
@@ -195,12 +195,14 @@
     <ClInclude Include="列挙(格子).h" />
     <ClInclude Include="列挙(集合).h" />
     <ClInclude Include="前処理(列).h" />
+    <ClInclude Include="最適化(区間).h" />
+    <ClInclude Include="母関数.h" />
     <ClInclude Include="辞書%28動的%29.h" />
     <ClInclude Include="整除算.h" />
     <ClInclude Include="包除原理.h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="半環.h" />
-    <ClInclude Include="可換環.h" />
+    <ClInclude Include="環.h" />
     <ClInclude Include="周期性.h" />
     <ClInclude Include="変形%28格子%29.h" />
     <ClInclude Include="変換%28グラフ%29.h" />
@@ -209,7 +211,6 @@
     <ClInclude Include="多項式.h" />
     <ClInclude Include="尺取り法.h" />
     <ClInclude Include="括弧列.h" />
-    <ClInclude Include="挿入DP.h" />
     <ClInclude Include="探索(木).h" />
     <ClInclude Include="数え上げ(グラフ).h" />
     <ClInclude Include="数え上げ(区間).h" />
@@ -233,7 +234,7 @@
     <ClInclude Include="約数変換.h" />
     <ClInclude Include="累積演算%28抽象%29.h" />
     <ClInclude Include="組(最適化).h" />
-    <ClInclude Include="組合せゲーム.h" />
+    <ClInclude Include="不偏ゲーム.h" />
     <ClInclude Include="統計量.h" />
     <ClInclude Include="群.h" />
     <ClInclude Include="群論.h" />
@@ -243,7 +244,7 @@
     <ClInclude Include="部分列DP.h" />
     <ClInclude Include="M-集合.h" />
     <ClInclude Include="順列(最適化).h" />
-    <ClInclude Include="順列(組合せ論).h" />
+    <ClInclude Include="数え上げ%28順列%29.h" />
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />
     <ClInclude Include="一重和.h" />

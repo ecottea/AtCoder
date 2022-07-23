@@ -290,7 +290,7 @@ void count_subgraph(const Graph& g, vm& cnt) {
 /*
 * 無向グラフ g について，set を頂点集合とする連結部分グラフの個数を cnt[set] に格納する．
 *
-* 利用：【部分グラフの数え上げ】，【下位集合の全探索】
+* 利用：【部分グラフの数え上げ】,【下位集合の全探索】
 */
 void count_connected_subgraph(const Graph& g, vm& cnt) {
 	// 参考 : https://drken1215.hatenablog.com/entry/2021/08/12/132500

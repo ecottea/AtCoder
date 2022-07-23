@@ -73,6 +73,7 @@ bool miller_rabin(ll n) {
 */
 ll pollard_rho(ll n) {
 	// Ql : https://qiita.com/Kiri8128/items/eca965fe86ea5f4cbb98
+	// verify : https://algo-method.com/tasks/553
 
 	//y•û–@z
 	// “K“–‚È’è” c ‚ğ‚Æ‚èŠÖ” f : Z/nZ ¨ Z/nZ ‚ğ
@@ -161,7 +162,7 @@ ll pollard_rho(ll n) {
 * n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
 * pps[p] = d : n ‚É‘fˆö” p ‚ª d ŒÂŠÜ‚Ü‚ê‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 *
-* —˜—pFy‘f””»’èzCy–ñ”ŒŸoz
+* —˜—pFy‘f””»’èz,y–ñ”ŒŸoz
 */
 void factor_integer(ll n, map<ll, int>& pps) {
 	// verify : https://algo-method.com/tasks/553
@@ -199,6 +200,8 @@ void factor_integer(ll n, map<ll, int>& pps) {
 * —˜—pFy‘fˆö”•ª‰ğz
 */
 void divisors(ll n, vl& divs) {
+	// verify : https://atcoder.jp/contests/chokudai_S002/tasks/chokudai_S002_j
+
 	Assert(n > 0);
 
 	map<ll, int> pps;

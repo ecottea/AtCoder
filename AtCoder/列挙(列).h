@@ -15,18 +15,14 @@ void enumerate_subsequences(const vector<T>& a, vector<vector<T>>& seqs) {
 	repb(set, n) {
 		vector<T> seq;
 
-		rep(i, n) {
-			if (set & (1 << i)) {
-				seq.push_back(a[i]);
-			}
-		}
+		rep(i, n) if (set & (1 << i)) seq.push_back(a[i]);
 
 		seqs.push_back(seq);
 	}
 }
 
 
-//y‹·‹`’P’²‘‰Á—ñ‚Ì—ñ‹“zO(binomial(m, n) n)
+//y‹·‹`’P’²‘‰Á—ñ‚Ì—ñ‹“zO(bin(m, n) n)
 /*
 * 0 <= a[0] < a[1] < ... < a[n-1] < m ‚È‚é—ñ a[0..n) ‚ð seqs ‚ÉŠi”[‚·‚éD
 */
@@ -58,7 +54,7 @@ void enumerate_strongly_increase_sequences(int n, int m, vvi& seqs) {
 }
 
 
-//yL‹`’P’²‘‰Á—ñ‚Ì—ñ‹“zO(binomial(n + m - 1, n) n)
+//yL‹`’P’²‘‰Á—ñ‚Ì—ñ‹“zO(bin(n+m-1, n) n)
 /*
 * 0 <= a[0] <= a[1] <= ... <= a[n-1] < m ‚È‚é—ñ a[0..n) ‚ð seqs ‚ÉŠi”[‚·‚éD
 */

@@ -21,9 +21,7 @@ template <class T> mint difference_sum(vector<T> a) {
 	mint res = 0;
 
 	// —×‚è‡‚¤—v‘f‚Ì·‚Éd‚İ‚ğ•t‚¯‚Ä‘«‚µ‚ñ‚Å‚¢‚­D
-	repi(i, 1, n - 1) {
-		res += mint(a[i] - a[i - 1]) * i * (n - i);
-	}
+	repi(i, 1, n - 1) res += mint(a[i] - a[i - 1]) * i * (n - i);
 
 	return res;
 }
@@ -60,16 +58,8 @@ template <class T> T xor_sum(const vl& a, const vl& b) {
 
 	// ŠeƒrƒbƒgˆÊ’u‚Ì 1 ‚ÌŒÂ”‚ğ”‚¦‚Ä‚¨‚­D
 	vi ones_a(d), ones_b(d);
-	rep(i, n) {
-		rep(j, d) {
-			if (a[i] & (1LL << j)) ones_a[j]++;
-		}
-	}
-	rep(i, m) {
-		rep(j, d) {
-			if (b[i] & (1LL << j)) ones_b[j]++;
-		}
-	}
+	rep(i, n) rep(j, d) if (a[i] & (1LL << j)) ones_a[j]++;
+	rep(i, m) rep(j, d) if (b[i] & (1LL << j)) ones_b[j]++;
 
 	// ƒrƒbƒg–ˆ‚É“Æ—§‚ÉŠñ—^‚ğŒvZ‚µ˜a‚ğ‚Æ‚ê‚Î‚æ‚¢D
 	T res = 0;
@@ -164,7 +154,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 /*
 * ƒ°i=[0..n)j=[0..m) lcm(a[i], b[j]) ‚Ì’l‚ğ•Ô‚·D
 *
-* —˜—pFy”{”•ÏŠ·CGCD ô‚İzCyŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
+* —˜—pFy”{”•ÏŠ·CGCD ô‚İz,yŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
 */
 mint lcm_sum(const vi& a, const vi& b) {
 	//y•û–@z

@@ -572,7 +572,7 @@ template <class S> struct KDTree {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_C
 
 	using vS = vector<S>; using vvS = vector<vS>; using vvSi = vector<pair<vS, int>>;
-	const S S_MIN = numeric_limits<S>::min(), S_MAX = numeric_limits<S>::max();
+	const S S_MIN = numeric_limits<S>::lowest(), S_MAX = numeric_limits<S>::max();
 
 	struct Node {
 		vS p1, p2; // 半開直方体 R = [p1, p2) に対応するノードであることを表す
@@ -703,7 +703,7 @@ template <class S, class T> struct KDTrie {
 	// verify : https://atcoder.jp/contests/abc075/tasks/abc075_d
 
 	using vS = vector<S>; using vvS = vector<vS>; using vT = vector<T>;
-	const S S_MIN = numeric_limits<S>::min(), S_MAX = numeric_limits<S>::max();
+	const S S_MIN = numeric_limits<S>::lowest(), S_MAX = numeric_limits<S>::max();
 
 	struct Node {
 		vS p1, p2; // 半開直方体 R = [p1, p2) に対応するノードであることを表す

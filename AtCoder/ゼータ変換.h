@@ -58,7 +58,7 @@ template <class T> void superset_mobius(vector<T>& A) {
 *       c[set] = Σ(sup1∩sup2 = set) a[sup1] b[sup2] 
 * なる c[0..2^n) を返す．
 * 
-* 利用：【ゼータ変換（上位集合）】，【メビウス変換（上位集合）】
+* 利用：【ゼータ変換（上位集合）】,【メビウス変換（上位集合）】
 */
 template <class T> vector<T> and_convolution(vector<T> a, vector<T> b) {
     // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
@@ -168,7 +168,7 @@ template <class T> void subset_mobius(vector<T>& A) {
 *       c[set] = Σ(sub1∪sub2 = set) a[sub1] b[sub2]
 * なる c[0..2^n) を返す．
 *
-* 利用：【ゼータ変換（下位集合）】，【メビウス変換（下位集合）】
+* 利用：【ゼータ変換（下位集合）】,【メビウス変換（下位集合）】
 */
 template <class T> vector<T> or_convolution(vector<T> a, vector<T> b) {
     // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
@@ -234,7 +234,7 @@ template <class T> vector<T> distinct_subset_or_tropical_convolution(const vecto
     // verify : https://atcoder.jp/contests/arc100/tasks/arc100_c
 
     int n = msb(sz(a));
-    T T_MIN = numeric_limits<T>::min();
+    T T_MIN = numeric_limits<T>::lowest();
 
     // A[set] : sub⊂set についての a[sub] の {max, 2nd max}
     vector<pair<T, T>> A(1LL << n);
@@ -280,7 +280,7 @@ template <class T> vector<T> distinct_subset_or_tropical_convolution(const vecto
 * なる c[0..2^n) を返す．
 * 凵 は集合の非交和であり，sub1∪sub2 = set かつ sub1∩sub2 = {} であることを表す．
 *
-* 利用：【形式的冪級数（可換環）】，【和集合畳込み】
+* 利用：【形式的冪級数（可換環）】,【和集合畳込み】
 */
 template <class T> T add_duc(T x, T y) { return x + y; }
 template <class T> T o_duc() { return 0; }
@@ -379,7 +379,7 @@ template <class T> void hadamard_inv(vector<T>& A) {
 * なる c[0..2^n) を返す．
 * △ は集合の対称差であり，添字でいうと XOR である．
 *
-* 利用：【アダマール変換】，【逆アダマール変換】
+* 利用：【アダマール変換】,【逆アダマール変換】
 */
 template <class T> vector<T> symmetric_difference_convolution(vector<T> a, vector<T> b) {
     // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519

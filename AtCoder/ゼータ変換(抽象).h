@@ -1,6 +1,5 @@
 #pragma once
 #include "header.h"
-#include "FPS(抽象).h"
 // ■■■■■ 集合のゼータ変換・メビウス変換など ■■■■■
 
 
@@ -53,7 +52,7 @@ void superset_mobius(vector<S>& f) {
 * なる c[0..2^n) を返す．
 * 要素は環 (S, add, o, mi, mul, e) の元とする．
 *
-* 利用：【ゼータ変換（上位集合，可換モノイド）】，【メビウス変換（上位集合，アーベル群）】
+* 利用：【ゼータ変換（上位集合，可換モノイド）】,【メビウス変換（上位集合，アーベル群）】
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
 vector<S> and_convolution(vector<S> a, vector<S> b) {
@@ -143,7 +142,7 @@ void subset_mobius(vector<S>& f) {
 * なる c[0..2^n) を返す．
 * 要素は環 (S, add, o, mi, mul, e) の元とする．
 *
-* 利用：【ゼータ変換（下位集合，可換モノイド）】，【メビウス変換（下位集合，アーベル群）】
+* 利用：【ゼータ変換（下位集合，可換モノイド）】,【メビウス変換（下位集合，アーベル群）】
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
 vector<S> or_convolution(vector<S> a, vector<S> b) {

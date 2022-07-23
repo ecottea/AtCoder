@@ -63,9 +63,9 @@ bool queen8_problem(int n, const vi& x0, const vi& y0, vi& y) {
 }
 
 
-//【ライツアウト】O(h^3 w^3)
+//【ライツアウト】O(h^3 w^3 / 64)
 /*
-* ライツアウトの盤面 s[0..h)[0..w) に対し，全マスを消灯する押し方を push に格納する．
+* ライツアウトの盤面 s[0..h)[0..w) に対し，全マスを消灯する押し方を sol に格納する．
 * s[i][j] = one はマス (i, j) が点灯状態であることを表す．
 * sol[i][j] = false[true] はマス (i, j) を押さない[押す] ことを表す．
 * 解が存在しないなら false を返す．
@@ -74,32 +74,28 @@ bool queen8_problem(int n, const vi& x0, const vi& y0, vi& y) {
 *
 * 制約：N は h * w + 1 以上の定数
 *
-* 利用：【ビット行列】，【連立一次方程式】
+* 利用：【ビット行列】,【連立一次方程式】
 */
 template <int N> bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1') {
 	int h = sz(s), w = sz(s[0]);
 
 	Bit_matrix<N> mat(h * w);
-	rep(x, h) {
-		rep(y, w) {
-			// 押したマスは点灯状態が反転する．
-			mat[x * w + y][x * w + y] = 1;
+	rep(x, h) rep(y, w) {
+		// 押したマスは点灯状態が反転する．
+		mat[x * w + y][x * w + y] = 1;
 
-			// 押したマスの 4 近傍も点灯状態が反転する．
-			rep(k, 4) {
-				int nx = x + DX[k];
-				int ny = y + DY[k];
+		// 押したマスの 4 近傍も点灯状態が反転する．
+		rep(k, 4) {
+			int nx = x + DX[k];
+			int ny = y + DY[k];
 
-				if (nx < 0 || h <= nx || ny < 0 || w <= ny) {
-					continue;
-				}
+			if (nx < 0 || h <= nx || ny < 0 || w <= ny) continue;
 
-				mat[x * w + y][nx * w + ny] = 1;
-			}
-
-			// 目標とする点灯パターン
-			mat[x * w + y][h * w] = (s[x][y] == one);
+			mat[x * w + y][nx * w + ny] = 1;
 		}
+
+		// 目標とする点灯パターン
+		mat[x * w + y][h * w] = (s[x][y] == one);
 	}
 
 	// 連立方程式を解いて押し方を見つける．
@@ -112,18 +108,14 @@ template <int N> bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1
 	// 連立方程式の解から押し方を復元する．
 	if (sol != nullptr) {
 		*sol = vvb(h, vb(w));
-		rep(x, h) {
-			rep(y, w) {
-				(*sol)[x][y] = res[x * w + y];
-			}
-		}
+		rep(x, h) rep(y, w) (*sol)[x][y] = res[x * w + y];
 	}
 
 	return true;
 }
 
 
-//【15 パズル】
+//【15 パズル】O(?)
 /*
 * h * w スライドパズルの盤面 a[0..h)[0..w) を解くのにかかる最短手数を返す．
 * 0 以上 h * w - 1 未満の数はパネルを，数 h * w - 1 は空きマスを表す．
@@ -131,9 +123,10 @@ template <int N> bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1
 *
 *（A* 探索）
 */
-int solve_15puzzle(const vvi& a_, int h = 4, int w = 4, int max_step = 45) {
+int solve_15puzzle(const vvi& a_, int max_step = 45) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_13_C
 
+	int h = sz(a_), w = sz(a_[0]);
 	const int OPEN = h * w - 1;
 
 	// 盤面のハッシュ化用関数
@@ -158,13 +151,11 @@ int solve_15puzzle(const vvi& a_, int h = 4, int w = 4, int max_step = 45) {
 	// 盤面のベクトル化，空きマス (x, y) の特定
 	vi a(h * w);
 	int x = -1, y = -1;
-	rep(i, h) {
-		rep(j, w) {
-			a[i * w + j] = a_[i][j];
+	rep(i, h) rep(j, w) {
+		a[i * w + j] = a_[i][j];
 
-			if (a[i * w + j] == OPEN) {
-				x = i; y = j;
-			}
+		if (a[i * w + j] == OPEN) {
+			x = i; y = j;
 		}
 	}
 
@@ -175,24 +166,14 @@ int solve_15puzzle(const vvi& a_, int h = 4, int w = 4, int max_step = 45) {
 
 	// mh[k][x * w + y] : パネル k が位置 (x, y) にある場合の正しい位置までのマンハッタン距離
 	vvi mh(h * w, vi(h * w));
-	rep(i, h) {
-		rep(j, w) {
-			rep(x, h) {
-				rep(y, w) {
-					mh[i * w + j][x * w + y] = abs(i - x) + abs(j - y);
-				}
-			}
-		}
+	rep(i, h) rep(j, w) rep(x, h) rep(y, w) {
+		mh[i * w + j][x * w + y] = abs(i - x) + abs(j - y);
 	}
 
 	// 初期盤面の各パネルの完成形における位置までの距離の和を求める．（距離の下界）
 	int d = 0;
-	rep(i, h) {
-		rep(j, w) {
-			if (a[i * w + j] != OPEN) {
-				d += mh[a[i * w + j]][i * w + j];
-			}
-		}
+	rep(i, h) rep(j, w) {
+		if (a[i * w + j] != OPEN) d += mh[a[i * w + j]][i * w + j];
 	}
 
 	// ハッシュ化された盤面 → 総距離の下界
@@ -220,9 +201,7 @@ int solve_15puzzle(const vvi& a_, int h = 4, int w = 4, int max_step = 45) {
 			int nx = x + DX[k];
 			int ny = y + DY[k];
 
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w) {
-				continue;
-			}
+			if (nx < 0 || nx >= h || ny < 0 || ny >= w) continue;
 
 			int num = a[nx * w + ny];
 			a[x * w + y] = num;

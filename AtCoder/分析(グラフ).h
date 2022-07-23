@@ -627,7 +627,7 @@ void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* 
 * 無向グラフ g を二辺連結成分分解し，i 番目の二辺連結成分の頂点集合を ccs[i] に格納する．
 *	二辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
 *
-* 利用：【グラフの関節点と橋】，【連結成分分解】
+* 利用：【グラフの関節点と橋】,【連結成分分解】
 */
 void two_edge_connected_component(const Graph& g, vvi& ccs) {
 	// verify : https://judge.yosupo.jp/problem/two_edge_connected_components

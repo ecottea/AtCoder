@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
-// ■■■■■ 写像 12 相 ■■■■■
+// ■■■■■ 写像 12 相とその類題 ■■■■■
 
 
 //【ボールの区別あり，箱の区別あり，箱の中身は任意】
@@ -16,7 +16,7 @@
 //【ボールの区別あり，箱の区別あり，箱の中身は 1 個以下】
 /*
 * ボールが n 個，箱が m 個の場合，順列の考え方より
-* ボールの入れ方は mPn 通りとなる．
+* ボールの入れ方は perm(m, n) 通りとなる．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_B
 */
@@ -48,11 +48,7 @@ void count_surjections(int n, int m, vvm& c) {
 	c = vvm(n + 1, vm(m + 1));
 	c[0][0] = 1;
 
-	repi(i, 1, n) {
-		repi(j, 1, m) {
-			c[i][j] = (c[i - 1][j] + c[i - 1][j - 1]) * j;
-		}
-	}
+	repi(i, 1, n) repi(j, 1, m) c[i][j] = (c[i - 1][j] + c[i - 1][j - 1]) * j;
 }
 
 
@@ -93,7 +89,7 @@ mint count_surjections(ll n, int m) {
 //【ボールの区別なし，箱の区別あり，箱の中身は任意】
 /*
 * ボールが n 個，箱が m 個の場合，重複組合せの考え方より
-* ボールの入れ方は mHn = n+m-1Cm-1 通りとなる．
+* ボールの入れ方は hom(m, n) = bin(n+m-1, m-1) 通りとなる．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_D
 */
@@ -102,7 +98,7 @@ mint count_surjections(ll n, int m) {
 //【ボールの区別なし，箱の区別あり，箱の中身は 1 個以下】
 /*
 * ボールが n 個，箱が m 個の場合，単にどの箱を選んだかなので，
-* ボールの入れ方は mCn 通りとなる．
+* ボールの入れ方は bin(m, n) 通りとなる．
 *
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_E
 */
@@ -111,9 +107,19 @@ mint count_surjections(ll n, int m) {
 //【ボールの区別なし，箱の区別あり，箱の中身は 1 個以上】
 /*
 * ボールが n 個，箱が m 個の場合，事前に配る考え方と重複組合せの考え方より
-* ボールの入れ方は mHn-m = n-1Cm-1 通りとなる．
+* ボールの入れ方は hom(m, n-m) = bin(n-1, m-1) 通りとなる．
 *
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_F
+*/
+
+
+//【ボールの区別なし，箱の区別あり，箱の中身は k 個未満】
+/*
+* ボールが n 個，箱が m 個の場合，ボールの入れ方は以下の式で与えられる：
+*	[z^n] (1-z^k)^m (1-z)^(-m)
+* これは二項定理と負の二項定理を用いて O(n / k) で計算できる．
+* 
+* verify : https://atcoder.jp/contests/agc009/tasks/agc009_e
 */
 
 
@@ -159,11 +165,7 @@ void stirling_S2(int n, vvm& c) {
 	c = vvm(n + 1, vm(n + 1));
 	c[0][0] = 1;
 
-	repi(i, 1, n) {
-		repi(j, 1, n) {
-			c[i][j] = c[i - 1][j] * j + c[i - 1][j - 1];
-		}
-	}
+	repi(i, 1, n) repi(j, 1, n) c[i][j] = c[i - 1][j] * j + c[i - 1][j - 1];
 }
 
 
@@ -197,7 +199,7 @@ mint stirling_S2(int n, int k) {
 }
 
 
-//【集合の分割の数（第 2 種スターリング数）】O(n log n)
+//【集合の分割の数（第 2 種スターリング数，mod998244353）】O(n log n)
 /*
 * n 点集合をちょうど k 個に分割する方法の数 s(n, k) を s[k] に格納する．
 * 
@@ -272,15 +274,9 @@ void count_integer_partitions(int n, int m, vvm& c) {
 
 	// c[i][j] : 自然数 i を j 以下の自然数に分割する方法の数
 	c = vvm(n + 1, vm(m + 1));
-	repi(j, 0, m) {
-		c[0][j] = 1;
-	}
+	repi(j, 0, m) c[0][j] = 1;
 
-	repi(j, 1, m) {
-		repi(i, 1, n) {
-			c[i][j] = c[i][j - 1] + (i >= j ? c[i - j][j] : 0);
-		}
-	}
+	repi(j, 1, m) repi(i, 1, n) c[i][j] = c[i][j - 1] + (i >= j ? c[i - j][j] : 0);
 }
 
 
@@ -311,21 +307,17 @@ void count_cntlimited_integer_partitions(int n, int m, int k, vvm& c) {
 
 	// c[i][j] : 自然数 i を j 個以下に分割する方法の数
 	c = vvm(n + 1, vm(m + 1));
-	repi(j, 0, m) {
-		c[0][j] = 1;
-	}
+	repi(j, 0, m) c[0][j] = 1;
 
 	// 貰う DP
-	repi(j, 1, m) {
-		repi(i, 1, n) {
-			c[i][j] = c[i][j - 1];
+	repi(j, 1, m) repi(i, 1, n) {
+		c[i][j] = c[i][j - 1];
 
-			if (i - j >= 0) {
-				c[i][j] += c[i - j][j];
+		if (i - j >= 0) {
+			c[i][j] += c[i - j][j];
 
-				if (j - k - 1 >= 0) {
-					c[i][j] -= c[i - j][j - k - 1];
-				}
+			if (j - k - 1 >= 0) {
+				c[i][j] -= c[i - j][j - k - 1];
 			}
 		}
 	}
@@ -356,12 +348,8 @@ void count_maxlimited_integer_partitions(int n, int m, int d, vvvm& c) {
 	c = vvvm(n + 1, vvm(m + 1, vm(d + 1)));
 	repi(j, 0, m) repi(k, 0, d) c[0][j][k] = 1;
 
-	repi(j, 1, m) {
-		repi(k, 1, d) {
-			repi(i, 1, n) {
-				c[i][j][k] = c[i][j - 1][k] + (i >= j ? c[i - j][j][k - 1] : 0);
-			}
-		}
+	repi(j, 1, m) repi(k, 1, d) repi(i, 1, n) {
+		c[i][j][k] = c[i][j - 1][k] + (i >= j ? c[i - j][j][k - 1] : 0);
 	}
 }
 
@@ -387,13 +375,11 @@ void partition_function(int n, vm& p) {
 	p = vm(n + 1);
 	p[0] = 1;
 
-	repi(i, 1, n) {
-		rep(j, m) {
-			if (i - pen[j] < 0) break;
+	repi(i, 1, n) rep(j, m) {
+		if (i - pen[j] < 0) break;
 
-			// 符号は 4 で割った余りで場合分けされる．
-			p[i] += (j & 2 ? -1 : 1) * p[i - pen[j]];
-		}
+		// 符号は 4 で割った余りで場合分けされる．
+		p[i] += (j & 2 ? -1 : 1) * p[i - pen[j]];
 	}
 }
 

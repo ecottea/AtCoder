@@ -32,7 +32,7 @@ int ord_p(const mint& a) {
 /*
 * m を法として a^x = 1 となる最小の自然数 x を返す．（なければ -1）
 *
-* 利用：【カーマイケル関数】，【約数列挙】
+* 利用：【カーマイケル関数】,【約数列挙】
 */
 int ord(const mint& a) {
 	// verify : https://atcoder.jp/contests/jag2015summer-day4/tasks/icpc2015summer_day4_d
@@ -88,13 +88,13 @@ int find_primitive_root() {
 }
 
 
-//【離散対数問題（法が素数）／baby-step giant-step】O(√p)
+//【離散対数問題（法が素数）】O(√p)
 /*
 * a^x = b mod p の最小解 x >= 0 を返す．（なければ INF）
 *
 * 制約 : p = mint::mod() は素数
 *
-*（平方分割）
+*（baby-step giant-step）
 */
 int log(mint a, mint b) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/baby-step-giant-step.html
@@ -151,12 +151,12 @@ int log(mint a, mint b) {
 }
 
 
-//【離散対数問題／baby-step giant-step】O(√m log m)
+//【離散対数問題】O(√m log m)
 /*
 * a x^d = b mod m の最小解 d >= 0 を返す（なければ INF）
 * ここで m = mint::mod() である．また 0^0 = 1 とする．
 *
-*（平方分割）
+*（baby-step giant-step）
 */
 int log(mint a, mint x, mint b) {
 	// verify : https://judge.yosupo.jp/problem/discrete_logarithm_mod
@@ -201,11 +201,13 @@ int log(mint a, mint x, mint b) {
 }
 
 
-//【平方剰余／トネリ－シャンクスのアルゴリズム】O(√p)
+//【平方剰余】O(√p)
 /*
 * x^2 = a mod p の解 x の一方を返す．（なければ -1）
 *
 * 制約 : p = mint::mod() は素数
+* 
+*（トネリ－シャンクスのアルゴリズム） 
 */
 int sqrt(const mint& a) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/tonelli-shanks.html

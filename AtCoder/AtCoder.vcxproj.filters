@@ -79,6 +79,9 @@
     <Filter Include="ヘッダー ファイル\行列">
       <UniqueIdentifier>{123631c0-bf2a-494d-8537-b924053d4f00}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\列%28順列%29">
+      <UniqueIdentifier>{e2da9ab7-f290-494d-9e07-ce1755bf7045}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -179,7 +182,7 @@
     <ClInclude Include="期待値.h">
       <Filter>ヘッダー ファイル\確率統計</Filter>
     </ClInclude>
-    <ClInclude Include="組合せゲーム.h">
+    <ClInclude Include="不偏ゲーム.h">
       <Filter>ヘッダー ファイル\ゲーム</Filter>
     </ClInclude>
     <ClInclude Include="区間DP.h">
@@ -187,9 +190,6 @@
     </ClInclude>
     <ClInclude Include="ビット全探索.h">
       <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
-    <ClInclude Include="順列.h">
-      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="分析%28木%29.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
@@ -233,7 +233,7 @@
     <ClInclude Include="半環.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
-    <ClInclude Include="可換環.h">
+    <ClInclude Include="環.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="ヒープ.h">
@@ -284,9 +284,6 @@
     <ClInclude Include="計算.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
-    <ClInclude Include="挿入DP.h">
-      <Filter>ヘッダー ファイル\列</Filter>
-    </ClInclude>
     <ClInclude Include="行列(抽象).h">
       <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
@@ -328,12 +325,6 @@
     </ClInclude>
     <ClInclude Include="変形%28格子%29.h">
       <Filter>ヘッダー ファイル\格子</Filter>
-    </ClInclude>
-    <ClInclude Include="二分探索.h">
-      <Filter>ヘッダー ファイル\典型問題</Filter>
-    </ClInclude>
-    <ClInclude Include="尺取り法.h">
-      <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>
     <ClInclude Include="有名パズル.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
@@ -440,9 +431,6 @@
     <ClInclude Include="有名数列.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
-    <ClInclude Include="順列(組合せ論).h">
-      <Filter>ヘッダー ファイル\組合せ論</Filter>
-    </ClInclude>
     <ClInclude Include="括弧列.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
@@ -493,6 +481,24 @@
     </ClInclude>
     <ClInclude Include="M-集合.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="順列.h">
+      <Filter>ヘッダー ファイル\列%28順列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ%28順列%29.h">
+      <Filter>ヘッダー ファイル\列%28順列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和(順列).h">
+      <Filter>ヘッダー ファイル\列%28順列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="母関数.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="尺取り法.h">
+      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
+    </ClInclude>
+    <ClInclude Include="最適化(区間).h">
+      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

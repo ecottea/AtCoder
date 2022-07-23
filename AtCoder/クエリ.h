@@ -72,7 +72,7 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 * S sum(ll x1, ll y1, ll x2, ll y2) : O(log n)
 *	[x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
 *
-* 利用：【完全永続セグメント木（モノイド）】，【座標圧縮】
+* 利用：【完全永続セグメント木（モノイド）】,【座標圧縮】
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 class Static_rectangle_sum {
@@ -125,22 +125,25 @@ public:
 
 //【Convex-Hull Trick（挿入単調，クエリ単調）】
 /*
-* insert(l) : n 回で O(n)
+* Convex_hull_trick_monotonous() : O(1)
+*	空で初期化する．
+* 
+* insert(l) : ならし O(1)
 *	l = {a, b} が表す直線 y = a x + b を追加する．
 *	呼び出す際の挿入する直線の傾き a は降順でなくてはならない．
 *
-* min(x) : q 回で O(q)
+* min(x) : ならし O(1)
 *	a x + b の最小値を返す．
 *	呼び出す際の x 座標は昇順でなくてはならない．
 */
-struct Convex_hull_trick {
+struct Convex_hull_trick_monotonous {
 	// 参考 : https://satanic0258.hatenablog.com/entry/2016/08/16/181331
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_z
 
 	int n; // 記録している直線の本数
 	deque<pll> lines; // 直線を傾き狭義降順に記録したデック
 
-	Convex_hull_trick() : n(0) {}
+	Convex_hull_trick_monotonous() : n(0) {}
 
 	void insert(pll l) {
 		ll a3, b3;
@@ -180,6 +183,110 @@ struct Convex_hull_trick {
 		tie(a, b) = lines[0];
 		return a * x + b;
 	}
+};
+
+
+//【Convex-Hull Trick】
+/*
+* Convex_hull_trick(flagMin = true) : O(1)
+*	空で初期化する．flagMin = true[false] なら最大値[最小値] クエリに対応する．
+*
+* add(a, b) : ならし O(log n)
+*	直線 y = a x + b を追加する．
+*
+* get(x) : O(log n)
+*	a x + b の最小値を返す．
+*/
+using CHT_TYPE = ll;
+class ConvexHullTrickDynamic {
+	// コピー元 : https://github.com/satanic0258/Cpp_snippet/blob/master/src/technique/ConvexHullTrick.cpp
+	// verify : https://yukicoder.me/problems/no/2012
+
+	//【実装上のアイデア】
+	// アルゴリズム上平衡二分探索木が必要になる．
+	// 自前で書くのは大変なので，std::set を使いたい．
+	// しかし std::lower_bound が任意の comp を引数にとれるのとは異なり，
+	// set 上では任意比較関数での二分探索ができない．
+	// そのため比較演算子のオーバーロードでクエリのときだけ場合分けするよう実装し，
+	// 擬似的に任意比較関数での二分探索を実現している．
+
+private:
+	// 直線 **************************************************************
+	struct Line {
+		CHT_TYPE a, b; // y = ax + b
+		mutable std::function<const Line* ()> getSuc; // 次の直線へのポインタ (ソートで用いる)
+
+		bool operator<(const Line& rhs) const {
+			// 取得クエリでは次の直線との差分でソート
+			if (rhs.b == numeric_limits<CHT_TYPE>::lowest()) {
+				const Line* suc = getSuc();
+				if (suc == nullptr) return false;
+				const CHT_TYPE& x = rhs.a;
+				return (suc->a - a) * x + suc->b - b > 0;
+			}
+			if (b == numeric_limits<CHT_TYPE>::lowest()) {
+				const Line* suc = rhs.getSuc();
+				if (suc == nullptr) return true;
+				const CHT_TYPE& x = a;
+				return (suc->a - rhs.a) * x + suc->b - rhs.b < 0;
+			}
+
+			// 通常の直線どうしは傾きソート
+			return a < rhs.a;
+		}
+	};
+
+	// 直線集合 **********************************************************
+	class LinesSet : public std::multiset<Line> {
+	private:
+		// true -> 最小値クエリ, false -> 最大値クエリ
+		bool flagMin;
+
+	public:
+		// コンストラクタ ( 第一引数falseで最大値クエリ,デフォルトで最小値クエリ )
+		LinesSet(bool flagMin = true) : flagMin(flagMin) {};
+
+		// 直線lが不必要であるかどうか
+		inline bool isBad(iterator l) {
+			const auto&& nel = std::next(l);
+			if (l == begin()) { // lが傾き最小のとき
+				if (nel == end()) return false; // lしかないなら必要
+				return l->a == nel->a && l->b <= nel->b;
+			}
+			else {
+				const auto&& prl = std::prev(l);
+				if (nel == end()) return l->a == prl->a && l->b <= prl->b;
+				return (prl->b - l->b) * (nel->a - l->a) >= (nel->b - l->b) * (prl->a - l->a);
+			}
+		}
+
+		// 直線y=ax+bを追加する
+		inline void add(CHT_TYPE a, CHT_TYPE b) {
+			if (flagMin) a = -a, b = -b;
+			auto&& it = insert({ a, b });
+			it->getSuc = [=] { return (std::next(it) == end() ? nullptr : &*std::next(it)); };
+			if (isBad(it)) { erase(it); return; }
+			while (std::next(it) != end() && isBad(std::next(it))) erase(std::next(it));
+			while (it != begin() && isBad(std::prev(it))) erase(std::prev(it));
+		}
+
+		// 直線群の中でxの時に最小(最大)となる値を返す
+		inline CHT_TYPE get(CHT_TYPE x) {
+			auto&& l = *lower_bound(Line{ x, numeric_limits<CHT_TYPE>::lowest() });
+			if (flagMin) return -l.a * x - l.b;
+			else return l.a * x + l.b;
+		}
+	};
+
+	LinesSet linesSet;
+
+public:
+	// コンストラクタ ( 第一引数falseで最大値クエリ,デフォルトで最小値クエリ )
+	ConvexHullTrickDynamic(bool flagMin = true) : linesSet(flagMin) {}
+	// 直線y=ax+bを追加する
+	inline void add(CHT_TYPE a, CHT_TYPE b) { linesSet.add(a, b); }
+	// あるxのときの直線集合での最小値を求める
+	inline CHT_TYPE get(CHT_TYPE x) { return linesSet.get(x); }
 };
 
 

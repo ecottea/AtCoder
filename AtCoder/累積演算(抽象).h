@@ -148,27 +148,28 @@ public:
 
 //【累積非可逆積（モノイド）】
 /*
-* Cumulative_lossy_prod<S, op, e>(a) : O(n)
+* Cumulative_lossy_prod<S, op, e>(vS a) : O(n)
 *	配列 a[0..n) で初期化する
 *	要素はモノイド <S, op, e> の元とする．
 *
-* left_prod(r) : O(1)
+* S left_prod(int r) : O(1)
 *	Πa[0..r] を返す．
 *
-* right_prod(l) : O(1)
+* S right_prod(int l) : O(1)
 *	Πa[l..n) を返す．
 *
-* without_prod(i) : O(1)
+* S without_prod(int i) : O(1)
 *	Πa[0..i)a(i..n) を返す．
 */
 template <class S, S(*op)(S, S), S(*e)()>
-struct Cumulative_lossy_prod {
+class Cumulative_lossy_prod {
 	int n;
 
 	// acc_l[i] : Πa[0..i)
 	// acc_r[i] : Πa[i..n)
 	vector<S> acc_l, acc_r;
 
+public:
 	// コンストラクタ（配列で初期化）
 	Cumulative_lossy_prod(const vector<S>& a) : n(sz(a)), acc_l(n + 1), acc_r(n + 1) {
 		acc_l[0] = acc_r[n] = e();

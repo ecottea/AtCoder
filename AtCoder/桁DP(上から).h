@@ -181,8 +181,7 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 
 		//dump(i + 1);
 		//repb(f, 2) {
-		//	dumps("(lz, smaller) =");
-		//	dump(bitset<2>(f));
+		//	dump("(lz, smaller) =", bitset<2>(f));
 		//	dump(dp[i + 1][f]);
 		//}
 	}

@@ -5,6 +5,7 @@
 #include "最短路.h"
 #include "ビット全探索.h"
 #include "数え上げ(グラフ).h"
+#include "マッチング(一般).h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
 
 
@@ -168,7 +169,7 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 * 無向グラフ g の最大クリークの大きさを返す．
 * S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
 *
-* 利用：【補グラフ】，【最大独立集合問題】
+* 利用：【補グラフ】,【最大独立集合問題】
 */
 int maximum_clique(const Graph& g, vi* vs = nullptr) {
 	// verify : https://atcoder.jp/contests/abc002/tasks/abc002_4
@@ -253,7 +254,7 @@ int chromatic_number(const Graph& g) {
 * 無向グラフ g の最小クリーク被覆の大きさを返す．
 * S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
 *
-* 利用：【補グラフ】，【彩色数】
+* 利用：【補グラフ】,【彩色数】
 */
 int minimum_clique_cover(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc187/tasks/abc187_f

@@ -125,107 +125,100 @@ template <class T> struct Imos_2D {
 /*
 * [0, h) * [0, w) 内の長方形または三角形領域に一定の値を加算する．
 *
-* Imos_2D(h, w) : O(h w)
+* Imos_2D_tri<T>(int h, int w) : O(h w)
 *	[0, h) * [0, w) を 0 で初期化する．
 *
-* set_rect(x1, y1, x2, y2, val) : O(1)
+* set_rect(int x1, int y1, int x2, int y2, T val) : O(1)
 *	[x1, x2] * [y1, y2] に val を加算する準備を行う．
 *
-* set_tri(x, y, d, val) : O(1)
+* set_tri(int x, int y, int d, T val) : O(1)
 *	[x, y] * [x + d, y + d] の対角線以下に val を加算する準備を行う．
 *
 * sum() : O(h w)
 *	実際に加算を行う．
 *
-* v[i][j] : O(1)
+* T v[int i][int j] : O(1)
 *	加算後の位置 (i, j) の値を得る．
+*
+* pii size() : O(1)
+*	(高さ, 幅) を返す．
 */
 template <class T> struct Imos_2D_tri {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
-	
-	int h;
-	int w;
-	vector<vector<T>> v;
+
+	using vT = vector<T>; using vvT = vector<vT>;
+
+	int h, w;
+	vvT v;
 
 	// [0, h) * [0, w) を 0 で初期化する．
-	Imos_2D_tri(int h_, int w_) : h(h_), w(w_), v(h + 2, vector<T>(w + 2)) {}
-	
+	Imos_2D_tri(int h_, int w_) : h(h_), w(w_), v(h + 2, vT(w + 2)) {}
+
 	// アクセス
-	vector<T> const& operator[](int i) const { return v[i]; }
-	vector<T>& operator[](int i) { return v[i]; }
+	vT const& operator[](int i) const { return v[i]; }
+	vT& operator[](int i) { return v[i]; }
+
+	// (高さ, 幅) を返す．
+	pii size() const { return make_pair(h, w); }
 
 	// 長方形 [x1, x2] * [y1, y2] に val を加算する準備を行う．O(1)
 	void set_rect(int x1, int y1, int x2, int y2, T val) {
-		// 左上
+		// 左上の角
 		v[x1][y1] += val;
 		v[x1 + 1][y1 + 1] -= val;
 
-		// 左下
+		// 左下の角
 		v[x2 + 2][y1 + 1] += val;
 		v[x2 + 1][y1] -= val;
 
-		// 右上
+		// 右上の角
 		v[x1 + 1][y2 + 2] += val;
 		v[x1][y2 + 1] -= val;
 
-		// 右下
+		// 右下の角
 		v[x2 + 1][y2 + 1] += val;
 		v[x2 + 2][y2 + 2] -= val;
 	}
 
 	// 正方形 [x, y] * [x + d, y + d] の対角線以下に val を加算する準備を行う．O(1)
 	void set_tri(int x, int y, int d, T val) {
-		// 左上
+		// verify : https://atcoder.jp/contests/joi2012ho/tasks/joi2012ho4
+
+		// 左上の角
 		v[x][y] += val;
 		v[x][y + 1] -= val;
 
-		// 左下
+		// 左下の角
 		v[x + d + 2][y + 1] += val;
 		v[x + d + 1][y] -= val;
 
-		// 右下
+		// 右下の角
 		v[x + d + 1][y + d + 2] += val;
 		v[x + d + 2][y + d + 2] -= val;
 	}
 
 	// 実際の加算を行う．O(h w)
-	vector<vector<T>>& sum() {
-		// 縦方向の累積和
-		repi(i, 1, h) {
-			repi(j, 0, w) {
-				v[i][j] += v[i - 1][j];
-			}
-		}
+	void sum() {
+		// verify : https://atcoder.jp/contests/joi2012ho/tasks/joi2012ho4
 
-		// 横方向の累積和
-		repi(i, 0, h) {
-			repi(j, 1, w) {
-				v[i][j] += v[i][j - 1];
-			}
-		}
+		// 下方向への累積和
+		repi(i, 1, h) repi(j, 0, w) v[i][j] += v[i - 1][j];
 
-		// 右下がり方向の累積和
-		repi(i, 1, h) {
-			repi(j, 1, w) {
-				v[i][j] += v[i - 1][j - 1];
-			}
-		}
+		// 右方向への累積和
+		repi(i, 0, h) repi(j, 1, w) v[i][j] += v[i][j - 1];
+
+		// 右下がり方向への累積和
+		repi(i, 1, h) repi(j, 1, w) v[i][j] += v[i - 1][j - 1];
 
 		// 不要な部分の削除
-		v.pop_back();
-		v.pop_back();
-		rep(i, h) {
-			v[i].pop_back();
-			v[i].pop_back();
-		}
-
-		return v;
+		v.resize(h);
+		rep(i, h) v[i].resize(w);
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Imos_2D& imos) {
-		rep(i, sz(imos.v)) {
-			rep(j, sz(imos.v[0])) os << imos[i][j] << " ";
+	friend ostream& operator<<(ostream& os, const Imos_2D_tri imos) {
+		rep(i, imos.size().first) {
+			rep(j, imos.size().second) os << imos[i][j] << " ";
 			os << endl;
 		}
 		return os;

@@ -23,7 +23,7 @@ ll burn_bury_problem(const vl& x, const vl& y, const vector<tuple<int, int, ll>>
 	// 辺がカットされたか否かとゴミを燃やしたか埋めたかの対応は以下の通り：
 	//	  S と i が繋がっている		   T と i が繋がっている
 	// ⇔ T と i がカットされている	⇔ S と i がカットされている
-	// ⇔ コスト y[i] を支払った		⇔ コスト x[i] を支払った
+	// ⇔ コスト x[i] を支払った		⇔ コスト y[i] を支払った
 	// ⇔ ゴミ i を燃やした			⇔ ゴミ i を埋めた
 
 	int n = sz(x);
@@ -51,22 +51,21 @@ ll burn_bury_problem(const vl& x, const vl& y, const vector<tuple<int, int, ll>>
 /*
 * n 個の計画があり，計画 i を実行すると非負の利益 x[i] を得る．
 * また m 個の機械があり，機械 j を購入すると非負のコスト y[i] がかかる．
-* c 個の p[k] = {a, b} は計画 a の実行には機械 b が必要であることを表す．
+* c 個の p[k] = {i, j} は計画 i の実行には機械 j が必要であることを表す．
 * この状況下で得られる最大利益を返す．
 */
 ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p) {
-	// 参考 : https://kmyk.github.io/algorithm-encyclopedia-staging/project-selection-problem#noredirect
-
 	//【方法】
-	// 頂点 S, T, a[0..n), b[0..m) をもつ以下のグラフ G 上の最小カット問題に帰着させる：
-	//		∀i = [0..n), S → i ：容量 x[i]
-	//		∀j = [0..m), j → T ：容量 y[i]
-	//		∀{a, b} ∈ p, a → b ：容量 +∞
-	//
 	// あらかじめ総利益 Σx[i] を得たことにして，
 	// 計画 i を実行しなかったときコスト x[i] を払うものとする．
+	// これによりコストを最小化する問題だとみなすことができる．
 	// 
-	// 辺がカットされたか否かとゴミを燃やしたか埋めたかの対応は以下の通り：
+	// 頂点 S, a[0..n), b[0..m), T をもつ以下のグラフ G 上の最小カット問題に帰着させる：
+	//		∀i = [0..n), S → a[i] ：容量 x[i]
+	//		∀j = [0..m), b[j] → T ：容量 y[i]
+	//		∀{i, j} ∈ p, a[i] → b[j] ：容量 +∞
+	//
+	// 辺がカットされたか否かと計画を実行したか[機械を購入したか] の対応は以下の通り：
 	//	  S と i がカットされている	   T と j がカットされている
 	// ⇔ コスト x[i] を支払った		⇔ コスト y[i] を支払った
 	// ⇔ 計画 i を実行しなかった		⇔ 機械 j を購入した
@@ -80,13 +79,13 @@ ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p) {
 	mf_graph<ll> g(n + m + 2);
 
 	rep(i, n) g.add_edge(S, i, x[i]);
-	rep(j, m) g.add_edge(j, T, y[j]);
+	rep(j, m) g.add_edge(n + j, T, y[j]);
 
 	repe(tmp, p) {
 		int a, b;
 		tie(a, b) = tmp;
 
-		g.add_edge(a, b, INFL);
+		g.add_edge(a, n + b, INFL);
 	}
 
 	return accumulate(all(x), 0LL) - g.flow(S, T);
