@@ -146,20 +146,20 @@ mint powered_geometric_series(mint r, int d) {
 
 //【x との XOR の和】
 /*
-* Xor_sum(vT a) : O(n log max(a))
+* XOR_sum(vT a) : O(n log max(a))
 *	a[0..n) で初期化する．
 *
 * ll sum(T x) : O(log max(a))
 *	Σi∈[0..n) a[i] XOR x の値を返す．
 */
-template <class T> struct Xor_sum {
+template <class T> struct XOR_sum {
 	// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
 
 	int d;
 	vvi cnt;
 
 	// a[0..n) で初期化する．
-	Xor_sum(const vector<T>& a) {
+	XOR_sum(const vector<T>& a) {
 		T a_max = *max_element(all(a));
 		if (a_max > 0) d = msb((ll)a_max) + 1;
 		else d = 0;
@@ -188,7 +188,7 @@ template <class T> struct Xor_sum {
 
 //【m で割った余りの和】
 /*
-* Mod_sum_query(a) : O(n)
+* Mod_sum(a) : O(n)
 *	配列 a で初期化する．
 *
 * sum_mod(m) : O(max(a) log(n) / m)
@@ -197,16 +197,16 @@ template <class T> struct Xor_sum {
 * sum_lack(m) : O(max(a) log(n) / m)
 *	a[0..n) を m で割った不足の和を返す．
 */
-struct Mod_sum_query {
+struct Mod_sum {
 	vi a;    // ★ a でなくバケツで累積和を持てば O(log n) を落とせる．
 	int n;
 	ll asum; // a[0..n) の和
 
 	// コンストラクタ（何もしない）
-	Mod_sum_query() : n(0), asum(0) {}
+	Mod_sum() : n(0), asum(0) {}
 
 	// 配列 a で初期化
-	Mod_sum_query(const vi& a_) : a(a_), n(sz(a)), asum(0) {
+	Mod_sum(const vi& a_) : a(a_), n(sz(a)), asum(0) {
 		sort(all(a));
 		rep(i, n) asum += a[i];
 	}

@@ -19,9 +19,18 @@
 //yÀ‹æŠÔ‚Ìd‚È‚è‚Ì’·‚³z
 /*
 * À•Â‹æŠÔ [l1, r1] ‚Æ [l2, r2] ‚Ì‹¤’Ê•”•ª‚Ì’·‚³‚ÍˆÈ‰º‚Ì®‚Å—^‚¦‚ç‚ê‚éF
-*	min(min(r1, r2) - max(l1, l2), 0)
+*	max(min(r1, r2) - max(l1, l2), 0)
 *
-* verify : https://atcoder.jp/contests/abc070/tasks/abc070_b
+* verify : https://atcoder.jp/contests/abc261/tasks/abc261_a
+*/
+
+
+//y‹æŠÔ’[‚ÌŒğŠ·z
+/*
+* a <= b <= c <= d ‚Å‚ ‚é‚Æ‚«ˆÈ‰º‚ª¬‚è—§‚ÂF
+*	|c - a| + |d - b| = |d - a| + |c - b|
+* 
+* verify : https://atcoder.jp/contests/arc120/tasks/arc120_d
 */
 
 

@@ -2,8 +2,7 @@
 #include "header.h"
 #include "約数変換.h"
 #include "二項係数.h"
-#include "数え上げ(区間).h"
-// ■■■■■ 二重の和など ■■■■■
+// ■■■■■ 組（スコア和） ■■■■■
 
 
 //【組の差の総和】O(n log n)
@@ -22,25 +21,6 @@ template <class T> mint difference_sum(vector<T> a) {
 
 	// 隣り合う要素の差に重みを付けて足し込んでいく．
 	repi(i, 1, n - 1) res += mint(a[i] - a[i - 1]) * i * (n - i);
-
-	return res;
-}
-
-
-//【区間の min の総和】O(n log n)
-/*
-* Σi<j min( a[i..j) ) の値を返す．
-*
-* 利用：【区間の数え上げ（最小値指定）】
-*/
-template <class T> T interval_min_sum(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
-
-	unordered_map<T, ll> cnt;
-	count_min_intervals(a, cnt);
-
-	T res = T(0);
-	repe(p, cnt) res += p.first * p.second;
 
 	return res;
 }

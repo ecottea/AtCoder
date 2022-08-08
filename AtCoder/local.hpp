@@ -225,14 +225,24 @@ void dump(First first, Rest... rest) {
 	dump(rest...);
 }
 
-template <class T>
-void dumpel(T a) {
+template <class T> void dumpel(T a) {
 	if (mute_dump) return;
 
 	int i = 0; 
 	cerr << "\033[1;32m";
 	repe(x, a) {
 		cerr << i++ << ": " << x << endl;
+	}
+	cerr << "\033[0m";
+}
+
+// Mathematica ‚Ì‘Ž®‚É‡‚í‚¹‚½o—Í
+template <class T> void dump_list(vector<T> a) {
+	if (mute_dump) return;
+
+	cerr << "\033[1;32m{";
+	rep(i, sz(a)) {
+		cerr << a[i] << (i < sz(a) - 1 ? ", " : "}\n");
 	}
 	cerr << "\033[0m";
 }

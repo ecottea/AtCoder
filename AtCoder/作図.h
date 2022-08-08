@@ -147,9 +147,7 @@ int intersection_C_L(const Circle<ll>& c, const Line<ll>& l, Point<double>& p1, 
 	ll r = c.second;
 
 	// (0, 0) と l との距離が円の半径より大きい場合 → 共有点 0 個
-	if (dnm_sq != 0 && (num * num - 1) / dnm_sq >= r * r) {
-		return 0;
-	}
+	if (dnm_sq != 0 && (num * num - 1) / dnm_sq >= r * r) return 0;
 
 	// (0, 0) と l との符号付き距離
 	double dist = num / sqrt(dnm_sq);
@@ -178,7 +176,7 @@ int intersection_C_L(const Circle<ll>& c, const Line<ll>& l, Point<double>& p1, 
 * 円 c と直線 l の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
 */
 int intersection_C_L(const Circle<double>& c, const Line<double>& l, Point<double>& p1, Point<double>& p2) {
-	// verify : https://atcoder.jp/contests/abc157/tasks/abc157_f
+	// verify : https://atcoder.jp/contests/abc263/tasks/abc263_h
 
 	// 円 c の中心が原点にくるよう平行移動
 	Point<double> o = c.first;
@@ -194,9 +192,7 @@ int intersection_C_L(const Circle<double>& c, const Line<double>& l, Point<doubl
 	double r = c.second;
 
 	// (0, 0) と l との距離が円の半径より大きい場合 → 共有点 0 個
-	if (dnm_sq != 0 && (num * num - 1) / dnm_sq >= r * r) {
-		return 0;
-	}
+	if (num * num >= r * r * dnm_sq) return 0;
 
 	// (0, 0) と l との符号付き距離
 	double dist = num / sqrt(dnm_sq);
@@ -283,14 +279,10 @@ int intersection_C_C(const Circle<double>& c1, const Circle<double>& c2, Point<d
 	double r_sum = r1 + r2, r_dif = abs(r1 - r2);
 
 	// 中心間距離が円の半径の和より大きい場合 → 共有点 0 個
-	if (d.sqnorm() > r_sum * r_sum) {
-		return 0;
-	}
-
+	if (d.sqnorm() > r_sum * r_sum) return 0;
+	
 	// 中心間距離が円の半径の差より小さい場合 → 共有点 0 個
-	if (d.sqnorm() < r_dif * r_dif) {
-		return 0;
-	}
+	if (d.sqnorm() < r_dif * r_dif) return 0;
 
 	// その他の場合 → 交点 2 個
 	double x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
@@ -317,9 +309,7 @@ int tangent_to_circle(const Point<ll>& p, const Circle<ll>& c, Point<double>& t1
 	Point<ll> d = p - o;
 
 	// p と o の距離が円の半径より小さい場合 → 接線 0 本
-	if (d.sqnorm() < r * r) {
-		return 0;
-	}
+	if (d.sqnorm() < r * r) return 0;
 
 	// p と o の距離が円の半径に等しい場合 → 接線 1 本
 	if (d.sqnorm() == r * r) {
@@ -359,9 +349,7 @@ int common_tangent(const Circle<ll>& c1, const Circle<ll>& c2, vector<Point<doub
 	ll r_sum = r1 + r2, r_dif = abs(r1 - r2);
 
 	// 中心間距離が円の半径の差より小さい場合 → 共通接線 0 本
-	if (d.sqnorm() < r_dif * r_dif) {
-		return 0;
-	}
+	if (d.sqnorm() < r_dif * r_dif) return 0;
 
 	// 中心間距離が円の半径の差に等しい場合 → 共通接線 1 本
 	if (d.sqnorm() == r_dif * r_dif) {

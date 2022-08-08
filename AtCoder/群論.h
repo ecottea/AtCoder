@@ -115,7 +115,7 @@ void order_distribution(ll n, unordered_map<ll, ll>& cnt) {
 * 無向グラフ G を，[0..n) を頂点とし互換 e ∈ E に対応する辺をもつよう定める．
 * G の k 個の連結成分それぞれの頂点集合を A[0..k) とおくと，
 *		H ~= S_(A[0]) * S_(A[1]) * ... * S_(A[k-1])
-* となる．これは Union-Find を用いることで効率的に計算できる．
+* となる．
 *
 * verify : https://atcoder.jp/contests/arc107/tasks/arc107_c
 */

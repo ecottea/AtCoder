@@ -72,12 +72,11 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 * S sum(ll x1, ll y1, ll x2, ll y2) : O(log n)
 *	[x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
 *
-* 利用：【完全永続セグメント木（モノイド）】,【座標圧縮】
+* 利用：【永続セグメント木（モノイド）】,【座標圧縮】
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 class Static_rectangle_sum {
 	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
-	// verify : https://judge.yosupo.jp/problem/rectangle_sum
 
 	// x[y] 座標の昇順列（x 座標は全て，y 座標はユニーク）
 	vl xs, ys;
@@ -88,6 +87,8 @@ class Static_rectangle_sum {
 public:
 	// 値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
 	Static_rectangle_sum(const vl& x, const vl& y, const vector<S>& v) {
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+		
 		int n = sz(x);
 		xs.resize(n);
 
@@ -113,6 +114,8 @@ public:
 
 	// [x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
 	S sum(ll x1, ll y1, ll x2, ll y2) const {
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+		
 		int t1 = lbpos(xs, x1);
 		int t2 = lbpos(xs, x2);
 		int j1 = lbpos(ys, y1);
@@ -439,6 +442,8 @@ struct Range_minimize1d_query {
 	Range_minimize1d_query(const vl& v) : n(sz(v)) { pos_segs[0] = rmq(v); }
 
 	void set(int l, int r, ll a, ll b) {
+		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
+
 		if (a >= 0) {
 			if (!pos_segs.count(a)) {
 				pos_segs[a] = rmq(n);
@@ -454,6 +459,8 @@ struct Range_minimize1d_query {
 	}
 
 	ll get(int i) {
+		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
+
 		ll res = INFL;
 		repea(p, pos_segs) {
 			chmin(res, p.first * i + p.second.get(i));

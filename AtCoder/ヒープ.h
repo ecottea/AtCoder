@@ -535,7 +535,11 @@ template <class T> struct Separated_multiset_sum {
 
 	// 多重集合の大きさを返す．
 	int size_l() const { return nl; }
-	int size_h() const { return nh; }
+	int size_h() const {
+		// verify : https://yukicoder.me/problems/no/2028
+
+		return nh;
+	}
 
 	// 多重集合に値 val を追加する．
 	void insert_l(const T& val) {
@@ -558,6 +562,8 @@ template <class T> struct Separated_multiset_sum {
 		nl++;
 	}
 	void insert_h(const T& val) {
+		// verify : https://yukicoder.me/problems/no/2028
+
 		if (nl == 0 || val >= *sl.rbegin()) {
 			sh.insert(val);
 
@@ -650,7 +656,11 @@ template <class T> struct Separated_multiset_sum {
 		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
 		return suml;
 	}
-	T sum_h() const { return sumh; }
+	T sum_h() const {
+		// verify : https://yukicoder.me/problems/no/2028
+		
+		return sumh;
+	}
 
 	// 多重集合の大きさを 1 減らす．
 	void decrese_l() {

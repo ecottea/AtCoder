@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "前処理(列).h"
 // ■■■■■ 辞書順 ■■■■■
 
 
@@ -18,12 +19,29 @@
 */
 
 
+//【無限連結と辞書順】
+/*
+* 文字列 s, t を無限個連結した文字列をそれぞれ S, T とするとき，以下が成り立つ：
+*	s + t < t + s ⇔ S < T
+* 
+* verify : https://yukicoder.me/contests/395
+*/
+
+
+//【接尾辞配列】
+/*
+* ACL の vi suffix_array(string s) を利用すればよい．
+* 
+* ret[i] は辞書順 i 番目の接尾辞の先頭文字の位置を表す．
+*/
+
+
 //【最小部分列】O(n k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) の部分列のうち，
 * 長さが m で辞書順で最小であるものを返す．
 *
-*（前から貪欲法）
+*（前から貪欲）
 */
 string smallest_subsequence(const string& s, int m) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_f
@@ -55,6 +73,33 @@ string smallest_subsequence(const string& s, int m) {
 	}
 
 	return res;
+}
+
+
+//【最小部分列（長さごと）】O(n)
+/*
+* 数列 a[0..n) の長さ m の部分列のうち，辞書順で最小であるものを S(m) とおく．
+* 各 j∈[0..n) について，S(j+1) に含まれるが S(j) に含まれない文字の位置を pos[j] に格納する．
+*
+* 利用：【デカルト木】
+*/
+void smallest_subsequence(const vi& a, vi& pos) {
+	// verify : https://atcoder.jp/contests/abc262/tasks/abc262_f
+
+	//【方法】
+	// 最小要素を根とするデカルト木を構築し，行きがけ順かつ右の子優先でなぞれば良い．
+
+	int n = sz(a);
+	pos.clear();
+
+	Cartesian_tree<int> ct(a);
+
+	function<void(int)> dfs = [&](int s) {
+		pos.push_back(s);
+		if (ct[s].rc != -1) dfs(ct[s].rc);
+		if (ct[s].lc != -1) dfs(ct[s].lc);
+	};
+	dfs(ct.rt);
 }
 
 
@@ -150,7 +195,7 @@ bool lex_order_subseq(const string& s, ll d, string& res) {
 }
 
 
-//【最短非部分列】O(n k)
+//【最小最短非部分列】O(n k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) の部分列でない最短の文字列のうち，
 * 辞書順で最小であるものを返す．
@@ -213,7 +258,7 @@ string shortest_nonsubsequence(const string& s) {
 }
 
 
-//【最短共通非部分列】O(n m k)
+//【最小最短共通非部分列】O(n m k)
 /*
 * k = 2 種類の数字からなる文字列 s[0..n), t[0..m) それぞれの
 * 部分列でない最短の文字列のうち，辞書順で最小であるものを返す．
@@ -295,7 +340,7 @@ string shortest_common_nonsubsequence(const string& s, const string& t) {
 }
 
 
-//【辞書順最小の連結文字列】O(n k^2 max|s[i]|)
+//【最小の連結文字列】O(n k^2 max|s[i]|)
 /*
 * n 個の文字列 s から k 個を選び連結して作られる辞書順最小の文字列を返す．
 *

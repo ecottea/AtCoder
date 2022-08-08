@@ -3,9 +3,35 @@
 // ■■■■■ 列の列挙 ■■■■■
 
 
+//【任意列の列挙】O(m^n n)
+/*
+* 集合 a[0..m) の要素からなる長さ n の列全てを seqs に格納する．
+*/
+void enumerate_all_sequences(int n, const vi& a, vvi& seqs) {
+	seqs.clear();
+	vi seq; // 作成途中の列
+
+	function<void()> rf = [&]() {
+		// 完成していれば記録する．
+		if (sz(seq) == n) {
+			seqs.push_back(seq);
+			return;
+		}
+
+		repe(x, a) {
+			seq.push_back(x);
+			rf();
+			seq.pop_back();
+		}
+	};
+
+	rf();
+}
+
+
 //【部分列の列挙】O(2^n n)
 /*
-* a[0..n) の部分列を seqs に格納する．
+* a[0..n) の部分列全てを seqs に格納する．
 */
 template <class T>
 void enumerate_subsequences(const vector<T>& a, vector<vector<T>>& seqs) {
@@ -14,9 +40,27 @@ void enumerate_subsequences(const vector<T>& a, vector<vector<T>>& seqs) {
 
 	repb(set, n) {
 		vector<T> seq;
-
 		rep(i, n) if (set & (1 << i)) seq.push_back(a[i]);
+		seqs.push_back(seq);
+	}
+}
 
+
+//【部分列の列挙（長さ指定）】O(bin(n, m) m)
+/*
+* a[0..n) の長さ m の部分列全てを seqs に格納する．
+*/
+template <class T>
+void enumerate_subsequences(const vector<T>& a, int m, vector<vector<T>>& seqs) {
+	int n = sz(a);
+	seqs.clear();
+
+	vb p(n);
+	rep(i, m) p[i] = true;
+
+	repp(p) {
+		vector<T> seq;
+		rep(i, n) if (p[i]) seq.push_back(a[i]);
 		seqs.push_back(seq);
 	}
 }
@@ -27,6 +71,8 @@ void enumerate_subsequences(const vector<T>& a, vector<vector<T>>& seqs) {
 * 0 <= a[0] < a[1] < ... < a[n-1] < m なる列 a[0..n) を seqs に格納する．
 */
 void enumerate_strongly_increase_sequences(int n, int m, vvi& seqs) {
+	// verify : https://atcoder.jp/contests/abc263/tasks/abc263_c
+
 	vi a(n);
 	seqs.clear();
 
@@ -110,6 +156,67 @@ void enumerate_strongly_multiple_sequences(ll k, vvl& seqs) {
 			a.push_back(a_max * i);
 			rf();
 			a.pop_back();
+		}
+	};
+
+	rf();
+}
+
+
+//【作業用スタックを利用して得られる列の列挙】O(Catalan(n) n)
+/*
+* a[0..n) に対し，先頭から順にスタックに積んでいき，任意のタイミングでスタックから
+* 要素を降ろしてくることで構成できる列を列挙する．
+*/
+void enumerate_stack_perm_sequences(const vi& a, vvi& seqs) {
+	//（例）a[0..4) = [1, 2, 3, 4] のとき
+	//	4 3 2 1  (((())))
+	//	3 4 2 1  ((()()))
+	//	3 2 4 1  ((())())
+	//	3 2 1 4  ((()))()
+	//	2 4 3 1  (()(()))
+	//	2 3 4 1  (()()())
+	//	2 3 1 4  (()())()
+	//	2 1 4 3  (())(())
+	//	2 1 3 4  (())()()
+	//	1 4 3 2  ()((()))
+	//	1 3 4 2  ()(()())
+	//	1 3 2 4  ()(())()
+	//	1 2 4 3  ()()(())
+	//	1 2 3 4  ()()()()
+	//
+	// '(' を左から順に a で彩色したとき，')' の色を左から順に並べたものになっている．
+	// '(' をヘッダを 1 つ右へ移動，')' を最も右の空きへの書き込み，と対応させられる．
+	// 任意の i < j < k について，[a[k], a[i], a[j]] は部分列に含まれない．
+
+	int n = sz(a);
+	seqs.clear();
+
+	vi seq; // 作成途中の列
+	int i = 0; // 次にスタックに積む a の要素番号
+	vi stk(n); int pt = -1; // 作業用スタックとスタックトップの位置
+
+	function<void()> rf = [&]() {
+		// 列が完成している場合は記録する．
+		if (sz(seq) == n) {
+			seqs.push_back(seq);
+			return;
+		}
+
+		// a[i] をスタックに積む場合
+		if (i < n) {
+			stk[++pt] = a[i++];
+			rf();
+			pt--; i--;
+		}
+
+		// スタックトップから作成途中の列に移動する場合
+		if (pt >= 0) {
+			int v = stk[pt--];
+			seq.push_back(v);
+			rf();
+			seq.pop_back();
+			stk[++pt] = v;
 		}
 	};
 

@@ -5,6 +5,37 @@
 // ■■■■■ 数え上げ（区間） ■■■■■
 
 
+//【和が 0 の区間の数え上げ】O(n)
+/*
+* 数列 a[0..n) の空でない連続部分列で和が 0 であるものの個数を返す．
+*/
+template <class T> ll count_zero_intervals(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/agc023/tasks/agc023_a
+
+	//【方法】
+	// Σa[0..i) の値ごとに個数を数え上げる．
+	// Σa[l..r) = 0 ⇔ Σa[0..l) = Σa[0..r) なので求める個数は三角数の和になる．
+
+	int n = sz(a);
+
+	// acc[i] : Σa[0..i)
+	vector<T> acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + a[i];
+
+	// cnt[v] : Σa[0..i) = v となる i の個数（i = 0 を含む）
+	unordered_map<T, int> cnt;
+	repi(i, 0, n) cnt[acc[i]]++;
+
+	ll res = 0;
+	repe(tmp, cnt) {
+		ll c = tmp.second;
+		res += c * (c - 1) / 2;
+	}
+
+	return res;
+}
+
+
 //【区間端範囲制約を満たす区間の数え上げ】O(n log n)
 /*
 * [0..n) の区間 [l..r] (l <= r) で，l_min[r] <= l <= l_max[r] かつ
@@ -47,7 +78,35 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 }
 
 
-//【最小値の指定された区間の数え上げ】O(n log n)
+//【最小値ごとの区間の数え上げ】O(n log n)
+/*
+* 列 a[0..n) について，最小値が m の区間 a[l..r) (l < r) の個数を cnt[m] に格納する．
+*
+* 利用：【自身より小さい数の次の位置】,【自身より小さい数の前の位置】
+*/
+template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
+	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
+
+	int n = sz(a);
+	cnt.clear();
+
+	vi pl, nl, pleq, nleq;
+	prev_less_position(a, pl);
+	next_less_position(a, nl);
+	prev_less_position(a, pleq, true);
+	next_less_position(a, nleq, true);
+
+	rep(i, n) {
+		if (pl[i] == pleq[i]) {
+			cnt[a[i]] += (ll)(nl[i] - pl[i] - 1) * (nl[i] - pl[i]) / 2;
+			cnt[a[i]] -= (ll)(i - pleq[i] - 1) * (i - pleq[i]) / 2;
+		}
+		cnt[a[i]] -= (ll)(nleq[i] - i - 1) * (nleq[i] - i) / 2;
+	}
+}
+
+
+//【最小値ごとの区間の数え上げ】O(n log n)
 /*
 * 列 a[0..n) について，最小値が m の区間 a[l..r) (l < r) の個数を cnt[m] に格納する．
 *
@@ -89,34 +148,6 @@ template <class T> void count_min_intervals_dt(const vector<T>& a, unordered_map
 	};
 
 	rf(ct.root, 0, n);
-}
-
-
-//【最小値の指定された区間の数え上げ】O(n log n)
-/*
-* 列 a[0..n) について，最小値が m の区間 a[l..r) (l < r) の個数を cnt[m] に格納する．
-*
-* 利用：【自身より小さい数の次の位置】,【自身より小さい数の前の位置】
-*/
-template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
-	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
-
-	int n = sz(a);
-	cnt.clear();
-
-	vi pl, nl, pleq, nleq;
-	prev_less_position(a, pl);
-	next_less_position(a, nl);
-	prev_less_position(a, pleq, true);
-	next_less_position(a, nleq, true);
-
-	rep(i, n) {
-		if (pl[i] == pleq[i]) {
-			cnt[a[i]] += (ll)(nl[i] - pl[i] - 1) * (nl[i] - pl[i]) / 2;
-			cnt[a[i]] -= (ll)(i - pleq[i] - 1) * (i - pleq[i]) / 2;
-		}
-		cnt[a[i]] -= (ll)(nleq[i] - i - 1) * (nleq[i] - i) / 2;
-	}
 }
 
 

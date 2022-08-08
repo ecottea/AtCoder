@@ -26,31 +26,12 @@ void montmort_number(int n, vm& mon) {
 
 	//【方法】
 	// モンモール数は以下の 2 項間漸化式を満たす：
-	//		mon[n] = n mon[n - 1] + (-1)^n
+	//		mon[n] = n mon[n-1] + (-1)^n
 
 	mon.resize(n + 1);
 	mon[0] = 1;
 	repi(i, 1, n) mon[i] = mon[i - 1] * i + (i & 1 ? -1 : 1);
 }
-
-
-//【メナージュ数】
-/*
-* 順列 p[0..n) で，任意の i∈[0..n) について
-*		p[i] != i かつ p[i] != i + 1 (mod n)
-* を満たすものの個数は
-*		Σk=[0..n] (-1)^k 2n/(2n-k) bin(2n-k, k) (n-k)!
-* である．
-* 
-*（証明）
-* 個数ごとの状態系包除原理を用いる．
-* 固定された特定の k 箇所で条件に違反（他は自由）するような順列の数は，
-* サイクルグラフ C_2n の大きさ k のマッチングの個数 2n/(2n-k) bin(2n-k, k) と，
-* マッチングに属さない p[i] の選び方 (n-k)! との積に等しい．
-* 
-* 参考 : http://oeis.org/A000179
-* verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
-*/
 
 
 //【順列の数（p[i] != i, p[i] != i + 1）】
@@ -68,6 +49,25 @@ void montmort_number(int n, vm& mon) {
 * マッチングに属さない p[i] の選び方 (n-k)! との積に等しい．
 *
 * 参考 : http://oeis.org/A000271
+* verify : https://atcoder.jp/contests/agc005/tasks/agc005_d
+*/
+
+
+//【メナージュ数】
+/*
+* 順列 p[0..n) で，任意の i∈[0..n) について
+*		p[i] != i かつ p[i] != i + 1 (mod n)
+* を満たすものの個数は
+*		Σk=[0..n] (-1)^k 2n/(2n-k) bin(2n-k, k) (n-k)!
+* である．
+* 
+*（証明）
+* 個数ごとの状態系包除原理を用いる．
+* 固定された特定の k 箇所で条件に違反（他は自由）するような順列の数は，
+* サイクルグラフ C_2n の大きさ k のマッチングの個数 2n/(2n-k) bin(2n-k, k) と，
+* マッチングに属さない p[i] の選び方 (n-k)! との積に等しい．
+* 
+* 参考 : http://oeis.org/A000179
 * verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
 */
 

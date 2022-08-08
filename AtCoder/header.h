@@ -74,6 +74,7 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define gcd __gcd
 #define dump(...)
 #define dumpel(v)
+#define dump_list(v)
 #define input_from_file(f)
 #define output_to_file(f)
 #endif
@@ -212,28 +213,26 @@ int solve(int n, const vi& a) {
 	return res;
 }
 
-void zikken() {
+void find_bug() {
+#ifdef _MSC_VER
 	// ‡‚í‚È‚¢“ü—Í—á‚ğŒ©‚Â‚¯‚éD
 
 	mt19937_64 mt;
 	mt.seed((int)time(NULL));
 	uniform_int_distribution<ll> rnd(0LL, 1LL << 62);
 
-#ifdef _MSC_VER
 	mute_dump = true;
-#endif
 
 	rep(hoge, 100) {
 		int n = 100;
 		vi a(n);
 		rep(i, n) {
-			a[i] = rnd(mt) % 3;
+			a[i] = rnd(mt) % 100;
 		}
 
 		auto res_naive = naive(n, a);
 		auto res_solve = solve(n, a);
 
-#ifdef _MSC_VER
 		if (res_naive != res_solve) {
 			cout << "----------error!----------" << endl;
 			cout << "input:" << endl;
@@ -243,11 +242,10 @@ void zikken() {
 			cout << res_solve << endl;
 			cout << "--------------------------" << endl;
 		}
-#endif
 	}
 
-#ifdef _MSC_VER
 	mute_dump = false;
+	exit(0);
 #endif
 }
 

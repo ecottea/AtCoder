@@ -28,6 +28,17 @@
 */
 
 
+//【DAG 上 DP とスコア和】
+/*
+* DAG g の ST から GL までの長さ k のパスの数を c(k) とおく．
+* 全ての k に対して c(k) を求めるのが間に合わなくても，以下の形なら O(|V|) で値が求まる：
+*	Σk c(k)		: パスの総数を求める DP
+*	Σk c(k) a^k	: 上の DP において遷移の度に値を a 倍
+* 
+* verify : https://atcoder.jp/contests/diverta2019-2/tasks/diverta2019_2_e
+*/
+
+
 //【ディルワースの定理】
 /*
 * DAG g の最小パス被覆の大きさは，最大反鎖の大きさに一致する．
@@ -41,8 +52,6 @@
 //【パスの個数】O(|V| + |E|)
 /*
 * DAG g の頂点 s から gl までのパスの個数を cnt[s] に格納する．
-*
-*（DAG 上の DP）
 */
 void count_path(const Graph& g, int gl, vm& cnt) {
 	// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_b
@@ -74,8 +83,6 @@ void count_path(const Graph& g, int gl, vm& cnt) {
 //【パスの個数】O(|V| + |E|)
 /*
 * DAG g の頂点 s からのパス（不動も可）の個数を cnt[s] に格納する．
-*
-*（DAG 上の DP）
 */
 void count_all_path(const Graph& g, vm& cnt) {
 	int n = sz(g);
@@ -104,8 +111,6 @@ void count_all_path(const Graph& g, vm& cnt) {
 //【最長パス】O(|V| + |E|)
 /*
 * DAG g の頂点 s からの最長パスの長さを len[s] に格納する．
-*
-*（DAG 上の DP）
 */
 void longest_path(const Graph& g, vi& len) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_g
@@ -132,12 +137,39 @@ void longest_path(const Graph& g, vi& len) {
 }
 
 
-//【スコア最大パス（頂点スコア，始点任意）】O(|V| + |E|)
+//【スコア最大パス】O(|V| + |E|)
+/*
+* コスト付き DAG g の頂点 s からのスコア最大パスのスコアを sc[s] に格納する．
+*/
+void highest_score_path(const WGraph& g, vl& sc) {
+	// verify : https://atcoder.jp/contests/code-festival-2017-qualb/tasks/code_festival_2017_qualb_d
+
+	int n = sz(g);
+
+	// sc[s] : 頂点 s からのスコア最大パスのスコア
+	sc.resize(n);
+	vb seen(n);
+
+	function<ll(int)> dfs = [&](int s) {
+		if (seen[s]) return sc[s];
+		seen[s] = true;
+		sc[s] = 0;
+
+		// s → t と進む場合
+		repe(t, g[s]) chmax(sc[s], dfs(t) + t.cost);
+
+		return sc[s];
+	};
+
+	// 各頂点 s についての情報を計算する．
+	rep(s, n) if (!seen[s]) dfs(s);
+}
+
+
+//【スコア最大パス（頂点スコア）】O(|V| + |E|)
 /*
 * 頂点 i に非負スコア w[i] の与えられた DAG g のパス（長さ 0 も可）で，
 * 頂点 s からのパスの最大スコアを sc[s] に格納する．
-*
-*（DAG 上の DP）
 */
 void highest_score_path(const Graph& g, const vl& w, vl& sc) {
 	int n = sz(g);
@@ -163,13 +195,11 @@ void highest_score_path(const Graph& g, const vl& w, vl& sc) {
 }
 
 
-//【スコア最大パス（頂点スコア，始点固定）】O(|V| + |E|)
+//【スコア最大パス（頂点スコア，復元）】O(|V| + |E|)
 /*
 * 頂点 i に非負スコア w[i] の与えられた DAG g の r からのパス（長さ 0 も可）で，
 * パスに属する頂点のスコアの和を最大とするパスの頂点列を path に格納する．
 * またそのパスのスコアを返す．
-*
-*（DAG 上の DP）
 */
 ll highest_score_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 	int n = sz(g);

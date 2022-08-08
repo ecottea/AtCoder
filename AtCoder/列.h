@@ -58,3 +58,20 @@ int cut_histogram_horizontal(const vl& hist, vector<pli>& hls) {
 }
 
 
+//【非等差数列】
+/*
+* どの p（素数）要素も等差数列をなさないような集合 a[0..n) は以下の方法で構築できる：
+*	a[i] = (i の p-1 進表示を p 進法表示だと解釈しなおしたもの)
+* 
+* これは 0 から順に条件を満たす限り昇順に数を追加していくという構成でも得られる．
+* 
+* verify : https://atcoder.jp/contests/monamieHB2021/tasks/monamieHB2021_b
+*/
+
+
+//【辞書順最小部分列（長さごと）】
+/*
+* 辞書順.h へ
+*/
+
+

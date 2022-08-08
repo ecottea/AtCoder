@@ -7,6 +7,8 @@
 //y‘f””»’èzO((log n)^3)
 /*
 * n ‚ª‘f”‚©‚ğ•Ô‚·D
+* 
+* verify : https://atcoder.jp/contests/abc263/tasks/abc263_g
 */
 //internal::is_prime_constexpr(int n);
 

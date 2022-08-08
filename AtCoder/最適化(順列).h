@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 順列の最小化[最大化] ■■■■■
+// ■■■■■ 最適化（順列） ■■■■■
 
 
 //【並べ替え不等式（積の和）】
@@ -8,8 +8,11 @@
 * 数列 a[0..n) と b[0..n) それぞれを自由に並べ替えてよいとき，
 * Σi a[i] b[i] が最大になるのは a, b の大小順が同じときで，
 * Σi a[i] b[i] が最小になるのは a, b の大小順が異なるときである．
+* 
+* 特に 0 < a < b < c < d なる a, b, c, d について以下が成り立つ：
+*		a d + b c < a c + b d < a b + c d
 *
-* 参考：https://manabitimes.jp/math/632
+* verify：https://atcoder.jp/contests/arc145/tasks/arc145_c
 */
 
 

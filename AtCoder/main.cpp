@@ -23,7 +23,7 @@ const double PI = acos(-1);
 const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi DY = { 0, 1, 0, -1 };
 int INF = 1001001001; ll INFL = 4004004004004004004LL;
-double EPS = 1e-16;
+double EPS = 1e-12;
 
 // 入出力高速化
 struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(18); } } fastIOtmp;
@@ -70,6 +70,7 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define gcd __gcd
 #define dump(...)
 #define dumpel(v)
+#define dump_list(v)
 #define input_from_file(f)
 #define output_to_file(f)
 #define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
@@ -82,8 +83,8 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #include <atcoder/all>
 using namespace atcoder;
 
-//using mint = modint1000000007;
-using mint = modint998244353;
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
@@ -92,8 +93,156 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 //----------------------------------------
 
 
+int naive(int n, ll t, const vl& a, const vl& b) {
+	vi p(n);
+	iota(all(p), 0);
+
+	int res = 0;
+	repp(p) {
+		int cnt = 0; ll now = 0;
+		rep(i, n) {
+			now++;
+			now += a[p[i]] * now + b[p[i]];
+			if (now > t) break;
+			else cnt++;
+		}
+		chmax(res, cnt);
+	}
+	return res;
+}
+
+
+int WA(int n, ll t, const vl& a, const vl& b) {
+	if (t == 0) return 0;
+
+	vector<pll> nab;
+	vl bs;
+
+	rep(i, n) {
+		if (a[i] > 0) nab.push_back({ -a[i], b[i] });
+		else bs.push_back(b[i]);
+	}
+	sort(all(nab)); // この順にソートして良い理由がない
+	sort(all(bs));
+	n = sz(nab);
+	int nb = sz(bs);
+//	dump(nab); dump(bs);
+
+	int m = msb(t) + 2;
+	vvl dp(n + 1, vl(m, t + 1));
+	dp[0][0] = 0;
+
+	rep(i, n) {
+		ll a, b;
+		tie(a, b) = nab[i];
+		a *= -1;
+
+		rep(j, m) {
+			chmin(dp[i + 1][j], dp[i][j]);
+
+			if (j < m - 1 && dp[i][j] <= t) {
+				ll now = dp[i][j] + 1;
+				ll add = a * now + b;
+				chmin(dp[i + 1][j + 1], now + add);
+			}
+		}
+	}
+//	dumpel(dp);
+
+	int res = 0;
+
+	ll acc = 0; int i = 0;
+	repir(j, m - 1, 0) {
+		if (dp[n][j] > t) continue;
+
+		while (i < nb && dp[n][j] + acc + 1 + bs[i] <= t) {
+			acc += 1 + bs[i++];
+		}
+
+		chmax(res, j + i);
+	}
+
+	return res;
+}
+
+
+int WA2(int n, ll t, const vl& a, const vl& b) {
+	if (t == 0) return 0;
+
+	if (n <= 8) return naive(n, t, a, b);
+
+	auto start = chrono::system_clock::now();
+
+	mt19937_64 mt((int)time(NULL));
+	uniform_real_distribution<> rnd(0, *max_element(all(b)) + 1.);
+	
+	int res = WA(n, t, a, b);
+
+	while (true) {
+		vector<pair<double, int>> nab;
+		vl bs;
+
+		rep(i, n) {
+			if (a[i] > 0) nab.push_back({ 1. * b[i] / a[i] + rnd(mt), i });
+			else bs.push_back(b[i]);
+		}
+		sort(all(nab));
+		sort(all(bs));
+		n = sz(nab);
+		int nb = sz(bs);
+
+		int m = msb(t) + 1;
+		vvl dp(n + 1, vl(m, t + 1));
+		dp[0][0] = 0;
+
+		rep(i, n) {
+			int id = nab[i].second;
+
+			rep(j, m) {
+				chmin(dp[i + 1][j], dp[i][j]);
+
+				if (j < m - 1 && dp[i][j] <= t) {
+					ll now = dp[i][j] + 1;
+					ll add = a[id] * now + b[id];
+					chmin(dp[i + 1][j + 1], now + add);
+				}
+			}
+		}
+
+		ll acc = 0; int i = 0;
+		repir(j, m - 1, 0) {
+			if (dp[n][j] > t) continue;
+
+			while (i < nb && dp[n][j] + acc + 1 + bs[i] <= t) {
+				acc += 1 + bs[i++];
+			}
+
+			chmax(res, j + i);
+		}
+
+		auto now = chrono::system_clock::now();
+		auto msec = chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+		if (msec >= 1900) break;
+	}
+
+	return res;
+}
+
+
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
-		
+
+	int n; ll t;
+	cin >> n >> t;
+
+	vl a(n), b(n);
+	rep(i, n) cin >> a[i] >> b[i];
+
+	dump(naive(n, t, a, b));
+	dump(WA(n, t, a, b));
+
+	ll res = WA2(n, t, a, b);
+
+	cout << res << endl;
 }

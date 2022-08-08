@@ -39,9 +39,19 @@ void set_partitions(int n, vvi& sps) {
 
 //【自然数の分割の列挙】O(n の分割数)（n = 50 くらいまで動く）
 /*
-* 自然数 n を k 以下の数に分割する方法を ips に格納する．
+* 自然数 n を k 以下の自然数に分割する方法を ips に格納する．
 */
-void integer_partitions(int n, int k, vvi& ips) {
+void integer_partitions_val(int n, int k, vvi& ips) {
+	//【具体例】
+	// (n, k) = (6, 3) のとき：
+	//	0: 3 3
+	//	1: 3 2 1
+	//	2: 3 1 1 1
+	//	3: 2 2 2
+	//	4: 2 2 1 1
+	//	5: 2 1 1 1 1
+	//	6: 1 1 1 1 1 1
+
 	ips.clear();
 	map<int, int> ip; // ip[i] : 分割に i を何個用いたか
 
@@ -81,6 +91,56 @@ void integer_partitions(int n, int k, vvi& ips) {
 	};
 
 	rf(n, k);
+}
+
+
+//【自然数の分割の列挙】O(n の分割数)（n = 50 くらいまで動く）
+/*
+* 自然数 n を d 個以下の自然数に分割する方法を ips に格納する．
+*/
+void integer_partitions_len(int n, int d, vvi& ips) {
+	//【具体例】
+	// (n, k) = (6, 3) のとき：
+	//	0 : 6
+	//	1 : 5 1
+	//	2 : 4 2
+	//	3 : 4 1 1
+	//	4 : 3 3
+	//	5 : 3 2 1
+	//	6 : 2 2 2
+
+	ips.clear();
+	map<int, int> ip; // ip[i] : 分割に i を何個用いたか
+	int len = 0;
+
+	// n を k 以下の数で分割する．
+	function<void(int, int)> rf = [&](int n, int k) {
+		// 分割しきった場合
+		if (n == 0) {
+			// 分割の記録
+			ips.push_back(vi());
+			for (auto it = ip.rbegin(); it != ip.rend(); it++) {
+				rep(i, it->second) ips.rbegin()->push_back(it->first);
+			}
+			return;
+		}
+
+		// 分割に使える数がもうない場か，分割の大きさが d に達した場合
+		if (k == 0 || len == d) return;
+
+		// n が k 以上のときは，n を k と n-k に分割できる．
+		if (n >= k) {
+			ip[k]++; len++;
+			rf(n - k, k);
+			len--; ip[k]--;
+			if (ip[k] == 0) ip.erase(k);
+		}
+
+		// これ以上 n の分割に k を使わない場合
+		rf(n, k - 1);
+	};
+
+	rf(n, n);
 }
 
 

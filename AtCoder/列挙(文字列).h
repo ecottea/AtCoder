@@ -7,7 +7,7 @@
 /*
 * 文字集合 cs の要素からなる長さ n の文字列全てを strs に格納する．
 */
-void all_strings(int n, const vc& cs, vector<string>& strs) {
+void enumerate_all_strings(int n, const vc& cs, vector<string>& strs) {
 	strs.clear();
 	string s;
 
@@ -31,44 +31,9 @@ void all_strings(int n, const vc& cs, vector<string>& strs) {
 }
 
 
-//【1 の連続しないビット列の列挙】O(fibonacci(n) n) = O(1.6^n n)
-/*
-* 長さ n のビット列のうち 1 が連続しないものを seqs に格納する．
-*/
-void enumerate_noncontinuous_bitsequences(int n, vl& seqs) {
-	ll b = 0;
-	seqs.clear();
-
-	// len : 残り長さ, d : 直前の桁の数
-	function<void(int, int)> rf = [&](int len, int d) {
-		// 残りの長さが 0 の場合
-		if (len == 0) {
-			seqs.push_back(b);
-			return;
-		}
-
-		// 直前の桁が 0 である場合は 1 を使える．
-		if (d == 0) {
-			b = b * 2 + 1;
-			rf(len - 1, 1);
-			b = (b - 1) / 2;
-		}
-
-		// 0 を使う．
-		b *= 2;
-		rf(len - 1, 0);
-		b /= 2;
-
-		return;
-	};
-
-	rf(n, 0);
-}
-
-
 //【括弧列の列挙】O(Catalan(n) n)（n = 15 くらいまで OK）
 /*
-* 長さ 2 n の括弧列を辞書順に seqs に格納する．
+* 長さ 2 n の括弧列全てを辞書順に seqs に格納する．
 */
 void enumerate_parenthesis_sequences(int n, vector<string>& seqs) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_b
@@ -103,6 +68,40 @@ void enumerate_parenthesis_sequences(int n, vector<string>& seqs) {
 	};
 
 	rf(n, n);
+}
+
+
+//【括弧文字列の列挙】O(2^n)
+/*
+* '(', ')', '?' からなる文字列 s[0..n) の '?' をいずれかの括弧に置き換えて
+* 得られる括弧文字列全てを strs に格納する．
+*/
+void enumerate_all_parenthesis_sequences(const string& s, vector<string>& strs) {
+	int n = sz(s);
+	strs.clear();
+	string p;
+
+	// l : 長さ
+	function<void(int)> rf = [&](int l) {
+		// 長さが n の場合は記録
+		if (l == n) {
+			strs.push_back(p);
+			return;
+		}
+
+		if (s[l] != ')') {
+			p.push_back('(');
+			rf(l + 1);
+			p.pop_back();
+		}
+		if (s[l] != '(') {
+			p.push_back(')');
+			rf(l + 1);
+			p.pop_back();
+		}
+	};
+
+	rf(0);
 }
 
 

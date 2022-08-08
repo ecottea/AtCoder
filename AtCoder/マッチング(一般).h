@@ -142,7 +142,7 @@ template <class T> mint count_different_color_matching(const vector<T>& c) {
 * 明らかに逆操作も可能であり，これは 1:1 対応である．
 *
 * 参考 : http://oeis.org/A011973
-* verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
+* verify : https://atcoder.jp/contests/agc005/tasks/agc005_d
 */
 
 

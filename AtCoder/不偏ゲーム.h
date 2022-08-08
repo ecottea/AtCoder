@@ -177,7 +177,7 @@ void range_mex(const vi& c, vi& nimber) {
 //【個数制限付きニム】O(n m)
 /*
 * 山から取り除ける石の個数が c[0..m) に限られるルールのニムについて，
-* i（<= n）個の石からなる山のニム値を nimber[i] に格納する．
+* i∈[0..n] 個の石からなる山のニム値を nimber[i] に格納する．
 */
 void selection_nim(const vi& c, int n, vi& nimber) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_k
@@ -202,18 +202,15 @@ void selection_nim(const vi& c, int n, vi& nimber) {
 }
 
 	
-// 【DAG 上のコマ移動ゲーム】O((|V| + |E|) log|V|)　
+//【DAG 上のコマ移動ゲーム】O((|V| + |E|) log|V|)　
 /*
-* ゲームのルール：
 * DAG g のある頂点 v にコマが置かれている．
-* 先手と後手は交互にコマを辺で繋がれた頂点のいずれかへ動かす．
-* 先に移動不可能になった方が負けとする．
-*
-* nimber[v] : v にコマがある状態のニム値
+* 先手と後手は交互にコマを辺で繋がれた頂点へ動かし，先に移動不可能になった方が負けとする．
+* コマが v にある状態のニム値を nimber[v] に格納する．
 *
 * 利用：【最小除外数（mex）】
 */
-void impartial_game(Graph& g, vi& nimber) {
+void DAG_game(const Graph& g, vi& nimber) {
 	int n = sz(g);
 
 	vb seen(n);
@@ -237,29 +234,22 @@ void impartial_game(Graph& g, vi& nimber) {
 }
 
 
-// 【有向グラフ上のコマ移動ゲーム】O(|V| + |E|)
+//【有向グラフ上のコマ移動ゲーム】O(|V| + |E|)
 /*
-* ゲームのルール：
-* 有向グラフ（閉路可） g のある頂点 v にコマが置かれている．
-* 先手と後手は交互にコマを辺で繋がれた頂点のいずれかへ動かす．
-* 先に移動不可能になった方が負けとする．
-*
-* res[v] : v にコマがある状態からの結果（1:先手勝ち，0:後手勝ち，-1:引き分け）
+* 有向グラフ（閉路可）g のある頂点 v にコマが置かれている．
+* 先手と後手は交互にコマを辺で繋がれた頂点へ動かし，先に移動不可能になった方が負けとする．
+* コマが v にある状態からの結果（1:先手勝ち，0:後手勝ち，-1:引き分け）を res[v] に格納する．
 *
 *（後退解析）
 */
-void cyclic_impartial_game(Graph& g, vi& res) {
+void directed_graph_game(const Graph& g, vi& res) {
 	// verify : https://atcoder.jp/contests/abc209/tasks/abc209_e
 
 	int n = sz(g);
 
 	// 辺の向きを逆にしたグラフを作成
 	Graph g_rev(n);
-	rep(s, n) {
-		repe(t, g[s]) {
-			g_rev[t].push_back(s);
-		}
-	}
+	rep(s, n) repe(t, g[s]) g_rev[t].push_back(s);
 
 	// res[i] : 先手番で局面 i のときの勝敗（1:勝ち，0:負け，-1:引き分け）
 	const int WIN = 1, LOSE = 0, DRAW = -1;
@@ -321,13 +311,12 @@ void cyclic_impartial_game(Graph& g, vi& res) {
 * 利用：【貰う木 DP】
 */
 // verify : https://atcoder.jp/contests/agc017/tasks/agc017_d
-using T_ecgot = int;
-void merge_ecgot(T_ecgot& x, const T_ecgot& y) { x ^= y; }
-T_ecgot e_ecgot() { return 0; }
-T_ecgot leaf_ecgot(int s) { return 0; }
-T_ecgot apply_ecgot(const T_ecgot& x, int s, int t) { return x + 1; }
-void edge_cut_game_on_tree(const Graph& g, int r, vector<T_ecgot>& nimber) {
-	tree_getDP<T_ecgot, merge_ecgot, e_ecgot, leaf_ecgot, apply_ecgot>(g, r, nimber);
+void merge_gct(int& x, const int& y) { x ^= y; }
+int e_gct() { return 0; }
+int leaf_gct(int s) { return 0; }
+int apply_gct(const int& x, int s, int t) { return x + 1; }
+void tree_cut_game(const Graph& g, int r, vi& nimber) {
+	tree_getDP<int, merge_gct, e_gct, leaf_gct, apply_gct>(g, r, nimber);
 }
 
 
@@ -340,7 +329,7 @@ void edge_cut_game_on_tree(const Graph& g, int r, vector<T_ecgot>& nimber) {
 *	x と y のニム積を返す．
 */
 class Nim_product {
-	// 参考 : ON NUMBERS AND GAMES(John H. Conway) (pp.52-53)
+	// 参考 :『ON NUMBERS AND GAMES』(John H. Conway)  (pp.52-53)
 
 	using ull = unsigned long long;
 

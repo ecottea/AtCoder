@@ -99,11 +99,15 @@ void quotient_range(ll n, vector<pair<ll, pll>>& qi) {
 */
 
 
-//【切り捨て除算】
+//【切り捨て除算】O(1)
 /*
-* a, b の正負によらず，数学的な floor(a / b) は以下の式で計算できる：
-*		a / b - (int)(a % b < 0)
+* a, b の正負によらず，数学的な floor(a / b) を返す．
 */
+template <class T> T floor_div(T a, T b) {
+	// verify : https://yukicoder.me/problems/no/2032
+
+	return a / b - (T)(a % b < 0);
+}
 
 
 //【切り捨て除算の結合法則】

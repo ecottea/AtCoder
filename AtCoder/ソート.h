@@ -142,7 +142,7 @@ template <class T> void selection_sort(vector<T>& a) {
 //【選択ソートの交換回数】
 /*
 * 互いに異なる要素からなる列 a[0..n) に対する最適な順序で行った選択ソートの交換回数は，
-* a を座標圧縮して得られる [0..n) 上の置換をサイクル分解したときの (最長サイクル長) - 1 に等しい．
+* a を座標圧縮して得られる [0..n) 上の置換をサイクル分解したときの (サイクル長) - 1 の総和に等しい．
 * 
 * verify : https://atcoder.jp/contests/nikkei2019-2-qual/tasks/nikkei2019_2_qual_c
 */

@@ -22,7 +22,7 @@ using S601 = ll;
 S601 op601(S601 a, S601 b) { return a + b; }
 S601 e601() { return 0; }
 S601 inv601(S601 a) { return -a; }
-#define Add_cgroup S601, op601, e601, inv601
+#define Add_group S601, op601, e601, inv601
 
 
 //yæZ ƒA[ƒxƒ‹ŒQz
@@ -30,7 +30,7 @@ using S602 = mint;
 S602 op602(S602 a, S602 b) { return a * b; }
 S602 e602() { return 1; }
 S602 inv602(S602 a) { return a.inv(); }
-#define Mul_cgroup S602, op602, e602, inv602
+#define Mul_group S602, op602, e602, inv602
 
 
 //yXOR ƒA[ƒxƒ‹ŒQz
@@ -38,7 +38,7 @@ using S603 = int;
 S603 op603(S603 a, S603 b) { return a ^ b; }
 S603 e603() { return 0; }
 S603 inv603(S603 a) { return a; }
-#define XOR_cgroup S603, op603, e603, inv603
+#define XOR_group S603, op603, e603, inv603
 
 
 //y‰Â‹tƒAƒtƒBƒ“•ÏŠ·‚Ì‡¬ ŒQz

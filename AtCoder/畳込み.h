@@ -67,7 +67,7 @@ template <class T> vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 }
 
 
-//【mod 998244353 での畳込み】O((|a| + |b|) log(|a| + |b|))
+//【畳込み（mod 998244353）】O((|a| + |b|) log(|a| + |b|))
 /*
 * ACL の vm convolution(vm a, vm b) を利用すればよい．
 * 
@@ -75,13 +75,13 @@ template <class T> vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 */
 
 
-//【mod 998244353 での畳込み（やや長い配列）】O((n + m) log(n + m))
+//【畳込み（mod 998244353，やや長い配列）】O((n + m) log(n + m))
 /*
 * a[0..n) と b[0..m) の mod 998244353 での畳込みを res[0..n+m-1) に格納する．
 *
 * 制約：n + m - 1 <= 16777216 = 2^24
 */
-void convolution998244353_long(vm& a, vm& b, vm& res) {
+void convolution_long(vm& a, vm& b, vm& res) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
 
 	//【方法】
@@ -141,11 +141,11 @@ void convolution998244353_long(vm& a, vm& b, vm& res) {
 }
 
 
-//【mod 998244353 での畳込み（長い配列）】O((n + m)^2)（遅い）
+//【畳込み（mod 998244353，長い配列）】O((n + m)^2)（遅い）
 /*
 * a[0..n) と b[0..m) の mod 998244353 での畳込みを res[0..n+m-1) に格納する．
 */
-void convolution998244353_long(const vm& a, const vm& b, vm& res) {
+void convolution_long(const vm& a, const vm& b, vm& res) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
 
 	//【方法】
@@ -170,7 +170,7 @@ void convolution998244353_long(const vm& a, const vm& b, vm& res) {
 }
 
 
-//【複数の数列の畳込み】O(n (log n)^2)
+//【複数の数列の畳込み（mod 998244353）】O(n (log n)^2)
 /*
 * 数列の集合 a の要素を全て畳込んだ結果（長さは n）を返す．
 */
@@ -193,6 +193,75 @@ vm multi_convoluion(vvm a) {
 	}
 
 	return a[q.top().second];
+}
+
+
+//【二次元畳込み】O(h1 w1 h2 w2)
+/*
+* a[0..h1)[0..w1) と b[0..h2)[0..w2) を畳み込んだ二次元配列 c[0..h1+h2-1)[0..w1+w2-1) を返す．
+*/
+template <class T>
+vector<vector<T>> naive_convolution_2D(const vector<vector<T>>& a, const vector<vector<T>>& b) {
+	int h1 = sz(a), w1 = sz(a[0]), h2 = sz(b), w2 = sz(b[0]);
+
+	// c[i][j] = Σs Σt a[s][t] b[i-s][j-t]  (∀i∈[0..h1+h2-1), j∈[0..w1+w2-1))
+	vector<vector<T>> c(h1 + h2 - 1, vector<T>(w1 + w2 - 1));
+	rep(i, h1 + h2 - 1) rep(j, w1 + w2 - 1) {
+		repi(s, max(i - (h2 - 1), 0), min(i, h1 - 1)) repi(t, max(j - (w2 - 1), 0), min(j, w1 - 1)) {
+			c[i][j] += a[s][t] * b[i - s][j - t];
+		}
+	}
+
+	return c;
+}
+
+
+//【二次元畳込み（mod998244353）】O((h1 + h2)(w1 + w2) (log(h1 + h2) + log(w1 + w2)))
+/*
+* a[0..h1)[0..w1) と b[0..h2)[0..w2) を畳み込んだ二次元配列 c[0..h1+h2-1)[0..w1+w2-1) を返す．
+*/
+vvm convolution_2D(vvm a, vvm b) {
+	// verify : https://atcoder.jp/contests/abc260/tasks/abc260_g
+
+	int h1 = sz(a), w1 = sz(a[0]), h2 = sz(b), w2 = sz(b[0]);
+
+	int h = 1 << (msb(h1 + h2 - 2) + 1);
+	int w = 1 << (msb(w1 + w2 - 2) + 1);
+
+	a.resize(h); b.resize(h);
+	rep(i, h) { a[i].resize(w); b[i].resize(w); }
+
+	// a, b の行方向の ntt
+	rep(i, h1) internal::butterfly(a[i]);
+	rep(i, h2) internal::butterfly(b[i]);
+
+	// aT, bT : a, b の転置
+	vvm aT(w, vm(h)), bT(w, vm(h));
+	rep(i, h) rep(j, w) { aT[j][i] = a[i][j]; bT[j][i] = b[i][j]; }
+
+	// aT, bT の行方向の ntt
+	rep(j, w) internal::butterfly(aT[j]);
+	rep(j, w) internal::butterfly(bT[j]);
+
+	// cT = aT : aT, bT の各点積
+	rep(j, w) rep(i, h) aT[j][i] *= bT[j][i];
+
+	// cT の行方向の intt
+	rep(j, w) internal::butterfly_inv(aT[j]);
+
+	// c : cT の転置
+	vvm c(h1 + h2 - 1, vm(w));
+	rep(i, h1 + h2 - 1) rep(j, w) c[i][j] = aT[j][i];
+
+	// c の行方向の intt，縮小，定数倍
+	mint inv = mint(h * w).inv();
+	rep(i, h1 + h2 - 1) {
+		internal::butterfly_inv(c[i]);
+		c[i].resize(w1 + w2 - 1);
+		rep(j, w1 + w2 - 1) c[i][j] *= inv;
+	}
+
+	return c;
 }
 
 
@@ -333,11 +402,11 @@ template <typename T> vector<T> max_convolution(vector<T> a, vector<T> b) {
 * NTT(int n) : O(n)
 *	長さ n 以下の数列を扱えるよう初期化を行う．
 *
-* ntt(const vm& a, vm& A) : O(n log n)
+* ntt(vm a, vm& A) : O(n log n)
 *	a[0..n) に対し mod 998244353 で数論変換を行った結果を A[0..n) に格納する．
 *	制約 : n は 2 の冪乗
 *
-* intt(const vm& A, vm& a) : O(n log n)
+* intt(vm A, vm& a) : O(n log n)
 *	A[0..n) に対し mod 998244353 で逆数論変換を行った結果を a[0..n) に格納する．
 *	制約 : n は 2 の冪乗
 *
@@ -415,6 +484,8 @@ struct NTT {
 
 	// 長さが 2 冪の列 a に対し mod 998244353 で数論変換を行った結果を A に格納する．
 	void ntt(const vm& a, vm& A) {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod
+		
 		Assert(sz(a) <= N);
 
 		int n = sz(a);
@@ -431,6 +502,8 @@ struct NTT {
 
 	// 長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
 	void intt(const vm& A, vm& a) {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod
+		
 		Assert(sz(a) <= N);
 
 		intt_sub(A, a);

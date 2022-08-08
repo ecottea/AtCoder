@@ -255,11 +255,9 @@ template <class T> bool inverse_matrix(const Matrix<T>& mat, Matrix<T>& mat_inv)
 
 	// 元の行列 mat と単位行列を繋げた拡大行列を作る．
 	Matrix<T> aug(m, 2 * m);
-	rep(i, m) {
-		rep(j, m) {
-			aug.v[i][j] = mat.v[i][j];
-			aug.v[i][m + j] = (i == j ? T(1) : T(0));
-		}
+	rep(i, m) rep(j, m) {
+		aug.v[i][j] = mat.v[i][j];
+		aug.v[i][m + j] = (i == j ? T(1) : T(0));
 	}
 	int n = 2 * m;
 	auto& v = aug.v;
@@ -307,11 +305,7 @@ template <class T> bool inverse_matrix(const Matrix<T>& mat, Matrix<T>& mat_inv)
 
 	// 拡大行列の右半分が mat の逆行列なのでコピーする．
 	mat_inv = Matrix<T>(m, m);
-	rep(i, m) {
-		rep(j, m) {
-			mat_inv.v[i][j] = aug.v[i][m + j];
-		}
-	}
+	rep(i, m) rep(j, m) mat_inv.v[i][j] = aug.v[i][m + j];
 
 	return true;
 }
@@ -321,7 +315,7 @@ template <class T> bool inverse_matrix(const Matrix<T>& mat, Matrix<T>& mat_inv)
 /*
 * A = a[0..m)[0..n) を階数標準形 R_r := [I_r, O; O, O] に変換する行列，すなわち
 *		P A Q = R_r （r = rank A）
-* を満たす行列 P, Q を p[0..m)(0..m), q[0..n)[0..n) に格納し，r を返す．
+* を満たす行列 P, Q を p[0..m)[0..m), q[0..n)[0..n) に格納し，r を返す．
 */
 template <class T> int rank_normal_form(const Matrix<T>& a, Matrix<T>& p, Matrix<T>& q) {
 	int m = a.m, n = a.n;

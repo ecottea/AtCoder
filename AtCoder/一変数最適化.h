@@ -65,17 +65,10 @@ ll minimize_xor_sum(const vl& a) {
 	// x ‚Ì j Œ…–Ú‚Í 1[0] ‚É‚·‚é‚Ì‚ª‚æ‚¢D
 
 	vi cnt(m);
-	rep(i, n) {
-		rep(j, m) {
-			if (a[i] & (1LL << j)) cnt[j]++;
-		}
-	}
-	dump(cnt);
+	rep(i, n) rep(j, m) if (a[i] & (1LL << j)) cnt[j]++;
 
 	ll res = 0;
-	rep(j, m) {
-		res += (ll)min(cnt[j], n - cnt[j]) << j;
-	}
+	rep(j, m) res += (ll)min(cnt[j], n - cnt[j]) << j;
 
 	return res;
 }
@@ -97,11 +90,7 @@ ll maximize_xor_sum(const vl& a, ll k) {
 	// x ‚Ì j Œ…–Ú‚Í‰Â”\‚È‚ç 0[1] ‚É‚·‚é‚Ì‚ª‚æ‚¢D
 
 	vi cnt(m);
-	rep(i, n) {
-		rep(j, m) {
-			if (a[i] & (1LL << j)) cnt[j]++;
-		}
-	}
+	rep(i, n) rep(j, m) if (a[i] & (1LL << j)) cnt[j]++;
 
 	bool smaller = false;
 

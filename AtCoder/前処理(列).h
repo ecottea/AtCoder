@@ -211,3 +211,85 @@ template <class T> void next_greater1(const vector<T>& a, vi& nxt) {
 }
 
 
+//【デカルト木】
+/*
+* Cartesian_tree(vT a, smaller = true) : O(n)
+*	a[0..n) の最小要素の位置を根とするデカルト木を ct に構築する．
+*	根から順に小さい要素での区間の分割を表す（同じ要素は左のものほど小さいとする．）
+*	smaller = false とすると，大小関係を逆転して木の構築を行う．
+*/
+template <class T> struct Cartesian_tree {
+	struct Node {
+		T val; // 区間の最小値
+		int l, r; // 区間 [l..r) に対応するノードであることを表す．
+		int p = -1; // 親（なければ -1）
+		int lc = -1; // 左の子（なければ -1）
+		int rc = -1; // 右の子（なければ -1）
+
+#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "[" << v.l << "," << v.r << "):" << v.val
+				<< ", lc:" << v.lc << ", rc:" << v.rc << ", p:" << v.p;
+			return os;
+		}
+#endif
+	};
+
+	int n; // ノードの数
+	int rt; // 根
+	vector<Node> v; // 頂点
+
+	// 数列 a[0..n) で初期化する．
+	Cartesian_tree(const vector<T>& a, bool smaller = true) : n(sz(a)), rt(0), v(n) {
+		// verify : https://judge.yosupo.jp/problem/cartesian_tree
+
+		// 木の構造を決定する．
+		repi(i, 1, n - 1) {
+			// pt : i-1 の祖先で値が a[i] 以下であるもののうち最も深いもの（なければ -1）
+			int pt = i - 1;
+			while (pt != -1 && (smaller ? a[pt] > a[i] : a[pt] < a[i])) pt = v[pt].p;
+
+			// pt の右の子を i，i の左の子を pt の元の右の子とする．
+			if (pt != -1) {
+				v[i].p = pt;
+				if (v[pt].rc != -1) v[v[pt].rc].p = i;
+				v[i].lc = v[pt].rc;
+				v[pt].rc = i;
+			}
+			// pt がなければ i を根とする．
+			else {
+				v[i].lc = rt;
+				v[rt].p = i;
+				rt = i;
+			}
+		}
+
+		// ノードの情報を決定する．
+		function<void(int, int, int)> dfs = [&](int s, int l, int r) {
+			v[s].val = a[s];
+			v[s].l = l;
+			v[s].r = r;
+
+			if (v[s].lc != -1) dfs(v[s].lc, l, s);
+			if (v[s].rc != -1) dfs(v[s].rc, s + 1, r);
+		};
+		dfs(rt, 0, n);
+	}
+	Cartesian_tree() : n(0), rt(-1) {} // ダミー
+
+	// アクセス
+	Node const& operator[](int i) const { return v[i]; }
+	Node& operator[](int i) { return v[i]; }
+
+	// 大きさ
+	int size() const { return n; }
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Cartesian_tree& ct) {
+		rep(i, sz(ct)) os << i << ": " << ct[i] << endl;
+		return os;
+	}
+#endif
+};
+
+

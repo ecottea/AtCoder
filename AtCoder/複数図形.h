@@ -5,12 +5,14 @@
 #include "順列.h"
 #include "探索.h"
 #include "作図.h"
+#include "計算.h"
+#include "括弧列.h"
 // ■■■■■ 点群，線分群，直線群など ■■■■■
 
 
 //【点群の合同判定】O(|s| log|s|)　
 /*
-* 点の集合 s, t が同じ向きで合同かどうかを返す．
+* 点の集合 s, t が反転なしで合同かどうかを返す．
 *
 * 利用：【偏角ソート】,【部分文字列判定】
 */
@@ -21,9 +23,7 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 	int n = sz(s);
 
 	// 点の数が違うならもちろん合同ではない．
-	if (sz(t) != n) {
-		return false;
-	}
+	if (sz(t) != n) return false;
 
 	// 原点中心に n 倍拡大した上で重心を求める．
 	Point<T> gs, gt;
@@ -61,16 +61,12 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 		}
 	}
 	else {
-		if (*t.rbegin() == o) {
-			// t のみが原点を含んでいたなら一致しない．
-			return false;
-		}
+		// t のみが原点を含んでいたなら一致しない．
+		if (*t.rbegin() == o) return false;
 	}
 
 	// 1 点のみだった場合の例外処理（もちろん合同）
-	if (s.empty()) {
-		return true;
-	}
+	if (s.empty()) return true;
 
 	// 原点回りの三角形の辺の長さと夾角の大きさの情報を格納したリスト
 	// 実際には長さの代わりに 2 乗ノルム，夾角の大きさの代わりに余弦と正弦，
@@ -90,9 +86,7 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 	}
 
 	// tri_t をコピーし 2 倍に延長することで周期境界を扱いやすくする．
-	rep(i, 3 * n) {
-		tri_t.push_back(tri_t[i]);
-	}
+	rep(i, 3 * n) tri_t.push_back(tri_t[i]);
 
 	// tri_s を 2 * tri_t が連続部分列として含んでいるかをチェックする．
 	int res = knuth_morris_pratt(tri_t, tri_s);
@@ -103,7 +97,7 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 
 //【点群の相似判定】O(|s| log|s|)
 /*
-* 点の集合 s, t が同じ向きで相似であれば，s から t への倍率を返す（相似でなければ -1 を返す）
+* 点の集合 s, t が反転なしで相似であれば，s から t への倍率を返す（相似でなければ -1 を返す）
 *
 * 利用：【偏角ソート】,【部分文字列判定】
 */
@@ -111,9 +105,7 @@ template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t)
 	int n = sz(s);
 
 	// 点の数が違うならもちろん相似ではない．
-	if (sz(t) != n) {
-		return false;
-	}
+	if (sz(t) != n) return false;
 
 	// 原点中心に n 倍拡大した上で重心を求める．
 	Point<T> gs, gt;
@@ -151,16 +143,12 @@ template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t)
 		}
 	}
 	else {
-		if (*t.rbegin() == o) {
-			// t のみが原点を含んでいたなら相似ではない．
-			return -1;
-		}
+		// t のみが原点を含んでいたなら相似ではない．
+		if (*t.rbegin() == o) return -1;
 	}
 
 	// 1 点のみだった場合の例外処理（もちろん相似）
-	if (s.empty()) {
-		return 1;
-	}
+	if (s.empty()) return 1;
 
 	// 原点回りの夾角の大きさの情報を格納したリスト
 	// 実際には夾角の大きさの代わりに余弦と正弦，さらにその代わりに内積と外積の比を用いる．
@@ -182,9 +170,7 @@ template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t)
 	}
 
 	// tri_t をコピーし 2 倍に延長することで周期境界を扱いやすくする．
-	rep(i, 2 * n) {
-		tri_t.push_back(tri_t[i]);
-	}
+	rep(i, 2 * n) tri_t.push_back(tri_t[i]);
 
 	// 2 * tri_t が tri_s を連続部分列として含んでいるかをチェックする．
 	vi pos;
@@ -418,76 +404,164 @@ template <class T> double minimum_bitonic_tour(vector<Point<T>>& p) {
 }
 
 
-//【直線群の交点からのマンハッタン距離の和の最小化】O(n log(n) log(1/EPS))
+//【直線群の交点数（左半平面）】
 /*
-* n 本の直線 a[i] x + b[i] y = c[i] の交点の多重集合 S について，S の点との
-* マンハッタン距離の和が最小になる点 (x, y) のうち，両座標が最も小さいものを返す．
+* Line_intersections_lhplane(vl a, vl b, vl c, ll inf) : O(n log n)
+*	n 本の直線 a[i] x + b[i] y = c[i] で初期化する．
+*	全ての交点は (-inf, inf)×(-inf, inf) に収まっているものとする．
 *
-* 制約：平行な線分の組は存在しない，軸平行な線分は存在しない，交点の座標の絶対値は INF 以下．
+* ll count(int|ll r) : O(n log n)
+*	x 座標が r より小さい交点の数を返す．
 *
-* 利用：【二分探索（実数）】,【転倒数】
+* ll count(Frac r) : O(n log n)
+*	x 座標が r より小さい交点の数を返す（オーバーフローに注意）
+*
+* ll count(double r) : O(n log n)
+*	x 座標が r より小さい交点の数を返す（誤差に注意）
+*
+* 利用：【転倒数】，【有理数】
 */
-pair<double, double> minimize_manhattan_sum(const vd& a, const vd& b, const vd& c) {
-	// verify : https://atcoder.jp/contests/tenka1-2017/tasks/tenka1_2017_e
+class Line_intersections_lhplane {
+	// y 軸平行でない直線数
+	int n;
 
-	int n = sz(a);
+	// 全ての交点は (-inf, inf)×(-inf, inf) に収まっている
+	ll inf;
 
-	// np : 交点の個数
-	ll np = (ll)n * (n - 1) / 2;
+	// y 軸と非平行な直線のみを x = -inf における y 座標について昇順に並べ替えたときの
+	// i 番目の直線が a[i] x + b[i] y = c[i] (b[i] != 0) であることを表す．
+	vl a, b, c;
 
-	// X 座標が十分小さいところでの Y 座標についての昇順に直線をソートする．
-	vector<pair<double, int>> yi(n);
-	rep(i, n) {
-		double x = (double)(-INF);
-		double y = (c[i] - a[i] * x) / b[i];
-		yi[i] = { y, i };
+	// y 軸と平行な直線の x 座標の昇順列
+	vector<Frac> xs;
+	vd xs_d;
+
+public:
+	// 直線群 a[i] x + b[i] y = c[i] で初期化する．
+	Line_intersections_lhplane(const vl& a_, const vl& b_, const vl& c_, ll inf_) : n(0), inf(inf_) {
+		// verify : https://atcoder.jp/contests/tenka1-2017/tasks/tenka1_2017_e
+
+		// x = -inf における点 i の y 座標を，{y, i} の形で昇順に並べたもの（y 軸非平行な直線のみ）
+		vector<pair<Frac, int>> yi;
+
+		rep(i, sz(a_)) {
+			// 直線 i が y 軸平行でない場合
+			if (b_[i] != 0) {
+				yi.emplace_back(Frac{ c_[i] - a_[i] * (-inf), b_[i] }, i);
+				n++;
+			}
+			// 直線 i が y 軸平行である場合
+			else {
+				xs.emplace_back(c_[i], a_[i]);
+			}
+		}
+
+		sort(all(yi));
+		sort(all(xs));
+		repe(x, xs) xs_d.emplace_back(x);
+
+		repe(tmp, yi) {
+			int i = tmp.second;
+			a.emplace_back(a_[i]);
+			b.emplace_back(b_[i]);
+			c.emplace_back(c_[i]);
+		}
 	}
-	sort(all(yi));
 
-	// マンハッタン距離最小を与えるのは中央値であることに注意する．
-	// (-INF, x] の範囲に交点が (np - 1) / 2 個以下しかないか
-	function<bool(double)> okQx = [&](double x) {
-		// y[j] : j 番目の直線の X = x における Y 座標
+	// x 座標が r より小さい交点の数を返す．
+	ll count(const Frac& r) {
+		// y[i] : i 番目の直線の x = r における y 座標
+		vector<Frac> y(n);
+		rep(i, n) y[i] = (c[i] - a[i] * r) / b[i];
+
+		// y 座標の転倒数が交点の個数となる．
+		ll res = inversion_number(y);
+
+		// y 軸平行な直線との交点の個数を追加する．
+		res += lbpos(xs, r) * (ll)n;
+
+		return res;
+	}
+	ll count(ll r) { return count(Frac(r)); }
+	ll count(int r) { return count(Frac(r)); }
+
+	// x 座標が r より小さい交点の数を返す（誤差注意）
+	ll count(double r) {
+		// verify : https://atcoder.jp/contests/tenka1-2017/tasks/tenka1_2017_e
+
+		// y[i] : i 番目の直線の x = r における y 座標
 		vd y(n);
-		rep(j, n) {
-			int i = yi[j].second;
-			y[j] = (c[i] - a[i] * x) / b[i];
-		}
+		rep(i, n) y[i] = (c[i] - a[i] * r) / b[i];
 
-		// Y 座標の転倒数が交点の個数となる．
-		ll inv = inversion_number(y);
+		// y 座標の転倒数が交点の個数となる．
+		ll res = inversion_number(y);
 
-		return inv <= (np - 1) / 2;
-	};
+		// y 軸平行な直線との交点の個数を追加する．
+		res += lbpos(xs_d, r) * (ll)n;
 
-	// res_x : (-INF, x] の範囲の交点が (np - 1) / 2 個以下となるかならないかの境界
-	double res_x = binary_search((double)(-INF), (double)(INF), okQx);
-
-	// Y 座標についても同様のことを行う．
-	vector<pair<double, int>> xi(n);
-	rep(i, n) {
-		double y = (double)(-INF);
-		double x = (c[i] - b[i] * y) / a[i];
-		xi[i] = { x, i };
+		return res;
 	}
-	sort(all(xi));
+};
 
-	function<bool(double)> okQy = [&](double y) {
-		vd x(n);
-		rep(j, n) {
-			int i = xi[j].second;
-			x[j] = (c[i] - b[i] * y) / a[i];
+
+//【直線群の交点数（円盤）】
+/*
+* Line_intersections_disk(vl a, vl b, vl c) : O(n log n)
+*	n 本の直線 a[i] x + b[i] y = c[i] で初期化する．
+*
+* ll count(double r) : O(n log n)
+*	原点からの距離が r より小さい交点の数を返す（誤差に注意）
+*
+* 利用：【円と直線の交点（実数）】,【色付き括弧列の違反対の数え上げ】
+*/
+class Line_intersections_disk {
+	// 直線の数
+	int n;
+
+	// ls[i] : i 番目の直線
+	vector<Line<double>> ls;
+
+public:
+	// 直線群 a[i] x + b[i] y = c[i] で初期化する．
+	Line_intersections_disk(const vl& a, const vl& b, const vl& c) : n(sz(a)), ls(n) {
+		// verify : https://atcoder.jp/contests/abc263/tasks/abc263_h
+
+		rep(i, n) {
+			if (abs(b[i]) > abs(a[i])) {
+				ls[i] = { { -1, (double)(c[i] + a[i]) / b[i] }, { 1, (double)(c[i] - a[i]) / b[i] } };
+			}
+			else {
+				ls[i] = { { (double)(c[i] + b[i]) / a[i], -1 }, { (double)(c[i] - b[i]) / a[i], 1 } };
+			}
+		}
+	}
+
+	// 原点からの距離が r より小さい交点の数を返す（誤差注意）
+	ll count(double r) {
+		// verify : https://atcoder.jp/contests/abc263/tasks/abc263_h
+
+		vector<pair<double, int>> thi; int id = 0;
+		Circle<double> c({ 0, 0 }, r);
+
+		rep(i, n) {
+			Point<double> p1, p2;
+			int cnt = intersection_C_L(c, ls[i], p1, p2);
+
+			if (cnt == 0) continue;
+
+			thi.emplace_back(atan2(p1.y, p1.x), id);
+			thi.emplace_back(atan2(p2.y, p2.x), id);
+			id++;
 		}
 
-		ll inv = inversion_number(x);
+		sort(all(thi));
 
-		return inv <= (np - 1) / 2;
-	};
+		vi p;
+		repe(tmp, thi) p.emplace_back(tmp.second);
 
-	double res_y = binary_search((double)(-INF), (double)(INF), okQy);
-
-	return { res_x, res_y };
-}
+		return count_illegal_parenthesis_pair(p);
+	}
+};
 
 
 //【一定距離以内の点対の列挙】O(?)

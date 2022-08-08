@@ -137,6 +137,40 @@ template <class T> ll ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
 }
 
 
+//【ランダム三分探索（下に凸）】O(log(r - l))
+/*
+* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
+* そうでなくても運が良ければ正しい x を返す．
+*/
+template <class T> ll random_ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
+	static bool first_call = true;
+
+	mt19937 mt;
+	uniform_int_distribution<ll> rnd;
+	if (first_call) {
+		first_call = false;
+		mt.seed((int)time(NULL));
+		rnd = uniform_int_distribution<ll>(0, INFL);
+	}
+
+	while (r - l > 2) {
+		ll m1 = l + 1 + rnd(mt) % (r - l - 1);
+		ll m2 = l + 1 + rnd(mt) % (r - l - 1);
+		if (m1 > m2) swap(m1, m2);
+
+		if (f(m1) > f(m2)) l = m1;
+		else r = m2;
+	}
+	return l + 1;
+
+	/* f の定義の雛形
+	function<ll(ll)> f = [&](ll x) {
+		return x;
+	};
+	*/
+}
+
+
 //【フィボナッチ探索】
 /*
 * Fibonacci_search(w) : O(log w)
@@ -347,7 +381,7 @@ double golden_search_lc(double left, double right, function<double(double)>& f) 
 //【ランダム三分探索（実数，下に凸）】O(log((r - l) / EPS))
 /*
 * 全域で狭義に下に凸な関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
-* 下に凸じゃなくても運が良ければ正しい解を返す．
+* 下に凸じゃなくても運が良ければ正しい x を返す．
 */
 double random_ternary_search_lc(double l, double r, function<double(double)>& f) {
 	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_f
@@ -388,7 +422,7 @@ double random_ternary_search_lc(double l, double r, function<double(double)>& f)
 //【並列二分探索】O(O(okQ) log max|ok[i] - ng[i]|)
 /*
 * i=[0..q) について，条件を満たす要素 ok[i] と満たさない要素 ng[i] の
-* 境界を二分探索し，ok[i] を境界に接する OK 側の要素に変更する．
+* 境界を二分探索し，ok[i][ng[i]] を境界に接する OK[NG] 側の要素に変更する．
 * okQ は，okQ(mid, res) で呼び出すと mid[i] が条件を満たすかが res[i] に格納されるとする．
 */
 template <typename T>

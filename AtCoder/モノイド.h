@@ -20,7 +20,7 @@
 using S001 = ll;
 S001 op001(S001 a, S001 b) { return a + b; }
 S001 e001() { return 0; }
-#define Add_cmonoid S001, op001, e001
+#define Add_monoid S001, op001, e001
 
 
 //y‘g‚Ì‰ÁZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -28,14 +28,14 @@ S001 e001() { return 0; }
 using S023 = pli;
 S023 op023(S023 a, S023 b) { return { a.first + b.first, a.second + b.second }; }
 S023 e023() { return { 0, 0 }; }
-#define Pairadd_cmonoid S023, op023, e023
+#define Pairadd_monoid S023, op023, e023
 
 
 //yæZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S024 = mint;
 S024 op024(S024 a, S024 b) { return a * b; }
 S024 e024() { return 1; }
-#define Pairadd_cmonoid S024, op024, e024
+#define Mul_monoid S024, op024, e024
 
 
 //ys—ñæZ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
@@ -43,7 +43,7 @@ S024 e024() { return 1; }
 using S002 = Matrix<mint>;
 S002 op002(S002 a, S002 b) { return a * b; }
 S002 e002() { return Matrix<mint>(3); }
-#define Mul_monoid S002, op002, e002
+#define MatrixMul_monoid S002, op002, e002
 
 
 //y‹ts—ñæZ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
@@ -59,7 +59,7 @@ S020 e020() { return Matrix<mint>(3); }
 using S003 = ll;
 S003 op003(S003 a, S003 b) { return max(a, b); }
 S003 e003() { return -INFL; }
-#define Max_cmonoid S003, op003, e003
+#define Max_monoid S003, op003, e003
 
 
 //ymin ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -67,14 +67,14 @@ S003 e003() { return -INFL; }
 using S004 = ll;
 S004 op004(S004 a, S004 b) { return min(a, b); }
 S004 e004() { return INFL; }
-#define Min_cmonoid S004, op004, e004
+#define Min_monoid S004, op004, e004
 
 
 //yxor ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S010 = int;
 S010 op010(S010 a, S010 b) { return a ^ b; }
 S010 e010() { return 0; }
-#define XOR_cmonoid S010, op010, e010
+#define XOR_monoid S010, op010, e010
 
 
 //yor ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -82,14 +82,14 @@ S010 e010() { return 0; }
 using S011 = int;
 S011 op011(S011 a, S011 b) { return a | b; }
 S011 e011() { return 0; }
-#define OR_cmonoid S011, op011, e011
+#define OR_monoid S011, op011, e011
 
 
 //yand ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S012 = int;
 S012 op012(S012 a, S012 b) { return a & b; }
 S012 e012() { return ~0; }
-#define AND_cmonoid S012, op012, e012
+#define AND_monoid S012, op012, e012
 
 
 //ygcd ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -97,14 +97,14 @@ S012 e012() { return ~0; }
 using S015 = ll;
 S015 op015(S015 a, S015 b) { return gcd(a, b); }
 S015 e015() { return 0; }
-#define GCD_cmonoid S015, op015, e015
+#define GCD_monoid S015, op015, e015
 
 
 //ylcm ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S016 = ll;
 S016 op016(S016 a, S016 b) { return a / gcd(a, b) * b; }
 S016 e016() { return 1; }
-#define LCM_cmonoid S016, op016, e016
+#define LCM_monoid S016, op016, e016
 
 
 //y¶•ÏX ƒ‚ƒmƒCƒhz
@@ -285,7 +285,7 @@ S021 op021(S021 a, S021 b) {
 	return { vals[3], vals[2] };
 }
 S021 e021() { return { -INFL, -INFL }; }
-#define SecondMax_cmonoid S021, op021, e021
+#define SecondMax_monoid S021, op021, e021
 
 
 //y‘æ“ñÅ¬’l ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -301,7 +301,7 @@ S022 op022(S022 a, S022 b) {
 	return { vals[0], vals[1] };
 }
 S022 e022() { return { INFL, INFL }; }
-#define SecondMin_cmonoid S022, op022, e022
+#define SecondMin_monoid S022, op022, e022
 
 
 //y¬‡ƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“•ÏŠ·‚Ì‡¬ ƒ‚ƒmƒCƒhz

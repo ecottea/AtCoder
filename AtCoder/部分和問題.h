@@ -494,15 +494,16 @@ int minimize_unlimited_partial_sum(const vi& a, int v) {
 
 //【部分和問題（個数制限付き，存在判定）】O(n v)
 /*
-* 長さ n の正整数列 a の部分和として v を作れるかを返す．
+* 長さ n の正整数列 a の部分和として j∈[0..v] を作れるかを able[j] に格納する．
 * 各 a[i] は [0..m[i]] 個用いることができる．
 *
 *（和を状態にもつ状態 DP）
 */
-bool limited_partial_sum(const vi& a, const vi& m, int v) {
+void limited_partial_sum(const vi& a, const vi& m, int v, vb& able) {
 	// 参考 : https://algo-method.com/tasks/313/editorial
 
 	int n = sz(a);
+	able.resize(v + 1);
 
 	// dp[i][j] : a[0..i) の中で和をちょうど j にするときの a[i-1] の個数の最小値
 	vvi dp(n + 1, vi(v + 1, INF));
@@ -534,7 +535,7 @@ bool limited_partial_sum(const vi& a, const vi& m, int v) {
 		}
 	}
 
-	return dp[n][v] != INF;
+	repi(j, 0, v) able[j] = (dp[n][j] != INF);
 }
 
 

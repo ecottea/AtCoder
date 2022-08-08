@@ -148,9 +148,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
+    <ClInclude Include="オートマトン.h" />
     <ClInclude Include="スコア和(順列).h" />
     <ClInclude Include="マッチング(一般).h" />
-    <ClInclude Include="分割%28最適化%29.h" />
+    <ClInclude Include="列挙(ビット列).h" />
+    <ClInclude Include="列挙(区間).h" />
+    <ClInclude Include="数え上げ(ビット列).h" />
+    <ClInclude Include="最適化%28分割%29.h" />
     <ClInclude Include="DAG.h" />
     <ClInclude Include="local.hpp" />
     <ClInclude Include="FPS%28mint%29.h" />
@@ -164,7 +168,7 @@
     <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="スコア和%28区間%29.h" />
-    <ClInclude Include="スコア和(文字列).h" />
+    <ClInclude Include="スコア和%28ビット列%29.h" />
     <ClInclude Include="スコア和(集合).h" />
     <ClInclude Include="セグメント木%28抽象%29.h" />
     <ClInclude Include="ゼータ変換(抽象).h" />
@@ -187,7 +191,7 @@
     <ClInclude Include="モノイド.h" />
     <ClInclude Include="M-モノイド.h" />
     <ClInclude Include="二乗の木DP.h" />
-    <ClInclude Include="二重和.h" />
+    <ClInclude Include="スコア和%28組%29.h" />
     <ClInclude Include="全方位木DP.h" />
     <ClInclude Include="分析(文字列).h" />
     <ClInclude Include="列挙(列).h" />
@@ -195,7 +199,10 @@
     <ClInclude Include="列挙(格子).h" />
     <ClInclude Include="列挙(集合).h" />
     <ClInclude Include="前処理(列).h" />
+    <ClInclude Include="文脈自由文法.h" />
+    <ClInclude Include="最適化(ビット列).h" />
     <ClInclude Include="最適化(区間).h" />
+    <ClInclude Include="構文解析.h" />
     <ClInclude Include="母関数.h" />
     <ClInclude Include="辞書%28動的%29.h" />
     <ClInclude Include="整除算.h" />
@@ -233,7 +240,7 @@
     <ClInclude Include="確率分布.h" />
     <ClInclude Include="約数変換.h" />
     <ClInclude Include="累積演算%28抽象%29.h" />
-    <ClInclude Include="組(最適化).h" />
+    <ClInclude Include="最適化%28組%29.h" />
     <ClInclude Include="不偏ゲーム.h" />
     <ClInclude Include="統計量.h" />
     <ClInclude Include="群.h" />
@@ -243,13 +250,13 @@
     <ClInclude Include="辞書順.h" />
     <ClInclude Include="部分列DP.h" />
     <ClInclude Include="M-集合.h" />
-    <ClInclude Include="順列(最適化).h" />
+    <ClInclude Include="最適化%28順列%29.h" />
     <ClInclude Include="数え上げ%28順列%29.h" />
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />
     <ClInclude Include="一重和.h" />
     <ClInclude Include="ビット行列.h" />
-    <ClInclude Include="点群.h" />
+    <ClInclude Include="複数図形.h" />
     <ClInclude Include="二分木.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />

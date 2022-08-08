@@ -1,6 +1,37 @@
 #pragma once
 #include "header.h"
-// ■■■■■ スコア和を求める問題（区間） ■■■■■
+#include "数え上げ(区間).h"
+// ■■■■■ スコア和（区間） ■■■■■
+
+
+//【区間の min の総和】O(n log n)
+/*
+* Σi<j min( a[i..j) ) の値を返す．
+*
+* 利用：【区間の数え上げ（最小値指定）】
+*/
+template <class T> T interval_min_sum(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
+
+	unordered_map<T, ll> cnt;
+	count_min_intervals(a, cnt);
+
+	T res = T(0);
+	repe(p, cnt) res += p.first * p.second;
+
+	return res;
+}
+
+
+//【積スコアの和 → 数え上げ】
+/*
+* ある区間分割のスコアが，各区間のスコアの積で与えられるとする．
+* 各区間のスコアがその区間についての何らかの数え上げ問題の答えとみなせるならば，
+* 積スコアの和を求める問題を数え上げの問題に帰着でき，遷移を細かくできることが期待される．
+*
+* 区間長の d 乗 → 区間に区別のできる d 個の玉を配置する（重複可）
+* verify : https://atcoder.jp/contests/agc013/tasks/agc013_e
+*/
 
 
 //【連の長さに応じたスコア】
@@ -17,20 +48,22 @@
 /*
 * a[0..n) を区間 B_1, ..., B_k に分ける方法 2^(n-1) 通り全てについての
 * Πi=[1..k] max(B_i) の値の総和を返す．
+* 
+*（スタックで高速化した DP）
 */
 mint max_product_sum(const vi& a) {
 	int n = sz(a);
 
 	//【方法】
 	// dp[i] を a[0..i) に対する答えとする．
-	// dp[i+1] は，i を含む区間の左端 j で場合分けすることにより，更新式
+	// dp[i+1] は，i を右端とする区間の左端 j で場合分けすることにより，漸化式
 	//		dp[i+1] = Σj=[0..i] dp[j] max(a[j..i])
 	// を用いて求めることができる．
 	//
 	// j0 < i を a[j0] >= a[i] を満たす最大のもの（なければ -1）と定めると，
 	//		max(a[j..i]) = max(a[j..i))	(j <= j0 のとき)
 	//		max(a[j..i]) = a[i]			(j > j0 のとき)
-	// となる．これを踏まえると，更新式は
+	// となる．これを踏まえると，漸化式は
 	//		dp[i+1] = dp[i] - Σj=(j0..i] dp[j] max(a[j..i)) + a[i] Σj=(j0..i] dp[j]
 	// と書き直せる．
 	//
@@ -71,9 +104,14 @@ mint max_product_sum(const vi& a) {
 /*
 * a[0..n) を区間 B_1, ..., B_k に分ける方法 2^(n-1) 通り全てについての
 * Πi=[1..k] (max(B_i) - min(B_i)) の値の総和を返す．
+* 
+*（スタックで高速化した DP）
 */
 mint range_product_sum(const vi& a) {
 	// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+
+	//【方法】
+	//【区間最大値の積の和】と同様．
 
 	int n = sz(a);
 

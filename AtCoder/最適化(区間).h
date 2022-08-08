@@ -1,7 +1,6 @@
 #pragma once
 #include "header.h"
 #include "座標圧縮.h"
-#include "M-モノイド.h"
 #include "ダブリング.h"
 // ■■■■■ 区間に関する最適化問題 ■■■■■
 
@@ -330,6 +329,37 @@ ll unit_commitment_problem(const vvl& c) {
 	}
 
 	return dp[n];
+}
+
+
+//【区間の和の最大化】O(n)
+/*
+* a[0..n) に対して以下の値を返す：
+*		max_(i < j) Σa[i..j)
+* また最大値を与える (i, j) を ids に格納する．
+*/
+ll maximize_interval_sum(const vl& a, pii* ids = nullptr) {
+	// verify : https://atcoder.jp/contests/dwango2016-prelims/tasks/dwango2016qual_d
+
+	//【方法】
+	// 累積和 acc[i] = Σa[0..i) を導入すれば，求める値は以下のように表される：
+	//		max_(i < j) (acc[j] - acc[i])
+	// すなわち【組の差の最大化】に帰着する．
+
+	int n = sz(a);
+
+	vl acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + a[i];
+
+	ll res = -INFL, acc_min = acc[0]; int i_min = 0;
+	if (ids == nullptr) ids = new pii;
+
+	repi(i, 1, n) {
+		if (chmax(res, acc[i] - acc_min)) *ids = { i_min, i };
+		if (chmin(acc_min, acc[i])) i_min = i;
+	}
+
+	return res;
 }
 
 

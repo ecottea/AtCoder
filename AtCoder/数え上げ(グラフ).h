@@ -345,3 +345,9 @@ void count_connected_subgraph(const Graph& g, vm& cnt) {
 */
 
 
+//【マッチングの数え上げ】
+/*
+* マッチング(二部).h，マッチング(一般).hへ
+*/
+
+

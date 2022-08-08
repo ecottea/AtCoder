@@ -120,6 +120,7 @@ struct Frac {
 	Frac operator-(const Frac& b) const { Frac a = *this; return a -= b; }
 	Frac operator*(const Frac& b) const { Frac a = *this; return a *= b; }
 	Frac operator/(const Frac& b) const { Frac a = *this; return a /= b; }
+	Frac operator-() const { return Frac(*this) *= Frac(-1); }
 
 	// ®”‚Æ‚Ìl‘¥‰‰Z
 	Frac& operator+=(ll c) { return *this += Frac(c); }
@@ -131,9 +132,9 @@ struct Frac {
 	Frac operator*(ll c) const { Frac a = *this; return a *= c; }
 	Frac operator/(ll c) const { Frac a = *this; return a /= c; }
 	friend Frac operator+(ll c, const Frac& a) { return a + c; }
-	friend Frac operator-(ll c, const Frac& a) { return a - c; }
+	friend Frac operator-(ll c, const Frac& a) { return Frac(c) - a; }
 	friend Frac operator*(ll c, const Frac& a) { return a * c; }
-	friend Frac operator/(ll c, const Frac& a) { return a / c; }
+	friend Frac operator/(ll c, const Frac& a) { return Frac(c) / a; }
 
 	// –ñ•ª
 	void reduction() { ll g = gcd(num, dnm); num /= g; dnm /= g; }

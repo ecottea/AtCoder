@@ -204,7 +204,7 @@ struct Segtree {
 };
 
 
-//【遅延評価セグメント木（モノイド作用付きモノイド）】
+//【遅延評価セグメント木（M-モノイド）】
 /*
 * Lazy_segtree<S, op, e, F, act, comp, id>(int n) : O(n)
 *	v[0..n) = e() で初期化する．
@@ -559,7 +559,7 @@ public:
 */
 
 
-//【Segment tree beats!（不完全モノイド作用付きモノイド）】
+//【Segment tree beats!（不完全 M-モノイド）】
 /*
 * Lazy_segtree<S, op, e, F, act, comp, id, fail>(int n) : O(n)
 *	v[0..n) = e() で初期化する．
@@ -1176,7 +1176,7 @@ struct Segtree_map {
 };
 
 
-//【連想遅延評価セグメント木（モノイド作用付きモノイド）】
+//【連想遅延評価セグメント木（M-モノイド）】
 /*
 * Lazy_segtree_map<T, lb, ub, S, op, e, F, act, comp, id>() : O(1)
 *	空のセグメント木で初期化する．
@@ -1611,7 +1611,7 @@ struct Lazy_segtree_map {
 };
 
 
-//【平行移動可能連想遅延評価セグメント木（モノイド作用付きモノイド）】
+//【平行移動可能連想遅延評価セグメント木（M-モノイド）】
 /*
 * Lazy_segtree_map_shiftable<T, lb, ub, add, zero, S, op, e, F, act, comp, id>() : O(1)
 *	空のセグメント木で初期化する．

@@ -39,6 +39,41 @@ void breadth_first_search(const Graph& g, int st, vi& dist) {
 }
 
 
+//【幅優先探索（距離上限指定）】O((max deg(v))^D)
+/*
+* グラフ g に対し始点を st として距離 D 以下の範囲の幅優先探索を行い，
+* st から各頂点 s への最短経路長を dist[s] に格納する．
+*/
+void breadth_first_search(const Graph& g, int st, int D, unordered_map<int, int>& dist) {
+	// verify : https://atcoder.jp/contests/abc254/tasks/abc254_e
+
+	int n = sz(g);
+
+	dist.clear(); // スタートからの最短距離を保持するテーブル
+	dist[st] = 0;
+	if (D == 0) return;
+
+	queue<int> q; // 次に探索する頂点を入れておくキュー
+	q.push(st);
+
+	while (!q.empty()) {
+		// 未探索の頂点 s を 1 つ得る．
+		auto s = q.front(); q.pop();
+
+		repe(t, g[s]) {
+			// 探索済みの頂点なら何もしない．
+			if (dist.count(t)) continue;
+
+			// スタートからの最短距離を確定する．
+			dist[t] = dist[s] + 1;
+
+			// 未探索の頂点として t を追加する．
+			if (dist[t] < D) q.push(t);
+		}
+	}
+}
+
+
 //【幅優先探索（複数始点）】O(|V| + |E|)
 /*
 * グラフ g に対し始点集合を st として幅優先探索を行い，

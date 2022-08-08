@@ -78,7 +78,7 @@ void binary_bfs(const WGraph& g, int st, vi& dist) {
 }
 
 
-//【単一始点最短路／ダイクストラ法】O(|V| + |E| log|V|)
+//【単一始点最短路】O(|V| + |E| log|V|)
 /*
 * 非負のコスト付きグラフ g に対し，始点 st から各頂点 i への最短距離を dist[i] に格納する．
 * 頂点 i に到達不能の場合は dist[i] = INFL とする．
@@ -228,7 +228,7 @@ void dijkstra_tree(const WGraph& g, int st, WGraph& gt) {
 }
 
 
-//【単一始点最短路（負コスト可）／ベルマン－フォード法】O(|E| |V|)
+//【単一始点最短路（負コスト可）】O(|E| |V|)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，
 * st から各頂点 i への最短距離を dist[i] に格納する．
@@ -271,7 +271,7 @@ bool bellman_ford(const WGraph& g, int st, vl& dist) {
 }
 
 
-//【全頂点対最短路（負コスト可）／ワーシャル－フロイド法】O(|V|^3)
+//【全頂点対最短路（負コスト可）】O(|V|^3)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，
 * 頂点 i から頂点 j への最短距離を dist[i][j] に格納する．

@@ -4,7 +4,7 @@
 // ■■■■■ ゲーム ■■■■■
 
 
-//【DAG 上のコマ移動ゲーム】O(|V| + |E|)　
+//【コスト付き DAG 上のコマ移動ゲーム】O(|V| + |E|)　
 /*
 * ゲームのルール：
 * コスト付き DAG g のある頂点 v にコマが置かれている．
@@ -13,7 +13,7 @@
 *
 * res[v] = {f, l} : v にコマがある状態から最善を尽くしたときの f:先手[l:後手] の点数
 */
-void score_game(const WGraph& g, vector<pll>& res) {
+void weighted_DAG_game(const WGraph& g, vector<pll>& res) {
 	int n = sz(g);
 
 	vb seen(n);
@@ -46,6 +46,83 @@ void score_game(const WGraph& g, vector<pll>& res) {
 
 	// 各頂点 s についての情報を計算する．
 	rep(s, n) dfs(s);
+}
+
+
+//【コスト付き有向グラフ上のコマ移動ゲーム】O(|V| + |E| log|V|)
+/*
+* コスト付き有向グラフ（閉路可）g のある頂点 v にコマが置かれている．
+* 左と右は交互にコマを辺で繋がれた頂点のいずれかへ動かし，
+* 通った辺のコストの総和を左は最小化，右は最大化する（終了せず +∞ になることも認める．）
+* コマが v にある状態から，左[右] が先手だった場合の最終スコアを sc_l[sc_r] に格納する．
+*
+*（後退解析）
+*/
+void weighted_directed_graph_game(const WGraph& g, vl& sc_l, vl& sc_h) {
+	// verify : https://atcoder.jp/contests/abc261/tasks/abc261_h
+
+	int n = sz(g);
+	sc_l.resize(n);
+	sc_h.resize(n);
+
+	// g_rev : g の辺の向きを逆にし，頂点を倍にしたグラフ（偶数：左先手，奇数：右先手）
+	WGraph g_rev(2 * n);
+	rep(s, n) repe(e, g[s]) {
+		g_rev[2 * e.to].push_back({ 2 * s + 1, e.cost });
+		g_rev[2 * e.to + 1].push_back({ 2 * s, e.cost });
+	}
+
+	vl sc(2 * n, INFL);
+
+	// rem[i] : まだ調べていない局面 i から遷移可能な局面がいくつあるか
+	vi rem(2 * n);
+
+	// 終局までのスコア昇順に局面を取り出す優先度付きキュー
+	priority_queue_rev<pli> q;
+
+	rep(t, n) {
+		// 遷移可能な局面数の記録
+		rem[2 * t] = rem[2 * t + 1] = sz(g[t]);
+
+		// 遷移不能な頂点ならどちらが先手でもスコアは 0
+		if (sz(g[t]) == 0) {
+			sc[2 * t] = sc[2 * t + 1] = 0;
+
+			repe(e, g_rev[2 * t]) q.push({ e.cost, e.to });
+			repe(e, g_rev[2 * t + 1]) q.push({ e.cost, e.to });
+		}
+	}
+
+	// 後退解析を行う．スコアが有限で確定する局面がある限り処理を行う．
+	while (!q.empty()) {
+		ll c; int t;
+		tie(c, t) = q.top(); q.pop();
+
+		rem[t]--;
+
+		// 左が先手の場合（スコア最小化）
+		if (t % 2 == 0) {
+			// スコア昇順に局面を取り出しているので，最初に見たものが最善
+			if (c >= sc[t]) continue;
+
+			sc[t] = c;
+			repe(e, g_rev[t]) q.push({ c + e.cost, e.to });
+		}
+		// 右が先手の場合（スコア最大化）
+		else {
+			// スコア昇順に局面を取り出しているので，最後に見たものが最善
+			if (rem[t] == 0) {
+				sc[t] = c;
+				repe(e, g_rev[t]) q.push({ c + e.cost, e.to });
+			}
+		}
+	}
+	// 後退解析が終わってもスコアが有限で確定していない局面は全てスコア +∞ になる．
+
+	rep(i, n) {
+		sc_l[i] = sc[2 * i];
+		sc_h[i] = sc[2 * i + 1];
+	}
 }
 
 

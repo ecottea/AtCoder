@@ -7,7 +7,7 @@
 /*
 * 文字列 s[0..n) が正しい括弧列かを返す．
 */
-bool parenthesis_sequenceQ(const vc& s) {
+bool parenthesis_sequenceQ(const string& s) {
 	// verify : https://atcoder.jp/contests/arc141/tasks/arc141_c
 
 	//【方法】
@@ -28,46 +28,6 @@ bool parenthesis_sequenceQ(const vc& s) {
 	}
 
 	return *min_element(all(acc)) == 0 && acc[n] == 0;
-}
-
-
-//【色付き括弧列の正しさ判定】
-/*
-* [0..n) が各 2 回含まれる列 p[0..2n) について，各 i∈[0..n) について，
-* 左右の i を色 i の "()" に対応させた列が正しい色付き括弧列かどうかを返す．
-*/
-bool parenthesis_sequenceQ(const vi& p) {
-	// verify : https://atcoder.jp/contests/arc076/tasks/arc076_c
-
-	int n = sz(p) / 2;
-	if (n == 0) return true;
-
-	// '(' を +1, ')' を -1 に置き換えつつ，'(' の位置を記憶する．
-	vi seen(n, -1); vi a(2 * n);
-	rep(i, 2 * n) {
-		if (seen[p[i]] != -1) {
-			a[i] = -1;
-		}
-		else {
-			a[i] = 1;
-			seen[p[i]] = i;
-		}
-	}
-
-	// ±1 に直した列の累積和をとり，括弧のネスト数を得る．
-	vi acc(2 * n + 1);
-	rep(i, 2 * n) acc[i + 1] = acc[i] + a[i];
-
-	// 各番号について対応する括弧の位置のネスト数が等しいかどうかをチェックする．
-	rep(i, 2 * n) {
-		int j = seen[p[i]];
-		if (i == j) continue;
-
-		// j < i
-		if (acc[i + 1] != acc[j]) return false;
-	}
-
-	return true;
 }
 
 
@@ -94,7 +54,7 @@ ll maximize_parenthesis_inner_product(const vl& a) {
 	//		s[0..0] には +1 が 1 個以上
 	//		s[0..2] には +1 が 2 個以上
 	//		s[0..4] には +1 が 3 個以上 ...
-	// 存在する必要があり，逆にこれらを満たす括弧列を構成することができる．
+	// 存在する必要があり，逆にこれらを満たす括弧列は全て構成することができる．
 	// 
 	// よって先頭から順に優先度付きキューに a の要素を入れていき，
 	// a[2i] まで読む度に，その時点での最大の要素を取り出し，
@@ -154,6 +114,98 @@ int parenthesis_tree(const string& s, Graph& g, vi& ls, vi& rs) {
 	}
 
 	return 0;
+}
+
+
+//【色付き括弧列】
+/*
+* [0..n) が各 2 回含まれる列 p[0..2n) を，各 i∈[0..n) について
+* 左右の i を色 i の "()" に対応させることで色付き括弧列とみなす．
+*/
+
+
+//【色付き括弧列の正しさ判定】O(n)
+/*
+* 色付き括弧列 p[0..2n) が正しい色付き括弧列かどうかを返す．
+*/
+bool parenthesis_sequenceQ(const vi& p) {
+	// verify : https://atcoder.jp/contests/arc076/tasks/arc076_c
+
+	int n = sz(p) / 2;
+	if (n == 0) return true;
+
+	// '(' を +1, ')' を -1 に置き換えつつ，'(' の位置を記憶する．
+	vi seen(n, -1); vi a(2 * n);
+	rep(i, 2 * n) {
+		if (seen[p[i]] != -1) {
+			a[i] = -1;
+		}
+		else {
+			a[i] = 1;
+			seen[p[i]] = i;
+		}
+	}
+
+	// ±1 に直した列の累積和をとり，括弧のネスト数を得る．
+	vi acc(2 * n + 1);
+	rep(i, 2 * n) acc[i + 1] = acc[i] + a[i];
+
+	// 各番号について対応する括弧の位置のネスト数が等しいかどうかをチェックする．
+	rep(i, 2 * n) {
+		int j = seen[p[i]];
+		if (i == j) continue;
+
+		// j < i
+		if (acc[i + 1] != acc[j]) return false;
+	}
+
+	return true;
+}
+
+
+//【色付き括弧列の違反対の数え上げ】O(n log n)
+/*
+* 色付き括弧列 p[0..2n) に含まれる違反括弧対の個数を返す．
+*/
+ll count_illegal_parenthesis_pair(vi p) {
+	// verify : https://atcoder.jp/contests/abc263/tasks/abc263_h
+
+	int n = sz(p) / 2;
+	if (n == 0) return true;
+
+	// '(' の色が昇順になるよう彩色しなおす．
+	vi col(n, -1); int c = 0; vi is_left(2 * n);
+	rep(i, 2 * n) {
+		// '(' を読んだ場合
+		if (col[p[i]] == -1) {
+			col[p[i]] = c;
+			p[i] = c++;
+			is_left[i] = true;
+		}
+		// ')' を読んだ場合
+		else {
+			p[i] = col[p[i]];
+		}
+	}
+
+	ll res = 0;
+
+	// ft_i[j] : p[0..i) までで，色 j の括弧が左端だけ読んだ状態か
+	fenwick_tree<int> ft(n);
+
+	rep(i, 2 * n) {
+		// '(' を読んだ場合
+		if (is_left[i]) {
+			ft.add(p[i], 1);
+		}
+		// ')' を読んだ場合
+		else {
+			ft.add(p[i], -1);
+			res += ft.sum(p[i], n);
+		}
+	}
+
+	return res;
 }
 
 

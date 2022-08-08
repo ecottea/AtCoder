@@ -104,32 +104,21 @@ public:
 	Cumulative_sum_2D(const vector<vector<S>>& a)
 		: h(sz(a)), w(sz(a[0])), acc(h + 1, vector<S>(w + 1, o())) {
 		// 元データを仮格納する．
-		rep(i, h) {
-			rep(j, w) {
-				acc[i + 1][j + 1] = a[i][j];
-			}
-		}
+		rep(i, h) rep(j, w) acc[i + 1][j + 1] = a[i][j];
 
 		// 縦方向に累積和をとる．
-		repi(i, 1, h) {
-			repi(j, 0, w) {
-				acc[i][j] = op(acc[i][j], acc[i - 1][j]);
-			}
-		}
+		repi(i, 1, h) repi(j, 0, w) acc[i][j] = op(acc[i][j], acc[i - 1][j]);
 
 		// 横方向に累積和をとる．
-		repi(i, 0, h) {
-			repi(j, 1, w) {
-				acc[i][j] = op(acc[i][j], acc[i][j - 1]);
-			}
-		}
+		repi(i, 0, h) repi(j, 1, w) acc[i][j] = op(acc[i][j], acc[i][j - 1]);
 	}
 	Cumulative_sum_2D() : h(0), w(0) {}
 
 	// Σa[x1..x2)[y1..y2) を返す．
 	S sum(int x1, int y1, int x2, int y2) {
 		// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
-		
+
+		if (x1 >= h || y1 >= w || x2 <= 0 || y2 <= 0) return o();
 		chmax(x1, 0);
 		chmax(y1, 0);
 		chmin(x2, h);
@@ -399,14 +388,14 @@ struct Quadratic_division {
 *	v[r-1] ... v[l] x を返す．空なら x を返す．
 */
 template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
-struct Quadratic_division {
+struct Quadratic_division_Mset {
 	using vF = vector<F>;
 
 	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
-	vector<F> v, v_mul;
+	vF v, v_mul;
 
 	// コンストラクタ（e() で初期化）
-	Quadratic_division(int n_) : n(n_) {
+	Quadratic_division_Mset(int n_) : n(n_) {
 		w = (int)(sqrt(n) + 0.001);
 		m = (n + w - 1) / w;
 
@@ -415,8 +404,12 @@ struct Quadratic_division {
 	}
 
 	// コンストラクタ（配列で初期化）
-	Quadratic_division(vector<F>& v_) : Quadratic_division(sz(v_)) {
+	Quadratic_division_Mset(const vF& v_) {
 		// verify : https://atcoder.jp/contests/arc027/tasks/arc027_4
+
+		n = sz(v_);
+		w = (int)(sqrt(n) + 0.001);
+		m = (n + w - 1) / w;
 
 		v = v_;
 		v_mul = vF(m, id());
@@ -459,7 +452,7 @@ struct Quadratic_division {
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
+	friend ostream& operator<<(ostream& os, Quadratic_division_Mset qd) {
 		rep(i, qd.n) os << qd.get(i) << " ";
 		return os;
 	}
@@ -612,7 +605,6 @@ void sliding_window_minimum_2D(const vector<vector<S>>& a, int dh, int dw, vecto
 template <class S, S(*op)(S, S), S(*o)()>
 class Sparse_table {
 	// 参考 : https://tookunn.hatenablog.com/entry/2016/07/13/211148
-	// verify : https://codeforces.com/contest/689/problem/D
 
 	int n, m;
 
@@ -623,6 +615,8 @@ public:
 	// コンストラクタ（初期化なし，配列で初期化）
 	Sparse_table() : n(0), m(0) {}
 	Sparse_table(const vector<S>& a) : n(sz(a)), m(msb(n) + 1), acc(m, vector<S>(n)) {
+		// verify : https://codeforces.com/contest/689/problem/D
+
 		rep(i, n) acc[0][i] = a[i];
 
 		repi(j, 1, m - 1) {
@@ -635,6 +629,8 @@ public:
 
 	// Σa[l..r) を返す．
 	S sum(int l, int r) {
+		// verify : https://codeforces.com/contest/689/problem/D
+		
 		if (l >= r) return o();
 
 		int j = msb(r - l);

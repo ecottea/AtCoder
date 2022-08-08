@@ -277,7 +277,7 @@ struct Lazy_fenwick_tree {
 
 //【区間加算／区間総和クエリ】
 /*
-* 利用：【遅延評価フェニック木】
+* 利用：【遅延評価フェニック木（Z-加群）】
 */
 template <class T> T op8(T x, T y) { return x + y; }
 template <class T> T e8() { return T(0); }
@@ -421,7 +421,7 @@ struct Fenwick_tree_2D {
 };
 
 
-//【二次元遅延評価フェニック木（Z 加群）】
+//【二次元遅延評価フェニック木（Z-加群）】
 /*
 * Lazy_fenwick_tree_2D<S, op, o, inv, mul>(int h, int w) : O(h w)
 *	要素数 h * w かつ初期値 o で初期化する．

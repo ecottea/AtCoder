@@ -182,3 +182,25 @@ void last_position(const string& s, vi& pos) {
 }
 
 
+//【異なる文字の次の位置】O(n k)
+/*
+* s[0..n) で，j > i かつ s[j] != s[i] なる最小の j を nxt[i] に格納する（なければ n）
+*/
+void next_different_position(const string& s, vi& nxt) {
+	int n = sz(s);
+	nxt.resize(n);
+
+	char c = s[n - 1]; // 走査中の文字
+	int pos = n; // 走査中の文字以外が最後に現れた位置
+
+	// 後ろから走査していく
+	repir(i, n - 1, 0) {
+		if (s[i] == c) nxt[i] = pos;
+		else {
+			nxt[i] = pos = i + 1;
+			c = s[i];
+		}
+	}
+}
+
+
