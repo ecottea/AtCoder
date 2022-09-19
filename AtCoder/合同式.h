@@ -64,6 +64,8 @@ int ord(const mint& a) {
 * —˜—pFy–ñ”—ñ‹“z
 */
 int find_primitive_root() {
+	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_c
+
 	const int p = mint::mod();
 
 	// p - 1 ‚Ì–ñ” divs ‚ğ“¾‚éD

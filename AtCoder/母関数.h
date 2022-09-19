@@ -91,8 +91,8 @@
 //y1 ŒÂ‚¨‚«‚ÌŒW”˜az
 /*
 * f(z) = ƒ°i a[i] z^i ‚É‚Â‚¢‚ÄC
-*	ƒ°i:‹ô” a[i] = (f(z) + f(-z)) / 2
-*	ƒ°i:Šï” a[i] = (f(z) - f(-z)) / 2
+*	ƒ°i:‹ô” a[i] z^i = (f(z) + f(-z)) / 2
+*	ƒ°i:Šï” a[i] z^i = (f(z) - f(-z)) / 2
 *
 * verify : https://atcoder.jp/contests/code-festival-2014-morning-middle/tasks/code_festival_morning_med_c
 */

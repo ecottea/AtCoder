@@ -4,6 +4,60 @@
 // ■■■■■ ゲーム ■■■■■
 
 
+//【局面の勝敗】O(?)（遅いので実験用）
+/*
+* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗のリストを res に格納する．
+*
+* 制約：
+* nxt(t, p, nps) を呼ぶと，t=1:先手番[t=0:後手番] での局面 p から遷移可能な局面のリストを nps に格納する．
+*（空の場合は，先手勝ちなら 1，後手勝ちなら 0 を返す．）
+*/
+template <class T>
+void decide_win_or_lose(const T& p_ini, function<int(int, const T&, vector<T>&)>& nxt, map<pair<int, T>, int>& res) {
+	res.clear();
+
+	// t=1:先手番[t=0:後手番] で局面 p であるときの勝敗を返す．
+	function<int(int, const T&)> dfs = [&](int t, const T& p) {
+		// 既に勝敗が確定済ならその結果を返す．
+		if (res.count({ t, p })) return res[{t, p}];
+
+		// 局面 p から遷移可能な局面の集合 nps を得る．
+		vector<T> nps;
+		int wl = nxt(t, p, nps);
+
+		// p から遷移可能な局面が無い場合は決着．
+		if (nps.empty()) {
+			res[{t, p}] = wl;
+			return wl;
+		}
+
+		// 遷移先に自分勝ちの局面が全く無ければ相手勝ち
+		res[{t, p}] = 1 - t;
+
+		// 遷移先に自分勝ちの局面が 1 つでもあれば自分勝ち
+		repe(np, nps) {
+			if (dfs(1 - t, np) == t) {
+				res[{t, p}] = t;
+			}
+		}
+
+		return res[{t, p}];
+	};
+
+	dfs(1, p_ini);
+
+	/* nxt の定義の雛形
+	using T = tuple<ll, ll, vl>;
+	function<int(int, const T&, vector<T>&)> nxt = [&](int t, const T& p, vector<T>& nps) {
+		ll l, r; vl a;
+		tie(l, r, a) = p;
+
+		return 0;
+	};
+	*/
+}
+
+
 //【コスト付き DAG 上のコマ移動ゲーム】O(|V| + |E|)　
 /*
 * ゲームのルール：

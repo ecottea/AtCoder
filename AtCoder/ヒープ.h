@@ -620,6 +620,8 @@ template <class T> struct Separated_multiset_sum {
 		return false;
 	}
 	bool erase_h(const T& val) {
+		// verify : https://atcoder.jp/contests/agc018/tasks/agc018_c
+
 		Assert(nh > 0);
 
 		auto it_h = sh.lower_bound(val);

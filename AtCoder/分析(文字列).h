@@ -406,8 +406,7 @@ class Aho_corasick {
 		Node* suf; // 最長接尾辞へのポインタ
 		bool seen; // 探索済か（find 用）
 
-		Node(Node* parent_ = nullptr, int pat_id_ = -1, Node* suf_ = nullptr)
-			: parent(parent_), childs(C), suf(suf_), seen(false) {}
+		Node(Node* parent_ = nullptr) : parent(parent_), childs(C), suf(nullptr), seen(false) {}
 	};
 
 	int n; // パターン数
@@ -431,6 +430,7 @@ class Aho_corasick {
 	}
 
 public:
+	// パターン文字列の集合 pats を検索できるよう初期化する．
 	Aho_corasick(const vector<string>& pats) : n(sz(pats)), root(new Node()) {
 		// まずトライ木を構築する．
 		create_trie_tree(pats);
@@ -444,35 +444,48 @@ public:
 
 			// 各文字 c について
 			rep(c, C) {
-				// 子が居ない場合は何もしない．
+				// 子 c が居ない場合は何もしない．
 				if (p->childs[c] == nullptr) continue;
 
+				// p から最小回数の遷移失敗を繰り返してたどり着ける c 遷移が可能なノード pp を探す．
 				Node* pp = p->suf;
 				while (pp != nullptr && pp->childs[c] == nullptr) pp = pp->suf;
 
+				// p から c で遷移し，次に遷移失敗した場合の行き先を定める．
+				// pp が見つからなかったら空文字列まで戻る．
 				if (pp == nullptr) p->childs[c]->suf = root;
+				// さもなくば pp から c で遷移した先に移る．
 				else p->childs[c]->suf = pp->childs[c];
 
+				// 子についての処理を予約する．
 				q.push(p->childs[c]);
 			}
 		}
 	}
 
+	// 文字列 s 中に pats[i] が存在するかを ex[i] に格納する（1 度しか実行できない）
 	void find(const string& s, vb& ex) {
 		ex.assign(n, false);
 
+		// 通過した頂点を記録するキュー
 		queue<Node*> q;
 
+		// 対象文字列 s による遷移でトライ木上を移動する．
 		Node* p = root;
 		repe(c, s) {
+			// c 遷移が可能なノード p まで戻る．
 			while (p != nullptr && p->childs[c - A] == nullptr) p = p->suf;
 
+			// c 遷移が不可能なら空文字列まで戻る．
 			if (p == nullptr) p = root;
+			// c 遷移が可能なら c で遷移した先に移る．
 			else p = p->childs[c - A];
 
+			// p 通過したことを記録しておく．
 			q.push(p);
 		}
 
+		// 通過した頂点だけでなく，空文字列からそこに至るまでの頂点全てを調べる．
 		while (!q.empty()) {
 			Node* p = q.front(); q.pop();
 			if (p == nullptr) continue;

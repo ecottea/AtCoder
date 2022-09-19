@@ -186,6 +186,68 @@ template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t)
 }
 
 
+//【点群の作る三角形の数え上げ】O(n^2 log n)　
+/*
+* 点群 p[0..n) から 3 点を選んで作れる鋭角[直角, 鈍角]三角形の個数を cp[c0, cn] とし，{cp,c0,cn} を返す．
+*
+* 制約：どの 3 点も共線でない．
+*
+* 利用：【偏角の比較（同偏角は同一視）】
+*/
+template <class T> tuple<ll, ll, ll> count_triangles(const vector<Point<T>>& p) {
+	// verify : https://atcoder.jp/contests/abc033/tasks/abc033_d
+
+	int n = sz(p);
+
+	// 原点からみた偏角で点を比較する関数．
+	auto cmp = [&](const Point<ll>& a, const Point<ll>& b) {
+		return compare_argument_weakly(a, b, { 1, 0 }, { 0, 0 });
+	};
+
+	// c0 : 直角三角形の個数，cn : 鈍角三角形の個数
+	ll c0 = 0, cn = 0;
+
+	// 点 p[i] 周りの角度を調べる．
+	rep(i, n) {
+		// v[0..n-1) : p[i] 以外の点全てについて，点 p[i] からの位置ベクトルを偏角順にソートしたもの．
+		vector<Point<ll>> v;
+		rep(j, n) if (j != i) v.emplace_back(p[j] - p[i]);
+		sort(all(v), cmp);
+
+		// 辺 v[j] を含むものを調べる．
+		rep(j, n - 1) {
+			Point<ll> e{ -v[j].y, v[j].x };
+
+			// v[j] を 90° 回転した方向 e を調査する．
+			auto it1 = lower_bound(all(v), e, cmp);
+			int j1 = (int)distance(v.begin(), it1) % (n - 1);
+			if (v[j].dot(v[j1]) == 0 && v[j].cross(v[j1]) > 0) {
+				c0++;
+				j1 = (j1 + 1) % n;
+			}
+
+			// v[j] を -90° 回転した方向 -e を調査する．
+			auto it2 = lower_bound(all(v), -e, cmp);
+			int j2 = (int)distance(v.begin(), it2) % (n - 1);
+			if (v[j].dot(v[j2]) == 0 && v[j].cross(v[j2]) < 0) {
+				c0++;
+			}
+
+			// 偏角が e から -e までの点を 3 点目に選ぶと鈍角三角形ができる．
+			cn += smod(j2 - j1, n - 1);
+		}
+	}
+
+	// 角を挟む辺それぞれに対して数えてしまっているので 2 で割る．
+	c0 /= 2; cn /= 2;
+
+	// cp : 鋭角三角形の個数
+	ll cp = (ll)n * (n - 1) * (n - 2) / 6 - (c0 + cn);
+
+	return { cp, c0, cn };
+}
+
+
 //【凸包】O(n log n)
 /*
 * 点群 p[0..n) の凸包の頂点を反時計回りに ch に格納する．

@@ -19,7 +19,7 @@ using S301 = ll;
 S301 op301(S301 x, S301 y) { return x + y; }
 S301 o301() { return 0; }
 S301 inv301(S301 x) { return -x; }
-S301 mul301(ll a, S301 x) { return a * x; }
+S301 mul301(ll a, S301 x) { return S301(a * x); }
 #define Add_Zmodule S301, op301, o301, inv301, mul301
 
 

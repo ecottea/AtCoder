@@ -164,45 +164,6 @@ void strongly_connected_component(const Graph& g, vvi& ccs) {
 }
 
 
-//【頂点の縮約】O(|V| + |E|)
-/*
-* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として
-* 縮約したグラフを gc に格納する．
-*
-* 特に強連結成分についての縮約を行えば DAG が得られる．
-*/
-void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
-	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_3
-
-	int n = sz(g), m = sz(p);
-
-	// id[v] : 頂点 v の属する成分
-	vi id(n);
-	rep(i, m) {
-		repe(v, p[i]) {
-			id[v] = i;
-		}
-	}
-
-	// 多重辺や自己ループを防ぐため一旦辺の集合を unordered_set でもつ．
-	vector<unordered_set<int>> gc_set(m);
-	rep(s, n) {
-		repe(t, g[s]) {
-			gc_set[id[s]].insert(id[t]);
-		}
-		gc_set[id[s]].erase(id[s]);
-	}
-
-	// 結果の格納
-	gc = Graph(m);
-	rep(s, m) {
-		repe(t, gc_set[s]) {
-			gc[s].push_back(t);
-		}
-	}
-}
-
-
 //【有向グラフの閉路分割】O(|V| + |E|) 
 /*
 * 有向グラフ g をいくつかの単純閉路に分割する（失敗したら false を返す）
@@ -311,9 +272,7 @@ template <class G> void cycle_detection(const G& g, vi& cycle) {
 		// s から辿れる頂点 t それぞれについて
 		repe(t, g[s]) {
 			// 親には戻らない（長さ 2 は閉路と認めない）
-			if (t == p) {
-				continue;
-			}
+			if (t == p) continue;
 
 			// t に対して深さ優先探索を行う．
 			auto end = dfs(t, s);

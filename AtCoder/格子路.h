@@ -259,7 +259,7 @@ void count_manhattan_path(const vvc& c_, int d, vvm& seq, char WALL = '#') {
 * n 個の点 (x[i], y[i]) に非負スコア c[i] が与えられており，その他の点のスコアは 0 である．
 * (-inf, -inf) から (inf, inf) までの最短路のうち，スコアの和が最大のもののスコアを返す．
 *
-*（平面走査 DP）
+*（コスト最大増加部分列）
 */
 ll op_mcp(ll a, ll b) { return max(a, b); }
 ll e_mcp() { return 0; }

@@ -3,33 +3,6 @@
 // ■■■■■ 探索 ■■■■■
 
 
-//【最適化問題 → 判定問題】
-/*
-*	(最適化問題) 条件 P(x) を満たすような最小の x を求めよ
-* について，P(x) を満たす x の範囲が [lb..∞) の形であるとする．また，
-*	(判定問題) x が条件 P(x) を満たすか判定せよ
-* であれば O(α) で解けるとする．
-*
-* このとき，条件を満たすか否かの境界を二分探索で求めることにより，
-* 元の (最適化問題) を O(α log(∞-lb)) で解くことができる．
-*
-* verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
-*/
-
-
-//【最大値の最小化】
-/*
-*	(最適化問題)「hogehoge な n 個の値の最大値」の最小値を求めよ
-* に対して【最適化問題 → 判定問題】を適用すると，
-*	(判定問題) hogehoge な n 個の値の最大値を x 以下にできるか判定せよ
-* に帰着する．これは
-*	(判定問題 2) hogehoge な n 個の値全てを x 以下にできるか判定せよ
-* と同値であり，n 個の値を独立に考えられ扱いやすくなる．
-*
-* verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
-*/
-
-
 //【めぐる式二分探索】O(log|ok - ng|)
 /*
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
@@ -157,6 +130,10 @@ template <class T> ll random_ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
 		ll m1 = l + 1 + rnd(mt) % (r - l - 1);
 		ll m2 = l + 1 + rnd(mt) % (r - l - 1);
 		if (m1 > m2) swap(m1, m2);
+		else if (m1 == m2) {
+			if (m1 == l + 1) m2++;
+			else m1--;
+		}
 
 		if (f(m1) > f(m2)) l = m1;
 		else r = m2;
@@ -489,6 +466,33 @@ void parallel_binary_search(vector<T>& ok, vector<T>& ng,
 		*/
 	}
 }
+
+
+//【最適化問題 → 判定問題】
+/*
+*	(最適化問題) 条件 P(x) を満たすような最小の x を求めよ
+* について，P(x) を満たす x の範囲が [lb..∞) の形であるとする．また，
+*	(判定問題) x が条件 P(x) を満たすか判定せよ
+* であれば O(α) で解けるとする．
+*
+* このとき，条件を満たすか否かの境界を二分探索で求めることにより，
+* 元の (最適化問題) を O(α log(∞-lb)) で解くことができる．
+*
+* verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
+*/
+
+
+//【最大値の最小化】
+/*
+*	(最適化問題)「hogehoge な n 個の値の最大値」の最小値を求めよ
+* に対して【最適化問題 → 判定問題】を適用すると，
+*	(判定問題) hogehoge な n 個の値の最大値を x 以下にできるか判定せよ
+* に帰着する．これは
+*	(判定問題 2) hogehoge な n 個の値全てを x 以下にできるか判定せよ
+* と同値であり，n 個の値を独立に考えられ扱いやすくなる．
+*
+* verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
+*/
 
 
 //【濃度の最大化】O(n log(1/EPS))

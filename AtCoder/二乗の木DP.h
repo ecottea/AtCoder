@@ -34,12 +34,10 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			// これは畳込みなので，mod998244353 なら高速化できる．
+			// これは畳込みなので，mod998244353 なら少し高速化できる．
 			vm ndps(ws + wt + 1);
-			repi(i, 1, ws) {
-				repi(j, 0, wt) {
-					ndps[i + j] += dp[s][i] * dp[t][j];
-				}
+			repi(i, 1, ws) repi(j, 0, wt) {
+				ndps[i + j] += dp[s][i] * dp[t][j];
 			}
 
 			dp[s] = ndps;
@@ -85,12 +83,10 @@ mint count_subtree(const Graph& g, int r, int k) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の個数
-			// これは畳込みなので，mod998244353 なら高速化できる．
+			// これは畳込みなので，mod998244353 なら少し高速化できる．
 			vm ndps(min(ws + wt, k) + 1);
-			repi(i, 1, min(ws, k)) {
-				repi(j, 0, min(wt, k - i)) {
-					ndps[i + j] += dp[s][i] * dp[t][j];
-				}
+			repi(i, 1, min(ws, k)) repi(j, 0, min(wt, k - i)) {
+				ndps[i + j] += dp[s][i] * dp[t][j];
 			}
 
 			dp[s] = ndps;
@@ -113,7 +109,7 @@ mint count_subtree(const Graph& g, int r, int k) {
 *
 *（二乗の木 DP）
 */
-void count_subtree__leaf(const Graph& g, int r, vm& cnt) {
+void count_subtree_leaf(const Graph& g, int r, vm& cnt) {
 	// verify : https://atcoder.jp/contests/abc235/tasks/abc235_h
 
 	int n = sz(g);
@@ -136,12 +132,10 @@ void count_subtree__leaf(const Graph& g, int r, vm& cnt) {
 			int wt = dfs(t, s);
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の葉を i 個もつ部分木の個数
-			// これは畳込みなので，mod998244353 なら高速化できる．
+			// これは畳込みなので，mod998244353 なら少し高速化できる．
 			vm ndps(ws + wt + 1);
-			repi(i, 0, ws) {
-				repi(j, 0, wt) {
-					ndps[i + j] += dp[s][i] * dp[t][j];
-				}
+			repi(i, 0, ws) repi(j, 0, wt) {
+				ndps[i + j] += dp[s][i] * dp[t][j];
 			}
 
 			dp[s] = ndps;
@@ -192,10 +186,8 @@ void minimum_cost_subtree(const Graph& g, const vl& c, int r, vl& cost) {
 
 			// ndps[i] : 部分木 s に部分木 t をマージした後の大きさ i の部分木の最小コスト
 			vl ndps(ws + wt + 1, INFL);
-			repi(i, 1, ws) {
-				repi(j, 0, wt) {
-					chmin(ndps[i + j], dp[s][i] + dp[t][j]);
-				}
+			repi(i, 1, ws) repi(j, 0, wt) {
+				chmin(ndps[i + j], dp[s][i] + dp[t][j]);
 			}
 
 			dp[s] = ndps;
@@ -246,13 +238,11 @@ void count_induced_subtree(const Graph& g, vm& cnt) {
 
 			// ndps[k][type] : 部分木 s に部分木 t をマージした後の個数
 			vvm ndps(ws + wt, vm(2));
-			rep(ks, ws) {
-				rep(kt, wt) {
-					ndps[ks + kt][0] += dp[s][ks][0] * dp[t][kt][0];
-					ndps[ks + kt][0] += dp[s][ks][0] * dp[t][kt][1];
-					ndps[ks + kt][1] += dp[s][ks][1] * dp[t][kt][0];
-					ndps[ks + kt + 1][1] += dp[s][ks][1] * dp[t][kt][1];
-				}
+			rep(ks, ws) rep(kt, wt) {
+				ndps[ks + kt][0] += dp[s][ks][0] * dp[t][kt][0];
+				ndps[ks + kt][0] += dp[s][ks][0] * dp[t][kt][1];
+				ndps[ks + kt][1] += dp[s][ks][1] * dp[t][kt][0];
+				ndps[ks + kt + 1][1] += dp[s][ks][1] * dp[t][kt][1];
 			}
 
 			dp[s] = ndps;
@@ -302,25 +292,23 @@ mint count_coprime_path(Graph& g, int k) {
 			// ndps : 部分木 s に部分木 t をマージした後の部分木の個数
 			vvm ndps(3, vm(min((ws + wt) / 2, k) + 1));
 
-			repi(i, 0, min(ws / 2, k)) {
-				repi(j, 0, min(wt / 2, k - i + 1)) {
-					// 辺 (s, t) がパスに属さない場合
-					mint sum = dp[t][0][j] + dp[t][1][j] + dp[t][2][j];
-					rep(c, 3) {
-						ndps[c][i + j] += dp[s][c][i] * sum;
-					}
+			repi(i, 0, min(ws / 2, k)) repi(j, 0, min(wt / 2, k - i + 1)) {
+				// 辺 (s, t) がパスに属さない場合
+				mint sum = dp[t][0][j] + dp[t][1][j] + dp[t][2][j];
+				rep(c, 3) {
+					ndps[c][i + j] += dp[s][c][i] * sum;
+				}
 
-					// 辺 (s, t) がパスに属する場合
-					if (i + j < sz(ndps[0]) - 1) {
-						ndps[1][i + j + 1] += dp[s][0][i] * dp[t][0][j];
-					}
-					if (i + j < sz(ndps[0])) {
-						ndps[1][i + j] += dp[s][0][i] * dp[t][1][j];
-						ndps[2][i + j] += dp[s][1][i] * dp[t][0][j];
-					}
-					if (i + j > 0) {
-						ndps[2][i + j - 1] += dp[s][1][i] * dp[t][1][j];
-					}
+				// 辺 (s, t) がパスに属する場合
+				if (i + j < sz(ndps[0]) - 1) {
+					ndps[1][i + j + 1] += dp[s][0][i] * dp[t][0][j];
+				}
+				if (i + j < sz(ndps[0])) {
+					ndps[1][i + j] += dp[s][0][i] * dp[t][1][j];
+					ndps[2][i + j] += dp[s][1][i] * dp[t][0][j];
+				}
+				if (i + j > 0) {
+					ndps[2][i + j - 1] += dp[s][1][i] * dp[t][1][j];
 				}
 			}
 

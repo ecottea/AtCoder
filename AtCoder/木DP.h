@@ -59,7 +59,7 @@ void tree_getDP(const Graph& g, int r, vector<T>& dp) {
 	void merge(T& x, const T& y) { chmax(x, y); }
 	T e() { return 0; }
 	T leaf(int s) { return 0; }
-	T apply(const T& x, int s, int t) { return x + 1; }
+	T apply(const T& x, int p, int s) { return x + 1; }
 	void solve_by_tree_getDP(const Graph& g, int r, vector<T>& dp) {
 		tree_getDP<T, merge, e, leaf, apply>(g, r, dp);
 	}
@@ -120,7 +120,7 @@ void tree_getDP(const WGraph& g, int r, vector<T>& dp) {
 	void merge(T& x, const T& y) { chmax(x, y); }
 	T e() { return 0; }
 	T leaf(int s) { return 0; }
-	T apply(const T& x, int s, int t, ll c) { return x + c; }
+	T apply(const T& x, int p, int s, ll c) { return x + c; }
 	void solve_by_tree_getDP(const WGraph& g, int r, vector<T>& dp) {
 		tree_getDP<T, merge, e, leaf, apply>(g, r, dp);
 	}

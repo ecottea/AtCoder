@@ -143,7 +143,7 @@ struct Fenwick_tree {
 *	要素数 n かつ初期値 o で初期化する．
 *	要素は Z 加群 (S, op, o, inv, mul) の元とする．
 *
-* Lazy_fenwick_tree<S, op, e, inv, mul>(vS a) : O(n)
+* Lazy_fenwick_tree<S, op, o, inv, mul>(vS a) : O(n)
 *	配列 a で初期化する．
 *
 * set(int i, S x) : O(log n)
@@ -153,13 +153,13 @@ struct Fenwick_tree {
 *	v[i] を返す．
 *
 * S prod(int l, int r) : O(log n)
-*	op( v[l..r) ) を返す．空なら o() を返す．
+*	Σv[l..r) を返す．空なら o() を返す．
 *
 * apply(int i, S x) : O(log n)
-*	v[i] = op(v[i], x) とする．
+*	v[i] += x とする．
 *
 * apply(int l, int r, S x) : O(log n)
-*	v[l..r) = op(v[l..r), x) とする．
+*	v[l..r) += x とする．
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S), S(*mul)(ll, S)>
 struct Lazy_fenwick_tree {
@@ -206,7 +206,7 @@ struct Lazy_fenwick_tree {
 		return prod(i, i + 1);
 	}
 
-	// op( v[l..r) ) を返す．空なら o を返す．（l, r : 0-indexed）
+	// Σv[l..r) を返す．空なら o を返す．（l, r : 0-indexed）
 	S prod(int l, int r) const {
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
@@ -214,12 +214,12 @@ struct Lazy_fenwick_tree {
 		return op(prod_sub(r), inv(prod_sub(l)));
 	}
 
-	// op( v[1..r] ) を返す．空なら o を返す．（r : 1-indexed）
+	// Σv[1..r] を返す．空なら o を返す．（r : 1-indexed）
 	S prod_sub(int r) const {
-		return op(prod_sub(r, 0), mul(r, prod_sub(r, 1)));
+		return op(prod_sub(r, 0), mul((ll)r, prod_sub(r, 1)));
 	}
 
-	// op( v[d][1..r] ) を返す．空なら o を返す．（r : 1-indexed）
+	// Σv[d][1..r] を返す．空なら o を返す．（r : 1-indexed）
 	S prod_sub(int r, int d) const {
 		S res = o();
 
@@ -233,7 +233,7 @@ struct Lazy_fenwick_tree {
 		return res;
 	}
 
-	// v[i] = op(v[i], x) とする．（i : 0-indexed）
+	// v[i] += x とする．（i : 0-indexed）
 	void apply(int i, S x) {
 		// i を 1-indexed に直す．
 		i++;
@@ -241,21 +241,21 @@ struct Lazy_fenwick_tree {
 		apply_sub(i, x, 0);
 	}
 
-	// v[l..r) = op(v[l..r), x) とする．（l, r : 0-indexed） 
+	// v[l..r) += x とする．（l, r : 0-indexed） 
 	void apply(int l, int r, S x) {
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
 		l++;
 
 		// 区間の端の値を調整する．
-		apply_sub(l, mul(l - 1, inv(x)), 0);
-		apply_sub(r + 1, mul(r, x), 0);
+		apply_sub(l, mul((ll)(l - 1), inv(x)), 0);
+		apply_sub(r + 1, mul((ll)r, x), 0);
 
 		apply_sub(l, x, 1);
 		apply_sub(r + 1, inv(x), 1);
 	}
 
-	// v[d][i] = op(v[d][i], x) とする．（i : 1-indexed）
+	// v[d][i] += x とする．（i : 1-indexed）
 	void apply_sub(int i, S x, int d) {
 		// 根に向かって値を op() していく．
 		while (i < n) {
@@ -273,17 +273,6 @@ struct Lazy_fenwick_tree {
 	}
 #endif
 };
-
-
-//【区間加算／区間総和クエリ】
-/*
-* 利用：【遅延評価フェニック木（Z-加群）】
-*/
-template <class T> T op8(T x, T y) { return x + y; }
-template <class T> T e8() { return T(0); }
-template <class T> T inv8(T x) { return -x; }
-template <class T> T mul8(T f, int i) { return f * i; }
-template <class T> using RASQ = Lazy_fenwick_tree<T, op8<T>, e8<T>, inv8<T>, mul8<T>>;
 
 
 //【二次元フェニック木（アーベル群）】
@@ -310,19 +299,32 @@ template <class T> using RASQ = Lazy_fenwick_tree<T, op8<T>, e8<T>, inv8<T>, mul
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 struct Fenwick_tree_2D {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2842
-
+	
 	// ノードの個数（要素数 + 1）
 	int h, w;
 
 	// v[x][y] : op( [*..x][*..y] ) の値（x, y ： 1-indexed，v[0][*], v[*][0] は使わない）
 	vector<vector<S>> v;
 
-	// コンストラクタ（初期化なし）
-	Fenwick_tree_2D() {}
+	// op( v[1..x][1..y] ) を返す．空なら o を返す．（x, y : 1-indexed）
+	S prod_sub(int x, int y) const {
+		S res = o();
+
+		// 子に向かって累積 op() をとっていく．
+		// i, j の最下位ビットから 1 を減算することで次の位置を得る．
+		for (int i = x; i > 0; i -= i & -i) {
+			for (int j = y; j > 0; j -= j & -j) {
+				res = op(res, v[i][j]);
+			}
+		}
+
+		return res;
+	}
 
 	// 要素数 h * w かつ初期値 o で初期化
-	Fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(h, vector<S>(w, o())) {}
+	Fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(h, vector<S>(w, o())) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2842
+	}
 
 	// 配列 a で初期化
 	Fenwick_tree_2D(const vector<vector<S>>& v_) : h(sz(v_) + 1), w(sz(v_[0]) + 1),
@@ -352,6 +354,7 @@ struct Fenwick_tree_2D {
 			}
 		}
 	}
+	Fenwick_tree_2D() {} // ダミー
 
 	// v[x][y] = val とする．（x, y : 0-indexed）
 	void set(int x, int y, S val) {
@@ -368,6 +371,8 @@ struct Fenwick_tree_2D {
 
 	// op( v[x1..x2)[y1..y2) ) を返す．空なら o を返す．（x1, y1, x2, y2 : 0-indexed）
 	S prod(int x1, int y1, int x2, int y2) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2842
+
 		// 0-indexed での半開長方形 [x1..x2) * [y1..y2) は，
 		// 1-indexed での閉長方形 [x1+1..x2] * [y1+1..y2] に対応する．
 		S res = o();
@@ -378,23 +383,10 @@ struct Fenwick_tree_2D {
 		return res;
 	}
 
-	// op( v[1..x][1..y] ) を返す．空なら o を返す．（x, y : 1-indexed）
-	S prod_sub(int x, int y) const {
-		S res = o();
-
-		// 子に向かって累積 op() をとっていく．
-		// i, j の最下位ビットから 1 を減算することで次の位置を得る．
-		for (int i = x; i > 0; i -= i & -i) {
-			for (int j = y; j > 0; j -= j & -j) {
-				res = op(res, v[i][j]);
-			}
-		}
-
-		return res;
-	}
-
 	// v[x][y] = op(v[x][y], val) とする．（x, y : 0-indexed）
 	void apply(int x, int y, S val) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2842
+
 		// x, y を 1-indexed に直す．
 		x++; y++;
 
@@ -590,6 +582,143 @@ struct Lazy_fenwick_tree_2D {
 	friend ostream& operator<<(ostream& os, const Lazy_fenwick_tree_2D& ft) {
 		rep(x, ft.h - 1) {
 			rep(y, ft.w - 1) {
+				os << ft.get(x, y) << " ";
+			}
+			cout << "\n";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【動的二次元フェニック木（アーベル群）】
+/*
+* Dynamic_fenwick_tree_2D<S, op, o, inv>(int h, int w) : O(h)
+*	要素数 h * w かつ初期値 o() で初期化する．
+*	要素はアーベル群 (S, op, o, inv) の元とする．
+*
+* add(int x, int y, S val) : O(log h log w)
+*	v[x][y] += val とする．
+*
+* set(int x, int y, S val) : O(log h log w)
+*	v[x][y] = val とする．
+*
+* S get(int x, int y) : O(log h log w)
+*	v[x][y] を返す．
+*
+* S sum(int x, int y) : O(log h log w)
+*	Σv[0..x)[0..y) を返す．空なら o() を返す．
+*
+* S sum(int x1, int y1, int x2, int y2) : O(log h log w)
+*	Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+struct Dynamic_fenwick_tree_2D {
+	// h : 行数 + 1, w : 列数 + 1
+	int h, w;
+
+	// v[x][y] : Σv[*..x][*..y] の値（x, y ： 1-indexed）
+	vector<unordered_map<int, S>> v;
+
+	// 要素数 h * w かつ初期値 o() で初期化
+	Dynamic_fenwick_tree_2D(int h_, int w_) : h(h_ + 1), w(w_ + 1), v(h) {}
+
+	// v[x][y] = val とする．（x, y : 0-indexed）
+	void set(int x, int y, S val) {
+		// 差分を求める．
+		S d = op(val, inv(get(x, y)));
+
+		add(x, y, d);
+	}
+
+	// v[x][y] を返す．（x, y : 0-indexed）
+	S get(int x, int y) const {
+		return sum(x, y, x + 1, y + 1);
+	}
+
+	// Σv[0..x)[0..y) を返す．空なら o() を返す．（x, y : 0-indexed）
+	S sum(int x, int y) const {
+		// verify : https://atcoder.jp/contests/abc266/tasks/abc266_h
+
+		S res = o();
+
+		// 子に向かって累積和をとっていく．
+		// i, j の最下位ビットから 1 を減算することで次の位置を得る．
+		for (int i = x; i > 0; i -= i & -i) {
+			for (int j = y; j > 0; j -= j & -j) {
+				const auto it = v[i].find(j);
+				if (it != v[i].end()) res = op(res, it->second);
+			}
+		}
+
+		return res;
+	}
+
+	// Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．（x1, y1, x2, y2 : 0-indexed）
+	S sum(int x1, int y1, int x2, int y2) const {
+		S res = o();
+
+		while (x1 != x2) {
+			if (x1 < x2) {
+				int j1 = y1, j2 = y2;
+				while (j1 != j2) {
+					if (j1 < j2) {
+						const auto it = v[x2].find(j2);
+						if (it != v[x2].end()) res = op(res, it->second);
+						j2 -= j2 & -j2;
+					}
+					else {
+						const auto it = v[x2].find(j1);
+						if (it != v[x2].end()) res = op(res, inv(it->second));
+						j1 -= j1 & -j1;
+					}
+				}
+				x2 -= x2 & -x2;
+			}
+			else {
+				int j1 = y1, j2 = y2;
+				while (j1 != j2) {
+					if (j1 < j2) {
+						const auto it = v[x1].find(j2);
+						if (it != v[x1].end()) res = op(res, inv(it->second));
+						j2 -= j2 & -j2;
+					}
+					else {
+						const auto it = v[x1].find(j1);
+						if (it != v[x1].end()) res = op(res, it->second);
+						j1 -= j1 & -j1;
+					}
+				}
+				x1 -= x1 & -x1;
+			}
+		}
+
+		return res;
+	}
+
+	// v[x][y] += val とする．（x, y : 0-indexed）
+	void add(int x, int y, S val) {
+		// verify : https://atcoder.jp/contests/abc266/tasks/abc266_h
+
+		// x, y を 1-indexed に直す．
+		x++; y++;
+
+		// 根に向かって値を足していく．
+		// i, j の最下位ビットに 1 を加算することで次の位置を得る．
+		for (int i = x; i < h; i += i & -i) {
+			for (int j = y; j < w; j += j & -j) {
+				auto it = v[i].find(j);
+				if (it != v[i].end()) it->second = op(it->second, val);
+				else v[i][j] = val;
+			}
+		}
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Dynamic_fenwick_tree_2D ft) {
+		rep(x, ft.h) {
+			rep(y, ft.w) {
 				os << ft.get(x, y) << " ";
 			}
 			cout << "\n";

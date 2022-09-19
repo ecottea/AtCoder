@@ -81,8 +81,8 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 
 //【多項分布（パラメータが一様の場合，積の期待値）】
 /*
-* X[0..n) をパラメータ (K, (1/n..1/n)) の多項分布に従う確率変数とするとき，
-*		E[ ΠX[0..i) ] = Π(K-i..K] / n^i
+* X[0..n) をパラメータ (K, (1/n,...,1/n)) の多項分布に従う確率変数とするとき，
+*		E[ ΠX[0..i) ] = perm(K, i) / n^i
 * 
 * (証明)
 * n = 3, i = 3 の場合を例とする．反復試行を考え，

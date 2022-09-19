@@ -12,41 +12,41 @@
 *	STR は string，vector<T> など．
 *
 * ll get(int l, int r) : O(1)
-*	連続部分列 s[l, r) のハッシュ値を返す．
+*	連続部分列 s[l, r) のハッシュ値を返す（空なら 0）
+*
+* ll join(ll hs, ll ht, int ls) : O(1)
+*	ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
 */
-// verify : https://atcoder.jp/contests/abc175/tasks/abc175_f
 template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 	using mint = static_modint<MOD>;
 	using vm = vector<mint>;
 
 	mint B = BASE; // 適当な基数
-	mint invB = B.inv(); // 基数の逆数
 	mint S = SHIFT; // 適当なシフト
 
 	// 列の長さ
 	int n;
 
+	// powB[i] : B^i, powB_inv[i] : B^(-i)
+	vm powB, powB_inv;
+
 	// v[i] : s[0, i) のハッシュ値
 	vm v;
 
-	// pow_invB[i] : B^(-i)
-	vm pow_invB;
-
 	// コンストラクタ（列 s で初期化）
 	Rolling_hash_sub() : n(0) {}
-	Rolling_hash_sub(const STR& s) : n(sz(s)), v(n + 1), pow_invB(n + 1) {
+	Rolling_hash_sub(const STR& s) : n(sz(s)), powB(n + 1), powB_inv(n + 1), v(n + 1) {
 		// ハッシュ値計算用の B の累乗
-		pow_invB[0] = 1;
-		rep(i, n) {
-			pow_invB[i + 1] = pow_invB[i] * invB;
-		}
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = powB[i] * B;
 
-		// s[0, i) のハッシュ値の計算
-		mint powB = 1;
-		rep(i, n) {
-			v[i + 1] = v[i] + (s[i] + S) * powB;
-			powB *= B;
-		}
+		// ハッシュ値計算用の B の逆元の累乗
+		mint invB = B.inv();
+		powB_inv[0] = 1;
+		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB;
+
+		// s[0, i) のハッシュ値 v[i] の計算
+		rep(i, n) v[i + 1] = v[i] + (s[i] + S) * powB[i];
 	}
 
 	// 代入
@@ -55,17 +55,23 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 
 	// s[l, r) のハッシュ値の取得
 	int get(int l, int r) {
-		// ハッシュ値は Σi=[0..r-l] (s[l+i] + SHIFT) * BASE^i (mod MOD)
-		return ((v[r] - v[l]) * pow_invB[l]).val();
+		// ハッシュ値は Σi=[0..r-l) (s[l+i] + S) * B^i (mod MOD)
+		return ((v[r] - v[l]) * powB_inv[l]).val();
+	}
+
+	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
+	int join(int hs, int ht, int ls) {
+		return (hs + ht * powB[ls]).val();
 	}
 };
-template <class STR> struct Rolling_hash {
+template <class STR> class Rolling_hash {
 	int n; // 列の長さ
 
 	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
-	Rolling_hash_sub<STR, 1000000007, 100007, 17> rh1;
-	Rolling_hash_sub<STR, 998244353, 99991, 91> rh2;
+	Rolling_hash_sub<STR, 1999987657, 114521, 17> rh1;
+	Rolling_hash_sub<STR, 1999901261, 314159, 91> rh2;
 
+public:
 	// コンストラクタ（文字列 s で初期化）
 	Rolling_hash() : n(0) {}
 	Rolling_hash(const STR& s) : n(sz(s)), rh1(s), rh2(s) {}
@@ -74,14 +80,26 @@ template <class STR> struct Rolling_hash {
 	Rolling_hash(const Rolling_hash& rh) = default;
 	Rolling_hash& operator=(const Rolling_hash& rh) = default;
 
+	// 列の長さの取得
+	int size() { return n; }
+
 	// s[l, r) のハッシュ値の取得
 	ll get(int l, int r) {
-		Assert(0 <= l && l <= r && r <= n);
+		// verify : https://atcoder.jp/contests/abc175/tasks/abc175_f
+
+		if (r <= 0 || l >= n || l >= r) return 0;
+		chmax(l, 0); chmin(r, n);
 		return (ll(rh1.get(l, r)) << 32) + ll(rh2.get(l, r));
 	}
 
-	// 列の長さの取得
-	int size() { return n; }
+	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
+	ll join(ll hs, ll ht, int ls) {
+		// verify : https://atcoder.jp/contests/arc050/tasks/arc050_d
+
+		int hs1 = (int)(hs >> 32), hs2 = (int)(hs % (1LL << 32));
+		int ht1 = (int)(ht >> 32), ht2 = (int)(ht % (1LL << 32));
+		return (ll(rh1.join(hs1, ht1, ls)) << 32) + ll(rh2.join(hs2, ht2, ls));
+	}
 };
 
 
@@ -95,7 +113,6 @@ template <class STR> struct Rolling_hash {
 * ll get(int x1, int y1, int x2, int y2) : O(1)
 *	部分長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 */
-// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_C
 template <class T, int MOD, int BASE_X, int BASE_Y, int SHIFT> struct Rolling_hash_2D_sub {
 	using mint = static_modint<MOD>;
 	using vm = vector<mint>;
@@ -169,6 +186,8 @@ template <class T> struct Rolling_hash_2D {
 
 	// 長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
 	ll get(int x1, int y1, int x2, int y2) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_C
+		
 		return (ll(rh1.get(x1, y1, x2, y2)) << 32) + ll(rh2.get(x1, y1, x2, y2));
 	}
 };
@@ -191,7 +210,6 @@ template <class T> struct Rolling_hash_2D {
 * ll sub(ll hA, ll hB) : O(1)
 *	ハッシュ値 hA, hB が表す数値の差（hA 側 - hB 側）のハッシュを返す．
 */
-// verify : https://codeforces.com/contest/898/problem/F
 template <int MOD> struct Number_rolling_hash_sub {
 	// 列とその長さ
 	string s; int n;
@@ -245,11 +263,15 @@ struct Number_rolling_hash {
 
 	// 連続部分列 s[l, r) が表す数値のハッシュ値を返す．
 	ll get(int l, int r) {
+		// verify : https://codeforces.com/contest/898/problem/F
+		
 		return ((ll)rh1.get(l, r) << 32) + rh2.get(l, r);
 	}
 
 	// ハッシュ値 hA, hB が表す数値の和のハッシュを返す．
 	ll add(ll hA, ll hB) {
+		// verify : https://codeforces.com/contest/898/problem/F
+		
 		ll hA1 = hA >> 32, hA2 = hA % (1LL << 32);
 		ll hB1 = hB >> 32, hB2 = hB % (1LL << 32);
 

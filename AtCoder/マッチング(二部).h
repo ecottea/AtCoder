@@ -291,17 +291,15 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 	dp[0][0] = 0;
 
 	// 貰う DP
-	rep(i, n) {
-		rep(j, m) {
-			// S[i] と T[j] は繋ぐしかないのでその分のコストは絶対必要になる．
-			// その他に
-			//		S[i] に T[j - 1] が繋がる
-			//		T[j] に S[i - 1] が繋がる
-			//		S[i], T[j] 共に他に繋がる頂点はなし
-			// の 3 通りの場合が考えられるので，そのうち最小のものを選ぶ．
-			dp[i + 1][j + 1]
-				= min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] }) + c[i][j];
-		}
+	rep(i, n) rep(j, m) {
+		// S[i] と T[j] は繋ぐしかないのでその分のコストは絶対必要になる．
+		// その他に
+		//		S[i] に T[j - 1] が繋がる
+		//		T[j] に S[i - 1] が繋がる
+		//		S[i], T[j] 共に他に繋がる頂点はなし
+		// の 3 通りの場合が考えられるので，そのうち最小のものを選ぶ．
+		dp[i + 1][j + 1]
+			= min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] }) + c[i][j];
 	}
 
 	// DP 復元
@@ -313,15 +311,9 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 
 			auto dp_min = min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] });
 
-			if (dp_min == dp[i + 1][j]) {
-				j--;
-			}
-			else if (dp_min == dp[i][j + 1]) {
-				i--;
-			}
-			else {
-				i--; j--;
-			}
+			if (dp_min == dp[i + 1][j]) j--;
+			else if (dp_min == dp[i][j + 1]) i--;
+			else { i--; j--; }
 		}
 
 		reverse(all(*match));
@@ -552,5 +544,100 @@ int gokon_matching(const vl& inc_m, const vl& dst_m, const vl& inc_w, const vl& 
 * 
 * 参考 : https://drken1215.hatenablog.com/entry/2019/10/05/173700
 */
+
+
+//【二部グラフの辺彩色】O(|V| |E|)
+/*
+* 二部グラフ (S, T) を |S| = ns, |T| = nt で辺 (u[i], v[i]) ∈ S×T をもつものと定め，(S, T) の辺彩色数を返す．
+* また具体的な辺彩色例における i 番目の辺の色を col[i] に格納する．
+*（辺彩色は辺集合のマッチングへの分割ともみなせる．）
+*/
+int bipartite_edge_chromatic(int ns, int nt, const vi& u, const vi& v, vi& col) {
+	// verify : https://codeforces.com/contest/600/problem/F
+
+	int m = sz(u), n = ns + nt;
+
+	// g[v][i] : 頂点 v から辺 i を通って行ける頂点
+	vector<unordered_map<int, int>> g(n); vi deg(n);
+	rep(i, m) {
+		g[u[i]][i] = ns + v[i];
+		g[ns + v[i]][i] = u[i];
+
+		deg[u[i]]++;
+		deg[ns + v[i]]++;
+	}
+
+	// d_max : g の最大次数（用いる色数）
+	int d_max = *max_element(all(deg));
+
+	// col[j] : 辺 j に塗られた色（未彩色なら -1）
+	col.assign(m, -1);
+
+	// nxt[v][j] : 頂点 v から出る色 j の辺番号（なければ -1）
+	vvi nxt(n, vi(d_max, -1));
+
+	// g の全ての辺について
+	rep(s, n) repe(it, g[s]) {
+		int i, t;
+		tie(i, t) = it;
+
+		if (col[i] != -1) continue;
+
+		// ce : 辺 s-t に使える色（無ければ -1）
+		// cst[0] : s に隣接する辺には塗られていないが，t に隣接する辺に塗られている色
+		// cst[1] : t に隣接する辺には塗られていないが，s に隣接する辺に塗られている色
+		int ce = -1; vi cst(2, -1);
+
+		rep(c, d_max) {
+			if (nxt[s][c] == -1) {
+				if (nxt[t][c] == -1) {
+					ce = c;
+					break;
+				}
+				else cst[0] = c;
+			}
+			else if (nxt[t][c] == -1) cst[1] = c;
+		}
+
+		// 辺 s-t に使える色があった場合，暫定的にその色で塗る．
+		if (ce != -1) {
+			col[i] = ce;
+			nxt[s][ce] = i;
+			nxt[t][ce] = i;
+			continue;
+		}
+
+		// 辺 s-t に使える色がなかった場合，t から伸びる色が cst[0], cst[1], ... と
+		// 交互に伸びていく極大単純パスを見つけ，その色を反転する．
+		int len = 0; vi is; vi vs{ t };
+		while (1) {
+			int c = cst[len % 2];
+			int i = nxt[vs.back()][c];
+			if (i == -1) break;
+
+			vs.emplace_back(g[vs.back()][i]);
+			is.emplace_back(i);
+			len++;
+		}
+
+		rep(l, len) {
+			int i = is[l];
+			int c = cst[(l + 1) % 2];
+
+			col[i] = c;
+			nxt[vs[l]][c] = i;
+			nxt[vs[l + 1]][c] = i;
+		}
+		nxt[vs[len]][cst[(len - 1) % 2]] = -1;
+
+		// 辺 s-t を cst[0] で塗る．
+		int c = cst[0];
+		col[i] = c;
+		nxt[s][c] = i;
+		nxt[t][c] = i;
+	}
+
+	return d_max;
+}
 
 

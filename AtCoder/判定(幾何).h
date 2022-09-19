@@ -79,6 +79,8 @@ inline bool intersectQ_L_CS(const Line<T>& l, const Line<T>& s) {
 */
 template <typename T>
 inline bool intersectQ_L_HS(const Line<T>& l, const Line<T>& s) {
+	// verify : https://codeforces.com/contest/598/problem/F
+	
 	// 共有点をもつ
 	// ⇔ a と b が l について逆側，または，a が l 上
 	T op0 = (l.second - l.first).cross(s.first - l.first);
@@ -347,6 +349,8 @@ bool convexQ(const Polygon<T>& poly) {
 */
 template <typename T>
 bool ccwQ(const Polygon<T>& poly) {
+	// verify : https://codeforces.com/contest/598/problem/F
+
 	int n = sz(poly);
 
 	ll res = 0;

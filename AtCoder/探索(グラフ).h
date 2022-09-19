@@ -6,17 +6,18 @@
 
 //【幅優先探索】O(|V| + |E|)
 /*
-* グラフ g に対し始点を st として幅優先探索を行い，
-* st から各頂点 s への最短経路長を dist[s] に格納する．
-* s が st から到達不能な頂点の場合は dist[s] = INF となる．
+* グラフ g に対し始点を st として幅優先探索を行い，各頂点 s を何番目に訪れたかを in[s] に格納する．
+* s が st から到達不能な頂点の場合は in[s] = INF とする．
 */
-void breadth_first_search(const Graph& g, int st, vi& dist) {
-	// verify : https://algo-method.com/tasks/414
+void breadth_first_search(const Graph& g, int st, vi& in) {
+	// verify : https://atcoder.jp/contests/arc148/tasks/arc148_c
 
 	int n = sz(g);
 
-	dist = vi(n, INF); // スタートからの最短距離を保持するテーブル
-	dist[st] = 0;
+	in = vi(n, INF);
+	in[st] = 0;
+
+	int i = 1; // 現在時刻
 
 	queue<int> q; // 次に探索する頂点を入れておくキュー
 	q.push(st);
@@ -27,10 +28,10 @@ void breadth_first_search(const Graph& g, int st, vi& dist) {
 
 		repe(t, g[s]) {
 			// 発見済みの頂点なら何もしない．
-			if (dist[t] != INF) continue;
+			if (in[t] != INF) continue;
 
-			// スタートからの最短距離を確定する．
-			dist[t] = dist[s] + 1;
+			// 何番目に訪れたかを確定する．
+			in[t] = i++;
 
 			// 未探索の頂点として t を追加する．
 			q.push(t);

@@ -197,7 +197,7 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 mint sum_digit_sum(const string& num, int m, int b = 10) {
 	int n = sz(num);
 	
-	// dp[i][f][j] : 以下の条件を満たす数の (個数, 和)：
+	// dp[i][f][j] : 以下の条件を満たす数の和（cnt は個数）：
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	j : d[0..i) の数字和 (mod m)
@@ -415,7 +415,7 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 * b 進数で n 桁の数 num 以下の正の整数すべてについて，
 * 桁の数字に現れる数字 t の個数を cnt[t] に格納する．
 *
-*（桁 DP，smaller フラグ，leading-zero フラグ）
+*（桁 DP，未満フラグ，前 0 フラグ）
 */
 void digits_distribution(const string& num, vm& cnt, int b = 10) {
 	// verify : https://yukicoder.me/problems/no/1953

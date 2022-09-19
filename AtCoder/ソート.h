@@ -3,46 +3,6 @@
 // ■■■■■ ソート ■■■■■
 
 
-//【コスト最小ソート】O(n log n)
-/*
-* 順列 p[0..n) に対し 2 つの要素の交換を繰り返して昇順にソートするときの最小コストを返す．
-* 一度の操作ではコスト c[i] + c[j] を払っての p[i] と p[j] の交換が可能である．
-*/
-ll minimum_cost_sort(const vi& p, const vl& c) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_D
-
-	int n = sz(p);
-	ll c_min = *min_element(all(c));
-
-	ll res = 0;
-	vb seen(n);
-
-	// サイクルごとに独立に見ていく．
-	rep(i, n) {
-		if (seen[i] || p[i] == i) continue;
-		seen[i] = true;
-
-		// サイクルの長さ，合計値，最小値を得る．
-		int l = 1;
-		ll loop_sum = c[i], loop_min = INFL;
-		for (int j = p[i]; j != i; j = p[j]) {
-			seen[j] = true;
-
-			l++;
-			loop_sum += c[j];
-			chmin(loop_min, c[j]);
-		}
-
-		// サイクル内で要素の交換をする場合と，
-		// サイクル外の最小要素を利用して交換をする場合のうち，
-		// コストの小さい方を総コストに加える．
-		res += loop_sum + min((l - 2) * loop_min, loop_min + (l + 1) * c_min);
-	}
-
-	return res;
-}
-
-
 //【バブルソート】O(n^2)
 /*
 * a[0..n) に対してバブルソートを行う．
@@ -106,9 +66,60 @@ template <class T> void insertion_sort(vector<T>& a) {
 
 //【挿入ソートの挿入回数】
 /*
-* 列 a[0..n) に対する最適な順序で行った挿入ソートの挿入回数は，
+* 列 a[0..n) に対する最適な順序で行った挿入ソートの挿入（巡回シフト）の回数は，
 * n - (a の最長増加部分列の長さ) に等しい．
+* 
+* 右巡回シフトしか認めない場合，最小回数は n - (a の左からの貪欲増加部分列の長さ) に等しい．
 */
+
+
+//【コスト最小挿入ソート】O(n^2)
+/*
+* [0..n) の順列 p[0..n) に対し挿入を繰り返して昇順にソートするときの最小コストを返す．
+* 一度の操作ではコスト lc[rc] を払っての 左[右] 巡回シフトが可能である．
+*/
+ll minimum_cost_insertion_sort(vi p, ll lc, ll rc) {
+	// verify : https://atcoder.jp/contests/agc032/tasks/agc032_d
+
+	//【方法】
+	// 動かさない要素の全体は増加部分列を成し，残る要素を適切な位置に挿入していくと考える．
+	// 動かさない要素を最善に決めれば，残る要素を左右どちらに動かすかは一意に決まる．
+	//（決まらないようであれば，その要素を新たに動かさない要素として悪くはならない．）
+
+	int n = sz(p);
+	++p; // p を [1..n] の順列にする．
+
+	// dp[i][j] : p[0..i) までの増加部分列で，直前に j を採用した場合
+	vvl dp(n + 1, vl(n + 1, INFL));
+	dp[0][0] = 0;
+
+	rep(i, n) repi(j, 0, n) {
+		if (dp[i][j] == INFL) continue;
+
+		// p[i] を採用する場合
+		if (j < p[i]) {
+			chmin(dp[i + 1][p[i]], dp[i][j]);
+		}
+
+		// p[i] を採用しない場合
+		if (j < p[i]) {
+			// せっかく j より大きいのにスルーするということは，
+			// この先で j より大きく p[i] 未満の要素を採用するつもりということ．
+			//（そうでなければ p[i] を採用すべきなので，それより良くなることはないので構わない．）
+			// よって p[i] は右に飛ばす，すなわち左シフトの対象になる．
+			chmin(dp[i + 1][j], dp[i][j] + lc);
+		}
+		else if (j > p[i]) {
+			// p[i] は j より小さいので左に飛ばす，すなわち右シフトしなければならない．
+			chmin(dp[i + 1][j], dp[i][j] + rc);
+		}
+	}
+
+	ll res = INFL;
+	repi(j, 0, n) chmin(res, dp[n][j]);
+
+	return res;
+}
 
 
 //【選択ソート】O(n^2)
@@ -146,6 +157,46 @@ template <class T> void selection_sort(vector<T>& a) {
 * 
 * verify : https://atcoder.jp/contests/nikkei2019-2-qual/tasks/nikkei2019_2_qual_c
 */
+
+
+//【コスト最小選択ソート】O(n log n)
+/*
+* [0..n) の順列 p[0..n) に対し 2 つの要素の交換を繰り返して昇順にソートするときの最小コストを返す．
+* 一度の操作ではコスト c[i] + c[j] を払っての i と j の交換が可能である．
+*/
+ll minimum_cost_selection_sort(const vi& p, const vl& c) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_D
+
+	int n = sz(p);
+	ll c_min = *min_element(all(c));
+
+	ll res = 0;
+	vb seen(n);
+
+	// サイクルごとに独立に見ていく．
+	rep(i, n) {
+		if (seen[i] || p[i] == i) continue;
+		seen[i] = true;
+
+		// サイクルの長さ，合計値，最小値を得る．
+		int l = 1;
+		ll loop_sum = c[i], loop_min = INFL;
+		for (int j = p[i]; j != i; j = p[j]) {
+			seen[j] = true;
+
+			l++;
+			loop_sum += c[j];
+			chmin(loop_min, c[j]);
+		}
+
+		// サイクル内で要素の交換をする場合と，
+		// サイクル外の最小要素を利用して交換をする場合のうち，
+		// コストの小さい方を総コストに加える．
+		res += loop_sum + min((l - 2) * loop_min, loop_min + (l + 1) * c_min);
+	}
+
+	return res;
+}
 
 
 //【シェルソート】O(n^1.25)

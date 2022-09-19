@@ -31,7 +31,7 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 	}
 	sort(all(lb_sr_j));
 
-	// ------------- ここを実装する（auto の方が速い） --------------
+	// -------------- ここを実装する（auto の方が速い） ---------------
 
 	// 区間に a[i] を追加する場合の解 sol を更新する．
 	auto insert = [&](int i, S& sol) {
@@ -192,7 +192,7 @@ struct Convex_hull_trick_monotonous {
 //【Convex-Hull Trick】
 /*
 * Convex_hull_trick(flagMin = true) : O(1)
-*	空で初期化する．flagMin = true[false] なら最大値[最小値] クエリに対応する．
+*	空で初期化する．flagMin = true[false] なら最小値[最大値] クエリに対応する．
 *
 * add(a, b) : ならし O(log n)
 *	直線 y = a x + b を追加する．

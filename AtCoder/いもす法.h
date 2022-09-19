@@ -12,7 +12,7 @@
 * set(int l, int r, T val) : O(1)
 *	半開区間 [l, r) に val を加算する準備を行う．
 *
-* T sum() : O(n)
+* void sum() : O(n)
 *	実際の加算を行う．
 *
 * T [int i] : O(1)
@@ -41,7 +41,7 @@ public:
 	}
 
 	// 実際の加算を行う．
-	vector<T>& sum() {
+	void sum() {
 		// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
 
 		rep(i, n) v[i + 1] += v[i];
@@ -309,6 +309,93 @@ template <class T> struct Imos_3D {
 	}
 #endif
 }; 
+
+
+//【線形いもす法】
+/*
+* Linear_imos<T>(int n) : O(n)
+*	半開区間 [0, n) を 0 で初期化する．
+*
+* set(int l, int r, T a, T b) : O(1)
+*	i∈[l, r) に a i + b を一括加算する準備を行う．
+*
+* set_right(int l, int r, T w0, T w1) : O(1)
+*	[l, r) に昇順に等差数列 v0, v1, ... を一括加算する準備を行う．
+*
+* set_left(int l, int r, T w0, T w1) : O(1)
+*	(l, r] に降順に等差数列 v0, v1, ... を一括加算する準備を行う．
+*
+* void sum() : O(n)
+*	実際の加算を行う．
+*
+* T [int i] : O(1)
+*	加算後の位置 i の値を得る．
+*/
+template <class T> class Linear_imos {
+	int n;
+	vector<vector<T>> v; // v[t] : 添字の t 次の係数
+
+public:
+	// [0, n) 上の a を 0 で初期化する．
+	Linear_imos(int n_) : n(n_), v(2, vector<T>(n + 1)) {}
+
+	// アクセス
+	T const& operator[](int i) const { return v[0][i]; }
+	T& operator[](int i) { return v[0][i]; }
+
+	// i∈[l, r) に a i + b を一括加算する準備を行う．
+	void set(int l, int r, T a, T b) {
+		chmax(l, 0);  chmin(r, n);
+		if (l >= r) return;
+
+		v[0][l] += b;
+		v[0][r] -= b;
+		v[1][l] += a;
+		v[1][r] -= a;
+	}
+
+	// [l, r) に昇順に等差数列 v0, v1, ... を一括加算する準備を行う．
+	void set_right(int l, int r, T w0, T w1) {
+		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
+
+		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
+		ll a = w1 - w0;
+		ll b = w0 - a * l;
+		set(l, r, a, b);
+	}
+
+	// (l, r] に降順に等差数列 v0, v1, ... を一括加算する準備を行う．
+	void set_left(int r, int l, T w0, T w1) {
+		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
+
+		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
+		ll a = w0 - w1;
+		ll b = w0 - a * r;
+		set(l + 1, r + 1, a, b);
+	}
+
+	// 実際の加算を行う．
+	void sum() {
+		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
+
+		// 正しい係数になるよう累積和をとる．
+		rep(i, n) {
+			v[0][i + 1] += v[0][i];
+			v[1][i + 1] += v[1][i];
+		}
+
+		// 計算して項を 1 つにまとめる．
+		rep(i, n) v[0][i] += v[1][i] * i;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Linear_imos imos) {
+		imos.sum();
+		rep(i, imos.n) os << imos[i] << " ";
+		return os;
+	}
+#endif
+};
 
 
 //【木上のいもす法】

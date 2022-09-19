@@ -83,8 +83,8 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
@@ -93,156 +93,66 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 //----------------------------------------
 
 
-int naive(int n, ll t, const vl& a, const vl& b) {
-	vi p(n);
-	iota(all(p), 0);
+void naive(int n, const vi& a) {
+	vector<pii> la(n);
+	rep(i, n) la[i] = { a[0] / gcd(a[0], a[i]) * a[i], a[i] };
 
-	int res = 0;
-	repp(p) {
-		int cnt = 0; ll now = 0;
-		rep(i, n) {
-			now++;
-			now += a[p[i]] * now + b[p[i]];
-			if (now > t) break;
-			else cnt++;
+	repi(i, 1, n - 2) {
+//		rep(j, n) cerr << la[j].second << (j < n - 1 ? " " : "\n");
+		sort(la.begin() + i, la.end());
+		repi(j, i + 1, n - 1) {
+			la[j].first = la[i].second / gcd(la[i].second, la[j].second) * la[j].second;
 		}
-		chmax(res, cnt);
 	}
-	return res;
+
+	rep(i, n) cout << la[i].second << (i < n - 1 ? " " : "\n");
 }
 
 
-int WA(int n, ll t, const vl& a, const vl& b) {
-	if (t == 0) return 0;
+void zikken() {
+	int n = 30;
 
-	vector<pll> nab;
-	vl bs;
-
-	rep(i, n) {
-		if (a[i] > 0) nab.push_back({ -a[i], b[i] });
-		else bs.push_back(b[i]);
-	}
-	sort(all(nab)); // この順にソートして良い理由がない
-	sort(all(bs));
-	n = sz(nab);
-	int nb = sz(bs);
-//	dump(nab); dump(bs);
-
-	int m = msb(t) + 2;
-	vvl dp(n + 1, vl(m, t + 1));
-	dp[0][0] = 0;
-
-	rep(i, n) {
-		ll a, b;
-		tie(a, b) = nab[i];
-		a *= -1;
-
-		rep(j, m) {
-			chmin(dp[i + 1][j], dp[i][j]);
-
-			if (j < m - 1 && dp[i][j] <= t) {
-				ll now = dp[i][j] + 1;
-				ll add = a * now + b;
-				chmin(dp[i + 1][j + 1], now + add);
-			}
-		}
-	}
-//	dumpel(dp);
-
-	int res = 0;
-
-	ll acc = 0; int i = 0;
-	repir(j, m - 1, 0) {
-		if (dp[n][j] > t) continue;
-
-		while (i < nb && dp[n][j] + acc + 1 + bs[i] <= t) {
-			acc += 1 + bs[i++];
-		}
-
-		chmax(res, j + i);
-	}
-
-	return res;
-}
-
-
-int WA2(int n, ll t, const vl& a, const vl& b) {
-	if (t == 0) return 0;
-
-	if (n <= 8) return naive(n, t, a, b);
-
-	auto start = chrono::system_clock::now();
+	vi a(n);
+	rep(i, n) a[i] = i + 1;
+	swap(a[0], a[29]);
 
 	mt19937_64 mt((int)time(NULL));
-	uniform_real_distribution<> rnd(0, *max_element(all(b)) + 1.);
+//	shuffle(all(a), mt);
+	dump(a);
+
+	naive(n, a);
 	
-	int res = WA(n, t, a, b);
-
-	while (true) {
-		vector<pair<double, int>> nab;
-		vl bs;
-
-		rep(i, n) {
-			if (a[i] > 0) nab.push_back({ 1. * b[i] / a[i] + rnd(mt), i });
-			else bs.push_back(b[i]);
-		}
-		sort(all(nab));
-		sort(all(bs));
-		n = sz(nab);
-		int nb = sz(bs);
-
-		int m = msb(t) + 1;
-		vvl dp(n + 1, vl(m, t + 1));
-		dp[0][0] = 0;
-
-		rep(i, n) {
-			int id = nab[i].second;
-
-			rep(j, m) {
-				chmin(dp[i + 1][j], dp[i][j]);
-
-				if (j < m - 1 && dp[i][j] <= t) {
-					ll now = dp[i][j] + 1;
-					ll add = a[id] * now + b[id];
-					chmin(dp[i + 1][j + 1], now + add);
-				}
-			}
-		}
-
-		ll acc = 0; int i = 0;
-		repir(j, m - 1, 0) {
-			if (dp[n][j] > t) continue;
-
-			while (i < nb && dp[n][j] + acc + 1 + bs[i] <= t) {
-				acc += 1 + bs[i++];
-			}
-
-			chmax(res, j + i);
-		}
-
-		auto now = chrono::system_clock::now();
-		auto msec = chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
-		if (msec >= 1900) break;
-	}
-
-	return res;
+	exit(0);
 }
+/*
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
+1 2 4 8 16 3 6 12 24 9 18 27 5 10 20 15 30 25 7 14 28 21 11 22 13 26 17 19 23 29
+
+3 17 8 7 10 16 13 4 6 9 4 3 5 6 14 8 9 11 12 11 5 13 16 14 15 15 10 7 17 12
+3 3 6 6 4 4 8 8 16 16 12 12 9 9 5 5 10 10 15 15 7 7 14 14 11 11 13 13 17 17
+
+5 7 28 16 18 4 19 10 27 8 22 15 14 12 11 2 20 17 1 9 25 6 29 23 21 30 24 26 3 13
+5 1 2 4 8 16 3 6 12 24 9 18 27 15 10 20 30 25 7 14 28 21 11 22 13 26 17 19 23 29
+
+1 2 3 4 30 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
+1 2 4 8 16 3 6 12 24 9 18 27 15 10 20 30 25 7 14 28 21 11 22 13 26 17 19 23 29
+
+30 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 1
+30 1 2 4 8 16 3 6 12 24 9 18 27 5 10 20 15 25 7 14 28 21 11 22 13 26 17 19 23 29
+*/
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
+	
+	zikken();
 
-	int n; ll t;
-	cin >> n >> t;
+	int n;
+	cin >> n;
 
-	vl a(n), b(n);
-	rep(i, n) cin >> a[i] >> b[i];
+	vi a(n);
+	cin >> a;
 
-	dump(naive(n, t, a, b));
-	dump(WA(n, t, a, b));
-
-	ll res = WA2(n, t, a, b);
-
-	cout << res << endl;
+	naive(n, a);	
 }

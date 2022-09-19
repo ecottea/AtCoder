@@ -26,7 +26,7 @@ const double PI = acos(-1);
 const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi DY = { 0, 1, 0, -1 };
 int INF = 1001001001; ll INFL = 4004004004004004004LL;
-double EPS = 1e-12; // 許容誤差に応じて調整
+double EPS = 1e-12;
 
 // 入出力高速化
 struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(18); } } fastIOtmp;
@@ -37,7 +37,6 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define lbpos(a, x) (int)distance((a).begin(), std::lower_bound(all(a), x))
 #define ubpos(a, x) (int)distance((a).begin(), std::upper_bound(all(a), x))
 #define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
-#define YES(b) {cout << ((b) ? "YES\n" : "NO\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -77,6 +76,7 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump_list(v)
 #define input_from_file(f)
 #define output_to_file(f)
+#define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
 #endif
 
 #endif // 折りたたみ用

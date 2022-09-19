@@ -4,6 +4,16 @@
 // ■■■■■ 辞書順 ■■■■■
 
 
+//【辞書順比較の言い換え】
+/*
+* 文字列 s, t について，s < t であるための必要十分条件は，次の (1), (2) の一方が成り立つことである：
+*	(1) s が t の真の接頭辞である．
+*	(2) s と t を前から見て初めて文字が異なる位置を i とすると s[i] < t[i] である．
+* 
+* verify : https://atcoder.jp/contests/arc050/tasks/arc050_d
+*/
+
+
 //【連結と辞書順】
 /*
 * 文字列の連結 "+" と辞書順比較 "<" の間には
@@ -30,9 +40,17 @@
 
 //【接尾辞配列】
 /*
-* ACL の vi suffix_array(string s) を利用すればよい．
+* ACL の vi sa = suffix_array(string s) を利用すればよい．
 * 
-* ret[i] は辞書順 i 番目の接尾辞の先頭文字の位置を表す．
+* sa[i] は辞書順 i 番目の接尾辞が s[sa[i]..n) であることを表す．
+*/
+
+
+//【LCP array】
+/*
+* ACL の vi lcp = lcp_array(string s, vi sa) を利用すればよい（sa は s の【接尾辞配列】）
+* 
+* lcp[i] は s[sa[i]..n) と s[sa[i+1]..n) の最長共通接頭辞の長さ．
 */
 
 
@@ -367,15 +385,13 @@ string minimum_string_concat(vector<string> s, int k) {
 	vector<string> dp(k + 1, str_max);
 	dp[0] = "";
 
-	repir(i, n - 1, 0) {
-		repir(j, min(n - i, k), 1) {
-			// s[i] を使う方が小さくなるなら更新する．
-			chmin(dp[j], s[i] + dp[j - 1]);
+	repir(i, n - 1, 0) repir(j, min(n - i, k), 1) {
+		// s[i] を使う方が小さくなるなら更新する．
+		chmin(dp[j], s[i] + dp[j - 1]);
 
-			// この更新式で大丈夫なのは，文字列の連結 "+" と辞書順比較 "<" の間に
-			//		A + B < A + C ⇔ B < C
-			// なる関係がある（"+" と "<" が左両立する）からである．
-		}
+		// この更新式で大丈夫なのは，文字列の連結 "+" と辞書順比較 "<" の間に
+		//		A + B < A + C ⇔ B < C
+		// なる関係がある（"+" と "<" が左両立する）からである．
 	}
 
 	return dp[k];

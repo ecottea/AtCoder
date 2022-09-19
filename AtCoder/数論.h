@@ -55,6 +55,8 @@ ll lcm(ll a, ll b) {
 * lcm a[0..n) を返す．（空列の lcm は 1 とする）
 */
 ll lcm(const vl& a) {
+	// verify : https://yukicoder.me/problems/no/2045
+
 	int n = sz(a);
 	
 	ll l = 1;
@@ -262,49 +264,6 @@ void factor_integer(ll n, map<ll, int>& pps) {
 }
 
 
-//【素因数分解（複数）】
-/*
-* Factor_integer(int n) : O(n log(log n))
-*	n 以下の自然数を高速に素因数分解する準備を行う．
-*
-* factor_integer(int i, map<int, int>& pps) : O(log n)
-*	i の素因数分解結果を pps に格納する．
-*/
-struct Factor_integer {
-	// verify : https://atcoder.jp/contests/abc215/tasks/abc215_d
-
-	int n;
-
-	// d[i] : i を割り切る最小の素数
-	vi d;
-
-	// n 以下の自然数を高速に素因数分解する準備を行う．
-	Factor_integer(int n_) : n(n_), d(n + 1) {
-		iota(all(d), 0);
-
-		for (int p = 2; p * p <= n; p++) {
-			if (d[p] != p) continue;
-
-			for (int i = p; i <= n; i += p) {
-				d[i] = p;
-			}
-		}
-	}
-
-	// i の素因数分解結果を pps に格納する．
-	void factor_integer(int i, map<int, int>& pps) {
-		Assert(i <= n);
-
-		pps.clear();
-
-		while (i > 1) {
-			pps[d[i]]++;
-			i /= d[i];
-		}
-	}
-};
-
-
 //【素数判定】O(√n)
 /*
 * n が素数かを返す．
@@ -387,7 +346,7 @@ ll carmichael_lambda(ll n) {
 //【メビウス関数】O(√n)
 /*
 * メビウス関数の値 μ(n) を返す．
-* μ(n) = (-1)^k (n が相異なる k 個の素数の積) or 0 （n が平方因子を含む）
+* μ(n) = (-1)^k（n が相異なる k 個の素数の積）or 0（n が平方因子を含む）
 */
 int mobius_mu(ll n) {
 	// verify : https://algo-method.com/tasks/494
@@ -410,7 +369,7 @@ int mobius_mu(ll n) {
 
 //【p-進付値】O(log n)
 /*
-* n を割る p の最大べきを返す．（p は素数でなくても動作する）
+* n を割る p の最大べきを返す（p は素数でなくても動作する）
 */
 int integer_exponent(ll n, ll p) {
 	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_a

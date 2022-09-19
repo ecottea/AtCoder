@@ -991,7 +991,7 @@ mint bostan_mori(const MFPS& f, const MFPS& g, ll d) {
 }
 
 
-//【展開係数（分子が疎）】O(n m log m log d)（n : f の項数，m : deg g）
+//【展開係数（分子がスパース）】O(n m log m log d)（n : f の項数，m : deg g）
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
@@ -1162,6 +1162,8 @@ MFPS expand(const vm& x) {
 MFPS expand(vector<MFPS> fs) {
 	// verify : https://atcoder.jp/contests/abc231/tasks/abc231_g
 
+	if (fs.empty()) return MFPS(1);
+
 	int m = sz(fs);
 
 	// (次数, 多項式の番号) の組を要素数昇順に記録する．
@@ -1178,6 +1180,69 @@ MFPS expand(vector<MFPS> fs) {
 	}
 
 	return fs[q.top().second];
+}
+
+
+//【多項式の累積積の和】O(n (log n)^2)
+/*
+* 多項式の列 fs[0..k) について，Σi=[0..k) Πfs[0..i) を返す．
+*/
+MFPS cumulative_product_sum(const vector<MFPS>& fs_) {
+	// verify : https://atcoder.jp/contests/abc269/tasks/abc269_h
+
+	//【方法】
+	// 1-indexed で考える．例えば k=7 のとき，答えは
+	//	1 + f1 + f1 f2 + f1 f2 f3 + f1 f2 f3 f4 + f1 f2 f3 f4 f5 + f1 f2 f3 f4 f5 f6 + f1 f2 f3 f4 f5 f6 f7
+	//	= (1 + f1) + f1 f2 (1 + f3) + f1 f2 f3 f4 (1 + f5 + f5 f6 (1 + f7))
+	// である．
+	//
+	// フェニック木の初期化と同様にして
+	//		g1 = f1, g2 = f1 f2, g3 = f3, g4 = f1 f2 f3 f4, ...
+	// と定めれば，答えは
+	//		(1 + g1) + g2 (1 + g3) + g4 (1 + g5 + g6 (1 + g7))
+	// と表される．
+	//
+	// まず
+	//		g[2i+1] += 1 
+	// とすれば答えは
+	//		g1 + g2 g3 + g4 (g5 + g6 g7)
+	// と表される．さらに
+	//		g[4i+1] += g[4i+2] g[4i+3]
+	// とすれば答えは
+	//		g1 + g4 g5
+	// と表される．最後に
+	//		g[8i+1] += g[8i+4] g[8i+5]
+	// とすれば答えは
+	//		g1
+	// と表される．
+
+	// 最初に 1 を加算する処理があるので，要素数を 2 冪まで拡張しておく．
+	int pow2 = 1;
+	while (pow2 < sz(fs_) + 1) pow2 *= 2;
+	int n = pow2;
+
+	// 1-indexed になおして格納する．
+	vector<MFPS> fs(n, MFPS(0));
+	rep(i, sz(fs_)) fs[i + 1] = fs_[i];
+
+	// フェニック木の初期化段階
+	for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
+		for (int i = 2 * pow2; i < n; i += 2 * pow2) {
+			fs[i] *= fs[i - pow2];
+		}
+	}
+
+	// 奇数番目の要素への 1 の加算
+	for (int i = 1; i < n; i += 2) fs[i] += 1;
+
+	// 積の加算の繰り返し
+	for (int pow2 = 2; pow2 < n; pow2 *= 2) {
+		for (int i = 1; i + pow2 < n; i += 2 * pow2) {
+			fs[i] += fs[i + pow2 - 1] * fs[i + pow2];
+		}
+	}
+
+	return fs[1];
 }
 
 

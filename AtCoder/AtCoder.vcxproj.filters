@@ -278,9 +278,6 @@
     <ClInclude Include="辞書順.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
-    <ClInclude Include="部分列DP.h">
-      <Filter>ヘッダー ファイル\文字列</Filter>
-    </ClInclude>
     <ClInclude Include="群.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
@@ -526,6 +523,12 @@
     </ClInclude>
     <ClInclude Include="列挙(ビット列).h">
       <Filter>ヘッダー ファイル\列%28ビット列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(列).h">
+      <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(順列).h">
+      <Filter>ヘッダー ファイル\列%28順列%29</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

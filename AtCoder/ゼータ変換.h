@@ -341,34 +341,53 @@ template <class T> void hadamard(vector<T>& a) {
 
     int n = msb(sz(a));
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) {
-                T x = a[set], y = a[set | (1 << i)];
-                a[set] = x + y, a[set + (1 << i)] = x - y;
-            }
-        }
-    }
+	rep(i, n) repb(set, n) {
+		if (!(set & (1 << i))) {
+            T x = a[set];
+            T y = a[set | (1 << i)];
+            
+            a[set] = x + y;
+            a[set + (1 << i)] = x - y;
+		}
+	}
 }
 
 
-//y‹tƒAƒ_ƒ}[ƒ‹•ÏŠ·z: O(2^n n)
+//y‹tƒAƒ_ƒ}[ƒ‹•ÏŠ·z: O(2^n n div)
 /*
 * A[0..2^n) ‚ð‹tƒAƒ_ƒ}[ƒ‹•ÏŠ·‚µ‚½‚à‚Ì‚Éã‘‚«‚·‚éD
 */
 template <class T> void hadamard_inv(vector<T>& A) {
     // verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
     
-    int n = msb(sz(A));
+	int n = msb(sz(A));
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) {
-                T x = A[set], y = A[set | (1 << i)];
-                A[set] = (x + y) / 2, A[set + (1 << i)] = (x - y) / 2;
-            }
-        }
-    }
+	rep(i, n) repb(set, n) {
+		if (!(set & (1 << i))) {
+            T x = A[set];
+            T y = A[set | (1 << i)];
+            
+            A[set] = (x + y) / 2;
+            A[set + (1 << i)] = (x - y) / 2;
+		}
+	}
+}
+
+
+//y‹tƒAƒ_ƒ}[ƒ‹•ÏŠ·imintjz: O(2^n n + log(mod))
+/*
+* A[0..2^n) ‚ð‹tƒAƒ_ƒ}[ƒ‹•ÏŠ·‚µ‚½‚à‚Ì‚Éã‘‚«‚·‚éD
+*
+* —˜—pFyƒAƒ_ƒ}[ƒ‹•ÏŠ·z
+*/
+void hadamard_inv(vm& A) {
+    // verify : https://atcoder.jp/contests/abc265/tasks/abc265_h
+
+    hadamard(A);
+
+    // ‚Ü‚Æ‚ß‚Ä¤‚ð‚Æ‚ç‚È‚¢‚Æ log(mod) ”{’x‚­‚È‚éD
+    mint inv = mint(sz(A)).inv();
+    rep(i, sz(A)) A[i] *= inv;
 }
 
 

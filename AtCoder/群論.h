@@ -121,6 +121,20 @@ void order_distribution(ll n, unordered_map<ll, ll>& cnt) {
 */
 
 
+//【置換を巡回置換の積で表す】
+/*
+* 順列.h の【置換のサイクル分解】を利用すればよい．
+*/
+
+
+//【置換の位数】
+/*
+* 置換 p の位数は，p を巡回置換の積に分解したときの，各巡回置換の長さの最小公倍数に等しい．
+* 
+* verify : https://yukicoder.me/problems/no/2045
+*/
+
+
 //【既約剰余類群の構造】
 /*
 * C(m) = Z/mZ とおく．C(m) の単元群 U(C(m)) の構造は次のように決定できる：
@@ -134,12 +148,6 @@ void order_distribution(ll n, unordered_map<ll, ll>& cnt) {
 * となる．
 * 
 * verify : https://yukicoder.me/problems/no/1881
-*/
-
-
-//【置換を巡回置換の積で表す】
-/*
-* 順列.h の【置換のサイクル分解】を利用すればよい．
 */
 
 

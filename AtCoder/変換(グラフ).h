@@ -15,25 +15,21 @@ void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#') {
 	int h = sz(c), w = sz(c[0]);
 
 	g = Graph(h * w);
-	rep(x, h) {
-		rep(y, w) {
-			// 空きマスでなかったら辺は追加しない．
-			if (c[x][y] == wall) continue;
+	rep(x, h) rep(y, w) {
+		// 空きマスでなかったら辺は追加しない．
+		if (c[x][y] == wall) continue;
 
-			// 今考えている近傍それぞれについて
-			rep(k, 4) {
-				// 4 近傍のマスの座標
-				int nx = x + DX[k];
-				int ny = y + DY[k];
+		// 今考えている近傍それぞれについて
+		rep(k, 4) {
+			// 4 近傍のマスの座標
+			int nx = x + DX[k];
+			int ny = y + DY[k];
 
-				// 範囲外だったり空きマスでなかったら辺は追加しない．
-				if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
-					continue;
-				}
+			// 範囲外だったり空きマスでなかったら辺は追加しない．
+			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) continue;
 
-				// 近傍に空きマスがあったら辺を追加する．
-				g[x * w + y].push_back(nx * w + ny);
-			}
+			// 近傍に空きマスがあったら辺を追加する．
+			g[x * w + y].push_back(nx * w + ny);
 		}
 	}
 }
@@ -227,6 +223,94 @@ int shrink_graph(const Graph& g, Graph& gs) {
 
 	return ns;
 }
+
+
+//【頂点の縮約】O(|V| + |E|)
+/*
+* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを gc に格納する．
+* 自己ループや多重辺が生じた場合は除去され，gc は単純グラフとなる．
+*
+* 特に強連結成分についての縮約を行えば DAG が得られる．
+*/
+void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
+	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_3
+
+	int n = sz(g), m = sz(p);
+
+	// id[v] : 頂点 v の属する成分
+	vi id(n);
+	rep(i, m) repe(v, p[i]) id[v] = i;
+
+	// 多重辺や自己ループを防ぐため一旦辺の集合を unordered_set でもつ．
+	vector<unordered_set<int>> gc_set(m);
+	rep(s, n) {
+		repe(t, g[s]) gc_set[id[s]].insert(id[t]);
+		gc_set[id[s]].erase(id[s]);
+	}
+
+	// 結果の格納
+	gc = Graph(m);
+	rep(s, m) repe(t, gc_set[s]) gc[s].push_back(t);
+}
+
+
+//【頂点の縮約と強連結成分】
+/*
+* 有向グラフ g の強連結成分を成す頂点集合を縮約すると DAG が得られる．
+* 
+* verify : https://atcoder.jp/contests/abc245/tasks/abc245_f
+*/
+
+
+//【頂点の縮約と二辺連結成分】
+/*
+* 無向グラフ g の二辺連結成分を成す頂点集合を縮約すると森が得られる．
+* 
+* verify : https://atcoder.jp/contests/tenka1-2015-quala/tasks/tenka1_2015_qualA_d
+*/
+
+
+//【辺の縮約】O(|V| + |E|)
+/*
+* グラフ g とその辺の集合 es について，es に含まれる辺を全て縮約したグラフを gc に格納する．
+* また gc の頂点 i に対応する g の頂点の集合を vs[i] に格納する．
+* 自己ループや多重辺が生じた場合は除去され，gc は単純グラフとなる．
+*/
+void edge_contraction(const Graph& g, const vector<pii>& es, Graph& gc, vvi* vs = nullptr) {
+	// verify : https://atcoder.jp/contests/tenka1-2015-quala/tasks/tenka1_2015_qualA_d
+
+	int n = sz(g);
+
+	dsu d(n);
+	repe(e, es) d.merge(e.first, e.second);
+
+	if (vs == nullptr) vs = new(vvi);
+	*vs = d.groups();
+	int m = sz(*vs);
+
+	// ids[v] : g の頂点 v の縮約後 gc におけるの頂点番号
+	vi id(n);
+	rep(i, m) repe(s, (*vs)[i]) id[s] = i;
+
+	// 多重辺や自己ループを防ぐため一旦辺の集合を unordered_set でもつ．
+	vector<unordered_set<int>> gc_set(m);
+	rep(s, n) {
+		repe(t, g[s]) gc_set[id[s]].insert(id[t]);
+		gc_set[id[s]].erase(id[s]);
+	}
+
+	// 結果の格納
+	gc = Graph(m);
+	rep(s, m) repe(t, gc_set[s]) gc[s].push_back(t);
+}
+
+
+//【辺の縮約と橋】
+/*
+* 無向グラフ g の橋以外の辺全てを縮約すると森が得られる．
+* 
+* verify : https://atcoder.jp/contests/tenka1-2015-quala/tasks/tenka1_2015_qualA_d
+*/
 
 
 //【大きい頂点への移動】

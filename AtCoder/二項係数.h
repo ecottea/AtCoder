@@ -603,19 +603,15 @@ public:
 		pow2.resize(p - 1);
 
 		bin[0][0] = 1;
-		repi(i, 1, p - 1) {
-			repi(j, 0, i) {
-				if (j > 0) bin[i][j] += bin[i - 1][j - 1];
-				if (j < i) bin[i][j] += bin[i - 1][j];
-				bin[i][j] %= p;
-			}
+		repi(i, 1, p - 1) repi(j, 0, i) {
+			if (j > 0) bin[i][j] += bin[i - 1][j - 1];
+			if (j < i) bin[i][j] += bin[i - 1][j];
+			bin[i][j] %= p;
 		}
 
-		rep(i, p) {
-			rep(j, p) {
-				acc[i][j + 1] = acc[i][j] + bin[i][j];
-				acc[i][j + 1] %= p;
-			}
+		rep(i, p) rep(j, p) {
+			acc[i][j + 1] = acc[i][j] + bin[i][j];
+			acc[i][j + 1] %= p;
 		}
 
 		pow2[0] = 1;

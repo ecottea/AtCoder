@@ -153,7 +153,9 @@
     <ClInclude Include="マッチング(一般).h" />
     <ClInclude Include="列挙(ビット列).h" />
     <ClInclude Include="列挙(区間).h" />
+    <ClInclude Include="列挙(順列).h" />
     <ClInclude Include="数え上げ(ビット列).h" />
+    <ClInclude Include="数え上げ(列).h" />
     <ClInclude Include="最適化%28分割%29.h" />
     <ClInclude Include="DAG.h" />
     <ClInclude Include="local.hpp" />
@@ -248,7 +250,6 @@
     <ClInclude Include="行列(抽象).h" />
     <ClInclude Include="計算.h" />
     <ClInclude Include="辞書順.h" />
-    <ClInclude Include="部分列DP.h" />
     <ClInclude Include="M-集合.h" />
     <ClInclude Include="最適化%28順列%29.h" />
     <ClInclude Include="数え上げ%28順列%29.h" />

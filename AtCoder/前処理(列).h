@@ -211,6 +211,25 @@ template <class T> void next_greater1(const vector<T>& a, vi& nxt) {
 }
 
 
+//【指定値以上の数の次の位置】O(n m)
+/*
+* [0..m) に値をもつ数列 a[0..n) について，a[i..n) で j 以上の値が現れる最左位置を nxt_grt[i][j] に格納する（なければ n）
+*/
+void next_greater_position(int m, const vi& a, vvi& nxt_grt) {
+	// verify : https://atcoder.jp/contests/agc058/tasks/agc058_b
+
+	int n = sz(a);
+
+	// nxt_grt[i][j] : a[i..n) で j 以上の値が現れる最左位置（無いなら n）
+	nxt_grt = vvi(n + 1, vi(m, n));
+
+	repir(i, n - 1, 0) {
+		repi(j, 0, a[i]) nxt_grt[i][j] = i;
+		repi(j, a[i] + 1, m - 1) nxt_grt[i][j] = nxt_grt[i + 1][j];
+	}
+}
+
+
 //【デカルト木】
 /*
 * Cartesian_tree(vT a, smaller = true) : O(n)

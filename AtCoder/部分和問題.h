@@ -397,8 +397,7 @@ template <class T> bool multiple_partial_sum(const vector<T>& a, int m, int r) {
 *
 *（mod m で和を状態にもつ状態 DP）
 */
-template <class T>
-mint count_multiple_partial_sum(const vector<T>& a, int m) {
+template <class T> mint count_multiple_partial_sum(const vector<T>& a, int m) {
 	int n = sz(a);
 
 	// dp[i][j] : a[0..i) の中で和が j mod m という状態をとる場合の数
@@ -578,7 +577,48 @@ mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 }
 
 
-//【部分和問題（負値可，個数制限付き，数え上げ）】O(n Σ|a[i]m[i]|)
+//【部分和問題（負値可，個数最小化）】O(n Σ|a[i]|)
+/*
+* 長さ n の整数列 a の部分和として v を作るのに必要な要素数の最小値を cnt[v - MIN] に格納し，MIN を返す．
+*
+*（和を状態にもつインライン貰う DP）
+*/
+int minimize_signed_partial_sum(const vi& a, vi& cnt) {
+	int n = sz(a);
+
+	// MIN, MAX : 部分和の最小値および最大値
+	int MIN = 0, MAX = 0;
+	rep(i, n) {
+		MIN += min(a[i], 0);
+		MAX += max(a[i], 0);
+	}
+
+	// cnt_i[j - MIN] : a[0..i) の中で和がちょうど j になる最小個数（なければ INF）
+	cnt.assign(MAX - MIN + 1, INF);
+	cnt[0 - MIN] = 0; // 空和が 0 であることに対応
+
+	// 貰う DP
+	rep(i, n) {
+		// a[i] の符号で走査方向を変える
+		if (a[i] > 0) {
+			repir(j, MAX, MIN + a[i]) {
+				// i 番目の数を選ぶ場合
+				chmin(cnt[j - MIN], cnt[j - a[i] - MIN] + 1);
+			}
+		}
+		else if (a[i] < 0) {
+			repi(j, MIN, MAX + a[i]) {
+				// i 番目の数を選ぶ場合
+				chmin(cnt[j - MIN], cnt[j - a[i] - MIN] + 1);
+			}
+		}
+	}
+
+	return MIN;
+}
+
+
+//【部分和問題（負値可，個数制限付き，数え上げ）】O(n Σm[i]|a[i]|)
 /*
 * 長さ n の整数列 a の部分和として v を作る方法が何通りあるかを返す．
 * 各 a[i] は [0..m[i]] 個用いることができる．
@@ -587,6 +627,7 @@ mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 */
 mint count_limited_signed_partial_sum(vi& a, const vi& m, int v) {
 	// 参考 : https://betrue12.hateblo.jp/entry/2020/10/05/124052
+	// verify : https://atcoder.jp/contests/arc104/tasks/arc104_d
 
 	int n = sz(a);
 
@@ -663,6 +704,68 @@ mint count_limited_signed_partial_sum(vi& a, const vi& m, int v) {
 	}
 
 	return dp[n][v - MIN];
+}
+
+
+//【部分和問題（負値可，個数制限付き，個数最小化）】O(A√A + n)（A = Σm[i]|a[i]|）
+/*
+* 長さ n の整数列 a の部分和として v を作るのに必要な要素数の最小値を cnt[v - MIN] に格納し，MIN を返す．
+* 各 a[i] は [0..m[i]] 個用いることができる．
+*
+*（和を状態にもつインライン貰う DP）
+*/
+int minimize_limited_signed_partial_sum(const vi& a_, const vi& m, vi& cnt) {
+	// verify : https://atcoder.jp/contests/abc269/tasks/abc269_g
+
+	// 要素を 1, 2, 4, 8, ... 個ずつセットにして 1 つの要素とみなす．
+	// a[i], w[i] : i 番目のセットの値とセットにした要素の数
+	vi a, w;
+	rep(i, sz(a_)) {
+		int mi = m[i], c = 1;
+		while (c < mi) {
+			a.emplace_back(a_[i] * c);
+			w.emplace_back(c);
+
+			mi -= c;
+			c *= 2;
+		}
+		a.emplace_back(a_[i] * mi);
+		w.emplace_back(mi);
+	}
+	dump(a); dump(w);
+
+	int n = sz(a);
+
+	// MIN, MAX : 部分和の最小値および最大値
+	int MIN = 0, MAX = 0;
+	rep(i, n) {
+		MIN += min(a[i], 0);
+		MAX += max(a[i], 0);
+	}
+	dump(MIN, MAX);
+
+	// cnt_i[j - MIN] : a[0..i) の中で和がちょうど j になる最小個数（なければ INF）
+	cnt.assign(MAX - MIN + 1, INF);
+	cnt[0 - MIN] = 0; // 空和が 0 であることに対応
+
+	// 貰う DP
+	rep(i, n) {
+		// a[i] の符号で走査方向を変える
+		if (a[i] > 0) {
+			repir(j, MAX, MIN + a[i]) {
+				// i 番目の数を選ぶ場合
+				chmin(cnt[j - MIN], cnt[j - a[i] - MIN] + w[i]);
+			}
+		}
+		else if (a[i] < 0) {
+			repi(j, MIN, MAX + a[i]) {
+				// i 番目の数を選ぶ場合
+				chmin(cnt[j - MIN], cnt[j - a[i] - MIN] + w[i]);
+			}
+		}
+	}
+
+	return MIN;
 }
 
 

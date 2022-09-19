@@ -17,6 +17,7 @@
 
 
 //【乗算 作用付き 総和 モノイド】
+/* verify : https://atcoder.jp/contests/acl1/tasks/acl1_e */
 using S101 = mint;
 S101 op101(S101 x, S101 y) { return x + y; }
 S101 e101() { return 0; }
@@ -70,7 +71,7 @@ using F103 = int;
 F103 id103() { return INF + 1; } // 使わない値なら何でも OK
 S103 act103(F103 f, S103 x) { return f == id103() ? x : f; }
 F103 comp103(F103 f, F103 g) { return f == id103() ? g : f; }
-#define Update_sum_amonoid S103, op103, e103, F103, act103, comp103, id103
+#define Update_Max_amonoid S103, op103, e103, F103, act103, comp103, id103
 
 
 //【変更 作用付き min モノイド】
@@ -82,7 +83,7 @@ using F104 = int;
 F104 id104() { return INF + 1; } // 使わない値なら何でも OK
 S104 act104(F104 f, S104 x) { return f == id104() ? x : f; }
 F104 comp104(F104 f, F104 g) { return f == id104() ? g : f; }
-#define Update_min_amonoid S104, op104, e104, F104, act104, comp104, id104
+#define Update_Min_amonoid S104, op104, e104, F104, act104, comp104, id104
 
 
 //【加算 作用付き max モノイド】
@@ -94,7 +95,7 @@ using F105 = ll;
 S105 act105(F105 f, S105 x) { return f + x; }
 F105 comp105(F105 f, F105 g) { return f + g; }
 F105 id105() { return 0; }
-#define Add_sum_amonoid S105, op105, e105, F105, act105, comp105, id105
+#define Add_Max_amonoid S105, op105, e105, F105, act105, comp105, id105
 
 
 //【加算 作用付き min モノイド】
@@ -106,7 +107,7 @@ using F106 = ll;
 S106 act106(F106 f, S106 x) { return f + x; }
 F106 comp106(F106 f, F106 g) { return f + g; }
 F106 id106() { return 0; }
-#define Add_min_amonoid S106, op106, e106, F106, act106, comp106, id106
+#define Add_Min_amonoid S106, op106, e106, F106, act106, comp106, id106
 
 
 //【アフィン 作用付き 総和 モノイド】
@@ -146,7 +147,7 @@ F107 comp107(F107 f, F107 g) {
 	return { a * c, a * d + b };
 }
 F107 id107() { return { 1, 0 }; }
-#define Affine_add_amonoid S107, op107, e107, F107, act107, comp107, id107
+#define Affine_Sum_amonoid S107, op107, e107, F107, act107, comp107, id107
 
 
 //【加算 作用付き 総和 モノイド】
@@ -180,7 +181,7 @@ F108 comp108(F108 f, F108 g) {
 	return f + g;
 }
 F108 id108() { return 0; }
-#define Add_add_amonoid S108, op108, e108, F108, act108, comp108, id108
+#define Add_Sum_amonoid S108, op108, e108, F108, act108, comp108, id108
 
 
 //【変更 作用付き 総和 モノイド】
@@ -219,7 +220,7 @@ F109 comp109(F109 f, F109 g) {
 	// (0, f; 0, 1).(0, g; 0, 1) = (0, f; 0, 1)
 	return f;
 }
-#define Update_add_amonoid S109, op109, e109, F109, act109, comp109, id109
+#define Update_Sum_amonoid S109, op109, e109, F109, act109, comp109, id109
 
 
 //【and 作用付き xor モノイド】
@@ -261,7 +262,7 @@ F111 comp111(F111 f, F111 g) {
 	return { a + c, max(a + d, b) };
 }
 F111 id111() { return { 0, -INFL }; }
-#define TropicalAffine_sum_amonoid S111, op111, e111, F111, act111, comp111, id111
+#define TropicalAffine_Max_amonoid S111, op111, e111, F111, act111, comp111, id111
 
 
 //【XOR 作用付き 転倒数 モノイド】
@@ -306,7 +307,7 @@ F112 comp112(F112 f, F112 g) {
 	return f ^ g;
 }
 F112 id112() { return false; }
-#define XOR_inversion_amonoid S112, op112, e112, F112, act112, comp112, id112
+#define XOR_Inversion_amonoid S112, op112, e112, F112, act112, comp112, id112
 
 
 //【乗算 作用付き GCD モノイド】
@@ -329,5 +330,45 @@ S114 act114(F114 f, S114 x) { return f * x; }
 F114 comp114(F114 f, F114 g) { return f * g; }
 F114 id114() { return 1; }
 #define Mul_LCM_amonoid S114, op114, e114, F114, act114, comp114, id114
+
+
+//【線形加算 作用付き 総和 モノイド】
+/*
+* S ∋ x = {v, i, 1} : 添字 i の元が値 v をとっていることを表す．
+* F ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．
+* x op y : 値 vx + vy をとっている状態にする（添字とかは壊れる）
+* f act x : v に値 a i + b を加算する．
+* f comp g : (af + ag) i + (bf + bg) を加算する作用にする．
+*/
+// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
+using S117 = tuple<mint, mint, mint>; // ベクトル (v, i, 1)
+using F117 = pair<mint, mint>; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
+S117 op117(S117 x, S117 y) {
+	mint vx, vy, sx, sy, cx, cy;
+	tie(vx, sx, cx) = x; // ベクトル (vx, sx, cx)
+	tie(vy, sy, cy) = y; // ベクトル (vy, sy, cy)
+
+	// (vx, sx, cx) + (vy, sy, cy) = (vx + vy, sx + sy, cx + cy)
+	return { vx + vy, sx + sy, cx + cy };
+}
+S117 e117() { return { 0, 0, 0 }; }
+S117 act117(F117 f, S117 x) {
+	mint v, s, c, a, b;
+	tie(v, s, c) = x; // ベクトル (v, s, c)
+	tie(a, b) = f; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
+
+	// (1, a, b; 0, 1, 0; 0, 0, 1).(v, s, c) = (v + a s + b c, s, c)
+	return { v + a * s + b * c, s, c };
+}
+F117 comp117(F117 f, F117 g) {
+	mint a, b, c, d;
+	tie(a, b) = f; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
+	tie(c, d) = g; // 行列 (1, c, d; 0, 1, 0; 0, 0, 1)
+
+	// (1, a, b; 0, 1, 0; 0, 0, 1).(1, c, d; 0, 1, 0; 0, 0, 1) = (1, a + c, b + d; 0, 1, 0; 0, 0, 1)
+	return { a + c, b + d };
+}
+F117 id117() { return { 0, 0 }; }
+#define LinearAdd_Sum_amonoid S117, op117, e117, F117, act117, comp117, id117
 
 

@@ -199,6 +199,8 @@ public:
 
 	// mask[=0] との XOR をとったときの昇順で i 番目（0-indexed）の要素を返す． : O(B)
 	T get(ll i, T mask = 0) const {
+		// verify : https://atcoder.jp/contests/arc147/tasks/arc147_e
+
 		Assert(0 <= i && i < size());
 		return get_sub(root, mask, i, B - 1);
 	}
@@ -535,8 +537,7 @@ public:
 */
 struct Trie_tree_set {
 	// 参考 : https://algo-logic.info/trie-tree/
-	// verify : https://codeforces.com/contest/1629/problem/D
-
+	
 	static const int K = 26; // 文字数
 
 	int n;		// g のノード数
@@ -544,6 +545,25 @@ struct Trie_tree_set {
 	vc chars;	// chars[i] : 頂点 g[i] に対応する文字
 	vb end;		// end[i] : g[i] で終わる文字列があるか
 	vi cnt;		// cnt[i] : g[i] を含む文字列の個数
+
+	bool find_sub(const string& str, bool prefix_flag) const {
+		int v = 0;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// 登録済みの文字だった場合
+			if (g[v][c - 'a'] != -1) {
+				// そのノードへ移動
+				v = g[v][c - 'a'];
+			}
+			// 未登録の文字だった場合
+			else {
+				return false;
+			}
+		}
+
+		return end[v] || prefix_flag;
+	}
 
 	Trie_tree_set() : n(1), g(1, vi(K, -1)), chars(1), end(1), cnt(1) {}
 
@@ -576,34 +596,20 @@ struct Trie_tree_set {
 			}
 		}
 
+		cnt[v]++;
 		end[v] = true;
 	}
 
 	bool find(const string& str) const {
+		// verify : https://codeforces.com/contest/1629/problem/D
+
 		return find_sub(str, false);
 	}
 
 	bool find_prefix(const string& str) const {
+		// verify : https://codeforces.com/contest/1629/problem/D
+
 		return find_sub(str, true);
-	}
-
-	bool find_sub(const string& str, bool prefix_flag) const {
-		int v = 0;
-
-		// str の文字 c を先頭から順に見ていく
-		repe(c, str) {
-			// 登録済みの文字だった場合
-			if (g[v][c - 'a'] != -1) {
-				// そのノードへ移動
-				v = g[v][c - 'a'];
-			}
-			// 未登録の文字だった場合
-			else {
-				return false;
-			}
-		}
-
-		return end[v] || prefix_flag;
 	}
 
 	int count() const { return cnt[0]; }
@@ -612,8 +618,8 @@ struct Trie_tree_set {
 
 //【トライ木（写像）】
 /*
-* Trie_tree_set(T nil) : O(1)
-*   空で初期化する．nil は今後割り当てることのない値とする．
+* Trie_tree_set(T nil = lowest()) : O(1)
+*   空で初期化する．nil は T の値域に属さない値とする．
 *
 * set(string s, T v) : O(|s|)
 *   s に値 v を割り当てる．

@@ -264,7 +264,6 @@ int maximize_interval_length_la_aa(const vi& a) {
 			// いまの l は固定された r に対して最小の l となっているので，
 			// いまの r を右端にもつ最長区間の長さは r - l である．
 			chmax(res, r - l);
-
 		}
 		// a[l..r) に a[r] が含まれる場合
 		else {

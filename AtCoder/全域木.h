@@ -10,9 +10,9 @@
 //【最小全域森／クラスカル法】O(|E| log|V|)
 /*
 * コスト付き無向グラフ g の最小全域森を求め，そのコストを返す．
-* 最小全域森は msf に構成し，各最小全域木の代表元を mst に格納する．
+* 最小全域森は msf に構成し，各最小全域木の代表元を rs に格納する．
 */
-ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* mst = nullptr) {
+ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 	int n = sz(g);
 	if (msf != nullptr)	*msf = WGraph(n);
 
@@ -44,9 +44,9 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* mst = nullptr) {
 	}
 
 	// 連結成分のそれぞれが最小全域木なので，その代表元を記録．
-	if (mst != nullptr) {
-		mst->clear();
-		repe(tmp, d.groups()) mst->push_back(tmp[0]);
+	if (rs != nullptr) {
+		rs->clear();
+		repe(tmp, d.groups()) rs->push_back(tmp[0]);
 	}
 
 	return cost;
@@ -55,7 +55,7 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* mst = nullptr) {
 
 //【最小全域木／プリム法】O(|E| log|V|)
 /*
-* コスト付き無向グラフ g の頂点 r を含む連結成分の最小全域木を mst に格納する．
+* コスト付き無向グラフ g の頂点 r を含む連結成分の最小全域木を rs に格納する．
 * また戻り値として最小コストを返す．
 */
 ll prim(const WGraph& g, int r, WGraph& mst) {
@@ -72,31 +72,24 @@ ll prim(const WGraph& g, int r, WGraph& mst) {
 
 	// 選んだ頂点から出ている辺をコスト昇順に記録しておくための優先度付きキュー．
 	using E = tuple<ll, int, int>;
-	priority_queue<E, vector<E>, greater<E>> q;
-	repe(e, g[r]) {
-		q.push({ e.cost, r, e.to });
-	}
+	priority_queue_rev<E> q;
+	repe(e, g[r]) q.push({ e.cost, r, e.to });
 
 	while (!q.empty()) {
-		ll c;
-		int s, t;
-		tie(c, s, t) = q.top();
-		q.pop();
+		ll c; int s, t;
+		tie(c, s, t) = q.top(); q.pop();
 
 		// 既に選んだ頂点への辺なら何もしない．
-		if (selected[t]) {
-			continue;
-		}
+		if (selected[t]) continue;
 
 		// 最小全域木に辺を追加し，頂点を選んだことを記録しておく．
 		mst[s].push_back({ t, c });
+		mst[t].push_back({ s, c });
 		res += c;
 		selected[t] = true;
 
 		// 調べるべき辺を追加する．
-		repe(e, g[t]) {
-			q.push({ e.cost, t, e.to });
-		}
+		repe(e, g[t]) q.push({ e.cost, t, e.to });
 	}
 
 	return res;

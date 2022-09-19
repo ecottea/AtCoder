@@ -166,12 +166,12 @@ void enumerate_tree(IGraph& g, int r, int k, vvi& dts) {
 
 //【クリークの列挙】O(2^(1.4√|E|) |V|)
 /*
-* 無向グラフ g の i 番目に見つけたクリークを cs[i] に頂点の集合として列挙する．
+* 無向グラフ g の i 番目に見つけたクリークを cs[i] に頂点の集合として列挙する（空グラフを含む）
 * S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
 */
 void enumerate_clique(const Graph& g, vvi& cs) {
 	// 参考：https://www.slideshare.net/wata_orz/ss-12131479
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2306
+	// verify : https://judge.yosupo.jp/problem/enumerate_cliques
 
 	int n = sz(g);
 	cs.clear();

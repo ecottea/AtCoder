@@ -75,6 +75,7 @@ template <class T> struct Point {
 	Point& operator/=(const T& c) { x /= c; y /= c;	return *this; }
 	Point operator/(const T& c) const { Point q(*this); return q /= c; }
 	friend Point operator*(const T& sc, const Point& p) { return p * sc; }
+	Point operator-() const { Point a = *this; return a *= -1; }
 
 	// “ñæƒmƒ‹ƒ€Cƒmƒ‹ƒ€C³‹K‰»
 	T sqnorm() const { return x * x + y * y; }

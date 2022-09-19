@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "ビット全探索.h"
+#include "ヒープ.h"
 // ■■■■■ 最適化（集合の分割） ■■■■■
 
 
@@ -16,7 +17,7 @@
 
 //【直径最小化クラスタリング】O(3^n k)
 /*
-* i と j の距離が dist[i][j] で与えられる n 点をクラスタ直径の最大値が最小になるように
+* i と j の距離が dist[i][j] で与えられる n 点を，クラスタ直径の最大値が最小になるように
 * k 個のクラスタに分割したときの直径の大きさを返す．
 *
 *（bit DP）
@@ -71,7 +72,7 @@ ll minimize_diameter_clustering(const vvl& dist, int k) {
 *
 * 利用：【下位集合の全探索】
 */
-ll maximize_score_clustering(const vvl& sc) {
+ll maximize_sum_clustering(const vvl& sc) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_u
 
 	int n = sz(sc);
@@ -98,6 +99,69 @@ ll maximize_score_clustering(const vvl& sc) {
 	}
 
 	return dp[(1LL << n) - 1];
+}
+
+
+//【スコア和最大化 3 彩色】O(n log n)
+/*
+* 玉 i∈[0..n) を色 A[B, C] で彩色するとスコア a[i][b[i], c[i]] が得られるとする．
+* x[y, z] 個（n=x+y+z）の玉を A[B, C] で彩色するときの最大スコアを返す．
+*
+* 利用：【多重集合の和（大小分離）】
+*/
+ll maximize_sum_coloring3(int x, int y, int z, const vl& a, const vl& b, const vl& c) {
+	// verify : https://atcoder.jp/contests/agc018/tasks/agc018_c
+
+	//【解法】
+	// 全て C で彩色した場合とのスコアの差分を
+	//		d[i] := a[i] - c[i], e[i] := b[i] - c[i]
+	// とおくと，d から x 個，e から y 個を重複せず選びスコア和を最大化する問題となる．
+	//
+	// e について降順ソートすると，i < j のとき，d[i] と e[i] を共に選ばずかつ e[j] を選ぶくらいなら，
+	// d[j] と e[j] を共に選ばずかつ e[i] を選んでもスコアが悪くなることはない．
+	// よって e を y 個選び尽くすまでは d も e も選ばないという選択肢は考える必要がない．
+	//
+	// e を最後に選ぶのが e[i] だとする．
+	// [0..i) については，e か d かの 2 択なので，全て e を選んだ場合とのスコアの差分を
+	//		f[i] := d[i] - e[i]
+	// とおき，f[i] を降順に i-y 個選ぶのが最善となる．
+	// (i..n) については，d か 選ばないかの 2 択なので，d を降順に x-(i-y) 個選ぶのが最善となる．
+
+	int n = x + y + z;
+
+	ll c_sum = accumulate(all(c), 0LL);
+
+	vector<pll> ed(n);
+	rep(i, n) ed[i] = { b[i] - c[i], a[i] - c[i] };
+	sort(all(ed), greater<pll>());
+
+	vl d(n), e(n);
+	rep(i, n) tie(e[i], d[i]) = ed[i];
+
+	ll e_acc = 0;
+	Separated_multiset_sum<ll> F, D;
+	rep(i, y) {
+		e_acc += e[i];
+		F.insert_l(d[i] - e[i]);
+	}
+	repi(i, y, n - 1) {
+		if (D.size_h() < x) D.insert_h(d[i]);
+		else D.insert_l(d[i]);
+	}
+
+	ll de_sum = e_acc + D.sum_h();
+
+	repi(i, y, n - 1) {
+		e_acc += e[i];
+		F.insert_h(d[i] - e[i]);
+		D.erase_h(d[i]);
+
+		chmax(de_sum, e_acc + F.sum_h() + D.sum_h());
+
+		if (D.size_h() == 0) break;
+	}
+
+	return de_sum + c_sum;
 }
 
 

@@ -25,16 +25,12 @@ void eratosthenes(int n, vi& ps) {
 		if (is_prime[i]) {
 			ps.push_back(i);
 
-			for (int j = i * i; j <= n; j += i) {
-				is_prime[j] = false;
-			}
+			for (int j = i * i; j <= n; j += i) is_prime[j] = false;
 		}
 	}
 
 	// ãn ‚æ‚è‘å‚«‚¢ i ‚Ìˆ—
-	for (; i <= n; i++) {
-		if (is_prime[i]) ps.push_back(i);
-	}
+	for (; i <= n; i++) if (is_prime[i]) ps.push_back(i);
 }
 
 
@@ -54,6 +50,7 @@ void eratosthenes_interval(ll l, ll r, vl& ps) {
 
 	// ‘f”‚©‚Ç‚¤‚©‚ğ‹L˜^‚µ‚Ä‚¨‚­‚½‚ß‚Ìƒe[ƒuƒ‹
 	vb is_prime(r - l, true);
+	if (l == 1) is_prime[0] = false; // 1 ‚Í‘f”‚Å‚Í‚È‚¢
 	repe(p, ps_sub) {
 		for (ll j = (l + p - 1) / p * p; j < r; j += p) {
 			if (j != p) is_prime[j - l] = false;
@@ -64,6 +61,49 @@ void eratosthenes_interval(ll l, ll r, vl& ps) {
 		if (is_prime[i]) ps.push_back(l + i);
 	}
 }
+
+
+//y‘fˆö”•ª‰ği•¡”jz
+/*
+* Factor_integer(int n) : O(n log(log n))
+*	n ˆÈ‰º‚Ì©‘R”‚ğ‚‘¬‚É‘fˆö”•ª‰ğ‚·‚é€”õ‚ğs‚¤D
+*
+* factor_integer(int i, map<int, int>& pps) : O(log n)
+*	i ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
+*/
+struct Factor_integer {
+	// verify : https://atcoder.jp/contests/abc215/tasks/abc215_d
+
+	int n;
+
+	// d[i] : i ‚ğŠ„‚èØ‚éÅ¬‚Ì‘f”
+	vi d;
+
+	// n ˆÈ‰º‚Ì©‘R”‚ğ‚‘¬‚É‘fˆö”•ª‰ğ‚·‚é€”õ‚ğs‚¤D
+	Factor_integer(int n_) : n(n_), d(n + 1) {
+		iota(all(d), 0);
+
+		for (int p = 2; p * p <= n; p++) {
+			if (d[p] != p) continue;
+
+			for (int i = p; i <= n; i += p) {
+				d[i] = p;
+			}
+		}
+	}
+
+	// i ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
+	void factor_integer(int i, map<int, int>& pps) {
+		Assert(i <= n);
+
+		pps.clear();
+
+		while (i > 1) {
+			pps[d[i]]++;
+			i /= d[i];
+		}
+	}
+};
 
 
 //yˆêŠ‡‘fˆö”•ª‰ğzO(n log(log n))

@@ -17,6 +17,32 @@ template <class T> inline double distance_P_L(const Point<T>& p, const Line<T>& 
 }
 
 
+//【角度の比較（符号なし）】O(1)
+/*
+* ベクトル a, b の成す無向角よりベクトル c, d の成す無向角が大きければ true，さもなくば false を返す．
+*/
+template <class T>
+bool compare_angle(const Point<T>& a, const Point<T>& b, const Point<T>& c, const Point<T>& d) {
+	// verify : https://codeforces.com/contest/598/problem/C
+
+	//【方法】
+	// a, b の成す無向角を θ（≦180°）とおくと，a, b の外積および内積は
+	//		|a×b| = |a| |b| sinθ
+	//		a・b = |a| |b| cosθ
+	// と表される．したがって a, b の成す無向角は atan2(|a×b|, a・b) で得られる．
+	//
+	// これを図形的に解釈し直すと，a が (1, 0) 方向を向くように a, b を同時に回転させたとき，
+	// b が (a・b, |a×b|) 方向を向くことを意味している．
+	//
+	// よって (a・b, |a×b|) と (c・d, |c×d|) を比較し，後者の方が偏角が大きければ true を返せば良い．
+	// 両者は上半平面内にあることが保証されているので，外積を使って判定を行える．
+
+	Point<T> b2{ a.dot(b), abs(a.cross(b)) };
+	Point<T> d2{ c.dot(d), abs(c.cross(d)) };
+	return b2.cross(d2) > 0;
+}
+
+
 //【偏角の比較】O(1)
 /*
 * 点 a と点 b の点 c からの e 方向 θ を基準とした [θ,θ+2π) 範囲の偏角を比較する．
@@ -29,7 +55,7 @@ bool compare_argument(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0 }, Poi
 	// verify : https://judge.yosupo.jp/problem/sort_points_by_argument
 
 	// c が原点にくるように平行移動しておく．
-	a -= c; b -= c; Point<T> O = Point<T>{ 0, 0 }; // O : 原点
+	a -= c; b -= c; Point<T> O{ 0, 0 }; // O : 原点
 
 	// もし a = O なら，a の偏角(∞) を b の偏角(≦∞)が超えることはない．
 	if (a == O) return false;
@@ -58,6 +84,44 @@ bool compare_argument(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0 }, Poi
 }
 
 
+//【偏角の比較（同偏角は同一視）】O(1)
+/*
+* 点 a と点 b の点 c からの e 方向 θ を基準とした [θ,θ+2π) 範囲の偏角を比較する．
+* a の偏角より b の偏角が大きければ true，さもなくば false を返す．
+* c 自身の偏角は未定義だが，便宜上 +∞ とする．
+*/
+template <class T>
+bool compare_argument_weakly(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0 }, Point<T> c = Point<T>{ 0, 0 }) {
+	// verify : https://atcoder.jp/contests/abc033/tasks/abc033_d
+
+	// c が原点にくるように平行移動しておく．
+	a -= c; b -= c; Point<T> O{ 0, 0 }; // O : 原点
+
+	// もし a = O なら，a の偏角(∞) を b の偏角(≦∞)が超えることはない．
+	if (a == O) return false;
+
+	// もし b = O なら，a の偏角(＜∞) より b の偏角(∞) が大きい． 
+	if (b == O) return true;
+
+	// 以降は a, b は O と異なるものとして考えて良い．
+
+	// 偏角が [θ, θ+π) の範囲にあるか
+	T op_a = e.cross(a), op_b = e.cross(b);
+	T ip_a = e.dot(a), ip_b = e.dot(b);
+	bool la = op_a > 0 || (op_a == 0 && ip_a > 0);
+	bool lb = op_b > 0 || (op_b == 0 && ip_b > 0);
+
+	// 象限に注目するだけで判定可能なケースを判定する．
+	if (la && !lb) return true;
+	if (!la && lb) return false;
+
+	// 以降は a, b の O からの位置ベクトルの成す角は π 未満と考えて良い．
+
+	// 半平面内であれば a, b の O からの位置ベクトルの外積で判定可能．
+	return a.cross(b) > 0;
+}
+
+
 //【偏角ソート】O(n log n)
 /*
 * n 点のリスト p を点 c からの e 方向 θ を基準とした [θ,θ+2π) 範囲の偏角昇順にソートする．
@@ -74,6 +138,76 @@ void argument_sort(vector<Point<T>>& p, Point<T> e = Point<T>{ 1, 0 }, Point<T> 
 		return compare_argument(a, b, e, c);
 	};
 	sort(all(p), cmp);
+}
+
+
+//【開三角形と直線の共通部分の長さ】O(1)
+/*
+* 開三角形 t と直線 l との共通部分の長さを返す．
+*
+* 利用：【共有判定（直線と閉線分）】，【2 直線の交点】
+*/
+template <class T>
+double length_intersection_OTri_L(const Polygon<T>& t, const Line<T>& l) {
+	// verify : https://codeforces.com/contest/598/problem/F
+
+	Assert(sz(t) == 3);
+
+	// 三角形　t の辺が直線 l に含まれる場合の例外処理
+	rep(i, 3) {
+		bool b1 = (l.second - l.first).cross(t[i] - l.first) == 0;
+		bool b2 = (l.second - l.first).cross(t[(i + 1) % 3] - l.first) == 0;
+		if (b1 && b2) return 0;
+	}
+
+	// p : 三角形 t の辺と直線 l との交点の集合
+	vector<Point<double>> p;
+	rep(i, 3) {
+		if (t[i] == t[(i + 1) % 3]) continue;
+		if (!intersectQ_L_HS(l, { t[i], t[(i + 1) % 3] })) continue;
+
+		p.emplace_back(intersection_L_L(l, { t[i], t[(i + 1) % 3] }));
+	}
+
+	return sz(p) < 2 ? 0 : (p[0] - p[1]).norm();
+}
+
+
+//【閉多角形と直線の共通部分の長さ】O(n)
+/*
+* 閉 n 角形 p と直線 l との共通部分の長さを返す．
+*
+* 制約：
+* p の頂点は反時計回り順で並んでいる．
+* p の任意の 2 頂点について，それを通る直線上に o は存在しない．
+*
+* 利用：【三角形と直線の共通部分の長さ】
+*/
+template <class T>
+double length_intersection_CPoly_L(const Polygon<T>& p, const Line<T>& l, Point<T> o = Point<T>{ 0, 0 }) {
+	// verify : https://codeforces.com/contest/598/problem/F
+
+	int n = sz(p);
+
+	double res = 0;
+
+	rep(i, n) {
+		int sign = ((p[i] - o).cross((p[(i + 1) % n] - o)) > 0 ? 1 : -1);
+		double len = length_intersection_Tri_L({ o, p[i], p[(i + 1) % n] }, l);
+		dump(sign, len);
+
+		// 辺 p[i]-p[i+1] が l に含まれる場合の例外処理
+		bool b1 = (l.second - l.first).cross(p[i] - l.first) == 0;
+		bool b2 = (l.second - l.first).cross(p[(i + 1) % n] - l.first) == 0;
+		if (b1 && b2) {
+			if (sign == 1) res += (p[i] - p[(i + 1) % n]).norm();
+			continue;
+		}
+
+		res += sign * len;
+	}
+
+	return abs(res);
 }
 
 
@@ -169,31 +303,29 @@ double area_intersection_C_Poly(const Circle<ll>& c, const Polygon<ll>& poly) {
 * 2 円 c1, c2 の共通部分の面積を返す．
 */
 template <class T>
-double area_intersection_C_C(const Circle<T>& c1, const Circle<T>& c2) {
+double area_intersection_C_C(Circle<T> c1, Circle<T> c2) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_I
+
+	// 円 c1 の半径 <= 円 c2 の半径 とする．
+	if (c1.second > c2.second) swap(c1, c2);
 
 	// 円 c1, c2 の中心と半径
 	Point<T> o1 = c1.first, o2 = c2.first;
 	T r1 = c1.second, r2 = c2.second;
 
-	// o1 から o2 へのベクトル，半径の差
+	// o1 から o2 へのベクトル，半径の和，半径の差
 	Point<T> d = o2 - o1;
-	T r_sum = r1 + r2, r_dif = abs(r1 - r2);
+	T r_sum = r1 + r2, r_dif = r2 - r1;
 
 	// 中心間距離が円の半径の和以上の場合 → 面積 0
-	if (d.sqnorm() >= r_sum * r_sum) {
-		return 0;
-	}
+	if (d.sqnorm() >= r_sum * r_sum) return 0;
 
-	// 中心間距離が円の半径の差以下の場合 → 小円の面積
-	if (d.sqnorm() <= r_dif * r_dif) {
-		T r_min = min(r1, r2);
-		return PI * r_min * r_min;
-	}
+	// 中心間距離が円の半径の差以下の場合 → 円 c1 の面積
+	if (d.sqnorm() <= r_dif * r_dif) return r1 * r1 * PI;
 
 	// その他の場合 → 2 つの弓形の面積の和
 	double x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
-	double h = sqrt(r1 * r1 - x * x);
+	double h = sqrt(r_sum * r_sum - d.sqnorm()) * sqrt(d.sqnorm() - r_dif * r_dif) / (2 * d.norm());
 	Point<double> nd = Point<double>(d) * (x / d.norm());
 	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (h / d.norm());
 	Point<double> p1 = Point<double>(o1) + nd + nn;
@@ -207,11 +339,9 @@ double area_intersection_C_C(const Circle<T>& c1, const Circle<T>& c2) {
 	double seg2 = abs(v1.angle(v2)) * r2 * r2 / 2 - abs(v1.cross(v2)) / 2;
 
 	double res;
+
 	if (r1 * r1 + d.sqnorm() < r2 * r2) {
 		res = (PI * r1 * r1 - seg1) + seg2;
-	}
-	else if (r2 * r2 + d.sqnorm() < r1 * r1) {
-		res = (PI * r2 * r2 - seg2) + seg1;
 	}
 	else {
 		res = seg1 + seg2;
