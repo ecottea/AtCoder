@@ -305,7 +305,7 @@ template <typename T> void convex_hull(vector<Point<T>> p, Polygon<T>& ch) {
 */
 template <class T>
 int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>& p,
-	bool strict = false, bool upper = true)
+	bool strict = true, bool upper = true)
 {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
 
@@ -359,7 +359,7 @@ int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>
 /*
 * 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分の共有点の数を返す．
 *
-* 制約：互いに平行な線分同士が共有点をもつことはない．
+* 制約：線分は軸平行，互いに平行な線分同士は共有点をもたない．
 */
 ll count_intersection(const vl& x1, const vl& y1, const vl& x2, const vl& y2) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_6_A

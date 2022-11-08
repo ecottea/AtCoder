@@ -136,10 +136,7 @@ template <int N> int reduced_row_echelon_form(Bit_matrix<N>& mat, vi* pjs = null
 		while (i2 < m && !mat[i2][j]) i2++;
 
 		// 見つからなかったら注目位置を右に移す．
-		if (i2 == m) {
-			j++;
-			continue;
-		}
+		if (i2 == m) { j++; continue; }
 
 		// 見つかったら i 行目とその行を入れ替える．
 		swap(mat[i], mat[i2]);
@@ -159,6 +156,68 @@ template <int N> int reduced_row_echelon_form(Bit_matrix<N>& mat, vi* pjs = null
 	}
 
 	return i;
+}
+
+
+//【逆行列】O(n^3 / 64)
+/*
+* n 次正方行列 mat の逆行列が存在すればそれを mat_inv に格納する．
+* また逆行列が存在する場合は true，存在しない場合は false を返す．
+*/
+template <int N> bool inverse_matrix(const Bit_matrix<N>& mat, Bit_matrix<N>& mat_inv) {
+	// verify : https://atcoder.jp/contests/jag2013summer-day4/tasks/icpc2013summer_day4_f
+	
+	int m = mat.m;
+
+	// 元の行列 mat と単位行列を繋げた拡大行列を作る．
+	Bit_matrix<2 * N> aug(m, 2 * m);
+	rep(i, m) rep(j, m) {
+		aug[i][j] = mat[i][j];
+		aug[i][m + j] = (i == j);
+	}
+	int n = 2 * m;
+
+	// 拡大行列に対して行基本変形を行い，左側を単位行列にすることを目指す．
+
+	// 直前に見つけたピボットの位置
+	int pi = -1, pj = -1;
+
+	// 注目位置を (i, j)（i 行目かつ j 列目）とする．
+	int i = 0, j = 0;
+
+	while (i < m && j < n) {
+		// 同じ列の下方の行から非 0 成分を見つける．
+		int k = i;
+		while (k < m && !aug[k][j]) k++;
+
+		// 見つからなかったら注目位置を右に移す．
+		if (k == m) { j++; continue; }
+
+		// 見つかったら i 行目とその行を入れ替える．
+		pi = i; pj = j;
+		if (i != k) swap(aug[i], aug[k]);
+
+		// i 行目以外の j 列目の成分が全て 0 になるよう XOR をとる．
+		rep(k, m) {
+			// i 行目だけは引かない．
+			if (k == i) continue;
+
+			if (aug[k][j]) aug[k] ^= aug[i];
+		}
+
+		// 注目位置を右下に移す．
+		i++; j++;
+	}
+
+	// mat が単位行列になっていれば，最後に発見したピボットの位置は (n-1, n-1)．
+	// そうなっていなければ mat は正則ではないので false を返す．
+	if (pi != m - 1 || pj != m - 1) return false;
+
+	// 拡大行列の右半分が mat の逆行列なのでコピーする．
+	mat_inv = Bit_matrix<N>(m, m);
+	rep(i, m) rep(j, m) mat_inv[i][j] = aug[i][m + j];
+
+	return true;
 }
 
 
@@ -305,44 +364,49 @@ template <int N> void find_base(Bit_matrix<N>& mat, vi& bis) {
 }
 
 
-//【行列の離散対数問題】O(2^(dim(x)/2) dim(x)^3 / 64)
+//【行列の離散対数問題】O(2^(dim(x)/2) dim(x)^3 / 64) ?
 /*
-* A^d x = y の最小解 d >= 0 を返す．（なければ INFL）
+* A^d x = y の最小解 d >= 0 を返す．（なければ INF）
+*
+* 利用：【転置との積】
 *
 *（呼び出すとき log<N> としないと gcc でエラーになるので注意．）
-*
 *（baby-step giant-step）
 */
 template <int N>
 ll log(const Bit_matrix<N>& A, const bitset<N>& x, const bitset<N>& y) {
-	// verify : https://atcoder.jp/contests/utpc2014/tasks/utpc2014_k
+	ll m = 1LL << ((A.m + 1) / 2);
 
-	ll hn = 1LL << ((A.m + 1) / 2);
-
-	// logA[v] : v = A^j x となる m 未満で最大の j
-	unordered_map<unsigned long long, int> logA;
+	// logA[v] : v = A^j y となる m 未満の j の昇順リスト
+	//（解の候補にすぎないので，最大の j を保持するだけではいけないはず．）
+	unordered_map<unsigned long long, vl> logA;
 	Bit_matrix<N> A_pow(A.n), A_trans = A.transpose();
-	rep(j, hn) {
+	rep(j, m) {
+		// A^j = y であれば j を返す．
 		if (((A_pow * x) ^ y).none()) return j;
 
-		logA[(A_pow * y).to_ullong()] = j;
+		logA[(A_pow * y).to_ullong()].emplace_back(j);
 
 		A_pow = prod_transpose(A_pow, A_trans);
 	}
 
-	// x に A_pow = A^hn を掛けながら解の候補を探していく．
+	// x に A_pow = A^m を掛けながら解の候補を探していく．
 	bitset<N> Ax = x;
-	repi(i, 1, hn) {
+	repi(i, 1, m) {
 		Ax = A_pow * Ax;
-		if (logA.count(Ax.to_ullong())) {
-			// A^(i hn) x = A^j y なる (i, j) が見つかった．
-			ll d = i * hn - logA[Ax.to_ullong()];
+		if (!logA.count(Ax.to_ullong())) continue;
 
-			// 実際に計算してみて一致するかを見る．
-			if (((A.pow(d) * x) ^ y).none()) {
-				return d;
-			}
-			return INFL; // ここで打ち切っていいとは限らないのでは？？
+		repir(t, sz(logA[Ax.to_ullong()]) - 1, 0) {
+			// A^(i m) x = A^j y なる (i, j) が見つかった．
+			ll j = logA[Ax.to_ullong()][t];
+
+			// 解の候補を得て，実際に計算してみて一致するかを見る．
+			ll d = i * m - j;
+			if (((A.pow(d) * x) ^ y).none()) return d;
+
+			// https://atcoder.jp/contests/utpc2014/tasks/utpc2014_k
+			// これを入れると AC する？？？　ただの嘘解法？？？
+			// return INFL;
 		}
 	}
 

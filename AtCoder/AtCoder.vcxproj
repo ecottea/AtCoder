@@ -150,6 +150,7 @@
     <ClInclude Include="01計画問題.h" />
     <ClInclude Include="オートマトン.h" />
     <ClInclude Include="スコア和(順列).h" />
+    <ClInclude Include="フロー.h" />
     <ClInclude Include="マッチング(一般).h" />
     <ClInclude Include="列挙(ビット列).h" />
     <ClInclude Include="列挙(区間).h" />
@@ -206,6 +207,8 @@
     <ClInclude Include="最適化(区間).h" />
     <ClInclude Include="構文解析.h" />
     <ClInclude Include="母関数.h" />
+    <ClInclude Include="フロー双対.h" />
+    <ClInclude Include="累積演算.h" />
     <ClInclude Include="辞書%28動的%29.h" />
     <ClInclude Include="整除算.h" />
     <ClInclude Include="包除原理.h" />

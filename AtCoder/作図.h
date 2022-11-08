@@ -18,7 +18,7 @@ inline Point<double> rotate(const Point<double>& p, const Point<double>& c, doub
 
 //【90°回転】O(1)
 /*
-* 点 p を点 c を中心に 90°× i だけ回転した点を返す．
+* 点 p を点 c を中心に 90° × i だけ回転した点を返す．
 */
 template <class T>
 inline Point<T> rotate90(const Point<T>& p, const Point<T>& c, int i) {

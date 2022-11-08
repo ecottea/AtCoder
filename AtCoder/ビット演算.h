@@ -36,7 +36,7 @@
 /*
 * XOR[0..n) Çï‘Ç∑ÅD
 */
-ll acc_XOR(ll n) {
+template <class T> T acc_XOR(T n) {
 	// verify : https://atcoder.jp/contests/abc121/tasks/abc121_d
 
 	//Åyï˚ñ@Åz
@@ -51,8 +51,7 @@ ll acc_XOR(ll n) {
 
 	if (n <= 0) return 0;
 
-	ll res = -1;
-
+	T res = -1;
 	if (n % 4 == 0) res = 0;
 	else if (n % 4 == 1) res = n - 1;
 	else if (n % 4 == 2) res = 1;

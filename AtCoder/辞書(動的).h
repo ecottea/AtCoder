@@ -107,8 +107,8 @@ template <class T = ll> class Binary_trie {
 		if (b < 0) return 0;
 
 		// 下位ビットに対応するノードの最小値を求めにいく．
-		T g = (mask >> b) & T(1);
-		if (t->ch[g] == nullptr) g ^= T(1);
+		int g = (int)((mask >> b) & T(1));
+		if (t->ch[g] == nullptr) g ^= 1;
 		T val = min_element_sub(t->ch[g], mask, b - 1);
 
 		// 自身のビットを設定する．
@@ -145,6 +145,15 @@ template <class T = ll> class Binary_trie {
 		return res;
 	}
 
+	void free_sub(Node* t) {
+		if (t == nullptr) return;
+
+		free_sub(t->ch[0]);
+		free_sub(t->ch[1]);
+
+		delete t;
+	}
+
 	void print_sub(Node* t, T val, int b, ostream& os) const {
 		if (t == nullptr) return;
 
@@ -161,6 +170,11 @@ public:
 	// 空で初期化する． : O(1)
 	Binary_trie(int B_ = 63) : root(nullptr), B(B_) {}
 
+	// メモリを開放する．： O(n B)
+	~Binary_trie() {
+//		free_sub(root);
+	}
+
 	// 要素数を返す． : O(1)
 	ll size() const {
 		return root != nullptr ? root->cnt : 0;
@@ -173,26 +187,28 @@ public:
 
 	// 値 val を cnt[=1] 個追加する． : O(B)
 	void insert(T val, ll cnt = 1) {
-		// verify : https://codeforces.com/contest/947/problem/C
+		// verify(cnt=1) : https://judge.yosupo.jp/problem/set_xor_min
 
 		root = insert_sub(root, val, cnt, B - 1);
 	}
 
 	// 値 val を cnt[=1] 個削除する． : O(B)
 	void erase(T val, ll cnt = 1) {
-		// verify : https://codeforces.com/contest/947/problem/C
+		// verify(cnt=1) : https://judge.yosupo.jp/problem/set_xor_min
 
 		root = erase_sub(root, val, cnt, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの最大要素を返す． : O(B)
 	T max_element(T mask = 0) const {
+		// verify(mask=0) : https://judge.yosupo.jp/problem/double_ended_priority_queue
+
 		return min_element_sub(root, ~mask, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの最小要素を返す． : O(B)
 	T min_element(T mask = 0) const {
-		// verify : https://codeforces.com/contest/947/problem/C
+		// verify : https://judge.yosupo.jp/problem/set_xor_min
 
 		return min_element_sub(root, mask, B - 1);
 	}
@@ -224,6 +240,8 @@ public:
 
 	// 要素 val の個数を返す． : O(B)
 	ll count(T val) const {
+		// verify : https://judge.yosupo.jp/problem/set_xor_min
+
 		return upper_bound(val) - lower_bound(val);
 	}
 

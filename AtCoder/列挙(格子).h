@@ -95,7 +95,7 @@ void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
 }
 
 
-//【ドミノ-モノミノのタイリングの列挙】
+//【ドミノ-モノミノのタイリングの列挙】O(?)
 /*
 * h * w の盤面にドミノ d 個とモノミノ h w - 2 d 個を敷き詰める方法を boards に列挙する．
 * i 番目に敷き詰められたタイルを番号 i で表す．
@@ -107,8 +107,6 @@ void enumerate_domino_monomino_tiling(int h, int w, int d, vvvi& boards) {
 
 	// (i, j): 注目位置，a : 1x2 タイルの残り数，b : 1x1 タイルの残り数
 	function<void(int, int, int, int, int)> dfs = [&](int i, int j, int a, int b, int id) {
-		dump(i, j, a, b);
-
 		// 完成していれば記録
 		if (i == h) {
 			boards.push_back(board);

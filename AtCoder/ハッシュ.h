@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "FPS(bit).h"
 // ■■■■■ ハッシュ ■■■■■
 
 
@@ -193,7 +194,7 @@ template <class T> struct Rolling_hash_2D {
 };
 
 
-//【ローリングハッシュ（数値文字列）】
+//【ローリングハッシュ（数値文字列，加減可能）】
 /*
 * 数値文字列 s の連続部分列 s[l, r) が表す数値のハッシュ値を計算する．
 * ハッシュ値のまま加減算を行うことができる．
@@ -290,6 +291,97 @@ struct Number_rolling_hash {
 		ll h2 = smod(hA2 - hB2, MOD2);
 
 		return (h1 << 32) + h2;
+	}
+};
+
+
+//【ローリングハッシュ（列，XOR 可能）】
+/*
+* 列 s[0..n) の連続部分列 s[l, r) のハッシュ値を計算する．
+* ハッシュ値のまま列同士の XOR を計算することができる．
+*
+* Rolling_hash_XOR(STR s) : O(64 n)
+*	列 s[0..n) で初期化する．
+*	STR は string，vector<T> など．
+*
+* ll get(int l, int r) : O(1)
+*	連続部分列 s[l, r) のハッシュ値を返す（空なら 0）
+*
+* ll join(ll hs, ll ht, int ls) : O(1)
+*	ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
+*
+* ll xor_sum(ll hs, ll ht, int l) : O(1)
+*	ハッシュ値 hs[ht] をもつ s[0..l)[ t[0..l) ] について s XOR t のハッシュ値を返す．
+*
+* 利用：【形式的冪級数（二元体 F2）】
+*/
+template <class STR> struct Rolling_hash_XOR {
+	//【方法】
+	// 通常のローリングハッシュでは mod p での (和, 積)-半環上で計算するが，
+	// それに代えて体 GF(2^63) ~= F_2[X] / (X^63 + X + 1) 上で計算を行えばいい．
+
+	// 列の長さ
+	int n;
+
+	BFPS<128> MOD{ bitset<128>(9223372036854775811), 64 }; // X^63 + X + 1
+	BFPS<128> B{ bitset<128>(8214269207820942862), 64 }; // ランダム
+	BFPS<128> invB{ bitset<128>(7314534990125951741), 64 }; // B の逆元
+	BFPS<128> S{ bitset<128>(5272143306228089744), 64 }; // ランダム
+
+	// powB[i] : B^i, powB_inv[i] : B^(-i)
+	vector<BFPS<128>> powB, powB_inv;
+
+	// v[i] : s[0, i) のハッシュ値
+	// v0[i] : 0 が i 個並んだ列のハッシュ値
+	vector<BFPS<128>> v, v0;
+
+	// コンストラクタ（列 s で初期化）
+	Rolling_hash_XOR() : n(0) {}
+	Rolling_hash_XOR(const STR& s) : n(sz(s)), powB(n + 1), powB_inv(n + 1), v(n + 1), v0(n + 1) {
+		// verify : https://atcoder.jp/contests/abc274/tasks/abc274_h
+
+		// ハッシュ値計算用の B の累乗
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = (powB[i] * B).reminder(MOD);
+
+		// ハッシュ値計算用の B の逆元の累乗
+		powB_inv[0] = 1;
+		rep(i, n) powB_inv[i + 1] = (powB_inv[i] * invB).reminder(MOD);
+
+		// s[0, i) のハッシュ値 v[i] の計算
+		rep(i, n) {
+			BFPS<128> fs(bitset<128>(s[i]), 64);
+			v[i + 1] = (v[i] + (fs + S) * powB[i]).reminder(MOD);
+		}
+
+		// 0 が i 個並んだ列のハッシュ値 v0[i] の計算
+		rep(i, n) v0[i + 1] = (v0[i] + S * powB[i]).reminder(MOD);
+	}
+
+	// 代入
+	Rolling_hash_XOR(const Rolling_hash_XOR& rh) = default;
+	Rolling_hash_XOR& operator=(const Rolling_hash_XOR& rh) = default;
+
+	// s[l, r) のハッシュ値の取得
+	ll get(int l, int r) {
+		// verify : https://atcoder.jp/contests/abc274/tasks/abc274_h
+
+		// ハッシュ値は Σi=[0..r-l) (s[l+i] + S) * B^i
+		return (ll)(((v[r] + v[l]) * powB_inv[l]).reminder(MOD).c.to_ullong());
+	}
+
+	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
+	ll join(ll hs, ll ht, int ls) {
+		BFPS<128> fs(bitset<128>(hs), 64);
+		BFPS<128> ft(bitset<128>(ht), 64);
+		return (ll)((fs + ft * powB[ls]).reminder(MOD).c.to_ullong());
+	}
+
+	// ハッシュ値 hs[ht] をもつ s[0..l)[ t[0..l) ] について s XOR t のハッシュ値を返す．
+	ll xor_sum(ll hs, ll ht, int l) {
+		// verify : https://atcoder.jp/contests/abc274/tasks/abc274_h
+
+		return hs ^ ht ^ (ll)v0[l].c.to_ullong();
 	}
 };
 

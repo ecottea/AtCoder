@@ -223,3 +223,55 @@ mint count_supersequences(const string& s, int n, int k = 26) {
 }
 
 
+//【部分列の数え上げ（並べ替え可，mod998244353）】O(n log n)
+/*
+* k = 26 種類の英小文字からなる文字列 s[0..n) の部分列を並べ替えて得られる文字列の個数を返す．
+* 空文字列も部分列とみなす．
+*
+* 利用：【階乗など（法が大きな素数）】
+*
+*（挿入 DP，指数型母関数）
+*/
+mint count_shuffleed_subseq(const string& s) {
+	// verify : https://yukicoder.me/problems/no/1195
+
+	//【方法】
+	// 文字列の長さを状態にもち，1 種類ずつ文字を挿入していく挿入 DP を用いる．
+	// dp_i[j] を i 種類目までの文字を使って得られる長さ j の文字列の個数とする．
+	// 
+	// 長さ j の文字列を得たければ，長さ t の文字列に j - t 個の文字を挿入すればいい．
+	// 挿入の仕方は重複組合せの考え方より bin(j, t) 通りあるから，遷移式
+	//		dp_(i+1)[j] = Σt bin(j, t) dp_i[t]
+	//		⇔ dp_(i+1)[j] = Σt j! / ((j-t)! t!) dp_i[t]
+	// を得る．このままでは畳込みの形になっていないが，これを
+	//		dp_(i+1)[j] / j! = Σt (1 / (j-t)!) (dp_i[t] / t!)
+	// と変形すれば畳込みの形になっている．
+
+	const int k = 26;
+	int n = sz(s);
+
+	vi cnt(k);
+	repe(c, s) cnt[c - 'a']++;
+
+	Factorial_mint fm(n);
+
+	// dp_i[j] : (i 種類目までの文字を使って得られる長さ j の文字列の個数) / j!
+	vm dp = { 1 };
+	dump(dp);
+
+	rep(i, k) {
+		if (cnt[i] == 0) continue;
+
+		vm c(cnt[i] + 1);
+		repi(j, 0, cnt[i]) c[j] = fm.factorial_inv(j);
+
+		dp = convolution(dp, c);
+	}
+
+	mint res = 0;
+	repi(j, 0, n) res += dp[j] * fm.factorial(j);
+
+	return res;
+}
+
+

@@ -35,7 +35,7 @@ template<class T> T arithmetic_series(T a, T b, ll i0, ll i1) {
 */
 
 
-//y“™”ä”—ñ‚Ì˜az
+//y“™”ä”—ñ‚Ì˜azO(log n)
 /*
 * geometric_series(r, n) : O(log n)
 *	ƒ°i¸[0..n) r^i ‚ğ•Ô‚·D
@@ -109,6 +109,14 @@ mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
 	res += b * (arithmetic_geometric_series(r, i1) - arithmetic_geometric_series(r, i0));
 	return res;
 }
+
+
+//y—İæŒ^”—ñ‚Ì˜azO(k log k)
+/*
+* ƒ°i¸[0..n) i^k ‚Í n ‚Ì k+1 Ÿ®‚É‚È‚é‚Ì‚ÅCƒ‰ƒOƒ‰ƒ“ƒWƒ…•âŠÔ‚Å’l‚ğ‹‚ß‚ç‚ê‚éD
+* 
+* verify : https://codeforces.com/contest/622/problem/F
+*/
 
 
 //y—İæ~“™”äŒ^”—ñ‚Ì–³ŒÀ˜azO(d log d)

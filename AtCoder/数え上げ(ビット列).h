@@ -94,6 +94,8 @@ mint count_non0interval_bitsequences(int n, const vi& l, const vi& r) {
 //【連結で得られるビット列の数え上げ】O(4^m m k log n) （m = max(|s[i]|)）
 /*
 * n 個のビット列 s[i] を好きに並べて得られる長さ k のビット列の個数を返す．
+* 
+*（スライド bit DP）
 */
 mint count_string_concat(const vector<string>& s_, int k, char one = '1') {
 	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/27/181249

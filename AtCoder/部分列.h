@@ -181,9 +181,9 @@ int longest_increasing_subsequence(const vector<T>& a, vi* lis = nullptr) {
 }
 
 
-//【コスト最大増加部分列】O(n log n)
+//【スコア最大増加部分列】O(n log n)
 /*
-* 非負コスト c[0..n) が与えられた数列 a[0..n) のコスト最大増加部分列のコストを返す．
+* 非負スコア c[0..n) が与えられた数列 a[0..n) のスコア最大増加部分列のスコアを返す．
 *
 *（セグメント木で高速化したインライン DP）
 *
@@ -192,16 +192,16 @@ int longest_increasing_subsequence(const vector<T>& a, vi* lis = nullptr) {
 ll op_mis(ll a, ll b) { return max(a, b); }
 ll e_mis() { return 0; }
 template <class T>
-ll maxcost_increasing_subsequence(const vector<T>& a, const vl& c) {
+ll maxscore_increasing_subsequence(const vector<T>& a, const vl& c) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_q
 
 	int n = sz(a);
 
 	// a を座標圧縮した結果を b に格納する．
-	vi b; vector<T> x;
-	int m = coordinate_compression(a, b, &x);
+	vi b;
+	int m = coordinate_compression(a, b);
 
-	// dp[j] : 今まで見てきた中での，右端の値が j であるような増加部分列の最大コスト
+	// dp[j] : 今まで見てきた中での，右端の値が j であるような増加部分列の最大スコア
 	segtree<ll, op_mis, e_mis> dp(m);
 
 	// j = b[i] を順に見ていく
@@ -209,21 +209,65 @@ ll maxcost_increasing_subsequence(const vector<T>& a, const vl& c) {
 		int j = b[i];
 
 		// j を右端にもてるのは，それまでの右端が j 未満のもののみ．
-		// よってその中での増加部分列の最大コストを求め，それに c[i] を加える．
-		ll cost = dp.prod(0, j) + c[i];
+		// よってその中での増加部分列の最大スコアを求め，それに c[i] を加える．
+		ll score = dp.prod(0, j) + c[i];
 
-		// j を右端とするよりコストの大きいものが作れれば更新する．
+		// j を右端とするよりスコアの大きいものが作れれば更新する．
 		// dp[j] 以外は更新されることはないので，更新は O(log n) で終わる．
 		// この性質が dp テーブルのインライン化と相性が良い．
-		if (cost > dp.get(j)) {
-			dp.set(j, cost);
-		}
+		if (score > dp.get(j)) dp.set(j, score);
 	}
 
-	// 右端の値を任意としたときの増加部分列の最大コストを得る．
-	ll cost = dp.prod(0, m);
+	// 右端の値を任意としたときの増加部分列の最大スコアを得る．
+	ll score = dp.prod(0, m);
 
-	return cost;
+	return score;
+}
+
+
+//【最長増加部分列（区分的）】O(n log n)
+/*
+* 数列 a[0..n) の，m 箇所以下の違反を認めた（狭義）最長増加部分列の長さを返す．
+*
+*（セグ木上の二分探索で高速化したインライン DP）
+*/
+ll op_lpis(ll a, ll b) { return min(a, b); }
+ll e_lpis() { return INFL; }
+int longest_piecewise_increasing_subsequence(const vl& a, int m) {
+	// verify : https://atcoder.jp/contests/dwacon2018-final-open/tasks/dwacon2018_final_b
+
+	int n = sz(a);
+
+	if (m >= n - 1) return n;
+
+	// dp_i[k][j] : a[0..i) までで，ルール違反が k 回，長さが j での右端の値の最小値
+	using SEG = segtree<ll, op_lpis, e_lpis>;
+	vector<SEG> dp(m + 1, SEG(n + 1));
+	repi(k, 0, m) dp[k].set(0, -INFL);
+
+	// r[k] : dp_i[k] のまだ INFL である最小の添字
+	vi r(m + 1, 1);
+
+	rep(i, n) repir(k, m, 0) { // インライン DP なので k は降順にしないとまずい．
+		// ルール違反する場合
+		if (k < m) {
+			ll val = dp[k + 1].get(r[k]);
+			chmin(val, a[i]); // 場合分けを含むので，より小さいものを採用する．
+			dp[k + 1].set(r[k], val);
+			chmax(r[k + 1], r[k] + 1);
+		}
+
+		// ルール違反しない場合
+		auto g = [&](ll x) { return x >= a[i]; };
+		int j = dp[k].min_left(n, g); // dp は単調ではないので，累積 min をとって単調にする．
+
+		ll val = dp[k].get(j);
+		chmin(val, a[i]); // 場合分けを含むので，より小さいものを採用する．
+		dp[k].set(j, val);
+		chmax(r[k], j + 1);
+	}
+
+	return r[m] - 1;
 }
 
 

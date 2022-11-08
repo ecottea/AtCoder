@@ -23,6 +23,30 @@ S pow(const S& x, ll n) {
 }
 
 
+//y“™”ä”—ñ‚Ì˜azO(log n)
+/*
+* ”¼ŠÂ (S, add, o, mul, e) ‚ÌŒ³ r ‚É‚Â‚¢‚Ä ƒ°i¸[0..n) r^i ‚ğ•Ô‚·D
+*
+*iŒJ‚è•Ô‚µ“ñæ–@j
+*/
+template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
+S geometric_series(S r, ll n) {
+	// verify : https://csacademy.com/contest/iati-shumen-2017-day-1/task/superstition/statement/
+	
+	// pow2 = r^(2^i), sumpow2 = 1 + r + ... + r^((2^i) - 1)
+	S res(o()), pow2 = r, sumpow2(e());
+
+	while (n > 0) {
+		if (n & 1LL) res = add(mul(res, pow2), sumpow2);
+		sumpow2 = add(sumpow2, mul(sumpow2, pow2));
+		pow2 = mul(pow2, pow2);
+		n /= 2;
+	}
+
+	return res;
+}
+
+
 //yÊ‘œ‚Ì‡¬z
 /*
 * Map_composite(vi s, ll k_max) : O(n log(k_max))

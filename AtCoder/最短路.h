@@ -250,8 +250,7 @@ bool bellman_ford(const WGraph& g, int st, vl& dist) {
 		// 全ての辺についての操作
 		rep(s, n) {
 			repe(e, g[s]) {
-				// もし (始点への距離) + (辺のコスト) < (終点への距離) なら
-				// (終点への距離) を更新する．
+				// もし (始点への距離) + (辺のコスト) < (終点への距離) なら (終点への距離) を更新する．
 				// INFL からは何を引いても INFL になるようにしているので，
 				// st から到達可能な負閉路しか検出しない．
 				if (dist[s] != INFL && dist[s] + e.cost < dist[e.to]) {

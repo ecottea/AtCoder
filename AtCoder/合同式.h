@@ -59,7 +59,7 @@ int ord(const mint& a) {
 
 //【原始根】O(√p)
 /*
-* 素数の法 p における原始根を 1 つ返す．
+* 素数の法 p における最小の原始根を返す．
 * 
 * 利用：【約数列挙】
 */
@@ -67,6 +67,7 @@ int find_primitive_root() {
 	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_c
 
 	const int p = mint::mod();
+	if (p == 2) return 1;
 
 	// p - 1 の約数 divs を得る．
 	vl divs;
@@ -121,7 +122,7 @@ int log(mint a, mint b) {
 	// a^(mod - 1) = 1 なので，同様のステップは高々 m 回で終了する．
 	// 各回の S へのアクセスが O(1) で行えるなら，全体計算量は O(m) である．
 
-	int m = (int)(ceil(sqrt(mint::mod())) + EPS);
+	int m = (int)(ceil(sqrt(mint::mod())) + 1);
 
 	// a = 0 の場合の例外処理
 	if (a == 0) {
@@ -163,21 +164,39 @@ int log(mint a, mint b) {
 int log(mint a, mint x, mint b) {
 	// verify : https://judge.yosupo.jp/problem/discrete_logarithm_mod
 
+	//【方法】
+	// まず i∈[0..√m) について素朴に a x^i を計算し，b に一致するかを見る：O(√m)
+	// 同時に i∈[0..√m) について b x^i を計算した集合 S を得ておく．
+	// もし a x^i = b なる i があれば d=i でよく，なければ d >= √m であることが確定する．
+	// 
+	// 次に a x^√m の値を計算し，b x^i がそれと等しくなる i∈[0..√m) を探す：O(1)
+	// もし
+	//		a x^√m = b x^i (mod m)
+	// なる i が見つかれば，これは
+	//		a x^(√m - i) = b (mod m)
+	// であるための必要条件なので，d = √m - i が解の候補となる．
+	// 解かどうかは実際に計算してみればわかる：O(log m)
+	// 解が見つからなければ d >= 2√m であることが確定する．
+	// 
+	// この調子で a x^2√m, a x^3√m, ... の値を計算し，b x^i がそれと等しくなる i を探す．
+	// x^(φ(m) + 1) = x なので，同様のステップは √m 回行えば十分である：O(√m)
+
 	if (x == 0) {
 		if (a == b) return 0;
 		if (b == 0) return 1;
 		return INF;
 	}
 
-	int sqrt_m = (int)(ceil(sqrt(mint::mod())) + EPS);
+	int sqrt_m = (int)(ceil(sqrt(mint::mod())) + 1);
 
-	// logx[v] : v = a x^j となる √m 未満の j の昇順リスト
+	// logx[v] : v = b x^j となる √m 未満の j の昇順リスト
+	//（解の候補にすぎないので，最大の j を保持するだけではいけない．）
 	unordered_map<int, vi> logx;
 	mint x_pow = 1;
 	rep(j, sqrt_m) {
 		if (a * x_pow == b) return j;
 
-		logx[(b * x_pow).val()].push_back(j);
+		logx[(b * x_pow).val()].emplace_back(j);
 
 		x_pow *= x;
 	}
@@ -188,12 +207,11 @@ int log(mint a, mint x, mint b) {
 		ax *= x_pow;
 		if (logx.count(ax.val())) {
 			repir(t, sz(logx[ax.val()]) - 1, 0) {
+				// a x^(i √m) = b x^j なる (i, j) が見つかった．
 				int j = logx[ax.val()][t];
-
-				// a x^(i hn) = b x^j なる (i, j) が見つかった．
+					
+				// 解の候補を得て，実際に計算してみて一致するかを見る．
 				int d = i * sqrt_m - j;
-
-				// 実際に計算してみて一致するかを見る．
 				if (a * x.pow(d) == b) return d;
 			}
 		}

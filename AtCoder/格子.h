@@ -126,7 +126,8 @@ ll largest_square(vvi& a) {
 * 上[下] の壁の位置の x 座標を u[i][j][ d[i][j] ] に，
 * 左[右] の壁の位置の y 座標を l[i][j][ r[i][j] ] にそれぞれ格納する．
 */
-template <class T> void bomberman(const vector<vector<T>>& c, vvi& u, vvi& d, vvi& l, vvi& r, T wall = '#') {
+template <class T>
+void bomberman(const vector<vector<T>>& c, vvi& u, vvi& d, vvi& l, vvi& r, T wall = '#') {
 	// verify : https://atcoder.jp/contests/hhkb2020/tasks/hhkb2020_e
 
 	int h = sz(c), w = sz(c[0]);

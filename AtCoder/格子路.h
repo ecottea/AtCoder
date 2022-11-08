@@ -440,8 +440,7 @@ void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
 
 	while (!q.empty()) {
 		int x, y;
-		tie(x, y) = q.front();
-		q.pop();
+		tie(x, y) = q.front(); q.pop();
 
 		// マス (x, y) の 4 近傍を調べる．
 		rep(k, 4) {
@@ -450,14 +449,10 @@ void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
 			int ny = y + DY[k];
 
 			// 範囲外または壁マスなら何もしない．
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
-				continue;
-			}
+			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) continue;
 
 			// 既に最短経路長が確定済みなら何もしない．
-			if (dist[nx][ny] != -1) {
-				continue;
-			}
+			if (dist[nx][ny] != -1) continue;
 
 			// 最短経路長の確定
 			dist[nx][ny] = dist[x][y] + 1;

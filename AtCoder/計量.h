@@ -5,9 +5,9 @@
 // ■■■■■ 計量 ■■■■■
 
 
-//【点と直線の距離】O(1)
+//【点と直線の距離（符号付き）】O(1)
 /*
-* 点 p と直線 l との距離を返す．
+* 点 p と直線 l との符号付き距離を返す．
 */
 template <class T> inline double distance_P_L(const Point<T>& p, const Line<T>& l) {
 	Point<double> d = (l.second - l.first).normalize();

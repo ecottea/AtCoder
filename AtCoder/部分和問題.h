@@ -251,26 +251,22 @@ ll count_partial_sum(const vl& a, ll v) {
 	// cnt[v] : 前半で部分和 v を作る方法の数
 	unordered_map<ll, int> cnt;
 
-	repb(set, n1) {
+	repb(set1, n1) {
 		// 前半の部分和の計算
-		ll sum = 0;
-		rep(i, n1) {
-			if (set & (1 << i)) sum += a[i];
-		}
+		ll sum1 = 0;
+		rep(i, n1) if (set1 & (1 << i)) sum1 += a[i];
 
-		cnt[sum]++;
+		cnt[sum1]++;
 	}
 
 	ll res = 0;
-	repb(set, n2) {
+	repb(set2, n2) {
 		// 後半の部分和の計算
-		ll sum = 0;
-		rep(i, n2) {
-			if (set & (1 << i)) sum += a[n1 + i];
-		}
+		ll sum2 = 0;
+		rep(i, n2) if (set2 & (1 << i)) sum2 += a[n1 + i];
 
-		// 前半の部分和で v - sum になるものがあれば，合わせて部分和が v となる．
-		res += cnt[v - sum];
+		// 前半の部分和で v - sum2 になるものがあれば，合わせて部分和が v となる．
+		res += cnt[v - sum2];
 	}
 
 	return res;
@@ -303,18 +299,14 @@ template <class T> bool partial_sum(const vector<T>& a, T v) {
 	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
 	repi(i, 1, (1 << n1) - 1) {
 		// 差分更新が行われるのがどのビットか
-		int change_index = ctz(i);
+		int change_index = lsb(i);
 
 		// i 番目のグレイコード
 		int gray_code = i ^ (i >> 1);
 
 		// グレイコードのビットを見て加算か減算かを判断
-		if (gray_code & (1 << change_index)) {
-			sum1 += a[change_index];
-		}
-		else {
-			sum1 -= a[change_index];
-		}
+		if (gray_code & (1 << change_index)) sum1 += a[change_index];
+		else sum1 -= a[change_index];
 
 		// リストに追加
 		sum1s.insert(sum1);
@@ -328,28 +320,104 @@ template <class T> bool partial_sum(const vector<T>& a, T v) {
 	T sum2 = 0;
 
 	// i = 0 に対応する処理
-	if (sum1s.count(v)) {
+	if (sum1s.count(v)) return true;
+
+	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
+	repi(i, 1, (1 << n2) - 1) {
+		// 差分更新が行われるのがどのビットか
+		int change_index = lsb(i);
+
+		// i 番目のグレイコード
+		int gray_code = i ^ (i >> 1);
+
+		// グレイコードのビットを見て加算か減算かを判断
+		if (gray_code & (1 << change_index)) sum2 += a[n1 + change_index];
+		else sum2 -= a[n1 + change_index];
+
+		// 前半のリストに v - sum2 があれば，合わせて部分和が v となる．
+		if (sum1s.count(v - sum2)) 	return true;
+	}
+
+	// ここまで回ってきたなら部分和が v にならない．
+	return false;
+}
+
+
+//【部分和問題（復元）】O(2^(n/2))
+/*
+* 非負整数列 a[0..n) について，Σi∈S a[i] = v なる添字集合 S を is に格納する．
+* S が存在しなければ false を返す．
+*
+*（半分全列挙）
+*/
+template <class T> bool construction_partial_sum_large(const vector<T>& a, T v, vi& is) {
+	// verify : https://yukicoder.me/problems/no/2081
+	
+	int n = sz(a);
+	is.clear();
+
+	// 前半の要素数
+	int n1 = n / 2;
+
+	// 前半の要素の部分和
+	T sum1 = 0;
+
+	// 前半の要素の部分和 → 添字集合の一例
+	unordered_map<T, int> sum_to_set1;
+
+	// i = 0 に対応する処理
+	sum_to_set1[0] = 0;
+
+	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
+	repi(i, 1, (1 << n1) - 1) {
+		// 差分更新が行われるのがどのビットか
+		int change_index = lsb(i);
+
+		// i 番目のグレイコード
+		int gray_code = i ^ (i >> 1);
+
+		// グレイコードのビットを見て加算か減算かを判断
+		if (gray_code & (1 << change_index)) sum1 += a[change_index];
+		else sum1 -= a[change_index];
+
+		// リストに追加
+		sum_to_set1[sum1] = gray_code;
+	}
+
+	// 後半の要素数
+	int n2 = n - n1;
+
+	// 後半の要素の部分和
+	T sum2 = 0;
+
+	// i = 0 に対応する処理
+	if (sum_to_set1.count(v)) {
+		int set1 = sum_to_set1[v];
+
+		rep(i, n1) if (set1 & (1 << i)) is.emplace_back(i);
+
 		return true;
 	}
 
 	// グレイコードを用いた差分更新を行うため，i = 1 からループを回す．
 	repi(i, 1, (1 << n2) - 1) {
 		// 差分更新が行われるのがどのビットか
-		int change_index = ctz(i);
+		int change_index = lsb(i);
 
 		// i 番目のグレイコード
 		int gray_code = i ^ (i >> 1);
 
 		// グレイコードのビットを見て加算か減算かを判断
-		if (gray_code & (1 << change_index)) {
-			sum2 += a[n1 + change_index];
-		}
-		else {
-			sum2 -= a[n1 + change_index];
-		}
+		if (gray_code & (1 << change_index)) sum2 += a[n1 + change_index];
+		else sum2 -= a[n1 + change_index];
 
 		// 前半のリストに v - sum2 があれば，合わせて部分和が v となる．
-		if (sum1s.count(v - sum2)) {
+		if (sum_to_set1.count(v - sum2)) {
+			int set1 = sum_to_set1[v - sum2];
+
+			rep(i, n1) if (set1 & (1 << i)) is.emplace_back(i);
+			rep(i, n2) if (gray_code & (1 << i)) is.emplace_back(n1 + i);
+
 			return true;
 		}
 	}

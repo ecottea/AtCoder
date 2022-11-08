@@ -47,13 +47,13 @@ template <class TREE> void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) 
 /*
 * 与えられた根付き木について，頂点対の最小共通祖先を求める．
 *
-* Lowest_common_ancestor(rt) : O(n)
+* Lowest_common_ancestor<TREE>(rt) : O(n)
 *	根付き木 rt で初期化する．
 *
-* lca(u, v) : O(log n)
+* int lca(int u, int v) : O(log n)
 *	頂点 u, v の最小共通祖先を返す．
 *
-* dist(u, v) : O(log n)
+* ll dist(int u, int v) : O(log n)
 *	頂点 u, v の距離を返す．
 *
 * 利用：【根付き木のオイラーツアー】

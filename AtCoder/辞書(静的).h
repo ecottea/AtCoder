@@ -153,8 +153,7 @@ public:
 			acc[0][i + 1] = acc[0][i] + bt[i].second;
 		}
 	}
-
-	Wavelet_matrix() : n(0), k(0) {} // ダミー
+	Wavelet_matrix() : n(0), k(0) {}
 
 	// 昇順で i 番目の要素を返す．
 	ll get(int i) {
@@ -299,7 +298,7 @@ public:
 	int count(int l, int r, ll v0, ll v1) {
 		// verify : https://atcoder.jp/contests/arc097/tasks/arc097_c
 
-		chmax(v0, 0LL); chmin(v1, (1LL << k) - 1);
+		chmax(v0, 0LL);
 		if (v0 >= v1) return 0;
 
 		return count_rsub(l, r, v1) - count_rsub(l, r, v0);
@@ -307,9 +306,9 @@ public:
 
 	// a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
 	ll sum(int l, int r, ll v0, ll v1) {
-		// verify : https://yukicoder.me/problems/no/924
+		// verify : https://atcoder.jp/contests/abc276/tasks/abc276_f
 
-		chmax(v0, 0LL); chmin(v1, (1LL << k) - 1);
+		chmax(v0, 0LL);
 		if (v0 >= v1) return 0;
 
 		return sum_rsub(l, r, v1) - sum_rsub(l, r, v0);

@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "s—ñ.h"
 // ¡¡¡¡¡ ”¼ŠÂ ¡¡¡¡¡
 
 
@@ -14,16 +15,23 @@
 */
 
 
-//y‰ÁZ - æZ ”¼ŠÂz
-/*
-* “Á‚É”¼ŠÂã‚Ì³•ûs—ñ‚É©‘R‚É˜a‚ÆÏ‚ğ’è‚ß‚ê‚ÎC‚±‚ê‚à‚Ü‚½i”ñ‰ÂŠ·j”¼ŠÂ‚Æ‚È‚éD
-*/
+//y‰ÁZ - æZ ‰ÂŠ·”¼ŠÂz
 using S801 = mint;
 S801 add801(S801 x, S801 y) { return x + y; }
 S801 o801() { return 0; }
 S801 mul801(S801 x, S801 y) { return x * y; }
 S801 e801() { return 1; }
 #define Add_mul_semiring S801, add801, o801, mul801, e801
+
+
+//ys—ñ‰ÁZ - æZ ”¼ŠÂz
+int msize813 = 3;
+using S813 = Matrix<mint>;
+S813 add813(S813 x, S813 y) { return x + y; }
+S813 o813() { return Matrix<mint>(msize813, msize813); }
+S813 mul813(S813 x, S813 y) { return x * y; }
+S813 e813() { return Matrix<mint>(msize813); }
+#define MatrixAdd_mul_semiring S813, add813, o813, mul813, e813
 
 
 //yXOR - AND ‰ÂŠÂ”¼ŠÂz
@@ -175,10 +183,17 @@ S812 e812() { return 0; }
 #define LCM_GCD_semiring S812, add812, o812, mul812, e812
 
 
+//yƒjƒ€˜a - ƒjƒ€Ï ‰ÂŠÂ”¼ŠÂz
+
+
 //y”¼ŠÂ‚Å‚È‚¢‚à‚Ìz
 /*
 * min - OR ‚Í”¼ŠÂ‚Å‚È‚¢D
 *	2 OR min(1, 2) = 2 OR 1 = 3
 *	min(2 OR 1, 2 OR 2) = min(3, 2) = 2
+* 
+* XOR - Ï ‚Í”¼ŠÂ‚Å‚È‚¢D
+*	3 * (1 XOR 2) = 3 * 3 = 9
+*	(3 * 1) XOR (3 * 2) = 3 XOR 6 = 5
 */
 

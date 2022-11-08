@@ -83,9 +83,9 @@ struct Thinning_cumulative_prod {
 };
 
 
-//【二次元累積和（アーベル群）】
+//【二次元累積和（アーベル群，長方形）】
 /*
-* Cumulative_sum_2D<S, op, o, inv>(vS a) : O(h w)
+* Cumulative_sum_2D<S, op, o, inv>(vvS a) : O(h w)
 *	二次元配列 a[0..h)[0..w) で初期化する．
 *	要素はアーベル群 <S, op, o, inv> の元とする．
 *
@@ -129,6 +129,153 @@ public:
 		res = op(res, inv(acc[x1][y2]));
 		res = op(res, inv(acc[x2][y1]));
 		res = op(res, acc[x1][y1]);
+
+		return res;
+	}
+};
+
+
+//【二次元累積和（アーベル群，長方形，三角形）】
+/*
+* Cumulative_sum_2D_tri<S, op, o, inv>(vvS a) : O(h w)
+*	二次元配列 a[0..h)[0..w) で初期化する（範囲外の値は o() とみなす）
+*	要素はアーベル群 <S, op, o, inv> の元とする．
+*
+* S sum_rect(int x1, int y1, int x2, int y2) : O(1)
+*	[x1..x2) * [y1..y2) の要素の和を返す．
+*
+* S sum_tri_DL(int x, int y, int d) : O(1)
+*	[x-d..x) * [y-d..y) の右下がりの対角線以下の要素の和を返す．
+*
+* S sum_tri_UR(int x, int y, int d) : O(1)
+*	[x-d..x) * [y-d..y) の右下がりの対角線以上の要素の和を返す．
+*
+* S sum_tri_DR(int x, int y, int d) : O(1)
+*	[x-d..x) * [y..y+d) の右上がりの対角線以下の要素の和を返す．
+*
+* S sum_tri_UL(int x, int y, int d) : O(1)
+*	[x-d..x) * [y..y+d) の右上がりの対角線以上の要素の和を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+class Cumulative_sum_2D_tri {
+	int h, w;
+
+	using vS = vector<S>;
+	using vvS = vector<vS>;
+
+	// acc_rect[i][j] : [0..i) * [0..j) の要素の和
+	// acc_tri_DL[i][j] : [0..i) * [0..j) の要素の内，(i,j) を通る右下がりの直線以下の要素の和
+	// acc_tri_DR[i][w + j] : [0..i) * [j..w) の要素の内，(i,j-1) を通る右上がりの直線以下の要素の和
+	vvS acc_rect;
+	vvS acc_tri_DL;
+	vvS acc_tri_DR;
+
+public:
+	// 二次元配列 a[0..h)[0..w) で初期化する．
+	Cumulative_sum_2D_tri(const vvS& a) : h(sz(a)), w(sz(a[0])) {
+		// verify : https://atcoder.jp/contests/indeednow-finala-open/tasks/indeednow_2015_finala_f
+
+		int h2 = h * 2, w2 = w * 2;
+
+		acc_rect = vvS(h2 + 1, vS(w2 + 1, o()));
+		rep(i, h) rep(j, w) acc_rect[i + 1][j + 1] = a[i][j];
+		repi(i, 0, h2) repi(j, 1, w2) acc_rect[i][j] = op(acc_rect[i][j], acc_rect[i][j - 1]);
+		repi(i, 1, h2) repi(j, 0, w2) acc_rect[i][j] = op(acc_rect[i][j], acc_rect[i - 1][j]);
+
+		acc_tri_DL = vvS(h2 + 1, vS(w2 + 1, o()));
+		rep(i, h) rep(j, w) acc_tri_DL[i + 1][j + 1] = a[i][j];
+		repi(i, 0, h2) repi(j, 1, w2) acc_tri_DL[i][j] = op(acc_tri_DL[i][j], acc_tri_DL[i][j - 1]);
+		repi(i, 1, h2) repi(j, 1, w2) acc_tri_DL[i][j] = op(acc_tri_DL[i][j], acc_tri_DL[i - 1][j - 1]);
+
+		acc_tri_DR = vvS(h2 + 1, vS(w2 + 1, o()));
+		rep(i, h) rep(j, w) acc_tri_DR[i + 1][w + j] = a[i][j];
+		repi(i, 0, h2) repir(j, w2 - 1, 0) acc_tri_DR[i][j] = op(acc_tri_DR[i][j], acc_tri_DR[i][j + 1]);
+		repi(i, 1, h2) repir(j, w2 - 1, 0) acc_tri_DR[i][j] = op(acc_tri_DR[i][j], acc_tri_DR[i - 1][j + 1]);
+	}
+	Cumulative_sum_2D_tri() : h(0), w(0) {}
+
+	// [x1..x2) * [y1..y2) の要素の和を返す．
+	S sum_rect(int x1, int y1, int x2, int y2) {
+		chmax(x1, 0);
+		chmax(y1, 0);
+		chmin(x2, h);
+		chmin(y2, w);
+		if (x1 >= x2 || y1 >= y2) return o();
+
+		S res = o();
+		res = op(res, acc_rect[x2][y2]);
+		res = op(res, inv(acc_rect[x1][y2]));
+		res = op(res, inv(acc_rect[x2][y1]));
+		res = op(res, acc_rect[x1][y1]);
+
+		return res;
+	}
+
+	// [x-d..x) * [y-d..y) の右下がりの対角線以下の要素の和を返す．
+	S sum_tri_DL(int x, int y, int d) {
+		if (x > h) {
+			d -= x - h;
+			y -= x - h;
+			x = h;
+		}
+		if (y > 2 * w) {
+			d -= y - 2 * w;
+			y = 2 * w;
+		}
+		if (x <= 0 || y <= 0 || d <= 0) return o();
+
+		int x1 = max(x - d, 0);
+		int y1 = max(y - d, 0);
+
+		S res = o();
+		res = op(res, acc_tri_DL[x][y]);
+		res = op(res, inv(acc_tri_DL[x1][y1]));
+		res = op(res, inv(acc_rect[x][y1]));
+		res = op(res, acc_rect[x1][y1]);
+
+		return res;
+	}
+
+	// [x-d..x) * [y-d..y) の右下がりの対角線以上の要素の和を返す．
+	S sum_tri_UR(int x, int y, int d) {
+		S res = o();
+		res = op(res, sum_rect(x - d, y - d, x, y));
+		res = op(res, inv(sum_tri_DL(x, y - 1, d - 1)));
+
+		return res;
+	}
+
+	// [x-d..x) * [y..y+d) の右上がりの対角線以下の要素の和を返す．
+	S sum_tri_DR(int x, int y, int d) {
+		// verify : https://atcoder.jp/contests/indeednow-finala-open/tasks/indeednow_2015_finala_f
+
+		if (x > h) {
+			d -= x - h;
+			y += x - h;
+			x = h;
+		}
+		if (y < -w) {
+			d -= -w - y;
+			y = -w;
+		}
+		if (x <= 0 || y >= w || d <= 0) return o();
+
+		int x1 = max(x - d, 0);
+		int y2 = min(y + d, w);
+
+		S res = o();
+		res = op(res, acc_tri_DR[x][w + y]);
+		res = op(res, inv(acc_tri_DR[x1][w + y2]));
+		res = op(res, inv(sum_rect(x1, y2, x, w)));
+
+		return res;
+	}
+
+	// [x-d..x) * [y..y+d) の右上がりの対角線以上の要素の和を返す．
+	S sum_tri_UL(int x, int y, int d) {
+		S res = o();
+		res = op(res, sum_rect(x - d, y, x, y + d));
+		res = op(res, inv(sum_tri_DR(x, y + 1, d - 1)));
 
 		return res;
 	}

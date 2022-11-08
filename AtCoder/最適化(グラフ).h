@@ -316,15 +316,19 @@ ll traveling_salesman_problem(const WGraph& g) {
 //【最小コストハミルトンパス】O(2^|V| |V|^2)
 /*
 * コスト付き有向グラフ g の最小コストハミルトンパスのコストを返す（存在しなければ -1）
-*
+* また頂点 s から出発し set を通るハミルトンパスの最小コストを dp[s][set] に格納する．
+* ただし s !∈ set とする．
+* 
 *（bit DP）
 */
-ll shortest_hamiltonian_path(const WGraph& g) {
+ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
+	// verify : https://atcoder.jp/contests/jag2013autumn/tasks/icpc2013autumn_c
+
 	int n = sz(g);
 
 	// dp[s][set] : 頂点 s から出発し set を通るハミルトンパスの最小コスト
 	//	s !∈ set とする．
-	vvl dp(n, vl(1LL << n, INFL));
+	dp = vvl(n, vl(1LL << n, INFL));
 	vvb seen(n, vb(1LL << n));
 	rep(s, n) {
 		dp[s][0] = 0;
@@ -406,82 +410,6 @@ ll chinese_postman_problem(const WGraph& g) {
 	res += minimum_cost_matching(adj);
 
 	return res;
-}
-
-
-//【最大流問題】O(|E| maxflow)
-/*
-* コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
-*/
-ll ford_fullkerson(const WGraph& g, int s, int t) {
-	// 参考：https://algo-logic.info/ford-fullkerson/
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_6_A
-
-	int n = sz(g);
-
-	// 残余ネットワークを作り初期化する．
-	// また更新のために逆向きの辺の番号を記録しておく．
-	WGraph res(n);
-	vvi rev(n);
-	rep(i, n) {
-		repe(e, g[i]) {
-			// 順方向は g と同じ，逆方向は 0 で初期化．
-			res[i].push_back(e);
-			res[e.to].push_back({ i, 0 });
-
-			// e = res[i][j] の逆向きの辺は res[e.to][rev[i][j]]
-			rev[i].push_back(sz(res[e.to]) - 1);
-			rev[e.to].push_back(sz(res[i]) - 1);
-		}
-	}
-
-	vb seen(n);
-	function<ll(int, ll)> dfs = [&](int v, ll f) {
-		// 終点 t まで流せたら流量を返す．
-		if (v == t) return f;
-
-		// 頂点 v に訪れたことを記録する．
-		seen[v] = true;
-
-		// v から出ている残余ネットワークの各辺 e について
-		rep(j, sz(res[v])) {
-			auto& e = res[v][j];
-
-			// e の先の頂点に既に訪れていたり，e に空きが無いなら何もしない．
-			if (seen[e.to] || e.cost == 0) continue;
-
-			// e にフローを流す．
-			ll f2 = dfs(e.to, min(f, e.cost));
-
-			// もしフローが流れたら残余ネットワークを更新し流量を返す．
-			if (f2 > 0) {
-				e.cost -= f2;
-				res[e.to][rev[v][j]].cost += f2;
-				return f2;
-			}
-		}
-
-		// ここまでくるのはフローを流せなかったとき
-		return 0LL;
-	};
-
-	ll mf = 0;
-	while (true) {
-		// どの頂点にも訪れていない状態にする．
-		seen.assign(n, false);
-
-		// 始点 s からフローを流す．
-		ll f = dfs(s, INFL);
-
-		// フローが流れなかったら最大まで流し切ったので結果を返す．
-		if (f == 0) return mf;
-
-		// フローが流れたら流量を更新する．
-		mf += f;
-	}
-
-	// ここにはこない．
-	return 0LL;
 }
 
 

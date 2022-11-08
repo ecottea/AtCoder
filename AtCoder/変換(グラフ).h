@@ -155,19 +155,62 @@ template <class G> void induced_subgraph(const G& g, const vi& vs, G& g2) {
 }
 
 
+//【頂点の除去】O(|V| + |E|)
+/*
+* グラフ g から頂点の集合 v_el とそれに接続する辺を除去したグラフを g2 に格納し，頂点数を返す．
+* また g2 の頂点 i が g のどの頂点と対応するかを prv[i] に格納する．
+*/
+int eliminate_vertex(const Graph& g, const vi& v_el, Graph& g2, vi* prv = nullptr) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2347
+
+	int n = sz(g);
+	if (prv != nullptr) prv->clear();
+
+	// ids[v] : g の頂点 v が g2 の何番目の頂点になるか（消去されるなら -1）
+	vi ids(n); int id = 0;
+	repe(v, v_el) ids[v] = -1;
+
+	rep(v, n) {
+		if (ids[v] == -1) continue;
+
+		ids[v] = id++;
+		if (prv != nullptr) prv->emplace_back(v);
+	}
+
+	if (id == 0) {
+		g2.clear();
+		return 0;
+	}
+
+	g2 = Graph(id);
+
+	rep(s, n) {
+		if (ids[s] == -1) continue;
+
+		repe(t, g[s]) {
+			if (ids[t] == -1) continue;
+
+			g2[ids[s]].emplace_back(ids[t]);
+		}
+	}
+
+	return id;
+}
+
+
 //【辺の除去】O(|V| + |E|)
 /*
-* グラフ g から辺の集合 es を除去したグラフを g2 に格納する．
+* グラフ g から辺の集合 e_el を除去したグラフを g2 に格納する．
 * 辺 e∈es は始点 s と終点 t の順序対 (s, t) で表す．
 */
-template <class G> void eliminate_edge(const G& g, const vector<pii>& es, G& g2) {
+template <class G> void eliminate_edge(const G& g, const vector<pii>& e_el, G& g2) {
 	// verify : https://atcoder.jp/contests/agc032/tasks/agc032_c
 
 	int n = sz(g);
 	g2 = G(n);
 
 	vector<unordered_set<int>> el(n);
-	repe(e, es) {
+	repe(e, e_el) {
 		int s, t;
 		tie(s, t) = e;
 
@@ -181,47 +224,6 @@ template <class G> void eliminate_edge(const G& g, const vector<pii>& es, G& g2)
 			g2[s].push_back(t);
 		}
 	}
-}
-
-
-//【不要な頂点の除去】O(|V| + |E|)
-/*
-* グラフ g の総次数 0 の頂点を除去したグラフを gs に構成する．
-* また gs の頂点数を返す．
-*/
-int shrink_graph(const Graph& g, Graph& gs) {
-	// verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_g
-
-	int n = sz(g);
-
-	// used[s] : 頂点 s の総次数が 1 以上か
-	vb used(n);
-	rep(s, n) {
-		repe(t, g[s]) {
-			used[s] = used[t] = true;
-		}
-	}
-
-	// is[s] : 頂点 s の新しいインデックス
-	vi is(n); int ns = 0;
-	rep(s, n) {
-		if (used[s]) {
-			is[s] = ns++;
-		}
-	}
-
-	// 無駄な頂点を除去したグラフを gs に構成する
-	gs = Graph(ns);
-	rep(s, n) {
-		int ss = is[s];
-		repe(t, g[s]) {
-			int ts = is[t];
-
-			gs[ss].push_back(ts);
-		}
-	}
-
-	return ns;
 }
 
 

@@ -16,7 +16,10 @@
 *	実際の加算を行う．
 *
 * T [int i] : O(1)
-*	加算後の位置 i の値を得る．
+*	加算後の位置 i の値を得る．sum() の後に呼び出すこと．
+*
+* vT get_array() : O(n)
+*	加算後の配列を返す．sum() の後に呼び出すこと．
 */
 template <class T> class Imos {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
@@ -26,7 +29,7 @@ template <class T> class Imos {
 
 public:
 	// [0, n) 上の a を 0 で初期化する．
-	Imos(int n_) : n(n_), v(n + 1) {}
+	Imos(int n) : n(n), v(n + 1) {}
 
 	// アクセス
 	T const& operator[](int i) const { return v[i]; }
@@ -35,6 +38,10 @@ public:
 	// 半開区間 [l, r) に val を加算する準備を行う．
 	void set(int l, int r, T val) {
 		// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
+
+		chmax(l, 0);
+		chmin(r, n);
+		if (l >= r) return;
 
 		v[l] += val;
 		v[r] -= val;
@@ -45,6 +52,13 @@ public:
 		// verify : https://atcoder.jp/contests/abc188/tasks/abc188_d
 
 		rep(i, n) v[i + 1] += v[i];
+	}
+
+	// 加算を終えた配列を返す．sum() の後に呼び出すこと．
+	vector<T> get_array() {
+		// verify : https://atcoder.jp/contests/arc045/tasks/arc045_b
+
+		v.resize(n);
 		return v;
 	}
 
@@ -89,6 +103,8 @@ template <class T> struct Imos_2D {
 
 	// [x1, x2) * [y1, y2) に val を加算する準備を行う．O(1)
 	void set(int x1, int y1, int x2, int y2, T val) {
+		// verify : https://atcoder.jp/contests/abc276/tasks/abc276_h
+
 		v[x1][y1] += val;
 		v[x1][y2] -= val;
 		v[x2][y1] -= val;
@@ -97,16 +113,10 @@ template <class T> struct Imos_2D {
 
 	// 実際の加算を行う．O(h w)
 	void sum() {
-		repi(i, 1, h) {
-			repi(j, 0, w) {
-				v[i][j] += v[i - 1][j];
-			}
-		}
-		repi(i, 0, h) {
-			repi(j, 1, w) {
-				v[i][j] += v[i][j - 1];
-			}
-		}
+		// verify : https://atcoder.jp/contests/abc276/tasks/abc276_h
+
+		repi(i, 1, h) repi(j, 0, w) v[i][j] += v[i - 1][j];
+		repi(i, 0, h) repi(j, 1, w) v[i][j] += v[i][j - 1];
 	}
 
 #ifdef _MSC_VER
@@ -132,12 +142,12 @@ template <class T> struct Imos_2D {
 *	[x1, x2] * [y1, y2] に val を加算する準備を行う．
 *
 * set_tri(int x, int y, int d, T val) : O(1)
-*	[x, y] * [x + d, y + d] の対角線以下に val を加算する準備を行う．
+*	[x, x+d] * [y, y+d] の対角線以下に val を加算する準備を行う．
 *
 * sum() : O(h w)
 *	実際に加算を行う．
 *
-* T v[int i][int j] : O(1)
+* T [int i][int j] : O(1)
 *	加算後の位置 (i, j) の値を得る．
 *
 * pii size() : O(1)

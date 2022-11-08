@@ -79,7 +79,7 @@ bool comp(ll a, ll b, string op_, ll c) {
 * a + b, a - b, a * b, a / b : O(1)
 *	加減乗除を行う．一方が整数でも構わない．複合代入演算子も使用可．
 *
-* reduction() : O(log max(num, dnm))
+* reduction() : O(log min(num, dnm))
 *	約分を行う．
 */
 struct Frac {
@@ -137,7 +137,7 @@ struct Frac {
 	friend Frac operator/(ll c, const Frac& a) { return Frac(c) / a; }
 
 	// 約分
-	void reduction() { ll g = gcd(num, dnm); num /= g; dnm /= g; }
+	void reduction() { ll g = gcd(abs(num), abs(dnm)); num /= g; dnm /= g; }
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Frac& a) { os << a.num << '/' << a.dnm; return os; }
@@ -255,28 +255,6 @@ int tetration(ll a, ll b, int m) {
 	};
 
 	return rf(b, m);
-}
-
-
-//【mint → 有理数】（実験用）
-/*
-* mint の値をそれっぽい有理数に変換する．
-*/
-void mint_to_frac() {
-	unordered_map<int, pii> nd;
-
-	repi(j, 1, 1024) {
-		mint j_inv = mint(j).inv();
-
-		repi(i, 1, 1024) {
-			int v = (i * j_inv).val();
-
-			if (!nd.count(v)) nd[v] = { i, j };
-		}
-	}
-
-	dump(nd[748683265]);
-	dump(nd[457528662]);
 }
 
 

@@ -47,18 +47,14 @@ template <typename T> struct Multiple_transform {
 		int n = sz(f);
 
 		// 各素因数ごとに上からの累積和をとる
-		repe(p, ps) {
-			repir(i, (n - 1) / p, 1) f[i] += f[p * i];
-		}
+		repe(p, ps) repir(i, (n - 1) / p, 1) f[i] += f[p * i];
 	}
 
 	void multiple_mobius(vector<T>& f) {
 		int n = sz(f);
 
 		// 各素因数ごとに下からの差分をとる
-		repe(p, ps) {
-			repi(i, 1, (n - 1) / p) f[i] -= f[p * i];
-		}
+		repe(p, ps) repi(i, 1, (n - 1) / p) f[i] -= f[p * i];
 	}
 
 	vector<T> gcd_convolution(vector<T> a, vector<T> b) {
@@ -117,18 +113,14 @@ template <typename T> struct Divisor_transform {
 		int n = sz(f);
 
 		// 各素因数ごとに下からの累積和をとる
-		repe(p, ps) {
-			repi(i, 1, (n - 1) / p) f[p * i] += f[i];
-		}
+		repe(p, ps) repi(i, 1, (n - 1) / p) f[p * i] += f[i];
 	}
 
 	void divisor_mobius(vector<T>& f) {
 		int n = sz(f);
 
 		// 各素因数ごとに上からの差分をとる
-		repe(p, ps) {
-			repir(i, (n - 1) / p, 1) f[p * i] -= f[i];
-		}
+		repe(p, ps) repir(i, (n - 1) / p, 1) f[p * i] -= f[i];
 	}
 
 	vector<T> lcm_convolution(vector<T> a, vector<T> b) {
@@ -145,7 +137,7 @@ template <typename T> struct Divisor_transform {
 
 //【倍数変換（添字約数制限）】
 /*
-* Limited_multiple_transform(vl ps, vl divs) : O(1)
+* Limited_multiple_transform<T>(vl ps, vl divs) : O(1)
 *   定数 n を定め，n の素因数の昇順列を ps，約数の昇順列を divs とする．
 *	添字集合を n の約数集合として初期化する．
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
@@ -210,7 +202,7 @@ template <typename T> struct Limited_multiple_transform {
 
 //【約数変換（添字約数制限）】
 /*
-* Limited_divisor_transform(vl ps, vl divs) : O(1)
+* Limited_divisor_transform<T>(vl ps, vl divs) : O(1)
 *   定数 n を定め，n の素因数の昇順列を ps，約数の昇順列を divs とする．
 *	添字集合を n の約数集合として初期化する．
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）

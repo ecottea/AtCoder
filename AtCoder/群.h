@@ -69,6 +69,34 @@ S604 inv604(S604 f) {
 #define AffineComposite_group S604, op604, e604, inv604
 
 
+//【可逆アフィン変換の逆合成 群】
+/*
+* S ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．（a != 0）
+* f op g : 合成した一次関数 g o f を返す．
+*
+* 正則行列 (a, b; 0, 1) の全体が積に関して作っている群ともみなせる．
+*/
+// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+using S608 = pair<mint, mint>;
+S608 op608(S608 f, S608 g) {
+	mint a, b, c, d;
+	tie(a, b) = g; // g(x) = a x + b;
+	tie(c, d) = f; // f(x) = c x + d;
+
+	// (g o f)(x) = a (c x + d) + b = (a c)x + (a d + b)
+	return { a * c, a * d + b };
+}
+S608 e608() { return { 1, 0 }; } // e(x) = x = 1 x + 0
+S608 inv608(S608 f) {
+	mint a, b;
+	tie(a, b) = f; // f(x) = a x + b;
+
+	// f(x) = a x + b ⇔ x = (1/a) f(x) - b/a
+	return { a.inv(), -b / a };
+}
+#define AffineInvComposite_group S608, op608, e608, inv608
+
+
 //【ビット列上 転倒数 群】
 /*
 * S ∋ x = {inv, c0, c1} : 列 x の転倒数，0 の個数，1 の個数の組
@@ -158,5 +186,47 @@ S607 inv607(S607 a) {
 	return res;
 }
 #define PermutationInvComposite_group S607, op607, e607, inv607
+
+
+//【群】
+/*
+* 群 (S, op, e, inv) の元を表す（op は * をオーバーロードする）
+*/
+template <class S, S(*op)(S, S), S(*e_)(), S(*inv_)(S)>
+struct Group {
+	// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+	S v;
+
+	// 単位元
+	static S e() { return e_(); }
+
+	// コンストラクタ
+	Group() : v(e()) {}
+	Group(S a) : v(a) {}
+
+	// 比較
+	bool operator==(const Group& a) const { return v == a.v; }
+	bool operator!=(const Group& a) const { return v != a.v; }
+
+	// 積
+	Group operator*(const Group& a) const {
+		if (v == e()) return a;
+		if (a.v == e()) return *this;
+		return op(v, a.v);
+	}
+
+	// 逆元
+	Group inv() const { return inv_(v); }
+
+	// 入出力
+	friend istream& operator>>(istream& is, Group& a) { is >> a.v; return is; }
+	friend ostream& operator<<(ostream& os, const Group& a) {
+#ifdef _MSC_VER
+		if (a.v == e()) return os << "e";
+#endif
+		return os << a.v;
+	}
+};
 
 

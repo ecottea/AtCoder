@@ -17,16 +17,23 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
 
+	//【方法】
+	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
+	// 左端の移動回数は，1 回のクエリで高々 n/k しか移動しないので q n/k + n 回．
+	// 右端の移動回数は，1 ブロックごとに高々 n しか移動しないので k n / 2 回．
+	// これらが一致するような k を求めると k = √(2q+1) + 1 となる．
+	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
+
 	int q = sz(l);
-	int sqrt_q = (int)(sqrt(q) + EPS);
+	int k = (int)(sqrt(q) + EPS);
+	int w = max((sz(a) + k - 1) / k, 1);
 	res.resize(q);
 
-	// a[0..n) を幅 √q のブロックに分割する．
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
 	vector<tuple<int, int, int>> lb_sr_j(q);
 	rep(j, q) {
-		int b = l[j] / sqrt_q; 
+		int b = l[j] / w; 
 		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
 	}
 	sort(all(lb_sr_j));
@@ -48,8 +55,8 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 	int lpt = 0, rpt = 0; S sol = res00;
 
 	// クエリを順に処理していく
-	rep(k, q) {
-		int j = get<2>(lb_sr_j[k]);
+	rep(tmp, q) {
+		int j = get<2>(lb_sr_j[tmp]);
 
 		// 区間を広げる
 		while (lpt > l[j]) { insert(--lpt, sol); }
@@ -60,6 +67,85 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 		while (rpt > r[j]) { erase(--rpt, sol); }
 
 		res[j] = sol;
+	}
+}
+
+
+//【Mo's algorithm（区間縮小なし）】O((n + q)√q α)
+/*
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納する．
+* res_ep は空区間クエリに対する解とする．また区間の右に a[i] を追加する場合，
+* 新たな解は insert（計算量 O(α)）で計算されるとする．
+*
+* 制約：左端を伸ばす操作は非破壊的
+* 
+*（クエリ平方分割）
+*/
+template <class T, class S>
+void mos_algorithm_no_erase(const vector<T>& a, const vi& l, const vi& r, S res_ep, vector<S>& res) {
+	// verify : https://codeforces.com/contest/620/problem/F
+
+	//【方法】
+	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
+	// 左端の移動回数は，1 回のクエリで高々 n/k しか移動しないので q n/k 回．
+	// 右端の移動回数は，1 ブロックごとに高々 n しか移動しないので k n / 2 回．
+	// これらが一致するような k を求めると k = √(2q) となる．
+	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
+
+	int q = sz(l);
+	int k = (int)(sqrt(q) + EPS);
+	int width = max((sz(a) + k - 1) / k, 1);
+	res.resize(q);
+
+	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
+	vector<vector<pii>> lb_to_rj(k);
+	vi l_max(k, -1); // ブロック内の左端位置の最大値
+	rep(j, q) {
+		lb_to_rj[min(l[j] / width, k - 1)].emplace_back(r[j], j);
+		chmax(l_max[min(l[j] / width, k - 1)], l[j]);
+	}
+	rep(b, k) sort(all(lb_to_rj[b]));
+
+	// -------------- ここを実装する（auto の方が速い） ---------------
+	
+	// 区間の右に a[i] を追加する場合の解 sol を更新する．
+	auto insert = [&](int i, S& sol) {
+		sol = sol;
+	};
+	// --------------------------------------------------------------
+
+	// 初期化
+	S sol = res_ep;
+
+	// クエリを順に処理していく
+	rep(b, k) {
+		int rpt = l_max[b];
+
+		repe(tmp, lb_to_rj[b]) {
+			int j = tmp.second;
+
+			// 右端がブロック内にある場合の例外処理
+			if (r[j] <= l_max[b]) {
+				S sol2 = res_ep;
+				
+				res[j] = sol2;
+
+				continue;
+			}
+
+			// 右端を伸ばす（これは記録する）
+			while (rpt < r[j]) { insert(rpt++, sol); }
+
+			// 左端を伸ばす（これは記録しない）
+			S sol2 = sol;
+			repi(i, l[j], l_max[b] - 1) {
+				sol2 = sol2;
+			}
+
+			res[j] = sol2;
+		}
+
+		sol = res_ep;
 	}
 }
 
@@ -131,13 +217,13 @@ public:
 * Convex_hull_trick_monotonous() : O(1)
 *	空で初期化する．
 * 
-* insert(l) : ならし O(1)
+* insert(pll l) : ならし O(1)
 *	l = {a, b} が表す直線 y = a x + b を追加する．
-*	呼び出す際の挿入する直線の傾き a は降順でなくてはならない．
+*	制約：呼び出す際の挿入する直線の傾き a は狭義降順でなくてはならない．
 *
-* min(x) : ならし O(1)
+* ll min(ll x) : ならし O(1)
 *	a x + b の最小値を返す．
-*	呼び出す際の x 座標は昇順でなくてはならない．
+*	制約：呼び出す際の x 座標は狭義昇順でなくてはならない．
 */
 struct Convex_hull_trick_monotonous {
 	// 参考 : https://satanic0258.hatenablog.com/entry/2016/08/16/181331
@@ -191,109 +277,209 @@ struct Convex_hull_trick_monotonous {
 
 //【Convex-Hull Trick】
 /*
-* Convex_hull_trick(flagMin = true) : O(1)
-*	空で初期化する．flagMin = true[false] なら最小値[最大値] クエリに対応する．
+* Convex_hull_trick<T>(bool min_flag = true) : O(1)
+*	空で初期化する．min_flag = true[false] なら最小値[最大値] クエリに対応する．
 *
-* add(a, b) : ならし O(log n)
+* insert(T a, T b) : ならし O(log n)
 *	直線 y = a x + b を追加する．
 *
-* get(x) : O(log n)
-*	a x + b の最小値を返す．
+* T get(T x) : O(log n)
+*	a x + b の最小値[最大値] を返す．
+*	制約：直線集合は空でない
 */
-using CHT_TYPE = ll;
-class ConvexHullTrickDynamic {
-	// コピー元 : https://github.com/satanic0258/Cpp_snippet/blob/master/src/technique/ConvexHullTrick.cpp
-	// verify : https://yukicoder.me/problems/no/2012
+template <class T> class Convex_hull_trick {
+	// 参考(理屈)：https://satanic0258.hatenablog.com/entry/2016/08/16/181331
+	// 参考(実装)：https://github.com/satanic0258/Cpp_snippet/blob/master/src/technique/ConvexHullTrick.cpp
 
-	//【実装上のアイデア】
-	// アルゴリズム上平衡二分探索木が必要になる．
-	// 自前で書くのは大変なので，std::set を使いたい．
-	// しかし std::lower_bound が任意の comp を引数にとれるのとは異なり，
-	// set 上では任意比較関数での二分探索ができない．
-	// そのため比較演算子のオーバーロードでクエリのときだけ場合分けするよう実装し，
-	// 擬似的に任意比較関数での二分探索を実現している．
-
-private:
-	// 直線 **************************************************************
+	// 1 本の直線を表す構造体
 	struct Line {
-		CHT_TYPE a, b; // y = ax + b
-		mutable std::function<const Line* ()> getSuc; // 次の直線へのポインタ (ソートで用いる)
+		// 直線の式が y = a x + b であることを表す．
+		T a, b;
+
+		// 直線であるか（さもなくば最小値クエリ）
+		bool is_line;
+
+		// 次の直線へのポインタを返す関数 (クエリとの比較で)
+		mutable function<const Line* ()> getSuc;
+
+		Line(T a_, T b_, bool is_line = true) : a(a_), b(b_), is_line(is_line) {}
 
 		bool operator<(const Line& rhs) const {
-			// 取得クエリでは次の直線との差分でソート
-			if (rhs.b == numeric_limits<CHT_TYPE>::lowest()) {
+			// set は lower_bound のように任意の比較関数を引数にとることはできないので，
+			// 比較演算子内で取得クエリか否かで場合分けすることにより無理やり二分探索を実現する．
+			//（set を使わず自前で平衡二分探索木を書くなら，左右の子を参照して下っていくだけでいい）
+
+			// 直線と最小値クエリの比較
+			if (!rhs.is_line) {
 				const Line* suc = getSuc();
 				if (suc == nullptr) return false;
-				const CHT_TYPE& x = rhs.a;
-				return (suc->a - a) * x + suc->b - b > 0;
+
+				const T& x = rhs.a;
+				return (suc->a - a) * x + (suc->b - b) < T(0);
 			}
-			if (b == numeric_limits<CHT_TYPE>::lowest()) {
+
+			// 最小値クエリと直線の比較
+			if (!is_line) {
 				const Line* suc = rhs.getSuc();
 				if (suc == nullptr) return true;
-				const CHT_TYPE& x = a;
-				return (suc->a - rhs.a) * x + suc->b - rhs.b < 0;
+
+				const T& x = a;
+				return (suc->a - rhs.a) * x + (suc->b - rhs.b) > T(0);
 			}
 
-			// 通常の直線どうしは傾きソート
-			return a < rhs.a;
+			// 直線と直線の比較
+			return a > rhs.a;
 		}
+
+#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const Line& l) {
+			os << "y=";
+
+			if (l.a == 1) os << "x";
+			else if (l.a == 0);
+			else if (l.a == -1) os << "-x";
+			else os << l.a << "x";
+
+			if (l.a == 0 || l.b < 0) os << l.b;
+			else if (l.b > 0) os << "+" << l.b;
+
+			return os;
+		}
+#endif
 	};
 
-	// 直線集合 **********************************************************
-	class LinesSet : public std::multiset<Line> {
-	private:
-		// true -> 最小値クエリ, false -> 最大値クエリ
-		bool flagMin;
+	set<Line> lines; // 直線を傾き狭義降順に記録した集合
 
-	public:
-		// コンストラクタ ( 第一引数falseで最大値クエリ,デフォルトで最小値クエリ )
-		LinesSet(bool flagMin = true) : flagMin(flagMin) {};
-
-		// 直線lが不必要であるかどうか
-		inline bool isBad(iterator l) {
-			const auto&& nel = std::next(l);
-			if (l == begin()) { // lが傾き最小のとき
-				if (nel == end()) return false; // lしかないなら必要
-				return l->a == nel->a && l->b <= nel->b;
-			}
-			else {
-				const auto&& prl = std::prev(l);
-				if (nel == end()) return l->a == prl->a && l->b <= prl->b;
-				return (prl->b - l->b) * (nel->a - l->a) >= (nel->b - l->b) * (prl->a - l->a);
-			}
-		}
-
-		// 直線y=ax+bを追加する
-		inline void add(CHT_TYPE a, CHT_TYPE b) {
-			if (flagMin) a = -a, b = -b;
-			auto&& it = insert({ a, b });
-			it->getSuc = [=] { return (std::next(it) == end() ? nullptr : &*std::next(it)); };
-			if (isBad(it)) { erase(it); return; }
-			while (std::next(it) != end() && isBad(std::next(it))) erase(std::next(it));
-			while (it != begin() && isBad(std::prev(it))) erase(std::prev(it));
-		}
-
-		// 直線群の中でxの時に最小(最大)となる値を返す
-		inline CHT_TYPE get(CHT_TYPE x) {
-			auto&& l = *lower_bound(Line{ x, numeric_limits<CHT_TYPE>::lowest() });
-			if (flagMin) return -l.a * x - l.b;
-			else return l.a * x + l.b;
-		}
-	};
-
-	LinesSet linesSet;
+	// 最小値クエリに対応する場合は true，最大値クエリに対応する場合は false
+	bool min_flag;
 
 public:
-	// コンストラクタ ( 第一引数falseで最大値クエリ,デフォルトで最小値クエリ )
-	ConvexHullTrickDynamic(bool flagMin = true) : linesSet(flagMin) {}
-	// 直線y=ax+bを追加する
-	inline void add(CHT_TYPE a, CHT_TYPE b) { linesSet.add(a, b); }
-	// あるxのときの直線集合での最小値を求める
-	inline CHT_TYPE get(CHT_TYPE x) { return linesSet.get(x); }
+	// 空で初期化する．
+	Convex_hull_trick(bool min_flag = true) : min_flag(min_flag) {}
+
+	// 直線 l : y = a x + b を追加する．
+	void insert(T a, T b) {
+		// verify : https://judge.yosupo.jp/problem/line_add_get_min
+
+		// 最大値クエリに対応する場合は -1 倍して上下反転し，最小値クエリとして扱う．
+		if (!min_flag) {
+			a = -a;
+			b = -b;
+		}
+
+		// nit : l の次に傾きが小さい直線（無いなら lines.end()）
+		auto nit = lines.lower_bound({ a, b });
+
+		// pit : l の次に傾きが大きい直線（無いなら lines.end()）
+		auto pit = (nit != lines.begin() ? prev(nit) : lines.end());
+
+		// pit と l の傾きが等しい場合
+		if (pit != lines.end() && pit->a == a) {
+			// pit の方が低い位置にあるなら l は不要
+			if (pit->b <= b) return;
+
+			// l の方が低い位置にあるなら pit は不要
+			lines.erase(pit);
+		}
+		// l と nit の傾きが等しい場合
+		else if (nit != lines.end() && a == nit->a) {
+			// nit の方が低い位置にあるなら l は不要
+			if (nit->b <= b) return;
+
+			// l の方が低い位置にあるなら nit は不要
+			lines.erase(nit);
+		}
+		// pit, l, nit の傾きが全て異なる場合
+		else if (pit != lines.end() && nit != lines.end()) {
+			// x1 = x1_num / x1_dnm : pit と l の交点の x 座標
+			//（y = pit->a x + pit->b と y = a x + b を連立する）
+			T x1_num = b - pit->b, x1_dnm = pit->a - a;
+
+			// x2 = x2_num / x2_dnm : l と nit の交点の x 座標
+			//（y = a x + b と y = nit->a x + nit->b を連立する）
+			T x2_num = nit->b - b, x2_dnm = a - nit->a;
+
+			// x1 >= x2 となっているなら l は不要な直線なので追加せず終わる．
+			if (x1_num * x2_dnm >= x2_num * x1_dnm) return;
+		}
+
+		// 直線 l を追加する．
+		auto it = lines.insert({ a, b }).first;
+		it->getSuc = [=] { return (next(it) == lines.end() ? nullptr : &*next(it)); };
+
+		// l より傾きが大きい直線のうち，l のせいで不必要になったものを削除する．
+		if (it != lines.begin()) {
+			auto pit = prev(it);
+			while (pit != lines.begin()) {
+				// pit : l の次に傾きが大きい直線
+				// ppit : l の次の次に傾きが大きい直線
+				auto ppit = prev(pit);
+
+				// x1 = x1_num / x1_dnm : ppit と pit の交点の x 座標
+				//（y = ppit->a x + ppit->b と y = pit->a x + pit->b を連立する）
+				T x1_num = pit->b - ppit->b, x1_dnm = ppit->a - pit->a;
+
+				// x2 = x2_num / x2_dnm : pit と l の交点の x 座標
+				//（y = pit->a x + pit->b と y = a x + b を連立する）
+				T x2_num = b - pit->b, x2_dnm = pit->a - a;
+
+				// x1 <= x2 となっているなら pit は必要な直線なので削除せず終わる．
+				if (x1_num * x2_dnm <= x2_num * x1_dnm) break;
+
+				// さもなくば pit は不必要な直線なので削除する．
+				pit = prev(lines.erase(pit));
+			}
+		}
+
+		// l より傾きが小さい直線のうち，l のせいで不必要になったものを削除する．
+		if (next(it) != lines.end()) {
+			auto nit = next(it);
+			while (next(nit) != lines.end()) {
+				// nit : l の次に傾きが小さい直線
+				// nnit : l の次の次に傾きが小さい直線
+				auto nnit = next(nit);
+
+				// x1 = x1_num / x1_dnm : l と nit の交点の x 座標
+				//（y = a x + b と y = nit->a x + nit->b を連立する）
+				T x1_num = nit->b - b, x1_dnm = a - nit->a;
+
+				// x2 = x2_num / x2_dnm : nit と nnit の交点の x 座標
+				//（y = nit->a x + nit->b と y = nnit->a x + nnit->b を連立する）
+				T x2_num = nnit->b - nit->b, x2_dnm = nit->a - nnit->a;
+
+				// x1 <= x2 となっているなら nit は必要な直線なので削除せず終わる．
+				if (x1_num * x2_dnm <= x2_num * x1_dnm) break;
+
+				// さもなくば nit は不必要な直線なので削除する．
+				nit = lines.erase(nit);
+			}
+		}
+	}
+
+	// a x + b の最小値[最大値] を返す．
+	T get(T x) {
+		// verify : https://judge.yosupo.jp/problem/line_add_get_min
+
+		Assert(!lines.empty());
+
+		auto it = lines.lower_bound(Line{ x, x, false });
+
+		if (min_flag) return it->a * x + it->b;
+		else return -(it->a * x + it->b); // 最大値クエリの場合は -1 倍していたので元に戻す．
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Convex_hull_trick& cht) {
+		for (auto it = cht.lines.begin(); it != cht.lines.end(); it++) {
+			os << *it << (next(it) != cht.lines.end() ? "," : "");
+		}
+		return os;
+	}
+#endif
 };
 
 
-//【slope trick】
+//【Slope Trick】
 /*
 * Slope_trick() : O(1)
 *	f(x) = 0 で初期化する．

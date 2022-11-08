@@ -15,6 +15,7 @@
 *
 * set(int i, int j, T v) : O(1)
 *	A[i][j] = v とする．
+*	制約：初期化にのみ利用する．同じ (i, j) に対して 2 度以上呼ばない．
 *
 * c * A ／ A * c : O(K)
 *	疎行列 A とスカラー c のスカラー積を返す．*= も使用可．
@@ -28,16 +29,16 @@ template <class T> struct SMatrix {
 	int n; // 行列のサイズ（n 行）
 	vector<vector<pair<int, T>>> v; // 行列の成分
 
-	// コンストラクタ（初期化なし，n 行の零行列，リスト）
-	SMatrix() {}
-	SMatrix(const int& n_) : n(n_), v(n) {}
+	// コンストラクタ（初期化なし，n 行の零行列）
+	SMatrix() : n(0) {}
+	SMatrix(int n_) : n(n_), v(n) {}
 
 	// 代入
 	SMatrix(const SMatrix& old) = default;
 	SMatrix& operator=(const SMatrix& other) = default;
 
 	// 要素の設定
-	void set(int i, int j, T val) { v[i].push_back({ j, val }); }
+	void set(int i, int j, T val) { v[i].emplace_back(j, val); }
 
 	// スカラー倍
 	SMatrix& operator*=(const T& sc) {

@@ -293,3 +293,117 @@ int ice_path(const vl& x, const vl& y, ll sx, ll sy, ll tx, ll ty) {
 }
 
 
+//【魔方陣】O(?)
+/*
+* 一部の数字が書き込まれた方陣 a[0..n)[0..n) について，条件に合う魔方陣をそこに構築する（なければ空）
+* 書き込まれる値は [1..n^2] とし，欠損値は 0 で表す．
+*/
+void find_magic_square(vvi& a) {
+	int n = sz(a);
+
+	int s = n * (n * n + 1) / 2;
+
+	// 残っている数を記録する双方向リスト（0 番目は根として利用する）
+	vi prv(n * n + 2), nxt(n * n + 2);
+	iota(all(prv), -1);
+	iota(all(nxt), 1);
+
+	vi x_sum(n), x_cnt(n), y_sum(n), y_cnt(n);
+	int d_sum = 0, d_cnt = 0, ad_sum = 0, ad_cnt = 0;
+
+	rep(i, n) rep(j, n) {
+		x_sum[i] += a[i][j];
+		x_cnt[i] += a[i][j] != 0;
+
+		y_sum[j] += a[i][j];
+		y_cnt[j] += a[i][j] != 0;
+
+		if (i == j) {
+			d_sum += a[i][j];
+			d_cnt += a[i][j] != 0;
+		}
+
+		if (i + j == n - 1) {
+			ad_sum += a[i][j];
+			ad_cnt += a[i][j] != 0;
+		}
+
+		if (a[i][j] != 0) {
+			int v = a[i][j];
+			nxt[prv[v]] = nxt[v];
+			prv[nxt[v]] = prv[v];
+		}
+	}
+
+	// (i, j): 注目位置
+	function<bool(int, int)> dfs = [&](int x, int y) {
+		//		dump("----",x, y,"----"); dumpel(a); dump(x_sum); dump(x_cnt); dump(y_sum); dump(y_cnt); dump(d_sum, d_cnt, ad_sum, ad_cnt);
+
+		if (x == n) return true;
+
+		if (y == n) return dfs(x + 1, 0);
+
+		if (a[x][y] != 0) return dfs(x, y + 1);
+
+		vi is;
+		if (x_cnt[x] == n - 1) is.push_back(s - x_sum[x]);
+		if (y_cnt[y] == n - 1) is.push_back(s - y_sum[y]);
+		if (x == y && d_cnt == n - 1) is.push_back(s - d_sum);
+		if (x + y == n - 1 && ad_cnt == n - 1) is.push_back(s - ad_sum);
+
+		uniq(is);
+		if (sz(is) >= 2) return false;
+
+		if (sz(is) == 1) {
+			int i = is[0];
+			if (i <= 0 || n * n < i) return false;
+			if (prv[nxt[i]] != i) return false;
+
+			a[x][y] = i;
+			x_sum[x] += i; x_cnt[x]++;
+			y_sum[y] += i; y_cnt[y]++;
+			if (x == y) { d_sum += i; d_cnt++; }
+			if (x + y == n - 1) { ad_sum += i; ad_cnt++; }
+			nxt[prv[i]] = nxt[i];
+			prv[nxt[i]] = prv[i];
+
+			if (dfs(x, y + 1)) return true;
+
+			a[x][y] = 0;
+			x_sum[x] -= i; x_cnt[x]--;
+			y_sum[y] -= i; y_cnt[y]--;
+			if (x == y) { d_sum -= i; d_cnt--; }
+			if (x + y == n - 1) { ad_sum -= i; ad_cnt--; }
+			prv[nxt[i]] = i;
+			nxt[prv[i]] = i;
+
+			return false;
+		}
+
+		for (int i = nxt[0]; i <= n * n; i = nxt[i]) {
+			a[x][y] = i;
+			x_sum[x] += i; x_cnt[x]++;
+			y_sum[y] += i; y_cnt[y]++;
+			if (x == y) { d_sum += i; d_cnt++; }
+			if (x + y == n - 1) { ad_sum += i; ad_cnt++; }
+			nxt[prv[i]] = nxt[i];
+			prv[nxt[i]] = prv[i];
+
+			if (dfs(x, y + 1)) return true;
+
+			a[x][y] = 0;
+			x_sum[x] -= i; x_cnt[x]--;
+			y_sum[y] -= i; y_cnt[y]--;
+			if (x == y) { d_sum -= i; d_cnt--; }
+			if (x + y == n - 1) { ad_sum -= i; ad_cnt--; }
+			prv[nxt[i]] = i;
+			nxt[prv[i]] = i;
+		}
+
+		return false;
+	};
+
+	if (!dfs(0, 0)) a.clear();
+}
+
+

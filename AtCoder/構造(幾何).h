@@ -109,7 +109,7 @@ template <class T> using Circle = pair<Point<T>, T>;
 
 //【平面内の多角形】
 /*
-* Polygon(p[0..n]) : これらの点を周る順に頂点にもつ n 角形を表す．
+* Polygon(p[0..n)) : これらの点を周る順に頂点にもつ n 角形を表す．
 */
 template <class T> using Polygon = vector<Point<T>>;
 

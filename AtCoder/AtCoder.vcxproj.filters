@@ -287,9 +287,6 @@
     <ClInclude Include="行列(抽象).h">
       <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
-    <ClInclude Include="累積演算%28抽象%29.h">
-      <Filter>ヘッダー ファイル\データ構造</Filter>
-    </ClInclude>
     <ClInclude Include="全順序集合.h">
       <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
@@ -440,9 +437,6 @@
     <ClInclude Include="二分木.h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="整除算.h">
-      <Filter>ヘッダー ファイル\計算</Filter>
-    </ClInclude>
     <ClInclude Include="max.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
@@ -529,6 +523,21 @@
     </ClInclude>
     <ClInclude Include="列挙(順列).h">
       <Filter>ヘッダー ファイル\列%28順列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="整除算.h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
+    <ClInclude Include="フロー.h">
+      <Filter>ヘッダー ファイル\グラフ</Filter>
+    </ClInclude>
+    <ClInclude Include="フロー双対.h">
+      <Filter>ヘッダー ファイル\最適化</Filter>
+    </ClInclude>
+    <ClInclude Include="累積演算%28抽象%29.h">
+      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
+    </ClInclude>
+    <ClInclude Include="累積演算.h">
+      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

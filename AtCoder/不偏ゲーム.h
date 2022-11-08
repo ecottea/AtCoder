@@ -34,6 +34,12 @@ void calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt, map<T, i
 	};
 
 	calc_nimber(p);
+
+	/* nxt の定義の雛形
+	function<void(const T&, vector<T>&)> nxt = [&](const T& p, vector<T>& nps) {
+
+	};
+	*/
 }
 
 
@@ -311,7 +317,7 @@ void directed_graph_game(const Graph& g, vi& res) {
 * 利用：【貰う木 DP】
 */
 // verify : https://atcoder.jp/contests/agc017/tasks/agc017_d
-void merge_gct(int& x, const int& y) { x ^= y; }
+void merge_gct(int& x, const int& y, int s) { x ^= y; }
 int e_gct() { return 0; }
 int leaf_gct(int s) { return 0; }
 int apply_gct(const int& x, int s, int t) { return x + 1; }
@@ -327,6 +333,12 @@ void tree_cut_game(const Graph& g, int r, vi& nimber) {
 *
 * ull prod(ull x, ull y) : O(64^2)
 *	x と y のニム積を返す．
+*
+* ull pow(ull x, ull n) : O(64^2 log n)
+*	n 個の x のニム積を返す．
+*
+* ull inv(ull x) : O(64^3)
+*	x のニム積逆元を返す．
 */
 class Nim_product {
 	// 参考 :『ON NUMBERS AND GAMES』(John H. Conway)  (pp.52-53)
@@ -383,6 +395,28 @@ public:
 			}
 		}
 		return res;
+	}
+
+	ull pow(ull x, ull n) {
+		ull res = 1, pow2 = x;
+		while (n > 0) {
+			if ((n & 1) != 0) res = prod(res, pow2);
+			pow2 = prod(pow2, pow2);
+			n /= 2;
+		}
+		return res;
+	}
+
+	ull inv(ull x) {
+		Assert(x > 0);
+
+		if (x < (1ULL << 1)) return 1;
+		if (x < (1ULL << 2)) return 5ULL - x;
+		if (x < (1ULL << 4)) return pow(x, (1ULL << 4) - 2);
+		if (x < (1ULL << 8)) return pow(x, (1ULL << 8) - 2);
+		if (x < (1ULL << 16)) return pow(x, (1ULL << 16) - 2);
+		if (x < (1ULL << 32)) return pow(x, (1ULL << 32) - 2);
+		return pow(x, ~0ULL - 1);
 	}
 };
 

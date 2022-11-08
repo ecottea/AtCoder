@@ -156,8 +156,8 @@ ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
 	x *= c / g;
 	y *= c / g;
 
-	// もし x を非負の範囲で最小にしたければ，x = smod(x, b / g) とする．
-	// もし y を非負の範囲で最小にしたければ，y = smod(y, a / g) とする．
+	// x を非負最小にしたければ，x = smod(x, b / g); y = (n - a * x) / b; とする．
+	// y を非負最小にしたければ，y = smod(y, a / g); x = (n - b * y) / a; とする．
 	// verify : https://atcoder.jp/contests/arc091/tasks/arc091_d
 
 	return g;

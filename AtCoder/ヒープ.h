@@ -28,8 +28,7 @@
 */
 template <typename T> struct Skew_heap {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
-	// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
-
+	
 	struct Node {
 		Node* l, * r;
 		T v;
@@ -60,23 +59,35 @@ template <typename T> struct Skew_heap {
 	Skew_heap() : root(nullptr), n(0) {}
 
 	// ヒープが空かを返す．
-	bool empty() const { return root == nullptr; }
+	bool empty() const { 
+		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
+		
+		return root == nullptr; 
+	}
 
 	// ヒープの大きさを返す．
 	int size() const { return n; }
 
 	// ヒープに値 val を追加する．
 	void push(T val) {
+		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
+
 		Node* p = new Node(val);
 		root = meld(root, p);
 		n++;
 	}
 
 	// ヒープ内の最大値を返す．
-	T top() const { return root->v; }
+	T top() const {
+		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
+		
+		return root->v;
+	}
 
 	// ヒープ内の最大値を削除する．
 	void pop() {
+		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
+
 		Node* p = root;
 		root = meld(root->r, root->l);
 		delete p;
@@ -85,6 +96,8 @@ template <typename T> struct Skew_heap {
 
 	// ヒープ hp を併合する．
 	void merge(Skew_heap<T>& hp) {
+		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
+
 		n += hp.n;
 		root = meld(root, hp.root);
 		hp.root = nullptr;
@@ -128,8 +141,7 @@ template <typename T> struct Skew_heap {
 */
 template <typename T> struct Skew_heap_rev {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
-	// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
-
+	
 	struct Node {
 		Node* l, * r;
 		T v;
@@ -160,23 +172,35 @@ template <typename T> struct Skew_heap_rev {
 	Skew_heap_rev() : root(nullptr), n(0) {}
 
 	// ヒープが空かを返す．
-	bool empty() const { return root == nullptr; }
+	bool empty() const {
+		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
+
+		return root == nullptr;
+	}
 
 	// ヒープの大きさを返す．
 	int size() const { return n; }
 
 	// ヒープに値 val を追加する．
 	void push(T val) {
+		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
+
 		Node* p = new Node(val);
 		root = meld(root, p);
 		n++;
 	}
 
 	// ヒープ内の最小値を返す．
-	T top() const { return root->v; }
+	T top() const {
+		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
+
+		return root->v;
+	}
 
 	// ヒープ内の最小値を削除する．
 	void pop() {
+		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
+
 		Node* p = root;
 		root = meld(root->r, root->l);
 		delete p;
@@ -185,6 +209,8 @@ template <typename T> struct Skew_heap_rev {
 
 	// ヒープ hp を併合する．
 	void merge(Skew_heap_rev<T>& hp) {
+		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
+		
 		n += hp.n;
 		root = meld(root, hp.root);
 		hp.root = nullptr;

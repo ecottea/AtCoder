@@ -930,7 +930,7 @@ MFPS sqrt(const MFPS& f, int d, bool& find) {
 
 //【展開係数】O(n log n log d)
 /*
-* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
+* 有理式 f(x)/g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
 * 制約 : deg f < deg g, g[0] != 0
 */
@@ -993,7 +993,7 @@ mint bostan_mori(const MFPS& f, const MFPS& g, ll d) {
 
 //【展開係数（分子がスパース）】O(n m log m log d)（n : f の項数，m : deg g）
 /*
-* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
+* 有理式 f(x)/g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *
 * 制約 : g[0] != 0
 *
@@ -1016,6 +1016,68 @@ mint bostan_mori(const SPoly<mint>& f, const MFPS& g, ll d) {
 
 		res += fc * bostan_mori(MFPS(1), g, d - fd);
 	}
+
+	return res;
+}
+
+
+//【展開係数（間引き和）】O(n log n log(k d))
+/*
+* 有理式 f(x)/g(x) を形式的冪級数に展開したときの 1, x^d, x^2d, ..., x^(k-1)d の係数の和を返す．
+*
+* 制約 : deg f < deg g, g[0] != 0
+* 
+*（高速きたまさ法）
+*/
+mint thinning_sum(const MFPS& f, const MFPS& g, ll d, ll k) {
+	// verify : https://csacademy.com/contest/iati-shumen-2017-day-1/task/superstition/statement/
+
+	//【方法】
+	// f(x)/g(x) = a[0] + a[1]x + a[2]x^2 + a[3]x^3 + ... とおく．
+	// 
+	// 例として g(x) = 1 - 2 x - 3 x^2 の場合を考える．このとき，a[0..∞) は漸化式
+	//		a[i] - 2 a[i-1] - 3 a[i-2] = 0	
+	//		⇔ a[i] = 2 a[i-1] + 3 a[i-2]
+	// を満たす．よって例えば a[3] の代わりに
+	//		a[3] = 2 a[2] + 3 a[1] = 2 (2 a[1] + 3 a[0]) + 3 a[1] = 7 a[1] + 6 a[0]
+	// を足しても結果は変わらない．
+	//
+	// このときの a[0], a[1] につく重みの計算は，g(x) を左右反転した
+	//		M(x) = x^2 - 2 x - 3
+	// で x^3 を割った余りを計算することで，
+	//		x^3 = (x^2 - 2 x - 3)(x + 2) + (7 z + 6)
+	// として求められる．これは線形作用なので一括で行うことができる．
+	// 
+	// 以上より，1 + x^d + x^2d + ... + x^(k-1)d を mod M(x) で計算し，
+	// 出てきた係数と a[0..2) との内積をとることにより求める値を得ることができる．
+
+	// n : 分母 g(x) の項数
+	int n = sz(g);
+
+	// f(x)/g(x) = a[0] + a[1]x + a[2]x^2 + a[3]x^3 + ...
+	MFPS a(f);
+	a.resize(n);
+	a /= g;
+
+	// mod : 法となる n-1 次多項式
+	MFPS mod(g);
+	mod = mod.rev();
+
+	// p : x^d
+	MFPS p = power_mod(MFPS::monomial(1), d, mod);
+
+	// p2 : 1 + x^d + x^2d + ... + x^(k-1)d
+	MFPS p2(0), pow2(p), sumpow2(1);
+	while (k > 0) {
+		if (k & 1LL) p2 = (p2 * pow2 + sumpow2).reminder(mod);
+		sumpow2 = (sumpow2 * (1 + pow2)).reminder(mod);
+		pow2 = (pow2 * pow2).reminder(mod);
+		k /= 2;
+	}
+
+	// p2 と a[0..n-1) との内積をとる．
+	mint res = 0;
+	rep(i, n - 1) res += a[i] * p2[i];
 
 	return res;
 }
@@ -1160,7 +1222,7 @@ MFPS expand(const vm& x) {
 * 多項式 fs[i] の積（次数は n）を返す．
 */
 MFPS expand(vector<MFPS> fs) {
-	// verify : https://atcoder.jp/contests/abc231/tasks/abc231_g
+	// verify : https://judge.yosupo.jp/problem/product_of_polynomial_sequence
 
 	if (fs.empty()) return MFPS(1);
 
@@ -1185,7 +1247,7 @@ MFPS expand(vector<MFPS> fs) {
 
 //【多項式の累積積の和】O(n (log n)^2)
 /*
-* 多項式の列 fs[0..k) について，Σi=[0..k) Πfs[0..i) を返す．
+* 多項式の列 fs[0..k) について，Σi=[0..k) Πfs[0..i)（次数は n）を返す．
 */
 MFPS cumulative_product_sum(const vector<MFPS>& fs_) {
 	// verify : https://atcoder.jp/contests/abc269/tasks/abc269_h
@@ -1297,7 +1359,7 @@ void multipoint_evaluation(const MFPS& f, const vm& x, vm& y) {
 
 //【ラグランジュ補間（一点評価）】O(n)
 /*
-* i=[0..n) について f(a i + b) = y[i] を満たす n - 1 次多項式 f について f(c) を返す．
+* 各 i∈[0..n) について f(a i + b) = y[i] を満たす n - 1 次多項式 f についての f(c) を返す．
 *
 * 利用：【階乗など（法が大きな素数）】
 */

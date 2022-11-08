@@ -561,3 +561,82 @@ void hadamard_matrix(int n, vvi& mat) {
 /*
 * 【二部グラフの完全マッチングの数え上げ】を利用すればよい．
 */
+
+
+//【行列のクロネッカー積】O(m1 m2 n1 n2)
+/*
+* 行列 a[0..m1)[0..n1) と b[0..m2)[0..n2) のクロネッカー積を返す．
+*/
+template <class T> Matrix<T> kronecker_product(const Matrix<T>& a, const Matrix<T>& b) {
+	Matrix<T> res(a.m * b.m, a.n * b.n);
+	rep(i1, a.m) rep(j1, a.n) rep(i2, b.m) rep(j2, b.n) {
+		res[i1 * b.m + i2][j1 * b.n + j2] = a[i1][j1] * b[i2][j2];
+	}
+
+	return res;
+}
+
+
+//【行列のクロネッカー積とベクトルとの積】O(k m n)（m : mats の行列の最大サイズ）
+/*
+* 行列の列 mats[0..k) のクロネッカー積を M とし，ベクトル M vec[0..n) を返す．
+*/
+template <class T>
+vector<T> kronecker_matrix_vector_product(const vector<Matrix<T>>& mats, vector<T> vec) {
+	// verify : https://atcoder.jp/contests/arc151/tasks/arc151_d
+
+	//【方法】
+	// k=2 で，
+	//		mats[0] = [a00, a01], mats[1] = B, vec = [vx0]
+	//		          [a10, a11]                     [vx1]
+	// の場合を考える．
+	//
+	// 行列のクロネッカー積を先に計算し，ブロック積を用いて M vec を計算すると，
+	//		[a00 B, a01 B] [vx0] = [a00 B vx0 + a01 B vx1]
+	//		[a10 B, a11 B] [vx1] = [a10 B vx0 + a11 B vx1]
+	// となる．一方これは B と vec のブロック積を先に計算することにより
+	//		[a00, a01] [B vx0] 
+	//		[a10, a11] [B vx1]
+	// とも表される．
+	//
+	// このように右から順に行列ベクトル積を計算していけば，巨大な行列になりうる M を陽に求める必要はない．
+
+	int K = sz(mats);
+	dump(mats); dump(vec);
+
+	// Ws : vec が大きさ Ws の小ブロックに分割されていることを表す
+	int Ws = 1;
+
+	repir(k, K - 1, 0) {
+		auto& mat = mats[k];
+
+		// Wl : vec が大きさ Wl の大ブロックに分割されていることを表す
+		int Wl = Ws * mat.n;
+
+		vector<T> nvec;
+
+		// tl : 上から何個目の大ブロックを計算しているか
+		rep(tl, sz(vec) / Wl) {
+			// ts : 大ブロック内で上から何個目の小ブロックを計算しているか
+			rep(ts, mat.m) {
+				// i : 小ブロック内の何行目を計算しているか
+				rep(i, Ws) {
+					T val = 0;
+					rep(j, mat.n) {
+						val += mat[ts][j] * vec[tl * Wl + i + j * Ws];
+					}
+					nvec.emplace_back(val);
+				}
+			}
+		}
+
+		Ws *= mat.m;
+
+		vec = move(nvec);
+		dump(vec);
+	}
+
+	return vec;
+}
+
+

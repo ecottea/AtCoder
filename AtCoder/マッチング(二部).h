@@ -16,8 +16,8 @@
 *	s∈S と t∈T の間に辺を張る．
 *
 * int flow() : O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
-*	フローを流し計算を行う．
-*	戻り値：最大マッチングの大きさ
+*	フローを流し計算を行うい，最大マッチングの大きさを返す．
+*	戻り値は「|最小点被覆|」，「|V| - |最小辺被覆|」，「|V| - |最大独立集合|」とも解釈できる．
 *
 * maximum_matching(vector<pii>& es) : O(|E|)
 *	最大マッチングの例を具体的に求め es に格納する．
@@ -35,7 +35,7 @@
 *	vs が最小点被覆であるとは，任意の辺がある v∈vs を端点にもつことをいう．
 *	flow() の後に呼び出すこと．
 *
-*（最大フロー問題）
+*（最大流問題）
 */
 struct Bipartite_matching {
 	// 参考 : https://qiita.com/drken/items/e805e3f514acceb87602
@@ -60,7 +60,11 @@ struct Bipartite_matching {
 	void add_edge(int s, int t) { g.add_edge(s, t + n, 1); }
 
 	// 計算を実行し，最大マッチングの大きさを返す．
-	int flow() { return g.flow(ST, GL); }
+	int flow() {
+		// verify : https://judge.yosupo.jp/problem/bipartitematching
+		
+		return g.flow(ST, GL);
+	}
 
 	// 最大マッチングの例を具体的に求める．
 	void maximum_matching(vector<pii>& es) {
@@ -82,13 +86,9 @@ struct Bipartite_matching {
 
 		// マッチングに含まれない S, T の頂点の集合
 		unordered_set<int> iso_s, iso_t;
-		rep(i, n) {
-			if (g.get_edge(i).flow == 0) iso_s.insert(i);
-		}
-		rep(j, m) {
-			if (g.get_edge(j + n).flow == 0) iso_t.insert(j + n);
-		}
-
+		rep(i, n) if (g.get_edge(i).flow == 0) iso_s.insert(i);
+		rep(j, m) if (g.get_edge(j + n).flow == 0) iso_t.insert(j + n);
+		
 		repe(e, g.edges()) {
 			// マッチングに含まれる S, T の頂点はそのまま結ぶ．
 			if (e.flow == 1 && e.from != ST && e.to != GL) {
@@ -117,14 +117,10 @@ struct Bipartite_matching {
 		vb ar = g.min_cut(ST);
 
 		// 残余グラフで ST から到達不可能な S の頂点を選ぶ．
-		rep(i, n) {
-			if (!ar[i]) vs[0].push_back(i);
-		}
-
+		rep(i, n) if (!ar[i]) vs[0].push_back(i);
+		
 		// 残余グラフで ST から到達可能な T の頂点を選ぶ．
-		rep(j, m) {
-			if (ar[n + j]) vs[1].push_back(j);
-		}
+		rep(j, m) if (ar[n + j]) vs[1].push_back(j);
 	}
 };
 
@@ -167,10 +163,18 @@ struct Minimum_cost_bipartite_matching {
 	}
 
 	// s∈S と t∈T の間にコスト c の辺を張る． 
-	void add_edge(int s, int t, ll c) { g.add_edge(s, n + t, 1, c); }
+	void add_edge(int s, int t, ll c) {
+		// verify : https://atcoder.jp/contests/maximum-cup-2013/tasks/maximum_2013_f
+
+		g.add_edge(s, n + t, 1, c);
+	}
 
 	// 最大マッチングの大きさと，そのうちの最小コストを返す．
-	pil flow() { return g.flow(ST, GL); }
+	pil flow() {
+		// verify : https://atcoder.jp/contests/maximum-cup-2013/tasks/maximum_2013_f
+
+		return g.flow(ST, GL);
+	}
 
 	// 実現例を具体的に求める．
 	void minimul_cost_maximum_matching(vector<pii>& es) {
@@ -387,7 +391,7 @@ template <class T> mint count_perfect_matching(const vector<vector<T>>& e, T ex)
 */
 // verify : https://atcoder.jp/contests/agc014/tasks/agc014_d
 using T_tbm = int;
-void merge_tbm(T_tbm& x, const T_tbm& y) { x += y; }
+void merge_tbm(T_tbm& x, const T_tbm& y, int s) { x += y; }
 T_tbm e_tbm() { return 0; }
 T_tbm leaf_tbm(int s) { return 0; }
 T_tbm apply_tbm(const T_tbm& x, int s, int t) { return (T_tbm)(x == 0); }

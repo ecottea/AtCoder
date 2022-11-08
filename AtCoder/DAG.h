@@ -49,6 +49,35 @@
 */
 
 
+//【コスト最小パス】O(|V| + |E|)
+/*
+* DAG g の頂点 s から gl までのコスト最小パスのコストを dist[s] に格納する．
+*/
+void lowest_cost_path(const WGraph& g, int gl, vl& dist) {
+	int n = sz(g);
+
+	// dist[s] : 頂点 s から gl までのコスト最小パスのコスト
+	dist.resize(n, INFL);
+	vb seen(n);
+
+	dist[gl] = 0;
+	seen[gl] = true;
+
+	function<ll(int)> dfs = [&](int s) {
+		if (seen[s]) return dist[s];
+		seen[s] = true;
+
+		// s → t と進む場合
+		repe(t, g[s]) chmin(dist[s], dfs(t) + t.cost);
+
+		return dist[s];
+	};
+
+	// 各頂点 s についての情報を計算する．
+	rep(s, n) dfs(s);
+}
+
+
 //【パスの個数】O(|V| + |E|)
 /*
 * DAG g の頂点 s から gl までのパスの個数を cnt[s] に格納する．

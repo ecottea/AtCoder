@@ -53,7 +53,6 @@ int interval_union_lsort(vector<T> l, vector<T> r, vector<T>& l2, vector<T>& r2)
 	// verify : https://atcoder.jp/contests/abc256/tasks/abc256_d
 
 	int n = sz(l);
-	l2.clear();	r2.clear();
 
 	if (n == 0) return 0;
 
@@ -64,6 +63,10 @@ int interval_union_lsort(vector<T> l, vector<T> r, vector<T>& l2, vector<T>& r2)
 
 	n = sz(lr);
 	rep(i, n) tie(l[i], r[i]) = lr[i];
+
+	int m = 1;
+	l2 = vector<T>{ l[0] };
+	r2 = vector<T>{ r[0] };
 
 	repi(i, 1, n - 1) {
 		// i 番目の区間の左端が処理中の区間の右端より右だった場合

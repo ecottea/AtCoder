@@ -162,7 +162,7 @@ void read_rooted_tree(int n, Rooted_tree& rt, bool one_indexed = true, bool shuf
 * Weighted_rooted_tree() : O(1)
 *	空で初期化する．
 * 
-* Weighted_rooted_tree(g, r) : O(n)
+* Weighted_rooted_tree(WGraph g, int r) : O(n)
 *	コスト付き木 g を r を根とみなしたコスト付き根付き木として受け取る．
 */
 struct Weighted_rooted_tree {

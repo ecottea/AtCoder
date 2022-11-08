@@ -299,7 +299,7 @@ pair<ll, mint> count_minimum_spanning_forest(const WGraph& g) {
 }
 
 
-//【最小全域森の構築森】O(|E| log |V|)
+//【最小全域森の結合森】O(|E| log |V|)
 /*
 * クラスカル法で最小全域森を構築する様子を表した根付き森を fst に構築し，
 * その根のリストを rs に格納する．

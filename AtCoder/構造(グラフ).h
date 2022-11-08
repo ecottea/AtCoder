@@ -45,7 +45,10 @@ struct WEdge {
 	int to; // 行き先の頂点番号
 	ll cost; // 辺のコスト
 
-	// コストなしグラフで呼ばれたとき用
+	WEdge() : to(-1), cost(-INFL) {}
+	WEdge(int to_, ll cost_) : to(to_), cost(cost_) {}
+
+	// プレーングラフで呼ばれたとき用
 	operator int() const { return to; }
 
 #ifdef _MSC_VER
@@ -99,18 +102,21 @@ void read_graph(int n, int m, WGraph& g, bool undirected = true, bool one_indexe
 * id : 辺の番号
 */
 struct IEdge {
-	// verify : https://atcoder.jp/contests/arc143/tasks/arc143_d
+	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
 
 	int to; // 行き先の頂点番号
 	int id; // 辺の番号
 	bool dir; // 順方向か
 
-	// コストなしグラフで呼ばれたとき用
+	IEdge() : to(-1), id(-1), dir(true) {}
+	IEdge(int to, int id, bool dir) : to(to), id(id), dir(dir) {}
+
+	// プレーングラフで呼ばれたとき用
 	operator int() const { return to; }
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const IEdge& e) {
-		os << '(' << e.to << ',' << e.id << ',' << e.dir << ')';
+		os << '(' << "to:" << e.to << ',' << "id:" << e.id << ',' << (e.dir ? "fwd" : "rev") << ')';
 		return os;
 	}
 #endif
@@ -121,8 +127,8 @@ struct IEdge {
 /*
 * IGraph g
 * g[v] : 頂点 v から出る辺を並べたリスト
-* 
-* verify : https://atcoder.jp/contests/arc143/tasks/arc143_d
+*
+* verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
 */
 using IGraph = vector<vector<IEdge>>;
 
@@ -138,6 +144,8 @@ using IGraph = vector<vector<IEdge>>;
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
 void read_graph(int n, int m, IGraph& g, bool undirected = true, bool one_indexed = true) {
+	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
+
 	g = IGraph(n);
 	rep(i, m) {
 		int a, b;

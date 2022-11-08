@@ -12,6 +12,7 @@
 void integer_digits(ll n, vi& ds, int b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
+	Assert(abs(b) >= 2);
 	ds.clear();
 
 	// n = 0 の場合の例外処理
@@ -73,9 +74,13 @@ mint from_digits(const string& s, int b = 10, char zero = '0') {
 //【数字和】O(log n)
 /*
 * 非負の数 n を b 進表記したときの桁の数字の和を返す．
+* 
+* 制約：b >= 2
 */
 ll digit_sum(ll n, ll b = 10) {
 	// verify : https://atcoder.jp/contests/abc080/tasks/abc080_b
+
+	Assert(b >= 2);
 
 	ll sum = 0;
 	while (n > 0) {
@@ -102,6 +107,42 @@ ll digit_sum(ll n, ll b = 10) {
 * 
 * verify : https://yukicoder.me/problems/no/1252
 */
+
+
+//【正則連分数展開】O(log min(num, dnm))
+/*
+* 正の有理数 num/dnm の正則連分数展開を seq に格納し，また GCD(分子, 分母) を返す．
+* すなわち，num/dnm = seq[0] + 1/(seq[1] + 1/(seq[2] + 1/(...))) である．
+*/
+ll continued_fraction(ll num, ll dnm, vl& seq) {
+	// verify : https://atcoder.jp/contests/abc273/tasks/abc273_h
+
+	while (dnm > 0) {
+		seq.emplace_back(num / dnm);
+		num %= dnm;
+		swap(num, dnm);
+	}
+
+	return num;
+}
+
+
+//【正則連分数展開からの復元】O(n)
+/*
+* 正の有理数の正則連分数展開 seq[0..n) が表す有理数 r を既約表示した {分子, 分母} を返す．
+* すなわち，r = seq[0] + 1/(seq[1] + 1/(seq[2] + 1/(...))) である．
+*/
+pll from_continued_fraction(const vl& seq) {
+	int n = sz(seq);
+	ll num = 1, dnm = 0;
+
+	repir(i, n - 1, 0) {
+		swap(num, dnm);
+		num += seq[i] * dnm;
+	}
+
+	return make_pair(num, dnm);
+}
 
 
 //【真分数 → 循環小数】O(m)

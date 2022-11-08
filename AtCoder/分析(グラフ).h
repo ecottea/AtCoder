@@ -245,26 +245,24 @@ bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
 
 //【無向グラフの閉路抽出】O(|V| + |E|)
 /*
-* 無向グラフ g の単純閉路を何か 1 つ見つける．
-*
-* g : 無向グラフ
-* cycle : 検出した閉路の頂点番号を順に格納したリスト（閉路なしなら空リスト）
+* 無向グラフ g に単純閉路があれば頂点を順に vs に，辺を順に es に格納し，その長さを返す（無ければ -1）
+* vs[0] から出て vs[1] に入る辺を es[0] とする．
 */
-template <class G> void cycle_detection(const G& g, vi& cycle) {
-	// verify : https://yukicoder.me/problems/no/1254
-	
+template <class E> int cycle_detection(const vector<vector<E>>& g, vi& vs, vector<E>* es = nullptr) {
+	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
+
 	int n = sz(g);
 
 	vb seen(n);
-	cycle.clear();
+	vs.clear();
+	if (es != nullptr) es->clear();
 
-	// 深さ優先探索用の関数
 	// s : 注目頂点，p : 親
 	// 戻り値 : 検出した閉路の末端（-1: 未検出，-2: 抽出完了）
 	function<int(int, int)> dfs = [&](int s, int p) {
 		// 既に訪れたことのある頂点に辿り着いたら閉路を検出したことになる．
 		if (seen[s]) {
-			cycle.push_back(s);
+			vs.push_back(s);
 			return s;
 		}
 		seen[s] = true;
@@ -281,10 +279,16 @@ template <class G> void cycle_detection(const G& g, vi& cycle) {
 			if (end == -1) continue;
 
 			// s が検出した閉路の末端であれば，閉路の記録をここで終わる．
-			if (end == s || end == -2) return -2;
+			if (end == s || end == -2) {
+				if (es != nullptr && end == s) es->push_back(t);
+				return -2;
+			}
 
 			// 検出した閉路を逆順に記録していく．
-			if (end >= 0) cycle.push_back(s);
+			if (end >= 0) {
+				vs.push_back(s);
+				if (es != nullptr) es->push_back(t);
+			}
 
 			return end;
 		}
@@ -301,8 +305,19 @@ template <class G> void cycle_detection(const G& g, vi& cycle) {
 		int end = dfs(v, v);
 
 		// 閉路を検出していたら終了．
-		if (end != -1) return;
+		if (end != -1) {
+			if (es != nullptr) {
+				auto e = es->back();
+				es->pop_back();
+				reverse(all(vs));
+				reverse(all(*es));
+				es->push_back(e);
+			}
+			return sz(vs);
+		}
 	}
+
+	return -1;
 }
 
 

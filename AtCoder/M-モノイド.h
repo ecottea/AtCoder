@@ -119,10 +119,11 @@ F106 id106() { return 0; }
 * f comp g : 合成した一次関数 f o g を返す．
 */
 // verify : https://judge.yosupo.jp/problem/range_affine_range_sum
-using S107 = pair<mint, mint>; // ベクトル (v, c)
-using F107 = pair<mint, mint>; // 行列 (a, b; 0, 1)
+using T107 = mint;
+using S107 = pair<T107, T107>; // ベクトル (v, c)
+using F107 = pair<T107, T107>; // 行列 (a, b; 0, 1)
 S107 op107(S107 x, S107 y) {
-	mint vx, vy, cx, cy;
+	T107 vx, vy, cx, cy;
 	tie(vx, cx) = x; // ベクトル (vx, cx)
 	tie(vy, cy) = y; // ベクトル (vy, cy)
 
@@ -131,7 +132,7 @@ S107 op107(S107 x, S107 y) {
 }
 S107 e107() { return { 0, 0 }; }
 S107 act107(F107 f, S107 x) {
-	mint v, c, a, b;
+	T107 v, c, a, b;
 	tie(v, c) = x; // ベクトル (v, c)
 	tie(a, b) = f; // 行列 (a, b; 0, 1)
 
@@ -139,7 +140,7 @@ S107 act107(F107 f, S107 x) {
 	return { a * v + b * c, c };
 }
 F107 comp107(F107 f, F107 g) {
-	mint a, b, c, d;
+	T107 a, b, c, d;
 	tie(a, b) = f; // 行列 (a, b; 0, 1)
 	tie(c, d) = g; // 行列 (c, d; 0, 1)
 
@@ -341,10 +342,11 @@ F114 id114() { return 1; }
 * f comp g : (af + ag) i + (bf + bg) を加算する作用にする．
 */
 // verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
-using S117 = tuple<mint, mint, mint>; // ベクトル (v, i, 1)
-using F117 = pair<mint, mint>; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
+using T117 = ll;
+using S117 = tuple<T117, T117, T117>; // ベクトル (v, i, 1)
+using F117 = pair<T117, T117>; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
 S117 op117(S117 x, S117 y) {
-	mint vx, vy, sx, sy, cx, cy;
+	T117 vx, vy, sx, sy, cx, cy;
 	tie(vx, sx, cx) = x; // ベクトル (vx, sx, cx)
 	tie(vy, sy, cy) = y; // ベクトル (vy, sy, cy)
 
@@ -353,7 +355,7 @@ S117 op117(S117 x, S117 y) {
 }
 S117 e117() { return { 0, 0, 0 }; }
 S117 act117(F117 f, S117 x) {
-	mint v, s, c, a, b;
+	T117 v, s, c, a, b;
 	tie(v, s, c) = x; // ベクトル (v, s, c)
 	tie(a, b) = f; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
 
@@ -361,7 +363,7 @@ S117 act117(F117 f, S117 x) {
 	return { v + a * s + b * c, s, c };
 }
 F117 comp117(F117 f, F117 g) {
-	mint a, b, c, d;
+	T117 a, b, c, d;
 	tie(a, b) = f; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
 	tie(c, d) = g; // 行列 (1, c, d; 0, 1, 0; 0, 0, 1)
 
@@ -370,5 +372,17 @@ F117 comp117(F117 f, F117 g) {
 }
 F117 id117() { return { 0, 0 }; }
 #define LinearAdd_Sum_amonoid S117, op117, e117, F117, act117, comp117, id117
+
+
+//【変更 作用付き OR モノイド】
+/* verify : https://codeforces.com/contest/620/problem/E */
+using S118 = ll;
+S118 op118(S118 x, S118 y) { return x | y; }
+S118 e118() { return 0; }
+using F118 = ll;
+F118 id118() { return -INFL - 1; } // 使わない値なら何でも OK
+S118 act118(F118 f, S118 x) { return f == id118() ? x : f; }
+F118 comp118(F118 f, F118 g) { return f == id118() ? g : f; }
+#define Update_OR_amonoid S118, op118, e118, F118, act118, comp118, id118
 
 

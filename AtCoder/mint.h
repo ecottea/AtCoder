@@ -113,6 +113,7 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 //【有限体 F_p 上の計算（64 bit）】
 /*
 * 有限体 F_p 上ので様々な計算を行う．
+* mll::set_mod(ll p) はあらゆる場所で使う法を書き換えてしまうので注意．
 *
 * 制約 : p は素数，コンパイラは gcc
 */
@@ -208,6 +209,28 @@ struct mll {
 	// 値の確認
 	ll val() const { return (ll)safe_mod(v); }
 };
-__int128 mll::MOD;
+__int128 mll::MOD; // 静的メンバ変数は実体を別に宣言する必要がある
+
+
+//【mint → 有理数】（実験用）
+/*
+* mint の値をそれっぽい有理数に変換する．
+*/
+void mint_to_frac() {
+	unordered_map<int, pii> nd;
+
+	repi(j, 1, 1024) {
+		mint j_inv = mint(j).inv();
+
+		repi(i, 1, 1024) {
+			int v = (i * j_inv).val();
+
+			if (!nd.count(v)) nd[v] = { i, j };
+		}
+	}
+
+	dump(nd[748683265]);
+	dump(nd[457528662]);
+}
 
 

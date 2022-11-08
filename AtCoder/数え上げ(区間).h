@@ -49,8 +49,8 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 
 	vvi r_min_to_ls(n), r_max_to_ls(n);
 	rep(l, n) {
-		// r_max[l] < l ‚Å‚ ‚é‚æ‚¤‚ÈðŒ‚Í–ž‚½‚¹‚È‚¢D
-		if (r_max[l] < l) return 0;
+		// r_max[l] < l ‚Å‚ ‚é‚æ‚¤‚ÈðŒ‚Í–ž‚½‚¹‚È‚¢‚Ì‚Å–³Ž‹‚·‚éD
+		if (r_max[l] < l) continue;
 
 		// r_min[l] < l ‚Í r_min[l] = l ‚¾‚Á‚½‚±‚Æ‚É‚µ‚Ä–â‘è‚È‚¢D
 		r_min_to_ls[max(r_min[l], l)].push_back(l);

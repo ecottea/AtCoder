@@ -4,57 +4,199 @@
 // ■■■■■ 0-1 計画問題 ■■■■■
 
 
-//【燃やす埋める問題】O(n^2 (n + m))
+//【二次 0-1 計画問題（燃やす埋める問題）】
 /*
-* n 個のゴミについて，ゴミ i を燃やすと非負コスト x[i], 埋めると非負コスト y[i] がかかる．
-* また m 個の p[j] = {a, b, c} は a を燃やし b を埋めるときの追加の非負コスト c を表す．
-* この状況下で全てのゴミを燃やすか埋めるかするときの最小コストを返す．
+* Binary_programming_BB(int n) : O(1)
+*	n 変数 X[0..n) で初期化する．
+*
+* add_cost0(int i, ll c) : O(1)
+*	X[i] = 0 のとき非負コスト c がかかるようにする．
+*
+* add_cost1(int i, ll c) : O(1)
+*	X[i] = 1 のとき非負コスト c がかかるようにする．
+*
+* add_profit0(int i, ll p) : O(1)
+*	X[i] = 0 のとき非負利益 p が得られるようにする．
+*
+* add_profit1(int i, ll p) : O(1)
+*	X[i] = 1 のとき非負利益 p が得られるようにする．
+*
+* add_cost01(int i, int j, ll c) : O(1)
+*	X[i] = 0 かつ X[j] = 0 のとき非負利益 p が得られるようにする．
+*
+* add_profit00(int i, int j, ll p) : O(1)
+*	X[i] = 0 かつ X[j] = 0 のとき非負利益 p が得られるようにする．
+*
+* add_profit11(int i, int j, ll p) : O(1)
+*	X[i] = 1 かつ X[j] = 1 のとき非負利益 p が得られるようにする．
+*
+* ll solve() : O(n^2 m)（m : 条件の数）
+*	得られる最大利益を返す．
 */
-ll burn_bury_problem(const vl& x, const vl& y, const vector<tuple<int, int, ll>>& p) {
-	// 参考 :  https://github.com/E869120/kyopro_educational_90/blob/main/editorial/040.jpg
-	// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
+struct Binary_programming_BB {
+	// 参考 : https://yosupo.hatenablog.com/entry/2015/03/31/134336
 
-	//【方法】
-	// 頂点 S, T, [0..n) をもつ以下のグラフ G 上の最小カット問題に帰着させる：
-	//		∀i=[0..n), S → i ：容量 y[i]
-	//		∀i=[0..n), i → T ：容量 x[i]
-	//		∀{a, b, c} ∈ p, a → b ：容量 c
-	//
-	// 辺がカットされたか否かとゴミを燃やしたか埋めたかの対応は以下の通り：
-	//	  S と i が繋がっている		   T と i が繋がっている
-	// ⇔ T と i がカットされている	⇔ S と i がカットされている
-	// ⇔ コスト x[i] を支払った		⇔ コスト y[i] を支払った
-	// ⇔ ゴミ i を燃やした			⇔ ゴミ i を埋めた
+	// n : 01-変数の数
+	int n;
+	
+	// profit : 前借りしている非負利益
+	ll profit = 0;
 
-	int n = sz(x);
+	// cost0[i] : X[i] = 0 のときにかかる非負コスト
+	// cost1[i] : X[i] = 1 のときにかかる非負コスト
+	vl cost0, cost1;
 
-	const int S = n, T = n + 1;
-	mf_graph<ll> g(n + 2);
+	// cost01[i][j] : X[i] = 0 かつ X[j] = 1 のときにかかる非負コスト
+	vvl cost01;
 
-	rep(i, n) {
-		g.add_edge(S, i, y[i]);
-		g.add_edge(i, T, x[i]);
+	// n 変数で初期化
+	Binary_programming_BB(int n_) : n(n_), cost0(n), cost1(n), cost01(n, vl(n)) {}
+
+	// X[i] = 0 のとき非負コスト c がかかるようにする．
+	void add_cost0(int i, ll c) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+
+		Assert(c >= 0);
+
+		cost0[i] += c;
 	}
 
-	repe(tmp, p) {
-		int a, b; ll c;
-		tie(a, b, c) = tmp;
+	// X[i] = 1 のとき非負コスト c がかかるようにする．
+	void add_cost1(int i, ll c) {
+		// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
 
-		g.add_edge(a, b, c);
+		Assert(c >= 0);
+
+		cost1[i] += c;
 	}
 
-	return g.flow(S, T);
-}
+	// X[i] = 0 のとき非負利益 p が得られるようにする．
+	void add_profit0(int i, ll p) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+
+		Assert(p >= 0);
+
+		// 利益 p を前借りしておき，X[i] = 1 のときコスト p がかかると言い換えればよい．
+		profit += p;
+		cost1[i] += p;
+	}
+
+	// X[i] = 1 のとき非負利益 p が得られるようにする．
+	void add_profit1(int i, ll p) {
+		// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
+
+		Assert(p >= 0);
+
+		// 利益 p を前借りしておき，X[i] = 0 のときコスト p がかかると言い換えればよい．
+		profit += p;
+		cost0[i] += p;
+	}
+
+	// X[i] = 0 かつ X[j] = 1 のとき非負コスト c がかかるようにする．
+	void add_cost01(int i, int j, ll c) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+
+		Assert(c >= 0);
+
+		cost01[i][j] += c;
+	}
+
+	// X[i] = 0 かつ X[j] = 0 のとき非負利益 p が得られるようにする．
+	void add_profit00(int i, int j, ll p) {
+		Assert(p >= 0);
+
+		// 利益 p を前借りしておき，
+		//		X[i] = 1 のときコスト p がかかる
+		//		X[i] = 0 かつ X[j] = 1 のときコスト p がかかる
+		// と言い換えればよい．
+		profit += p;
+		cost1[i] += p;
+		cost01[i][j] += p;
+	}
+
+	// X[i] = 1 かつ X[j] = 1 のとき非負利益 p が得られるようにする．
+	void add_profit11(int i, int j, ll p) {
+		// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
+
+		Assert(p >= 0);
+
+		// 利益 p を前借りしておき，
+		//		X[j] = 0 のときコスト p がかかる
+		//		X[i] = 0 かつ X[j] = 1 のときコスト p がかかる
+		// と言い換えればよい．
+		profit += p;
+		cost0[j] += p;
+		cost01[i][j] += p;
+	}
+
+	// 最大利益を返す．
+	ll solve() {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+
+		// ST : 始点（恒等的に 0），GL : 終点（恒等的に 1）
+		// g の残余ネットワークで ST から到達可能な頂点は 0，それ以外は 1 とにする．
+		int ST = n, GL = n + 1;
+		mf_graph<ll> g(n + 2);
+		
+		rep(i, n) {
+			// X[i] = 0 にコスト c0， X[i] = 1 にコスト c1 がかかるとき
+			//	c = min(c0, c1) として確定でコスト c がかかるとし，
+			//		c0 > c1 なら X[i] = 0 にコスト c0 - c がかかる
+			//		c0 < c1 なら X[i] = 1 にコスト c1 - c がかかる
+			// としてよい．
+			ll c = min(cost0[i], cost1[i]);
+			profit -= c;
+
+			if (cost0[i] > cost1[i]) {
+				// X[i] = 0 にコスト c0 - c がかかるとき
+				//	X[i] = 0 かつ X[GL] = 1 だとコスト c0 - c がかかると言い換えられる．
+				//	よって辺 i → GL をカットすることにコスト c0 - c を課せば良い．
+				g.add_edge(i, GL, cost0[i] - c);
+			}
+			else if (cost0[i] < cost1[i]) {
+				// X[i] = 1 にコスト c1 - c がかかるとき
+				//	X[ST] = 0 かつ X[i] = 1 だとコスト c1 - c がかかると言い換えられる．
+				//	よって辺 ST → i をカットすることにコスト c1 - c を課せば良い．
+				g.add_edge(ST, i, cost1[i] - c);
+			}
+		}
+
+		rep(i, n) rep(j, n) {
+			// X[i] = 0 かつ X[j] = 1 にコスト c がかかるとき
+			//	そのまま辺 i → j をカットすることにコスト c を課せば良い．
+			if (cost01[i][j] > 0) g.add_edge(i, j, cost01[i][j]);
+		}
+
+		return profit - g.flow(ST, GL);
+	}
+};
+
+
+//【三次の利益】
+/*
+* X[i] = 0 かつ X[j] = 0 かつ X[k] = 0 のとき非負利益 p が得られることは，
+* 利益 p を前借りした上で変数 Y を追加し，
+*	Y = 1 のときコスト p
+*	Y = 0 かつ X[i] = 1 のときコスト ∞
+*	Y = 0 かつ X[j] = 1 のときコスト ∞
+*	Y = 0 かつ X[k] = 1 のときコスト ∞
+* とすることで二次の項のみで表現できる．
+*/
 
 
 //【project selection problem】O((n + m)^2 (n + m + c))
 /*
 * n 個の計画があり，計画 i を実行すると非負の利益 x[i] を得る．
-* また m 個の機械があり，機械 j を購入すると非負のコスト y[i] がかかる．
+* また m 個の機械があり，機械 j を購入すると非負のコスト y[j] がかかる．
 * c 個の p[k] = {i, j} は計画 i の実行には機械 j が必要であることを表す．
 * この状況下で得られる最大利益を返す．
+* また実行した計画を x_ids に，購入した機械を y_ids にそれぞれ格納する．
 */
-ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p) {
+ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p,
+	vi* x_ids = nullptr, vi* y_ids = nullptr)
+{
+	// verify : https://atcoder.jp/contests/arc031/tasks/arc031_4
+
 	//【方法】
 	// あらかじめ総利益 Σx[i] を得たことにして，
 	// 計画 i を実行しなかったときコスト x[i] を払うものとする．
@@ -62,12 +204,12 @@ ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p) {
 	// 
 	// 頂点 S, a[0..n), b[0..m), T をもつ以下のグラフ G 上の最小カット問題に帰着させる：
 	//		∀i = [0..n), S → a[i] ：容量 x[i]
-	//		∀j = [0..m), b[j] → T ：容量 y[i]
+	//		∀j = [0..m), b[j] → T ：容量 y[j]
 	//		∀{i, j} ∈ p, a[i] → b[j] ：容量 +∞
 	//
 	// 辺がカットされたか否かと計画を実行したか[機械を購入したか] の対応は以下の通り：
 	//	  S と i がカットされている	   T と j がカットされている
-	// ⇔ コスト x[i] を支払った		⇔ コスト y[i] を支払った
+	// ⇔ コスト x[i] を支払った		⇔ コスト y[j] を支払った
 	// ⇔ 計画 i を実行しなかった		⇔ 機械 j を購入した
 	//
 	//    S と i が繋がっている		   T と j が繋がっている
@@ -75,8 +217,8 @@ ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p) {
 
 	int n = sz(x), m = sz(y);
 
-	const int S = n + m, T = n + m + 1;
 	mf_graph<ll> g(n + m + 2);
+	int S = n + m, T = S + 1;
 
 	rep(i, n) g.add_edge(S, i, x[i]);
 	rep(j, m) g.add_edge(n + j, T, y[j]);
@@ -88,7 +230,19 @@ ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p) {
 		g.add_edge(a, n + b, INFL);
 	}
 
-	return accumulate(all(x), 0LL) - g.flow(S, T);
+	ll res = accumulate(all(x), 0LL) - g.flow(S, T);
+
+	if (x_ids != nullptr) {
+		x_ids->clear();
+		y_ids->clear();
+
+		vb mc = g.min_cut(S);
+
+		rep(i, n) if (mc[i]) x_ids->emplace_back(i);
+		rep(j, m) if (mc[n + j]) y_ids->emplace_back(j);
+	}
+
+	return res;
 }
 
 
