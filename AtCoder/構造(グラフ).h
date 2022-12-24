@@ -12,25 +12,30 @@
 
 //【グラフの入力】O(|V| + |E|)
 /*
-* 始点 終点の組からなる入力を受け取り，n 頂点 m 辺のグラフを構築する．
+* (始点, 終点) の組からなる入力を受け取り，n 頂点 m 辺のグラフを構築して返す．
 *
 * n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* undirected : 無向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
+* m : グラフの辺の数（省略すれば n-1）
+* undirected : 無向グラフか（省略すれば true）
+* one_indexed : 入力が 1-indexed か（省略すれば true）
 */
-void read_graph(int n, int m, Graph& g,	bool undirected = true, bool one_indexed = true) {
-	g = Graph(n);
+Graph read_Graph(int n, int m = -1, bool undirected = true, bool one_indexed = true) {
+	// verify : https://codeforces.com/contest/764/problem/C
+
+	Graph g(n);
+	if (m == -1) m = n - 1;
+
 	rep(i, m) {
 		int a, b;
 		cin >> a >> b;
 
-		if (one_indexed) { a--; b--; }
+		if (one_indexed) { --a; --b; }
 
 		g[a].push_back(b);
 		if (undirected) g[b].push_back(a);
 	}
+
+	return g;
 }
 
 
@@ -46,7 +51,7 @@ struct WEdge {
 	ll cost; // 辺のコスト
 
 	WEdge() : to(-1), cost(-INFL) {}
-	WEdge(int to_, ll cost_) : to(to_), cost(cost_) {}
+	WEdge(int to, ll cost) : to(to), cost(cost) {}
 
 	// プレーングラフで呼ばれたとき用
 	operator int() const { return to; }
@@ -64,35 +69,38 @@ struct WEdge {
 /*
 * WGraph g
 * g[v] : 頂点 v から出る辺を並べたリスト
-* 
+*
 * verify : https://judge.yosupo.jp/problem/shortest_path
-*/ 
+*/
 using WGraph = vector<vector<WEdge>>;
 
 
 //【コスト付きグラフの入力】O(|V| + |E|)
 /*
-* 始点 終点 コストの組からなる入力を受け取り，n 頂点 m 辺のコスト付きグラフを構築する．
+* (始点, 終点, コスト) の組からなる入力を受け取り，n 頂点 m 辺のコスト付きグラフを構築して返す．
 *
 * n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* undirected : 無向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
+* m : グラフの辺の数（省略すれば n-1）
+* undirected : 無向グラフか（省略すれば true）
+* one_indexed : 入力が 1-indexed か（省略すれば true）
 */
-void read_graph(int n, int m, WGraph& g, bool undirected = true, bool one_indexed = true) {
+WGraph read_WGraph(int n, int m = -1, bool undirected = true, bool one_indexed = true) {
 	// verify : https://judge.yosupo.jp/problem/shortest_path
-	
-	g = WGraph(n);
+
+	WGraph g(n);
+	if (m == -1) m = n - 1;
+
 	rep(i, m) {
 		int a, b; ll c;
 		cin >> a >> b >> c;
 
-		if (one_indexed) { a--; b--; }
+		if (one_indexed) { --a; --b; }
 
 		g[a].push_back({ b, c });
 		if (undirected) g[b].push_back({ a, c });
 	}
+
+	return g;
 }
 
 
@@ -135,27 +143,30 @@ using IGraph = vector<vector<IEdge>>;
 
 //【参照付きグラフの入力】O(|V| + |E|)
 /*
-* 始点 終点 の組からなる入力を受け取り，n 頂点 m 辺の参照付きグラフを構築する．
+* (始点, 終点) の組からなる入力を受け取り，n 頂点 m 辺の参照付きグラフを構築して返す．
 *
 * n : グラフの頂点の数
-* m : グラフの辺の数
-* g : ここにグラフを構築して返す
-* undirected : 無向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
+* m : グラフの辺の数（省略すれば n-1）
+* undirected : 無向グラフか（省略すれば true）
+* one_indexed : 入力が 1-indexed か（省略すれば true）
 */
-void read_graph(int n, int m, IGraph& g, bool undirected = true, bool one_indexed = true) {
+IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed = true) {
 	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
 
-	g = IGraph(n);
+	IGraph g(n);
+	if (m == -1) m = n - 1;
+
 	rep(i, m) {
 		int a, b;
 		cin >> a >> b;
 
-		if (one_indexed) { a--; b--; }
+		if (one_indexed) { --a; --b; }
 
 		g[a].push_back({ b, i, true });
 		if (undirected) g[b].push_back({ a, i, false });
 	}
+
+	return g;
 }
 
 

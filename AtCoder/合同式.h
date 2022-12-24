@@ -14,8 +14,7 @@ int ord_p(const mint& a) {
 	const int p = mint::mod();
 
 	// p - 1 の約数が位数の候補となる．
-	vl divs;
-	divisors(p - 1, divs);
+	vl divs = divisors(p - 1);
 
 	// p - 1 の約数を昇順に調べていく．
 	repe(d, divs) {
@@ -43,8 +42,7 @@ int ord(const mint& a) {
 	ll lambda = carmichael_lambda(m);
 
 	// λ(m) の約数が位数の候補となる．
-	vl divs;
-	divisors(lambda, divs);
+	vl divs = divisors(lambda);
 
 	// λ(m) の約数を昇順に調べていく．
 	repe(d, divs) {
@@ -70,8 +68,7 @@ int find_primitive_root() {
 	if (p == 2) return 1;
 
 	// p - 1 の約数 divs を得る．
-	vl divs;
-	divisors(p - 1, divs);
+	vl divs = divisors(p - 1);
 
 	// p - 1 自身だけ削除する．
 	divs.pop_back();
@@ -156,7 +153,7 @@ int log(mint a, mint b) {
 
 //【離散対数問題】O(√m log m)
 /*
-* a x^d = b mod m の最小解 d >= 0 を返す（なければ INF）
+* a x^d ≡ b (mod m) の最小解 d >= 0 を返す（なければ INF）
 * ここで m = mint::mod() である．また 0^0 = 1 とする．
 *
 *（baby-step giant-step）
@@ -221,52 +218,66 @@ int log(mint a, mint x, mint b) {
 }
 
 
-//【平方剰余】O(√p)
+//【平方剰余】O((log p)^2)
 /*
-* x^2 = a mod p の解 x の一方を返す．（なければ -1）
+* x^2 = a mod p の解 x の 1 つを返す．（なければ -1）
 *
 * 制約 : p = mint::mod() は素数
-* 
-*（トネリ－シャンクスのアルゴリズム） 
 */
-int sqrt(const mint& a) {
+int tonelli_shanks(const mint& a) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/tonelli-shanks.html
 	// verify : https://judge.yosupo.jp/problem/sqrt_mod
 
 	//【方法】
-	// p = mod, p - 1 = 2^d q（q : 奇数）と表しておく．
+	// p = mod, p-1 = 2^d q（q : 奇数）と表しておく．
 	// 
-	// 適当な平方非剰余 z を見つける．
-	// オイラーの基準より，
-	//		z が平方非剰余 ⇔ z^((p-1)/2) = -1
-	// である．
+	// a = 0 のときは 0^2 = 0 なので単に 0 を返せば良い．
+	// 
+	// p = 2 のときは x^2 = x (mod 2) なので単に a を返せば良い．
+	// 
+	// a が平方非剰余の場合を検出するには，オイラーの規準より
+	//		a が平方非剰余 ⇔ a^((p-1)/2) = -1
+	// であることを用いてればよい．この場合は -1 を返す．
+	// 
+	// p = 3 (mod 4) の場合は，単に x = a^((p+1)/4) を返せば良い．実際，オイラーの規準より
+	//		x^2 = a^((p+1)/2) = a * a^((p-1)/2) = a * 1 = a
+	// となる．
+	// 
+	// 以降の手順のため，オイラーの規準を用いて適当な平方非剰余 z を見つけておく．
 	//
-	// t = a^q と初期化する．a は平方剰余なので，オイラーの基準より
+	// t = a^q と初期化する．a は平方剰余なので，オイラーの規準より
 	//		t^(2^(d-1)) = a^(2^(d-1) q) = a^((p-1)/2) = 1
 	// となる．
 	//
-	// i = [d-2..0] について，t^(2^i) = -1 であれば
-	//		t *= z^((p-1) / 2^(i+1))
-	// と t を更新する．
-	//		(z^((p-1) / 2^(i+1)))^(2^i) = z^(2^i (p-1) / 2^(i+1)) = z^((p-1) / 2) = -1
-	// なので，この更新により t^(2^i) = 1 となる．
-	// i = 0 まで更新を終えれば，最終的に t = 1 となる．
+	// i∈[d-2..0] について，t^(2^i) = -1 であれば
+	//		t *= z^(2^(d-i-1) q)
+	// と t を更新する．この因子の 2^i 乗は
+	//		(z^(2^(d-i-1) q))^(2^i) = z^(2^(d-1) q) = z^((p-1)/2) = -1
+	// より -1 なので，この更新により t^(2^i) = 1 となる．
+	// i = 0 まで更新を終えれば最終的に t = 1 となり，ここまでの手順から
+	//		1 = a^q z^(2^(d-i[1]-1) q) ... z^(2^(d-i[k]-1) q)
+	// の形の等式が得られる．
 	//
-	// 求める x は
-	//		x = a^(1/2) = (t a)^(1/2)
-	// と表されるから，2 のべきを 1 つ小さくしながら途中計算することにより，
-	// 先の計算と同時に x を得ることができる．
+	// 先の等式を用いれば，求める x は
+	//		x = (1 a)^(1/2)
+	//		= (a^(q+1) z^(2^(d-i[1]-1) q) ... z^(2^(d-i[k]-1) q))^(1/2)
+	//		= a^((q+1)/2) z^(2^(d-i[1]-2) q) ... z^(2^(d-i[k]-2) q)
+	// と表される．
 
 	// 法 p を得る．
-	const int p = mint::mod();
+	int p = mint::mod();
+
+	// a = 0 の場合の例外処理
+	if (a == 0) return 0;
 
 	// p = 2 の場合の例外処理
 	if (p == 2) return a.val();
 
 	// a が平方非剰余なら -1 を返す．
-	if (a.pow((p - 1) / 2) == -1) {
-		return -1;
-	}
+	if (a.pow((p - 1) / 2) == -1) return -1;
+
+	// p = 3 (mod 4) の場合は簡単に解決する．
+	if (p % 4 == 3) return a.pow((p + 1) / 4).val();
 
 	// mod - 1 = 2^d q（q : 奇数）なる d, q を得る．
 	int q = p - 1, d = 0;
@@ -275,18 +286,26 @@ int sqrt(const mint& a) {
 		d++;
 	}
 
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<ll> rnd(2, p - 1);
+
 	// 適当な平方非剰余 z を見つける．
-	mint z = 2;
-	while (z.pow((p - 1) / 2) == 1) {
-		z += 1;
+	mint z; vm z_pow(d); // z_pow[i] = z^(2^i q)
+	while (true) {
+		z = rnd(mt);
+
+		z_pow[0] = z.pow(q);
+		repi(i, 1, d - 1) z_pow[i] = z_pow[i - 1] * z_pow[i - 1];
+
+		if (z_pow[d - 1] == -1) break;
 	}
 
 	// t を更新しつつ結果を得る．
-	mint t = a.pow(q), res = a.pow((q + 1) / 2);
+	mint tmp = a.pow((q - 1) / 2), res = tmp * a, t = tmp * res;
 	repir(i, d - 2, 0) {
 		if (t.pow(1LL << i) == -1) {
-			t *= z.pow((p - 1) >> (i + 1));
-			res *= z.pow((p - 1) >> (i + 2));
+			t *= z_pow[d - i - 1];
+			res *= z_pow[d - i - 2];
 		}
 	}
 

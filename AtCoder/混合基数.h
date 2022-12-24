@@ -30,7 +30,7 @@ void mixed_radix(const vl& a, ll val, vl& d, vl& b) {
 
 //【混合基数，下から桁 DP，桁上げフラグ，スコア最小化】O(n)
 /*
-* 混合基数 b[0..n) で表現 num[0..n) をもつ数について，全ての整数 d についての
+* 混合基数 b[0..n) で num[0..n) と表示される数について，全ての整数 d についての
 * (d の数字和) + (num + d の数字和) の最小値を返す．
 */
 ll minimize_pair_digit_sum(const vl& num, const vl& b) {
@@ -41,14 +41,14 @@ ll minimize_pair_digit_sum(const vl& num, const vl& b) {
 	// dp[i][f] : 以下の条件を満たす数の最小スコア：
 	//	i : 下からの桁 d[0..i) まで決まっている．
 	//	f : d[i+1] への桁上げがあるなら 1，さもなくば 0（桁上げフラグ）
-	vvl dp(n + 1, vl(2, INFL));
+	vvl dp(n + 1, vl(1LL << 1, INFL));
 	dp[0][0] = 0;
 
 	// 下の桁から順に配る DP
 	rep(i, n) {
 		ll x = num[i];
 
-		rep(f, 2) {
+		repb(f, 1) {
 			// d の i 桁目を 0 にする場合
 			chmin(dp[i + 1][0], dp[i][f] + (x + f));
 
@@ -112,19 +112,19 @@ void enumerate_redundant_mixed_radix(const vl& a, ll val, vvl& ds) {
 * ll fibonacci(int i) : O(1)
 *	i 番目のフィボナッチ数 fib[i] を得る（fib[0] = 0, fib[1] = 1 とする．）
 *
-* get_digits(ll n, vi& ds) : O(log n)
-*	n のフィボナッチ進法表示を ds に格納する．（下位から順）
+* vi get_digits(ll n) : O(log n)
+*	n のフィボナッチ進法表示を返す．（下位から順）
 *	桁の数は {0, 1} であり，1 は連続せず，下 2 桁は常に "00" である．
 */
 class Fibonacci_representation {
-	// verify : https://atcoder.jp/contests/arc122/tasks/arc122_c
-
 	int m;
 	vl fib;
 
 public:
 	// n 以下の整数のフィボナッチ進法表示を求められるよう初期化する．
 	Fibonacci_representation(ll n) {
+		// verify : https://atcoder.jp/contests/arc122/tasks/arc122_c
+		
 		fib = vl{ 0, 1 }; m = 2;
 		while (fib[m - 1] <= n) {
 			fib.push_back(fib[m - 1] + fib[m - 2]);
@@ -139,16 +139,15 @@ public:
 		return fib[i];
 	}
 
-	// n のフィボナッチ進法表示を ds に格納する．（下位から順）
-	void get_digits(ll n, vi& ds) {
-		if (n == 0) {
-			ds = vi{ 0 };
-			return;
-		}
+	// n のフィボナッチ進法表示を返す（下位から順）
+	vi get_digits(ll n) {
+		// verify : https://atcoder.jp/contests/arc122/tasks/arc122_c
+		
+		if (n == 0) return vi{ 0 };
 
 		int i = 2;
 		while (fib[i] <= n) i++;
-		ds.resize(i);
+		vi ds(i);
 		i--;
 
 		while (i >= 2) {
@@ -160,6 +159,8 @@ public:
 			i--;
 		}
 		ds[1] = ds[0] = 0;
+
+		return ds;
 	}
 };
 

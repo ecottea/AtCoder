@@ -8,7 +8,8 @@
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
-template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
+template <typename T>
+T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 	// 参考 : https://twitter.com/meguru_comp/status/697008509376835584
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_4_D
 
@@ -24,7 +25,8 @@ template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 	return ok;
 
 	/* okQ の定義の雛形
-	function<bool(ll)> okQ = [&](ll x) {
+	using T = ll;
+	function<bool(T)> okQ = [&](T x) {
 		return true || false;
 	};
 	*/
@@ -35,7 +37,8 @@ template <typename T> T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 /*
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 */
-template <typename T> T binary_search(T ok, T ng, function<bool(T)>& okQ) {
+template <typename T>
+T binary_search(T ok, T ng, function<bool(T)>& okQ) {
 	// verify : https://atcoder.jp/contests/abc189/tasks/abc189_f
 
 	// 誤差 EPS で境界が決定するまで
@@ -68,7 +71,8 @@ template <typename T> T binary_search(T ok, T ng, function<bool(T)>& okQ) {
 /*
 * 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l, r) における最大値を与える x を返す．
 */
-template <class T> ll ternary_search_uc(ll l, ll r, function<T(ll)>& f) {
+template <class T>
+ll ternary_search_uc(ll l, ll r, function<T(ll)>& f) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_f
 
 	while (r - l > 2) {
@@ -92,7 +96,10 @@ template <class T> ll ternary_search_uc(ll l, ll r, function<T(ll)>& f) {
 /*
 * 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
 */
-template <class T> ll ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
+template <class T>
+ll ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
+	// verify : https://atcoder.jp/contests/abc279/tasks/abc279_d
+
 	while (r - l > 2) {
 		ll m1 = (l + r) / 2;
 		ll m2 = m1 + 1;
@@ -115,7 +122,8 @@ template <class T> ll ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
 * 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
 * そうでなくても運が良ければ正しい x を返す．
 */
-template <class T> ll random_ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
+template <class T>
+ll random_ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
 	static bool first_call = true;
 
 	mt19937 mt;
@@ -150,10 +158,10 @@ template <class T> ll random_ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
 
 //【フィボナッチ探索】
 /*
-* Fibonacci_search(w) : O(log w)
+* Fibonacci_search(ll w) : O(log w)
 *	最大で幅 w の開区間まで扱えるよう初期化する．
 *
-* search(left, right, f, up) : O(log(right - left))
+* ll search(ll left, ll right, function<ll(ll)> f, bool up = true) : O(log(right - left))
 *	関数 f(i) の開区間 (left, right) における最大[小]値を与える i を返す．
 *	up = true なら f の階差の符号変化は + → 0 → - で，返すのは最大値となる．
 *	up = false なら f の階差の符号変化は - → 0 → + で，返すのは最小値となる．
@@ -402,23 +410,21 @@ double random_ternary_search_lc(double l, double r, function<double(double)>& f)
 * 境界を二分探索し，ok[i][ng[i]] を境界に接する OK[NG] 側の要素に変更する．
 * okQ は，okQ(mid, res) で呼び出すと mid[i] が条件を満たすかが res[i] に格納されるとする．
 */
-template <typename T>
-void parallel_binary_search(vector<T>& ok, vector<T>& ng,
-	function<void(const vector<T>&, vb&)>& okQ)
-{
+void parallel_binary_search(vi& ok, vi& ng,	function<void(const vi&, vb&)>& okQ) {
 	// 参考 : https://betrue12.hateblo.jp/entry/2019/08/14/152227
-	// verify : https://atcoder.jp/contests/code-thanks-festival-2017-open/tasks/code_thanks_festival_2017_h
+	// verify : https://yukicoder.me/problems/no/1982
 
 	//【使い所】
 	// 解が単調性を持っていることが分かっているが，ランダムアクセスができず，
 	// 愚直に二分探索を繰り返すと O(N Q) がかかってしまう場合．（Union-Find など）
 	// どうせ線形探索に O(N) かかるのなら Q 個のクエリをまとめて処理できるので，
 	// 線形探索の回数を O(log Q) に抑えることで全体 O(N log Q) を実現する．
+	//
+	// 永続データ構造の代案として使えたりする．
 	
 	int q = sz(ok); // クエリの数
 
-	vector<T> mid(q);
-	vb res(q);
+	vi mid(q); vb res(q);
 
 	while (true) {
 		bool update = false; // 更新が起こったか
@@ -441,30 +447,28 @@ void parallel_binary_search(vector<T>& ok, vector<T>& ng,
 		rep(i, q) {
 			if (res[i]) ok[i] = mid[i];
 			else ng[i] = mid[i];
-		}
-
-		/* okQ の定義の雛形
-		function<void(const vi&, vb&)> okQ = [&](const vi& mid, vb& res) {
-			// mid の値ごとに処理するため，連想配列 mid → id を作る．
-			unordered_map<int, vi> mid_to_id;
-			rep(id, q) {
-				mid_to_id[mid[id]].push_back(id);
-			}
-
-			// シミュレーションを行う
-			rep(t, t_max) {
-				// 時刻 t での処理
-
-				// mid = t のものに対する判定
-				if (mid_to_id.count(t)) {
-					repe(id, mid_to_id[t]) {
-						res[id] = true || false;
-					}
-				}
-			}
-		};
-		*/
+		}		
 	}
+
+	/* okQ の定義の雛形
+	function<void(const vi&, vb&)> okQ = [&](const vi& mid, vb& res) {
+		// mid の値ごとに処理するため，mid → id を作る．
+		vvi mid_to_id(k);
+		rep(id, q) mid_to_id[mid[id]].push_back(id);
+
+		// 必要なデータ構造の準備をここに書く：
+
+
+		// シミュレーションを行う
+		rep(t, k) {
+			// 時刻 t での処理をここに書く：
+
+
+			// mid = t のものに対する判定
+			repe(id, mid_to_id[t]) res[id] = (seg.get(I[id]) >= x[id]);
+		}
+	};
+	*/
 }
 
 

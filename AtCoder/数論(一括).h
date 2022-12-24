@@ -10,7 +10,7 @@
 * n ˆÈ‰º‚Ì‘f”‚ğ—ñ‹“‚µCps ‚É¸‡‚ÉŠi”[‚·‚éD
 */
 void eratosthenes(int n, vi& ps) {
-	// verify : https://algo-method.com/tasks/330
+	// verify : https://judge.yosupo.jp/problem/enumerate_primes
 
 	ps.clear();
 

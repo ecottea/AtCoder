@@ -5,14 +5,15 @@
 
 //【自身より小さい数の次の位置】O(n log n)
 /*
-* a[0..n) で，j > i かつ a[j] < a[i] なる最小の j を nxt_les[i] に格納する（なければ n）
+* a[0..n) で，i < j かつ a[i] > a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
 * eq = true とすると「自身以下の数の次の位置」を格納する．
 */
-template <class T> void next_less_position(const vector<T>& a, vi& nxt_les, bool eq = false) {
+template <class T>
+vi next_less_position(const vector<T>& a, bool eq = false) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
 
 	int n = sz(a);
-	nxt_les = vi(n, n);
+	vi nxt_les(n, n);
 
 	priority_queue<pair<T, int>> q;
 
@@ -26,19 +27,22 @@ template <class T> void next_less_position(const vector<T>& a, vi& nxt_les, bool
 
 		q.push({ a[i], i });
 	}
+
+	return nxt_les;
 }
 
 
 //【自身より大きい数の次の位置】O(n log n)
 /*
-* a[0..n) で，j > i かつ a[j] > a[i] なる最小の j を nxt_grt[i] に格納する（なければ n）
+* a[0..n) で，i < j かつ a[i] < a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
 * eq = true とすると「自身以上の数の次の位置」を格納する．
 */
-template <class T> void next_greater_position(const vector<T>& a, vi& nxt_grt, bool eq = false) {
+template <class T>
+vi next_greater_position(const vector<T>& a, bool eq = false) {
 	// verify : https://atcoder.jp/contests/code-festival-2014-qualb/tasks/code_festival_qualB_d
 
 	int n = sz(a);
-	nxt_grt = vi(n, n);
+	vi nxt_grt(n, n);
 
 	priority_queue_rev<pair<T, int>> q;
 
@@ -52,19 +56,22 @@ template <class T> void next_greater_position(const vector<T>& a, vi& nxt_grt, b
 
 		q.push({ a[i], i });
 	}
+
+	return nxt_grt;
 }
 
 
 //【自身より小さい数の前の位置】O(n log n)
 /*
-* a[0..n) で，j < i かつ a[j] < a[i] なる最大の j を prv_les[i] に格納する（なければ -1）
+* a[0..n) で，j < i かつ a[j] < a[i] なる最大の j（なければ -1）を pps[i] に格納し pos を返す．
 * eq = true とすると「自身以下の数の前の位置」を格納する．
 */
-template <class T> void prev_less_position(const vector<T>& a, vi& prv_les, bool eq = false) {
+template <class T>
+vi prev_less_position(const vector<T>& a, bool eq = false) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
 
 	int n = sz(a);
-	prv_les = vi(n, -1);
+	vi prv_les(n, -1);
 
 	priority_queue<pair<T, int>> q;
 
@@ -78,19 +85,22 @@ template <class T> void prev_less_position(const vector<T>& a, vi& prv_les, bool
 
 		q.push({ a[i], i });
 	}
+
+	return prv_les;
 }
 
 
 //【自身より大きい数の前の位置】O(n log n)
 /*
-* a[0..n) で，j < i かつ a[j] > a[i] なる最大の j を prv_grt[i] に格納する（なければ -1）
+* a[0..n) で，j < i かつ a[j] > a[i] なる最大の j（なければ -1）を pos[i] に格納し pos を返す．
 * eq = true とすると「自身以上の数の前の位置」を格納する．
 */
-template <class T> void prev_greater_position(const vector<T>& a, vi& prv_grt, bool eq = false) {
+template <class T>
+vi prev_greater_position(const vector<T>& a, bool eq = false) {
 	// verify : https://atcoder.jp/contests/code-festival-2014-qualb/tasks/code_festival_qualB_d
 
 	int n = sz(a);
-	prv_grt = vi(n, -1);
+	vi prv_grt(n, -1);
 
 	priority_queue_rev<pair<T, int>> q;
 
@@ -104,19 +114,22 @@ template <class T> void prev_greater_position(const vector<T>& a, vi& prv_grt, b
 
 		q.push({ a[i], i });
 	}
+
+	return prv_grt;
 }
 
 
 //【自身より大きい数の次以降 k 個の位置】O(k n log n)
 /*
-* a[0..n) で，j > i かつ a[j] > a[i] なる j を昇順に k 個まで nxt_grt[i] に格納する．
+* a[0..n) で，i < j かつ a[i] < a[j] なる j を昇順に k 個まで pos[i] に格納し pos を返す．
 * eq = true とすると「自身以上の数の次から k 個の位置」を格納する．
 */
-template <class T> void next_greater_positions(const vector<T>& a, int k, vvi& nxt_grt, bool eq = false) {
+template <class T>
+vvi next_greater_positions(const vector<T>& a, int k, bool eq = false) {
 	// verify : https://atcoder.jp/contests/abc140/tasks/abc140_e
 
 	int n = sz(a);
-	nxt_grt = vvi(n);
+	vvi nxt_grt(n);
 
 	// 奥の要素にアクセスできる優先度付きキューとして set を用いる．
 	set<pair<T, int>> q;
@@ -135,21 +148,23 @@ template <class T> void next_greater_positions(const vector<T>& a, int k, vvi& n
 
 		q.insert({ a[i], i });
 	}
+
+	return nxt_grt;
 }
 
 
 //【自身と同じ数の次の位置】O(n)
 /*
-* a[0..n) の各要素 a[i] について，j > i かつ a[j] = a[i] となる最小の j を
-* nxt[j] に格納する．（存在しなければ n）
+* a[0..n) で，i < j かつ a[i] = a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す． 
 */
-template <class T> void next_equal(const vector<T>& a, vi& nxt) {
+template <class T>
+vi next_equal(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc036/tasks/agc036_b
 
 	int n = sz(a);
 
 	// nxt[i] : j > i かつ a[j] = a[i] となる最小の j（なければ n）
-	nxt = vi(n, n);
+	vi nxt(n, n);
 
 	// num_to_pos[x] : 値 x が最後に現れた位置（右から走査する）
 	unordered_map<T, int> num_to_pos;
@@ -160,21 +175,23 @@ template <class T> void next_equal(const vector<T>& a, vi& nxt) {
 		}
 		num_to_pos[a[i]] = i;
 	}
+
+	return nxt;
 }
 
 
 //【自身と同じ数の前の位置】O(n)
 /*
-* a[0..n) の各要素 a[i] について，j < i かつ a[j] = a[i] となる最大の j を
-* prv[j] に格納する．（存在しなければ -1）
+* a[0..n) で，j < i かつ a[j] = a[i] なる最大の j（なければ -1）を pps[i] に格納し pos を返す．
 */
-template <class T> void prev_equal(const vector<T>& a, vi& prv) {
+template <class T> 
+vi prev_equal(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc031/tasks/agc031_b
 
 	int n = sz(a);
 
 	// prv[i] : j < i かつ a[j] = a[i] となる最大の j（なければ -1）
-	prv = vi(n, -1);
+	vi prv(n, -1);
 
 	// num_to_pos[x] : 値 x が最後に現れた位置（左から走査する）
 	unordered_map<T, int> num_to_pos;
@@ -185,19 +202,21 @@ template <class T> void prev_equal(const vector<T>& a, vi& prv) {
 		}
 		num_to_pos[a[i]] = i;
 	}
+
+	return prv;
 }
 
 
 //【自身より 1 つ大きい数の次の位置】O(n)
 /*
-* a[0..n) の各要素 a[i] について，j > i かつ a[j] = a[i] + 1 となる最小の j を
-* nxt[j] に格納する．（存在しなければ n）
+* a[0..n) で，i < j かつ a[i]+1 = a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
 */
-template <class T> void next_greater1(const vector<T>& a, vi& nxt) {
+template <class T>
+vi next_greater1(const vector<T>& a, vi& nxt) {
 	int n = sz(a);
 
 	// nxt[i] : j > i かつ a[j] = a[i] となる最小の j（なければ n）
-	nxt = vi(n, n);
+	vi nxt(n, n);
 
 	// num_to_pos[x] : 値 x が最後に現れた位置（右から走査する）
 	unordered_map<T, int> num_to_pos;
@@ -208,36 +227,42 @@ template <class T> void next_greater1(const vector<T>& a, vi& nxt) {
 		}
 		num_to_pos[a[i]] = i;
 	}
+
+	return nxt;
 }
 
 
 //【指定値以上の数の次の位置】O(n m)
 /*
-* [0..m) に値をもつ数列 a[0..n) について，a[i..n) で j 以上の値が現れる最左位置を nxt_grt[i][j] に格納する（なければ n）
+* [0..m) に値をもつ数列 a[0..n) について，a[i..n) で j 以上の値が現れる
+* 最左位置（なければ n）を pos[i][j] に格納し pos を返す．
 */
-void next_greater_position(int m, const vi& a, vvi& nxt_grt) {
+vvi next_greater_position(int m, const vi& a) {
 	// verify : https://atcoder.jp/contests/agc058/tasks/agc058_b
 
 	int n = sz(a);
 
 	// nxt_grt[i][j] : a[i..n) で j 以上の値が現れる最左位置（無いなら n）
-	nxt_grt = vvi(n + 1, vi(m, n));
+	vvi nxt_grt(n + 1, vi(m, n));
 
 	repir(i, n - 1, 0) {
 		repi(j, 0, a[i]) nxt_grt[i][j] = i;
 		repi(j, a[i] + 1, m - 1) nxt_grt[i][j] = nxt_grt[i + 1][j];
 	}
+
+	return nxt_grt;
 }
 
 
 //【デカルト木】
 /*
 * Cartesian_tree(vT a, smaller = true) : O(n)
-*	a[0..n) の最小要素の位置を根とするデカルト木を ct に構築する．
+*	a[0..n) の最小要素の位置を根とするデカルト木を構築する．
 *	根から順に小さい要素での区間の分割を表す（同じ要素は左のものほど小さいとする．）
 *	smaller = false とすると，大小関係を逆転して木の構築を行う．
 */
-template <class T> struct Cartesian_tree {
+template <class T>
+struct Cartesian_tree {
 	struct Node {
 		T val; // 区間の最小値
 		int l, r; // 区間 [l..r) に対応するノードであることを表す．
@@ -254,7 +279,7 @@ template <class T> struct Cartesian_tree {
 #endif
 	};
 
-	int n; // ノードの数
+	int n; // 頂点の数
 	int rt; // 根
 	vector<Node> v; // 頂点
 
@@ -310,5 +335,43 @@ template <class T> struct Cartesian_tree {
 	}
 #endif
 };
+
+
+//【中央値で部分列に分解】O(n log n)
+/*
+* 数列 a[0..n) の中央値を med とし，med 未満[以上] の要素からなる a の部分列を la[ ua ] に格納する．
+* ただし med = min(a) のときは代わりに med ← min(a)+1 を用いる（min(a) = max(a) なら false を返す）
+* また l_pos[ u_pos ] には la[ ua ] の要素の元の位置を格納する．
+*/
+template <class T>
+bool median_separate(const vector<T>& a, vector<T>& la, vector<T>& ua, vi& l_pos, vi& u_pos) {
+	// verify : https://atcoder.jp/contests/chokudai_s001/tasks/chokudai_S001_j
+
+	int n = sz(a);
+	la.clear(); ua.clear(); l_pos.clear(); u_pos.clear();
+
+	auto sa(a);
+	sort(all(sa));
+
+	T a_min = sa[0];
+	T a_max = sa[n - 1];
+	if (a_min == a_max) return false;
+
+	T med = sa[(n + 1) / 2];
+	if (med == a_min) med++;
+
+	rep(i, n) {
+		if (a[i] < med) {
+			la.emplace_back(a[i]);
+			l_pos.emplace_back(i);
+		}
+		else {
+			ua.emplace_back(a[i]);
+			u_pos.emplace_back(i);
+		}
+	}
+
+	return true;
+}
 
 

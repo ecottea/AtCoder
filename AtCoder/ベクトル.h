@@ -64,7 +64,6 @@ template <class T> inline T dot(const vector<T>& x, const vector<T>& y) {
 }
 
 
-
 //【ベクトル（半環）】
 /*
 * 成分は半環 <S, add, o, mul, e> の元とする．

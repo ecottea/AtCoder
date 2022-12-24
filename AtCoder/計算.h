@@ -177,7 +177,7 @@ ll integer_root(ll a, int n) {
 }
 
 
-//y—İæ‚Å—İæz
+//y—İæ‚Å—İæzO(ãm)
 /*
 * a ^ (b ^ c) mod m ‚ğ•Ô‚·D
 *

@@ -100,13 +100,13 @@ template <ll MOD> struct static_modint {
 	}
 
 	// 法の確認
-	static int mod() { return MOD; }
+	static int mod() { return int(MOD); }
 
 	// 値の確認
 	int val() const { return int(v); }
 };
-//using mint = static_modint<1000000007>;
-using mint = static_modint<998244353>;
+using mint = static_modint<1000000007>;
+//using mint = static_modint<998244353>;
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 
 

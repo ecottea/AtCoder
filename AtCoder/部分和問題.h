@@ -7,17 +7,18 @@
 
 //y•”•ª˜a–â‘èi”‚¦ã‚°jzO(n v)
 /*
-* ”ñ•‰®”—ñ a[0..n) ‚Ì•”•ª˜a‚Æ‚µ‚Ä i¸[0..v] ‚ğì‚é•û–@‚ª‰½’Ê‚è‚ ‚é‚©‚ğ cnt[i] ‚ÉŠi”[‚·‚éD
+* ”ñ•‰®”—ñ a[0..n) ‚Ì•”•ª˜a‚Æ‚µ‚Ä i¸[0..v] ‚ğì‚é•û–@‚ª‰½’Ê‚è‚ ‚é‚©‚ğ cnt[i] ‚ÉŠi”[‚µ cnt ‚ğ•Ô‚·D
 *
 *i˜a‚ğó‘Ô‚É‚à‚Âó‘Ô DPj
 */
-void count_partial_sum(const vi& a, int v, vm& cnt) {
+template <class T>
+vector<T> count_partial_sum(const vi& a, int v) {
 	// Ql : https://qiita.com/suisen_cp/items/794f24d31852b97d58a6
 
 	int n = sz(a);
 
 	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª‚¿‚å‚¤‚Ç j ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”
-	vvm dp(n + 1, vm(v + 1));
+	vector<vector<T>> dp(n + 1, vector<T>(v + 1));
 	dp[0][0] = 1; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
 
 	// –á‚¤ DP
@@ -34,18 +35,18 @@ void count_partial_sum(const vi& a, int v, vm& cnt) {
 		}
 	}
 
-	cnt = dp[n];
+	return dp[n];
 }
 
 
 //y•”•ª˜a–â‘èi”‚¦ã‚°Cmod998244353jzO(n + v log v)
 /*
 * Še j=[0..v] ‚É‚Â‚¢‚ÄC³®”‚Ì—ñ a[0..n) ‚Ì•”•ª˜a‚Æ‚µ‚Ä j ‚ğì‚é•û–@‚ª
-* ‰½’Ê‚è‚ ‚é‚©‚ğ cnt[j] ‚ÉŠi”[‚·‚éD
+* ‰½’Ê‚è‚ ‚é‚©‚ğ cnt[j] ‚ÉŠi”[‚µ cnt ‚ğ•Ô‚·D
 *
 * —˜—pFyŒ`®“I™p‹‰”imod 998244353jz,yw”ŠÖ”z,yŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
 */
-void count_partial_sum_fps(const vi& a, int v, vm& cnt) {
+vm count_partial_sum_fps(const vi& a, int v) {
 	// Ql : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 	// verify : https://judge.yosupo.jp/problem/sharp_p_subset_sum
 
@@ -70,7 +71,8 @@ void count_partial_sum_fps(const vi& a, int v, vm& cnt) {
 		}
 	}
 	f = exp(f, v + 1, fm);
-	cnt = f.c;
+
+	return f.c;
 }
 
 
@@ -130,7 +132,8 @@ bool construction_partial_sum(const vi& a, int v, vi& is) {
 *
 * §–ñFA ‚Í v + 1 ˆÈã‚Ì’è”D
 */
-template <size_t A> bool construction_partial_sum_fast(const vi& a, int v, vi& is) {
+template <size_t A>
+bool construction_partial_sum_fast(const vi& a, int v, vi& is) {
 	// verify : https://atcoder.jp/contests/abc221/tasks/abc221_g
 	
 	int n = sz(a);
@@ -165,7 +168,8 @@ template <size_t A> bool construction_partial_sum_fast(const vi& a, int v, vi& i
 *
 *iƒrƒbƒg‰‰Z‚Å‚‘¬‰»‚µ‚½ bool DPj
 */
-template <size_t m> void enumerate_partial_sum(const vi& a, bitset<m>& res) {
+template <size_t m>
+void enumerate_partial_sum(const vi& a, bitset<m>& res) {
 	// verify : https://algo-method.com/tasks/337
 
 	int n = sz(a);
@@ -186,7 +190,8 @@ template <size_t m> void enumerate_partial_sum(const vi& a, bitset<m>& res) {
 *
 *iƒrƒbƒg‰‰Z‚Å‚‘¬‰»‚µ‚½ bool DPj
 */
-template <size_t m> void enumerate_pair_partial_sum(const vi& a, const vi& b, bitset<m>& res) {
+template <size_t m>
+void enumerate_pair_partial_sum(const vi& a, const vi& b, bitset<m>& res) {
 	// verify : https://atcoder.jp/contests/arc099/tasks/arc099_c
 
 	int n = sz(a);
@@ -236,7 +241,7 @@ int minimize_partial_sum(const vi& a, int v) {
 }
 
 
-//y•”•ª˜a–â‘èi”‚¦ã‚°jzO(2^(n/2) n)
+//y•”•ª˜a–â‘èiŒÂ”‚ª¬C”‚¦ã‚°jzO(2^(n/2) n)
 /*
 * ’·‚³ n ‚Ì”ñ•‰®”‚Ì—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ğì‚é•û–@‚ª‰½’Ê‚è‚ ‚é‚©‚ğ•Ô‚·D
 *
@@ -273,13 +278,14 @@ ll count_partial_sum(const vl& a, ll v) {
 }
 
 
-//y•”•ª˜a–â‘èi‘¶İ”»’èjzO(2^(n/2))
+//y•”•ª˜a–â‘èiŒÂ”‚ª¬C‘¶İ”»’èjzO(2^(n/2))
 /*
 * ’·‚³ n ‚Ì”ñ•‰®”‚Ì—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ªì‚ê‚é‚©‚ğ•Ô‚·D
 *
 *i”¼•ª‘S—ñ‹“j
 */
-template <class T> bool partial_sum(const vector<T>& a, T v) {
+template <class T>
+bool partial_sum(const vector<T>& a, T v) {
 	// QlFhttps://qiita.com/keymoon/items/6cf46473b5421bfe1d48
 
 	int n = sz(a);
@@ -343,14 +349,15 @@ template <class T> bool partial_sum(const vector<T>& a, T v) {
 }
 
 
-//y•”•ª˜a–â‘èi•œŒ³jzO(2^(n/2))
+//y•”•ª˜a–â‘èiŒÂ”‚ª¬C•œŒ³jzO(2^(n/2))
 /*
 * ”ñ•‰®”—ñ a[0..n) ‚É‚Â‚¢‚ÄCƒ°i¸S a[i] = v ‚È‚é“YšW‡ S ‚ğ is ‚ÉŠi”[‚·‚éD
 * S ‚ª‘¶İ‚µ‚È‚¯‚ê‚Î false ‚ğ•Ô‚·D
 *
 *i”¼•ª‘S—ñ‹“j
 */
-template <class T> bool construction_partial_sum_large(const vector<T>& a, T v, vi& is) {
+template <class T>
+bool construction_partial_sum_large(const vector<T>& a, T v, vi& is) {
 	// verify : https://yukicoder.me/problems/no/2081
 	
 	int n = sz(a);
@@ -434,7 +441,8 @@ template <class T> bool construction_partial_sum_large(const vector<T>& a, T v, 
 *
 *imod m ‚Å˜a‚ğó‘Ô‚É‚à‚Âó‘Ô DPj
 */
-template <class T> bool multiple_partial_sum(const vector<T>& a, int m, int r) {
+template <class T>
+bool multiple_partial_sum(const vector<T>& a, int m, int r) {
 	// varify : https://algo-method.com/tasks/352
 
 	int n = sz(a);
@@ -465,7 +473,8 @@ template <class T> bool multiple_partial_sum(const vector<T>& a, int m, int r) {
 *
 *imod m ‚Å˜a‚ğó‘Ô‚É‚à‚Âó‘Ô DPj
 */
-template <class T> mint count_multiple_partial_sum(const vector<T>& a, int m) {
+template <class T>
+mint count_multiple_partial_sum(const vector<T>& a, int m) {
 	int n = sz(a);
 
 	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ª j mod m ‚Æ‚¢‚¤ó‘Ô‚ğ‚Æ‚éê‡‚Ì”

@@ -3,14 +3,14 @@
 // ■■■■■ 列挙（集合） ■■■■■
 
 
-//【集合の分割の列挙】O(n 番目のベル数)（n = 12 くらいまで動く）
+//【集合の分割の列挙】O(n 番目のベル数)（n=12 くらいまで動く）
 /*
-* n 点集合の全ての分割を sps に格納する．
+* [0..n) の分割全てからなるリストを返す．
 * 例えば [0..6) の分割 {{0, 1, 4}, {2, 5}, {3}} は [0,0,1,2,0,1] と一意的に表す．
 */
-void set_partitions(int n, vvi& sps) {
+vvi set_partitions(int n) {
 	vi sp(n);
-	sps.clear();
+	vvi sps;
 
 	// [0..i) までを m 個の集合に分割し終えているとする．
 	function<void(int, int)> rf = [&](int i, int m) {
@@ -34,6 +34,54 @@ void set_partitions(int n, vvi& sps) {
 	};
 
 	rf(0, 0);
+
+	return sps;
+}
+
+
+//【集合の分割の列挙（等分）】O(multinomial(n,[m]*k)/k!)
+/*
+* n = k m とし，[0..n) の k 個の m 点集合へ分割のリストを返す．
+* 例えば [0..6) の 3 個の 2 点集合への分割の 1 つに {{0, 1}, {2, 5}, {3, 4}} がある．
+*/
+vvvi set_partitions(int k, int m) {
+	// verify : https://atcoder.jp/contests/agc043/tasks/agc043_d
+	
+	int n = k * m;
+	vvi sp;
+	vvvi sps;
+
+	function<void(int)> rf = [&](int x) {
+		// 全ての要素の所属を決め終えた場合
+		if (x == n) {
+			sps.push_back(sp);
+			return;
+		}
+
+		// 要素 x を既に存在する集合に含める場合
+		rep(i, sz(sp)) {
+			// 既に m 点集合になっているなら追加できない．
+			if (sz(sp[i]) == m) continue;
+
+			sp[i].push_back(x);
+			rf(x + 1);
+			sp[i].pop_back();
+		}
+
+		// 既に k 個の集合が存在している場合は新たな集合は作れない．
+		if (sz(sp) == k) return;
+
+		// 要素 x を単独で新たな集合とする場合
+		sp.push_back(vi{ x });
+		rf(x + 1);
+		sp.pop_back();
+
+		return;
+	};
+
+	rf(0);
+
+	return sps;
 }
 
 

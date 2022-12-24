@@ -165,7 +165,7 @@ struct Ushige_ub01_only {
 	void maximize_diff(int a, vi& diff) {
 		// a を始点とする最短経路問題を解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
-		binary_bfs(g, a, diff);
+		binary_BFS(g, a, diff);
 	}
 
 #ifdef _MSC_VER

@@ -199,8 +199,7 @@ inline int pos_relation_C_C(const Circle<T>& c1, const Circle<T>& c2) {
 *	点 p が多角形 poly の境界にあれば 0
 *	点 p が多角形 poly の内部にあれば 1
 */
-template <class T>
-int inner_polygon(const Polygon<T>& poly, Point<T>& p) {
+template <class T> int inner_polygon(const Polygon<T>& poly, Point<T>& p) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_C
 
 	int n = sz(poly);
@@ -310,36 +309,27 @@ int inner_circle_by_3points(const Point<T>& a, const Point<T>& b, const Point<T>
 
 //【凸性判定】O(n)
 /*
-* n 角形 poly が凸多角形なら true，さもなくば false を返す．
+* n 角形 poly が（広義）凸多角形なら true，さもなくば false を返す．
 */
-template <typename T>
-bool convexQ(const Polygon<T>& poly) {
+template <typename T> bool convexQ(const Polygon<T>& poly) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_B
 
 	int n = sz(poly);
 
-	bool first_call = true;
-	bool b, res = true;
+	bool first_call = true, cc = true;
 
 	rep(i, n) {
 		T op = (poly[(i + 1) % n] - poly[i]).cross(poly[(i + 2) % n] - poly[i]);
-		if (op == 0) {
-			continue;
-		}
+		if (op == 0) continue; // 連続 3 点が共線の場合
 
 		if (first_call) {
-			b = op > 0;
+			cc = op > 0; // 頂点の並び順を任意とするため
 			first_call = false;
 		}
-		else {
-			if (b != (op > 0)) {
-				res = false;
-				break;
-			}
-		}
+		else if (cc != (op > 0)) return false;
 	}
 
-	return res;
+	return true;
 }
 
 
@@ -347,8 +337,7 @@ bool convexQ(const Polygon<T>& poly) {
 /*
 * 単純 n 角形 poly の頂点が反時計回りに並んでいたら true，さもなくば false を返す．
 */
-template <typename T>
-bool ccwQ(const Polygon<T>& poly) {
+template <typename T> bool ccwQ(const Polygon<T>& poly) {
 	// verify : https://codeforces.com/contest/598/problem/F
 
 	int n = sz(poly);

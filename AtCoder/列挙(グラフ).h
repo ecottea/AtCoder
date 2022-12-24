@@ -8,8 +8,6 @@
 /*
 * 無向グラフ g の大きさ k の連結成分を ccs に列挙する．
 * 連結成分は頂点番号のリストとして表す．
-*
-*（バックトラッキング）
 */
 void enumerate_connected_component(const Graph& g, int k, vvi& ccs) {
 	// verify : https://atcoder.jp/contests/abc211/tasks/abc211_e
@@ -83,8 +81,6 @@ void enumerate_connected_component(const Graph& g, int k, vvi& ccs) {
 /*
 * 参照付きグラフ g の r を根とする大きさ k の有向木の辺集合を dts に列挙する．
 * 辺集合は辺に付けられた参照番号を並べたリストで表す．
-*
-*（バックトラッキング）
 */
 void enumerate_tree(IGraph& g, int r, int k, vvi& dts) {
 	// verify : https://atcoder.jp/contests/arc009/tasks/arc009_4
@@ -166,15 +162,15 @@ void enumerate_tree(IGraph& g, int r, int k, vvi& dts) {
 
 //【クリークの列挙】O(2^(1.4√|E|) |V|)
 /*
-* 無向グラフ g の i 番目に見つけたクリークを cs[i] に頂点の集合として列挙する（空グラフを含む）
+* 無向グラフ g のクリークを成す頂点集合のリストを返す（空グラフを含む）
 * S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
 */
-void enumerate_clique(const Graph& g, vvi& cs) {
+vvi enumerate_clique(const Graph& g) {
 	// 参考：https://www.slideshare.net/wata_orz/ss-12131479
 	// verify : https://judge.yosupo.jp/problem/enumerate_cliques
 
 	int n = sz(g);
-	cs.clear();
+	vvi cs;
 
 	// 隣接行列 adj，各頂点の次数 deg，総次数 deg_sum，
 	// 最小次数 deg_min，次数最小頂点の番号 i_min を得る．
@@ -202,31 +198,21 @@ void enumerate_clique(const Graph& g, vvi& cs) {
 			// n 頂点それぞれについて
 			rep(i, n) {
 				// set に選んでいないなら無関係
-				if (!(set & (1 << i))) {
-					continue;
-				}
+				if (!(set & (1 << i))) continue;
 
 				// i 番目以降の頂点について
 				repi(j, i + 1, n - 1) {
 					// set に選んでいないなら無関係 
-					if (!(set & (1 << j))) {
-						continue;
-					}
+					if (!(set & (1 << j))) continue;
 
 					// 辺 (v[i], v[j]) がなければクリークでない．
-					if (!adj[v[i]][v[j]]) {
-						goto NEXT_LOOP;
-					}
+					if (!adj[v[i]][v[j]]) goto NEXT_LOOP;
 				}
 			}
 
 			// クリークが見つかったので記録する．
 			cs.push_back(vi());
-			rep(i, n) {
-				if (set & (1 << i)) {
-					cs.rbegin()->push_back(v[i]);
-				}
-			}
+			rep(i, n) if (set & (1 << i)) cs.rbegin()->push_back(v[i]);
 
 		NEXT_LOOP:;
 		}
@@ -237,7 +223,7 @@ void enumerate_clique(const Graph& g, vvi& cs) {
 		// 辺に対して頂点が十分少ないなら素朴な方法で構わない．
 		if (deg_min * deg_min >= deg_sum) {
 			naive();
-			return;
+			return cs;
 		}
 
 		// 次数最小の頂点 v[i_min] の隣接点の番号の集合を得る．
@@ -257,30 +243,20 @@ void enumerate_clique(const Graph& g, vvi& cs) {
 		repb(sub, d) {
 			rep(i, d) {
 				// sub に選んでいないなら無関係
-				if (!(sub & (1 << i))) {
-					continue;
-				}
+				if (!(sub & (1 << i))) continue;
 
 				repi(j, i + 1, d - 1) {
 					// sub に選んでいないなら無関係
-					if (!(sub & (1 << j))) {
-						continue;
-					}
+					if (!(sub & (1 << j))) continue;
 
 					// sub がクリークでなければ何もしない．
-					if (!adj[v[ia[i]]][v[ia[j]]]) {
-						goto LOOP_END;
-					}
+					if (!adj[v[ia[i]]][v[ia[j]]]) goto LOOP_END;
 				}
 			}
 
 			// sub がクリークなら v[i_min] と合わせてもクリークとなるので記録する．
 			cs.push_back(vi({ v[i_min] }));
-			rep(i, d) {
-				if (sub & (1 << i)) {
-					cs.rbegin()->push_back(v[ia[i]]);
-				}
-			}
+			rep(i, d) if (sub & (1 << i)) cs.rbegin()->push_back(v[ia[i]]);
 
 		LOOP_END:;
 		}
@@ -295,12 +271,12 @@ void enumerate_clique(const Graph& g, vvi& cs) {
 		deg_sum = 0;
 		deg_min = INF;
 		rep(i, n) {
-			if (chmin(deg_min, deg[v[i]])) {
-				i_min = i;
-			}
+			if (chmin(deg_min, deg[v[i]])) 	i_min = i;
 			deg_sum += deg[v[i]];
 		}
 	}
+
+	return cs;
 }
 
 

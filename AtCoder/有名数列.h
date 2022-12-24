@@ -8,26 +8,25 @@
 
 //【フィボナッチ数】O(n)
 /*
-* i∈[0..n) について，i 番目のフィボナッチ数を fib[i] に格納する（fib[0] = 0, fib[1] = 1 とする．）
-* 
-*（DP）
+* フィボナッチ数のリスト fib[0..n) を返す（fib[0]=0, fib[1]=1 とする．）
 */
-template <class T> void fibonacci(int n, vector<T>& fib) {
+template <class T>
+vector<T> fibonacci(int n) {
 	// verify : https://atcoder.jp/contests/tenka1-2012-qualA/tasks/tenka1_2012_qualA_1
 
-	fib.resize(n);
+	vector<T> fib(n);
 	fib[0] = 0;
 	fib[1] = 1;
 
 	repi(i, 2, n - 1) fib[i] = fib[i - 1] + fib[i - 2];
+
+	return fib;
 }
 
 
 //【フィボナッチ数】O(log n)
 /*
 * n 番目のフィボナッチ数 fib[n] を返す（fib[0] = 0, fib[1] = 1 とする．）
-*
-*（行列累乗）
 *
 * 利用：【行列】
 */
@@ -61,7 +60,8 @@ mint fibonacci(ll n) {
 *
 *（累積和で高速化した DP）
 */
-template <class T> void k_nacci_acc(int n, int k, vector<T>& seq) {
+template <class T>
+void k_nacci_acc(int n, int k, vector<T>& seq) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_semiexp
 
 	seq = vector<T>(n);
@@ -89,7 +89,8 @@ template <class T> void k_nacci_acc(int n, int k, vector<T>& seq) {
 *
 *（いもす法で高速化した DP）
 */
-template <class T> void k_nacci_imos(int n, int k, vector<T>& seq) {
+template <class T>
+void k_nacci_imos(int n, int k, vector<T>& seq) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_semiexp
 
 	seq = vector<T>(n + k + 1);
@@ -120,7 +121,8 @@ template <class T> void k_nacci_imos(int n, int k, vector<T>& seq) {
 *
 *（二次元累積和で高速化した格子 DP）
 */
-template <class T> void delannoy_number_acc(int h, int w, int s, int t, vector<vector<T>>& seq) {
+template <class T>
+void delannoy_number_acc(int h, int w, int s, int t, vector<vector<T>>& seq) {
 	seq = vector<vector<T>>(h, vector<T>(w));
 	seq[0][0] = 1;
 
@@ -163,7 +165,8 @@ template <class T> void delannoy_number_acc(int h, int w, int s, int t, vector<v
 *
 *（二次元いもす法で高速化した格子 DP）
 */
-template <class T> void delannoy_number_imos(int h, int w, int s, int t, vector<vector<T>>& seq) {
+template <class T>
+void delannoy_number_imos(int h, int w, int s, int t, vector<vector<T>>& seq) {
 	seq = vector<vector<T>>(h, vector<T>(w));
 	seq[0][0] = 1;
 
@@ -185,7 +188,7 @@ template <class T> void delannoy_number_imos(int h, int w, int s, int t, vector<
 }
 
 
-//【ベルヌーイ数】O(n log n)
+//【ベルヌーイ数（mod 998244353）】O(n log n)
 /*
 * i=[0..n) についてベルヌーイ数 B(i) を b[i] に格納する．
 *
@@ -210,4 +213,190 @@ void bernoulli(int n, vm& b, const Factorial_mint& fm) {
 	rep(i, n) b[i] = f[i] * fm.factorial(i);
 }
 
+
+//【第 1 種スターリング数】
+/*
+* fps(mint).h の【下降階乗冪（符号付き第 1 種スターリング数）】または
+* 数え上げ(順列).h の【j 個の巡回置換の積で表される順列の数え上げ】を利用すればいい．
+*/
+
+
+//【第 1 種スターリング数（法が小さな素数）】
+/*
+* Stirling_S1_small_prime_mod(int p) : O(p^2)
+*	p を法として初期化する．
+*
+* int get(ll n, ll r) : O(log n)
+*	符号付き第 1 種スターリング数 S(n, r) mod p を返す．
+*/
+ostream& operator<<(ostream& os, const dynamic_modint<82645>& x) { os << x.val(); return os; }
+class Stirling_S1_small_prime_mod {
+	int p; // 利用する法（素数）
+
+	using mint_p = dynamic_modint<82645>; // 他と被らなければ何でも良い．
+	using vmp = vector<mint_p>;
+	using vvmp = vector<vmp>;
+
+	vvmp bin; // bin[i][j] : binomial(i, j)
+	vvmp s1;  // s1[i][j] : S(i, j)
+
+public:
+	// p を法として初期化する．
+	Stirling_S1_small_prime_mod(int p) : p(p), bin(p, vmp(p)), s1(p, vmp(p)) {
+		// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind_small_p_large_n
+
+		mint_p::set_mod(p);
+
+		// bin[0..p)[0..p) を愚直に計算する．
+		bin[0][0] = 1;
+		rep(i, p - 1) repi(j, 0, i) {
+			bin[i + 1][j] += bin[i][j];
+			bin[i + 1][j + 1] += bin[i][j];
+		}
+
+		// s1[0..p)[0..p) を愚直に計算する．
+		s1[0][0] = 1;
+		rep(i, p - 1) repi(j, 0, i) {
+			s1[i + 1][j] -= s1[i][j] * i;
+			s1[i + 1][j + 1] += s1[i][j];
+		}
+	}
+
+	// 符号付き第 1 種スターリング数 S(n, r) mod p を返す．
+	int get(ll n, ll r) {
+		// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind_small_p_large_n
+
+		if (n == 0) return (int)(r == 0);
+		if (n < r) return 0;
+
+		// S(n, r) の三角形は歪んでいるので補正する．
+		r -= (n + p - 1) / p;
+		if (r < 0) return 0;
+
+		// dn : n の p 進表示の桁の数（上位から順）
+		vi dn; ll n_ = n, pow_p = 1;
+		while (n_ > 0) {
+			dn.push_back((int)(n_ % p));
+			n_ /= p;
+			if (n_ == 0) break;
+			pow_p *= p;
+		}
+		pow_p /= p;
+		reverse(all(dn));
+		int k = sz(dn);
+
+		mint_p res = 1;
+		rep(i, k - 1) {
+			ll ri = r / (pow_p * (p - 1));
+			if (dn[i] - ri < 0) return 0;
+			res *= bin[p - 1 - ri][dn[i] - ri];
+			r %= pow_p * (p - 1);
+			pow_p /= p;
+		}
+		res *= s1[dn[k - 1]][r + (dn[k - 1] > 0 ? 1 : 0)];
+
+		return res.val();
+	}
+};
+
+
+//【第 2 種スターリング数】
+/*
+* 写像12相.h の【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）】を利用すればいい．
+*/
+
+
+//【第 2 種スターリング数（法が小さな素数）】
+/*
+* Stirling_S2_small_prime_mod(int p) : O(p^2)
+*	p を法として初期化する．
+*
+* int get(ll n, ll r) : O(log n)
+*	第 2 種スターリング数 s(n, r) mod p を返す．
+*/
+ostream& operator<<(ostream& os, const dynamic_modint<124572>& x) { os << x.val(); return os; }
+class Stirling_S2_small_prime_mod {
+	int p; // 利用する法（素数）
+
+	using mint_p = dynamic_modint<124572>; // 他と被らなければ何でも良い．
+	using vmp = vector<mint_p>;
+	using vvmp = vector<vmp>;
+
+	vvmp bin; // bin[i][j] : binomial(i, j)
+	vvmp s2;  // s1[i][j] : S(i, j)
+
+public:
+	// p を法として初期化する．
+	Stirling_S2_small_prime_mod(int p) : p(p), bin(p, vmp(p)), s2(p + 1, vmp(p + 1)) {
+		// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_second_kind_small_p_large_n
+
+		mint_p::set_mod(p);
+
+		// bin[0..p)[0..p) を愚直に計算する．
+		bin[0][0] = 1;
+		rep(i, p - 1) repi(j, 0, i) {
+			bin[i + 1][j] += bin[i][j];
+			bin[i + 1][j + 1] += bin[i][j];
+		}
+
+		// s2[0..p)[0..p) を愚直に計算する．
+		s2[0][0] = 1;
+		rep(i, p) repi(j, 0, i) {
+			s2[i + 1][j] += s2[i][j] * j;
+			s2[i + 1][j + 1] += s2[i][j];
+		}
+	}
+
+	// 第 2 種スターリング数 s(n, r) mod p を返す．
+	int get(ll n, ll r) {
+		// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_second_kind_small_p_large_n
+
+		if (n == 0) return (int)(r == 0);
+		if (n < r) return 0;
+
+		// s(n, r) の三角形は歪んでいるので補正する．
+		n -= r / p + 1; r--;
+		if (r < 0) return 0;
+
+		// dn : n の p 進（最下位だけ p-1 進）表示の桁の数（上位から順）
+		// dr : r の p 進表示の桁の数（上位から順）
+		vi dn, dr;
+		do {
+			dn.push_back((int)(n % (dr.empty() ? p - 1 : p)));
+			n /= (dr.empty() ? p - 1 : p);
+			dr.push_back((int)(r % p));
+			r /= p;
+		} while (n > 0);
+		reverse(all(dn)); reverse(all(dr));
+		int k = sz(dn);
+
+		mint_p res = 1;
+		rep(i, k - 1) res *= bin[dn[i]][dr[i]];
+		res *= s2[dn[k - 1] + (dr[k - 1] == p - 1 ? 2 : 1)][dr[k - 1] + 1];
+
+		return res.val();
+	}
+};
+
+
+//【カタラン数】
+/*
+* n 番目のカタラン数 C[n] は
+*	C[n] = bin(2n, n)/(n+1) = (2n)!/((n+1)! n!) = bin(2n, n) - bin(2n, n-1)
+* と表され，最初の数項は
+*	C[0]=1, C[1]=1, C[2]=2, C[3]=5, C[4]=14, C[5]=42, ...
+* である．また C[n] の母関数は
+*	f(z) = (1 - √(1-4z)) / (2z)
+* である．
+*/
+
+
+//【カタラン数の自己畳込み】
+/*
+* カタラン数の列 {C[n]} を k(>0) 回自己畳込みした数列を {C^(k)[n]} とすると，
+*	C^(k)[n] = bin(2n + k, n) * k / (2n + k)
+* である．
+* 
+* verify : https://atcoder.jp/contests/xmascon22/tasks/xmascon22_d
+*/
 

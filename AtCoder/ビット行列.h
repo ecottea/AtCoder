@@ -17,6 +17,9 @@
 * Bit_matrix<N>(vector<bitset<N>> a, int n) : O(m N / 64)
 *	配列 a の要素で初期化する．
 *
+* Bit_matrix<N>(vi[vl] a, int n) : O(m N / 64)
+*	a[i] の第 j ビット v[i][j] とする行列で初期化する．
+*
 * push_back(bitset<N> col) : O(N / 64)
 *	最下行に col を追加する．
 *
@@ -27,21 +30,24 @@
 * A * B : O(l m n)
 *	l * m 行列 A と m * n 行列 B の積を返す．
 *
-* pow(ll d) : O(n^3 log d)
+* Bit_matrix<N> pow(ll d) : O(n^3 log d)
 *	自身を d 乗した行列を返す．
 *
-* transpose() : O(m n)
-*	自身を転置した行列を返す．
+* Bit_matrix<N> transpose() : O(m n)
+*	自身を転置した行列を返す（N が十分大きいことを要確認）
 */
-template <int N> struct Bit_matrix {
+template <int N>
+struct Bit_matrix {
 	int m, n; // 行数, 列数（行列のサイズは m * n）
 	vector<bitset<N>> v; // 行列の成分
 
 	// コンストラクタ（初期化なし，零行列，単位行列，二次元配列）
 	Bit_matrix() : m(0), n(0) {}
-	Bit_matrix(int m_, int n_) : m(m_), n(n_), v(m) {}
-	Bit_matrix(int n_) : m(n_), n(n_), v(m) { rep(i, n) v[i][i] = 1; }
-	Bit_matrix(const vector<bitset<N>>& a, int n_) : m(sz(a)), n(n_), v(a) {}
+	Bit_matrix(int m, int n) : m(m), n(n), v(m) {}
+	Bit_matrix(int n) : m(n), n(n), v(m) { rep(i, n) v[i][i] = 1; }
+	Bit_matrix(const vector<bitset<N>>& a, int n) : m(sz(a)), n(n), v(a) {}
+	Bit_matrix(const vi& a, int n) : m(sz(a)), n(n), v(m) { rep(i, m) v[i] = bitset<N>(a[i]); }
+	Bit_matrix(const vl& a, int n) : m(sz(a)), n(n), v(m) { rep(i, m) v[i] = bitset<N>(a[i]); }
 
 	// 代入
 	Bit_matrix(const Bit_matrix& old) = default;
@@ -90,12 +96,13 @@ template <int N> struct Bit_matrix {
 		rep(i, res.m) rep(j, res.n) res[i][j] = v[j][i];
 		return res;
 	}
-		
+
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Bit_matrix& a) {
 		rep(i, a.m) {
-			rep(j, a.n) os << a.v[i][j] << " ";
-			os << endl;
+			os << "[";
+			rep(j, a.n) os << a.v[i][j] << (j < a.n - 1 ? " " : "]");
+			if (i < a.m - 1) os << "\n";
 		}
 		return os;
 	}
@@ -105,23 +112,25 @@ template <int N> struct Bit_matrix {
 
 //【転置との積】: O(l m n / 64)
 /*
-* l * m 行列 A と n * m 行列 B について，積 A * B^T を返す．
+* l×m 行列 A と n×m 行列 B について，積 A * B^T を返す．
 */
-template <int N> Bit_matrix<N> prod_transpose(const Bit_matrix<N>& A, const Bit_matrix<N>& B) {
+template <int N>
+Bit_matrix<N> prod_transpose(const Bit_matrix<N>& A, const Bit_matrix<N>& B) {
 	Bit_matrix<N> res(A.m, B.m);
 	rep(i, res.m) rep(j, res.n) res[i][j] = (A[i] & B[j]).count() % 2;
 	return res;
 }
 
 
-//【行簡約階段形】O(m^2 n / 64)
+//【行簡約階段形】O(m n min(m, n) / 64)
 /*
-* 行基本変形で mat を行簡約階段形に変形する（ピボットの上下は全て 0．）
+* 行基本変形で m×n 行列 mat を行簡約階段形に変形する（ピボットの上下は全て 0．）
 * また i 行目のピボットが何列目かを pjs[i] に格納し，mat の階数を返す．
 *
 *（呼び出すとき reduced_row_echelon_form<N> としないと gcc でエラーになるので注意．）
 */
-template <int N> int reduced_row_echelon_form(Bit_matrix<N>& mat, vi* pjs = nullptr) {
+template <int N>
+int reduced_row_echelon_form(Bit_matrix<N>& mat, vi* pjs = nullptr) {
 	// verify : https://atcoder.jp/contests/abc249/tasks/abc249_g
 
 	int m = mat.m, n = mat.n;
@@ -164,7 +173,8 @@ template <int N> int reduced_row_echelon_form(Bit_matrix<N>& mat, vi* pjs = null
 * n 次正方行列 mat の逆行列が存在すればそれを mat_inv に格納する．
 * また逆行列が存在する場合は true，存在しない場合は false を返す．
 */
-template <int N> bool inverse_matrix(const Bit_matrix<N>& mat, Bit_matrix<N>& mat_inv) {
+template <int N>
+bool inverse_matrix(const Bit_matrix<N>& mat, Bit_matrix<N>& mat_inv) {
 	// verify : https://atcoder.jp/contests/jag2013summer-day4/tasks/icpc2013summer_day4_f
 	
 	int m = mat.m;
@@ -221,14 +231,15 @@ template <int N> bool inverse_matrix(const Bit_matrix<N>& mat, Bit_matrix<N>& ma
 }
 
 
-//【連立一次方程式】O(m^2 n / 64)
+//【連立一次方程式】O(m n min(m, n) / 64)
 /*
-* m * (n + 1) 拡大係数行列 mat で表される連立一次方程式の解の 1 つを sol に格納する．
+* m×(n+1) 拡大係数行列 mat で表される連立一次方程式の解の 1 つを sol に格納する．
 * 解が存在しないなら false を返す．
 *
 *（呼び出すとき solve_eq<N> としないと gcc でエラーになるので注意．）
 */
-template <int N> bool solve_eq(Bit_matrix<N>& mat, bitset<N>* sol = nullptr) {
+template <int N>
+bool solve_eq(Bit_matrix<N>& mat, bitset<N>* sol = nullptr) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/problems/1308
 
 	int m = mat.m, n = mat.n - 1;
@@ -275,14 +286,15 @@ template <int N> bool solve_eq(Bit_matrix<N>& mat, bitset<N>* sol = nullptr) {
 }
 
 
-//【連立一次方程式（優先度付き）】O(m^2 n / 64)
+//【連立一次方程式（優先度付き）】O(m n min(m, n) / 64)
 /*
-* m * (n + 1) 拡大係数行列 mat で表される連立一次方程式の解の 1 つを sol に格納する．
+* m×(n+1) 拡大係数行列 mat で表される連立一次方程式の解の 1 つを sol に格納する．
 * ただし条件式は上の行のものほど優先し，矛盾した下行の条件式は無視する．
 *
 *（呼び出すとき priority_solve_eq<N> としないと gcc でエラーになるので注意．）
 */
-template <int N> void priority_solve_eq(Bit_matrix<N>& mat, bitset<N>& sol) {
+template <int N>
+void priority_solve_eq(Bit_matrix<N>& mat, bitset<N>& sol) {
 	// verify : https://atcoder.jp/contests/abc141/tasks/abc141_f
 
 	int m = mat.m, n = mat.n - 1;
@@ -322,15 +334,16 @@ template <int N> void priority_solve_eq(Bit_matrix<N>& mat, bitset<N>& sol) {
 }
 
 
-//【基底の選択】O(m^2 n / 64)
+//【基底の選択】O(m n min(m, n) / 64)
 /*
-* m * n 行列 mat の行ベクトルで張られる空間を V とし，
+* m×n 行列 mat の行ベクトルで張られる空間を V とし，
 * mat の第 i 行ベクトル（i ∈ bis）が V の基底となるよう bis に格納する．
 * 基底は i が小さいものを優先して構成する．
 *
 *（呼び出すとき find_base<N> としないと gcc でエラーになるので注意．）
 */
-template <int N> void find_base(Bit_matrix<N>& mat, vi& bis) {
+template <int N>
+void find_base(Bit_matrix<N>& mat, vi& bis) {
 	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_a
 
 	int m = mat.m, n = mat.n;

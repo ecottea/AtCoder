@@ -40,41 +40,6 @@ void breadth_first_search(const Graph& g, int st, vi& in) {
 }
 
 
-//【幅優先探索（距離上限指定）】O((max deg(v))^D)
-/*
-* グラフ g に対し始点を st として距離 D 以下の範囲の幅優先探索を行い，
-* st から各頂点 s への最短経路長を dist[s] に格納する．
-*/
-void breadth_first_search(const Graph& g, int st, int D, unordered_map<int, int>& dist) {
-	// verify : https://atcoder.jp/contests/abc254/tasks/abc254_e
-
-	int n = sz(g);
-
-	dist.clear(); // スタートからの最短距離を保持するテーブル
-	dist[st] = 0;
-	if (D == 0) return;
-
-	queue<int> q; // 次に探索する頂点を入れておくキュー
-	q.push(st);
-
-	while (!q.empty()) {
-		// 未探索の頂点 s を 1 つ得る．
-		auto s = q.front(); q.pop();
-
-		repe(t, g[s]) {
-			// 探索済みの頂点なら何もしない．
-			if (dist.count(t)) continue;
-
-			// スタートからの最短距離を確定する．
-			dist[t] = dist[s] + 1;
-
-			// 未探索の頂点として t を追加する．
-			if (dist[t] < D) q.push(t);
-		}
-	}
-}
-
-
 //【幅優先探索（複数始点）】O(|V| + |E|)
 /*
 * グラフ g に対し始点集合を st として幅優先探索を行い，
@@ -109,6 +74,49 @@ void multi_bfs(const Graph& g, const vi& st, vi& dist) {
 			q.push(t);
 		}
 	}
+}
+
+
+//【幅優先探索（動的）】O(|V| + |E|)（ほぼ実験用）
+/*
+* st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
+*/
+template <class T>
+set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt) {
+	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_c
+
+	set<T> vs; // st から到達可能な頂点のリスト
+	vs.insert(st);
+
+	queue<T> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		// 未探索の頂点 s を得る．
+		auto s = que.front(); que.pop();
+
+		repe(t, nxt(s)) {
+			// t が発見済みの頂点なら何もしない．
+			if (vs.count(t)) continue;
+
+			// t に到達したことを記録する．
+			vs.insert(t);
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+
+	return vs;
+
+	/* nxt の定義の雛形
+	using T = ll;
+	function<vector<T>(T)> nxt = [&](T s) {
+		vector<T> res;
+
+		return res;
+	};
+	*/
 }
 
 
@@ -210,7 +218,8 @@ void topological_bfs(const Graph& g, const vi& st, vi& time) {
 * グラフ g に対し始点を st として深さ優先探索を行い，通った頂点を順に seq に格納する．
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
-template <class G> void depth_first_search(G& g, int st, vi& seq) {
+template <class G>
+void depth_first_search(G& g, int st, vi& seq) {
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_d
 
 	int n = sz(g);

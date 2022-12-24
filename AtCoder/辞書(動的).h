@@ -7,7 +7,7 @@
 
 //【binary trie】
 /*
-* Binary_trie<T>(int B = 63) : O(1)
+* Binary_trie<T = ll>(int B = 63) : O(1)
 *   型 T の B ビット整数を扱えるよう空で初期化する．
 *
 * ll size() : O(1)
@@ -24,6 +24,7 @@
 *
 * T max_element(T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，最大要素を返す．
+*	戻り値には mask との XOR はかかっていないので注意！！！
 *
 * T min_element(T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，最小要素を返す．
@@ -45,7 +46,8 @@
 * ll count(T l, T r, T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，値 [l..r) をもつ要素の個数を返す．
 */
-template <class T = ll> class Binary_trie {
+template <class T = ll>
+class Binary_trie {
 	// 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/06/022654
 
 	struct Node {
@@ -413,7 +415,8 @@ public:
 * T get(S x) : O(log n)
 *	x に割り当てられた値を返す．
 */
-template <class S, class T> class Interval_map {
+template <class S, class T>
+class Interval_map {
 	map<pair<S, S>, T> lr_to_v; // 区間 [l[i], r[i]) → v[i]
 	T nil;
 
@@ -654,7 +657,8 @@ struct Trie_tree_set {
 * int count_prefix(string s) : O(|s|)
 *   s を接頭辞にもつ文字列が何個登録されているかを返す．
 */
-template <class T> class Trie_tree_map {
+template <class T>
+class Trie_tree_map {
 	// 参考 : https://algo-logic.info/trie-tree/
 
 	const int K = 26; // 文字数

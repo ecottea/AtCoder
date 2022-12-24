@@ -29,18 +29,18 @@
 class Factorial_mint {
 	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_max;
-	vm fac_, fac_inv_;
+	vm fac, fac_inv;
 
 public:
 	// n! までの階乗とその逆数を前計算しておく．O(n)
-	Factorial_mint(int n) : n_max(n), fac_(n + 1), fac_inv_(n + 1) {
+	Factorial_mint(int n) : n_max(n), fac(n + 1), fac_inv(n + 1) {
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 
-		fac_[0] = 1;
-		repi(i, 1, n) fac_[i] = fac_[i - 1] * i;
+		fac[0] = 1;
+		repi(i, 1, n) fac[i] = fac[i - 1] * i;
 
-		fac_inv_[n] = fac_[n].inv();
-		repir(i, n - 1, 0) fac_inv_[i] = fac_inv_[i + 1] * (i + 1);
+		fac_inv[n] = fac[n].inv();
+		repir(i, n - 1, 0) fac_inv[i] = fac_inv[i + 1] * (i + 1);
 	}
 	Factorial_mint() : n_max(0) {} // ダミー
 
@@ -49,7 +49,7 @@ public:
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 
 		Assert(0 <= n && n <= n_max);
-		return fac_[n];
+		return fac[n];
 	}
 
 	// 1 / n! を返す．O(1)
@@ -57,7 +57,7 @@ public:
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 
 		Assert(0 <= n && n <= n_max);
-		return fac_inv_[n];
+		return fac_inv[n];
 	}
 
 	// 1 / n を返す．O(1)
@@ -65,7 +65,7 @@ public:
 		// verify : https://atcoder.jp/contests/exawizards2019/tasks/exawizards2019_d
 
 		Assert(0 < n && n <= n_max);
-		return fac_[n - 1] * fac_inv_[n];
+		return fac[n - 1] * fac_inv[n];
 	}
 
 	// 順列の数 nPr を返す．O(1)
@@ -73,7 +73,7 @@ public:
 		Assert(n <= n_max);
 
 		if (r < 0 || n - r < 0) return 0;
-		return fac_[n] * fac_inv_[n - r];
+		return fac[n] * fac_inv[n - r];
 	}
 
 	// 二項係数 nCr を返す．O(1)
@@ -82,17 +82,19 @@ public:
 
 		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
-		return fac_[n] * fac_inv_[r] * fac_inv_[n - r];
+		return fac[n] * fac_inv[r] * fac_inv[n - r];
 	}
 
 	// 多項係数 nC[r] を返す．O(|r|)
 	mint multinomial(const vi& rs) const {
+		// verify : https://yukicoder.me/problems/no/2141
+
 		if (*min_element(all(rs)) < 0) return 0;
 		int n = accumulate(all(rs), 0);
 		Assert(n <= n_max);
 
-		mint res = fac_[n];
-		repe(r, rs) res *= fac_inv_[r];
+		mint res = fac[n];
+		repe(r, rs) res *= fac_inv[r];
 
 		return res;
 	}
@@ -115,7 +117,7 @@ struct Factorial_small_prime_mod {
 
 	// 階乗の値を保持するテーブル
 	using mint_p = dynamic_modint<31415>; // 他と被らなければ何でも良い．
-	vector<mint_p> fac_;
+	vector<mint_p> fac;
 
 	// (p-1)! までの階乗を法を p として前計算しておく．
 	Factorial_small_prime_mod(int p_) : p(p_) {
@@ -123,16 +125,15 @@ struct Factorial_small_prime_mod {
 
 		mint_p::set_mod(p);
 
-		fac_ = vector<mint_p>(p);
-		fac_[0] = 1;
+		fac = vector<mint_p>(p);
+		fac[0] = 1;
 		repi(i, 1, p - 1) {
-			fac_[i] = fac_[i - 1] * i;
+			fac[i] = fac[i - 1] * i;
 		}
 	}
 
 	pair<ll, mint_p> factorial_qr(ll n) const {
-		ll pow = 0;
-		mint_p mod = 1;
+		ll pow = 0; mint_p mod = 1;
 
 		// ルジャンドルの公式を用いて pow = ord_p(n!) を求めるついでに，
 		// ウィルソンの定理 (p-1)! = -1 (mod p) を利用して mod も求める．
@@ -141,7 +142,7 @@ struct Factorial_small_prime_mod {
 			int r = (int)(n % p);
 
 			pow += q;
-			mod *= fac_[r] * (q % 2 ? -1 : 1);
+			mod *= fac[r] * (q % 2 ? -1 : 1);
 
 			n /= p;
 		}
@@ -152,9 +153,7 @@ struct Factorial_small_prime_mod {
 	// n! mod p を返す．
 	int factorial(ll n) {
 		// n が p 以上なら明らかに p の倍数
-		if (n >= (ll)p) {
-			return 0;
-		}
+		if (n >= (ll)p) return 0;
 
 		// そうでなければ n! mod p を返す．
 		return factorial_qr(n).second.val();
@@ -164,9 +163,7 @@ struct Factorial_small_prime_mod {
 	int binomial(ll n, ll r) {
 		// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
 
-		if (r < 0 || n - r < 0) {
-			return 0;
-		}
+		if (r < 0 || n - r < 0) return 0;
 
 		// n, r, n-r それぞれの pow および mod を得る．
 		auto fac_n = factorial_qr(n);
@@ -479,28 +476,28 @@ struct Factorial_arbitrary_mod {
 class Factorial_log {
 	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_max;
-	vd fac_;
+	vd fac;
 
 public:
 	// n! までの階乗とその逆数を前計算しておく．O(n)
 	Factorial_log(int n) : n_max(n) {
-		fac_.resize(n + 1);
-		fac_[0] = 0;
-		repi(i, 1, n) fac_[i] = fac_[i - 1] + log(i);
+		fac.resize(n + 1);
+		fac[0] = 0;
+		repi(i, 1, n) fac[i] = fac[i - 1] + log(i);
 	}
 	Factorial_log() : n_max(0) {} // ダミー
 
 	// log n! を返す．O(1)
 	double factorial(int n) const {
 		Assert(0 <= n && n <= n_max);
-		return fac_[n];
+		return fac[n];
 	}
 
 	// 順列の数の対数 log nPr を返す．O(1)
 	double permutation(int n, int r) const {
 		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
-		return fac_[n] - fac_[n - r];
+		return fac[n] - fac[n - r];
 	}
 
 	// 二項係数の対数 log nCr を返す．O(1)
@@ -509,7 +506,7 @@ public:
 
 		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
-		return fac_[n] - fac_[r] - fac_[n - r];
+		return fac[n] - fac[r] - fac[n - r];
 	}
 
 	// 多項係数の対数 log nC[r] を返す．O(|r|)
@@ -517,8 +514,8 @@ public:
 		int n = accumulate(all(r), 0);
 		Assert(n <= n_max);
 
-		double res = fac_[n];
-		repe(ri, r) res -= fac_[ri];
+		double res = fac[n];
+		repe(ri, r) res -= fac[ri];
 
 		return res;
 	}
@@ -529,8 +526,9 @@ public:
 /*
 * n! を返す．
 */
-template <class T> T factorial(int n) {
-	// verify : https://atcoder.jp/contests/jsc2019-qual/tasks/jsc2019_qual_c
+template <class T>
+T factorial(int n) {
+	// verify : https://atcoder.jp/contests/arc106/tasks/arc106_f
 
 	T val = 1;
 	repi(i, 1, n) val *= i;
@@ -542,7 +540,8 @@ template <class T> T factorial(int n) {
 /*
 * nPr を返す．
 */
-template <class T> T permutation(ll n, int r) {
+template <class T>
+T permutation(ll n, int r) {
 	// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/3
 
 	Assert(n >= r);
@@ -557,12 +556,12 @@ template <class T> T permutation(ll n, int r) {
 /*
 * nCr を返す．
 */
-template <class T> T binomial(ll n, ll r) {
-	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e
+ll binomial(ll n, ll r) {
+	// verify : https://atcoder.jp/contests/arc106/tasks/arc106_f
 
 	Assert(n >= 0);
 
-	T val = 1;
+	ll val = 1;
 	chmin(r, n - r);
 
 	if (r < 0) return 0;
@@ -572,6 +571,26 @@ template <class T> T binomial(ll n, ll r) {
 		val /= i + 1;
 	}
 	return val;
+}
+
+
+//【二項係数（r か n-r が小さい）】O(min(r, n-r))
+/*
+* nCr を返す．
+*/
+mint binomial_mint(ll n, ll r) {
+	Assert(n >= 0);
+
+	mint num = 1, dnm = 1;
+	chmin(r, n - r);
+
+	if (r < 0) return 0;
+
+	rep(i, r) {
+		num *= n - i;
+		dnm *= i + 1;
+	}
+	return num / dnm;
 }
 
 
@@ -879,6 +898,12 @@ void binomial_fixed_n(ll n, ll r1, ll r2, int p, vi& bin) {
 *	bin(i+2, 2): 1  3  6 10 15 21 28 36 ...
 * 
 * verify : https://atcoder.jp/contests/abc256/tasks/abc256_f
+*/
+
+
+//【二項係数のくくり出し】
+/*
+* bin(n, r) = (n/r) bin(n-1, r-1)
 */
 
 

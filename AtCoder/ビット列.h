@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "探索.h"
-#include "線形計画問題.h"
+#include "フロー双対.h"
 // ■■■■■ ビット列 ■■■■■
 
 

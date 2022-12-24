@@ -77,7 +77,7 @@ template <class T> vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 }
 
 
-//【畳込み（mod 998244353）】O((|a| + |b|) log(|a| + |b|))
+//【畳込み（mod 998244353，長さ 4,194,304 以下）】O((|a| + |b|) log(|a| + |b|))
 /*
 * ACL の vm convolution(vm a, vm b) を利用すればよい．
 * 
@@ -85,98 +85,143 @@ template <class T> vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 */
 
 
-//【畳込み（mod 998244353，やや長い配列）】O((n + m) log(n + m))
+//【畳込み（mod 998244353，長さ 8,388,608 以下）】O(3 (n + m) log(n + m))
 /*
-* a[0..n) と b[0..m) の mod 998244353 での畳込みを res[0..n+m-1) に格納する．
+* a[0..n) と b[0..m) の mod 998244353 での畳込みを c[0..n+m-1) に格納し c を返す．
 *
-* 制約：n + m - 1 <= 16777216 = 2^24
+* 制約：n, m <= 8,388,608 = 2^24
 */
-void convolution_long(vm& a, vm& b, vm& res) {
+vm convolution_large(const vm& a, const vm& b) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
 
 	//【方法】
 	// ACL の convolution() が結果の大きさ 2^23 以下までしか対応していないので，
-	// もしそれより大きい結果になりそうなら列を等分し，畳込み結果を統合する．
+	// 列を分割し，カラツバ法っぽく畳込み結果を統合する．
 
-	int n = sz(a), m = sz(b);
+	int n = sz(a), m = sz(b), d = 1 << 22;
+	vm c(n + m - 1);
 
-	// 畳込み結果の大きさが 2^23 以下なら ACL が対応している．
-	if (n + m - 1 <= (1 << 23)) {
-		res = convolution(a, b);
-		return;
-	}
-
-	res.resize(n + m - 1);
-
-	// |a| >= |b| とする．
-	bool swap_flag = false;
-	if (n < m) {
-		a.swap(b);
-		swap_flag = true;
-	}
-
-	// a を等分する．
-	int n1 = n / 2, n2 = n - n1;
+	// a を分割する．
+	int n1 = min(d, n), n2 = n - n1;
 	vm a1(n1), a2(n2);
 	rep(i, n1) a1[i] = a[i];
 	rep(i, n2) a2[i] = a[n1 + i];
 
-	// a を等分することにより畳込み結果の大きさが 2^23 以下になる場合は b はそのまま
-	if (n2 + m - 1 <= (1 << 23)) {
-		vm c1 = convolution(a1, b);
-		vm c2 = convolution(a2, b);
+	// b を分割する．
+	int m1 = min(d, m), m2 = m - m1;
+	vm b1(m1), b2(m2);
+	rep(j, m1) b1[j] = b[j];
+	rep(j, m2) b2[j] = b[m1 + j];
 
-		if (!c1.empty()) rep(i, n1 + m - 1) res[i] += c1[i];
-		if (!c2.empty()) rep(i, n2 + m - 1) res[n1 + i] += c2[i];
-	}
-	// そうでないなら a, b 共に等分する．
-	else {
-		int m1 = m / 2, m2 = m - m1;
-		vm b1(m1), b2(m2);
-		rep(i, m1) b1[i] = b[i];
-		rep(i, m2) b2[i] = b[m1 + i];
+	vm c11 = convolution(a1, b1);
+	vm c22 = convolution(a2, b2);
 
-		vm c11 = convolution(a1, b1);
-		vm c12 = convolution(a1, b2);
-		vm c21 = convolution(a2, b1);
-		vm c22 = convolution(a2, b2);
+	// a, b の母関数をそれぞれ
+	//		f(z) = f1(z) + f2(z) z^d
+	//		g(z) = g1(z) + g2(z) z^d
+	// とおく．これらの積は
+	//		f(z) g(z)
+	//		= (f1 + f2 z^d) (g1 + g2 z^d)
+	//		= f1 g1 + (f1 g2 + f2 g1) z^d + (f2 g2) z^2d
+	// と表される．さらに
+	//		f1 g2 + f2 g1 = (f1 + f2)(g1 + g2) - f1 g1 - f2 g2
+	// と書き直せば，積の回数を計 3 回に抑えられる．
+	rep(i, n2) a1[i] += a2[i];
+	rep(j, m2) b1[j] += b2[j];
+	vm c12 = convolution(a1, b1);
+	if (!c11.empty()) rep(k, n1 + m1 - 1) c12[k] -= c11[k];
+	if (!c22.empty()) rep(k, n2 + m2 - 1) c12[k] -= c22[k];
 
-		if (!c11.empty()) rep(i, n1 + m1 - 1) res[i] += c11[i];
-		if (!c12.empty()) rep(i, n1 + m2 - 1) res[m1 + i] += c12[i];
-		if (!c21.empty()) rep(i, n2 + m1 - 1) res[n1 + i] += c21[i];
-		if (!c22.empty()) rep(i, n2 + m2 - 1) res[n1 + m1 + i] += c22[i];
-	}
+	if (!c11.empty()) rep(k, n1 + m1 - 1) c[k] += c11[k];
+	if (!c12.empty()) rep(k, min(n1 + m1 - 1, n + m - 1 - m1)) c[m1 + k] += c12[k];
+	if (!c22.empty()) rep(k, n2 + m2 - 1) c[n1 + m1 + k] += c22[k];
 
-	if (swap_flag) a.swap(b);
+	return c;
 }
 
 
-//【畳込み（mod 998244353，長い配列）】O((n + m)^2)（遅い）
+//【畳込み（mod 998244353，長さ 16,777,216 以下）】O(9 (n + m) log(n + m))
 /*
-* a[0..n) と b[0..m) の mod 998244353 での畳込みを res[0..n+m-1) に格納する．
+* a[0..n) と b[0..m) の mod 998244353 での畳込みを c[0..n+m-1) に格納し c を返す．
+*
+* 制約：n, m <= 16,777,216 = 2^24
 */
-void convolution_long(const vm& a, const vm& b, vm& res) {
-	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
-
+vm convolution_verylarge(const vm& a, const vm& b) {
+	// verify : https://judge.yosupo.jp/problem/convolution_mod_large
+	
 	//【方法】
 	// ACL の convolution() が結果の大きさ 2^23 以下までしか対応していないので，
-	// もしそれより大きい結果になりそうなら列を分割し，畳込み結果を統合する．
+	// 列を長さ 2^22 以下に分割し，カラツバ法っぽく畳込み結果を統合する．
 
-	const int len = (1 << 22);
 	int n = sz(a), m = sz(b);
-	res.resize(n + m - 1);
+	int d = (max(n, m) + 3) / 4;
 
-	for (int i = 0; i < n; i += len) {
-		vm a_sub{ a.begin() + i, a.begin() + min(i + len, n) };
+	// a を分割する．
+	vm a0(d), a1(d), a2(d), a3(d);
+	repi(i, 0, min(d, n) - 1)			a0[i] = a[i];
+	repi(i, d, min(2 * d, n) - 1)		a1[i - d] = a[i];
+	repi(i, 2 * d, min(3 * d, n) - 1)	a2[i - 2 * d] = a[i];
+	repi(i, 3 * d, n - 1)				a3[i - 3 * d] = a[i];
 
-		for (int j = 0; j < m; j += len) {
-			vm b_sub{ b.begin() + j, b.begin() + min(j + len, m) };
+	// b を分割する．
+	vm b0(d), b1(d), b2(d), b3(d);
+	repi(i, 0, min(d, m) - 1)			b0[i] = b[i];
+	repi(i, d, min(2 * d, m) - 1)		b1[i - d] = b[i];
+	repi(i, 2 * d, min(3 * d, m) - 1)	b2[i - 2 * d] = b[i];
+	repi(i, 3 * d, m - 1)				b3[i - 3 * d] = b[i];
 
-			vm c = convolution(a_sub, b_sub);
+	// 列 x に列 y を加える．
+	auto add = [&](vm& x, const vm& y, int l = 0) {
+		rep(i, sz(y)) x[l + i] += y[i];
+	};
 
-			rep(k, sz(c)) res[i + j + k] += c[k];
-		}
-	}
+	// 列 x から列 y を引く．
+	auto sub = [&](vm& x, const vm& y, int l = 0) {
+		rep(i, sz(y)) x[l + i] -= y[i];
+	};
+
+	// 列 x と列 y を加えた結果を返す．
+	auto sum = [&](const vm& x, const vm& y) {
+		vm z(d);
+		rep(i, d) z[i] = x[i] + y[i];
+		return z;
+	};
+
+	// hij = (fi + fj)(gi + gj) など
+	vm h0 = convolution(a0, b0);
+	vm h1 = convolution(a1, b1);
+	vm h2 = convolution(a2, b2);
+	vm h3 = convolution(a3, b3);
+	vm h02 = convolution(sum(a0, a2), sum(b0, b2));
+	vm h13 = convolution(sum(a1, a3), sum(b1, b3));
+	add(a0, a1); add(b0, b1); add(a2, a3); add(b2, b3);
+	vm h01 = convolution(a0, b0);
+	vm h23 = convolution(a2, b2);
+	add(a0, a2); add(b0, b2);
+	vm h0123 = convolution(a0, b0);
+
+	vm c01(4 * d);
+	add(c01, h0);
+	add(c01, h01, d); sub(c01, h0, d); sub(c01, h1, d);
+	add(c01, h1, 2 * d);
+
+	vm c23(4 * d);
+	add(c23, h2);
+	add(c23, h23, d); sub(c23, h2, d); sub(c23, h3, d);
+	add(c23, h3, 2 * d);
+
+	vm c0123(4 * d);
+	add(c0123, h02);
+	add(c0123, h0123, d); sub(c0123, h02, d); sub(c0123, h13, d);
+	add(c0123, h13, 2 * d);
+
+	vm c(8 * d);
+	add(c, c01);
+	add(c, c0123, 2 * d); sub(c, c01, 2 * d); sub(c, c23, 2 * d);
+	add(c, c23, 4 * d);
+
+	c.resize(n + m - 1);
+	return c;
 }
 
 
@@ -226,7 +271,7 @@ vector<vector<T>> naive_convolution_2D(const vector<vector<T>>& a, const vector<
 }
 
 
-//【二次元畳込み（mod998244353）】O((h1 + h2)(w1 + w2) (log(h1 + h2) + log(w1 + w2)))
+//【二次元畳込み（mod 998244353）】O((h1 + h2)(w1 + w2) log(h1 + h2) log(w1 + w2))
 /*
 * a[0..h1)[0..w1) と b[0..h2)[0..w2) を畳み込んだ二次元配列 c[0..h1+h2-1)[0..w1+w2-1) を返す．
 */
@@ -407,7 +452,7 @@ template <typename T> vector<T> max_convolution(vector<T> a, vector<T> b) {
 }
 
 
-//【数論変換】
+//【数論変換（mod 998244353）】
 /*
 * NTT(int n) : O(n)
 *	長さ n 以下の数列を扱えるよう初期化を行う．
@@ -445,6 +490,8 @@ struct NTT {
 
 	// 長さ n 以下の数列を扱えるよう初期化を行う．
 	NTT(int n) {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod
+
 		// n 以上の最小の 2 冪 2^M を求める．
 		M = msb(n - 1) + 1;
 		N = 1 << M;
@@ -514,7 +561,7 @@ struct NTT {
 	void intt(const vm& A, vm& a) {
 		// verify : https://judge.yosupo.jp/problem/convolution_mod
 		
-		Assert(sz(a) <= N);
+		Assert(sz(A) <= N);
 
 		intt_sub(A, a);
 
@@ -577,6 +624,220 @@ struct NTT {
 		vm A; ntt(a, A);
 		rep(i, n) A[i] = A[i].pow(d);
 		intt(A, a);
+
+		return a;
+	}
+};
+
+
+//【高速フーリエ変換】
+/*
+* FFT<D>(int n) : O(n)
+*	長さ n 以下の数列を扱えるよう初期化を行う．
+*	制約 : D は double または long double（誤差には注意！）
+*
+* fft(vD a, vcD& A) : O(n log n)
+*	実数列 a[0..n) に対し高速フーリエ変換を行った結果を A[0..n) に格納する（cD = complex<D>）
+*	制約 : n は 2 の冪乗
+*
+* ifft(vcD A, vD& a) : O(n log n)
+*	複素数列 A[0..n) に対し逆高速フーリエ変換を行った結果を a[0..n) に格納する．
+*	制約 : n は 2 の冪乗
+*
+* vD convolution(vD a, vD b) : O((n + m) log(n + m))
+*	実数列 a[0..n) と b[0..m) の畳込みを返す．
+*
+* vi convolution(vi a, vi b, int mod = 1e9+7) : O(3 (n + m) log(n + m))
+*	整数列 a[0..n) と b[0..m) の mod を法とした畳込みを返す．
+*
+* vD cyclic_convolution(vD a, vD b) : O(n log n)
+*	実数列 a[0..n) と b[0..n) の巡回畳込みを返す．
+*	制約 : n は 2 の冪乗
+*/
+template<class D = double>
+struct FFT {
+	using vD = vector<D>;
+	using cD = complex<D>;
+	using vcD = vector<cD>;
+
+	// N : 扱える数列の長さの上限（N = 2^M）
+	int N, M;
+
+	// w : 1 の原始 2^M 乗根とする．
+	// w_pow[i] : w^i，w_pow[N-i] : w^(-i)
+	vcD w_pow;
+
+	// 長さ n 以下の数列を扱えるよう初期化を行う．
+	FFT(int n) {
+		// verify : https://atcoder.jp/contests/atc001/tasks/fft_c
+
+		// n 以上の最小の 2 冪 2^M を求める．
+		M = msb(n - 1) + 1;
+		N = 1 << M;
+
+		// w の累乗を前計算しておく．
+		w_pow.resize(N + 1); D pi = acos(D(-1));
+		repi(i, 0, N) {
+			D th = 2 * pi * i / N;
+			w_pow[i] = cD(cos(th), sin(th));
+		}
+	}
+
+	// x を (y, z) に分割する
+	void butterfly(const vcD& x, vcD& y, vcD& z) {
+		int n = sz(x) / 2, m = msb(n) + 1;
+		y.resize(n); z.resize(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[i + n];
+			z[i] = (x[i] - x[i + n]) * w_pow[(ll)i << (M - m)];
+		}
+	}
+
+	// x を (y, z) に分割する（逆変換用）
+	void butterfly_inv(const vcD& x, vcD& y, vcD& z) {
+		int n = sz(x) / 2, m = msb(n) + 1;
+		y.resize(n); z.resize(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[i + n];
+			z[i] = (x[i] - x[i + n]) * w_pow[N - (i << (M - m))];
+		}
+	}
+
+	// (y, z) を x に統合する
+	void riffle(const vcD& y, const vcD& z, vcD& x) {
+		int n = sz(y);
+		x = vcD(2 * n);
+
+		rep(i, n) {
+			x[2 * i] = y[i];
+			x[2 * i + 1] = z[i];
+		}
+	}
+
+	// 長さが 2 冪の複素数列 a に対し高速フーリエ変換を行った結果を A に格納する．
+	void fft_sub(const vcD& a, vcD& A) {
+		int n = sz(a);
+		if (n == 1) {
+			A = a;
+			return;
+		}
+
+		vcD b, c, B, C;
+		butterfly(a, b, c);
+		fft_sub(b, B); fft_sub(c, C);
+		riffle(B, C, A);
+	}
+
+	// 長さが 2 冪の実数列 a に対し高速フーリエ変換を行った結果を A に格納する．
+	void fft(const vD& a_, vcD& A) {
+		// verify : https://atcoder.jp/contests/atc001/tasks/fft_c
+
+		int n = sz(a_);
+		Assert(n <= N);
+
+		vcD a(n);
+		rep(i, n) a[i] = cD(a_[i], 0);
+
+		fft_sub(a, A);
+	}
+
+	// 長さが 2 冪の複素数列 a に対し逆高速フーリエ変換を行った結果を A に格納する．
+	void intt_sub(const vcD& A, vcD& a) {
+		int n = sz(A);
+		if (n == 1) {
+			a = A;
+			return;
+		}
+
+		vcD b, c, B, C;
+		butterfly_inv(A, B, C);
+		intt_sub(B, b); intt_sub(C, c);
+		riffle(b, c, a);
+	}
+
+	// 長さが 2 冪の実数列 A に対し逆高速フーリエ変換を行った結果を a に格納する．
+	void ifft(const vcD& A, vD& a_) {
+		// verify : https://atcoder.jp/contests/atc001/tasks/fft_c
+
+		int n = sz(A);
+		Assert(n <= N);
+
+		vcD a;
+		intt_sub(A, a);
+
+		a_.resize(n);
+		rep(i, n) a_[i] = a[i].real() / n; // 定数倍も調整しておく
+	}
+
+	// a と b の畳込みを返す．
+	vD convolution(vD a, vD b) {
+		// verify : https://atcoder.jp/contests/atc001/tasks/fft_c
+
+		int n = sz(a), m = sz(b);
+		Assert(n + m - 1 <= N);
+
+		int k = 1 << (msb(n + m - 2) + 1);
+		a.resize(k); b.resize(k);
+
+		vcD A, B; fft(a, A); fft(b, B);
+		rep(i, k) A[i] *= B[i];
+		ifft(A, a);
+
+		a.resize(n + m - 1);
+
+		return a;
+	}
+
+	// a と b の畳込みを返す．
+	vi convolution(const vi& a, const vi& b, int mod = (int)1e9 + 7) {
+		// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6%E3%83%BBnumpy-%E9%AB%98%E9%80%9F%E3%83%95%E3%83%BC%E3%83%AA%E3%82%A8%E5%A4%89%E6%8F%9Bfft%E3%81%AB%E3%82%88%E3%82%8B%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF
+		// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
+
+		int n = sz(a), m = sz(b);
+		Assert(n + m - 1 <= N);
+
+		vD a0(n), a1(n), b0(m), b1(m); int pow2 = 1 << 15;
+		rep(i, n) {
+			a0[i] = a[i] % pow2;
+			a1[i] = a[i] / pow2;
+		}
+		rep(i, m) {
+			b0[i] = b[i] % pow2;
+			b1[i] = b[i] / pow2;
+		}
+
+		vD c00_d = this->convolution(a0, b0);
+		vD c11_d = this->convolution(a1, b1);
+		rep(i, n) a0[i] += a1[i];
+		rep(i, m) b0[i] += b1[i];
+		vD c01_d = this->convolution(a0, b0);
+
+		vl c00(n + m - 1), c11(n + m - 1), c01(n + m - 1);
+		rep(i, n + m - 1) {
+			c00[i] = (ll)(c00_d[i] + 0.5) % mod;
+			c11[i] = (ll)(c11_d[i] + 0.5) % mod;
+			c01[i] = ((ll)(c01_d[i] + 0.5) - c00[i] - c11[i] + 2 * mod) % mod;
+		}
+
+		vi c(n + m - 1);
+		rep(i, n + m - 1) {
+			c[i] = (int)((c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2) % mod);
+		}
+
+		return c;
+	}
+
+	// 長さが 2 冪の列 a と b の巡回畳込みを返す．
+	vD cyclic_convolution(vD a, vD b) {
+		Assert(sz(a) == sz(b) && sz(a) <= N);
+
+		int n = sz(a);
+
+		vcD A, B; fft(a, A); fft(b, B);
+		rep(i, n) A[i] *= B[i];
+		ifft(A, a);
 
 		return a;
 	}

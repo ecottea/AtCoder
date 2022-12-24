@@ -7,9 +7,9 @@
 //【ウェーブレット行列】
 /*
 * Wavelet_matrix(vl a) : O(n log n log A)
-*	非負整数列 a[0..n) で初期化する．（A = max(a) とおく．）
+*	整数列 a[0..n) で初期化する．（A = max(|a[i]|) とおく．）
 *
-* ll get(int i) : O(log(max a))
+* ll get(int i) : O(log A)
 *	昇順で i 番目の要素を返す．
 *
 * ll get(int l, int r, int i) : O(log A))
@@ -24,8 +24,8 @@
 * int position(ll v, int c) : O(log n log A)
 *	昇順で c 番目の v の位置を返す．
 *
-* frequency(int l, int r, int c, vector<pli>& freq) : O(min(r - l, A) log A)
-*	a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組のリストを freq に格納する．
+* vector<pli> frequency(int l, int r, int c) : O(min(r - l, A) log A)
+*	a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組のリストを返す．
 *
 * ll sum(int l, int r) : O(1)
 *	a[l..r) の和を返す．
@@ -33,14 +33,17 @@
 * ll sum(int l, int r, ll v0, ll v1) : O(log A)
 *	a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
 *
-* intersection(int l1, int r1, int l2, int r2, vector<tuple<ll, int, int>>& freq) : O(min((r1 - l1) + (r2 - l2), A) log A)
-*	a[l1..r1) と a[l2..r2) に共通する要素を求め，
-*	その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
+* vector<tlii> intersection(int l1, int r1, int l2, int r2) : O(min((r1 - l1) + (r2 - l2), A) log A)
+*	a[l1..r1) と a[l2..r2) に共通する要素を求め，その値とそれぞれにおける出現頻度の三つ組のリストを返す
+*
+* ll abs_sum(int l, int r, ll v) : O(log A)
+*	Σi∈[l..r) |a[i] - v| を返す．
 */
 class Wavelet_matrix {
 	// 参考 : https://miti-7.hatenablog.com/entry/2018/04/28/152259
 
 	int n; // 要素数
+	ll shift; // 非負にするために履かせた下駄
 	int k; // msb 以下の桁数（1-indexed）
 	vvb bs; // bs[j][i] : 第 j + 1 ビットについての安定ソート後の a[i] の第 j ビット
 	vvvi bs_acc; // bs[b] : のビット b = 0, 1 それぞれの個数の累積和
@@ -108,16 +111,16 @@ class Wavelet_matrix {
 	}
 
 public:
-	// 非負整数列 t で初期化する．
+	// 整数列 t で初期化する．
 	Wavelet_matrix(const vl& t)
-		: n(sz(t)), k(msb(*max_element(all(t))) + 1),
+		: n(sz(t)), shift(max(-*min_element(all(t)), 0LL)), k(msb(*max_element(all(t)) + shift) + 1),
 		bs(k, vb(n)), bs_acc(2, vvi(k, vi(n + 1))), num_zeros(k), acc(k + 1, vl(n + 1))
 	{
 		// verify : https://judge.yosupo.jp/problem/static_range_frequency
 
 		// ビットと組にして安定ソートするためのリスト
 		vector<pair<bool, ll>> bt(n);
-		rep(i, n) bt[i].second = t[i];
+		rep(i, n) bt[i].second = t[i] + shift; // 下駄を履かせて非負にする．
 
 		// j : 注目ビット位置（上位ビットから順に見ていく）
 		repir(j, k - 1, 0) {
@@ -153,7 +156,7 @@ public:
 			acc[0][i + 1] = acc[0][i] + bt[i].second;
 		}
 	}
-	Wavelet_matrix() : n(0), k(0) {}
+	Wavelet_matrix() : n(0), shift(0), k(0) {}
 
 	// 昇順で i 番目の要素を返す．
 	ll get(int i) {
@@ -173,18 +176,20 @@ public:
 			}
 		}
 
-		return res;
+		return res - shift;
 	}
 
 	// a[l..r) に v が何個あるかを返す．
 	int count(int l, int r, ll v) {
 		// verify : https://judge.yosupo.jp/problem/static_range_frequency
 
+		chmax(l, 0); chmin(r, n); v += shift;
 		return count_sub(r, v) - count_sub(l, v);
 	}
 
 	// 昇順で c 番目の v の位置を返す．
 	int position(ll v, int c) {
+		v += shift;
 		if (!id.count(v)) return -1;
 
 		int i = id[v] + c;
@@ -204,6 +209,7 @@ public:
 	ll get(int l, int r, int i) {
 		// verify : https://judge.yosupo.jp/problem/range_kth_smallest
 
+		chmax(l, 0); chmin(r, n);
 		ll res = 0;
 
 		repir(j, k - 1, 0) {
@@ -222,12 +228,13 @@ public:
 			}
 		}
 
-		return res;
+		return res - shift;
 	}
 
 	// a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組を返す．
-	void frequency(int l, int r, int c, vector<pli>& freq) {
-		freq.clear();
+	vector<pli> frequency(int l, int r, int c) {
+		chmax(l, 0); chmin(r, n);
+		vector<pli> freq;
 
 		priority_queue<tuple<int, int, int, int, ll>> q;
 		q.push({ r - l, k - 1, l, r, 0 });
@@ -241,8 +248,8 @@ public:
 			q.pop();
 
 			if (j == -1) {
-				freq.push_back({ v, w });
-				if (--c == 0) return;
+				freq.push_back({ v - shift, w });
+				if (--c == 0) return freq;
 			}
 			else {
 				int l1 = num_zeros[j] + bs_acc[1][j][l];
@@ -254,17 +261,21 @@ public:
 				q.push({ r0 - l0, j - 1, l0, r0, 2 * v });
 			}
 		}
+
+		return freq;
 	}
 
 	// a[l..r) の和を返す．
 	ll sum(int l, int r) {
-		return acc[k][r] - acc[k][l];
+		chmax(l, 0); chmin(r, n);
+		return acc[k][r] - acc[k][l] - shift * (r - l);
 	}
 
 	// a[l1..r1) と a[l2..r2) に共通する要素を求め，
 	// その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
-	void intersection(int l1, int r1, int l2, int r2, vector<tuple<ll, int, int>>& freq) {
-		freq.clear();
+	vector<tuple<ll, int, int>> intersection(int l1, int r1, int l2, int r2) {
+		chmax(l1, 0); chmin(r1, n); chmax(l2, 0); chmin(r2, n);
+		vector<tuple<ll, int, int>> freq;
 
 		queue<tuple<int, int, int, int, int, ll>> q;
 		q.push({ k - 1, l1, r1, l2, r2, 0 });
@@ -276,7 +287,7 @@ public:
 			if (l1 == r1 || l2 == r2) continue;
 
 			if (j == -1) {
-				freq.push_back({ v, r1 - l1, r2 - l2 });
+				freq.push_back({ v - shift, r1 - l1, r2 - l2 });
 			}
 			else {
 				int l11 = num_zeros[j] + bs_acc[1][j][l1];
@@ -292,13 +303,15 @@ public:
 				q.push({ j - 1, l10, r10, l20, r20, 2 * v });
 			}
 		}
+
+		return freq;
 	}
 
 	// a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
 	int count(int l, int r, ll v0, ll v1) {
 		// verify : https://atcoder.jp/contests/arc097/tasks/arc097_c
 
-		chmax(v0, 0LL);
+		chmax(l, 0); chmin(r, n); v0 += shift; v1 += shift; chmax(v0, 0LL);
 		if (v0 >= v1) return 0;
 
 		return count_rsub(l, r, v1) - count_rsub(l, r, v0);
@@ -308,10 +321,28 @@ public:
 	ll sum(int l, int r, ll v0, ll v1) {
 		// verify : https://atcoder.jp/contests/abc276/tasks/abc276_f
 
-		chmax(v0, 0LL);
+		chmax(l, 0); chmin(r, n); v0 += shift; v1 += shift; chmax(v0, 0LL);
 		if (v0 >= v1) return 0;
 
-		return sum_rsub(l, r, v1) - sum_rsub(l, r, v0);
+		ll res = sum_rsub(l, r, v1) - sum_rsub(l, r, v0);
+		if (shift != 0) res -= shift * (count_rsub(l, r, v1) - count_rsub(l, r, v0));
+
+		return res;
+	}
+
+	// Σi∈[l..r) |a[i] - v| を返す．
+	ll abs_sum(int l, int r, ll v) {
+		// verify : https://yukicoder.me/problems/no/2169
+
+		chmax(l, 0); chmin(r, n); v += shift;
+		if (v <= 0) return sum_rsub(l, r, INFL) - v * (r - l);
+
+		ll res = sum_rsub(l, r, INFL);
+		res -= (r - l) * v;
+		res -= 2 * sum_rsub(l, r, v);
+		res += 2 * count_rsub(l, r, v) * v;
+
+		return res;
 	}
 };
 

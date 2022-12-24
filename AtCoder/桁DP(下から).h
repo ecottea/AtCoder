@@ -3,9 +3,9 @@
 // ■■■■■ 桁 DP（下の桁から） ■■■■■
 
 
-//【下から桁 DP，以下フラグ，数え上げ】O(n m b)
+//【下から状態桁 DP，以下フラグ，数え上げ】O(n m b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの個数を返す．
+* b=10 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum(const string& num, int m, int b = 10) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_s
@@ -44,9 +44,9 @@ mint count_digit_sum(const string& num, int m, int b = 10) {
 }
 
 
-//【下から桁 DP，以上フラグ，数え上げ】O(n m b)
+//【下から状態桁 DP，以上フラグ，数え上げ】O(n m b)
 /*
-* b 進数で n 桁の数 num 以上の n 桁の整数で，数字和が m の倍数であるものの個数を返す．
+* b=10 進数で n 桁の数 num 以上の n 桁の整数で，数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 	int n = sz(num);
@@ -83,9 +83,9 @@ mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 }
 
 
-//【下から桁 DP，以下フラグ，前 0 フラグ，数え上げ】O(n m b)
+//【下から状態桁 DP，以下フラグ，前 0 フラグ，数え上げ】O(n m b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
+* b=10 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
 * 数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
@@ -141,9 +141,9 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 }
 
 
-//【下から桁 DP，以下フラグ，スコア和】O(n m b)
+//【下から状態桁 DP，以下フラグ，スコア和】O(n m b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの和を返す．
+* b=10 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの和を返す．
 */
 mint sum_digit_sum(const string& num, int m, int b = 10) {
 	int n = sz(num);
@@ -184,9 +184,9 @@ mint sum_digit_sum(const string& num, int m, int b = 10) {
 }
 
 
-//【下から桁 DP，以下フラグ，前 0 フラグ，スコア和】O(n m b)
+//【下から状態桁 DP，以下フラグ，前 0 フラグ，スコア和】O(n m b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
+* b=10 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
 * 数字和が m の倍数であるものの和を返す．
 */
 mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
@@ -247,7 +247,7 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 
 //【下から桁 DP，以下フラグ，桁上げフラグ，スコア最大化】O(n b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
+* b=10 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
 * d の数字和と num - d の数字和の合計の最大値を返す．
 */
 ll maximize_pair_digit_sum(const string& num, int b = 10) {
@@ -295,7 +295,7 @@ ll maximize_pair_digit_sum(const string& num, int b = 10) {
 
 //【下から桁 DP，以下フラグ，桁上げフラグ，スコア最小化】O(n b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
+* b=10 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
 * d の数字和と num + d の数字和の合計の最小値を返す．
 */
 ll minimize_pair_digit_sum(string num, int b = 10) {
@@ -344,7 +344,7 @@ ll minimize_pair_digit_sum(string num, int b = 10) {
 
 //【下から桁 DP，桁上げフラグ，前 0 フラグ，スコア最大化】O(n b)
 /*
-* b 進数で n 桁の数 num について，全ての整数 d についての
+* b=10 進数で n 桁の数 num について，全ての整数 d についての
 * d, num, d + num の桁が揃う箇所の最大個数を返す．（前 0 は '0' と認めない）
 */
 ll maximize_digit_triple(string num, int b = 10) {

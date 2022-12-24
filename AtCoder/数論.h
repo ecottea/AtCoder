@@ -80,8 +80,7 @@ mint lcm(const vi& a) {
 	map<ll, int> lpps;
 
 	rep(i, n) {
-		map<ll, int> pps;
-		factor_integer(a[i], pps);
+		auto pps = factor_integer(a[i]);
 
 		repe(pp, pps) chmax(lpps[pp.first], pp.second);
 	}
@@ -166,16 +165,16 @@ ll bezout(ll a, ll b, ll c, ll& x, ll& y) {
 
 //y–ñ”—ñ‹“zO(ãn)
 /*
-* n ‚Ì–ñ”‘S‚Ä‚ğƒŠƒXƒg ds ‚É¸‡‚ÉŠi”[‚·‚éD
+* n ‚Ì–ñ”‘S‚Ä‚ğ¸‡‚ÉŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 */
-void divisors(ll n, vl& ds) {
-	// verify : https://algo-method.com/tasks/346
+vl divisors(ll n) {
+	// verify : https://yukicoder.me/problems/no/2142
 
-	ds.clear();
+	vl ds;
 
 	if (n == 1) {
 		ds.push_back(1);
-		return;
+		return ds;
 	}
 
 	ll i = 1;
@@ -188,6 +187,8 @@ void divisors(ll n, vl& ds) {
 	if (i * i == n) ds.push_back(i);
 
 	sort(all(ds));
+
+	return ds;
 }
 
 
@@ -195,7 +196,8 @@ void divisors(ll n, vl& ds) {
 /*
 * n ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê pps ‚ğ—˜—p‚µ‚Ä n ‚Ì–ñ”‘S‚Ä‚ğƒŠƒXƒg divs ‚É¸‡‚ÉŠi”[‚·‚éD
 */
-template <class T> void divisors(map<T, int>& pps, vector<T>& divs) {
+template <class T>
+void divisors(map<T, int>& pps, vector<T>& divs) {
 	// verify : https://atcoder.jp/contests/arc068/tasks/arc068_c
 
 	divs = vector<T>({ T(1) });
@@ -243,14 +245,13 @@ ll divisor_sigma(int k, ll n) {
 
 //y‘fˆö”•ª‰ğzO(ãn)
 /*
-* n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
-* 
-* pps[p] = d : n ‚É‘fˆö” p ‚ª d ŒÂŠÜ‚Ü‚ê‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
+* n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚ÉŠi”[‚µ pps ‚ğ•Ô‚·D
+* pps[p] = d ‚Í n ‚É‘fˆö” p ‚ª d ŒÂŠÜ‚Ü‚ê‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 */
-void factor_integer(ll n, map<ll, int>& pps) {
+map<ll, int> factor_integer(ll n) {
 	// verify : https://algo-method.com/tasks/457
 
-	pps.clear();
+	map<ll, int> pps;
 
 	for (ll i = 2; i * i <= n; i++) {
 		int d = 0;
@@ -261,6 +262,8 @@ void factor_integer(ll n, map<ll, int>& pps) {
 		if (d > 0) pps[i] = d;
 	}
 	if (n > 1) pps[n] = 1;
+
+	return pps;
 }
 
 
@@ -291,8 +294,7 @@ ll euler_phi(ll n) {
 	// verify : https://judge.yosupo.jp/problem/tetration_mod
 
 	// n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚Éó‚¯æ‚éD
-	map<ll, int> pps;
-	factor_integer(n, pps);
+	auto pps = factor_integer(n);
 
 	// ƒÓ(n) ‚ğŒvZ‚·‚éD
 	ll res = 1;
@@ -323,8 +325,7 @@ ll carmichael_lambda(ll n) {
 	// verify : https://atcoder.jp/contests/jag2015summer-day4/tasks/icpc2015summer_day4_d
 
 	// n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚Éó‚¯æ‚éD
-	map<ll, int> pps;
-	factor_integer(n, pps);
+	auto pps = factor_integer(n);
 
 	// ƒÉ(n) ‚ğŒvZ‚·‚éD
 	ll res = 1;

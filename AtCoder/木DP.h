@@ -6,7 +6,7 @@
 
 //【貰う木 DP】O(n)
 /*
-* r を根とする根付き木 g の部分木 s についての問題の答えを dp[s] に格納する．
+* r を根とする根付き木 g の部分木 s についての問題の答えを dp[s] に格納し dp を返す．
 *
 * void merge(T& x, T y, int s) :
 *   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
@@ -23,11 +23,11 @@
 *   辺 p-s を追加した部分木 p についての答えを返す．
 */
 template <class T, void(*merge)(T&, const T&, int), T(*e)(), T(*leaf)(int), T(*apply)(const T&, int, int)>
-void tree_getDP(const Graph& g, int r, vector<T>& dp) {
+vector<T> tree_getDP(const Graph& g, int r) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_p
 
 	int n = sz(g);
-	dp.resize(n, e());
+	vector<T> dp(n, e());
 
 	// 部分木 s についての答えを計算する．（p : s の親）
 	function<void(int, int)> dfs = [&](int s, int p) {
@@ -54,14 +54,16 @@ void tree_getDP(const Graph& g, int r, vector<T>& dp) {
 
 	dfs(r, -1);
 
+	return dp;
+
 	/* 雛形
 	using T = int;
 	void merge(T& x, const T& y, int s) { chmax(x, y); }
 	T e() { return 0; }
 	T leaf(int s) { return 0; }
 	T apply(const T& x, int p, int s) { return x + 1; }
-	void solve_by_tree_getDP(const Graph& g, int r, vector<T>& dp) {
-		tree_getDP<T, merge, e, leaf, apply>(g, r, dp);
+	vector<T> solve_by_tree_getDP(const Graph& g, int r) {
+		return tree_getDP<T, merge, e, leaf, apply>(g, r);
 	}
 	*/
 };
@@ -69,7 +71,7 @@ void tree_getDP(const Graph& g, int r, vector<T>& dp) {
 
 //【貰う木 DP（コスト付き）】O(n)
 /*
-* r を根とするコスト付き根付き木 g の部分木 s についての問題の答えを dp[s] に格納する．
+* r を根とするコスト付き根付き木 g の部分木 s についての問題の答えを dp[s] に格納し dp を返す．
 *
 * T merge(T x, T y, int s) :
 *   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
@@ -86,11 +88,11 @@ void tree_getDP(const Graph& g, int r, vector<T>& dp) {
 *   コスト c の辺 p-s を追加した部分木 p についての答えを返す．
 */
 template <class T, void(*merge)(T&, const T&, int), T(*e)(), T(*leaf)(int), T(*apply)(const T&, int, int, ll)>
-void tree_getDP(const WGraph& g, int r, vector<T>& dp) {
+vector<T> tree_getDP(const WGraph& g, int r) {
 	// verify : https://yukicoder.me/problems/no/417
 
 	int n = sz(g);
-	dp.resize(n, e());
+	vector<T> dp(n, e());
 
 	// 部分木 s についての答えを計算する．（p : s の親）
 	function<void(int, int)> dfs = [&](int s, int p) {
@@ -115,14 +117,16 @@ void tree_getDP(const WGraph& g, int r, vector<T>& dp) {
 
 	dfs(r, -1);
 
+	return dp;
+
 	/* 雛形
 	using T = ll;
 	void merge(T& x, const T& y, int s) { chmax(x, y); }
 	T e() { return 0; }
 	T leaf(int s) { return 0; }
 	T apply(const T& x, int p, int s, ll c) { return x + c; }
-	void solve_by_tree_getDP(const WGraph& g, int r, vector<T>& dp) {
-		tree_getDP<T, merge, e, leaf, apply>(g, r, dp);
+	vector<T> solve_by_tree_getDP(const WGraph& g, int r) {
+		return tree_getDP<T, merge, e, leaf, apply>(g, r);
 	}
 	*/
 };
@@ -140,8 +144,8 @@ void merge_hot(T_hot& x, const T_hot& y, int s) { chmax(x, y); }
 T_hot e_hot() { return 0; }
 T_hot leaf_hot(int s) { return 0; }
 T_hot apply_hot(const T_hot& x, int s, int t) { return x + 1; }
-void height_of_tree(const Graph& g, int r, vector<T_hot>& h) {
-	tree_getDP<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r, h);
+vector<T_hot> height_of_tree(const Graph& g, int r) {
+	return tree_getDP<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r);
 }
 
 
@@ -156,8 +160,8 @@ void merge_hoct(T_hoct& x, const T_hoct& y, int s) { chmax(x, y); }
 T_hoct e_hoct() { return 0; }
 T_hoct leaf_hoct(int s) { return 0; }
 T_hoct apply_hoct(const T_hoct& x, int s, int t, ll c) { return x + c; }
-void height_of_weighted_tree(const WGraph& g, int r, vector<T_hoct>& h) {
-	tree_getDP<T_hoct, merge_hoct, e_hoct, leaf_hoct, apply_hoct>(g, r, h);
+vector<T_hoct> height_of_weighted_tree(const WGraph& g, int r) {
+	return tree_getDP<T_hoct, merge_hoct, e_hoct, leaf_hoct, apply_hoct>(g, r);
 }
 
 
@@ -175,8 +179,7 @@ T_cis apply_cis(const T_cis& x, int s, int t) { return { x.second, x.first + x.s
 mint count_independent_set(const Graph& g) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_p
 
-	vector<T_cis> dp;
-	tree_getDP<T_cis, merge_cis, e_cis, leaf_cis, apply_cis>(g, 0, dp);
+	auto dp = tree_getDP<T_cis, merge_cis, e_cis, leaf_cis, apply_cis>(g, 0);
 	return dp[0].first + dp[0].second;
 }
 
@@ -195,8 +198,7 @@ T_mis apply_mis(const T_mis& x, int s, int t) { return { max(x.first, x.second +
 int maximum_independent_set(const Graph& g) {
 	// verify : https://yukicoder.me/problems/no/763
 
-	vector<T_mis> dp;
-	tree_getDP<T_mis, merge_mis, e_mis, leaf_mis, apply_mis>(g, 0, dp);
+	auto dp = tree_getDP<T_mis, merge_mis, e_mis, leaf_mis, apply_mis>(g, 0);
 	return max(dp[0].first, dp[0].second);
 }
 
@@ -219,8 +221,7 @@ ll distance_sum(const Graph& g) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_am
 
 	n_ds = sz(g);
-	vector<T_ds> dp;
-	tree_getDP<T_ds, merge_ds, e_ds, leaf_ds, apply_ds>(g, 0, dp);
+	auto dp = tree_getDP<T_ds, merge_ds, e_ds, leaf_ds, apply_ds>(g, 0);
 	return dp[0].first;
 }
 
@@ -253,8 +254,7 @@ void distance_sum_subtree(const Graph& g, vl& ds) {
 	int n = sz(g);
 	ds.resize(n);
 
-	vector<T_dss> dp;
-	tree_getDP<T_dss, merge_dss, e_dss, leaf_dss, apply_dss>(g, 0, dp);
+	auto dp = tree_getDP<T_dss, merge_dss, e_dss, leaf_dss, apply_dss>(g, 0);
 	dumpel(dp);
 
 	rep(s, n) ds[s] = get<0>(dp[s]);

@@ -169,8 +169,10 @@ mint matrix_tree_theorem(const Graph& g) {
 
 //【完全グラフの全域木の数え上げ（次数制約付き）】
 /*
-* 完全グラフ K_n の全域木で，頂点 i の次数が d[i] であるものの個数は以下の式で与えられる：
+* 完全グラフ K_n の全域木で，頂点 i の次数が d[i] であるものの個数は以下の多項係数で与えられる：
 *	(n - 2)! / (Πi (d[i] - 1)!)
+* 
+* verify : https://atcoder.jp/contests/arc106/tasks/arc106_f
 *
 *（Cayley の定理）
 */

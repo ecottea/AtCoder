@@ -74,6 +74,7 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump(...)
 #define dumpel(v)
 #define dump_list(v)
+#define dump_list2D(v)
 #define input_from_file(f)
 #define output_to_file(f)
 #define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
@@ -102,7 +103,7 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 // 0 埋め出力（d : 桁数，res : 出力したい数値）
 cout << setfill('0') << right << setw(d) << res << endl;
  
-// string s_ を vector<char> s に変換
+// string s_ を vc s に変換
 vc s(all(s_));
 
 // vc s_ を string s に変換
@@ -213,7 +214,7 @@ int solve(int n, const vi& a) {
 	return res;
 }
 
-void find_bug() {
+void bug_find() {
 #ifdef _MSC_VER
 	// 合わない入力例を見つける．
 

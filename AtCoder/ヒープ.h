@@ -26,7 +26,8 @@
 * merge(Skew_heap<T>& hp) : O(log n)
 *	ヒープ hp を自身に併合する．
 */
-template <typename T> struct Skew_heap {
+template <typename T>
+struct Skew_heap {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
 	
 	struct Node {
@@ -139,7 +140,8 @@ template <typename T> struct Skew_heap {
 * merge(Skew_heap_rev& hp) : O(log n)
 *	ヒープ hp を自身に併合する．
 */
-template <typename T> struct Skew_heap_rev {
+template <typename T>
+struct Skew_heap_rev {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
 	
 	struct Node {
@@ -393,12 +395,14 @@ private:
 *	多重集合内の最大値[最小値]を返す．
 *
 * bool erase_l(T val), erase_h(T val) : O(log n)
-*	多重集合内の値 val を削除する．要素がなければ false を返す．
+*	多重集合内の値 val を削除する（空なら何もせず false を返す）
+*	どちらにも要素がなければ false を返す．
 * 
 * void decrease_l(), decrease_r() : O(log n)
-*	多重集合の大きさを 1 減らす．逆側は 1 増える．
+*	多重集合の大きさを 1 減らす．逆側は 1 増える（空なら何もしない）
 */
-template <class T> struct Separated_multiset {
+template <class T>
+struct Separated_multiset {
 	int nl, nh;
 	multiset<T> sl, sh;
 
@@ -449,7 +453,7 @@ template <class T> struct Separated_multiset {
 	bool erase_l(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
 		
-		Assert(nl > 0);
+		if (nl == 0) return false;
 
 		auto it_l = sl.lower_bound(val);
 		if (it_l != sl.end() && *it_l == val) {
@@ -472,7 +476,7 @@ template <class T> struct Separated_multiset {
 	bool erase_h(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
 		
-		Assert(nh > 0);
+		if (nh == 0) return false;
 
 		auto it_h = sh.lower_bound(val);
 		if (it_h != sh.end() && *it_h == val) {
@@ -495,7 +499,7 @@ template <class T> struct Separated_multiset {
 
 	// 多重集合の大きさを 1 減らす．
 	void decrese_l() {
-		Assert(nl > 0);
+		if (nl == 0) return;
 
 		sh.insert(*sl.rbegin());
 		sl.erase(prev(sl.end()));
@@ -503,7 +507,7 @@ template <class T> struct Separated_multiset {
 		nl--; nh++;
 	}
 	void decrese_h() {
-		Assert(nh > 0);
+		if (nh == 0) return;
 
 		sl.insert(*sh.begin());
 		sh.erase(sh.begin());
@@ -523,7 +527,7 @@ template <class T> struct Separated_multiset {
 
 //【多重集合の和（大小分離）】
 /*
-* Separated_multiset_sum() : O(1)
+* Separated_multiset_sum<T>() : O(1)
 *	空で初期化する．
 *
 * bool empty_l(), empty_h() : O(1)
@@ -539,15 +543,17 @@ template <class T> struct Separated_multiset {
 *	多重集合内の最大値[最小値]を返す．
 *
 * bool erase_l(T val), erase_h(T val) : O(log n)
-*	多重集合内の値 val を 1 つ削除する．どちらにも要素がなければ false を返す．
+*	多重集合内の値 val を 1 つ削除する（空なら何もしない）
+*	どちらにも要素がなければ false を返す．
 *
 * void decrease_l(), decrease_r() : O(log n)
-*	多重集合の大きさを 1 減らす．逆側は 1 増える．
+*	多重集合の大きさを 1 減らす．逆側は 1 増える（空なら何もしない）
 *
 * T sum_l(), sum_h() : O(1)
 *	多重集合内の和を返す．
 */
-template <class T> struct Separated_multiset_sum {
+template <class T>
+struct Separated_multiset_sum {
 	int nl, nh;
 	multiset<T> sl, sh;
 	T suml, sumh;
@@ -615,7 +621,7 @@ template <class T> struct Separated_multiset_sum {
 	bool erase_l(const T& val) {
 		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
 
-		Assert(nl > 0);
+		if (nl == 0) return false;
 
 		auto it_l = sl.lower_bound(val);
 		if (it_l != sl.end() && *it_l == val) {
@@ -648,7 +654,7 @@ template <class T> struct Separated_multiset_sum {
 	bool erase_h(const T& val) {
 		// verify : https://atcoder.jp/contests/agc018/tasks/agc018_c
 
-		Assert(nh > 0);
+		if (nh == 0) return false;
 
 		auto it_h = sh.lower_bound(val);
 		if (it_h != sh.end() && *it_h == val) {
@@ -694,7 +700,7 @@ template <class T> struct Separated_multiset_sum {
 	void decrese_l() {
 		// verify : https://atcoder.jp/contests/abc249/tasks/abc249_f
 
-		Assert(nl > 0);
+		if (nl == 0) return;
 
 		T v = *sl.rbegin();
 		sl.erase(prev(sl.end()));
@@ -705,7 +711,9 @@ template <class T> struct Separated_multiset_sum {
 		nl--; nh++;
 	}
 	void decrese_h() {
-		Assert(nh > 0);
+		// verify : https://atcoder.jp/contests/abc281/tasks/abc281_e
+
+		if (nh == 0) return;
 
 		T v = *sh.begin();
 		sh.erase(sh.begin());
@@ -751,7 +759,8 @@ template <class T> struct Separated_multiset_sum {
 * void pop() : O(log n)
 *	ヒープ内の最大要素を削除する．
 */
-template <class T> class Binary_heap {
+template <class T>
+class Binary_heap {
 	int n; // 格納されているデータの個数
 	vector<T> v; // v[1] を根とする完全二分木（v[0] は使わない）
 

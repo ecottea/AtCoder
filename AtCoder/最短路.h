@@ -39,13 +39,93 @@ template <class G> void breadth_first_search(const G& g, int st, vi& dist) {
 }
 
 
+//【幅優先探索（距離上限指定）】O((max deg(v))^D)
+/*
+* グラフ g に対し始点を st として距離 D 以下の範囲の幅優先探索を行い，
+* st から各頂点 s への最短経路長を dist[s] に格納する．
+*/
+void BFS_ub(const Graph& g, int st, int D, unordered_map<int, int>& dist) {
+	// verify : https://atcoder.jp/contests/abc254/tasks/abc254_e
+
+	int n = sz(g);
+
+	// dist[v] : st から v までの最短距離
+	//（vi dist(n) とすると距離 D 以下でない頂点の分までテーブルを確保してしまい無駄がある）
+	dist.clear();
+	dist[st] = 0;
+	if (D == 0) return;
+
+	queue<int> q; // 次に探索する頂点を入れておくキュー
+	q.push(st);
+
+	while (!q.empty()) {
+		// 未探索の頂点 s を 1 つ得る．
+		auto s = q.front(); q.pop();
+
+		repe(t, g[s]) {
+			// 探索済みの頂点なら何もしない．
+			if (dist.count(t)) continue;
+
+			// スタートからの最短距離を確定する．
+			dist[t] = dist[s] + 1;
+
+			// 未探索の頂点として t を追加する．
+			if (dist[t] < D) q.push(t);
+		}
+	}
+}
+
+
+//【幅優先探索（動的）】O(|V| + |E|)
+/*
+* st から到達可能な t までの最短距離を dist[t] に格納したリストを返す．
+* nxt(s) は s の次に訪れることのできる頂点のリストを返す．
+*/
+template <class T> unordered_map<T, int> dynamic_BFS(T st, const function<vector<T>(T)>& nxt) {
+	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_f
+
+	unordered_map<T, int> dist; // st からの最短距離を保持するテーブル
+	dist[st] = 0;
+
+	queue<T> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		// 未探索の頂点 s を得る．
+		auto s = que.front(); que.pop();
+
+		repe(t, nxt(s)) {
+			// t が発見済みの頂点なら何もしない．
+			if (dist.count(t)) continue;
+
+			// スタートからの最短距離を確定する．
+			dist[t] = dist[s] + 1;
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+
+	return dist;
+
+	/* nxt の定義の雛形
+	using T = ll;
+	function<vector<T>(T)> nxt = [&](T s) {
+		vector<T> res;
+
+		return res;
+	};
+	*/
+}
+
+
 //【01-BFS】O(|V| + |E|)
 /*
 * 辺のコストが 0, 1 の二値に限られるコスト付きグラフ g に対し，
 * st から各頂点 i への最短経路長を dist[i] に格納する．
 * i が st から到達不能な頂点の場合は dist[i] = INF となる．
 */
-void binary_bfs(const WGraph& g, int st, vi& dist) {
+void binary_BFS(const WGraph& g, int st, vi& dist) {
 	// verify : https://atcoder.jp/contests/arc005/tasks/arc005_3
 
 	int n = sz(g);
@@ -228,7 +308,7 @@ void dijkstra_tree(const WGraph& g, int st, WGraph& gt) {
 }
 
 
-//【単一始点最短路（負コスト可）】O(|E| |V|)
+//【単一始点最短路（負コスト可）】O(|V| |E|)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，
 * st から各頂点 i への最短距離を dist[i] に格納する．
@@ -288,32 +368,23 @@ bool warshall_floyd(const WGraph& g, vvl& dist) {
 	dist = vvl(n, vl(n, INFL));
 
 	rep(s, n) dist[s][s] = 0;
-	rep(s, n) {
-		repe(e, g[s]) {
-			// 多重辺に対応するため chmin を用いている．
-			chmin(dist[s][e.to], e.cost);
-		}
-	}
+	rep(s, n) repe(e, g[s]) chmin(dist[s][e.to], e.cost);
 
 	rep(k, n) {
 		// 途中で通っていいのが 0 から k までの頂点のとき
-		rep(i, n) {
-			rep(j, n) {
-				// 通れない場合は加算しないようにしてオーバーフローに注意する．
-				if (dist[i][k] == INFL || dist[k][j] == INFL) continue;
+		rep(i, n) rep(j, n) {
+			// 通れない場合は加算しないようにしてオーバーフローに注意する．
+			if (dist[i][k] == INFL || dist[k][j] == INFL) continue;
 
-				// 新しく通れるようになった k を通る方が距離が小さければ更新
+			// 新しく通れるようになった k を通る方が距離が小さければ更新
 				// （一時配列に退避させず計算してしまっているので途中は間違った値
 				// になっているが，より小さい値になるだけなので最後には合う．）
-				chmin(dist[i][j], dist[i][k] + dist[k][j]);
-			}
+			chmin(dist[i][j], dist[i][k] + dist[k][j]);
 		}
 	}
 
 	// 負の閉路を持っていれば false を返す．
-	rep(i, n) {
-		if (dist[i][i] < 0) return false;
-	}
+	rep(i, n) if (dist[i][i] < 0) return false;
 	return true;
 }
 
@@ -376,6 +447,75 @@ int shortest_path(const Graph& g, int st, int gl, vi* path = nullptr) {
 	}
 
 	return d;
+}
+
+
+//【最短パス（動的）】O(|V| + |E|)
+/*
+* st から gl までの最短距離を返し（到達不能なら INF），path に最短パス上の頂点の列を格納する．
+* nxt(s) は s の次に訪れることのできる頂点のリストを返す．
+*/
+template <class T>
+int dynamic_shortest_path(T st, T gl, const function<vector<T>(T)>& nxt, vector<T>* path = nullptr) {
+	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_f
+
+	unordered_map<T, int> dist; // st からの最短距離を保持するテーブル
+	dist[st] = 0;
+
+	unordered_map<T, T> p; // 1 つ手前の頂点を記録しておくテーブル（復元用）
+
+	queue<T> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		// 未探索の頂点 s を得る．
+		auto s = que.front(); que.pop();
+
+		repe(t, nxt(s)) {
+			// t が発見済みの頂点なら何もしない．
+			if (dist.count(t)) continue;
+
+			// スタートからの最短距離を確定する．
+			dist[t] = dist[s] + 1;
+			p[t] = s;
+
+			// ゴールに到着したら終了．
+			if (t == gl) break;
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+
+	// st から gl まで到達不能の場合
+	if (!dist.count(gl)) return INF;
+	int d = dist[gl];
+
+	// 必要なら経路復元を行う．
+	if (path != nullptr) {
+		*path = vector<T>(d + 1);
+
+		T t = gl; int i = d;
+
+		while (t != st) {
+			(*path)[i--] = t;
+			t = p[t];
+		}
+
+		(*path)[0] = st;
+	}
+
+	// ゴールに到達不可能
+	return d;
+
+	/* nxt の定義の雛形
+	using T = ll;
+	function<vector<T>(T)> nxt = [&](T s) {
+		vector<T> res;
+
+		return res;
+	};
+	*/
 }
 
 
@@ -458,11 +598,12 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 
 	vl dist(n, INFL); // st からの最短距離
 	dist[st] = 0;
+
 	vi parent(n); // 1 つ手前の頂点（復元用）
 
 	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
 	priority_queue_rev<pli> q;
-	q.push({ 0, st });
+	q.emplace(0, st);
 
 	while (!q.empty()) {
 		ll c; int s;
@@ -479,7 +620,7 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 			if (dist[s] + e.cost < dist[e.to]) {
 				dist[e.to] = dist[s] + e.cost;
 				parent[e.to] = s;
-				q.push({ dist[e.to], e.to });
+				q.emplace(dist[e.to], e.to);
 			}
 		}
 	}
@@ -494,11 +635,11 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 
 		int t = gl;
 		while (t != st) {
-			path->push_back(t);
+			path->emplace_back(t);
 			t = parent[t];
 		}
 
-		path->push_back(st);
+		path->emplace_back(st);
 		reverse(all(*path));
 	}
 

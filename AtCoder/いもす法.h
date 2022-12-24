@@ -21,7 +21,8 @@
 * vT get_array() : O(n)
 *	加算後の配列を返す．sum() の後に呼び出すこと．
 */
-template <class T> class Imos {
+template <class T>
+class Imos {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
 	int n;
@@ -88,7 +89,8 @@ public:
 * v[i][j] : O(1)
 *	加算後の位置 (i, j) の値を得る．
 */
-template <class T> struct Imos_2D {
+template <class T>
+struct Imos_2D {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
 	int h, w;
@@ -153,7 +155,8 @@ template <class T> struct Imos_2D {
 * pii size() : O(1)
 *	(高さ, 幅) を返す．
 */
-template <class T> struct Imos_2D_tri {
+template <class T>
+struct Imos_2D_tri {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
 	using vT = vector<T>; using vvT = vector<vT>;
@@ -253,7 +256,8 @@ template <class T> struct Imos_2D_tri {
 * v[i][j][k] : O(1)
 *	加算後の位置 (i, j, k) の値を得る．
 */
-template <class T> struct Imos_3D {
+template <class T>
+struct Imos_3D {
 	// verify : https://atcoder.jp/contests/joi2013yo/tasks/joi2013yo_e
 	
 	int h, w, d;
@@ -341,7 +345,8 @@ template <class T> struct Imos_3D {
 * T [int i] : O(1)
 *	加算後の位置 i の値を得る．
 */
-template <class T> class Linear_imos {
+template <class T>
+class Linear_imos {
 	int n;
 	vector<vector<T>> v; // v[t] : 添字の t 次の係数
 
@@ -427,7 +432,8 @@ public:
 * get(v) : O(1)
 *	加算後の頂点 v の値を得る．
 */
-template <class T> struct Imos_tree {
+template <class T>
+struct Imos_tree {
 	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
 
 	Rooted_tree rt;

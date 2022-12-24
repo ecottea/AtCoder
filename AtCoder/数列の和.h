@@ -1,24 +1,25 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
-// ■■■■■ 一重の和など ■■■■■
+// ■■■■■ 数列の和など ■■■■■
 
 
 //【等差数列の和】O(1)
 /*
-* Σi∈[i0..i1) (a + b i) を返す．
+* Σi∈[i0..i1) (a i + b) を返す．
 */
-template<class T> T arithmetic_series(T a, T b, ll i0, ll i1) {
+template<class T>
+T arithmetic_series(T a, T b, ll i0, ll i1) {
 	// verify : https://atcoder.jp/contests/arc035/tasks/arc035_b
 
 	if (i0 >= i1) return 0;
 
 	// 2^(-1) が存在しない場合でも問題ないように偶数を先に 2 で割っておく．
 	if ((i1 - i0) % 2 == 0) {
-		return a * (i1 - i0) + b * (i1 + i0 - 1) * ((i1 - i0) / 2);
+		return a * (i1 + i0 - 1) * ((i1 - i0) / 2) + b * (i1 - i0);
 	}
 	else {
-		return a * (i1 - i0) + b * ((i1 + i0 - 1) / 2) * (i1 - i0);
+		return a * ((i1 + i0 - 1) / 2) * (i1 - i0) + b * (i1 - i0);
 	}
 }
 
@@ -150,100 +151,5 @@ mint powered_geometric_series(mint r, int d) {
 
 	return res;
 }
-
-
-//【x との XOR の和】
-/*
-* XOR_sum(vT a) : O(n log max(a))
-*	a[0..n) で初期化する．
-*
-* ll sum(T x) : O(log max(a))
-*	Σi∈[0..n) a[i] XOR x の値を返す．
-*/
-template <class T> struct XOR_sum {
-	// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
-
-	int d;
-	vvi cnt;
-
-	// a[0..n) で初期化する．
-	XOR_sum(const vector<T>& a) {
-		T a_max = *max_element(all(a));
-		if (a_max > 0) d = msb((ll)a_max) + 1;
-		else d = 0;
-
-		cnt = vvi(d, vi(2));
-
-		repe(v, a) {
-			rep(j, d) {
-				cnt[j][(v >> j) & 1]++;
-			}
-		}
-	}
-
-	// Σi=[0..n) a[i] XOR x の値を返す．
-	ll sum(T x) {
-		// ビット毎に独立に寄与を計算し和をとればよい．
-		ll res = 0;
-		rep(j, d) {
-			// (0,1), (1,0) の組だけがビット位置に応じた寄与をもつ．
-			res += (ll)cnt[j][1 - ((x >> j) & 1)] << j;
-		}
-		return res;
-	}
-};
-
-
-//【m で割った余りの和】
-/*
-* Mod_sum(a) : O(n)
-*	配列 a で初期化する．
-*
-* sum_mod(m) : O(max(a) log(n) / m)
-*	a[0..n) mod m の和を返す．
-*
-* sum_lack(m) : O(max(a) log(n) / m)
-*	a[0..n) を m で割った不足の和を返す．
-*/
-struct Mod_sum {
-	vi a;    // ★ a でなくバケツで累積和を持てば O(log n) を落とせる．
-	int n;
-	ll asum; // a[0..n) の和
-
-	// コンストラクタ（何もしない）
-	Mod_sum() : n(0), asum(0) {}
-
-	// 配列 a で初期化
-	Mod_sum(const vi& a_) : a(a_), n(sz(a)), asum(0) {
-		sort(all(a));
-		rep(i, n) asum += a[i];
-	}
-
-	// a[0..n) mod m の和を返す．
-	ll sum_mod(int m) {
-		ll res = asum;
-
-		for (ll v = m; v <= a[n - 1]; v += m) {
-			// 通常の和とくらべて何個 m を引かれるかを二分探索で求めれば良い．
-			res -= m * (ll)distance(lower_bound(all(a), v), a.end());
-		}
-
-		return res;
-	}
-
-	// a[0..n) を m で割った不足の和を返す．
-	ll sum_lack(int m) {
-		// sum : 1-indexed での a[0..n) mod m の和
-		ll sum = asum;
-
-		for (ll v = m; v < a[n - 1]; v += m) {
-			// 通常の和とくらべて何個 m を引かれるかを二分探索で求めれば良い．
-			sum -= m * (ll)distance(lower_bound(all(a), v + 1), a.end());
-		}
-
-		// 不足分を返す．
-		return m * (ll)n - sum;
-	}
-};
 
 

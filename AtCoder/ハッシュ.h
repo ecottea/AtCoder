@@ -65,7 +65,8 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 		return (hs + ht * powB[ls]).val();
 	}
 };
-template <class STR> class Rolling_hash {
+template <class STR>
+class Rolling_hash {
 	int n; // 列の長さ
 
 	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
@@ -172,7 +173,8 @@ template <class T, int MOD, int BASE_X, int BASE_Y, int SHIFT> struct Rolling_ha
 		return (v_sum * pow_invBX[x1] * pow_invBY[y1]).val();
 	}
 };
-template <class T> struct Rolling_hash_2D {
+template <class T>
+struct Rolling_hash_2D {
 	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
 	Rolling_hash_2D_sub<T, 1000000007, 100007, 26627, 17> rh1;
 	Rolling_hash_2D_sub<T, 998244353, 99991, 54401, 91> rh2;
@@ -225,9 +227,7 @@ template <int MOD> struct Number_rolling_hash_sub {
 	Number_rolling_hash_sub(const string& s_) : s(s_), n(sz(s)), v(n + 1), pow10(n + 1) {
 		// ハッシュ値計算用の 10 の累乗
 		pow10[0] = 1;
-		rep(i, n) {
-			pow10[i + 1] = (pow10[i] * 10) % MOD;
-		}
+		rep(i, n) pow10[i + 1] = (pow10[i] * 10) % MOD;
 
 		// 10^(-1) の計算
 		ll inv10 = 1, pow2 = 10, d = MOD - 2;
@@ -315,7 +315,8 @@ struct Number_rolling_hash {
 *
 * 利用：【形式的冪級数（二元体 F2）】
 */
-template <class STR> struct Rolling_hash_XOR {
+template <class STR>
+struct Rolling_hash_XOR {
 	//【方法】
 	// 通常のローリングハッシュでは mod p での (和, 積)-半環上で計算するが，
 	// それに代えて体 GF(2^63) ~= F_2[X] / (X^63 + X + 1) 上で計算を行えばいい．
@@ -399,7 +400,8 @@ template <class STR> struct Rolling_hash_XOR {
 * ll get() : O(1)
 *	現時点での集合 S のハッシュ値を返す．
 */
-template <class X> struct Zobrist_hash_set {
+template <class X>
+struct Zobrist_hash_set {
 	// verify : https://www.codechef.com/problems/COOK82D
 
 	// ハッシュ値
@@ -457,7 +459,8 @@ template <class X> struct Zobrist_hash_set {
 * ll get() : O(1)
 *	現時点での部分写像 f のハッシュ値を返す．
 */
-template <class X, class Y> struct Zobrist_hash_pmap {
+template <class X, class Y>
+struct Zobrist_hash_pmap {
 	// ハッシュ値
 	ll v;
 
@@ -554,7 +557,8 @@ template <class X, class Y> struct Zobrist_hash_pmap {
 * ll get() : O(1)
 *	現時点での部分写像 f のハッシュ値を返す．
 */
-template <class X> struct Zobrist_hash_pfunc {
+template <class X>
+struct Zobrist_hash_pfunc {
 	// ハッシュ値
 	ll v;
 
@@ -651,7 +655,8 @@ template <class X> struct Zobrist_hash_pfunc {
 * ll get() : O(1)
 *	現時点での部分写像 f のハッシュ値を返す．
 */
-template <class X> struct Zobrist_hash_func {
+template <class X>
+struct Zobrist_hash_func {
 	// ハッシュ値
 	ll v;
 
@@ -727,7 +732,8 @@ template <class X> struct Zobrist_hash_func {
 * ll get() : O(1)
 *	現時点での部分写像 f のハッシュ値を返す．
 */
-template <class X> struct Zobrist_hash_func_mod {
+template <class X>
+struct Zobrist_hash_func_mod {
 	// verify : https://atcoder.jp/contests/abc238/tasks/abc238_g
 
 	// ハッシュ値

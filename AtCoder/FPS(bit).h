@@ -144,7 +144,11 @@ template <int N> struct BFPS {
 		q.n = n - r.n;
 		return make_pair(q, r);
 	}
-	BFPS quotient(const BFPS& g) const { return quotient_remainder(g).first; }
+	BFPS quotient(const BFPS& g) const {
+		// verify : https://atcoder.jp/contests/arc084/tasks/arc084_d
+	
+		return quotient_remainder(g).first;
+	}
 	BFPS reminder(const BFPS& g) const { return quotient_remainder(g).second; }
 
 	// スパース積
@@ -341,20 +345,24 @@ bool linearly_recurrent_sequence(const bitset<N>& a, const bitset<N>& c, int d, 
 * a(x) u(x) + b(x) v(x) = g(x) の解 (u(x), v(x)) を u, v に格納する．
 */
 template <int N>
-void extended_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& g, BFPS<N>& u, BFPS<N>& v) {
+BFPS<N> extended_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& u, BFPS<N>& v) {
+	// verify : https://atcoder.jp/contests/arc084/tasks/arc084_d
+
 	b.resize();
 	if (sz(b) == 0) {
 		u = BFPS<N>(1);
 		v = BFPS<N>();
-		g = a;
-		return;
+
+		return a;
 	}
 
 	BFPS<N> q, r;
 	tie(q, r) = a.quotient_remainder(b);
 
-	extended_gcd(b, r, g, v, u);
+	BFPS<N> g = extended_gcd(b, r, v, u);
 	v += q * u;
+
+	return g;
 }
 
 

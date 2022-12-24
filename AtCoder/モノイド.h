@@ -31,7 +31,24 @@ S023 e023() { return { 0, 0 }; }
 #define Pairadd_monoid S023, op023, e023
 
 
+//ymax ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
+using S003 = ll;
+S003 op003(S003 a, S003 b) { return max(a, b); }
+S003 e003() { return -INFL; }
+#define Max_monoid S003, op003, e003
+
+
+//ymin ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
+using S004 = ll;
+S004 op004(S004 a, S004 b) { return min(a, b); }
+S004 e004() { return INFL; }
+#define Min_monoid S004, op004, e004
+
+
 //yæZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify : https://codeforces.com/contest/1748/problem/D */
 using S024 = mint;
 S024 op024(S024 a, S024 b) { return a * b; }
 S024 e024() { return 1; }
@@ -52,22 +69,6 @@ using S020 = Matrix<mint>;
 S020 op020(S020 a, S020 b) { return b * a; }
 S020 e020() { return Matrix<mint>(3); }
 #define InvMul_monoid S020, op020, e020
-
-
-//ymax ‰ÂŠ·ƒ‚ƒmƒCƒhz
-/* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
-using S003 = ll;
-S003 op003(S003 a, S003 b) { return max(a, b); }
-S003 e003() { return -INFL; }
-#define Max_monoid S003, op003, e003
-
-
-//ymin ‰ÂŠ·ƒ‚ƒmƒCƒhz
-/* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
-using S004 = ll;
-S004 op004(S004 a, S004 b) { return min(a, b); }
-S004 e004() { return INFL; }
-#define Min_monoid S004, op004, e004
 
 
 //yxor ‰ÂŠ·ƒ‚ƒmƒCƒhz

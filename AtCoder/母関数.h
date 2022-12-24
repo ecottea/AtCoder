@@ -58,6 +58,9 @@
 * Σk bin(a, c+k) bin(b, d-k) = bin(a+b, c+d)  (k∈[max(-c, d-b)..min(a-c, d)])
 * Σk bin(a, c+k) bin(b, d+k) = bin(a+b, b+c-d)  (k∈[max(-c, -d)..min(a-c, b-d)])
 * 
+* 証明：上式は両辺とも a+b 個から c+d 個選ぶ場合の数に等しいことから従う．
+* 下式は bin(b, d+k) = bin(b, b-d-k) と上式から従う．
+* 
 * verfy : https://atcoder.jp/contests/arc144/tasks/arc144_d
 */
 
@@ -74,8 +77,7 @@
 /*
 * [z^i] z^r (1-z)^(-r-1) = bin(i, r)
 *
-* 証明：
-* 右辺を負の二項定理を用いて計算すると次のように左辺に一致する：
+* 証明：右辺を負の二項定理を用いて計算すると次のように左辺に一致する：
 *	bin(i, r)
 *	= bin(i, i - r)
 *	= bin(j + r, j)  (j = i - r とおいた)

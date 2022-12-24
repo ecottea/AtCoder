@@ -40,7 +40,7 @@ void count_noncontinuous_bitsequences(int n, int k, vm& cnt) {
 }
 
 
-//【1 が k 個連続しないビット列の数え上げ（mod998244353）】O(k log k log n)
+//【1 が k 個連続しないビット列の数え上げ（mod 998244353）】O(k log k log n)
 /*
 * 長さ n のビット列のうち，'1' が k 個連続しないものの個数を返す．
 *
@@ -85,7 +85,6 @@ mint count_non0interval_bitsequences(int n, const vi& l, const vi& r) {
 
 		acc[r + 1] = acc[r] + dp[r];
 	}
-	dump(dp);
 
 	return acc[n + 1] - acc[r_to_l[n] + 1];
 }

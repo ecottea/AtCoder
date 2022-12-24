@@ -13,7 +13,8 @@
 * out[s] : DFS で最後に頂点 s から離れた時刻（根なら 2 n - 1）
 * pos[t] : DFS で時刻 t に訪れていた頂点の番号（長さ 2 n - 1）
 */
-template <class TREE> void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) {
+template <class TREE>
+void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
 
 	int n = sz(rt);
@@ -50,19 +51,21 @@ template <class TREE> void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) 
 * Lowest_common_ancestor<TREE>(rt) : O(n)
 *	根付き木 rt で初期化する．
 *
-* int lca(int u, int v) : O(log n)
-*	頂点 u, v の最小共通祖先を返す．
+* int lca(int s, int t) : O(log n)
+*	頂点 s, t の最小共通祖先を返す．
 *
-* ll dist(int u, int v) : O(log n)
-*	頂点 u, v の距離を返す．
+* ll dist(int s, int t) : O(log n)
+*	頂点 s, t の距離を返す．
+*
+* int jump(int s, int t, int i) : O(log n)
+*	頂点 s から t までのパスの i 番目（0-indexed）の頂点を返す（なければ -1）
 *
 * 利用：【根付き木のオイラーツアー】
 */
-pli op1(pli a, pli b) { return min(a, b); }
-pli e1() { return { INFL, -1 }; }
-template <class TREE> struct Lowest_common_ancestor {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
-
+pli op_LCA(pli a, pli b) { return min(a, b); }
+pli e_LCA() { return { INFL, -1 }; }
+template <class TREE>
+struct Lowest_common_ancestor {
 	TREE rt;
 
 	// オイラーツアーの結果の記録用
@@ -73,10 +76,13 @@ template <class TREE> struct Lowest_common_ancestor {
 
 	// 深さに関する区間最小クエリを処理するためのセグメント木
 	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
-	segtree<pli, op1, e1> seg;
+	using SEG = segtree<pli, op_LCA, e_LCA>;
+	SEG seg;
 
 	// コンストラクタ（根付き木で初期化）：O(n)
 	Lowest_common_ancestor(TREE& rt_) : rt(rt_) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
+
 		// オイラーツアーを求めておく．
 		euler_tour(rt, in, out, pos);
 
@@ -84,30 +90,53 @@ template <class TREE> struct Lowest_common_ancestor {
 		// 深さだけでなく頂点の番号も返したいのでそれらを対にしてもつ．
 		int n = sz(rt.v);
 		vector<pli> depth(2 * n - 1);
-		rep(t, 2 * n - 1) {
-			depth[t] = { rt[pos[t]].depth, pos[t] };
-		}
-		seg = segtree<pli, op1, e1>(depth);
+		rep(t, 2 * n - 1) depth[t] = { rt[pos[t]].depth, pos[t] };
+		seg = SEG(depth);
 	}
 
-	// 頂点 u, v の最小共通祖先を返す．
-	int lca(int u, int v) {
+	// 頂点 s, t の最小共通祖先を返す．
+	int lca(int s, int t) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
+
 		// 初めて u または v に訪れたとき
-		int left = min(in[u], in[v]);
+		int left = min(in[s], in[t]);
 
 		// 最後に u または v から離れたとき
-		int right = max(out[u], out[v]);
+		int right = max(out[s], out[t]);
 
 		// その途中で訪れたことのある最も浅い頂点が最小共通祖先
 		return seg.prod(left, right).second;
 	}
 
-	// 頂点 u, v の距離を返す．
-	ll dist(int u, int v) {
-		int r = lca(u, v);
+	// 頂点 s, t の距離を返す．
+	ll dist(int s, int t) {
+		int r = lca(s, t);
 
 		// 根からの距離の和を求め，ダブっている分を引く．
-		return rt[u].dist + rt[v].dist - 2 * rt[r].dist;
+		return rt[s].dist + rt[t].dist - 2 * rt[r].dist;
+	}
+
+	// 頂点 s から t までのパスの i 番目（0-indexed）の頂点を返す（なければ -1）
+	int jump(int s, int t, int i) {
+		// verify : https://judge.yosupo.jp/problem/jump_on_tree
+
+		int r = lca(s, t);
+		int ds = rt[s].depth, dt = rt[t].depth, dr = rt[r].depth;
+		int dist = ds + dt - 2 * dr;
+
+		int res;
+
+		if (i > dist) res = -1;
+		else if (i <= ds - dr) {
+			int j = seg.max_right(out[s] - 1, [&](pli tmp) { return tmp.first > ds - i; });
+			res = pos[j];
+		}
+		else {
+			int j = seg.min_left(in[t] + 1, [&](pli tmp) { return tmp.first >= dt - (dist - i); });
+			res = pos[j];
+		}
+
+		return res;
 	}
 };
 
@@ -123,9 +152,10 @@ template <class TREE> struct Lowest_common_ancestor {
 * sum(v) : O(log n)
 *	根 r から v までの辺の値の和を返す．
 *
-* 利用：【木のオイラーツアー】
+* 利用：【根付き木のオイラーツアー】
 */
-template <class T> struct Path_sum_query {
+template <class T>
+struct Path_sum_query {
 	// 参考：https://perogram.hateblo.jp/entry/2020/10/01/034136
 	
 	// オイラーツアーの結果の記録用
@@ -248,7 +278,8 @@ ll op_teasq(ll x, ll y) { return x + y; }
 ll o_teasq() { return 0; }
 ll inv_teasq(ll x) { return -x; }
 ll mul_teasq(ll a, ll x) { return a * x; }
-template <class TREE> struct Tree_edge_add_sum_query {
+template <class TREE>
+struct Tree_edge_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 	
 	// 根付き木
@@ -751,7 +782,8 @@ struct Segtree_on_tree_edge {
 * out[s] : DFS で頂点 s から出て次になぞる頂点が何番目か（根なら n）
 * pos[i] : DFS で i 番目になぞる頂点番号（長さ n）
 */
-template <class TREE> void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
+template <class TREE>
+void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
 	// 参考：https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://codeforces.com/contest/375/problem/D
 

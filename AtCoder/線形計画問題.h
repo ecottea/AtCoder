@@ -109,8 +109,10 @@
 //【整数計画問題（2 変数，1 制約）】O(√e)
 /*
 * 変数 x, y(>=0) についての整数計画問題
-*	maximize :   a x + b y
-*	subject to : c x + d y <= e, x >= 0, y >= 0
+*	maximize	a x + b y
+*	subject to	c x + d y <= e
+*				x >= 0
+*				y >= 0
 * の解の目的関数値を返し，実行可能解を sx, sy に格納する．
 *
 * 制約：c > 0, d > 0, e >= 0

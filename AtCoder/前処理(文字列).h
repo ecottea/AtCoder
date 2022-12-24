@@ -5,18 +5,18 @@
 
 //【ランレングス符号（文字列）】O(n)
 /*
-* 文字列 s[0..n) をランレングス符号化し，結果を cls に格納する．
+* 文字列 s[0..n) をランレングス符号化し，結果を格納したリスト cls を返す．
 * cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
 */
-void run_length_encodeing(const string& s, vector<pair<char, int>>& cls) {
+vector<pair<char, int>> run_length_encodeing(const string& s) {
 	// verify : https://atcoder.jp/contests/abc124/tasks/abc124_d
 
 	int n = sz(s);
-	cls.clear();
+	vector<pair<char, int>> cls;
 
-	if (n == 0) return;
+	if (n == 0) return cls;
 
-	cls.push_back({ s[0], 1 });
+	cls.emplace_back(s[0], 1);
 
 	// 今読んでいる文字の種類を記憶する．
 	char c = s[0];
@@ -25,7 +25,7 @@ void run_length_encodeing(const string& s, vector<pair<char, int>>& cls) {
 		// 記憶している文字と同じ文字の場合
 		if (s[i] == c) {
 			// 列の長さを増やす．
-			(*cls.rbegin()).second++;
+			cls.back().second++;
 		}
 		// 記憶している文字と異なる文字の場合
 		else {
@@ -33,27 +33,29 @@ void run_length_encodeing(const string& s, vector<pair<char, int>>& cls) {
 			c = s[i];
 
 			// 新たな列を追加する．
-			cls.push_back({ c, 1 });
+			cls.emplace_back(c, 1);
 		}
 	}
+
+	return cls;
 }
 
 
 //【ランレングス符号】O(n)
 /*
-* a[0..n) をランレングス符号化し，結果を cls に格納する．
+* a[0..n) をランレングス符号化し，結果を格納したリスト cls を返す．
 * cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
 */
 template <class T>
-void run_length_encodeing(const vector<T>& a, vector<pair<T, int>>& cls) {
+vector<pair<T, int>> run_length_encodeing(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/arc024/tasks/arc024_2
 
 	int n = sz(a);
-	cls.clear();
+	vector<pair<T, int>> cls;
 
-	if (n == 0) return;
+	if (n == 0) return cls;
 
-	cls.push_back( {a[0], 1} );
+	cls.emplace_back(a[0], 1);
 
 	// 今読んでいる文字の種類を記憶する．
 	T c = a[0];
@@ -62,7 +64,7 @@ void run_length_encodeing(const vector<T>& a, vector<pair<T, int>>& cls) {
 		// 記憶している文字と同じ文字の場合
 		if (c == a[i]) {
 			// 列の長さを増やす．
-			cls.rbegin()->second++;
+			cls.back().second++;
 		}
 		// 記憶している文字と異なる文字の場合
 		else {
@@ -70,9 +72,11 @@ void run_length_encodeing(const vector<T>& a, vector<pair<T, int>>& cls) {
 			c = a[i];
 
 			// 新たな列を追加する．
-			cls.push_back({ c, 1 });
+			cls.emplace_back(c, 1);
 		}
 	}
+
+	return cls;
 }
 
 

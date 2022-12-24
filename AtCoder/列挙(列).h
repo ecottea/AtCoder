@@ -5,11 +5,14 @@
 
 //y”CˆÓ—ñ‚Ì—ñ‹“zO(m^n n)
 /*
-* W‡ a[0..m) ‚Ì—v‘f‚©‚ç‚È‚é’·‚³ n ‚Ì—ñ‘S‚Ä‚ğ seqs ‚ÉŠi”[‚·‚éD
+* W‡ a[0..m) ‚Ì—v‘f‚©‚ç‚È‚é’·‚³ n ‚Ì—ñ‘S‚Ä‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 */
-void enumerate_all_sequences(int n, const vi& a, vvi& seqs) {
-	seqs.clear();
-	vi seq; // ì¬“r’†‚Ì—ñ
+template <class T>
+vector<vector<T>> enumerate_all_sequences(int n, const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/agc043/tasks/agc043_d
+
+	vector<vector<T>> seqs;
+	vector<T> seq; // ì¬“r’†‚Ì—ñ
 
 	function<void()> rf = [&]() {
 		// Š®¬‚µ‚Ä‚¢‚ê‚Î‹L˜^‚·‚éD
@@ -26,6 +29,39 @@ void enumerate_all_sequences(int n, const vi& a, vvi& seqs) {
 	};
 
 	rf();
+
+	return seqs;
+}
+
+
+//y”CˆÓ—ñ‚Ì—ñ‹“i—v‘f‚²‚ÆãŒÀw’èjzO(ƒ®ub[0..n) n)
+/*
+* ”—ñ a[0..n) ‚ÅCÍi, a[i] ¸ [0..ub[i]) ‚ğ–‚½‚·‚à‚Ì‘S‚Ä‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
+*/
+vvi enumerate_all_sequences(const vi& ub) {
+	int n = sz(ub);
+	vvi seqs;
+
+	vi seq; // ì¬“r’†‚Ì—ñ
+	int i = 0; // —ñ‚Ì’·‚³
+
+	function<void()> rf = [&]() {
+		// Š®¬‚µ‚Ä‚¢‚ê‚Î‹L˜^‚·‚éD
+		if (i == n) {
+			seqs.push_back(seq);
+			return;
+		}
+
+		rep(x, ub[i]) {
+			seq.push_back(x); i++;
+			rf();
+			seq.pop_back(); i--;
+		}
+	};
+
+	rf();
+
+	return seqs;
 }
 
 

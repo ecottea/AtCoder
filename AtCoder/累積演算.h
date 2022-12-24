@@ -11,7 +11,8 @@
 * T sum(int x1, int y1, int x2, int y2) : O(1)
 *	Σa[x1..x2)[y1..y2) を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
 */
-template <class T> class Cumulative_sum_2D {
+template <class T>
+class Cumulative_sum_2D {
 	int h, w;
 
 	using vT = vector<T>;
@@ -38,10 +39,8 @@ public:
 	T sum(int x1, int y1, int x2, int y2) {
 		// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
 
-		chmax(x1, 0);
-		chmax(y1, 0);
-		chmin(x2, h);
-		chmin(y2, w);
+		chmax(x1, 0); chmax(y1, 0);
+		chmin(x2, h); chmin(y2, w);
 		if (x1 >= x2 || y1 >= y2) return T(0);
 
 		T res(0);
@@ -75,7 +74,8 @@ public:
 * T sum_tri_UL(int x, int y, int d) : O(1)
 *	[x-d..x) * [y..y+d) の右上がりの対角線以上の要素の和を返す．
 */
-template <class T> class Cumulative_sum_2D_tri {
+template <class T>
+class Cumulative_sum_2D_tri {
 	int h, w;
 
 	using vT = vector<T>;
@@ -196,6 +196,69 @@ public:
 };
 
 
+//【三次元累積和（直方体）】
+/*
+* Cumulative_sum_3D<T>(vvT a) : O(h w d)
+*	三次元配列 a[0..h)[0..w)[0..d) で初期化する．
+*
+* T sum(int x1, int y1, int x2, int y2, int z1, int z2) : O(1)
+*	Σa[x1..x2)[y1..y2)[z1..z2) を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
+*/
+template <class T>
+class Cumulative_sum_3D {
+	int h, w, d;
+
+	using vT = vector<T>;
+	using vvT = vector<vT>;
+	using vvvT = vector<vvT>;
+
+	// acc[i][j][k] : Σa[0..i)[0..j)[0..k)
+	vvvT acc;
+
+public:
+	// 三次元配列 a[0..h)[0..w)[0..d) で初期化する．
+	Cumulative_sum_3D(const vvvT& a) : h(sz(a)), w(sz(a[0])), d(sz(a[0][0])), acc(h + 1, vvT(w + 1, vT(d + 1))) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_g
+
+		// 元データを仮格納する．
+		rep(i, h) rep(j, w) rep(k, d) acc[i + 1][j + 1][k + 1] = a[i][j][k];
+
+		// 縦方向に累積和をとる．
+		repi(i, 1, h) repi(j, 0, w) repi(k, 0, d) acc[i][j][k] += acc[i - 1][j][k];
+
+		// 横方向に累積和をとる．
+		repi(i, 0, h) repi(j, 1, w) repi(k, 0, d) acc[i][j][k] += acc[i][j - 1][k];
+
+		// 奥行き方向に累積和をとる．
+		repi(i, 0, h) repi(j, 0, w) repi(k, 1, d) acc[i][j][k] += acc[i][j][k - 1];
+
+		dumpel(acc);
+	}
+	Cumulative_sum_3D() : h(0), w(0), d(0) {}
+
+	// Σa[x1..x2)[y1..y2)[z1..z2) を返す．
+	T sum(int x1, int y1, int z1, int x2, int y2, int z2) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_g
+
+		chmax(x1, 0); chmax(y1, 0); chmax(z1, 0);
+		chmin(x2, h); chmin(y2, w); chmin(z2, d);
+		if (x1 >= x2 || y1 >= y2 || z1 >= z2) return T(0);
+
+		T res(0);
+		res += acc[x2][y2][z2];
+		res -= acc[x1][y2][z2];
+		res -= acc[x2][y1][z2];
+		res += acc[x1][y1][z2];
+		res -= acc[x2][y2][z1];
+		res += acc[x1][y2][z1];
+		res += acc[x2][y1][z1];
+		res -= acc[x1][y1][z1];
+
+		return res;
+	}
+};
+
+
 //【線形加重累積和】
 /*
 * Linear_weighted_cumulative_sum<T>(vT v) : O(n)
@@ -210,7 +273,8 @@ public:
 * T sum_left(int r, int l, ll w0, ll w1) : O(1)
 *	v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
 */
-template <class T> class Linear_weighted_cumulative_sum {
+template <class T>
+class Linear_weighted_cumulative_sum {
 	int n;
 
 	// acc[0][i] : Σj∈[0..i) v[j]
@@ -257,6 +321,50 @@ public:
 		ll a = w0 - w1;
 		ll b = w0 - a * r;
 		return sum(l + 1, r + 1, a, b);
+	}
+};
+
+
+//【指数加重累積和】
+/*
+* Exponential_weighted_cumulative_sum(vT v, T B) : O(n)
+*	配列 v[0..n) と底 B で初期化する．
+*
+* mint sum(int l, int r) : O(1)
+*	Σi∈[l..r) B^(i-l) v[i] を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
+*/
+template <class T>
+class Exponential_weighted_cumulative_sum {
+	int n;
+
+	// acc[l] : Σi∈[l..n) B^(l-i) v[i]
+	vm acc;
+
+	// powB[i] : B^i
+	vm powB;
+
+public:
+	// 配列 a[0..n) と底 B で初期化する．
+	Exponential_weighted_cumulative_sum(const vector<T>& v, T B) : n(sz(v)), acc(n + 1), powB(n + 1) {
+		// verify : https://yukicoder.me/problems/no/2170
+
+		// B の冪の計算
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = powB[i] * B;
+
+		// 上からの指数加重累積和の計算
+		repir(i, n - 1, 0) acc[i] = acc[i + 1] * B + v[i];
+	}
+	Exponential_weighted_cumulative_sum() : n(0) {}
+
+	// Σi∈[l..r) B^(i-l) v[i] を返す．
+	mint sum(int l, int r) {
+		// verify : https://yukicoder.me/problems/no/2170
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		return acc[l] - acc[r] * powB[r - l];;
 	}
 };
 
@@ -410,13 +518,14 @@ void sliding_window_minimum_2D(vector<vector<T>> a, int dh, int dw,
 
 //【Sparse Table（最小値）】
 /*
-* Sparse_table<T>(vS a, bool min_flag) : O(n log n)
+* Sparse_table<T>(vS a, bool min_flag = true) : O(n log n)
 *	配列 a[0..n) で初期化する．min_flag = true[false] のときは最小値[最大値] を求める．
 *
 * T get(int l, int r) : O(1)
 *	min a[l..r) を返す．（空なら numeric_limits<T>::max() を返す）
 */
-template <class T> class Sparse_table {
+template <class T>
+class Sparse_table {
 	// 参考 : https://tookunn.hatenablog.com/entry/2016/07/13/211148
 
 	int n, m;
@@ -447,9 +556,11 @@ public:
 	T get(int l, int r) {
 		// verify : https://atcoder.jp/contests/arc045/tasks/arc045_b
 
-		chmax(l, 0);
-		chmin(r, n);
-		if (l >= r) return (min_flag ? T(INFL) : T(-INFL));
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) {
+			if (min_flag) return numeric_limits<T>::max();
+			else return numeric_limits<T>::lowest();
+		}
 
 		int j = msb(r - l);
 		return min(acc[j][l], acc[j][r - (1 << j)]) * (min_flag ? 1 : -1);
@@ -467,9 +578,75 @@ public:
 };
 
 
+//【Sparse Table（最小値と位置）】
+/*
+* Sparse_table_indexed<T>(vS a, bool min_flag = true) : O(n log n)
+*	配列 a[0..n) で初期化する．min_flag = true[false] のときは最小値[最大値] を求める．
+*
+* pTi get(int l, int r) : O(1)
+*	min a[l..r) とそれを与える位置の組を返す．（空なら {numeric_limits<T>::max(), -1} を返す）
+*/
+template <class T>
+class Sparse_table_indexed {
+	// 参考 : https://tookunn.hatenablog.com/entry/2016/07/13/211148
+
+	int n, m;
+	bool min_flag;
+
+	// acc[j][i] : min a[i..i+2^j)
+	vector<vector<pair<T, int>>> acc;
+
+public:
+	// 配列 a[0..n) で初期化する．min_flag = true[false] のときは最小値[最大値] を求める．
+	Sparse_table_indexed(const vector<T>& a, bool min_flag = true)
+		: n(sz(a)), m(msb(n) + 1), min_flag(min_flag), acc(m, vector<pair<T, int>>(n))
+	{
+		// verify : https://atcoder.jp/contests/agc026/tasks/agc026_d
+
+		rep(i, n) acc[0][i] = { a[i], i };
+
+		if (!min_flag) rep(i, n) acc[0][i].first *= -1;
+
+		repi(j, 1, m - 1) {
+			int d = 1 << (j - 1);
+			rep(i, n - d) acc[j][i] = min(acc[j - 1][i], acc[j - 1][i + d]);
+		}
+	}
+	Sparse_table_indexed() : n(0), m(0), min_flag(true) {}
+
+	// min a[l..r) を返す．
+	pair<T, int> get(int l, int r) {
+		// verify : https://atcoder.jp/contests/agc026/tasks/agc026_d
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) {
+			if (min_flag) return make_pair(numeric_limits<T>::max(), -1);
+			else return make_pair(numeric_limits<T>::lowest(), -1);
+		}
+
+		int j = msb(r - l);
+		T val; int i;
+		tie(val, i) = min(acc[j][l], acc[j][r - (1 << j)]);
+
+		if (min_flag) return make_pair(val, i);
+		else return make_pair(-val, i);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Sparse_table_indexed& st) {
+		rep(j, st.m) {
+			rep(i, st.n) os << st.acc[j][i].first << " ";
+			os << "\n";
+		}
+		return os;
+	}
+#endif
+}; 
+
+
 //【間引き Sparse Table（最小値）】
 /*
-* Sparse_table_mod<T>(vT a, int m, bool min_flag) : O(n log n)
+* Sparse_table_mod<T>(vT a, int m, bool min_flag = true) : O(n log n)
 *	配列 a[0..n) と法 m で初期化する．min_flag = true[false] のときは最小値[最大値] を求める．
 *
 * T get(int l, int r, int k) : O(1)
@@ -477,7 +654,8 @@ public:
 *
 * 利用：【Sparse Table（最小値）】
 */
-template <class T> class Thinning_sparse_table {
+template <class T>
+class Thinning_sparse_table {
 	int m; // 法
 	bool min_flag;
 	vector<Sparse_table<T>> sts;
@@ -513,13 +691,14 @@ public:
 
 //【二次元 Sparse Table（最小値）】
 /*
-* Sparse_table<T>(vvT a) : O(h w log h log w)
+* Sparse_table<T>(vvT a, bool min_flag = true) : O(h w log h log w)
 *	二次元配列 a[0..h)[0..w) で初期化する．min_flag = true[false] のときは最小値[最大値] を求める．
 *
-* T sum(x1, y1, x2, y2) : O(1)
+* T sum(int x1, int y1, int x2, int y2) : O(1)
 *	min a[x1..x2)[y1..y2) を返す．（空なら numeric_limits<T>::max() を返す）
 */
-template <class T> struct Sparse_table_2D {
+template <class T>
+struct Sparse_table_2D {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/sparse_table_2D.html
 
 	int h, w, bh, bw;

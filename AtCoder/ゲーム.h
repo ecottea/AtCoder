@@ -6,15 +6,15 @@
 
 //【局面の勝敗】O(?)（遅いので実験用）
 /*
-* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗のリストを res に格納する．
-*
-* 制約：
+* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗を {{手番, 局面}, 勝敗} で表したリストを返す．
 * nxt(t, p, nps) を呼ぶと，t=1:先手番[t=0:後手番] での局面 p から遷移可能な局面のリストを nps に格納する．
-*（空の場合は，先手勝ちなら 1，後手勝ちなら 0 を返す．）
+* ただし nps が空の場合は，先手勝ちなら 1，後手勝ちなら 0 を返すようにする．
 */
 template <class T>
-void decide_win_or_lose(const T& p_ini, function<int(int, const T&, vector<T>&)>& nxt, map<pair<int, T>, int>& res) {
-	res.clear();
+map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vector<T>&)>& nxt) {
+	// verify : https://yukicoder.me/problems/no/2132
+
+	map<pair<int, T>, int> res;
 
 	// t=1:先手番[t=0:後手番] で局面 p であるときの勝敗を返す．
 	function<int(int, const T&)> dfs = [&](int t, const T& p) {
@@ -45,6 +45,8 @@ void decide_win_or_lose(const T& p_ini, function<int(int, const T&, vector<T>&)>
 	};
 
 	dfs(1, p_ini);
+
+	return res;
 
 	/* nxt の定義の雛形
 	using T = tuple<ll, ll, vl>;

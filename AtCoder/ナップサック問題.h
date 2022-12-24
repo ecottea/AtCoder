@@ -38,7 +38,7 @@
 * で求められる．
 *
 * f(x) を等比数列の和の公式を用いて
-*	f(x) = Π_i (0 x^0 - (v[i] x^w[i])^(m[i]+1)) / (0 x^0 - v[i] x^w[i])
+*		f(x) = Π_i (0 x^0 - (v[i] x^w[i])^(m[i]+1)) / (0 x^0 - v[i] x^w[i])
 * と直したくなるが，これの計算には負元が必要になるので使えない．
 */
 
@@ -119,16 +119,12 @@ ll knapsack01_problem_giveDP(const vl& v, const vi& w, int w_max, vb* sel = null
 	vvl dp(n + 1, vl(w_max + 1));
 
 	// 配る DP
-	rep(i, n) {
-		repi(j, 0, w_max) {
-			// i 番目の品物を選ばない場合
-			chmax(dp[i + 1][j], dp[i][j]);
+	rep(i, n) repi(j, 0, w_max) {
+		// i 番目の品物を選ばない場合
+		chmax(dp[i + 1][j], dp[i][j]);
 
-			// i 番目の品物を選ぶ場合
-			if (j + w[i] <= w_max) {
-				chmax(dp[i + 1][j + w[i]], dp[i][j] + v[i]);
-			}
-		}
+		// i 番目の品物を選ぶ場合
+		if (j + w[i] <= w_max) chmax(dp[i + 1][j + w[i]], dp[i][j] + v[i]);
 	}
 
 	// DP 復元を行う．
@@ -148,6 +144,101 @@ ll knapsack01_problem_giveDP(const vl& v, const vi& w, int w_max, vb* sel = null
 }
 
 
+//【0-1 ナップサック問題（指数重さ）】O(n)?
+/*
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
+* 価値が最大になるよう品物を選んだときの価値を返す．
+*
+* 制約：重さを昇順ソートしたとき増加の勢いが指数関数的
+*
+*（枝刈りで高速化した重さを状態とした状態 DP）
+*/
+ll knapsack01_problem_exponential_weight(const vl& v, const vl& w, ll w_max, vb* sel = nullptr) {
+	int n = sz(v);
+
+	// 品物を重さについて降順にソートする．
+	vector<tuple<ll, ll, int>> item(n);
+	rep(i, n) item[i] = { w[i], v[i], i };
+	sort(all(item), greater<tuple<ll, ll, int>>());
+
+	// w_acc[i] : Σw[i..n)
+	// v_acc[i] : Σv[i..n)
+	vl w_acc(n + 1), v_acc(n + 1);
+	repir(i, n - 1, 0) {
+		ll w, v; int id;
+		tie(w, v, id) = item[i];
+
+		w_acc[i] += w_acc[i + 1] + w;
+		v_acc[i] += v_acc[i + 1] + v;
+	}
+
+	// 全部選べる場合の例外処理
+	if (w_acc[0] <= w_max) {
+		if (sel != nullptr) *sel = vb(n, true);
+		return v_acc[0];
+	}
+
+	// dp[i][j] : 品物 [0..i) の中で重さちょうど j で実現できる最大価値
+	vector<unordered_map<ll, ll>> dp(n + 1);
+	dp[0][0] = 0;
+
+	ll res = 0;
+	ll j_res = 0; int i_res = 0; // DP 復元用
+
+	// 配る DP
+	rep(i, n) {
+		ll w, v; int id;
+		tie(w, v, id) = item[i];
+
+		repe(tmp, dp[i]) {
+			ll j, v_max;
+			tie(j, v_max) = tmp;
+
+			// 品物 i を選ばない場合
+			if (j + w_acc[i + 1] <= w_max) {
+				// 品物 [i+1..n) を総取りできるだけの重さの余裕があるなら枝刈りする．
+				if (chmax(res, v_max + v_acc[i + 1])) {
+					j_res = j;
+					i_res = i;
+				}
+			}
+			else {
+				auto it = dp[i + 1].find(j);
+				if (it == dp[i + 1].end()) dp[i + 1][j] = v_max;
+				else chmax(it->second, v_max);
+			}
+
+			// 品物 i を選ぶ場合
+			// 現時点での重さが w_max を超えてしまった場合は枝刈りする．
+			ll nj = j + w, nv = v_max + v;
+			if (nj <= w_max) {
+				auto it = dp[i + 1].find(nj);
+				if (it == dp[i + 1].end()) dp[i + 1][nj] = nv;
+				else chmax(it->second, nv);
+			}
+		}
+	}
+
+	// DP 復元を行う．
+	if (sel != nullptr) {
+		*sel = vb(n, true);
+		(*sel)[get<2>(item[i_res])] = false;
+
+		ll j = j_res;
+		repir(i, i_res, 1) {
+			ll w, v; int id;
+			tie(w, v, id) = item[i - 1];
+
+			// i 番目の品物を選んだ場合と選ばなかった場合で価値の差があれば選んだ証拠．
+			if (dp[i][j] != dp[i - 1][j]) j -= w;
+			else (*sel)[id] = false;
+		}
+	}
+
+	return res;
+}
+
+
 //【0-1 ナップサック問題（価値の和が小）】O(n Σv[i])
 /*
 * 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
@@ -156,46 +247,36 @@ ll knapsack01_problem_giveDP(const vl& v, const vi& w, int w_max, vb* sel = null
 *
 *（価値を状態とした状態 DP）
 */
-ll knapsack01_problem(const vi& v, vl& w, ll w_max, vb* sel = nullptr) {
+ll knapsack01_problem(const vi& v, const vl& w, ll w_max, vb* sel = nullptr) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_e
 
 	int n = sz(v); // 品物の個数
 
 	// 重さを無視した合計価値 v_max の計算
 	int v_max = 0;
-	rep(i, n) {
-		v_max += v[i];
-	}
+	rep(i, n) v_max += v[i];
 
 	// dp[i][j] : 品物 [0..i) で価値ちょうど j を実現できる最小重さ
 	vvl dp(n + 1, vl(v_max + 1, INFL));
 
 	// 品物がなくても価値 0 は実現でき，その最小重さは 0 である．
-	repi(i, 0, n) {
-		dp[i][0] = 0;
-	}
+	repi(i, 0, n) dp[i][0] = 0;
 
 	// DP で 0-1 ナップサック問題を解く．
-	repi(i, 1, n) {
-		repi(j, 1, v_max) {
-			// i 番目の品物を選ばない場合
-			dp[i][j] = dp[i - 1][j];
+	repi(i, 1, n) repi(j, 1, v_max) {
+		// i 番目の品物を選ばない場合
+		dp[i][j] = dp[i - 1][j];
 
-			// i 番目の品物の価値が j を超えていれば選べない．
-			if (j - v[i - 1] < 0) {
-				continue;
-			}
+		// i 番目の品物の価値が j を超えていれば選べない．
+		if (j - v[i - 1] < 0) continue;
 
-			// i 番目の品物を選ぶ方が重さを小さくできるなら更新する．
-			dp[i][j] = min(dp[i][j], dp[i - 1][j - v[i - 1]] + w[i - 1]);
-		}
+		// i 番目の品物を選ぶ方が重さを小さくできるなら更新する．
+		dp[i][j] = min(dp[i][j], dp[i - 1][j - v[i - 1]] + w[i - 1]);
 	}
 
 	// 重さ w_max 以下で実現できた中での最大の合計価値を得る．
 	int j = v_max;
-	while (j >= 0 && dp[n][j] > w_max) {
-		j--;
-	}
+	while (j >= 0 && dp[n][j] > w_max) j--;
 	v_max = j;
 
 	// DP 復元を行う．
@@ -206,6 +287,90 @@ ll knapsack01_problem(const vi& v, vl& w, ll w_max, vb* sel = nullptr) {
 			if (dp[i][j] != dp[i - 1][j]) {
 				(*sel)[i - 1] = true;
 				j -= v[i - 1];
+			}
+		}
+	}
+
+	return v_max;
+}
+
+
+//【0-1 ナップサック問題（指数価値）】O(n)?
+/*
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
+* 価値が最大になるよう品物を選んだときの価値を返す．
+*
+* 制約：価値を昇順ソートしたとき増加の勢いが指数関数的
+*
+*（枝刈りで高速化した価値を状態とした状態 DP）
+*/
+ll knapsack01_problem_exponential_value(const vl& v, const vl& w, ll w_max, vb* sel = nullptr) {
+	// verify : https://yukicoder.me/problems/no/2167
+
+	int n = sz(v);
+
+	// 品物を価値について降順にソートする．
+	vector<tuple<ll, ll, int>> item(n);
+	rep(i, n) item[i] = { v[i], w[i], i };
+	sort(all(item), greater<tuple<ll, ll, int>>());
+
+	// v_acc[i] : Σv[i..n)
+	vl v_acc(n + 1);
+	repir(i, n - 1, 0) v_acc[i] += v_acc[i + 1] + get<0>(item[i]);
+
+	// dp[i][j] : 品物 [0..i) で価値ちょうど j を実現できる最小重さ
+	vector<unordered_map<ll, ll>> dp(n + 1);
+	dp[0][0] = 0;
+
+	// 暫定的な実現可能な最大価値の下界
+	ll v_lb = 0;
+
+	// 配る DP
+	rep(i, n) {
+		ll v, w; int id;
+		tie(v, w, id) = item[i];
+
+		repe(tmp, dp[i]) {
+			ll j, w_min;
+			tie(j, w_min) = tmp;
+
+			// 品物 i を選ばない場合
+			// 品物 [i+1..n) を総取りしても v_lb 未満の価値にしかならないなら枝刈りする．
+			if (j + v_acc[i + 1] >= v_lb) {
+				if (dp[i + 1].count(j)) chmin(dp[i + 1][j], w_min);
+				else dp[i + 1][j] = w_min;
+			}
+
+			// 品物 i を選ぶ場合
+			// 品物 [i+1..n) を総取りしても v_lb 未満の価値にしかならないなら枝刈りする．
+			// また現時点での重さが w_max を超えてしまった場合も枝刈りする．
+			ll nj = j + v, nw = w_min + w;
+			if (nj + v_acc[i + 1] >= v_lb && nw <= w_max) {
+				if (dp[i + 1].count(nj)) chmin(dp[i + 1][nj], nw);
+				else dp[i + 1][nj] = nw;
+
+				// 実現可能な最大価値の下界を更新する．
+				chmax(v_lb, nj);
+			}
+		}
+	}
+
+	// 重さ w_max 以下で実現できた中での最大の合計価値を得る．
+	ll v_max = 0;
+	repe(tmp, dp[n]) chmax(v_max, tmp.first);
+
+	// DP 復元を行う．
+	ll j = v_max;
+	if (sel != nullptr) {
+		*sel = vb(n);
+		repir(i, n, 1) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
+			if (dp[i][j] != dp[i - 1][j]) {
+				ll v, w; int id;
+				tie(v, w, id) = item[i - 1];
+
+				(*sel)[id] = true;
+				j -= v;
 			}
 		}
 	}

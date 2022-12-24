@@ -6,14 +6,14 @@
 
 //【Mo's algorithm】O(n√q α + q log q)
 /*
-* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納する．
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納し res を返す．
 * res00 は a[0..0) クエリに対する解とする．また区間に a[i] を追加[削除]する場合，
 * 新たな解は insert[erase]（計算量 O(α)）で計算されるとする．
 *
 *（クエリ平方分割）
 */
 template <class T, class S>
-void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector<S>& res) {
+vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
 
@@ -27,13 +27,13 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 	int q = sz(l);
 	int k = (int)(sqrt(q) + EPS);
 	int w = max((sz(a) + k - 1) / k, 1);
-	res.resize(q);
+	vector<S> res(q);
 
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
 	vector<tuple<int, int, int>> lb_sr_j(q);
 	rep(j, q) {
-		int b = l[j] / w; 
+		int b = l[j] / w;
 		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
 	}
 	sort(all(lb_sr_j));
@@ -56,8 +56,6 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 
 	// クエリを順に処理していく
 	rep(tmp, q) {
-		int j = get<2>(lb_sr_j[tmp]);
-
 		// 区間を広げる
 		while (lpt > l[j]) { insert(--lpt, sol); }
 		while (rpt < r[j]) { insert(rpt++, sol); }
@@ -68,12 +66,14 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 
 		res[j] = sol;
 	}
+
+	return res;
 }
 
 
 //【Mo's algorithm（区間縮小なし）】O((n + q)√q α)
 /*
-* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納する．
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納し res を返す．
 * res_ep は空区間クエリに対する解とする．また区間の右に a[i] を追加する場合，
 * 新たな解は insert（計算量 O(α)）で計算されるとする．
 *
@@ -82,7 +82,7 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00, vector
 *（クエリ平方分割）
 */
 template <class T, class S>
-void mos_algorithm_no_erase(const vector<T>& a, const vi& l, const vi& r, S res_ep, vector<S>& res) {
+vector<S> mos_algorithm_no_erase(const vector<T>& a, const vi& l, const vi& r, S res_ep) {
 	// verify : https://codeforces.com/contest/620/problem/F
 
 	//【方法】
@@ -95,7 +95,7 @@ void mos_algorithm_no_erase(const vector<T>& a, const vi& l, const vi& r, S res_
 	int q = sz(l);
 	int k = (int)(sqrt(q) + EPS);
 	int width = max((sz(a) + k - 1) / k, 1);
-	res.resize(q);
+	vector<S> res(q);
 
 	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
 	vector<vector<pii>> lb_to_rj(k);
@@ -147,6 +147,8 @@ void mos_algorithm_no_erase(const vector<T>& a, const vi& l, const vi& r, S res_
 
 		sol = res_ep;
 	}
+
+	return res;
 }
 
 
@@ -202,6 +204,8 @@ public:
 	S sum(ll x1, ll y1, ll x2, ll y2) const {
 		// verify : https://judge.yosupo.jp/problem/rectangle_sum
 		
+		if (x1 >= x2 || y1 >= y2) return o();
+
 		int t1 = lbpos(xs, x1);
 		int t2 = lbpos(xs, x2);
 		int j1 = lbpos(ys, y1);

@@ -2,63 +2,221 @@
 #include "header.h"
 #include "多項式.h"
 #include "探索.h"
+#include "行列.h"
+#include "FPS(mint).h"
 // ■■■■■ 期待値 ■■■■■
 
 
-//【すごろく（任意サイコロ）】O(n m)
+//【すごろくの確率と期待値】
 /*
-* a[j] の目が p[j] の確率で出る m 面サイコロを用いてすごろくを行う．
-* マス 0 からスタートしてマス n に辿り着くまでの回数の期待値を返す．
+* すごろくにおいて，
+*	p[i] : マス i に止まる確率
+*	e[i] : マス i に止まる（or 通り過ぎる）までのターン数の期待値
+* とおくと，
+*	e[i] = Σp[0..i)
+* が成り立つ．
+* 
+* 証明：e[i] は，マス [0..i) の中で止まったものの数と言い換えられるので，期待値の線形性から従う．
+* 
+* verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+*/
+
+
+//【すごろく（目が任意，確率が任意）】O(n m)
+/*
+* a[0..m) の目が順に p[0..m) の確率で出る m 面サイコロを用いてすごろくを行う．
+* 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
 *
 *（期待値 DP）
 */
-double sugoroku(const vi& a, const vd& p, int n) {
+template <class T>
+vector<T> sugoroku(const vi& a, const vector<T>& p, int n) {
+	// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+	
+	//【方法】
+	// 出る目で場合分けを行って dp[i] を貰う DP で計算する．
+	// a[j] の目が出た場合，
+	//		a[j] の目を出すのに 1 ターン
+	//		残り i-a[j] マス以上進むのにかかるターン数の期待値が dp[i-a[j]]
+	// かかる．これを a[j] の目が出る確率 p[j] で重み付けながら足し合わせることで，
+	//		dp[i] = Σj p[j] (1 + dp[i-a[j]])
+	// なる遷移式を得る．
+
 	int m = sz(a);
 
-	// dp[i] : マス i からマス n に辿り着くまでの回数の期待値
-	vd dp(n + 1);
+	// dp[i] : i マス以上進むのにかかるターン数の期待値
+	vector<T> dp(n + 1);
 
 	// 貰う DP
-	repir(i, n - 1, 0) {
-		// 必ずかかる手数で初期化
-		double e = 1;
+	repi(i, 1, n) rep(j, m) dp[i] += p[j] * (1 + dp[max(i - a[j], 0)]);
 
-		rep(j, m) {
-			// 確率で重みを付けながら先の期待値を足していく．
-			e += dp[min(i + a[j], n)] * p[j];
+	return dp;
+}
+
+
+//【すごろく（確率が任意，mod 998244353）】O(n log n)
+/*
+* [1..m] の目が順に p[0..m) の確率で出る m 面サイコロを用いてすごろくを行う．
+* 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
+*
+* 利用：【形式的冪級数（mod 998244353）】
+*/
+vm sugoroku(const vm& p, int n) {
+	// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+
+	//【方法】
+	// 出る目で場合分けを行って dp[i] を求める漸化式を導出する．
+	// 便宜上 p を 1-indexed とし p[1..m] として記述する．
+	// 
+	// j の目が出た場合，
+	//		j の目を出すのに 1 ターン
+	//		残り i-j マス以上進むのにかかるターン数の期待値が dp[i-j]
+	// かかる．これを j の目が出る確率 p[j] で重み付けながら足し合わせることで，
+	//		dp[i] = Σj∈[1..m] p[j] (1 + dp[i-j])
+	// なる漸化式を得る．
+	//
+	// 先の漸化式を変形すると，Σp[1..m]=1 より
+	//		dp[i] = 1 + Σj∈[1..m] p[j] dp[i-j]
+	// となる．右辺に畳込みの形が現れていることに注目し，FPS を用いてさらに変形する．
+	//		f(z) = Σi dp[i] z^i
+	//		p(z) = Σi p[i] z^i（p[0] = 0 とする）
+	// とおくと，dp[0] = 0 に注意して
+	//		[z^i] f(z) = [z^i] (z/(1-z)) + [z^i] p(z) f(z)
+	//		f(z) = z/(1-z) + p(z) f(z)
+	//		f(z) = z / (1-z)(1-p(z))
+	// を得る．
+
+	int m = sz(p);
+
+	MFPS dnm(p);
+	dnm >>= 1;
+	dnm *= -1;
+	dnm[0] = 1;
+
+	dnm.resize(m + 2);
+	repir(j, m + 1, 1) dnm[j] -= dnm[j - 1];
+
+	MFPS f = MFPS::monomial(1);
+	f.resize(n + 1);
+	f /= dnm;
+	f.resize(n + 1);
+
+	return f.c;
+}
+
+
+//【すごろく（確率が任意，mod 998244353）】O(n (log n)^2)
+/*
+* [1..k] の目が順に p[0..k) の確率で出る k 面サイコロを用いてすごろくを行う．
+* 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
+*
+*（分割統治法）
+*/
+vm sugoroku_dc(const vm& p, int n) {
+	// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+
+	//【方法】
+	// 出る目で場合分けを行って dp[i] を求める漸化式を導出する．
+	// 便宜上 p を 1-indexed とし p[1..k] として記述する．
+	// 
+	// j の目が出た場合，
+	//		j の目を出すのに 1 ターン
+	//		残り i-j マス以上進むのにかかるターン数の期待値が dp[i-j]
+	// かかる．これを j の目が出る確率 p[j] で重み付けながら足し合わせることで，
+	//		dp[i] = Σj∈[1..k] p[j] (1 + dp[i-j])
+	// なる漸化式が得られ，Σp[1..k]=1 を用いて変形すると
+	//		dp[i] = 1 + Σj∈[1..k] p[j] dp[i-j]
+	// となる．
+	// 
+	// 簡単のため n=4 として記述する．
+	// dp[1..4] を左 dp[1..2] と右 dp[3..4] に分け，分割統治法を用いて先の漸化式に従い計算を行う．
+	// 
+	// (i) まず左部分内で完結する寄与の計算を行う：
+	//		dp[1] += 1
+	//		dp[2] += 1 + p[1] dp[1]
+	// これで dp[1..2] は正しい値になった．
+	// 
+	// (ii) 次に左部分から右部分への寄与の計算を行う：
+	//		dp[3] += p[1] dp[2] + p[2] dp[1]  (dp[m] += p[1] dp[m-1] + p[2] dp[m-2] + ...)
+	//		dp[4] += p[2] dp[2] + p[3] dp[1]  (dp[m+1] += p[2] dp[m-1] + p[3] dp[m-2] + ...)
+	// この式の右辺は既知の数列 p[1..3] と dp[1..2] の畳込みなのでまとめて計算できる．
+	// 
+	// (iii) 最後に右部分内で完結する寄与の計算を行う：
+	//		dp[3] += 1
+	//		dp[4] += 1 + p[1] dp[3]
+	// これで dp[3..4] は正しい値になった．
+	//
+	// 実際には (i) と (iii) についてもさらに 3 ステップに分割して再帰的に計算を行う．
+
+	int k = sz(p);
+
+	// i マス以上進むのにかかるターン数の期待値
+	vm dp(n + 1);
+
+	function<void(int, int)> rf = [&](int l, int r) {
+		// 単一要素のみになったら，どこからの寄与でもない定数 1 を加算して終了．
+		if (r - l == 1) {
+			dp[l] += 1;
+			return;
 		}
 
-		// 結果の記録
-		dp[i] = e;
-	}
+		// m : 中央位置
+		int m = (l + r) / 2;
 
-	return dp[0];
+		// 左側を正しい値に設定する．
+		rf(l, m);
+
+		// 左側から右側への寄与を計算する．
+		vm x(m - l), y(r - l);
+		repi(i, l, m - 1) x[i - l] = dp[i];
+		rep(i, min(r - l, k)) y[i] = p[i];
+
+		vm z = convolution(x, y);
+		repi(i, m, r - 1) dp[i] += z[i - l - 1];
+
+		// 右側を正しい値に設定する．
+		rf(m, r);
+	};
+
+	rf(1, n + 1);
+
+	return dp;
 }
 
 
 //【すごろく】O(n)
 /*
-* 1 から m の目が等確率で出る m 面サイコロを用いてすごろくを行う．
-* マス 0 からスタートしてマス n に辿り着くまでの回数の期待値を返す．
-*
-*（累積和で高速化した期待値 DP）
+* [1..m] の目が各 1/m の確率で出る m 面サイコロを用いてすごろくを行う．
+* 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
 */
-double sugoroku(int m, int n) {
-	// マス i からマス n に辿り着くまでの回数の期待値を e[i] とおく．
-	// dp[i] : Σe[i..n)
+vd sugoroku(int m, int n) {
+	//【方法】
+	// 出る目で場合分けを行って dp[i] を貰う DP で計算する．
+	// 
+	// j の目が出た場合，
+	//		j の目を出すのに 1 ターン
+	//		残り i-j マス以上進むのにかかるターン数の期待値が dp[i-j]
+	// かかる．これを j の目が出る確率 1/m で重み付けながら足し合わせることで，
+	//		dp[i] = Σj∈[1..m] (1/m) (1 + dp[i-j])
+	// なる遷移式を得る．
+	//
+	// 先の遷移式を変形すると，
+	//		dp[i] = 1 + (1/m) Σdp[i-m..i)
+	// となる．これは累積和を用いて高速化可能である．
+
+	// dp[i] : i マス以上進むのにかかるターン数の期待値
 	vd dp(n + 1);
 
-	// 貰う DP
-	repir(i, n - 1, 0) {
-		// e[i] = 1 + Σe[i+1..i+m] / m である．
-		// ただしゴールを超えたものもゴールとして扱う．
-		double sub = (1 + i + m) <= n ? dp[i + 1 + m] : 0;
-		double e = 1 + (dp[i + 1] - sub) / m;
+	// acc[i] : Σdp[0..i)
+	vd acc(n + 2);
 
-		dp[i] = dp[i + 1] + e;
+	// 貰う DP
+	repi(i, 1, n) {
+		dp[i] = 1 + (acc[i] - acc[max(i - m, 0)]) / m;
+		acc[i + 1] = acc[i] + dp[i];
 	}
 
-	return dp[0] - dp[1];
+	return dp;
 }
 
 
@@ -349,5 +507,64 @@ double blurred_shooting(const vi& x) {
 
 	return rf(set);
 }
+
+
+//【重み付きランダムウォーク】
+/*
+* Random_walk_weighted<T>(int n) : O(1)
+*	n 頂点 0 辺のグラフで初期化する．
+*
+* add_edge(int s, int t, T w, T p) : O(1)
+*	有向辺 s→t を，重み w，選択確率 p で追加する．
+*
+* vT solve(int t) : O(n^3)
+*	各頂点から出発し t に初めて到着するまでの経路の重みの和の期待値のリストを返す．
+*	制約：どの頂点からも t に到達可能
+*
+* 利用：【行列】，【連立一次方程式】
+*/
+template <class T> class Random_walk_weighted {
+	int n;
+	Matrix<T> mat;
+
+public:
+	// n 頂点 0 辺のグラフで初期化する．
+	Random_walk_weighted(int n) : n(n), mat(n, n + 1) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2171
+
+		rep(i, n) mat[i][i] = 1;
+	}
+
+	// 有向辺 s→t を，重み w，選択確率 p で追加する．
+	void add_edge(int s, int t, T w, T p) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2171
+
+		mat[s][t] -= p;
+		mat[s][n] += w * p;
+	}
+
+	// 各頂点から出発し t に初めて到着するまでの経路の重みの和の期待値のリストを返す．
+	vector<T> solve(int t) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2171
+
+		Matrix<T> mat2(mat);
+		repi(j, 0, n) mat2[t][j] = (T)(t == j);
+		
+		vector<T> sol;
+		solve_eq(mat2, &sol);
+
+		return sol;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Random_walk_weighted& rw) {
+		rep(i, rw.n) {
+			rep(j, rw.n + 1) os << rw.mat[i][j] << " ";
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
 
 

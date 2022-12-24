@@ -136,7 +136,7 @@ struct Matrix {
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 半環 <S, add, o, mul, e> 上の数列 a について，a[n] の値を返す．
 *
-* 利用：【半環上の行列】
+* 利用：【行列（半環）】
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
 S linearly_recurrent_sequence(vector<S> a, const vector<S>& c, ll n) {

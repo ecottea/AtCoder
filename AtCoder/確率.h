@@ -92,8 +92,7 @@ double dice_product_probability(int n, ll d) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_dice
 
 	// d ‚ğ‘fˆö”•ª‰ğ‚·‚éD
-	map<ll, int> pps;
-	factor_integer(d, pps);
+	auto pps = factor_integer(d);
 
 	// d ‚É 2, 3, 5 ˆÈŠO‚Ì‘fˆö”‚ªŠÜ‚Ü‚ê‚Ä‚¢‚ê‚ÎŠm—¦‚Í–¾‚ç‚©‚É 0
 	auto it = pps.upper_bound(5);

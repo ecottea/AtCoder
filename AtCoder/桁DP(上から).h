@@ -5,15 +5,15 @@
 
 //【上から桁 DP，未満フラグ，数え上げ】O(n b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数の個数を返す．
+* b=10 進数で n 桁の数 num 以下の非負の整数の個数を返す．
 */
-mint count_digit_sum(const string& num, int b = 10) {
+mint count_digit(const string& num, int b = 10) {
 	int n = sz(num);
 
 	// dp[i][f] : 以下の条件を満たす数の個数：
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
-	vvm dp(n + 1, vm(1 << 1));
+	vvm dp(n + 1, vm(1LL << 1));
 	dp[0][0] = 1;
 
 	// 上の桁から順に配る DP
@@ -21,30 +21,36 @@ mint count_digit_sum(const string& num, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 2) {
+		repb(f, 1) {
+			int smaller = (f >> 0) & 1;
+
 			// d_max : d[i] のとれる値の最大値
 			int d_max = (f ? b - 1 : x);
 
 			// d : d[i]
 			repi(d, 0, d_max) {
-				int nf = (int)(f || (d < d_max));
+				int n_smaller = (int)(smaller || (d < d_max));
+
+				int nf = (n_smaller << 0);
 
 				dp[i + 1][nf] += dp[i][f];
 			}
 		}
 
-		//dump(i + 1);
-		//dump("!smaller"); dump(dp[i + 1][0]);
-		//dump("smaller"); dump(dp[i + 1][1]);
+		//dump("----", i + 1, "----");
+		//repb(f, 1) dump("(smaller) =", bitset<1>(f), ":", dp[i + 1][f]);
 	}
 
-	return dp[n][0] + dp[n][1];
+	mint res = 0;
+	repb(f, 1) res += dp[0][f];
+
+	return res;
 }
 
 
-//【上から桁 DP，未満フラグ，数え上げ】O(n b m)
+//【上から状態桁 DP，未満フラグ，数え上げ】O(n b m)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの個数を返す．
+* b=10 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum(const string& num, int m, int b = 10) {
 	// 参考 : https://ferin-tech.hatenablog.com/entry/2019/11/10/%E6%A1%81DP%E3%81%AE%E5%AE%9F%E8%A3%85
@@ -56,7 +62,7 @@ mint count_digit_sum(const string& num, int m, int b = 10) {
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	j : d[0..i) の数字和 (mod m)
-	vvvm dp(n + 1, vvm(2, vm(m)));
+	vvvm dp(n + 1, vvm(1LL << 1, vm(m)));
 	dp[0][0][0] = 1;
 
 	// 上の桁から順に配る DP
@@ -64,7 +70,7 @@ mint count_digit_sum(const string& num, int m, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 2) {
+		repb(f, 1) {
 			// d_max : d[i] のとれる値の最大値
 			int d_max = (f ? b - 1 : x);
 
@@ -84,13 +90,16 @@ mint count_digit_sum(const string& num, int m, int b = 10) {
 		//dump("smaller"); dump(dp[i + 1][1]);
 	}
 
-	return dp[n][0][0] + dp[n][1][0];
+	mint res = 0;
+	repb(f, 1) res += dp[0][f][0];
+
+	return res;
 }
 
 
-//【上から桁 DP，超過フラグ，数え上げ】O(n b m)
+//【上から状態桁 DP，超過フラグ，数え上げ】O(n b m)
 /*
-* b 進数で n 桁の数 num 以上の n 桁の整数で，数字和が m の倍数であるものの個数を返す．
+* b=10 進数で n 桁の数 num 以上の n 桁の整数で，数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_s
@@ -101,7 +110,7 @@ mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) > num[0..i) なら 1，さもなくば 0（超過フラグ）
 	//	j : d[0..i) の数字和 (mod m)
-	vvvm dp(n + 1, vvm(2, vm(m)));
+	vvvm dp(n + 1, vvm(1LL << 1, vm(m)));
 	dp[0][0][0] = 1;
 
 	// 上の桁から順に配る DP
@@ -109,7 +118,7 @@ mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 2) {
+		repb(f, 1) {
 			// d_min : d[i] のとれる値の最小値
 			int d_min = (f ? 0 : x);
 
@@ -129,13 +138,16 @@ mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 		//dump("greater"); dump(dp[i + 1][1]);
 	}
 
-	return dp[n][0][0] + dp[n][1][0];
+	mint res = 0;
+	repb(f, 1) res += dp[0][f][0];
+
+	return res;
 }
 
 
-//【上から桁 DP，未満フラグ，前 0 フラグ，数え上げ】O(n b m)
+//【上から状態桁 DP，未満フラグ，前 0 フラグ，数え上げ】O(n b m)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
+* b=10 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
 * 数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
@@ -147,8 +159,8 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 	//      d[0..i) の全てが '0' なら 2，さもなくば 0（前 0 フラグ）
 	//      f はこれら 2 つのフラグの OR をとったもの
 	//	j : d[0..i) の数字和 (mod m)
-	vvvm dp(n + 1, vvm(1 << 2, vm(m)));
-	dp[0][2 | 0][0] = 1;
+	vvvm dp(n + 1, vvm(1LL << 2, vm(m)));
+	dp[0][0 | 2][0] = 1;
 
 	// 上の桁から順に配る DP
 	rep(i, n) {
@@ -179,20 +191,58 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 			}
 		}
 
-		//dump(i + 1);
-		//repb(f, 2) {
-		//	dump("(lz, smaller) =", bitset<2>(f));
-		//	dump(dp[i + 1][f]);
-		//}
+		//dump("----", i + 1, "----");
+		//repb(f, 2) dump("(lz, smaller) =", bitset<2>(f), ":", dp[i + 1][f]);
 	}
 
-	return dp[n][0 | 0][0] + dp[n][0 | 1][0];
+	return dp[n][0 | 0][0] + dp[n][1 | 0][0];
 }
 
 
-//【上から桁 DP，未満フラグ，スコア和】O(n b m)
+//【上から桁 DP，未満フラグ，スコア和】O(n b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの和を返す．
+* b=10 進数で n 桁の数 num 以下の非負の整数の和を返す．
+*/
+mint sum_digit(const string& num, int b = 10) {
+	int n = sz(num);
+
+	// dp[i][f][j] : 以下の条件を満たす数の和（cnt は個数）：
+	//	i : 上からの桁 d[0..i) まで決まっている．
+	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
+	vvm dp(n + 1, vm(1LL << 1));
+	vvm cnt(n + 1, vm(1LL << 1));
+	cnt[0][0] = 1;
+
+	// 上の桁から順に配る DP
+	rep(i, n) {
+		// x : num の上から i 桁目の数
+		int x = num[i] - '0';
+
+		repb(f, 1) {
+			// d_max : d[i] のとれる値の最大値
+			int d_max = (f ? b - 1 : x);
+
+			// d : d[i]
+			repi(d, 0, d_max) {
+				int nf = (int)(f || (d < d_max));
+
+				cnt[i + 1][nf] += cnt[i][f];
+				dp[i + 1][nf] += dp[i][f] * b + cnt[i][f] * d;
+			}
+		}
+
+		//dump(i + 1);
+		//dump("!smaller"); dump(dp[i + 1][0]);
+		//dump("smaller"); dump(dp[i + 1][1]);
+	}
+
+	return dp[n][0] + dp[n][1];
+}
+
+
+//【上から状態桁 DP，未満フラグ，スコア和】O(n b m)
+/*
+* b=10 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの和を返す．
 */
 mint sum_digit_sum(const string& num, int m, int b = 10) {
 	int n = sz(num);
@@ -201,8 +251,8 @@ mint sum_digit_sum(const string& num, int m, int b = 10) {
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	j : d[0..i) の数字和 (mod m)
-	vvvm dp(n + 1, vvm(2, vm(m)));
-	vvvm cnt(n + 1, vvm(2, vm(m)));
+	vvvm dp(n + 1, vvm(1LL << 1, vm(m)));
+	vvvm cnt(n + 1, vvm(1LL << 1, vm(m)));
 	cnt[0][0][0] = 1;
 
 	// 上の桁から順に配る DP
@@ -210,7 +260,7 @@ mint sum_digit_sum(const string& num, int m, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 2) {
+		repb(f, 1) {
 			// d_max : d[i] のとれる値の最大値
 			int d_max = (f ? b - 1 : x);
 
@@ -235,9 +285,9 @@ mint sum_digit_sum(const string& num, int m, int b = 10) {
 }
 
 
-//【上から桁 DP，未満フラグ，前 0 フラグ，スコア和】O(n b m)
+//【上から状態桁 DP，未満フラグ，前 0 フラグ，スコア和】O(n b m)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
+* b=10 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
 * 数字和が m の倍数であるものの和を返す．
 */
 mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
@@ -249,8 +299,8 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 	//      d[0..i) の全てが '0' なら 2，さもなくば 0（前 0 フラグ）
 	//      f はこれら 2 つのフラグの OR をとったもの
 	//	j : d[0..i) の数字和 (mod m)
-	vvvm dp(n + 1, vvm(4, vm(m)));
-	vvvm cnt(n + 1, vvm(4, vm(m)));
+	vvvm dp(n + 1, vvm(1LL << 2, vm(m)));
+	vvvm cnt(n + 1, vvm(1LL << 2, vm(m)));
 	cnt[0][0 | 2][0] = 1;
 
 	// 上の桁から順に配る DP
@@ -258,7 +308,7 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 4) {
+		repb(f, 2) {
 			int smaller = f & 1;
 			int leading0 = (f >> 1) & 1;
 
@@ -291,16 +341,16 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 		//}
 	}
 
-	return dp[n][0][0] + dp[n][1][0];
+	return dp[n][0 | 0][0] + dp[n][1 | 0][0];
 }
 
 
 //【上から桁 DP，未満フラグ，桁上げフラグ，スコア最大化】O(n b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
+* b=10 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
 * d の数字和と num - d の数字和の合計の最大値を返す．
 */
-mint maximize_pair_digit_sum(const string& num, int b = 10) {
+ll maximize_pair_digit_sum(const string& num, int b = 10) {
 	int n = sz(num);
 
 	// dp[i][f] : 以下の条件を満たす数の個数：
@@ -308,7 +358,7 @@ mint maximize_pair_digit_sum(const string& num, int b = 10) {
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	    d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
 	//      f はこれら 2 つのフラグの OR をとったもの
-	vvl dp(n + 1, vl(4, -INFL));
+	vvl dp(n + 1, vl(1LL << 2, -INFL));
 	dp[0][0 | 0] = 0;
 
 	// 上の桁から順に配る DP
@@ -316,7 +366,7 @@ mint maximize_pair_digit_sum(const string& num, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 4) {
+		repb(f, 2) {
 			int smaller = (f >> 0) & 1;
 			int carry = (f >> 1) & 1;
 
@@ -340,24 +390,22 @@ mint maximize_pair_digit_sum(const string& num, int b = 10) {
 			}
 		}
 
-		//dump(i + 1);
-		//rep(f, 4) {
-		//	dumps("(carry, smaller) =");
-		//	dump(bitset<2>(f));
-		//	dump(dp[i + 1][f]);
-		//}
+		//dump("----", i + 1, "----");
+		//repb(f, 2) dump("(carry, smaller) =", bitset<2>(f), ":", dp[i + 1][f]);
 	}
 
-	return max(dp[n][0 | 0], dp[n][0 | 1]);
+	return max(dp[n][0 | 0], dp[n][1 | 0]);
 }
 
 
 //【上から桁 DP，未満フラグ，桁上げフラグ，スコア最小化】O(n b)
 /*
-* b 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
+* b=10 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
 * d の数字和と num + d の数字和の合計の最小値を返す．
 */
-mint minimize_pair_digit_sum(string num, int b = 10) {
+ll minimize_pair_digit_sum(string num, int b = 10) {
+	// verify : https://atcoder.jp/contests/abc155/tasks/abc155_e
+
 	num.insert(num.begin(), '0');
 	int n = sz(num);
 
@@ -366,7 +414,7 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	    d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
 	//		f はこれら 2 つのフラグの OR をとったもの
-	vvl dp(n + 1, vl(4, INFL));
+	vvl dp(n + 1, vl(1LL << 2, INFL));
 	dp[0][0 | 0] = 0;
 
 	// 上の桁から順に配る DP
@@ -374,7 +422,7 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		rep(f, 4) {
+		repb(f, 2) {
 			int smaller = (f >> 0) & 1;
 			int carry = (f >> 1) & 1;
 
@@ -398,21 +446,17 @@ mint minimize_pair_digit_sum(string num, int b = 10) {
 			}
 		}
 
-		//dump(i + 1);
-		//rep(f, 4) {
-		//	dumps("(carry, smaller) =");
-		//	dump(bitset<2>(f));
-		//	dump(dp[i + 1][f]);
-		//}
+		//dump("----", i + 1, "----");
+		//repb(f, 2) dump("(carry, smaller) =", bitset<2>(f), ":", dp[i + 1][f]);
 	}
 
-	return min(dp[n][0 | 0], dp[n][0 | 1]);
+	return min(dp[n][0 | 0], dp[n][1 | 0]);
 }
 
 
 //【桁の数字の分布】O(n b)
 /*
-* b 進数で n 桁の数 num 以下の正の整数すべてについて，
+* b=10 進数で n 桁の数 num 以下の正の整数すべてについて，
 * 桁の数字に現れる数字 t の個数を cnt[t] に格納する．
 *
 *（桁 DP，未満フラグ，前 0 フラグ）

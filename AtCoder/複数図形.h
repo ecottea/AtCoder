@@ -7,6 +7,8 @@
 #include "作図.h"
 #include "計算.h"
 #include "括弧列.h"
+#include "座標圧縮.h"
+#include "累積演算.h"
 // ■■■■■ 点群，線分群，直線群など ■■■■■
 
 
@@ -43,8 +45,8 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 
 	// 原点の周りで偏角ソートを行う．
 	Point<T> o;
-	argument_sort(s, o);
-	argument_sort(t, o);
+	argument_sort(s);
+	argument_sort(t);
 
 	// 原点に点が存在した場合の例外処理
 	// o は便宜上偏角最大としていたので，存在するなら配列の末尾にある．
@@ -72,7 +74,7 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 	// 実際には長さの代わりに 2 乗ノルム，夾角の大きさの代わりに余弦と正弦，
 	// さらにその代わりに内積と外積を用いる．
 	// （内積だけだと，例えば対称移動させた直角三角形で WA してしまう．）
-	vector<ll> tri_s, tri_t;
+	vector<T> tri_s, tri_t;
 	s.push_back(s[0]);
 	t.push_back(t[0]);
 	rep(i, n) {
@@ -89,9 +91,9 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 	rep(i, 3 * n) tri_t.push_back(tri_t[i]);
 
 	// tri_s を 2 * tri_t が連続部分列として含んでいるかをチェックする．
-	int res = knuth_morris_pratt(tri_t, tri_s);
+	vi pos = knuth_morris_pratt(tri_t, tri_s);
 
-	return res >= 0;
+	return !pos.empty();
 }
 
 
@@ -101,11 +103,14 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 *
 * 利用：【偏角ソート】,【部分文字列判定】
 */
-template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t) {
+template <typename T>
+double similarityQ(vector<Point<T>> s, vector<Point<T>> t) {
+	// verify : https://atcoder.jp/contests/abc022/tasks/abc022_d
+
 	int n = sz(s);
 
 	// 点の数が違うならもちろん相似ではない．
-	if (sz(t) != n) return false;
+	if (sz(t) != n) return -1;
 
 	// 原点中心に n 倍拡大した上で重心を求める．
 	Point<T> gs, gt;
@@ -125,8 +130,8 @@ template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t)
 
 	// 原点の周りで偏角ソートを行う．
 	Point<T> o;
-	argument_sort(s, o);
-	argument_sort(t, o);
+	argument_sort(s);
+	argument_sort(t);
 
 	// 原点に点が存在した場合の例外処理
 	// o は便宜上偏角最大としていたので，存在するなら配列の末尾にある．
@@ -150,35 +155,47 @@ template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t)
 	// 1 点のみだった場合の例外処理（もちろん相似）
 	if (s.empty()) return 1;
 
-	// 原点回りの夾角の大きさの情報を格納したリスト
-	// 実際には夾角の大きさの代わりに余弦と正弦，さらにその代わりに内積と外積の比を用いる．
-	vl tri_s, tri_t;
+	// 原点回りの三角形の二辺比と夾角の大きさの情報を格納したリスト
+	// 実際には二辺比の代わりに 2 乗ノルムの比，夾角の大きさの代わりに余弦と正弦，
+	// さらにその代わりに内積と外積の比を用いる．
+	vector<T> tri_s, tri_t;
 	s.push_back(s[0]);
 	t.push_back(t[0]);
 	rep(i, n) {
-		ll in_s = s[i].dot(s[i + 1]);
-		ll out_s = s[i].cross(s[i + 1]);
-		ll g_s = gcd(in_s, out_s);
+		T sqnorm_s = s[i].sqnorm();
+		T sqnorm_s2 = s[i + 1].sqnorm();
+		T g_s = gcd(sqnorm_s, sqnorm_s2);
+		tri_s.push_back(sqnorm_s / g_s);
+		tri_s.push_back(sqnorm_s2 / g_s);
+
+		T in_s = s[i].dot(s[i + 1]);
+		T out_s = s[i].cross(s[i + 1]);
+		g_s = gcd(abs(in_s), abs(out_s));
 		tri_s.push_back(in_s / g_s);
 		tri_s.push_back(out_s / g_s);
 
-		ll in_t = t[i].dot(t[i + 1]);
-		ll out_t = t[i].cross(t[i + 1]);
-		ll g_t = gcd(in_t, out_t);
+		T sqnorm_t = t[i].sqnorm();
+		T sqnorm_t2 = t[i + 1].sqnorm();
+		T g_t = gcd(sqnorm_t, sqnorm_t2);
+		tri_t.push_back(sqnorm_t / g_t);
+		tri_t.push_back(sqnorm_t2 / g_t);
+
+		T in_t = t[i].dot(t[i + 1]);
+		T out_t = t[i].cross(t[i + 1]);
+		g_t = gcd(abs(in_t), abs(out_t));
 		tri_t.push_back(in_t / g_t);
 		tri_t.push_back(out_t / g_t);
 	}
 
 	// tri_t をコピーし 2 倍に延長することで周期境界を扱いやすくする．
-	rep(i, 2 * n) tri_t.push_back(tri_t[i]);
+	rep(i, 4 * n) tri_t.push_back(tri_t[i]);
 
 	// 2 * tri_t が tri_s を連続部分列として含んでいるかをチェックする．
-	vi pos;
-	knuth_morris_pratt(tri_t, tri_s, pos);
+	vi pos = knuth_morris_pratt(tri_t, tri_s);
 
 	double res = -1;
-	if (sz(pos) != 0) {
-		int i = pos[0] / 2;
+	if (!pos.empty()) {
+		int i = pos[0] / 4;
 		res = t[i].norm() / s[0].norm();
 	}
 
@@ -194,7 +211,8 @@ template <typename T> double similarityQ(vector<Point<T>> s, vector<Point<T>> t)
 *
 * 利用：【偏角の比較（同偏角は同一視）】
 */
-template <class T> tuple<ll, ll, ll> count_triangles(const vector<Point<T>>& p) {
+template <class T>
+tuple<ll, ll, ll> count_triangles(const vector<Point<T>>& p) {
 	// verify : https://atcoder.jp/contests/abc033/tasks/abc033_d
 
 	int n = sz(p);
@@ -253,7 +271,8 @@ template <class T> tuple<ll, ll, ll> count_triangles(const vector<Point<T>>& p) 
 * 点群 p[0..n) の凸包の頂点を反時計回りに ch に格納する．
 * p[0] は x 座標最小（同じものがあれば y 座標最小）の点とする．
 */
-template <typename T> void convex_hull(vector<Point<T>> p, Polygon<T>& ch) {
+template <typename T>
+void convex_hull(vector<Point<T>> p, Polygon<T>& ch) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
 
 	int n = sz(p);
@@ -433,7 +452,8 @@ ll count_intersection(const vl& x1, const vl& y1, const vl& x2, const vl& y2) {
 *	x 座標最小の点 →(x 座標昇順)→ x 座標最大の点 →(x 座標降順)→ x 座標最小の点
 * の順に点を結ぶ経路の最短長を返す．
 */
-template <class T> double minimum_bitonic_tour(vector<Point<T>>& p) {
+template <class T>
+double minimum_bitonic_tour(vector<Point<T>>& p) {
 	int n = sz(p);
 
 	sort(all(p));
@@ -841,8 +861,142 @@ ll maximize_manhattan_distance(const vl& x, const vl& y) {
 //【2 点間距離の最大値と円被覆】
 /*
 * 距離がユークリッド距離，マンハッタン距離，チェス盤距離のいずれかであるとする．
-* 点群 S 内の任意の 2 点の距離が 2r 以下のとき，S は半径 r の閉円盤で被覆される． 
-* 
+* 点群 S 内の任意の 2 点の距離が 2r 以下のとき，S は半径 r の閉円盤で被覆される．  
 * verify : https://atcoder.jp/contests/joi2010ho/tasks/joi2010ho_d
+* 
+* ハニカム格子上の 6 近傍距離ではそのような被覆は存在するとは限らない．
+* verify : https://atcoder.jp/contests/abc280/tasks/abc280_g
 */
+
+
+//【直径 d 以下の部分集合の数え上げ（2 次元，マンハッタン距離）】O(n^2)
+/*
+* i 番目の点が (x[i], y[i]) である大きさ n の点群の部分集合のうち，
+* マンハッタン距離で測った直径が d 以下であるものの個数を返す（空集合含む）
+*
+* 利用：【座標圧縮】，【二次元累積和（長方形）】
+*/
+template <class T>
+mint count_manhattan_distance_clique_2D(const vector<T>& x, const vector<T>& y, T d) {
+	int n = sz(x);
+
+	// 45° 回転させ，代わりにチェス盤距離で測ることにする．
+	vector<T> u(n), v(n);
+	rep(i, n) {
+		u[i] = x[i] + y[i];
+		v[i] = x[i] - y[i];
+	}
+
+	vi u_cp, v_cp; vector<T> xs, ys;
+	int h = coordinate_compression(u, u_cp, &xs);
+	int w = coordinate_compression(v, v_cp, &ys);
+	
+	vvi cnt(h, vi(w));
+	rep(i, n) cnt[u_cp[i]][v_cp[i]]++;
+	Cumulative_sum_2D<int> acc(cnt);
+	
+	vm pow2(n + 1);
+	pow2[0] = 1;
+	rep(i, n) pow2[i + 1] = pow2[i] * 2;
+
+	mint res = 1; // 空集合を先に数えておく．
+
+	// BB の右下隅（内部）の座標 (i, j) で場合分けしながら二次元尺取法で数え上げていく．
+	// (i0, j0) : 左上隅として許せる限界（内部）
+	int i0 = 0;
+	rep(i, h) {
+		while (xs[i] - xs[i0] > d) i0++;
+
+		int j0 = 0;
+		rep(j, w) {
+			while (ys[j] - ys[j0] > d) j0++;
+
+			// (i, j) の要素を選ぶ場合
+			mint add1 = pow2[cnt[i][j]] - 1;
+			add1 *= pow2[acc.sum(i0, j0, i + 1, j + 1) - cnt[i][j]];
+			res += add1;
+
+			// (i, j) の要素を選ばない場合
+			mint add0 = pow2[acc.sum(i, j0, i + 1, j)] - 1;
+			add0 *= pow2[acc.sum(i0, j, i, j + 1)] - 1;
+			add0 *= pow2[acc.sum(i0, j0, i, j)];
+			res += add0;
+		}
+	}
+
+	return res;
+}
+
+
+//【直径 D 以下の部分集合の数え上げ（3 次元，チェビシェフ距離）】O(n^3)
+/*
+* i 番目の点が (x[i], y[i], z[i]) である大きさ n の点群の部分集合のうち，
+* チェビシェフ距離で測った直径が D 以下であるものの個数を返す（空集合含む）
+*
+* 利用：【座標圧縮】，【三次元累積和（直方体）】
+*/
+template <class T>
+mint count_chebyshev_distance_clique_3D(const vector<T>& x, const vector<T>& y, const vector<T>& z, T D) {
+	// verify : https://atcoder.jp/contests/abc280/tasks/abc280_g
+
+	int n = sz(x);
+
+	vi x_cp, y_cp, z_cp; vector<T> xs, ys, zs;
+	int h = coordinate_compression(x, x_cp, &xs);
+	int w = coordinate_compression(y, y_cp, &ys);
+	int d = coordinate_compression(z, z_cp, &zs);
+	dump(xs); dump(ys); dump(zs);
+
+	vvvi cnt(h, vvi(w, vi(d)));
+	rep(i, n) cnt[x_cp[i]][y_cp[i]][z_cp[i]]++;
+	dumpel(cnt);
+
+	Cumulative_sum_3D<int> acc(cnt);
+
+	vm pow2(n + 1);
+	pow2[0] = 1;
+	rep(i, n) pow2[i + 1] = pow2[i] * 2;
+
+	mint res = 1; // 空集合を先に数えておく．
+
+	// BB の最大隅（内部）の座標 (i, j, k) で場合分けしながら数え上げていく．
+	// (i0, j0, k0) : 最小隅として許せる限界（内部）
+	int i0 = 0;
+	rep(i, h) {
+		while (xs[i] - xs[i0] > D) i0++;
+
+		int j0 = 0;
+		rep(j, w) {
+			while (ys[j] - ys[j0] > D) j0++;
+
+			int k0 = 0;
+			rep(k, d) {
+				while (zs[k] - zs[k0] > D) k0++;
+
+				dump("------", i0, i, j0, j, k0, k, "-------");
+
+				// 無条件の場合
+				res += pow2[acc.sum(i0, j0, k0, i + 1, j + 1, k + 1)];
+				dump(res);
+				// BB の最大隅条件を，少なくとも 1 個の座標が満たしていない場合
+				res -= pow2[acc.sum(i0, j0, k0, i, j + 1, k + 1)];
+				res -= pow2[acc.sum(i0, j0, k0, i + 1, j, k + 1)];
+				res -= pow2[acc.sum(i0, j0, k0, i + 1, j + 1, k)];
+				dump(res);
+				// BB の最大隅条件を，少なくとも 2 個の座標が満たしていない場合
+				res += pow2[acc.sum(i0, j0, k0, i, j, k + 1)];
+				res += pow2[acc.sum(i0, j0, k0, i + 1, j, k)];
+				res += pow2[acc.sum(i0, j0, k0, i, j + 1, k)];
+				dump(res);
+				// BB の最大隅条件を，少なくとも 3 個の座標が満たしていない場合
+				res -= pow2[acc.sum(i0, j0, k0, i, j, k)];
+
+				dump(res);
+			}
+		}
+	}
+
+	return res;
+}
+
 

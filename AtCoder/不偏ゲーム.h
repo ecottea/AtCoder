@@ -36,6 +36,7 @@ void calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt, map<T, i
 	calc_nimber(p);
 
 	/* nxt ‚Ì’è‹`‚Ì—Œ`
+	using T = vi;
 	function<void(const T&, vector<T>&)> nxt = [&](const T& p, vector<T>& nps) {
 
 	};

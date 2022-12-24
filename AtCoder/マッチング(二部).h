@@ -19,19 +19,17 @@
 *	フローを流し計算を行うい，最大マッチングの大きさを返す．
 *	戻り値は「|最小点被覆|」，「|V| - |最小辺被覆|」，「|V| - |最大独立集合|」とも解釈できる．
 *
-* maximum_matching(vector<pii>& es) : O(|E|)
-*	最大マッチングの例を具体的に求め es に格納する．
-*	flow() の後に呼び出すこと．
-* 	es : 最大マッチングに含まれる辺 {s, t} ∈ S×T のリスト
+* vector<pii> maximum_matching() : O(|E|)
+*	最大マッチングに含まれる辺 {s, t} ∈ S×T のリストを返す．
+*	制約：flow() の後に呼び出すこと．
 *
-* minimum_edge_covering(vector<pii>& es) : O(|V| + |E|)
-*	最小辺被覆の例を具体的に求め es に格納する．
+* vector<pii> minimum_edge_covering() : O(|V| + |E|)
+*	最小辺被覆に含まれる辺 {s, t} ∈ S×T のリストを返す．
 *	es が最小辺被覆であるとは，任意の頂点がある e∈es の端点として現れることをいう．
-*	flow() の後に呼び出すこと．
-* 	es : 最小辺被覆に含まれる辺 {s, t} ∈ S×T のリスト
+*	制約：flow() の後に呼び出すこと．
 *
-* minimum_vertex_covering(vvi& vs) : O(|V| + |E|)
-*	最小点被覆の例を具体的に求め，S の頂点を vs[0], T の頂点を vs[1] に格納する．
+* vvi minimum_vertex_covering() : O(|V| + |E|)
+*	最小点被覆の例を具体的に求め，S の頂点を vs[0], T の頂点を vs[1] に格納し，vs を返す．
 *	vs が最小点被覆であるとは，任意の辺がある v∈vs を端点にもつことをいう．
 *	flow() の後に呼び出すこと．
 *
@@ -46,7 +44,7 @@ struct Bipartite_matching {
 	int ST, GL;
 
 	// |S|, |T| を渡して初期化する．
-	Bipartite_matching(int n_, int m_) : n(n_), m(m_) {
+	Bipartite_matching(int n, int m) : n(n), m(m) {
 		g = mf_graph<int>(n + m + 2);
 
 		// スタートとゴールおよびそれらとの間の辺を先に作っておく．
@@ -62,15 +60,15 @@ struct Bipartite_matching {
 	// 計算を実行し，最大マッチングの大きさを返す．
 	int flow() {
 		// verify : https://judge.yosupo.jp/problem/bipartitematching
-		
+
 		return g.flow(ST, GL);
 	}
 
 	// 最大マッチングの例を具体的に求める．
-	void maximum_matching(vector<pii>& es) {
+	vector<pii> maximum_matching() {
 		// verify : https://judge.yosupo.jp/problem/bipartitematching
 
-		es.clear();
+		vector<pii> es;
 
 		repe(e, g.edges()) {
 			// フローが流れている S, T 間の辺がマッチングに対応する．
@@ -78,17 +76,19 @@ struct Bipartite_matching {
 				es.push_back({ e.from, e.to - n });
 			}
 		}
+
+		return es;
 	}
 
 	// 最小辺被覆の例を具体的に求める．
-	void minimum_edge_covering(vector<pii>& es) {
-		es.clear();
+	vector<pii> minimum_edge_covering() {
+		vector<pii> es;
 
 		// マッチングに含まれない S, T の頂点の集合
 		unordered_set<int> iso_s, iso_t;
 		rep(i, n) if (g.get_edge(i).flow == 0) iso_s.insert(i);
 		rep(j, m) if (g.get_edge(j + n).flow == 0) iso_t.insert(j + n);
-		
+
 		repe(e, g.edges()) {
 			// マッチングに含まれる S, T の頂点はそのまま結ぶ．
 			if (e.flow == 1 && e.from != ST && e.to != GL) {
@@ -105,22 +105,26 @@ struct Bipartite_matching {
 				iso_t.erase(e.to);
 			}
 		}
+
+		return es;
 	}
 
 	// 最小点被覆の例を具体的に求める．
-	void minimum_vertex_covering(vvi& vs) {
+	vvi minimum_vertex_covering() {
 		// verify : https://judge.yosupo.jp/problem/assignment
 
-		vs = vvi(2);
+		vvi vs(2);
 
 		// ar[v] : g の残余グラフで ST から v に到達可能か
 		vb ar = g.min_cut(ST);
 
 		// 残余グラフで ST から到達不可能な S の頂点を選ぶ．
 		rep(i, n) if (!ar[i]) vs[0].push_back(i);
-		
+
 		// 残余グラフで ST から到達可能な T の頂点を選ぶ．
 		rep(j, m) if (ar[n + j]) vs[1].push_back(j);
+
+		return vs;
 	}
 };
 
@@ -238,8 +242,7 @@ ll hungarian(const vvl& c_, vi& p) {
 
 		// 完全マッチングが得られたら終了．
 		if (k == n) {
-			vector<pii> es;
-			bm.maximum_matching(es);
+			vector<pii> es = bm.maximum_matching();
 
 			ll res = 0;
 			repe(e, es) {
@@ -251,8 +254,7 @@ ll hungarian(const vvl& c_, vi& p) {
 		}
 
 		// 最小点被覆を得る（k 本の縦線または横線で全ての 0 を被覆することに対応する．）
-		vvi vs;
-		bm.minimum_vertex_covering(vs);
+		vvi vs = bm.minimum_vertex_covering();
 
 		// 直線が存在しない行および列を得る．
 		vvi vs_cp(2);
@@ -274,9 +276,9 @@ ll hungarian(const vvl& c_, vi& p) {
 }
 
 
-//【二部グラフのコスト最小弾性マッチング】O(|S| |T|)
+//【二部グラフの最小コスト弾性マッチング】O(|S| |T|)
 /*
-* コスト付き完全二部グラフ (S, T) のコスト最小弾性マッチングのコストを返す．
+* コスト付き完全二部グラフ (S, T) の最小コスト弾性マッチングのコストを返す．
 * またそのようなマッチングを昇順に match に格納する．
 *
 * c[i][j] : S[i] と T[j] の間にある辺のコスト．
@@ -302,8 +304,7 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 		//		T[j] に S[i - 1] が繋がる
 		//		S[i], T[j] 共に他に繋がる頂点はなし
 		// の 3 通りの場合が考えられるので，そのうち最小のものを選ぶ．
-		dp[i + 1][j + 1]
-			= min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] }) + c[i][j];
+		dp[i + 1][j + 1] = min({ dp[i + 1][j], dp[i][j + 1], dp[i][j] }) + c[i][j];
 	}
 
 	// DP 復元
@@ -435,6 +436,21 @@ int tree_bipartite_matching(const Graph& g) {
 * 各 Y ⊂ f(2^S) に対する g(Y) が効率よく計算できるならば役に立つ．
 * 
 * verify：https://atcoder.jp/contests/arc076/tasks/arc076_d
+*/
+
+
+//【頂点次数が等しい二部グラフの完全マッチング分割】
+/*
+* 二部グラフ (S, T) で，|S| = |T| かつ全ての頂点の次数が等しい場合，
+* (S, T) には必ず完全マッチングが存在し，これを帰納的に適用して辺集合を完全マッチングに分割できる．
+* 
+* 証明：各頂点の次数を d とする．ホールの結婚定理において，
+*		∀X ⊂ S, |X| <= |f(X)|
+* を示せば良い．X から出る辺は d |X| 本であり，これは f(X) に入る辺の本数以下である．
+* f(X) の各頂点の次数も d なので，f(X) に入る辺の本数が d |X| 本以上となるためには
+* f(X) が少なくとも |X| 個の頂点を含んでいなければならず，|X| <= |f(X)| である．
+* 
+* verify : https://atcoder.jp/contests/agc037/tasks/agc037_d
 */
 
 

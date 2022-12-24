@@ -120,9 +120,179 @@ ll tree_diameter(const WGraph& g, pii& p) {
 }
 
 
+//【木の重心】O(n)
+/*
+* 木 g の重心を返し，もう 1 つ重心がある場合はそれを c2 に格納する（なければ -1）
+* 木 g の重心とは，その頂点を取り除いてできる部分木の大きさが全て |g|/2 以下になる点である．
+*/
+template <class G>
+int tree_centroid(const G& g, int* c2 = nullptr) {
+	// 参考 : https://qiita.com/drken/items/4b4c3f1824339b090202
+	// verify : https://atcoder.jp/contests/agc018/tasks/agc018_d
+
+	int n = sz(g), hn = n / 2;
+
+	int centroid = -1;
+	if (c2 != nullptr) *c2 = -1;
+
+	// 0 を根とする部分木 s に含まれる頂点の個数を返す．（p : s の親）
+	function<int(int, int)> dfs = [&](int s, int p) {
+		// s_cnt : 部分木 s の大きさ
+		int s_cnt = 1;
+
+		// ok : 頂点 s が重心か
+		bool ok = true;
+
+		// s の子 t を調べる．
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// t_cnt : 部分木 t の大きさ
+			int t_cnt = dfs(t, s);
+
+			// 大きさが |g|/2 を超える部分木があれば s は重心ではない．
+			if (t_cnt > hn) ok = false;
+
+			// 部分木 t の大きさを加える．
+			s_cnt += t_cnt;
+		}
+
+		// p を含む部分木の大きさが |g|/2 を超えていれば s は重心ではない．
+		if (n - s_cnt > hn) ok = false;
+
+		// s は重心なのでそれを記録する．
+		if (ok) {
+			if (centroid == -1) centroid = s;
+			else if (c2 != nullptr) *c2 = s;
+		}
+
+		return s_cnt;
+	};
+
+	dfs(0, -1);
+
+	return centroid;
+}
+
+
+//【木の重心分解】
+/*
+* Centroid_decomposition<G>(G g) : O(n log n)
+*	木 g に対して，各部分木から重心を取り除く操作を繰り返して得られる木構造を構築する．
+*	s の子が {t} ⇔ s を取り除いてできた {部分木} の重心が {t}
+*
+* 性質：∀u,v∈V について，LCA(u,v) は u-v パス上に存在する．
+*/
+template <class G>
+struct Centroid_decomposition {
+	// 参考 : https://ferin-tech.hatenablog.com/entry/2020/03/06/162311
+
+	struct Node {
+		int size = -1; // この頂点を重心とする部分木の大きさ
+		int dep = -1; // この頂点が何回目の操作で取り除かれたか
+		int p = -1; // 親（なければ -1）
+		vi cs; // 子のリスト
+
+#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "size:" << v.size << ", ";
+			os << "dep:" << v.dep << ", ";
+			os << "p:" << v.p << ", ";
+			os << "cs:" << v.cs;
+			return os;
+		}
+#endif
+	};
+
+	int n; // 頂点の数
+	int rt; // 根
+	vector<Node> v; // 頂点
+
+	// 木 g で初期化する．
+	Centroid_decomposition(const G& g) : n(sz(g)), v(n) {
+		// verify : https://codeforces.com/contest/342/problem/E
+
+		// cnt[v] : 部分木 v の大きさ（使いまわす．根はその都度直前に取り除かれた重心に変わる）
+		vi cnt(n);
+
+		// bc を根としたときの部分木 s の大きさ cnt[s] を更新し，既に重心を発見しているかを返す．
+		//	p : bc を根としたときの s の親
+		//	r_size : s を含む部分木全体の大きさ
+		//	dep : 何回目の処理か
+		//	bc : 直前に取り除かれた重心
+		function<bool(int, int, int, int, int)> dfs = [&](int s, int p, int r_size, int dep, int bc) {
+			// 部分木 s の大きさ
+			cnt[s] = 1;
+
+			// ok : 頂点 s が重心か
+			bool ok = true;
+
+			// s の子 t を調べる．
+			repe(t, g[s]) {
+				// 親や既に取り除かれた頂点には進まない．
+				if (t == p || v[t].dep != -1) continue;
+
+				// 部分木 t の大きさを求める（既に重心を発見していればすぐに帰る）
+				if (dfs(t, s, r_size, dep, bc)) return true;
+
+				// 大きさが元の半分を超える部分木があれば s は重心ではない．
+				if (cnt[t] > r_size / 2) ok = false;
+
+				// 部分木 t の大きさを加える．
+				cnt[s] += cnt[t];
+			}
+
+			// p を含む部分木の大きさが元の半分を超えていれば s は重心ではない．
+			if (r_size - cnt[s] > r_size / 2) ok = false;
+
+			// s は重心なのでそれを記録し取り除く
+			if (ok) {
+				// s の情報を決定する．
+				v[s].size = r_size;
+				v[s].dep = dep;
+				v[s].p = bc;
+				if (bc != -1) v[bc].cs.push_back(s);
+				else rt = s;
+
+				// s の親 p を含む部分木を重心分解する．
+				if (p != -1) dfs(p, -1, r_size - cnt[s], dep + 1, s);
+
+				// s の各子 t を含む部分木を重心分解する．
+				repe(t, g[s]) {
+					if (t == p || v[t].dep != -1) continue;
+
+					dfs(t, -1, cnt[t], dep + 1, s);
+				}
+
+				return true;
+			}
+
+			return false;
+		};
+
+		dfs(0, -1, sz(g), 0, -1);
+	}
+	Centroid_decomposition() : n(0), rt(-1) {}
+
+	// アクセス
+	Node const& operator[](int i) const { return v[i]; }
+	Node& operator[](int i) { return v[i]; }
+
+	// 大きさ
+	int size() const { return n; }
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Centroid_decomposition& cd) {
+		rep(i, sz(cd)) os << i << ": " << cd[i] << endl;
+		return os;
+	}
+#endif
+};
+
+
 //【木上のシュタイナー木】O(n)
 /*
-* 無向木 g の頂点集合 v を含む最小の木を st に構築し，その大きさを返す．
+* 木 g の頂点集合 v を含む最小の木を st に構築し，その大きさを返す．
 * また st の頂点 i が g のどの頂点と対応するかを id[i] に格納する．
 */
 int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
@@ -199,7 +369,7 @@ int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
 
 //【コスト付き木上のシュタイナー木】O(n)
 /*
-* コスト付き無向木 g の頂点集合 v を含む最小の木を st に構築し，その合計コストを返す．
+* コスト付き木 g の頂点集合 v を含む最小の木を st に構築し，その合計コストを返す．
 * また st の頂点 i が g のどの頂点と対応するかを id[i] に格納する．
 */
 ll steiner_tree(const WGraph& g, const vi& v, WGraph& st, vi& id) {
@@ -271,13 +441,13 @@ ll steiner_tree(const WGraph& g, const vi& v, WGraph& st, vi& id) {
 
 //【葉の削除回数】O(n)
 /*
-* 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納する．
+* 木 g に対し葉の削除を繰り返したとき何回目に頂点 i が削除されるかを lv[i] に格納し lv を返す．
 *
 *（葉からの幅優先探索）
 */
-void leaf_remove_level(const Graph& g, vi& lv) {
+vi leaf_remove_level(const Graph& g) {
 	int n = sz(g);
-	lv = vi(n);
+	vi lv(n);
 
 	// 木が 1 頂点のみで次数 1 の頂点が存在しない場合の例外処理
 	if (n == 1) {
@@ -318,6 +488,8 @@ void leaf_remove_level(const Graph& g, vi& lv) {
 			}
 		}
 	}
+
+	return lv;
 }
 
 

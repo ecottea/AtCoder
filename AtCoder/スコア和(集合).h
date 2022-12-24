@@ -1,24 +1,14 @@
 #pragma once
 #include "header.h"
 #include "FPS(mint).h"
-// ■■■■■ 部分集合を渡るスコア和 ■■■■■
-
-
-//【部分集合の個数】
-/*
-* Σset⊂[0..n) 1 = 2^n
-* 
-* 証明：
-* 部分集合を定めるとき，各 i∈[0..n) について独立に含むか含まないかの 2 通りを選べる．
-*/
+// ■■■■■ スコア和（集合） ■■■■■
 
 
 //【部分集合の大きさの和】
 /*
 * Σset⊂[0..n) |set| = n 2^(n-1)
 * 
-* 証明：
-* 各 i∈[0..n) が数えられる回数は，[0..n)-{i} の部分集合の個数と同じ 2^(n-1) 回である．
+* 証明：各 i∈[0..n) が数えられる回数は，[0..n)-{i} の部分集合の個数と同じ 2^(n-1) 回である．
 */
 
 
@@ -30,7 +20,8 @@
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-template <class T> void total_sum(const vector<T>& a, vm& res) {
+template <class T>
+void total_sum(const vector<T>& a, vm& res) {
 	//【方法】
 	// a[i] が res[k] に何回寄与するかを考えると，
 	// i を含む大きさ k の部分集合の個数 bin(n-1, k-1) 回と分かる．
@@ -66,7 +57,8 @@ template <class T> void total_sum(const vector<T>& a, vm& res) {
 *
 * 利用：【形式的冪級数（mod 998244353）】,【一次式の積の展開（基本対称式）】
 */
-template <class T> void multiple_sum(const vector<T>& a, vm& res) {
+template <class T>
+void multiple_sum(const vector<T>& a, vm& res) {
 	//【方法】
 	// 一次式の積
 	//		g(x) = Πi=[0..n) (1 + a[i] x)

@@ -133,7 +133,8 @@ public:
 *
 *（ダブリング）
 */
-template <class T> struct Map_accumulate {
+template <class T>
+struct Map_accumulate {
 	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
 
 	int n, K;

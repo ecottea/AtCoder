@@ -6,9 +6,10 @@
 //【最長共通接頭尾辞】O(n)
 /*
 * 文字列 s[0..n) について，s[0..i) の接頭辞と接尾辞が
-* 最大何文字一致しているか（i 文字未満）を len[i] に格納する．
+* 最大何文字一致しているか（i 文字未満）を len[i] に格納し len を返す．
 */
-template <class STR> void morris_pratt(const STR& s, vi& len) {
+template <class STR>
+vi morris_pratt(const STR& s) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/01/235807
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_B
 
@@ -39,7 +40,7 @@ template <class STR> void morris_pratt(const STR& s, vi& len) {
 	// len[i] : - 0 0 1 2 3 4 0 1 1
 
 	int n = sz(s);
-	len.resize(n + 1);
+	vi len(n + 1);
 	len[0] = -1;
 
 	int j = -1;
@@ -47,25 +48,27 @@ template <class STR> void morris_pratt(const STR& s, vi& len) {
 		while (j >= 0 && s[i] != s[j]) j = len[j];
 		len[i + 1] = ++j;
 	}
+
+	return len;
 }
 
 
 //【部分文字列判定】O(n + m)
 /*
 * s[0..n) の部分文字列として w[0..m) が含まれているかどうか調べ，
-* 見つかった場所の先頭位置を昇順に pos に格納する．
+* 見つかった場所の先頭位置を昇順に格納したリストを返す．
 *
 * 利用：【最長共通接頭尾辞】
 */
-template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos) {
+template <class STR>
+vi knuth_morris_pratt(const STR& s, const STR& w) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_B
 
 	int n = sz(s), m = sz(w);
-	pos.clear();
+	vi pos;
 
 	// l[j] : w[0..j) の接頭辞と接尾辞が最大何文字一致しているか（j 文字未満）
-	vi l;
-	morris_pratt(w, l);
+	vi l = morris_pratt(w);
 
 	int i = 0; // s[i..i+m) を走査中
 	int j = 0; // s[i..i+j) = w[0..j) まで確定
@@ -91,6 +94,36 @@ template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos
 		// s[i+j-l[j]..i+j) = w[0..l[j]) までは確定していることになる． 
 		if (j > 0) j = l[j];
 	}
+
+	return pos;
+}
+
+
+//【最長共通部分文字列】O(n + m)
+/*
+* 2 つの文字列 s[0..n), t[0..m) の最長共通部分文字列の長さを返す．
+*/
+template <class STR>
+int longest_common_substring(const STR& s, const STR& t) {
+	// verify : https://atcoder.jp/contests/arc151/tasks/arc151_e
+
+	int n = sz(s), m = sz(t);
+
+	STR st(s);
+	st.push_back('$');
+	repe(c, t) st.push_back(c);
+
+	auto sa = suffix_array(st);
+	auto lcp = lcp_array(st, sa);
+
+	int res = 0;
+	rep(i, n + m) {
+		if ((sa[i] < n) == (sa[i + 1] < n)) continue;
+
+		chmax(res, lcp[i]);
+	}
+
+	return res;
 }
 
 
@@ -111,10 +144,11 @@ template <class STR> void knuth_morris_pratt(const STR& s, const STR& w, vi& pos
 
 //【最長回文長（文字中心）】O(n)
 /*
-* s[0..n) の s[i] を中心とする最長回文の半径（(文字数 + 1) / 2）を r[i] に格納する．
+* s[0..n) の s[i] を中心とする最長回文の半径（(文字数 + 1) / 2）を r[i] に格納し r を返す．
 * ここで回文の半径とは，(文字数 + 1) / 2 を意味する．
 */
-template <class STR> void manacher(const STR& s, vi& r) {
+template <class STR>
+vi manacher(const STR& s) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/02/235837
 
 	//【方法】
@@ -137,7 +171,7 @@ template <class STR> void manacher(const STR& s, vi& r) {
 	// である．よって次の j は j - k にすればよい．
 
 	int n = sz(s);
-	r.resize(n);
+	vi r(n);
 
 	int i = 0, j = 0;
 	while (i < n) {
@@ -152,6 +186,8 @@ template <class STR> void manacher(const STR& s, vi& r) {
 		i += k;
 		j -= k;
 	}
+
+	return r;
 }
 
 
@@ -162,7 +198,8 @@ template <class STR> void manacher(const STR& s, vi& r) {
 *
 * 利用：【最長回文長（文字中心）】
 */
-template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
+template <class STR>
+void manacher(const STR& s, vi& lo, vi& le) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/02/235837
 	// verify : https://judge.yosupo.jp/problem/enumerate_palindromes
 
@@ -194,9 +231,10 @@ template <class STR> void manacher(const STR& s, vi& lo, vi& le) {
 
 //【Z アルゴリズム】O(n)
 /*
-* 文字列 s[0..n) について，s[i..n) と s の最長共通接頭辞の長さを z[i] に格納する．
+* 文字列 s[0..n) について，s[i..n) と s の最長共通接頭辞の長さを z[i] に格納し z を返す．
 */
-template <class STR> void z_algorithm(const STR& s, vi& z) {
+template <class STR>
+vi z_algo(const STR& s) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/03/214243
 	// verify : https://judge.yosupo.jp/problem/zalgorithm
 
@@ -225,7 +263,7 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 	// z[i] :	9 2 1 0 3 4 2 1 0
 	
 	int n = sz(s);
-	z.resize(n);
+	vi z(n);
 	z[0] = n;
 
 	int i = 1, j = 0;
@@ -246,14 +284,17 @@ template <class STR> void z_algorithm(const STR& s, vi& z) {
 		i += k;
 		j -= k;
 	}
+
+	return z;
 }
 
 
 //【Z アルゴリズム（接尾辞）】O(n)
 /*
-* 文字列 s[0..n) について，s[0..i] と s の最長共通接尾辞の長さを z[i] に格納する．
+* 文字列 s[0..n) について，s[0..i] と s の最長共通接尾辞の長さを z[i] にまとめて z を返す．
 */
-template <class STR> vi z_algorithm_suffix(STR s) {
+template <class STR>
+vi z_algorithm_suffix(STR s) {
 	// verify : https://atcoder.jp/contests/arc055/tasks/arc055_c
 
 	reverse(all(s));
@@ -266,9 +307,9 @@ template <class STR> vi z_algorithm_suffix(STR s) {
 //【ワイルドカード付き文字列検索】O((n + m) log(n + m))
 /*
 * 任意文字とマッチする文字 '?' および英小文字からなる文字列 s[0..n), p[0..m) について，
-* s[i..i+m) = p[0..m) となる i を昇順に pos に格納する．
+* s[i..i+m) = p[0..m) となる i を昇順に格納したリストを返す．
 */
-void wildcard_matching(const string& s, const string& p, vi& pos) {
+vi wildcard_matching(const string& s, const string& p) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2021/01/02/000716
 	// verify : https://atcoder.jp/contests/panasonic2020/tasks/panasonic2020_e
 
@@ -295,7 +336,7 @@ void wildcard_matching(const string& s, const string& p, vi& pos) {
 	using vm = vector<mint>;
 
 	int n = sz(s), m = sz(p);
-	pos.clear();
+	vi pos;
 
 	vm sb(n), sab(n), saab(n);
 	rep(i, n) {
@@ -325,6 +366,8 @@ void wildcard_matching(const string& s, const string& p, vi& pos) {
 		mint val = c1[i] - 2 * c2[i] + c3[i];
 		if (val == 0) pos.push_back(i - m + 1);
 	}
+
+	return pos;
 }
 
 

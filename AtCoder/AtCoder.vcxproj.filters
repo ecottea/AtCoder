@@ -161,7 +161,7 @@
     <ClInclude Include="ゲーム.h">
       <Filter>ヘッダー ファイル\ゲーム</Filter>
     </ClInclude>
-    <ClInclude Include="一重和.h">
+    <ClInclude Include="数列の和.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
     <ClInclude Include="列.h">
@@ -538,6 +538,15 @@
     </ClInclude>
     <ClInclude Include="累積演算.h">
       <Filter>ヘッダー ファイル\アルゴリズム</Filter>
+    </ClInclude>
+    <ClInclude Include="積の和典型.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="ヤング図形.h">
+      <Filter>ヘッダー ファイル\組合せ論</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(集合).h">
+      <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

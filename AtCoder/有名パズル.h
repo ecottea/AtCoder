@@ -118,7 +118,7 @@ template <int N> bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1
 //【15 パズル】O(?)
 /*
 * h * w スライドパズルの盤面 a[0..h)[0..w) を解くのにかかる最短手数を返す．
-* 0 以上 h * w - 1 未満の数はパネルを，数 h * w - 1 は空きマスを表す．
+* 0 以上 h*w-1 未満の数はパネルを，数 h*w-1 は空きマスを表す．
 * max_step 手以内に解けない場合は -1 を返す．
 *
 *（A* 探索）
@@ -226,7 +226,7 @@ int solve_15puzzle(const vvi& a_, int max_step = 45) {
 //【こおりのぬけみち】O(n log n)
 /*
 * n 個の岩が (x[i], y[i]) >= 0 に配置された「こおりのぬけみち」について，
-* (sx, sy) から (tx, ty) までの最小移動回数を返す（到達不能なら INF を返す）
+* (sx, sy) から (tx, ty) で停止するまでの最小移動回数を返す（不可能なら INF を返す）
 *
 * 利用：【幅優先探索】
 */
@@ -337,8 +337,6 @@ void find_magic_square(vvi& a) {
 
 	// (i, j): 注目位置
 	function<bool(int, int)> dfs = [&](int x, int y) {
-		//		dump("----",x, y,"----"); dumpel(a); dump(x_sum); dump(x_cnt); dump(y_sum); dump(y_cnt); dump(d_sum, d_cnt, ad_sum, ad_cnt);
-
 		if (x == n) return true;
 
 		if (y == n) return dfs(x + 1, 0);

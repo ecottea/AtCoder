@@ -352,8 +352,7 @@ int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
 
 	if (paths == nullptr) return res;
 
-	vector<pii> es;
-	bm.maximum_matching(es);
+	vector<pii> es = bm.maximum_matching();
 
 	dsu uf(n);
 	repe(e, es) {
