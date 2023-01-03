@@ -15,11 +15,9 @@
 * void sum() : O(n)
 *	実際の加算を行う．
 *
-* T [int i] : O(1)
-*	加算後の位置 i の値を得る．sum() の後に呼び出すこと．
-*
-* vT get_array() : O(n)
-*	加算後の配列を返す．sum() の後に呼び出すこと．
+* T [](int i) : O(1)
+*	加算後の位置 i の値を得る．
+*	制約 : sum() の後に呼び出さなければならない．
 */
 template <class T>
 class Imos {
@@ -55,14 +53,6 @@ public:
 		rep(i, n) v[i + 1] += v[i];
 	}
 
-	// 加算を終えた配列を返す．sum() の後に呼び出すこと．
-	vector<T> get_array() {
-		// verify : https://atcoder.jp/contests/arc045/tasks/arc045_b
-
-		v.resize(n);
-		return v;
-	}
-
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Imos& imos) {
 		rep(i, imos.n) os << imos[i] << " ";
@@ -77,17 +67,18 @@ public:
 /*
 * [0, h) * [0, w) 内の長方形領域に一定の値を加算する．
 *
-* Imos_2D(h, w) : O(h w)
+* Imos_2D(int h, int w) : O(h w)
 *	[0, h) * [0, w) を 0 で初期化する．
 *
-* set(x1, y1, x2, y2, val) : O(1)
+* set(int x1, int y1, int x2, int y2, T val) : O(1)
 *	[x1, x2) * [y1, y2) に val を加算する準備を行う．
 *
 * sum() : O(h w)
 *	実際に加算を行う．
 *
-* v[i][j] : O(1)
+* T [][](int i, int j) : O(1)
 *	加算後の位置 (i, j) の値を得る．
+*	制約 : sum() の後に呼び出さなければならない．
 */
 template <class T>
 struct Imos_2D {
@@ -149,8 +140,9 @@ struct Imos_2D {
 * sum() : O(h w)
 *	実際に加算を行う．
 *
-* T [int i][int j] : O(1)
+* T [][](int i, int j) : O(1)
 *	加算後の位置 (i, j) の値を得る．
+*	制約 : sum() の後に呼び出さなければならない．
 *
 * pii size() : O(1)
 *	(高さ, 幅) を返す．
@@ -244,17 +236,18 @@ struct Imos_2D_tri {
 /*
 * [0, h) * [0, w) * [0, d) 内の直方体領域に一定の値を加算する．
 *
-* Imos_3D(h, w, d) : O(h w d)
+* Imos_3D(int h, int w, int d) : O(h w d)
 *	[0, h) * [0, w) * [0, d) を 0 で初期化する．
 *
-* set(x1, y1, z1, x2, y2, z2, val) : O(1)
+* set(int x1, int y1, int z1, int x2, int y2, int z2, T val) : O(1)
 *	[x1, x2) * [y1, y2) * [z1, z2) に val を加算する準備を行う．
 *
 * sum() : O(h w d)
 *	実際に加算を行う．
 *
-* v[i][j][k] : O(1)
+* T [][][](int i, int j, int k) : O(1)
 *	加算後の位置 (i, j, k) の値を得る．
+*	制約 : sum() の後に呼び出さなければならない．
 */
 template <class T>
 struct Imos_3D {
@@ -342,8 +335,9 @@ struct Imos_3D {
 * void sum() : O(n)
 *	実際の加算を行う．
 *
-* T [int i] : O(1)
+* T [](int i) : O(1)
 *	加算後の位置 i の値を得る．
+*	制約 : sum() の後に呼び出さなければならない．
 */
 template <class T>
 class Linear_imos {
@@ -415,61 +409,6 @@ public:
 
 //【木上のいもす法】
 /*
-* r を根とする根付き木 rt の頂点の先祖や子孫に一定の値を加算する．
-*
-* Imos_tree(rt, r) : O(|V|)
-*	r を根とする根付き木 rt を 0 で初期化する．
-*
-* set_anc(v, val) : O(1)
-*	頂点 v とその先祖に val を加算する準備を行う．
-*
-* set_dsc(v, val) : O(1)
-*	頂点 v とその子孫に val を加算する準備を行う．
-*
-* sum() : O(|V|)
-*	実際の加算を行う．
-*
-* get(v) : O(1)
-*	加算後の頂点 v の値を得る．
+* 木クエリ.h へ
 */
-template <class T>
-struct Imos_tree {
-	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
-
-	Rooted_tree rt;
-	vector<T> v_anc, v_dsc;
-
-	// 根付き木 rt を 0 で初期化する．
-	Imos_tree(const Rooted_tree& rt_) : rt(rt_), v_anc(rt_.n), v_dsc(rt_.n) {}
-
-
-	// 頂点 v とその先祖に val を加算する準備を行う．
-	void set_anc(int v, T val) {
-		v_anc[v] += val;
-	}
-
-	// 頂点 v とその子孫に val を加算する準備を行う．
-	void set_dsc(int v, T val) {
-		v_dsc[v] += val;
-	}
-
-	// 実際の加算を行う．
-	void sum() {
-		sum_sub(rt.r, 0);
-	}
-	// 再帰用の関数
-	T sum_sub(int s, T val) {
-		v_dsc[s] += val;
-		for (auto t : rt.v[s].child) {
-			v_anc[s] += sum_sub(t, v_dsc[s]);
-		}
-		return v_anc[s];
-	};
-
-	// 加算後の頂点 v の値を得る．
-	T get(int v) {
-		return v_dsc[v] + v_anc[v];
-	}
-};
-
 

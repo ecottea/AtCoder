@@ -548,6 +548,9 @@
     <ClInclude Include="数え上げ(集合).h">
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
+    <ClInclude Include="最適化(木).h">
+      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">

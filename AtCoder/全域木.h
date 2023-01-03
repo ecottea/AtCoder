@@ -191,8 +191,7 @@ mint count_spanning_forest(const Graph& g) {
 	if (n <= 1) return 1;
 
 	// g を連結成分分解する．
-	vvi ccs;
-	connected_component(g, ccs);
+	vvi ccs = connected_component(g);
 
 	// mat : g のラプラシアン行列
 	//	mat[s][s] : 頂点 s の次数

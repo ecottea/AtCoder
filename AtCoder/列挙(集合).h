@@ -87,9 +87,9 @@ vvvi set_partitions(int k, int m) {
 
 //【自然数の分割の列挙】O(n の分割数)（n = 50 くらいまで動く）
 /*
-* 自然数 n を k 以下の自然数に分割する方法を ips に格納する．
+* 自然数 n を k 以下の自然数（広義降順）に分割する方法のリストを返す．
 */
-void integer_partitions_val(int n, int k, vvi& ips) {
+vvi integer_partitions_val(int n, int k) {
 	//【具体例】
 	// (n, k) = (6, 3) のとき：
 	//	0: 3 3
@@ -100,7 +100,7 @@ void integer_partitions_val(int n, int k, vvi& ips) {
 	//	5: 2 1 1 1 1
 	//	6: 1 1 1 1 1 1
 
-	ips.clear();
+	vvi ips;
 	map<int, int> ip; // ip[i] : 分割に i を何個用いたか
 
 	// n を k 以下の数で分割する．
@@ -137,16 +137,17 @@ void integer_partitions_val(int n, int k, vvi& ips) {
 		// これ以上 n の分割に k を使わない場合
 		rf(n, k - 1);
 	};
-
 	rf(n, k);
+
+	return ips;
 }
 
 
 //【自然数の分割の列挙】O(n の分割数)（n = 50 くらいまで動く）
 /*
-* 自然数 n を d 個以下の自然数に分割する方法を ips に格納する．
+* 自然数 n を d 個以下の自然数（広義降順）に分割する方法のリストを返す．
 */
-void integer_partitions_len(int n, int d, vvi& ips) {
+vvi integer_partitions_len(int n, int d) {
 	//【具体例】
 	// (n, k) = (6, 3) のとき：
 	//	0 : 6
@@ -157,7 +158,7 @@ void integer_partitions_len(int n, int d, vvi& ips) {
 	//	5 : 3 2 1
 	//	6 : 2 2 2
 
-	ips.clear();
+	vvi ips;
 	map<int, int> ip; // ip[i] : 分割に i を何個用いたか
 	int len = 0;
 
@@ -187,8 +188,9 @@ void integer_partitions_len(int n, int d, vvi& ips) {
 		// これ以上 n の分割に k を使わない場合
 		rf(n, k - 1);
 	};
-
 	rf(n, n);
+
+	return ips;
 }
 
 

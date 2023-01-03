@@ -93,27 +93,16 @@ ll tree_diameter(const WGraph& g, pii& p) {
 
 	int n = sz(g);
 
-	// 適当な頂点を始点にして最遠の点 s を求める．
-	vl dist;
-	dijkstra(g, 0, dist);
+	// 適当な頂点（0 とする）を始点にして最遠の点 s を求める．
+	vl dist = dijkstra(g, 0);
 
-	ll max_dist = -1;
-	int s;
-	rep(i, n) {
-		if (chmax(max_dist, dist[i])) {
-			s = i;
-		}
-	}
+	ll max_dist = -1; int s;
+	rep(i, n) if (chmax(max_dist, dist[i])) s = i;
 
 	// s を始点にして最遠の点 t を求めれば，s と t の距離が木の直径である．
-	max_dist = -1;
-	int t;
-	dijkstra(g, s, dist);
-	rep(i, n) {
-		if (chmax(max_dist, dist[i])) {
-			t = i;
-		}
-	}
+	max_dist = -1; int t;
+	dist = dijkstra(g, s);
+	rep(i, n) if (chmax(max_dist, dist[i])) t = i;
 
 	p = { s, t };
 	return max_dist;
@@ -178,10 +167,12 @@ int tree_centroid(const G& g, int* c2 = nullptr) {
 //【木の重心分解】
 /*
 * Centroid_decomposition<G>(G g) : O(n log n)
-*	木 g に対して，各部分木から重心を取り除く操作を繰り返して得られる木構造を構築する．
+*	木 g に対して，各部分木から重心を取り除く操作を繰り返して得られる根付き木を構築する．
 *	s の子が {t} ⇔ s を取り除いてできた {部分木} の重心が {t}
 *
-* 性質：∀u,v∈V について，LCA(u,v) は u-v パス上に存在する．
+* int lca(int v1, int v2) : O(log n)
+*	頂点 v1, v2 の最小共通祖先 LCA(v1, v2) を返す．
+*	性質：LCA(v1, v2) は元の木の v1-v2 パス上に存在する．
 */
 template <class G>
 struct Centroid_decomposition {
@@ -198,7 +189,7 @@ struct Centroid_decomposition {
 			os << "size:" << v.size << ", ";
 			os << "dep:" << v.dep << ", ";
 			os << "p:" << v.p << ", ";
-			os << "cs:" << v.cs;
+			os << "cs:[" << v.cs << "]";
 			return os;
 		}
 #endif
@@ -209,7 +200,7 @@ struct Centroid_decomposition {
 	vector<Node> v; // 頂点
 
 	// 木 g で初期化する．
-	Centroid_decomposition(const G& g) : n(sz(g)), v(n) {
+	Centroid_decomposition(const G& g) : n(sz(g)), rt(-1), v(n) {
 		// verify : https://codeforces.com/contest/342/problem/E
 
 		// cnt[v] : 部分木 v の大きさ（使いまわす．根はその都度直前に取り除かれた重心に変わる）
@@ -281,6 +272,16 @@ struct Centroid_decomposition {
 	// 大きさ
 	int size() const { return n; }
 
+	// v1 と v2 の最小共通祖先を返す．
+	int lca(int v1, int v2) {
+		// 木の高さが O(log n) なので，ダブリングを用いず愚直に上っていっても高速
+		while (v[v1].dep < v[v2].dep) v2 = v[v2].p;
+		while (v[v1].dep > v[v2].dep) v1 = v[v1].p;
+		while (v1 != v2) { v1 = v[v1].p; v2 = v[v2].p; }
+
+		return v1;
+	}
+
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Centroid_decomposition& cd) {
 		rep(i, sz(cd)) os << i << ": " << cd[i] << endl;
@@ -288,6 +289,86 @@ struct Centroid_decomposition {
 	}
 #endif
 };
+
+
+//【重心からの距離】O(n log n)
+/*
+* 木 g を重心分解して得られた根付き木 cd について，v の深さ i の先祖から v までの
+* g における距離（先祖がいなければ -1）を dist[i][v] に格納して dist を返す．
+*
+* 利用：【木の重心分解】
+*/
+vvi distance_from_centroid(const Graph& g, const Centroid_decomposition<Graph>& cd) {
+	// verify : https://www.spoj.com/problems/QTREE5/
+
+	int n = sz(g);
+
+	int i_max = 0;
+	rep(v, n) chmax(i_max, cd[v].dep);
+
+	vvi dist(i_max + 1, vi(n, -1));
+
+	// cent : 部分木の重心
+	rep(cent, n) {
+		// c_dep : cent の深さ
+		int c_dep = cd[cent].dep;
+
+		function<void(int, int, int)> dfs = [&](int s, int p, int len) {
+			dist[c_dep][s] = len;
+
+			// 再帰処理
+			repe(t, g[s]) {
+				// cent と同じかそれより浅い頂点は無視する．
+				if (cd[t].dep <= c_dep || t == p) continue;
+
+				dfs(t, s, len + 1);
+			}
+		};
+		dfs(cent, -1, 0);
+	}
+
+	return dist;
+}
+
+
+//【重心からの距離（コスト付き木）】O(n log n)
+/*
+* コスト付き木 g を重心分解して得られた根付き木 cd について，v の深さ i の先祖から v までの
+* g における距離（先祖がいなければ -1）を dist[i][v] に格納して dist を返す．
+*
+* 利用：【木の重心分解】
+*/
+vvl distance_from_centroid(const WGraph& g, const Centroid_decomposition<WGraph>& cd) {
+	// verify : https://codeforces.com/gym/100633/problem/D
+
+	int n = sz(g);
+
+	int i_max = 0;
+	rep(v, n) chmax(i_max, cd[v].dep);
+
+	vvl dist(i_max + 1, vl(n, -1));
+
+	// cent : 部分木の重心
+	rep(cent, n) {
+		// c_dep : cent の深さ
+		int c_dep = cd[cent].dep;
+
+		function<void(int, int, ll)> dfs = [&](int s, int p, ll len) {
+			dist[c_dep][s] = len;
+
+			// 再帰処理
+			repe(t, g[s]) {
+				// cent と同じかそれより浅い頂点は無視する．
+				if (cd[t].dep <= c_dep || t == p) continue;
+
+				dfs(t, s, len + t.cost);
+			}
+		};
+		dfs(cent, -1, 0);
+	}
+
+	return dist;
+}
 
 
 //【木上のシュタイナー木】O(n)

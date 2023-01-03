@@ -159,15 +159,15 @@ ll pollard_rho(ll n) {
 
 //y‘fˆö”•ª‰ğzO(n^(1/4))
 /*
-* n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚ÉŠi”[‚·‚éD
+* n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚ÉŠi”[‚µ pps ‚ğ•Ô‚·D
 * pps[p] = d : n ‚É‘fˆö” p ‚ª d ŒÂŠÜ‚Ü‚ê‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 *
 * —˜—pFy‘f””»’èz,y–ñ”ŒŸoz
 */
-void factor_integer(ll n, map<ll, int>& pps) {
+map<ll, int> factor_integer(ll n) {
 	// verify : https://algo-method.com/tasks/553
 
-	pps.clear();
+	map<ll, int> pps;
 	if (n == 1) return;
 
 	// ŒŸo‚µ‚½–ñ”‚ğ‹L˜^‚µ‚Ä‚¨‚­ƒLƒ…[
@@ -190,24 +190,25 @@ void factor_integer(ll n, map<ll, int>& pps) {
 			divs.push(d2);
 		}
 	}
+
+	return pps;
 }
 
 
 //y–ñ”—ñ‹“zO(n^(1/4))
 /*
-* n ‚Ì–ñ”‘S‚Ä‚ğƒŠƒXƒg divs ‚É¸‡‚ÉŠi”[‚·‚éD
+* n ‚Ì–ñ”‘S‚Ä‚ğ¸‡‚ÉŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 *
 * —˜—pFy‘fˆö”•ª‰ğz
 */
-void divisors(ll n, vl& divs) {
+vl divisors(ll n) {
 	// verify : https://atcoder.jp/contests/chokudai_S002/tasks/chokudai_S002_j
 
 	Assert(n > 0);
 
-	map<ll, int> pps;
-	factor_integer(n, pps);
+	map<ll, int> pps = factor_integer(n);
 
-	divs = vl({ 1 });
+	vl divs{ 1 };
 	repe(pp, pps) {
 		ll p; int d;
 		tie(p, d) = pp;
@@ -225,6 +226,8 @@ void divisors(ll n, vl& divs) {
 	}
 
 	sort(all(divs));
+
+	return divs;
 }
 
 
@@ -237,8 +240,7 @@ void divisors(ll n, vl& divs) {
 int count_divisors(ll n) {
 	Assert(n > 0);
 
-	map<ll, int> pps;
-	factor_integer(n, pps);
+	map<ll, int> pps = factor_integer(n);
 
 	int res = 1;
 	repe(pp, pps) res *= pp.second + 1;
@@ -256,8 +258,7 @@ int count_divisors(ll n) {
 ll divisors_sum(ll n) {
 	Assert(n > 0);
 
-	map<ll, int> pps;
-	factor_integer(n, pps);
+	map<ll, int> pps = factor_integer(n);
 
 	ll res = 1;
 	repe(pp, pps) {
@@ -296,8 +297,7 @@ ll find_primitive_root(ll p) {
 	uniform_int_distribution<ll> rnd(1, p - 1);
 
 	// p - 1 ‚Ì–ñ” divs ‚ğ“¾‚éD
-	vl divs;
-	divisors(p - 1, divs);
+	vl divs = divisors(p - 1);
 
 	// p - 1 ©g‚¾‚¯íœ‚·‚éD
 	divs.pop_back();

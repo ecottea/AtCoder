@@ -7,12 +7,12 @@
 
 //【局面のニム値】O(?)（遅いので実験用）
 /*
-* 初期局面 p から遷移可能な局面とそのニム値のリストを nim に格納する．
+* 初期局面 p から遷移可能な局面とそのニム値のリストを返す．
 * nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納するものとする．
 */
 template <class T>
-void calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt, map<T, int>& nim) {
-	nim.clear();
+map<T, int> calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt) {
+	map<T, int> nim;
 
 	function<int(const T&)> calc_nimber = [&](const T& p) {
 		if (nim.count(p)) return nim[p];
@@ -32,8 +32,9 @@ void calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt, map<T, i
 
 		return nim[p];
 	};
-
 	calc_nimber(p);
+
+	return nim;
 
 	/* nxt の定義の雛形
 	using T = vi;
@@ -49,13 +50,13 @@ void calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt, map<T, i
 * Nimber() : O(1)
 *	空で初期化する．
 *
-* insert(v) : O(log n)
+* insert(int v) : O(log n)
 *	ニム値 v をもつ局面を 1 つ追加する．
 *
-* erase(v) : O(log n)
+* erase(int v) : O(log n)
 *	ニム値 v をもつ局面を 1 つ削除する．
 *
-* mex() : O(log n)
+* int mex() : O(log n)
 *	現在記録されている局面のニム値の mex を返す．
 */
 struct Nimber {
@@ -313,7 +314,7 @@ void directed_graph_game(const Graph& g, vi& res) {
 //【木の辺の切断ゲーム】O(n)
 /*
 * r を根とする木 g について，交互に辺を切断して着手不能に陥ったほうが負けのゲームを行う．
-* 部分木 s でゲームを開始した場合のニム値を nimber[s] に格納する．
+* 各 s について部分木 s でゲームを開始した場合のニム値を格納したリストを返す．
 *
 * 利用：【貰う木 DP】
 */
@@ -322,8 +323,8 @@ void merge_gct(int& x, const int& y, int s) { x ^= y; }
 int e_gct() { return 0; }
 int leaf_gct(int s) { return 0; }
 int apply_gct(const int& x, int s, int t) { return x + 1; }
-void tree_cut_game(const Graph& g, int r, vi& nimber) {
-	tree_getDP<int, merge_gct, e_gct, leaf_gct, apply_gct>(g, r, nimber);
+vi tree_cut_game(const Graph& g, int r) {
+	return tree_getDP<int, merge_gct, e_gct, leaf_gct, apply_gct>(g, r);
 }
 
 

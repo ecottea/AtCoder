@@ -401,9 +401,7 @@ struct Rolling_hash_XOR {
 *	現時点での集合 S のハッシュ値を返す．
 */
 template <class X>
-struct Zobrist_hash_set {
-	// verify : https://www.codechef.com/problems/COOK82D
-
+class Zobrist_hash_set {
 	// ハッシュ値
 	ll v;
 
@@ -414,25 +412,32 @@ struct Zobrist_hash_set {
 	mt19937_64 mt;
 	uniform_int_distribution<ll> rnd;
 
+public:
 	// コンストラクタ（空集合で初期化）
 	Zobrist_hash_set() : v(0) {
+		// verify : https://www.codechef.com/problems/COOK82D
+		
 		mt.seed((int)time(NULL));
 		rnd = uniform_int_distribution<ll>(-INFL, INFL);
 	}
 
 	// S に対し要素 x の有無を反転する．
 	void flip(const X& x) {
+		// verify : https://www.codechef.com/problems/COOK82D
+
 		// x が初めて出現した場合はハッシュ値を割り当てる．
-		if (!x_to_hash.count(x)) {
-			x_to_hash[x] = rnd(mt);
-		}
+		if (!x_to_hash.count(x)) x_to_hash[x] = rnd(mt);
 
 		// ハッシュ値の更新
 		v ^= x_to_hash[x];
 	}
 
-	// 現時点での関数 f のハッシュ値を返す．
-	ll get() { return v; }
+	// 現時点での集合 S のハッシュ値を返す．
+	ll get() {
+		// verify : https://www.codechef.com/problems/COOK82D
+		
+		return v;
+	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_set z) {

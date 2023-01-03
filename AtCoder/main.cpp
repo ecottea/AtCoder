@@ -80,23 +80,118 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #endif // 折りたたみ用
 
 
-//--------------AtCoder 専用--------------
-#include <atcoder/all>
-using namespace atcoder;
+////--------------AtCoder 専用--------------
+//#include <atcoder/all>
+//using namespace atcoder;
+//
+////using mint = modint1000000007;
+//using mint = modint998244353;
+////using mint = modint; // mint::set_mod(m);
+//
+//istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+//ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
+//using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
+////----------------------------------------
 
-//using mint = modint1000000007;
-using mint = modint998244353;
-//using mint = modint; // mint::set_mod(m);
 
-istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
-using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
-//----------------------------------------
+//【木の入力】O(n)
+/*
+* 親を並べた入力を受け取り，n 頂点の木を構成して返す．
+*
+* n : グラフの頂点の数
+* undirected : 無向グラフなら true
+* one_indexed : 入力が 1-indexed で与えられるなら true
+*/
+Graph read_tree(int n, bool undirected = true, bool one_indexed = true) {
+	// verify : https://atcoder.jp/contests/arc028/tasks/arc028_3
+
+	Graph g(n);
+	repi(i, 1, n - 1) {
+		int p;
+		cin >> p;
+
+		if (one_indexed) p--;
+
+		g[p].push_back(i);
+		if (undirected) g[i].push_back(p);
+	}
+
+	return g;
+}
+
+
+//【配る木 DP】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする根付き木 g の
+* 根からのパス r→s についての問題の答えを格納したリストを返す．
+*
+* T apply(T x, int s, int t) :
+*   根からのパス r→s についての答えが x のとき，
+*   辺 s→t を追加した根からのパス r→t についての答えを返す．
+*
+* T root(int r) :
+*   根からのパス r→r に対する問題の答えを返す．
+*/
+template <class T, T(*apply)(const T&, int, int), T(*root)(int)>
+vector<T> tree_giveDP(const Graph& g, int r) {
+	int n = sz(g);
+
+	vector<T> dp(n);
+	dp[r] = root(r);
+
+	// s の各子 t について，根からのパス r→t についての答えを計算する．（p : s の親）
+	function<void(int, int)> dfs = [&](int s, int p) {
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// 根からのパス r→t についての答えを計算する．
+			dp[t] = apply(dp[s], s, t);
+
+			// t から先の答えを計算する．
+			dfs(t, s);
+		}
+	};
+	dfs(r, -1);
+
+	return dp;
+
+	/* 雛形
+	using T = int;
+	T apply(const T& x, int s, int t) { return x + 1; }
+	T root(int r) { return 0; }
+	vector<T> solve_by_tree_giveDP(const Graph& g, int r) {
+		return tree_giveDP<T, apply, root>(g, r);
+	}
+	*/
+};
+
+
+//【木の深さ】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の深さを格納したリストを返す．
+* s の深さとは，根から s までの辺の本数のことである．
+*
+* 利用：【配る木 DP】
+*/
+// verify : https://algo-method.com/tasks/529
+using T = int;
+T apply(const T& x, int s, int t) { return x + 1; }
+T root(int r) { return 0; }
+vector<T> solve_by_tree_giveDP(const Graph& g, int r) {
+	return tree_giveDP<T, apply, root>(g, r);
+}
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
+	int n;
+	cin >> n;
+
+	Graph g = read_tree(n, true, false);
 	
+	auto depth = solve_by_tree_giveDP(g, 0);
+
+	rep(i, n) cout << depth[i] << endl;
 }

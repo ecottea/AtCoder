@@ -67,14 +67,14 @@ ll minimize_pair_digit_sum(const vl& num, const vl& b) {
 //【冗長混合基数表示の列挙】O(?)（二進なら val = 400 くらいまで動く）
 /*
 * 最下位を 0 桁目とし，[0..n) 桁目の重みが a[0..n) で与えられる混合基数について，
-* 値 val の i 番目の冗長混合基数表示の j 桁目の数字を ds[i][j] に格納する．
+* 値 val の i 番目の冗長混合基数表示の j 桁目の数字を ds[i][j] に格納し ds を返す．
 * 冗長混合基数表示では，桁の数字に任意の非負整数を認める．
 *
 * 制約：a[0] = 1，a[i] は a[i+1] の真の約数
 */
-void enumerate_redundant_mixed_radix(const vl& a, ll val, vvl& ds) {
+vvl enumerate_redundant_mixed_radix(const vl& a, ll val) {
 	int n = sz(a);
-	vl d(n);
+	vvl ds; vl d(n);
 
 	function<void(int)> rf = [&](int j) {
 		// a[0] = 1 の位に立つ数は残り全部に確定．
@@ -99,8 +99,9 @@ void enumerate_redundant_mixed_radix(const vl& a, ll val, vvl& ds) {
 			val += k * a[j];
 		}
 	};
-
 	rf(n - 1);
+
+	return ds;
 }
 
 

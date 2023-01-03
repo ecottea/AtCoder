@@ -6,15 +6,15 @@
 
 //【グリッド → グラフ】O(h w)
 /*
-* h 行 w 列のグリッドから 4 近傍を連結としたグラフ g を構築する．
+* h 行 w 列のグリッドから 4 近傍を連結としたグラフ g を返す．
 * 壁マスは wall，空きマスはその他とする．
 * i 行目の j 列目にあるマス (i, j) はグラフ頂点 i * w + j に対応する．
 */
 template <class T>
-void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#') {
+Graph grid_to_graph(const vector<vector<T>>& c, T wall = '#') {
 	int h = sz(c), w = sz(c[0]);
 
-	g = Graph(h * w);
+	Graph g(h * w);
 	rep(x, h) rep(y, w) {
 		// 空きマスでなかったら辺は追加しない．
 		if (c[x][y] == wall) continue;
@@ -32,6 +32,8 @@ void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#') {
 			g[x * w + y].push_back(nx * w + ny);
 		}
 	}
+
+	return g;
 }
 
 
@@ -39,110 +41,120 @@ void grid_to_graph(const vector<vector<T>>& c, Graph& g, T wall = '#') {
 /*
 * マス (i, j) と (i + 1, j) の間の壁の有無が wx[0..h-1)[0..w) で，
 * マス (i, j) と (i, j + 1) の間の壁の有無が wy[0..h)[0..w-1) で表されたグリッドにおいて，
-* 4 近傍を連結としたグラフ g を構築する（壁があることは wall で表す）
+* 4 近傍を連結としたグラフ g を返す（壁があることは wall で表す）
 * マス (i, j) はグラフ頂点 i * w + j に対応する．
 */
 template <class T>
-void wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, Graph& g, T wall = '1') {
+Graph wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, T wall = '1') {
 	// verify : https://atcoder.jp/contests/abc168/tasks/abc168_f
 
 	int h = sz(wy), w = sz(wx[0]);
-	g = Graph(h * w);
+	Graph g(h * w);
 
-	rep(x, h) {
-		rep(y, w) {
-			if (x > 0 && wx[x - 1][y] != wall) g[x * w + y].push_back((x - 1) * w + y);
-			if (x < h - 1 && wx[x][y] != wall) g[x * w + y].push_back((x + 1) * w + y);
-			if (y > 0 && wy[x][y - 1] != wall) g[x * w + y].push_back(x * w + (y - 1));
-			if (y < w - 1 && wy[x][y] != wall) g[x * w + y].push_back(x * w + (y + 1));
-		}
+	rep(x, h) rep(y, w) {
+		if (x > 0 && wx[x - 1][y] != wall) g[x * w + y].push_back((x - 1) * w + y);
+		if (x < h - 1 && wx[x][y] != wall) g[x * w + y].push_back((x + 1) * w + y);
+		if (y > 0 && wy[x][y - 1] != wall) g[x * w + y].push_back(x * w + (y - 1));
+		if (y < w - 1 && wy[x][y] != wall) g[x * w + y].push_back(x * w + (y + 1));
 	}
+
+	return g;
 }
 
 
 //【隣接行列 → グラフ】O(|V|^2)
 /*
-* 隣接行列 e[0..n)[0..n) で辺 i→j の存在が e[i][j]=ex で表されるとし，
-* 対応する有向グラフを g に格納する．
+* 隣接行列 e[0..n)[0..n) 辺の有無が表される有向グラフ g を返す．
 */
-template <class T> void construct_graph(const vector<vector<T>>& e, T ex, Graph& g) {
+template <class T>
+Graph construct_graph(const vector<vector<T>>& e, T exist = 1) {
 	int n = sz(e);
-	g = Graph(n);
-	rep(i, n) rep(j, n) if (e[i][j] == ex) g[i].push_back(j);
+	Graph g(n);
+	rep(i, n) rep(j, n) if (e[i][j] == exist) g[i].push_back(j);
+
+	return g;
 }
+
+
+//【始点[終点] の任意化】
+/*
+* 始点を任意にしたい場合，超頂点 ST から各頂点へ重み 0 の辺を張り，ST を始点とすればよい．
+* verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_graph
+*
+* 終点を任意にしたい場合，超頂点 GL へ各頂点へ重み 0 の辺を張り，GL を終点とすればよい．
+*/
 
 
 //【逆グラフ】O(|V| + |E|)
 /*
-* 有向グラフ g の辺の向きを逆にしたグラフを g_rev に格納する．
+* 有向グラフ g の辺の向きを逆にしたグラフを返す．
 */
-void reverse_graph(const Graph& g, Graph& g_rev) {
+Graph reverse_graph(const Graph& g) {
 	// verify : https://atcoder.jp/contests/nikkei2019-qual/tasks/nikkei2019_qual_d
 
 	int n = sz(g);
-	g_rev = Graph(n);
+	Graph g_rev(n);
 
-	rep(s, n) {
-		repe(t, g[s]) {
-			g_rev[t].push_back(s);
-		}
-	}
+	rep(s, n) repe(t, g[s]) g_rev[t].push_back(s);
+
+	return g_rev;
 }
 
 
 //【逆グラフ（コスト付き）】O(|V| + |E|)
 /*
-* コスト付き有向グラフ g の辺の向きを逆にしたグラフを g_rev に格納する．
+* コスト付き有向グラフ g の辺の向きを逆にしたグラフを返す．
 */
-void reverse_graph(const WGraph& g, WGraph& g_rev) {
+WGraph reverse_graph(const WGraph& g) {
 	int n = sz(g);
-	g_rev = WGraph(n);
+	WGraph g_rev(n);
 
-	rep(s, n) {
-		repe(e, g[s]) {
-			g_rev[e.to].push_back({ s, e.cost });
-		}
-	}
+	rep(s, n) repe(e, g[s]) g_rev[e.to].emplace_back(s, e.cost);
+
+	return g_rev;
 }
 
 
 //【補グラフ】O(|V|^2)
 /*
-* 無向グラフ g の補グラフ（単純，自己ループなし）を cg に格納する
+* 無向グラフ g の補グラフ（単純，自己ループなし）を返す．
 */
-void complement_graph(const Graph& g, Graph& cg) {
+Graph complement_graph(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc187/tasks/abc187_f
 
 	int n = sz(g);
-	cg = Graph(n);
+	Graph cg(n);
 
 	rep(s, n) {
-		vb e(n, true);
-		e[s] = false;
+		vb e(n, true); // 多重辺はなし（辺の有無だけを考える）
+		e[s] = false; // 自己ループはなし
 
 		repe(t, g[s]) e[t] = false;
 
-		rep(t, n) {
-			if (e[t]) cg[s].push_back(t);
-		}
+		rep(t, n) if (e[t]) cg[s].push_back(t);
 	}
+
+	return cg;
 }
 
 
 //【誘導部分グラフ】O(|V| + |E|)
 /*
-* グラフ g について，頂点集合を vs とする誘導部分グラフを g2 に格納する．
+* グラフ g について，頂点集合を vs とする誘導部分グラフを返す．
 */
-template <class G> void induced_subgraph(const G& g, const vi& vs, G& g2) {
+template <class G>
+G induced_subgraph(const G& g, const vi& vs) {
 	// verify : https://atcoder.jp/contests/abc253/tasks/abc253_h
 
 	int n = sz(g), n2 = sz(vs);
 
+	// id[v] : g の頂点が誘導部分グラフの何番目の頂点に対応するか（無ければ -1）
 	vi id(n, -1);
 	rep(i, n2) id[vs[i]] = i;
 
-	g2 = G(n2);
+	G g2(n2);
 
+	// 選ばれていない頂点は無視しながら g2 に誘導部分グラフを構築する．
 	rep(s, n) {
 		if (id[s] == -1) continue;
 
@@ -152,62 +164,31 @@ template <class G> void induced_subgraph(const G& g, const vi& vs, G& g2) {
 			g2[id[s]].push_back(id[t]);
 		}
 	}
+
+	return g2;
 }
 
 
-//【頂点の除去】O(|V| + |E|)
+//【頂点の除去】
 /*
-* グラフ g から頂点の集合 v_el とそれに接続する辺を除去したグラフを g2 に格納し，頂点数を返す．
-* また g2 の頂点 i が g のどの頂点と対応するかを prv[i] に格納する．
+* グラフ g から頂点の集合 V' とそれに接続する辺を除去したグラフは，
+* V\V' による g の誘導部分グラフに等しい．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/problems/2347
 */
-int eliminate_vertex(const Graph& g, const vi& v_el, Graph& g2, vi* prv = nullptr) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2347
-
-	int n = sz(g);
-	if (prv != nullptr) prv->clear();
-
-	// ids[v] : g の頂点 v が g2 の何番目の頂点になるか（消去されるなら -1）
-	vi ids(n); int id = 0;
-	repe(v, v_el) ids[v] = -1;
-
-	rep(v, n) {
-		if (ids[v] == -1) continue;
-
-		ids[v] = id++;
-		if (prv != nullptr) prv->emplace_back(v);
-	}
-
-	if (id == 0) {
-		g2.clear();
-		return 0;
-	}
-
-	g2 = Graph(id);
-
-	rep(s, n) {
-		if (ids[s] == -1) continue;
-
-		repe(t, g[s]) {
-			if (ids[t] == -1) continue;
-
-			g2[ids[s]].emplace_back(ids[t]);
-		}
-	}
-
-	return id;
-}
 
 
 //【辺の除去】O(|V| + |E|)
 /*
-* グラフ g から辺の集合 e_el を除去したグラフを g2 に格納する．
-* 辺 e∈es は始点 s と終点 t の順序対 (s, t) で表す．
+* 有向グラフ g から辺の集合 e_el を除去した有向グラフを返す．
+* 辺 e∈e_el は始点 s と終点 t の順序対 (s, t) で表す．
 */
-template <class G> void eliminate_edge(const G& g, const vector<pii>& e_el, G& g2) {
+template <class G>
+G eliminate_edge(const G& g, const vector<pii>& e_el) {
 	// verify : https://atcoder.jp/contests/agc032/tasks/agc032_c
 
 	int n = sz(g);
-	g2 = G(n);
+	G g2(n);
 
 	vector<unordered_set<int>> el(n);
 	repe(e, e_el) {
@@ -217,24 +198,22 @@ template <class G> void eliminate_edge(const G& g, const vector<pii>& e_el, G& g
 		el[s].insert(t);
 	}
 
-	rep(s, n) {
-		repe(t, g[s]) {
-			if (el[s].count(t)) continue;
+	rep(s, n) repe(t, g[s]) {
+		if (el[s].count(t)) continue;
 
-			g2[s].push_back(t);
-		}
+		g2[s].push_back(t);
 	}
+
+	return g2;
 }
 
 
 //【頂点の縮約】O(|V| + |E|)
 /*
-* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを gc に格納する．
-* 自己ループや多重辺が生じた場合は除去され，gc は単純グラフとなる．
-*
-* 特に強連結成分についての縮約を行えば DAG が得られる．
+* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
+* 自己ループや多重辺が生じた場合は除去され，結果は単純グラフとなる．
 */
-void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
+Graph vertex_contraction(const Graph& g, const vvi& p) {
 	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_3
 
 	int n = sz(g), m = sz(p);
@@ -250,9 +229,11 @@ void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
 		gc_set[id[s]].erase(id[s]);
 	}
 
-	// 結果の格納
-	gc = Graph(m);
+	// 結果の構築
+	Graph gc(m);
 	rep(s, m) repe(t, gc_set[s]) gc[s].push_back(t);
+
+	return gc;
 }
 
 
@@ -274,11 +255,11 @@ void vertex_contraction(const Graph& g, const vvi& p, Graph& gc) {
 
 //【辺の縮約】O(|V| + |E|)
 /*
-* グラフ g とその辺の集合 es について，es に含まれる辺を全て縮約したグラフを gc に格納する．
+* グラフ g とその辺の集合 es について，es に含まれる辺を全て縮約したグラフ gc を返す．
 * また gc の頂点 i に対応する g の頂点の集合を vs[i] に格納する．
 * 自己ループや多重辺が生じた場合は除去され，gc は単純グラフとなる．
 */
-void edge_contraction(const Graph& g, const vector<pii>& es, Graph& gc, vvi* vs = nullptr) {
+Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr) {
 	// verify : https://atcoder.jp/contests/tenka1-2015-quala/tasks/tenka1_2015_qualA_d
 
 	int n = sz(g);
@@ -302,8 +283,10 @@ void edge_contraction(const Graph& g, const vector<pii>& es, Graph& gc, vvi* vs 
 	}
 
 	// 結果の格納
-	gc = Graph(m);
+	Graph gc(m);
 	rep(s, m) repe(t, gc_set[s]) gc[s].push_back(t);
+
+	return gc;
 }
 
 

@@ -5,11 +5,11 @@
 
 //【1 の連続しないビット列の列挙】O(fibonacci(n) n) = O(1.6^n n)
 /*
-* 長さ n のビット列のうち 1 が連続しないもの全てを seqs に格納する．
+* 長さ n のビット列のうち 1 が連続しないもの全てを格納したリストを返す．
 */
-void enumerate_noncontinuous_bitsequences(int n, vl& seqs) {
+vl enumerate_noncontinuous_bitsequences(int n) {
 	ll b = 0;
-	seqs.clear();
+	vl seqs;
 
 	// len : 残り長さ, d : 直前の桁の数
 	function<void(int, int)> rf = [&](int len, int d) {
@@ -33,8 +33,9 @@ void enumerate_noncontinuous_bitsequences(int n, vl& seqs) {
 
 		return;
 	};
-
 	rf(n, 0);
+
+	return seqs;
 }
 
 

@@ -145,19 +145,12 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 			set2_max = set2;
 		}
 	}
+
 	// 最大独立集合の構成
 	if (vs != nullptr) {
 		vs->clear();
-		rep(i, n1) {
-			if (set1_max & (1 << i)) {
-				vs->push_back(i);
-			}
-		}
-		rep(i, n2) {
-			if (set2_max & (1 << i)) {
-				vs->push_back(n1 + i);
-			}
-		}
+		rep(i, n1) if (set1_max & (1 << i)) vs->push_back(i);
+		rep(i, n2) if (set2_max & (1 << i)) vs->push_back(n1 + i);
 	}
 
 	return pc_max;
@@ -177,8 +170,7 @@ int maximum_clique(const Graph& g, vi* vs = nullptr) {
 	//【方法】
 	// 最大クリーク問題は，補グラフについての最大独立集合問題と等価である．
 
-	Graph gc;
-	complement_graph(g, gc);
+	Graph gc = complement_graph(g);
 
 	return maximum_independent_set(gc, vs);
 }
@@ -262,8 +254,7 @@ int minimum_clique_cover(const Graph& g) {
 	//【方法】
 	// 最小クリーク被覆の大きさは，補グラフについての彩色数に等しい．
 
-	Graph gc;
-	complement_graph(g, gc);
+	Graph gc = complement_graph(g);
 
 	return chromatic_number(gc);
 }
@@ -282,10 +273,8 @@ ll traveling_salesman_problem(const WGraph& g) {
 
 	// dp[i][set] : 頂点 i から set を通り頂点 n - 1 までのハミルトンパスの最小コスト
 	//	i !∈ set だが，n - 1 ∈ set なので注意．
-	vvl dp(n, vl(1LL << n, INFL));
-	vvb seen(n, vb(1LL << n));
-	dp[n - 1][0] = 0;
-	seen[n - 1][0] = true;
+	vvl dp(n, vl(1LL << n, INFL)); vvb seen(n, vb(1LL << n));
+	dp[n - 1][0] = 0; seen[n - 1][0] = true;
 
 	// メモ化再帰用の関数の定義
 	function<ll(int, int)> rf = [&](int s, int set) {
@@ -376,8 +365,7 @@ ll chinese_postman_problem(const WGraph& g) {
 	int n = sz(g);
 
 	// 全頂点対の最短経路長を求めておく．
-	vvl cost;
-	warshall_floyd(g, cost);
+	vvl cost = warshall_floyd(g);
 
 	// 次数が奇数の頂点を求める．
 	vi vodd;

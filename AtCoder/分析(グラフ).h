@@ -7,14 +7,13 @@
 
 //【連結成分分解】O(|V| + |E|)
 /*
-* 無向グラフ g を連結成分分解し，結果を ccs に格納する．
-* ccs[i] は i 番目の連結成分の頂点からなるリストである．
+* 無向グラフ g を連結成分分解し，連結成分のリストを返す．
 */
-void connected_component(const Graph& g, vvi& ccs) {
+vvi connected_component(const Graph& g) {
 	// verify : https://atcoder.jp/contests/arc032/tasks/arc032_2
 
 	int n = sz(g);
-	ccs.clear();
+	vvi ccs;
 
 	vb seen(n);
 
@@ -38,17 +37,19 @@ void connected_component(const Graph& g, vvi& ccs) {
 		ccs.push_back(vi());
 		dfs(s, -1);
 	}
+
+	return ccs;
 }
 
 
 //【トポロジカルソート】O(|V| + |E|)
 /*
-* DAG g をトポロジカルソートした結果の i 番目の頂点を seq[i] に格納する．
-* g が DAG でない場合は false を返す．
+* DAG g をトポロジカルソートした結果の i 番目の頂点を seq[i] に格納し seq を返す．
+* g が DAG でない場合は空リストを返す．
 *
 *（葉からの幅優先探索）
 */
-bool topological_sort(const Graph& g, vi& seq) {
+vi topological_sort(const Graph& g) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_4_B
 
 	int n = sz(g);
@@ -69,7 +70,7 @@ bool topological_sort(const Graph& g, vi& seq) {
 		}
 	}
 
-	seq.clear();
+	vi seq;
 	while (!q.empty()) {
 		auto s = q.front(); q.pop();
 
@@ -87,20 +88,20 @@ bool topological_sort(const Graph& g, vi& seq) {
 		}
 	}
 
-	return sz(seq) == n;
+	return sz(seq) == n ? seq : vi();
 }
 
 
 //【強連結成分分解】O(|V| + |E|)
 /*
-* 有向グラフ g を強連結成分分解し，トポロジカルソートされた結果を ccs に返す．
-* ccs[i] は i 番目の強連結成分の頂点からなるリストである．
+* 有向グラフ g を強連結成分分解し，強連結成分をトポロジカルソート順に格納したリストを返す．
 */
-void strongly_connected_component(const Graph& g, vvi& ccs) {
+vvi strongly_connected_component(const Graph& g) {
 	// 参考 : https://hkawabata.github.io/technical-note/note/Algorithm/graph/scc.html
 	// verify : https://judge.yosupo.jp/problem/scc
 
 	int n = sz(g);
+	vvi ccs;
 
 	// 辺の向きを逆にしたグラフを作成
 	Graph g_rev(n);
@@ -161,6 +162,8 @@ void strongly_connected_component(const Graph& g, vvi& ccs) {
 			trace_rev(v);
 		}
 	}
+
+	return ccs;
 }
 
 
@@ -248,7 +251,8 @@ bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
 * 無向グラフ g に単純閉路があれば頂点を順に vs に，辺を順に es に格納し，その長さを返す（無ければ -1）
 * vs[0] から出て vs[1] に入る辺を es[0] とする．
 */
-template <class E> int cycle_detection(const vector<vector<E>>& g, vi& vs, vector<E>* es = nullptr) {
+template <class E>
+int cycle_detection(const vector<vector<E>>& g, vi& vs, vector<E>* es = nullptr) {
 	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
 
 	int n = sz(g);
@@ -330,7 +334,8 @@ template <class E> int cycle_detection(const vector<vector<E>>& g, vi& vs, vecto
 *
 * 利用：【強連結成分分解】
 */
-template <class G> void directed_cycle_detection(const G& g, vi& cycle) {
+template <class G>
+void directed_cycle_detection(const G& g, vi& cycle) {
 	// verify : https://judge.yosupo.jp/problem/cycle_detection
 
 	int n = sz(g);
@@ -460,7 +465,8 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 * i 番目の連結成分 cc[i] が二部グラフかどうかを b[i] に格納する．
 * 二部グラフの部分についてはその彩色例を col に格納する（色は 0, 1 で表す）
 */
-template <class G> void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
+template <class G>
+void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 	// veriy : https://atcoder.jp/contests/arc099/tasks/arc099_c
 
 	int n = sz(g);
@@ -598,12 +604,12 @@ void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* 
 
 //【二辺連結成分分解】O(|V| + |E|)
 /*
-* 無向グラフ g を二辺連結成分分解し，i 番目の二辺連結成分の頂点集合を ccs[i] に格納する．
-*	二辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
+* 無向グラフ g を二辺連結成分分解し，二辺連結成分の頂点集合のリストを返す．
+* 二辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
 *
 * 利用：【グラフの関節点と橋】,【連結成分分解】
 */
-void two_edge_connected_component(const Graph& g, vvi& ccs) {
+vvi two_edge_connected_component(const Graph& g) {
 	// verify : https://judge.yosupo.jp/problem/two_edge_connected_components
 
 	//【方法】
@@ -630,7 +636,7 @@ void two_edge_connected_component(const Graph& g, vvi& ccs) {
 		}
 	}
 
-	connected_component(g2, ccs);
+	return connected_component(g2);
 }
 
 

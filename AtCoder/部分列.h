@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "座標圧縮.h"
+#include "複数図形.h"
 // ■■■■■ 部分列 ■■■■■
 
 
@@ -186,6 +187,40 @@ int longest_increasing_subsequence(const vector<T>& a, vi* lis = nullptr) {
 	}
 
 	return len;
+}
+
+
+//【最長増加部分列（二次元）】O(n (log n)^2)
+/*
+* 数列 a[0..n), b[0..n) について，添字の増加列 t_0 < ... < t_(k-1) で，
+*		∀i∈[0..k-1), a[t_i] < a[t_(i+1)] かつ b[t_i] < b[t_(i+1)]
+* を満たすものの長さ k の最大値を返す．
+*
+* 利用：【狭義単調な点列】，【めぐる式二分探索】
+*/
+template <class T>
+int longest_increasing_subsequence_2D(const vector<T>& a, const vector<T>& b) {
+	// 参考 : https://topcoder-g-hatena-ne-jp.jag-icpc.org/skyaozora/20141216.html
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/1341
+
+	int n = sz(a);
+
+	// ps[j] : その要素を末尾にもつ長さ j の増加部分列が存在するような点（ps[0] は使わない）
+	vector<Monotonous_points<T>> ps(1);
+
+	rep(i, n) {
+		// j : (a[i], b[i]) を末尾に持つ増加部分列の最大長
+		function<bool(int)> okQ = [&](int j) { return ps[j].find_LL(a[i], b[i]); };
+		int j = meguru_search(0, sz(ps), okQ) + 1;
+
+		// 点 (a[i], b[i]) を挿入する．
+		if (j >= sz(ps)) ps.push_back(Monotonous_points<T>(false));
+		if (!ps[j].find_LL(a[i], b[i], false)) ps[j].insert(a[i], b[i]);
+
+		dump(i); dump(ps);
+	}
+
+	return sz(ps) - 1;
 }
 
 
@@ -416,7 +451,8 @@ ll levenshtein_distance(const vector<T>& s, const vector<T>& t,
 *
 *（貪欲法）
 */
-template <class STR> bool subsequenceQ(const STR& s, const STR& t) {
+template <class STR>
+bool subsequenceQ(const STR& s, const STR& t) {
 	// verify : https://yukicoder.me/problems/no/1909
 
 	int n = sz(s), m = sz(t);
@@ -435,7 +471,8 @@ template <class STR> bool subsequenceQ(const STR& s, const STR& t) {
 /*
 * 数列 a[0..n) の左から順に貪欲に選んだ増加部分列の長さを返す．
 */
-template <class T> int greedy_increasing_subsequence(const vector<T>& a) {
+template <class T>
+int greedy_increasing_subsequence(const vector<T>& a) {
 	int n = sz(a);
 
 	T v = numeric_limits<T>::lowest();

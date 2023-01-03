@@ -3,6 +3,41 @@
 // ■■■■■ 累積演算 ■■■■■
 
 
+//【累積和】
+/*
+* Cumulative_sum<T>(vT a) : O(n)
+*	配列 a[0..n) で初期化する．
+*
+* T sum(int l, int r) : O(1)
+*	Σa[l..r) を返す．（空なら 0 を返す．範囲外の値は 0 とみなす）
+*/
+template <class T>
+struct Cumulative_sum {
+	int n;
+
+	// acc[i] : Σa[0..i)
+	vector<T> acc;
+
+	// 配列 a[0..n) で初期化する．
+	Cumulative_sum(const vector<T>& a) : n(sz(a)), acc(n + 1) {
+		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_h
+
+		rep(i, n) acc[i + 1] = acc[i] + a[i];
+	}
+	Cumulative_sum() : n(0) {} // ダミー
+
+	// Σa[l..r) を返す．（空なら 0 を返す．範囲外の値は 0 とみなす）
+	T sum(int l, int r) {
+		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_h
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		return acc[r] - acc[l];
+	}
+};
+
+
 //【二次元累積和（長方形）】
 /*
 * Cumulative_sum_2D<T>(vvT a) : O(h w)

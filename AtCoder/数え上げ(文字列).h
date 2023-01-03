@@ -28,7 +28,8 @@ ll count_substring(const string& s) {
 *
 * —˜—pFyÅ’·‰ñ•¶’·z
 */
-template <class STR> ll count_palindromes(const STR& s) {
+template <class STR>
+ll count_palindromes(const STR& s) {
 	int n = sz(s);
 
 	vi lo, le;

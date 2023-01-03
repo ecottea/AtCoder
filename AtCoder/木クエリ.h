@@ -141,7 +141,66 @@ struct Lowest_common_ancestor {
 };
 
 
-//【辺加算／根からのパス総和クエリ】
+//【頂点加算（根からのパス，部分木）／一括総和】
+/*
+* Imos_tree(Tree rt) : O(n)
+*	根付き木 rt を 0 で初期化する．
+*
+* add_anc(int v, T val) : O(1)
+*	頂点 v とその先祖（根から v へのパス）に val を加算する準備を行う．
+*
+* add_dsc(int v, T val) : O(1)
+*	頂点 v とその子孫（部分木 v）に val を加算する準備を行う．
+*
+* sum() : O(n)
+*	実際の加算を行う．
+*
+* T get(int v) : O(1)
+*	加算後の頂点 v の値を得る．
+*	制約 : sum() の後に呼び出さなければならない．
+*
+*（いもす法）
+*/
+template <class T>
+struct Imos_tree {
+	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
+
+	Rooted_tree rt;
+	vector<T> v_anc, v_dsc;
+
+	// 根付き木 rt を 0 で初期化する．
+	Imos_tree(const Rooted_tree& rt_) : rt(rt_), v_anc(rt_.n), v_dsc(rt_.n) {}
+
+	// 頂点 v とその先祖に val を加算する準備を行う．
+	void add_anc(int v, T val) {
+		v_anc[v] += val;
+	}
+
+	// 頂点 v とその子孫に val を加算する準備を行う．
+	void add_dsc(int v, T val) {
+		v_dsc[v] += val;
+	}
+
+	// 再帰用の関数
+	T sum_sub(int s, T val) {
+		v_dsc[s] += val;
+		repe(t, rt.v[s].child) v_anc[s] += sum_sub(t, v_dsc[s]);
+		return v_anc[s];
+	};
+
+	// 実際の加算を行う．
+	void sum() {
+		sum_sub(rt.r, 0);
+	}
+
+	// 加算後の頂点 v の値を得る．
+	T get(int v) {
+		return v_dsc[v] + v_anc[v];
+	}
+};
+
+
+//【一辺加算／根からのパス総和クエリ】
 /*
 * Path_sum_query(rt) : O(n)
 *	根付き木 rt と辺の重みの初期値 0 で初期化する．
@@ -246,7 +305,118 @@ void heavy_light_decomposition(TREE& rt, vi& in, vi& out, vi& pos, vi& top) {
 }
 
 
-//【辺加算／総和クエリ】
+//【頂点加算（パス，部分木）／一括総和】
+/*
+* Imos_tree_arbitrary_path<T>(Tree rt) : O(n)
+*	根付き木 rt と初期値 0 で初期化する．
+*
+* add(int v, T val) : O(1)
+*	頂点 v に val を加算する準備を行う．
+*
+* add_subtree(int v, T val) : O(1)
+*	頂点 v の部分木の頂点に val を加算する準備を行う．
+*
+* add(int v1, int v2, T val) : O(log n)
+*	頂点 v1 から v2 までの頂点（両端含む）に val を加算する準備を行う．
+*
+* sum() : O(n)
+*	実際の加算を行う．
+*
+* T [](int v) : O(1)
+*	加算後の頂点 v の値を得る．
+*	制約 : sum() の後に呼び出さなければならない．
+*
+*（いもす法）
+*
+* 利用：【根付き木の HL 分解】
+*/
+template <class T>
+struct Imos_tree_arbitrary_path {
+	// 根付き木
+	Rooted_tree rt;
+	int n;
+
+	// HL 分解の結果の記録用
+	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
+	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
+	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
+	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
+	vi in, out, pos, top;
+
+	// imos[i] : in[v] = i であるような頂点の値
+	vector<T> imos;
+
+	// コンストラクタ（根付き木で初期化）
+	Imos_tree_arbitrary_path(Rooted_tree& rt) : rt(rt), n(rt.n), imos(n + 1) {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		// rt を HL 分解する．
+		heavy_light_decomposition(rt, in, out, pos, top);
+	}
+
+	// 頂点 v に val を加算する準備を行う．
+	void add(int v, ll val) {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		imos[in[v]] += val;
+		imos[in[v] + 1] -= val;
+	}
+
+	// 頂点 v の部分木の頂点に val を加算する準備を行う．
+	void add_subtree(int v, ll val) {
+		imos[in[v]] += val;
+		imos[out[v]] -= val;
+	}
+
+	// 頂点 v1 から v2 までの頂点（両端含む）に val を加算する準備を行う．
+	void add(int v1, int v2, ll val) {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		// v1 と v2 が異なる連結成分に属している限りループを回す．
+		while (top[v1] != top[v2]) {
+			// v1 の方が浅い連結成分に属しているとする．
+			if (in[top[v1]] > in[top[v2]]) swap(v1, v2);
+
+			// v2 を含む連結成分は pos で並んで配置されているので，
+			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
+			imos[in[top[v2]]] += val;
+			imos[in[v2] + 1] -= val;
+
+			// 一つ浅い連結成分に移動する．
+			v2 = rt[top[v2]].parent;
+		}
+
+		// ここまできたら v1 と v2 は同じ連結成分に属するので，
+		// その間の頂点のみに対して val を加算する．
+		if (in[v1] > in[v2]) swap(v1, v2);
+		imos[in[v1]] += val;
+		imos[in[v2] + 1] -= val;
+	}
+
+	// 実際の加算を行う．
+	void sum() {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		rep(i, n) imos[i + 1] += imos[i];
+	}
+
+	// 頂点 v の値を返す．
+	ll get(int v) {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		return imos[in[v]];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Imos_tree_arbitrary_path& q) {
+		os << q.imos;
+		return os;
+	}
+#endif
+};
+
+
+//【辺加算（パス，部分木）／総和（パス，部分木）クエリ】
 /*
 * Tree_edge_add_sum_query<WRtree>(WRtree rt) : O(n)
 *	コスト付き根付き木 rt で初期化する．
@@ -393,7 +563,7 @@ struct Tree_edge_add_sum_query {
 };
 
 
-//【頂点加算／総和クエリ】
+//【頂点加算（パス，部分木）／総和（パス，部分木）クエリ】
 /*
 * Tree_vertex_add_sum_query(rt) : O(n)
 *	根付き木 rt と初期値 0 で初期化する．
@@ -541,8 +711,7 @@ struct Tree_vertex_add_sum_query {
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Tree_vertex_add_sum_query& q) {
-		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
-			<< q.top << endl << q.rasq << endl;
+		os << q.rasq;
 		return os;
 	}
 #endif

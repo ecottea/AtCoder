@@ -145,14 +145,8 @@ void greater_interval(const vector<T>& a, vi& l, vi& r, bool greater = true) {
 
 	function<void(int, int, int)> rf = [&](int s, int pl, int pr) {
 		l[s] = pl; r[s] = pr;
-
-		if (ct[s].left != -1) {
-			rf(ct[s].left, pl, s);
-		}
-
-		if (ct[s].right != -1) {
-			rf(ct[s].right, s + 1, pr);
-		}
+		if (ct[s].left != -1) rf(ct[s].left, pl, s);
+		if (ct[s].right != -1) rf(ct[s].right, s + 1, pr);
 	};
 
 	rf(ct.root, 0, n);

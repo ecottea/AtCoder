@@ -97,18 +97,18 @@ string smallest_subsequence(const string& s, int m) {
 //【最小部分列（長さごと）】O(n)
 /*
 * 数列 a[0..n) の長さ m の部分列のうち，辞書順で最小であるものを S(m) とおく．
-* 各 j∈[0..n) について，S(j+1) に含まれるが S(j) に含まれない文字の位置を pos[j] に格納する．
+* 各 j∈[0..n) について，S(j+1) に含まれるが S(j) に含まれない文字の位置を格納したリストを返す．
 *
 * 利用：【デカルト木】
 */
-void smallest_subsequence(const vi& a, vi& pos) {
+vi smallest_subsequence(const vi& a) {
 	// verify : https://atcoder.jp/contests/abc262/tasks/abc262_f
 
 	//【方法】
 	// 最小要素を根とするデカルト木を構築し，行きがけ順かつ右の子優先でなぞれば良い．
 
 	int n = sz(a);
-	pos.clear();
+	vi pos;
 
 	Cartesian_tree<int> ct(a);
 
@@ -118,6 +118,8 @@ void smallest_subsequence(const vi& a, vi& pos) {
 		if (ct[s].lc != -1) dfs(ct[s].lc);
 	};
 	dfs(ct.rt);
+
+	return pos;
 }
 
 

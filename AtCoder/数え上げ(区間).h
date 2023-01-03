@@ -9,7 +9,8 @@
 /*
 * ”—ñ a[0..n) ‚Ì‹ó‚Å‚È‚¢˜A‘±•”•ª—ñ‚Å˜a‚ª 0 ‚Å‚ ‚é‚à‚Ì‚ÌŒÂ”‚ğ•Ô‚·D
 */
-template <class T> ll count_zero_intervals(const vector<T>& a) {
+template <class T>
+ll count_zero_intervals(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc023/tasks/agc023_a
 
 	//y•û–@z
@@ -84,7 +85,8 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 *
 * —˜—pFy©g‚æ‚è¬‚³‚¢”‚ÌŸ‚ÌˆÊ’uz,y©g‚æ‚è¬‚³‚¢”‚Ì‘O‚ÌˆÊ’uz
 */
-template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
+template <class T>
+void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
 
 	int n = sz(a);
@@ -112,7 +114,8 @@ template <class T> void count_min_intervals(const vector<T>& a, unordered_map<T,
 *
 * —˜—pFyƒfƒJƒ‹ƒg–Øz
 */
-template <class T> void count_min_intervals_dt(const vector<T>& a, unordered_map<T, ll>& cnt) {
+template <class T>
+void count_min_intervals_dt(const vector<T>& a, unordered_map<T, ll>& cnt) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
 	
 	//y•û–@z

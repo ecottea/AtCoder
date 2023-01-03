@@ -9,7 +9,8 @@
 *		max_(i < j) (a[j] - a[i])
 * ‚Ü‚½Å‘å’l‚ğ—^‚¦‚é (i, j) ‚ğ ids ‚ÉŠi”[‚·‚éD
 */
-template <class T> T maximize_pair_diff(const vector<T>& a, pii* ids = nullptr) {
+template <class T>
+T maximize_pair_diff(const vector<T>& a, pii* ids = nullptr) {
 	//y•û–@z
 	// —İÏ min ‚ğ‚à‚¿‚È‚ª‚ç¶‚©‚çüŒ`‘–¸‚·‚ê‚Î‚¢‚¢D
 

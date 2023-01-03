@@ -7,7 +7,7 @@
 
 //【部分和問題（数え上げ）】O(n v)
 /*
-* 非負整数列 a[0..n) の部分和として i∈[0..v] を作る方法が何通りあるかを cnt[i] に格納し cnt を返す．
+* 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 *
 *（和を状態にもつ状態 DP）
 */
@@ -22,17 +22,15 @@ vector<T> count_partial_sum(const vi& a, int v) {
 	dp[0][0] = 1; // 空和が 0 であることに対応
 
 	// 貰う DP
-	rep(i, n) {
-		repi(j, 0, v) {
-			// i 番目の数を選ばない場合
-			dp[i + 1][j] = dp[i][j];
+	rep(i, n) repi(j, 0, v) {
+		// i 番目の数を選ばない場合
+		dp[i + 1][j] = dp[i][j];
 
-			// i 番目の数が j より大きいと選べない．
-			if (j < a[i]) continue;
+		// i 番目の数が j より大きいと選べない．
+		if (j < a[i]) continue;
 
-			// i 番目の数を選ぶ場合を加算する．
-			dp[i + 1][j] += dp[i][j - a[i]];
-		}
+		// i 番目の数を選ぶ場合を加算する．
+		dp[i + 1][j] += dp[i][j - a[i]];
 	}
 
 	return dp[n];
@@ -41,8 +39,7 @@ vector<T> count_partial_sum(const vi& a, int v) {
 
 //【部分和問題（数え上げ，mod998244353）】O(n + v log v)
 /*
-* 各 j=[0..v] について，正整数の列 a[0..n) の部分和として j を作る方法が
-* 何通りあるかを cnt[j] に格納し cnt を返す．
+* 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 *
 * 利用：【形式的冪級数（mod 998244353）】,【指数関数】,【階乗など（法が大きな素数）】
 */
@@ -52,20 +49,21 @@ vm count_partial_sum_fps(const vi& a, int v) {
 
 	//【方法】
 	// 母関数は
-	//		f(x) = Πi=[0..n) (1 + x^a[i])
+	//		f(z) = Πi=[0..n) (1 + z^a[i])
 	// であるが，これは
-	//		f(x) = exp(Σi=[0..n) log(1 + x^a[i]))
+	//		f(z) = exp(Σi=[0..n) log(1 + z^a[i]))
 	// と書き直せる．対数関数のマクローリン展開の式より
-	//		log(1 + x^a[i]) = Σk=[1..∞) (-1)^(k-1) 1/k x^(k * a[i])
+	//		log(1 + z^a[i]) = Σk=[1..∞) (-1)^(k-1) 1/k z^(k * a[i])
 	// であり，これはスパースなので高速に和が計算できる．
 
 	Factorial_mint fm(2 * (v + 1));
 
-	unordered_map<int, int> c;
-	repe(x, a) c[x]++;
+	// cnt[v] : a[0..n) の中に v が何個含まれるか
+	unordered_map<int, int> cnt;
+	repe(x, a) cnt[x]++;
 
 	MFPS f(0, v + 1);
-	repe(p, c) {
+	repe(p, cnt) {
 		for (int k = 1; k * p.first <= v; k++) {
 			f[k * p.first] += p.second * (k & 1 ? 1 : -1) * fm.inv(k);
 		}

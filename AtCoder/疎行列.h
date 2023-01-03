@@ -23,7 +23,8 @@
 * A * v : O(K)
 *	疎行列 A と列ベクトル v の積を返す．
 */
-template <class T> struct SMatrix {
+template <class T>
+struct SMatrix {
 	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_g
 
 	int n; // 行列のサイズ（n 行）

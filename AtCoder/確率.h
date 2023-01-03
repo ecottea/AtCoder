@@ -7,34 +7,29 @@
 //【コインの表の枚数の確率】O(n^2)
 /*
 * 表が出る確率がそれぞれ p[0..n) のコインをすべて投げたとき，
-* 表が j 枚出る確率を head[j] に格納する．
+* 表が j 枚出る確率を res[j] に格納し res を返す．
 * 
 *（確率 DP）
 */
-void coin_probability(const vd& p, vd& head) {
+vd coin_probability(const vd& p) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_i
 
 	int n = sz(p);
-	head.resize(n + 1);
-
+	
 	// dp[i][j] : コイン [0..i) のうち表が j 枚出る確率
 	vvd dp(n + 1, vd(n + 1));
 	dp[0][0] = 1;
 
 	// 配る DP
-	rep(i, n) {
-		repi(j, 0, i) {
-			// 表が出た場合
-			dp[i + 1][j + 1] += p[i] * dp[i][j];
+	rep(i, n) repi(j, 0, i) {
+		// 表が出た場合
+		dp[i + 1][j + 1] += p[i] * dp[i][j];
 
-			// 裏が出た場合
-			dp[i + 1][j] += (1 - p[i]) * dp[i][j];
-		}
+		// 裏が出た場合
+		dp[i + 1][j] += (1 - p[i]) * dp[i][j];
 	}
 	
-	repi(j, 0, n) {
-		head[j] = dp[n][j];
-	}
+	return dp[n];
 }
 
 
@@ -49,8 +44,7 @@ void coin_probability(const vd& p, vd& head) {
 void tournament_probability(const vd& r, vd& win, function<double(double, double)>& f) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tournament
 
-	int n = sz(r);
-	int k = msb(n);
+	int n = sz(r), k = msb(n);
 	win = vd(n);
 
 	// dp[d][i] : i 番目の人が d 回戦で勝つ確率
@@ -116,20 +110,16 @@ double dice_product_probability(int n, ll d) {
 		// 計算結果を入れておくための一時配列
 		vvvd dp_(m2 + 1, vvd(m3 + 1, vd(m5 + 1)));
 
-		repi(i2, 0, m2) {
-			repi(i3, 0, m3) {
-				repi(i5, 0, m5) {
-					// 各サイコロの目 j について
-					rep(j, 6) {
-						// 素因数 2, 3, 5 の個数がいくつになるか
-						int n2 = min(i2 + d2[j], m2);
-						int n3 = min(i3 + d3[j], m3);
-						int n5 = min(i5 + d5[j], m5);
+		repi(i2, 0, m2) repi(i3, 0, m3) repi(i5, 0, m5) {
+			// 各サイコロの目 j について
+			rep(j, 6) {
+				// 素因数 2, 3, 5 の個数がいくつになるか
+				int n2 = min(i2 + d2[j], m2);
+				int n3 = min(i3 + d3[j], m3);
+				int n5 = min(i5 + d5[j], m5);
 
-						// 確率 1 / 6 でそのように遷移する．
-						dp_[n2][n3][n5] += dp[i2][i3][i5] / 6.;
-					}
-				}
+				// 確率 1 / 6 でそのように遷移する．
+				dp_[n2][n3][n5] += dp[i2][i3][i5] / 6.;
 			}
 		}
 
@@ -186,4 +176,21 @@ double multi_secretary_problem(int n, int k) {
 	return dp[0][0][0];
 }
 
+
+//【根付き木上の順列がヒープ条件を満たす確率】
+/*
+* n 頂点の根付き木の頂点に対して一様ランダムに [0..n) の順列を割り当てるとき，
+* 割り当てがヒープ的（親が子より大）である確率は，
+*		Πv∈V 1/size(v)
+* である．ここで size(v) は v を根とする部分木の頂点の数である．
+* 
+* また割り当てがヒープ的かつ [0..i) の割り当てが済んでいるという条件の下で，
+* 要素 i が頂点 v に割り当てられる条件付き確率は，
+*		size(v) / (n-i)	(v の親への割り当てが済んでいる場合)
+*		0				(v の親への割り当てが済んでいない場合)
+* となる．よってヒープ的な割り当てを一様ランダムに選ぶことを要素について逐次的に言い換え，
+* 空いている部分木の頂点数に比例する確率で [0..n) を順に根に割り当てていくとしてもよい．
+* 
+* verify : https://atcoder.jp/contests/agc060/tasks/agc060_c
+*/
 

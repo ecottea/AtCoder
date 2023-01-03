@@ -6,6 +6,32 @@
 // ■■■■■ フローの双対問題 ■■■■■
 
 
+//【最短路問題の LP 定式化】
+/*
+* グラフ G = (V, E) について，
+*	c[s][t] : 辺 s→t のコスト
+*	f[s][t] : 辺 s→t を通るか
+* とおくと，S から T までの最短路問題は，f[s][t] を変数とする
+*	minimize	Σs→t c[s][t] f[s][t]
+*	subject to	Σv→t f[v][t] - Σs→v f[s][v] = 0 （∀v ∈ V\{S, T}）
+*				ΣS→t f[S][t] - Σs→S f[s][S] = 1
+*				ΣT→t f[T][t] - Σs→T f[s][T] = -1
+*				0 <= f[s][t] （∀s→t ∈ E）
+* なる線形計画問題として定式化できる．
+* 
+* これは，最小費用流問題において辺の容量を全て ∞ とし，流量を 1 としたものに等価である．
+*/
+
+
+//【最短路問題の双対問題】
+/*
+*【最短路問題の LP 定式化】の双対をとると，p[v] を変数とする
+*	maximize	-p[S] + p[T]
+*	subject to	p[t] - p[s] <= c[s][t] （∀s→t ∈ E）
+* なる線形計画問題（いわゆる牛ゲー）になる．
+*/
+
+
 //【牛ゲー】
 /*
 * Ushige(int n) : O(n)
@@ -17,38 +43,43 @@
 * set_lb(int a, int b, ll d) : O(1)
 *	v[b] - v[a] >= d という制約を追加する．
 *
-* bool maximize_diff(int a, vl& diff) : O(n m)（m : 制約の数）
-*	v[b] - v[a] の最大値（無いなら INFL）を diff[b] に格納する．
-*	制約を満たすことが不可能なら false を返す．
+* vl maximize_diff(int a) : O(n m)（m : 制約の数）
+*	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
+*	制約を満たすことが不可能なら空リストを返す．
+* 
+* 利用：【コスト付きグラフ】
 */
 struct Ushige {
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/0304
-
 	int n;
 	WGraph g;
 
-	Ushige(int n_) : n(n_), g(n_) {}
+	Ushige(int n_) : n(n_), g(n_) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/0304
+	}
 
 	void set_ub(int a, int b, ll d) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/0304
+
 		// 差の上限に対応する重みを持つ辺を張る．
 		g[a].push_back({ b, d });
 	}
 
 	void set_lb(int a, int b, ll d) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/0304
+
 		// 差の下限に対応する重みを持つ辺を張る．
 		g[b].push_back({ a, -d });
 	}
 
-	bool maximize_diff(int a, vl& diff) {
-		// a を始点とする最短経路問題を解く．
+	vl maximize_diff(int a) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/0304
+
+		// a を始点とする最短経路問題をベルマンフォード法で解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
 		// ただし負の閉路を持っていた場合は制約を満たせない．
-		return bellman_ford(g, a, diff);
-	}
-
-	bool bellman_ford(const WGraph& g, int st, vl& cost) {
-		cost = vl(n, INFL); // スタートからの最小コストを保持するテーブル
-		cost[st] = 0;
+		
+		vl cost(n, INFL); // スタートからの最小コストを保持するテーブル
+		cost[a] = 0;
 
 		rep(i, n) {
 			bool updated = false;
@@ -66,12 +97,12 @@ struct Ushige {
 			}
 
 			// もしコストの更新が起こらなければ最小コスト確定
-			if (!updated) return true;
+			if (!updated) return cost;
 		}
 
 		// もし全ての辺についての操作を |V| 回繰り返してもコストの更新があったなら，
 		// どこかに負の閉路を持っているので false を返す．
-		return false;
+		return vl();
 	}
 
 #ifdef _MSC_VER
@@ -95,8 +126,8 @@ struct Ushige {
 * set_ub(a, b, d) : O(1)
 *	v[b] - v[a] <= d という制約を追加する．（d >= 0）
 *
-* maximize_diff(a, diff) : O(n + m log n)（m : 制約の数）
-*	v[b] - v[a] の最大値（無いなら INFL）を diff[b] に格納する．
+* vl maximize_diff(a) : O(n + m log n)（m : 制約の数）
+*	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
 *
 * 利用：【単一始点最短路／ダイクストラ法】
 */
@@ -114,10 +145,10 @@ struct Ushige_ub_only {
 		g[a].push_back({ b, d });
 	}
 
-	void maximize_diff(int a, vl& diff) {
+	vl maximize_diff(int a) {
 		// a を始点とする最短経路問題を解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
-		dijkstra(g, a, diff);
+		return dijkstra(g, a);
 	}
 
 #ifdef _MSC_VER
@@ -141,31 +172,35 @@ struct Ushige_ub_only {
 * set_ub(a, b, d) : O(1)
 *	v[b] - v[a] <= d という制約を追加する．（d ∈ {0, 1}）
 *
-* maximize_diff(a, diff) : O(n + m)（m : 制約の数）
-*	v[b] - v[a] の最大値（無いなら INFL）を diff[b] に格納する．
+* vi maximize_diff(a) : O(n + m)（m : 制約の数）
+*	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
 *
 * 利用：【01-BFS】
 */
 struct Ushige_ub01_only {
-	// verify : https://atcoder.jp/contests/agc056/tasks/agc056_c
-
 	int n;
 	WGraph g;
 
+	Ushige_ub01_only(int n_) : n(n_), g(n_) {
+		// verify : https://atcoder.jp/contests/agc056/tasks/agc056_c
+	}
 	Ushige_ub01_only() : n(0) {}
-	Ushige_ub01_only(int n_) : n(n_), g(n_) {}
 
 	void set_ub(int a, int b, int d) {
+		// verify : https://atcoder.jp/contests/agc056/tasks/agc056_c
+
 		Assert(d == 0 || d == 1);
 
 		// 差の上限に対応する重みを持つ辺を張る．
 		g[a].push_back({ b, d });
 	}
 
-	void maximize_diff(int a, vi& diff) {
+	vi maximize_diff(int a) {
+		// verify : https://atcoder.jp/contests/agc056/tasks/agc056_c
+
 		// a を始点とする最短経路問題を解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
-		binary_BFS(g, a, diff);
+		return binary_BFS(g, a);
 	}
 
 #ifdef _MSC_VER
@@ -189,34 +224,34 @@ struct Ushige_ub01_only {
 * set_lb1(int a, int b) : O(1)
 *	v[b] - v[a] >= 1 という制約を追加する．
 *
-* bool minimize_range(vi& val) : O(n + m)（m : 制約の数）
-*	min(v) = 0 で max(v) を最小とする v[i] の一例を val[i] に格納する．
-*	制約を満たすことが不可能なら false を返す．
+* vi minimize_range() : O(n + m)（m : 制約の数）
+*	min(v) = 0 で max(v) を最小とする v[i] の一例を返す（無ければ空リスト）
 *
 * 利用：【トポロジカルソート】,【最長パス】
 */
 struct Ushige_lb1_only {
-	// verify : https://codeforces.com/contest/1635/problem/E
-
 	int n;
 	Graph g; // 辺の重みが -1 のグラフ
 
-	Ushige_lb1_only(int n_) : n(n_), g(n_) {}
+	Ushige_lb1_only(int n_) : n(n_), g(n_) {
+		// verify : https://codeforces.com/contest/1635/problem/E
+	}
 
 	void set_lb1(int a, int b) {
+		// verify : https://codeforces.com/contest/1635/problem/E
+
 		// 差の下限に対応する重みを持つ辺を張る．
 		g[b].push_back(a);
 	}
 
-	bool minimize_range(vi& val) {
-		// 負閉路がどこかにあれば制約充足不可能
-		vi seq;
-		bool top_res = topological_sort(g, seq);
-		if (!top_res) return false;
+	vi minimize_range() {
+		// verify : https://codeforces.com/contest/1635/problem/E
 
-		// DAG が保証されたので最長パスを求める．
-		longest_path(g, val);
-		return true;
+		// 負閉路がどこかにあれば制約充足不可能
+		if (topological_sort(g).empty()) return vi();
+
+		// DAG が保証されたので各頂点からの最長パス長を求める．
+		return longest_path(g);
 	}
 
 #ifdef _MSC_VER
@@ -243,8 +278,8 @@ struct Ushige_lb1_only {
 * set_lb(int a, int b, ll d) : O(1)
 *	v[b] - v[a] >= d という制約を追加する．
 *
-* void maximize_diff(int a, vl& diff) : O(n + m)（m : 制約の数）
-*	v[b] - v[a] の最大値（無いなら INFL）を diff[b] に格納する．
+* vl maximize_diff(int a) : O(n + m)（m : 制約の数）
+*	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
 *	制約：v[s] <= ... <= v[s] のような制約の循環は存在しない
 *
 * 利用：【コスト最小パス】
@@ -265,10 +300,10 @@ struct Ushige_DAG {
 		g_rev[a].push_back({ b, -d });
 	}
 
-	void maximize_diff(int a, vl& diff) {
+	vl maximize_diff(int a) {
 		// a を始点とする最短経路問題を解く代わりに，a を終点とする逆グラフの最短経路問題を解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
-		lowest_cost_path(g_rev, a, diff);
+		return lowest_cost_path(g_rev, a);
 	}
 
 #ifdef _MSC_VER
@@ -282,6 +317,118 @@ struct Ushige_DAG {
 	}
 #endif
 };
+
+
+//【最大流問題の LP 定式化】
+/*
+* グラフ G = (V, E) について，
+*	u[s][t] : 辺 s→t の容量
+*	f[s][t] : 辺 s→t のフロー
+* とおくと，最大流問題は，F, f[s][t] を変数とする
+*	maximize	F
+*	subject to	Σv→t f[v][t] - Σs→v f[s][v] = 0 （∀v ∈ V\{S, T}）
+*				ΣS→t f[S][t] - Σs→S f[s][S] = F
+*				ΣT→t f[T][t] - Σs→T f[s][T] = -F
+*				0 <= f[s][t] <= u[s][t] （∀s→t ∈ E）
+* なる線形計画問題として定式化できる．
+*/
+
+
+//【最大流問題の双対問題】
+/*
+*【最大流問題の LP 定式化】の双対をとると，y[s][t], p[v] を変数とする
+*	minimize	Σs→t u[s][t] y[s][t]
+*	subject to	y[s][t] + p[t] - p[s] >= 0 （∀s→t ∈ E）
+*				p[S] - p[T] >= 1
+*				y[s][t] >= 0 （∀s→t ∈ E）
+* なる線形計画問題になる．
+* 
+* 結局 p[v] には {0, 1} を割り当てるのが最善となり，最小カット問題と等価である．
+*/
+
+
+//【最小費用流問題の LP 定式化】
+/*
+* グラフ G = (V, E) について，
+*	c[s][t] : 辺 s→t のコスト
+*	u[s][t] : 辺 s→t の容量
+*	F : 始点 S から終点 T までの流量
+*	f[s][t] : 辺 s→t のフロー
+* とおくと，最小費用流問題は，f[s][t] を変数とする
+*	minimize	Σs→t c[s][t] f[s][t]
+*	subject to	Σv→t f[v][t] - Σs→v f[s][v] = 0 （∀v ∈ V\{S, T}）
+*				ΣS→t f[S][t] - Σs→S f[s][S] = F
+*				ΣT→t f[T][t] - Σs→T f[s][T] = -F
+*				0 <= f[s][t] <= u[s][t] （∀s→t ∈ E）
+* なる線形計画問題として定式化できる．
+*/
+
+
+//【最小費用流問題の双対問題】
+/*
+*【最小費用流問題の LP 定式化】の双対をとると，y[s][t], p[v] を変数とする
+*	maximize	-Σs→t u[s][t] y[s][t] - F p[S] + F p[T]
+*	subject to	-y[s][t] + p[t] - p[s] <= c[s][t] （∀s→t ∈ E）
+*				y[s][t] >= 0 （∀s→t ∈ E）
+* なる線形計画問題になる．
+*/
+
+
+//【一般化最小費用流問題の LP 定式化】
+/*
+* グラフ G = (V, E) について，
+*	c[e] : 辺 e のコスト
+*	u[e] : 辺 e の容量
+*	d[v] : 頂点 v からの湧き出し（負なら吸い込み，総和 0）
+*	out[v] : 頂点 v から出る辺の集合
+*	in[v] : 頂点 v に入ってくる辺の集合
+*	f[e] : 辺 e のフロー
+* とおくと，一般化最小費用流問題は，f[e] を変数とする
+*	minimize	Σe c[e] f[e]
+*	subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = g[v] （∀v ∈ V）
+*				0 <= f[e] <= u[e] （∀e ∈ E）
+* なる線形計画問題として定式化できる．
+*/
+
+
+//【一般化最小費用流問題の双対問題】
+/*
+*【一般化最小費用流問題の LP 定式化】の双対をとると，y[e], p[v] を変数とする
+*	maximize	-Σe u[e] y[e] - Σv d[v] p[v]
+*	subject to	-y[e] + p[t] - p[s] <= c[e] （∀e = s→t ∈ E）
+*				y[e] >= 0 （∀e ∈ E）
+* なる線形計画問題になる．
+*/
+
+
+//【一般化最小費用流問題の LP 定式化（最小流量付き）】
+/*
+* グラフ G = (V, E) について，
+*	c[e] : 辺 e のコスト
+*	l[e] : 辺 e の最小流量
+*	u[e] : 辺 e の最大流量（容量）
+*	d[v] : 頂点 v からの湧き出し（負なら吸い込み，総和 0）
+*	out[v] : 頂点 v から出る辺の集合
+*	in[v] : 頂点 v に入ってくる辺の集合
+*	f[e] : 辺 e のフロー
+* とおくと，一般化最小費用流問題は，f[e] を変数とする
+*	minimize	Σe c[e] f[e]
+*	subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = g[v] （∀v ∈ V）
+*				l[e] <= f[e] <= u[e] （∀e ∈ E）
+* なる線形計画問題として定式化できる．
+*/
+
+
+//【一般化最小費用流問題の双対問題（最小流量付き）】
+/*
+*【一般化最小費用流問題の LP 定式化（最小流量付き）】の双対をとると，
+* x[e], y[e], p[v] を変数とする
+*	maximize	Σe l[e] x[e] - Σe u[e] y[e] - Σv d[v] p[v]
+*	subject to	x[e] - y[e] + p[t] - p[s] <= c[e] （∀e = s→t ∈ E）
+*				x[e] >= 0 （∀e ∈ E）
+*				y[e] >= 0 （∀e ∈ E）
+* なる線形計画問題になる．
+*/
 
 
 //【一般化最小費用流問題の双対問題】
@@ -447,89 +594,5 @@ public:
 	}
 #endif
 };
-
-
-//【最小費用流問題の LP 定式化】
-/*
-* グラフ G = (V, E) について，
-*	c[s][t] : 辺 s→t のコスト
-*	u[s][t] : 辺 s→t の容量
-*	F : 始点 S から終点 T までの流量
-*	f[s][t] : 辺 s→t のフロー
-* とおくと，最小費用流問題は，f[s][t] を変数とする
-*	minimize	Σs→t c[s][t] f[s][t]
-*	subject to	Σv→t f[v][t] - Σs→v f[s][v] = 0 （∀v ∈ V\{S, T}）
-*				ΣS→t f[S][t] - Σs→S f[s][S] = F
-*				ΣT→t f[T][t] - Σs→T f[s][T] = -F
-*				0 <= f[s][t] <= u[s][t] （∀s→t ∈ E）
-* なる線形計画問題として定式化できる．
-*/
-
-
-//【最小費用流問題の双対問題】
-/*
-*【最小費用流問題の LP 定式化】の双対をとると，y[s][t], p[v] を変数とする
-*	maximize	-Σs→t u[s][t] y[s][t] - F p[S] + F p[T]
-*	subject to	-y[s][t] + p[t] - p[s] <= c[s][t] （∀s→t ∈ E）
-*				y[s][t] >= 0 （∀s→t ∈ E）
-* なる線形計画問題になる．
-*/
-
-
-//【一般化最小費用流問題の LP 定式化】
-/*
-* グラフ G = (V, E) について，
-*	c[e] : 辺 e のコスト
-*	u[e] : 辺 e の容量
-*	d[v] : 頂点 v からの湧き出し（負なら吸い込み，総和 0）
-*	out[v] : 頂点 v から出る辺の集合
-*	in[v] : 頂点 v に入ってくる辺の集合
-*	f[e] : 辺 e のフロー
-* とおくと，一般化最小費用流問題は，f[e] を変数とする
-*	minimize	Σe c[e] f[e]
-*	subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = g[v] （∀v ∈ V）
-*				0 <= f[e] <= u[e] （∀e ∈ E）
-* なる線形計画問題として定式化できる．
-*/
-
-
-//【一般化最小費用流問題の双対問題】
-/*
-*【一般化最小費用流問題の LP 定式化】の双対をとると，y[e], p[v] を変数とする
-*	maximize	-Σe u[e] y[e] - Σv d[v] p[v]
-*	subject to	-y[e] + p[t] - p[s] <= c[e] （∀e = s→t ∈ E）
-*				y[e] >= 0 （∀e ∈ E）
-* なる線形計画問題になる．
-*/
-
-
-//【一般化最小費用流問題の LP 定式化（最小流量付き）】
-/*
-* グラフ G = (V, E) について，
-*	c[e] : 辺 e のコスト
-*	l[e] : 辺 e の最小流量
-*	u[e] : 辺 e の最大流量（容量）
-*	d[v] : 頂点 v からの湧き出し（負なら吸い込み，総和 0）
-*	out[v] : 頂点 v から出る辺の集合
-*	in[v] : 頂点 v に入ってくる辺の集合
-*	f[e] : 辺 e のフロー
-* とおくと，一般化最小費用流問題は，f[e] を変数とする
-*	minimize	Σe c[e] f[e]
-*	subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = g[v] （∀v ∈ V）
-*				l[e] <= f[e] <= u[e] （∀e ∈ E）
-* なる線形計画問題として定式化できる．
-*/
-
-
-//【一般化最小費用流問題の双対問題（最小流量付き）】
-/*
-*【一般化最小費用流問題の LP 定式化（最小流量付き）】の双対をとると，
-* x[e], y[e], p[v] を変数とする
-*	maximize	Σe l[e] x[e] - Σe u[e] y[e] - Σv d[v] p[v]
-*	subject to	x[e] - y[e] + p[t] - p[s] <= c[e] （∀e = s→t ∈ E）
-*				x[e] >= 0 （∀e ∈ E）
-*				y[e] >= 0 （∀e ∈ E）
-* なる線形計画問題になる．
-*/
 
 

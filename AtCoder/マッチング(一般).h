@@ -72,7 +72,7 @@ ll minimum_cost_matching(const vvl& adj) {
 */
 
 
-//【異色頂点間を結ぶ完全マッチングの数え上げ】O(n (log n)^2)
+//【異色頂点間を結ぶ完全マッチングの数え上げ（mod 998244353）】O(n (log n)^2)
 /*
 * 頂点の色が c[0..n) で与えられる完全グラフ K_n について，
 * どのマッチングも異色頂点間を結ぶような完全マッチングの個数を返す．
@@ -81,7 +81,8 @@ ll minimum_cost_matching(const vvl& adj) {
 * 
 *（個数ごとの状態系包除原理）
 */
-template <class T> mint count_different_color_matching(const vector<T>& c) {
+template <class T>
+mint count_different_color_matching(const vector<T>& c) {
 	// verify : https://atcoder.jp/contests/abl/tasks/abl_f
 
 	//【方法】
@@ -173,13 +174,13 @@ template <class T> mint count_different_color_matching(const vector<T>& c) {
 
 //【完全グラフの完全マッチングの列挙】O((2n-1)!! n)
 /*
-* 頂点 [0..2n) をもつ完全グラフの完全マッチングを mcs に列挙する．
+* 頂点 [0..2n) をもつ完全グラフの完全マッチング全てのリストを返す．
 * 完全マッチングは n 個の頂点対のリストとして表す．
 */
-void enumerate_perfect_matching(int n, vector<vector<pii>>& mcs) {
+vector<vector<pii>> enumerate_perfect_matching(int n) {
 	// verify : https://atcoder.jp/contests/abc236/tasks/abc236_d
 
-	mcs.clear();
+	vector<vector<pii>> mcs;
 
 	// a[i] : 頂点 i が何番目のマッチングに属しているか（未使用なら -1）
 	vi a(2 * n, -1);
@@ -231,21 +232,22 @@ void enumerate_perfect_matching(int n, vector<vector<pii>>& mcs) {
 
 		return;
 	};
-
 	rf(0);
+
+	return mcs;
 }
 
 
 //【大きさ k のマッチングの列挙】O(√perm(|V|, 2k) k)
 /*
-* 無向グラフ g の大きさ k のマッチングを mcs に列挙する．
+* 無向グラフ g の大きさ k のマッチング全てのリストを返す．
 * マッチングは n 個の頂点対のリストとして表す．
 */
-void enumerate_matching(const Graph& g, int k, vector<vector<pii>>& mcs) {
+vector<vector<pii>> enumerate_matching(const Graph& g, int k) {
 	// verify : https://atcoder.jp/contests/arc095/tasks/arc095_c
 
 	int n = sz(g);
-	mcs.clear();
+	vector<vector<pii>> mcs;
 
 	// used[v] : 頂点 v をマッチングに使用しているか
 	int used = 0;
@@ -296,8 +298,9 @@ void enumerate_matching(const Graph& g, int k, vector<vector<pii>>& mcs) {
 
 		return;
 	};
-
 	rf(0);
+
+	return mcs;
 }
 
 

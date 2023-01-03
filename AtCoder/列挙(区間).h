@@ -5,12 +5,15 @@
 
 //y‹æŠÔ•ªŠ„‚Ì˜a‚Ì—ñ‹“zO(2^n n)
 /*
-* a[0..n) ‚ğ‹æŠÔ•ªŠ„‚µ‚½‚Æ‚«‚ÌCŠe‹æŠÔ‚Ì a ‚Ì˜a‚ğ•À‚×‚½—ñ‚ğ seqs ‚ÉŠi”[‚·‚éD
+* a[0..n) ‚ğ‹æŠÔ•ªŠ„‚µ‚½‚Æ‚«‚ÌCŠe‹æŠÔ‚Ì a ‚Ì˜a‚ğ•À‚×‚½—ñ‚ÌƒŠƒXƒg‚ğ•Ô‚·D
 */
-template <class T> void enumerate_interval_partitions(const vector<T>& a, vector<vector<T>>& seqs) {
+template <class T>
+vector<vector<T>> enumerate_interval_partitions(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/abc197/tasks/abc197_c
 	
 	int n = sz(a);
+
+	vector<vector<T>> seqs;
 
 	repb(sep, n - 1) {
 		vector<T> b; T acc = a[0];
@@ -27,6 +30,8 @@ template <class T> void enumerate_interval_partitions(const vector<T>& a, vector
 
 		seqs.push_back(b);
 	}
+
+	return seqs;
 }
 
 

@@ -127,9 +127,10 @@ stringstream ss{ str };
 string s;
 while (getline(ss, s, ' ')) {}
 
-// 集合の共通部分，和集合を得る
+// 集合の共通部分，和集合，差集合を得る
 set_intersection(all(a), all(b), inserter(res, res.end()));
 set_union(all(a), all(b), inserter(res, res.end()));
+set_difference(all(a), all(b), inserter(res, res.end()));
 
 // x に [l..r] 上の一様乱数を代入する
 mt19937_64 mt((int)time(NULL));

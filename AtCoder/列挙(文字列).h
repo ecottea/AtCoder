@@ -5,10 +5,10 @@
 
 //y”CˆÓ•¶š—ñ‚Ì—ñ‹“zO(n |cs|^n)
 /*
-* •¶šW‡ cs ‚Ì—v‘f‚©‚ç‚È‚é’·‚³ n ‚Ì•¶š—ñ‘S‚Ä‚ğ strs ‚ÉŠi”[‚·‚éD
+* •¶šW‡ cs ‚Ì—v‘f‚©‚ç‚È‚é’·‚³ n ‚Ì•¶š—ñ‘S‚Ä‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 */
-void enumerate_all_strings(int n, const vc& cs, vector<string>& strs) {
-	strs.clear();
+vector<string> enumerate_all_strings(int n, const vc& cs) {
+	vector<string> strs;
 	string s;
 
 	// l : ’·‚³
@@ -26,20 +26,21 @@ void enumerate_all_strings(int n, const vc& cs, vector<string>& strs) {
 			s.pop_back();
 		}
 	};
-
 	rf(0);
+
+	return strs;
 }
 
 
 //yŠ‡ŒÊ—ñ‚Ì—ñ‹“zO(Catalan(n) n)in = 15 ‚­‚ç‚¢‚Ü‚Å OKj
 /*
-* ’·‚³ 2 n ‚ÌŠ‡ŒÊ—ñ‘S‚Ä‚ğ«‘‡‚É seqs ‚ÉŠi”[‚·‚éD
+* ’·‚³ 2n ‚ÌŠ‡ŒÊ—ñ‘S‚Ä‚ğ«‘‡‚ÉŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 */
-void enumerate_parenthesis_sequences(int n, vector<string>& seqs) {
+vector<string> enumerate_parenthesis_sequences(int n) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_b
 
 	string s = "";
-	seqs.clear();
+	vector<string> seqs;
 
 	// l, r : ¶‰E‚ÌŠ‡ŒÊ‚ğ‚ ‚Æ‚¢‚­‚Âg‚¦‚é‚©
 	function<void(int, int)> rf = [&](int l, int r) {
@@ -66,19 +67,20 @@ void enumerate_parenthesis_sequences(int n, vector<string>& seqs) {
 
 		return;
 	};
-
 	rf(n, n);
+
+	return seqs;
 }
 
 
 //yŠ‡ŒÊ•¶š—ñ‚Ì—ñ‹“zO(2^n)
 /*
 * '(', ')', '?' ‚©‚ç‚È‚é•¶š—ñ s[0..n) ‚Ì '?' ‚ğ‚¢‚¸‚ê‚©‚ÌŠ‡ŒÊ‚É’u‚«Š·‚¦‚Ä
-* “¾‚ç‚ê‚éŠ‡ŒÊ•¶š—ñ‘S‚Ä‚ğ strs ‚ÉŠi”[‚·‚éD
+* “¾‚ç‚ê‚éŠ‡ŒÊ•¶š—ñ‘S‚Ä‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 */
-void enumerate_all_parenthesis_sequences(const string& s, vector<string>& strs) {
+vector<string> enumerate_all_parenthesis_sequences(const string& s) {
 	int n = sz(s);
-	strs.clear();
+	vector<string> strs;
 	string p;
 
 	// l : ’·‚³
@@ -100,8 +102,9 @@ void enumerate_all_parenthesis_sequences(const string& s, vector<string>& strs) 
 			p.pop_back();
 		}
 	};
-
 	rf(0);
+
+	return strs;
 }
 
 

@@ -67,29 +67,31 @@ vvi enumerate_all_sequences(const vi& ub) {
 
 //【部分列の列挙】O(2^n n)
 /*
-* a[0..n) の部分列全てを seqs に格納する．
+* a[0..n) の部分列全てを格納したリストを返す．
 */
 template <class T>
-void enumerate_subsequences(const vector<T>& a, vector<vector<T>>& seqs) {
+vector<vector<T>> enumerate_subsequences(const vector<T>& a) {
 	int n = sz(a);
-	seqs.clear();
+	vector<vector<T>> seqs;
 
 	repb(set, n) {
 		vector<T> seq;
 		rep(i, n) if (set & (1 << i)) seq.push_back(a[i]);
 		seqs.push_back(seq);
 	}
+
+	return seqs;
 }
 
 
 //【部分列の列挙（長さ指定）】O(bin(n, m) m)
 /*
-* a[0..n) の長さ m の部分列全てを seqs に格納する．
+* a[0..n) の長さ m の部分列全てを格納したリストを返す．
 */
 template <class T>
-void enumerate_subsequences(const vector<T>& a, int m, vector<vector<T>>& seqs) {
+vector<vector<T>> enumerate_subsequences(const vector<T>& a, int m) {
 	int n = sz(a);
-	seqs.clear();
+	vector<vector<T>> seqs;
 
 	vb p(n);
 	rep(i, m) p[i] = true;
@@ -99,18 +101,20 @@ void enumerate_subsequences(const vector<T>& a, int m, vector<vector<T>>& seqs) 
 		rep(i, n) if (p[i]) seq.push_back(a[i]);
 		seqs.push_back(seq);
 	}
+
+	return seqs;
 }
 
 
 //【狭義単調増加列の列挙】O(bin(m, n) n)
 /*
-* 0 <= a[0] < a[1] < ... < a[n-1] < m なる列 a[0..n) を seqs に格納する．
+* 0 <= a[0] < a[1] < ... < a[n-1] < m なる列 a[0..n) を格納したリストを返す．
 */
-void enumerate_strongly_increase_sequences(int n, int m, vvi& seqs) {
+vvi enumerate_strongly_increase_sequences(int n, int m) {
 	// verify : https://atcoder.jp/contests/abc263/tasks/abc263_c
 
 	vi a(n);
-	seqs.clear();
+	vvi seqs;
 
 	// len : 列の長さ
 	function<void(int)> rf = [&](int len) {
@@ -131,18 +135,19 @@ void enumerate_strongly_increase_sequences(int n, int m, vvi& seqs) {
 			len--;
 		}
 	};
-
 	rf(0);
+
+	return seqs;
 }
 
 
 //【広義単調増加列の列挙】O(bin(n+m-1, n) n)
 /*
-* 0 <= a[0] <= a[1] <= ... <= a[n-1] < m なる列 a[0..n) を seqs に格納する．
+* 0 <= a[0] <= a[1] <= ... <= a[n-1] < m なる列 a[0..n) を格納したリストを返す．
 */
-void enumerate_weakly_increase_sequences(int n, int m, vvi& seqs) {
+vvi enumerate_weakly_increase_sequences(int n, int m) {
 	vi a(n);
-	seqs.clear();
+	vvi seqs;
 
 	// len : 列の長さ
 	function<void(int)> rf = [&](int len) {
@@ -163,18 +168,19 @@ void enumerate_weakly_increase_sequences(int n, int m, vvi& seqs) {
 			len--;
 		}
 	};
-
 	rf(0);
+
+	return seqs;
 }
 
 
 //【真の倍数列の列挙】O(?)（k = 10^4 くらいまで動く）
 /*
-* a[0] | a[1] | ... | a[m] <= k なる狭義単調列 a を seqs に格納する．
+* a[0] | a[1] | ... | a[m] <= k なる狭義単調列 a を格納したリストを返す．
 */
-void enumerate_strongly_multiple_sequences(ll k, vvl& seqs) {
+vvl enumerate_strongly_multiple_sequences(ll k) {
 	vl a;
-	seqs.clear();
+	vvl seqs;
 
 	function<void()> rf = [&]() {
 		// 列の記録
@@ -194,17 +200,20 @@ void enumerate_strongly_multiple_sequences(ll k, vvl& seqs) {
 			a.pop_back();
 		}
 	};
-
 	rf();
+
+	return seqs;
 }
 
 
 //【作業用スタックを利用して得られる列の列挙】O(Catalan(n) n)
 /*
 * a[0..n) に対し，先頭から順にスタックに積んでいき，任意のタイミングでスタックから
-* 要素を降ろしてくることで構成できる列を列挙する．
+* 要素を降ろしてくることで構成できる列を格納したリストを返す．
 */
-void enumerate_stack_perm_sequences(const vi& a, vvi& seqs) {
+vvi enumerate_stack_perm_sequences(const vi& a) {
+	// verify : https://atcoder.jp/contests/abc262/tasks/abc262_g
+
 	//（例）a[0..4) = [1, 2, 3, 4] のとき
 	//	4 3 2 1  (((())))
 	//	3 4 2 1  ((()()))
@@ -221,12 +230,12 @@ void enumerate_stack_perm_sequences(const vi& a, vvi& seqs) {
 	//	1 2 4 3  ()()(())
 	//	1 2 3 4  ()()()()
 	//
-	// '(' を左から順に a で彩色したとき，')' の色を左から順に並べたものになっている．
+	// '(' を左から順に a[0..n) で彩色したとき，')' の色を左から順に並べたものになっている．
 	// '(' をヘッダを 1 つ右へ移動，')' を最も右の空きへの書き込み，と対応させられる．
 	// 任意の i < j < k について，[a[k], a[i], a[j]] は部分列に含まれない．
 
 	int n = sz(a);
-	seqs.clear();
+	vvi seqs;
 
 	vi seq; // 作成途中の列
 	int i = 0; // 次にスタックに積む a の要素番号
@@ -255,8 +264,9 @@ void enumerate_stack_perm_sequences(const vi& a, vvi& seqs) {
 			stk[++pt] = v;
 		}
 	};
-
 	rf();
+
+	return seqs;
 }
 
 

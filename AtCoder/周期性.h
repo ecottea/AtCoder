@@ -19,7 +19,8 @@
 *
 *（フロイドの循環検出法）
 */
-template <class T> struct Periodic_sequence_sum {
+template <class T>
+struct Periodic_sequence_sum {
 	// verify : https://atcoder.jp/contests/abc179/tasks/abc179_e
 
 	// nc : 非周期部分の長さ，c : 周期部分の長さ
@@ -81,7 +82,8 @@ template <class T> struct Periodic_sequence_sum {
 * a[i+1] = f(a[i]), a[0] = a0 なる数列について，a[0] から始まる非周期列の長さ nc と
 * a[nc] から始まる周期列の長さ c の組 {nc, c} を返す．
 */
-template <class T> pii floyds_cycle_finding(function<T(T)>& f, T a0) {
+template <class T>
+pii floyds_cycle_finding(function<T(T)>& f, T a0) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89%E3%81%AE%E5%BE%AA%E7%92%B0%E6%A4%9C%E5%87%BA%E6%B3%95
 	// verify : https://atcoder.jp/contests/abc030/tasks/abc030_d
 

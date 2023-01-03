@@ -9,7 +9,8 @@
 *
 *（総和で高速化した部分列 DP）
 */
-template <class T> mint count_subseq_inline(const vector<T>& a) {
+template <class T>
+mint count_subseq_inline(const vector<T>& a) {
 	// verify : https://judge.yosupo.jp/problem/number_of_subsequences
 
 	int n = sz(a);
@@ -46,7 +47,8 @@ template <class T> mint count_subseq_inline(const vector<T>& a) {
 *
 *（耳 DP）
 */
-template <class T> mint count_subsequences(const vector<T>& s, const vector<T>& t) {
+template <class T>
+mint count_subsequences(const vector<T>& s, const vector<T>& t) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_h
 
 	int n = sz(s), m = sz(t);
@@ -76,7 +78,8 @@ template <class T> mint count_subsequences(const vector<T>& s, const vector<T>& 
 /*
 * s[0..n) の部分列と t[0..m) の部分列の組のうち両者が一致するものの個数を返す．
 */
-template <class T> mint count_common_subsequences(const vector<T>& s, const vector<T>& t) {
+template <class T>
+mint count_common_subsequences(const vector<T>& s, const vector<T>& t) {
 	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_e
 
 	int n = sz(s), m = sz(t);

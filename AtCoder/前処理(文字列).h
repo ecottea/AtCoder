@@ -109,16 +109,16 @@ void run_length_encodeing(const vector<T>& a, vector<T>& c, vi& x) {
 //【文字の次の位置】O(n k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s[i..n-1] で最初に文字 c が現れる位置を nxt[i][c] に格納する（無いなら n）
+* s[i..n-1] で最初に文字 c が現れる位置（無いなら n）を nxt[i][c] に格納し nxt を返す．
 */
-void next_position(const string& s, vvi& nxt) {
+vvi next_position(const string& s) {
 	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_e
 
 	int n = sz(s);
 	const int k = 26;
 
 	// nxt[i][c] : s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
-	nxt = vvi(n + 1, vi(k, n));
+	vvi nxt(n + 1, vi(k, n));
 
 	repir(i, n - 1, 0) {
 		rep(c, k) {
@@ -126,20 +126,22 @@ void next_position(const string& s, vvi& nxt) {
 		}
 		nxt[i][s[i] - 'a'] = i;
 	}
+
+	return nxt;
 }
 
 
 //【文字の前の位置】O(n k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s[0..i] で最後に文字 c が現れる位置を prv[i][c] に格納する（無いなら -1）
+* s[0..i] で最後に文字 c が現れる位置（無いなら -1）を prv[i][c] に格納し prv を返す．
 */
-void prev_position(const string& s, vvi& prv) {
+vvi prev_position(const string& s) {
 	int n = sz(s);
 	const int k = 26;
 	
 	// prv[i + 1][c] : s[0..i] で最後に文字 c が現れる位置（無いなら -1）
-	prv = vvi(n + 1, vi(k, -1));
+	vvi prv(n + 1, vi(k, -1));
 	
 	rep(i, n) {
 		rep(c, k) {
@@ -147,52 +149,58 @@ void prev_position(const string& s, vvi& prv) {
 		}
 		prv[i + 1][s[i] - 'a'] = i;
 	}
+
+	return prv;
 }
 
 
 //【文字の最初の位置】O(n + k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s で最初に文字 c が現れる位置を pos[c] に格納する（無いなら n）
+* s で最初に文字 c が現れる位置（無いなら n）を pos[c] に格納し pos を返す．
 */
-void first_position(const string& s, vi& pos) {
+vi first_position(const string& s) {
 	int n = sz(s);
 	const int k = 26;
 
 	// pos[c] : s で最初に文字 c が現れる位置（無いなら n）
-	pos = vi(k, n);
+	vi pos(k, n);
 
 	repir(i, n - 1, 0) {
 		pos[s[i] - 'a'] = i;
 	}
+
+	return pos;
 }
 
 
 //【文字の最後の位置】O(n + k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s で最後に文字 c が現れる位置を pos[c] に格納する（無いなら -1）
+* s で最後に文字 c が現れる位置（無いなら -1）を pos[c] に格納し pos を返す．
 */
-void last_position(const string& s, vi& pos) {
+vi last_position(const string& s) {
 	int n = sz(s);
 	const int k = 26;
 
 	// pos[c] : s で最初に文字 c が現れる位置（無いなら -1）
-	pos = vi(k, -1);
+	vi pos(k, -1);
 
 	rep(i, n) {
 		pos[s[i] - 'a'] = i;
 	}
+
+	return pos;
 }
 
 
 //【異なる文字の次の位置】O(n k)
 /*
-* s[0..n) で，j > i かつ s[j] != s[i] なる最小の j を nxt[i] に格納する（なければ n）
+* s[0..n) で，j > i かつ s[j] != s[i] なる最小の j（なければ n）を nxt[i] に格納し nxt を返す．
 */
-void next_different_position(const string& s, vi& nxt) {
+vi next_different_position(const string& s) {
 	int n = sz(s);
-	nxt.resize(n);
+	vi nxt(n);
 
 	char c = s[n - 1]; // 走査中の文字
 	int pos = n; // 走査中の文字以外が最後に現れた位置
@@ -205,6 +213,8 @@ void next_different_position(const string& s, vi& nxt) {
 			c = s[i];
 		}
 	}
+
+	return nxt;
 }
 
 

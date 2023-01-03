@@ -12,7 +12,7 @@
 *			∀a, b, c ∈ T，	a ≡ b かつ b ≡ c ⇒ a ≡ c
 * を満たすことを要求する．ここで ≡ は < から誘導される同値関係であり，
 *		a ≡ b ⇔ !(a < b) かつ !(b < a)　（等しい または 比較不能）
-* で定義される．商集合 T / ≡ は < から誘導される順序で狭義の全順序となる．
+* で定義される．商集合 T/≡ は < から誘導される順序で狭義の全順序となる．
 */
 
 
@@ -49,7 +49,8 @@
 /*
 * a[0..n) に対してバブルソートを行う．
 */
-template <class T> void bubble_sort(vector<T>& a) {
+template <class T>
+void bubble_sort(vector<T>& a) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_A
 
 	int n = sz(a);
@@ -84,7 +85,8 @@ template <class T> void bubble_sort(vector<T>& a) {
 /*
 * 長さ n の配列 a に対して挿入ソートを行う．
 */
-template <class T> void insertion_sort(vector<T>& a) {
+template <class T>
+void insertion_sort(vector<T>& a) {
 	int n = sz(a);
 
 	// 未ソートの要素を昇順に見ていく．
@@ -168,7 +170,8 @@ ll minimum_cost_insertion_sort(vi p, ll lc, ll rc) {
 /*
 * a[0..n) に対して選択ソートを行う．
 */
-template <class T> void selection_sort(vector<T>& a) {
+template <class T>
+void selection_sort(vector<T>& a) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_B
 
 	int n = sz(a);
@@ -245,7 +248,8 @@ ll minimum_cost_selection_sort(const vi& p, const vl& c) {
 /*
 * a[0..n) に対してシェルソートを行う．
 */
-template <class T> void shell_sort(vector<T>& a) {
+template <class T>
+void shell_sort(vector<T>& a) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_2_D
 
 	int n = sz(a);
@@ -286,7 +290,8 @@ template <class T> void shell_sort(vector<T>& a) {
 /*
 * a[0..n) に対してマージソートを行う．
 */
-template <class T> void merge_sort(vector<T>& a) {
+template <class T>
+void merge_sort(vector<T>& a) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_B
 
 	// 型 T における最大値
@@ -332,7 +337,8 @@ template <class T> void merge_sort(vector<T>& a) {
 /*
 * a[0..n) に対してクイックソートを行う．
 */
-template <class T> void quick_sort(vector<T>& a) {
+template <class T>
+void quick_sort(vector<T>& a) {
 	// varify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_6_C
 
 	int n = sz(a);

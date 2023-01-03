@@ -102,12 +102,12 @@ struct Binary_Tree {
 
 //【二分木の入力】O(n)
 /*
-* (自身 左の子 右の子) を並べた入力を受け取り，n 頂点の二分木 bt を構築する．
+* (自身 左の子 右の子) を並べた入力を受け取り，n 頂点の二分木を構築し返す．
 * 非存在を表す入力を nval に与える．
 *
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
-void read_binary_tree(int n, Binary_Tree& bt, bool one_indexed = true, int nval = -1) {
+Binary_Tree read_binary_tree(int n, bool one_indexed = true, int nval = -1) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_B
 
 	vi s(n), l(n), r(n);
@@ -124,19 +124,21 @@ void read_binary_tree(int n, Binary_Tree& bt, bool one_indexed = true, int nval 
 			if (r[i] != -1) r[i]--;
 		}
 	}
-	bt = Binary_Tree(s, l, r);
+
+	return Binary_Tree(s, l, r);
 }
 
 
 //【ハフマン符号木】O(n log n)
 /*
-* n 種類の文字 i の出現頻度が p[i] > 0 であるときのハフマン符号木を bt に構築する．
+* n 種類の文字 i の出現頻度が p[i] > 0 であるときのハフマン符号木を構築し返す．
 *
 *（頻度が低い順に貪欲法）
 *
 * 利用：【二分木】
 */
-template <class T> void huffman_tree(const vector<T>& p, Binary_Tree& bt) {
+template <class T>
+Binary_Tree huffman_tree(const vector<T>& p) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_15_D
 
 	int n = sz(p);
@@ -178,7 +180,7 @@ template <class T> void huffman_tree(const vector<T>& p, Binary_Tree& bt) {
 	}
 
 	// ハフマン木を構築する．
-	bt = Binary_Tree(s, l, r);
+	return Binary_Tree(s, l, r);
 }
 
 
@@ -287,7 +289,8 @@ int coordinate_compression_binary_tree(const vvl& pos, vector<pil>& l, vector<pi
 * erase(key) : 平均 O(log n)／最悪 O(n)
 *	key を削除する．
 */
-template <class T> struct Binary_search_tree {
+template <class T>
+struct Binary_search_tree {
 	verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_C
 
 	// 二分探索木のノード
@@ -427,7 +430,8 @@ template <class T> struct Binary_search_tree {
 * erase(key) : O(log n)
 *	key を削除する．
 */
-template <class T> struct Treap {
+template <class T>
+struct Treap {
 	// varify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
 
 	// ツリープのノード

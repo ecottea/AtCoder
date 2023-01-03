@@ -5,15 +5,15 @@
 
 //【桁の数の取得】O(log n)
 /*
-* n を b 進表記したときの桁の数字を上位桁から順に並べたものを ds に格納する．
+* n を b 進表記したときの桁の数字を上位桁から順に並べたリストを返す．
 * 
 * 制約：|b| >= 2
 */
-void integer_digits(ll n, vi& ds, int b = 10) {
+vi integer_digits(ll n, int b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	Assert(abs(b) >= 2);
-	ds.clear();
+	vi ds;
 
 	// n = 0 の場合の例外処理
 	if (n == 0) {
@@ -30,6 +30,8 @@ void integer_digits(ll n, vi& ds, int b = 10) {
 
 	// 上位桁から順になるように並べ直す．
 	reverse(all(ds));
+
+	return ds;
 }
 
 

@@ -5,6 +5,117 @@
 // ■■■■■ 計算 ■■■■■
 
 
+//【累乗（mint 利用）】
+/*
+* Pow_mint(int n, ll B) : O(n)
+*	底を B とし，B^(-n) から B^n まで計算可能として初期化する．
+*	制約 : B は mint の法と互いに素
+*
+* mint [](int i) : O(1)
+*	B^i を返す．
+*/
+class Pow_mint {
+	int n;
+	vm powB, powB_inv;
+
+public:
+	Pow_mint(int n, ll B) : n(n) {
+		// B の累乗を計算する．
+		powB.resize(n + 1);
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = powB[i] * B;
+
+		// B の逆元の累乗を計算する．
+		mint invB = mint(1) / B;
+		powB_inv.resize(n + 1);
+		powB_inv[0] = 1;
+		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB;
+	};
+
+	// B^i を返す．
+	mint const& operator[](int i) const {
+		Assert(abs(i) <= n);
+
+		return i >= 0 ? powB[i] : powB_inv[-i];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Pow_mint& pw) {
+		os << pw.powB << endl;
+		os << pw.powB_inv << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【累乗】
+/*
+* Pow(int n, ll B, ll M) : O(n)
+*	底を B とし，B^(-n) から B^n (mod M) まで計算可能として初期化する．
+*	制約 : B と M は互いに素
+*
+* mint [](int i) : O(1)
+*	B^i mod M を返す．
+*/
+class Pow {
+	int n;
+	vl powB, powB_inv;
+
+	// a x + b y = g の解 (x, y) を返す．
+	pll extended_gcd(ll a, ll b) {
+		if (b == 0) {
+			Assert(a == 1);
+			return make_pair(1LL, 0LL);
+		}
+
+		ll q = a / b, r = a % b;
+		ll X, Y;
+		tie(X, Y) = extended_gcd(b, r);
+
+		return make_pair(Y, X - q * Y);
+	}
+
+public:
+	Pow(int n, ll B, ll M) : n(n) {
+		// verify : https://codeforces.com/contest/715/problem/C
+
+		B %= M;
+
+		// B の累乗を計算する．
+		powB.resize(n + 1);
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = powB[i] * B % M;
+
+		// 拡張ユークリッドの互除法で B の逆元を計算する．
+		ll invB, tmp;
+		tie(invB, tmp) = extended_gcd(B, M);
+
+		// B の逆元の累乗を計算する．
+		powB_inv.resize(n + 1);
+		powB_inv[0] = 1;
+		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB % M;
+	};
+
+	// B^i を返す．
+	ll const& operator[](int i) const {
+		// verify : https://codeforces.com/contest/715/problem/C
+
+		Assert(abs(i) <= n);
+
+		return i >= 0 ? powB[i] : powB_inv[-i];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Pow& pw) {
+		os << pw.powB << endl;
+		os << pw.powB_inv << endl;
+		return os;
+	}
+#endif
+};
+
+
 //【積との比較】O(1)
 /*
 * 関係式 a * b op c が成り立つかを返す．（a * b がオーバーフローしても良い）

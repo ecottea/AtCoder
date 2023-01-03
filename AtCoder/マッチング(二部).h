@@ -335,7 +335,8 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 *
 *（bit DP）
 */
-template <class T> mint count_perfect_matching(const vector<vector<T>>& e, T ex) {
+template <class T>
+mint count_perfect_matching(const vector<vector<T>>& e, T ex) {
 	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231035
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_o
 
@@ -374,7 +375,7 @@ template <class T> mint count_perfect_matching(const vector<vector<T>>& e, T ex)
 }
 
 
-//【パーマネント】
+//【二部グラフの完全マッチングの数え上げとパーマネント】
 /*
 * 【二部グラフの完全マッチングの数え上げ】の戻り値は
 * 0,1 を成分にもつ二部隣接行列 e[0..n)[0..n) のパーマネント perm(e) とも解釈できる．
@@ -397,8 +398,7 @@ T_tbm e_tbm() { return 0; }
 T_tbm leaf_tbm(int s) { return 0; }
 T_tbm apply_tbm(const T_tbm& x, int s, int t) { return (T_tbm)(x == 0); }
 int tree_bipartite_matching(const Graph& g) {
-	vector<T_tbm> dp;
-	tree_getDP<T_tbm, merge_tbm, e_tbm, leaf_tbm, apply_tbm>(g, 0, dp);
+	vector<T_tbm> dp = tree_getDP<T_tbm, merge_tbm, e_tbm, leaf_tbm, apply_tbm>(g, 0);
 	
 	int res = 0;
 	rep(i, sz(g)) res += (int)(dp[i] > 0);

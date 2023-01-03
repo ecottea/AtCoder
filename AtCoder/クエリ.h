@@ -494,13 +494,13 @@ public:
 * add_const(ll x0) : O(1)
 *	f(x) += y0 とする．
 *
-* add_right(ll x0) : O(1)
+* add_right(ll x0) : O(log n)
 *	f(x) += min(x - x0, 0) とする．（＿／ の形を加算する．）
 *
-* add_left(ll x0) : O(1)
+* add_left(ll x0) : O(log n)
 *	f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
 *
-* add_abs(ll x0) : O(1)
+* add_abs(ll x0) : O(log n)
 *	f(x) += |x - x0| とする．（＼／ の形を加算する．）
 *
 * acc_min_left() : O(1)
@@ -510,14 +510,13 @@ public:
 *	f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
 *
 * shift(ll x0) : O(1)
-*	f(x) を x0 だけ平行移動する．（f(x) ← f(x - x0)）
+*	f(x) を右に x0 だけ平行移動する．（f(x) ← f(x - x0)）
 *
-* sliding_window_min(ll x0, ll x1) : O(1)
-*	f(x) を min f([x+x0, x+x1]) に置き換える．（＼＿＿／ の形にする．）
+* sliding_window_min(ll dl, ll dr) : O(1)
+*	f(x) を min f([x-dl, x+dr]) に置き換える．（＼＿＿／ の形にする．）
 */
 struct Slope_trick {
 	// 参考 : https://maspypy.com/slope-trick-1-%E8%A7%A3%E8%AA%AC%E7%B7%A8
-	// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
 
 	ll y_min; // 最小値
 	priority_queue<ll> l; // 最小値より左の折れ点の x 座標を降順に取り出せるキュー
@@ -527,12 +526,15 @@ struct Slope_trick {
 
 	// f(x) = 0 で初期化する．
 	Slope_trick() : y_min(0), add_l(0), add_r(0) {
+		// 番兵を挿入しておく．
 		l.push(-INFL);
 		r.push(INFL);
 	};
 
 	// min f(x) を返し，必要ならそれを与える x の範囲 [l, r] を lr に格納する．
 	ll min(pll* lr = nullptr) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
 		if (lr != nullptr) {
 			*lr = { l.top() + add_l, r.top() + add_r };
 		}
@@ -541,11 +543,15 @@ struct Slope_trick {
 
 	// f(x) += y0 とする．
 	void add_const(ll y0) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
 		y_min += y0;
 	}
 
 	// f(x) += min(x - x0, 0) とする．（＿／ の形を加算する．）
 	void add_right(ll x0) {
+		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
+
 		y_min += max(0LL, (l.top() + add_l) - x0);
 		l.push(x0 - add_l);
 		r.push((l.top() + add_l) - add_r);
@@ -554,6 +560,8 @@ struct Slope_trick {
 
 	// f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
 	void add_left(ll x0) {
+		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
+
 		y_min += max(0LL, x0 - (r.top() + add_r));
 		r.push(x0 - add_r);
 		l.push((r.top() + add_r) - add_l);
@@ -562,6 +570,8 @@ struct Slope_trick {
 
 	// f(x) += |x - x0| とする．（＼／ の形を加算する．）
 	void add_abs(ll x0) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
 		add_right(x0);
 		add_left(x0);
 	}
@@ -578,16 +588,18 @@ struct Slope_trick {
 		l.push(-INFL);
 	}
 
-	// f(x) を x0 だけ平行移動する．（f(x) ← f(x - x0)）
+	// f(x) を x0 だけ右に平行移動する．（f(x) ← f(x - x0)）
 	void shift(ll x0) {
 		add_l += x0;
 		add_r += x0;
 	}
 
-	// f(x) を min f([x+x0, x+x1]) に置き換える．（＼＿＿／ の形にする．）
-	void sliding_window_min(ll x0, ll x1) {
-		add_l += x0;
-		add_r += x1;
+	// f(x) を min f([x-dl, x+dr]) に置き換える．（＼＿＿／ の形にする．）
+	void sliding_window_min(ll dl, ll dr) {
+		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
+
+		add_l -= dl;
+		add_r += dr;
 	}
 };
 
@@ -617,6 +629,8 @@ ll mapping6(ll f, ll x) { return max(f, x); }
 ll composition6(ll f, ll g) { return max(f, g); }
 ll id6() { return -INFL; }
 struct Range_minimize1d_query {
+	// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
+
 	// 内部では値 v[i] を一次の項の係数 a で分けて
 	//		min(a[1] i + b[1], a[2] i + b[2], ...)
 	// の形で保持する．

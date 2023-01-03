@@ -25,13 +25,23 @@ S801 e801() { return 1; }
 
 
 //ys—ñ‰ÁZ - æZ ”¼ŠÂz
-int msize813 = 3;
+int size813 = 3;
 using S813 = Matrix<mint>;
 S813 add813(S813 x, S813 y) { return x + y; }
-S813 o813() { return Matrix<mint>(msize813, msize813); }
+S813 o813() { return Matrix<mint>(size813, size813); }
 S813 mul813(S813 x, S813 y) { return x * y; }
-S813 e813() { return Matrix<mint>(msize813); }
+S813 e813() { return Matrix<mint>(size813); }
 #define MatrixAdd_mul_semiring S813, add813, o813, mul813, e813
+
+
+//yFPS‰ÁZ - æZ ‰ÂŠ·”¼ŠÂz
+int size814 = 10;
+using S814 = MFPS;
+S814 add814(S814 x, S814 y) { return x + y; }
+S814 o814() { return MFPS(0); }
+S814 mul814(S814 x, S814 y) { return (x * y).resize(size814); }
+S814 e814() { return MFPS(1); }
+#define MFPSAdd_mul_semiring S814, add814, o814, mul814, e814
 
 
 //yXOR - AND ‰ÂŠÂ”¼ŠÂz

@@ -207,6 +207,7 @@
     <ClInclude Include="文脈自由文法.h" />
     <ClInclude Include="最適化(ビット列).h" />
     <ClInclude Include="最適化(区間).h" />
+    <ClInclude Include="最適化(木).h" />
     <ClInclude Include="構文解析.h" />
     <ClInclude Include="母関数.h" />
     <ClInclude Include="フロー双対.h" />

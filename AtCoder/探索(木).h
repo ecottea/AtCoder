@@ -9,7 +9,8 @@
 * 木 g に対し始点を st として深さ優先探索を行い，通った頂点を順に seq に格納する．
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
-template <class G> void tree_dfs(G& g, int st, vi& seq) {
+template <class G>
+void tree_dfs(G& g, int st, vi& seq) {
 	int n = sz(g);
 	seq.clear();
 
@@ -42,7 +43,8 @@ template <class G> void tree_dfs(G& g, int st, vi& seq) {
 * 森 g の各木に対し適当な始点から深さ優先探索を行い，通った頂点を順に seq に格納する．
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
-template <class G> void forest_dfs(G& g, int st, vi& seq) {
+template <class G>
+void forest_dfs(G& g, int st, vi& seq) {
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_d
 
 	int n = sz(g);

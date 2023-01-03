@@ -6,17 +6,16 @@
 
 //【木の入力】O(n)
 /*
-* 親を並べた入力を受け取り，n 頂点の木を構成する．
+* 親を並べた入力を受け取り，n 頂点の木を構成して返す．
 *
 * n : グラフの頂点の数
-* g : ここにグラフを構築して返す
 * undirected : 無向グラフなら true
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
-void read_tree(int n, Graph& g, bool undirected = true, bool one_indexed = true) {
+Graph read_tree(int n, bool undirected = true, bool one_indexed = true) {
 	// verify : https://atcoder.jp/contests/arc028/tasks/arc028_3
 
-	g = Graph(n);
+	Graph g(n);
 	repi(i, 1, n - 1) {
 		int p;
 		cin >> p;
@@ -26,6 +25,8 @@ void read_tree(int n, Graph& g, bool undirected = true, bool one_indexed = true)
 		g[p].push_back(i);
 		if (undirected) g[i].push_back(p);
 	}
+
+	return g;
 }
 
 
@@ -64,7 +65,7 @@ struct Rooted_tree {
 
 	// コンストラクタ（空で初期化，木と根で初期化）
 	Rooted_tree() : n(0), r(-1) {}
-	Rooted_tree(Graph& g, int r_) : n(sz(g)), r(r_), v(n) {
+	Rooted_tree(const Graph& g, int r_) : n(sz(g)), r(r_), v(n) {
 		// s : 注目ノード，p : s の親
 		function<void(int, int)> dfs = [&](int s, int p) {
 			v[s].parent = p;
@@ -108,12 +109,12 @@ struct Rooted_tree {
 
 //【根付き木の入力】O(n)
 /*
-* ([自身] 子の数 子のリスト) を並べた入力を受け取り，n 頂点の根付き木 rt を構築する．
+* ([自身] 子の数 子のリスト) を並べた入力を受け取り，n 頂点の根付き木を構築して返す．
 *
 * one_indexed : 入力が 1-indexed で与えられるなら true
 * shuffled : [自身] の指定があるなら true
 */
-void read_rooted_tree(int n, Rooted_tree& rt, bool one_indexed = true, bool shuffled = false) {
+Rooted_tree read_rooted_tree(int n, bool one_indexed = true, bool shuffled = false) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_A
 
 	// is_root[v] : v は根か
@@ -153,7 +154,7 @@ void read_rooted_tree(int n, Rooted_tree& rt, bool one_indexed = true, bool shuf
 	}
 
 	// 根付き木の構築
-	rt = Rooted_tree(g, r);
+	return Rooted_tree(g, r);
 }
 
 
@@ -189,7 +190,7 @@ struct Weighted_rooted_tree {
 
 	// コンストラクタ（初期化なし，コスト付き木と根で初期化）
 	Weighted_rooted_tree() : n(0), r(-1) {}
-	Weighted_rooted_tree(WGraph& g, int r_) : n(sz(g)), v(n), r(r_) {
+	Weighted_rooted_tree(const WGraph& g, int r_) : n(sz(g)), v(n), r(r_) {
 		// 再帰用の関数
 		// s : 注目ノード，p : s の親
 		function<void(int, int, ll)> dfs = [&](int s, int p, ll d) {
@@ -228,5 +229,40 @@ struct Weighted_rooted_tree {
 	}
 #endif
 };
+
+
+//【コスト付き木のランダム生成】O(n^2)
+/*
+* n 頂点でコストが [c_min..c_max] 内の一様乱数で与えられるランダムなコスト付き木を返す．
+*/
+WGraph create_random_WTree(int n, ll c_min, ll c_max) {
+	WGraph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	vector<pii> es;
+	rep(i, n) repi(j, i + 1, n - 1) es.emplace_back(i, j);
+	shuffle(all(es), mt);
+
+	uniform_int_distribution<ll> rnd(c_min, c_max);
+
+	dsu d(n);
+	repe(e, es) {
+		int u, v;
+		tie(u, v) = e;
+		if (d.same(u, v)) continue;
+
+		ll c = rnd(mt);
+		g[u].emplace_back(v, c);
+		g[v].emplace_back(u, c);
+		d.merge(u, v);
+	}
+
+	return g;
+}
 
 

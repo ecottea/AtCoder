@@ -34,7 +34,8 @@ ll minimize_difference_sum(vl a) {
 /*
 * a[0..n) ‚É‚Â‚¢‚Ä min_x ƒ°i (a[i] - x)^2 ‚ğ•Ô‚·D
 */
-template <class T> double minimize_squared_sum(const vector<T>& a) {
+template <class T>
+double minimize_squared_sum(const vector<T>& a) {
 	int n = sz(a);
 
 	//y•û–@z

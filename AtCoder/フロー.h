@@ -4,14 +4,6 @@
 // ■■■■■ フロー ■■■■■
 
 
-//【最小費用流（流量が自由）】
-/*
-* 流量を自由としてコストの最小化を行いたい場合，始点から終点まで容量 ∞，コスト 0 の辺を張れば良い．
-*
-* verify : https://onlinejudge.u-aizu.ac.jp/problems/2293
-*/
-
-
 //【最小費用流（負コスト可，DAG）】
 /*
 * Negative_mcf_graph(int n) : O(1)
@@ -52,7 +44,9 @@ struct Negative_mcf_graph_DAG {
 	vl pot;
 
 	// n 頂点で初期化する．
-	Negative_mcf_graph_DAG(int n_) : n(n_), g(n), pot(n, INFL) {}
+	Negative_mcf_graph_DAG(int n_) : n(n_), g(n), pot(n, INFL) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2266
+	}
 
 	// s から t へ容量 cap，コスト cost の辺を追加する．
 	void add_edge(int s, int t, ll cap, ll cost) {
@@ -61,7 +55,7 @@ struct Negative_mcf_graph_DAG {
 		g[s].emplace_back(t, cap, cost);
 	}
 
-	// DAG 上の DP で GL までの距離を求め，その -1 倍をポテンシャルとする．
+	// DAG 上の DP で GL までの距離を求め，その -1 倍をポテンシャルとする．: O(n + m)
 	void DAG_DP(int GL) {
 		pot[GL] = 0;
 
@@ -306,7 +300,7 @@ struct Generalized_max_profit_flow {
 		// ST : 始点（湧き出しへ），GL : 終点（吸い込みから）
 		int ST = n, GL = n + 1;
 
-		// 湧き出しへは始点から，吸い込みから終点へと辺を繋ぐ．
+		// 湧き出しへは始点から，吸い込みからは終点へと辺を繋ぐ．
 		rep(i, n) {
 			if (div[i] > 0) g.add_edge(ST, i, div[i], 0);
 			else if (div[i] < 0) g.add_edge(i, GL, -div[i], 0);
@@ -328,6 +322,29 @@ struct Generalized_max_profit_flow {
 	}
 #endif
 };
+
+
+//【流量が自由】
+/*
+* 流量を自由としてコストの最小化を行いたい場合，始点から終点まで容量 ∞，コスト 0 の辺を張れば良い．
+*
+* verify : https://onlinejudge.u-aizu.ac.jp/problems/2293
+*/
+
+
+//【流量 f まで利得 p】
+/*
+* 流量 f までは利得 p が得られ，それより多く流しても利得が得られない辺を張りたい場合，
+* 流量 f で利得 p の辺と，流量 ∞ で利得 0 の辺を組にして張れば良い．
+*
+* verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_graph
+*/
+
+
+//【双対問題】
+/*
+* フロー双対.h へ
+*/
 
 
 //【最大流問題】O(|E| maxflow)

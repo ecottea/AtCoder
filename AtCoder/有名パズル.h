@@ -286,8 +286,7 @@ int ice_path(const vl& x, const vl& y, ll sx, ll sy, ll tx, ll ty) {
 		}
 	}
 
-	vi dist;
-	breadth_first_search(g, 0, dist);
+	vi dist = breadth_first_search(g, 0);
 
 	return dist[xy_to_i[tx * w + ty]];
 }

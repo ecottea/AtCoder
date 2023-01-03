@@ -194,13 +194,13 @@ vl divisors(ll n) {
 
 //【約数列挙（素因数分解済）】O(σ(n))
 /*
-* n の素因数分解結果 pps を利用して n の約数全てをリスト divs に昇順に格納する．
+* n の素因数分解結果 pps を利用して n の約数全てを昇順に格納したリストを返す．
 */
 template <class T>
-void divisors(map<T, int>& pps, vector<T>& divs) {
+vector<T> divisors(map<T, int>& pps) {
 	// verify : https://atcoder.jp/contests/arc068/tasks/arc068_c
 
-	divs = vector<T>({ T(1) });
+	vector<T> divs{ T(1) };
 	repe(pp, pps) {
 		T p; int d;
 		tie(p, d) = pp;
@@ -210,13 +210,11 @@ void divisors(map<T, int>& pps, vector<T>& divs) {
 		rep(i, d - 1) powp[i + 1] = powp[i] * p;
 
 		int m = sz(divs);
-		repir(j, m - 1, 0) {
-			rep(i, d) {
-				divs.push_back(divs[j] * powp[i]);
-			}
-		}
+		repir(j, m - 1, 0) rep(i, d) divs.push_back(divs[j] * powp[i]);
 	}
 	sort(all(divs));
+
+	return divs;
 }
 
 

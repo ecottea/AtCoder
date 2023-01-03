@@ -62,7 +62,8 @@ inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const 
 /*
 * ü•ª l ‚Ì‚’¼“ñ“™•ªü‚ğ•Ô‚·D
 */
-template <typename T> inline Line<double> vertical_bisector(const Line<T>& l) {
+template <typename T>
+inline Line<double> vertical_bisector(const Line<T>& l) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_C
 
 	Point<double> p1 = Point<double>(l.first + l.second) / 2.;

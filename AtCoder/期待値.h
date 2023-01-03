@@ -110,9 +110,9 @@ vm sugoroku(const vm& p, int n) {
 * [1..k] の目が順に p[0..k) の確率で出る k 面サイコロを用いてすごろくを行う．
 * 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
 *
-*（分割統治法）
+*（分割統治 FFT）
 */
-vm sugoroku_dc(const vm& p, int n) {
+vm sugoroku_dcFFT(const vm& p, int n) {
 	// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
 
 	//【方法】
@@ -166,7 +166,8 @@ vm sugoroku_dc(const vm& p, int n) {
 		// 左側を正しい値に設定する．
 		rf(l, m);
 
-		// 左側から右側への寄与を計算する．
+		// 左側から右側への寄与をまとめて計算する．
+		// x : 左側の値，y : 各移動距離にかかる係数
 		vm x(m - l), y(r - l);
 		repi(i, l, m - 1) x[i - l] = dp[i];
 		rep(i, min(r - l, k)) y[i] = p[i];
@@ -177,7 +178,6 @@ vm sugoroku_dc(const vm& p, int n) {
 		// 右側を正しい値に設定する．
 		rf(m, r);
 	};
-
 	rf(1, n + 1);
 
 	return dp;

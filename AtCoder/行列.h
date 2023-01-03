@@ -6,17 +6,18 @@
 
 //【行列】
 /*
-* 行列を表す構造体
-*
-* Matrix(m, n) : O(m n)
+* Matrix<T>(m, n) : O(m n)
 *	m * n 零行列で初期化する．
 *
-* Matrix(n) : O(n^2)
+* Matrix<T>(n) : O(n^2)
 *	n * n 単位行列で初期化する．
 *
-* Matrix(a) : O(m n)
+* Matrix<T>(vvT a) : O(m n)
 *	配列 a の要素で初期化する．
 *
+* bool empty() : O(1)
+*	行列が空かを返す．
+* 
 * A + B : O(m n)
 *	m * n 行列 A, B の和を返す．+= も使用可．
 *
@@ -35,7 +36,7 @@
 * A * B : O(l m n)
 *	l * m 行列 A と m * n 行列 B の積を返す．
 *
-* pow(d) : O(n^3 log d)
+* Mat pow(ll d) : O(n^3 log d)
 *	自身を d 乗した行列を返す．
 */
 template <class T>
@@ -46,7 +47,7 @@ struct Matrix {
 	// コンストラクタ（初期化なし，零行列，単位行列，二次元配列）
 	Matrix() : m(0), n(0) {}
 	Matrix(const int& m_, const int& n_) : m(m_), n(n_), v(m_, vector<T>(n_)) {}
-	Matrix(const int& n_) : m(n_), n(n_), v(n_, vector<T>(n_)) { rep(i, n) v[i][i] = 1; }
+	Matrix(const int& n_) : m(n_), n(n_), v(n_, vector<T>(n_)) { rep(i, n) v[i][i] = T(1); }
 	Matrix(const vector<vector<T>>& a) : m(sz(a)), n(sz(a[0])), v(a) {}
 
 	// 代入
@@ -62,6 +63,9 @@ struct Matrix {
 	// アクセス
 	vector<T> const& operator[](int i) const { return v[i]; }
 	vector<T>& operator[](int i) { return v[i]; }
+
+	// 空か
+	bool empty() { return min(m, n) == 0; }
 
 	// 比較
 	bool operator==(const Matrix& b) const { return m == b.m && n == b.n && v == b.v; }
@@ -241,14 +245,14 @@ bool solve_eq(const Matrix<T>& mat, vector<T>* sol = nullptr) {
 //【連立一次方程式（2k+1 重対角行列）】O(n k^2)
 /*
 * (i,j) 成分が a[i][k-i+j] であるような 2k+1 重 n×n 対角行列 A と b[0..n) について，
-* A x = b の解を sol に格納する．不定や不能の場合は false を返す．
+* A x = b の解を返す（不定や不能の場合は空リストを返す）
 */
 template <class T>
-bool solve_eq_diagonal(vector<vector<T>> a, vector<T> b, vector<T>& sol) {
+vector<T> solve_eq_diagonal(vector<vector<T>> a, vector<T> b) {
 	// verify : https://atcoder.jp/contests/indeednow-finala-open/tasks/indeednow_2015_finala_e
 
 	int n = sz(a), k = sz(a[0]) / 2;
-	sol.resize(n);
+	vector<T> sol(n);
 
 	// p[i] : i 行目のピボットのある列
 	vi p(n);
@@ -259,7 +263,7 @@ bool solve_eq_diagonal(vector<vector<T>> a, vector<T> b, vector<T>& sol) {
 		for (; j <= j_max; j++) if (a[i][k - i + j] != T(0)) break;
 
 		// 非 0 成分が無かった場合は不定または不能
-		if (j > j_max) return false;
+		if (j > j_max) return vector<T>();
 		p[i] = j;
 
 		// A[i][j] が 1 になるよう行全体を A[i][j] で割る．
@@ -292,7 +296,7 @@ bool solve_eq_diagonal(vector<vector<T>> a, vector<T> b, vector<T>& sol) {
 		repi(j2, j + 1, j_max) sol[i] -= sol[j2] * a[i][k - i + j2];
 	}
 
-	return true;
+	return sol;
 }
 
 
@@ -348,13 +352,41 @@ T determinant(const Matrix<T>& mat) {
 }
 
 
-//【逆行列】O(n^3)
+//【パーマネント】O(2^n n)
 /*
-* n 次正方行列 mat の逆行列が存在すればそれを mat_inv に格納する．
-* また存在する場合は true，存在しない場合は false を返す．
+* n 次正方行列 mat のパーマネントを返す．
 */
 template <class T>
-bool inverse_matrix(const Matrix<T>& mat, Matrix<T>& mat_inv) {
+T parmanent(const Matrix<T>& mat) {
+	// verify : https://atcoder.jp/contests/dp/tasks/dp_o
+
+	int n = mat.n;
+
+	// dp[set] : 行の集合が set，列の集合が [n-|set|..n) である小パーマネント
+	vector<T> dp(1LL << n);
+	dp[0] = 1;
+
+	// より小さいパーマネントから順に余因子展開で計算していく．
+	repi(set, 1, (1 << n) - 1) {
+		int j = n - popcount(set);
+
+		rep(i, n) {
+			if (!(set & (1 << i))) continue;
+
+			dp[set] += mat[i][j] * dp[set - (1LL << i)];
+		}
+	}
+
+	return dp[(1LL << n) - 1];
+}
+
+
+//【逆行列】O(n^3)
+/*
+* n 次正方行列 mat の逆行列を返す（存在しなければ空）
+*/
+template <class T>
+Matrix<T> inverse_matrix(const Matrix<T>& mat) {
 	// verify : https://judge.yosupo.jp/problem/inverse_matrix
 
 	int m = mat.m;
@@ -379,7 +411,7 @@ bool inverse_matrix(const Matrix<T>& mat, Matrix<T>& mat_inv) {
 		while (i2 < m && v[i2][j] == T(0)) i2++;
 
 		// 見つからなかったら全て 0 の列があったので mat は非正則
-		if (i2 == m) return false;
+		if (i2 == m) return Matrix<T>();
 
 		// 見つかったら i 行目とその行を入れ替える．
 		if (i != i2) swap(v[i], v[i2]);
@@ -402,10 +434,10 @@ bool inverse_matrix(const Matrix<T>& mat, Matrix<T>& mat_inv) {
 	}
 
 	// 拡大行列の右半分が mat の逆行列なのでコピーする．
-	mat_inv = Matrix<T>(m, m);
+	Matrix<T> mat_inv(m, m);
 	rep(i, m) rep(j, m) mat_inv[i][j] = v[i][m + j];
 
-	return true;
+	return mat_inv;
 }
 
 
@@ -511,12 +543,12 @@ int rank_normal_form(const Matrix<T>& a, Matrix<T>& p, Matrix<T>& q) {
 
 //【最小多項式】O(n^3)
 /*
-* 正方行列 A = a[0..n)[0..n) の最小多項式を f に格納する．
+* 正方行列 A = a[0..n)[0..n) の最小多項式を返す．
 * 最小多項式とは，f(A) = O を満たす次数最小なモニック多項式である．
 *
 * 利用：【線形漸化式の発見】
 */
-void minimal_polynomial(const Matrix<mint>& a, MFPS& f) {
+MFPS minimal_polynomial(const Matrix<mint>& a) {
 	// 参考 : https://yukicoder.me/wiki/black_box_linear_algebra
 
 	int n = a.n;
@@ -537,11 +569,12 @@ void minimal_polynomial(const Matrix<mint>& a, MFPS& f) {
 		v = a * v;
 	}
 	
-	vm c;
-	berlekamp_massey(s, c);
+	vm c = berlekamp_massey(s);
 
-	f = MFPS(c);
+	MFPS f(c);
 	f = (1 - (f >> 1)).rev();
+
+	return f;
 }
 
 
@@ -550,7 +583,8 @@ void minimal_polynomial(const Matrix<mint>& a, MFPS& f) {
 * 正方行列 A = a[0..n)[0..n) を相似な上ヘッセンベルグ行列 H = P^(-1) A P に書き換える．
 * 上ヘッセンベルグ行列とは，対角の 2 つ下以下の成分が全て 0 であるような行列である．
 */
-template <class T> void hessenberg_reduction(Matrix<T>& a) {
+template <class T>
+void hessenberg_reduction(Matrix<T>& a) {
 	// 参考 : https://hitonanode.github.io/cplib-cpp/linear_algebra_matrix/characteristic_poly.hpp
 	// verify : https://judge.yosupo.jp/problem/characteristic_polynomial
 
@@ -596,16 +630,16 @@ template <class T> void hessenberg_reduction(Matrix<T>& a) {
 
 //【特性多項式（mod 998244353）】O(n^3)
 /*
-* 正方行列 A = a[0..n)[0..n) の特性多項式 |xI - A| を f に格納する．
+* 正方行列 A = a[0..n)[0..n) の特性多項式 |zI - A| を返す．
 *
 * 利用：【形式的冪級数（mod 998244353）】,【ヘッセンベルグ縮約】
 */
-void characteristic_polynomial(Matrix<mint> a, MFPS& f) {
+MFPS characteristic_polynomial(Matrix<mint> a) {
 	// verify : https://judge.yosupo.jp/problem/characteristic_polynomial
 
 	//【方法】
 	// A を相似な上ヘッセンベルグ行列に縮約しておく（相似なので特性多項式は不変）
-	// xI - A の首座小行列式を，最右列で余因子展開しながら再帰的に求めていく．
+	// zI - A の首座小行列式を，最右列で余因子展開しながら再帰的に求めていく．
 
 	int n = a.n;
 	hessenberg_reduction(a);
@@ -617,7 +651,7 @@ void characteristic_polynomial(Matrix<mint> a, MFPS& f) {
 		repi(j, i + 1, n - 1) acc[i][j] = acc[i][j - 1] * a[j][j - 1];
 	}
 
-	// dp[j] : xI - A の j * j 首座小行列式
+	// dp[j] : zI - A の j*j 首座小行列式
 	vector<MFPS> dp(n + 1);
 	dp[0] = MFPS(1);
 
@@ -626,18 +660,18 @@ void characteristic_polynomial(Matrix<mint> a, MFPS& f) {
 		dp[j] += dp[j - 1] * MFPS(vm{ -a[j - 1][j - 1], 1 });
 	}
 
-	f = dp[n];
+	return dp[n];
 }
 
 
 //【アダマール行列】O(4^n)
 /*
-* 2^n * 2^n のアダマール行列を mat に格納する．
+* 2^n * 2^n のアダマール行列を返す．
 */
-void hadamard_matrix(int n, vvi& mat) {
+vvi hadamard_matrix(int n) {
 	// verify : https://atcoder.jp/contests/keyence2021/tasks/keyence2021_d
 
-	mat = vvi(1LL << n, vi(1LL << n));
+	vvi mat(1LL << n, vi(1LL << n));
 
 	function<void(int, int, int, int)> rf = [&](int n, int x, int y, int sgn) {
 		if (n == 0) {
@@ -651,15 +685,10 @@ void hadamard_matrix(int n, vvi& mat) {
 		rf(n - 1, x, y + b, sgn);
 		rf(n - 1, x + b, y + b, -sgn);
 	};
-
 	rf(n, 0, 0, 1);
+
+	return mat;
 }
-
-
-//【パーマネント】O(2^n n)
-/*
-* 【二部グラフの完全マッチングの数え上げ】を利用すればよい．
-*/
 
 
 //【行列のクロネッカー積】O(m1 m2 n1 n2)

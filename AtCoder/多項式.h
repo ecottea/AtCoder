@@ -28,7 +28,8 @@
 * double f.solve(Poly1 g) : O(1)
 *	f(x) = g(x) ‚Ì‰ğ‚ğ•Ô‚·D
 */
-template <class T> struct Poly1 {
+template <class T>
+struct Poly1 {
 	// f(x) = a x + b ‚ÌŒW”
 	T a, b;
 
@@ -183,7 +184,8 @@ int quadratic_equation(ll a, ll b, ll c, vd& sol) {
 * f * g : O(n m)
 *	Ï‚ğ•Ô‚·D
 */
-template <class T> struct SPoly {
+template <class T>
+struct SPoly {
 	// Ÿ” ¨ ŒW”
 	unordered_map<ll, T> c;
 

@@ -88,7 +88,7 @@ void to_chomsky(const CFG& cfg, CFG& cnf) {
 
 	// ’PˆÊ‹K‘¥‚ğœ‹‚·‚éD
 	vvi dist(n);
-	rep(i, n) breadth_first_search(g, i, dist[i]);
+	rep(i, n) dist[i] = breadth_first_search(g, i);
 
 	cnf = CFG(n2);
 	rep(i, n) {

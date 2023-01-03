@@ -7,12 +7,12 @@
 
 //【素数の列挙】O(n log(log n))
 /*
-* n 以下の素数を列挙し，ps に昇順に格納する．
+* n 以下の素数を昇順に列挙したリストを返す．
 */
-void eratosthenes(int n, vi& ps) {
+vi eratosthenes(int n) {
 	// verify : https://judge.yosupo.jp/problem/enumerate_primes
 
-	ps.clear();
+	vi ps;
 
 	// 素数かどうかを記録しておくためのテーブル
 	vb is_prime(n + 1, true);
@@ -31,22 +31,22 @@ void eratosthenes(int n, vi& ps) {
 
 	// √n より大きい i の処理
 	for (; i <= n; i++) if (is_prime[i]) ps.push_back(i);
+
+	return ps;
 }
 
 
 //【素数の列挙（区間）】O((√r + (r - l))log(log r))
 /*
-* [l..r) に含まれる素数を ps に昇順に格納する．
+* [l..r) に含まれる素数を昇順に格納したリストを返す．
 *
 * 利用：【素数の列挙】
 */
-void eratosthenes_interval(ll l, ll r, vl& ps) {
+vl eratosthenes_interval(ll l, ll r) {
 	// verify : https://algo-method.com/tasks/332
 
-	ps.clear();
-
-	vi ps_sub;
-	eratosthenes(int(sqrt(r) + EPS), ps_sub);
+	vl ps;
+	vi ps_sub = eratosthenes(int(sqrt(r) + EPS));
 
 	// 素数かどうかを記録しておくためのテーブル
 	vb is_prime(r - l, true);
@@ -60,6 +60,8 @@ void eratosthenes_interval(ll l, ll r, vl& ps) {
 	rep(i, r - l) {
 		if (is_prime[i]) ps.push_back(l + i);
 	}
+
+	return ps;
 }
 
 
@@ -108,14 +110,14 @@ struct Factor_integer {
 
 //【一括素因数分解】O(n log(log n))
 /*
-* n 以下の自然数 i の素因数分解を pps[i] に格納する．（pps[0] は使わない）
+* n 以下の自然数 i の素因数分解を pps[i] に格納し pps を返す（pps[0] は使わない）
 *
 *（エラトステネスの篩）
 */
-void factor_integer_all(int n, vector<map<int, int>>& pps) {
+vector<map<int, int>> factor_integer_all(int n) {
 	// verify : https://atcoder.jp/contests/abc052/tasks/arc067_a
 
-	pps = vector<map<int, int>>(n + 1);
+	vector<map<int, int>> pps(n + 1);
 
 	// 順に素数で割っていった残りの値を記録しておくためのテーブル
 	vi a(n + 1);
@@ -139,23 +141,24 @@ void factor_integer_all(int n, vector<map<int, int>>& pps) {
 	for (; p <= n; p++) {
 		if (a[p] != 1) pps[p][a[p]]++;
 	}
+
+	return pps;
 }
 
 
 //【一括素因数分解（区間）】O((√r + (r - l))log(log r))
 /*
-* [l..r) に含まれる自然数 i の素因数分解を pps[i - l] に格納する．
+* [l..r) に含まれる自然数 i の素因数分解を pps[i - l] に格納し，pps を返す．
 *
 *（エラトステネスの区間篩）
 *
 * 利用：【素数の列挙】
 */
-void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
-	pps = vector<map<ll, int>>(r - l);
+vector<map<ll, int>> factor_integer_interval(ll l, ll r) {
+	vector<map<ll, int>> pps(r - l);
 
 	// ps : √r 以下の素数のリスト
-	vi ps;
-	eratosthenes(int(sqrt(r) + EPS), ps);
+	vi ps = eratosthenes(int(sqrt(r) + EPS));
 
 	// 順に素数で割っていった残りの値を記録しておくためのテーブル
 	vl a(r - l);
@@ -173,63 +176,72 @@ void factor_integer_interval(ll l, ll r, vector<map<ll, int>>& pps) {
 	for (ll j = l; j < r; j++) {
 		if (a[j - l] != 1) pps[j - l][a[j - l]]++;
 	}
+
+	return pps;
 }
 
 
 //【約数関数 σ_k(n)】O(n log(log n))
 /*
-* i = [1..n] について約数関数 σ_k(i) = (i の約数の k 乗和) を s[i] に格納する．
+* 各 i∈[1..n] について約数関数 σ_k(i)=(i の約数の k 乗和) を格納したリストを返す．
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
 *
 * 利用：【約数変換，LCM 畳込み】
 */
-template <class T> void divisor_sigma(int k, int n, vector<T>& s) {
+template <class T>
+vector<T> divisor_sigma(int k, int n) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
 	// verify : https://atcoder.jp/contests/arc068/tasks/arc068_c
 
-	s.resize(n + 1);
+	vector<T> s(n + 1);
 	s[0] = 0;
 	repi(i, 1, n) s[i] = T(pow(i, k));
 
 	Divisor_transform<T> dt(n);
 	dt.divisor_zeta(s);
+
+	return s;
 }
 
 
 //【オイラー関数 φ(n)】O(n log(log n))
 /*
-* i = [1..n] についてオイラー関数 φ(i) の値を e[i] に格納する．
+* 各 i∈[1..n] についてオイラー関数 φ(i) の値を格納したリストを返す．
 *
 * 利用：【約数変換，LCM 畳込み】
 */
-void euler_phi(int n, vi& phi) {
+vi euler_phi(int n) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
 	// verify : https://onlinejudge.u-aizu.ac.jp/challenges/sources/VPC/RUPC/2286?year=2011
 
-	phi.resize(n + 1);
+	vi phi(n + 1);
 	phi[0] = 0;
 	repi(i, 1, n) phi[i] = i;
 
 	Divisor_transform<int> dt(n);
 	dt.divisor_mobius(phi);
+
+	return phi;
 }
 
 
 //【メビウス関数 μ(n)】O(n log(log n))
 /*
-* i = [1..n] についてメビウス関数 μ(i) の値を mu[i] に格納する．
+* 各 i∈[1..n] についてメビウス関数 μ(i) の値を格納したリストを返す．
 *
 * 利用：【約数変換，LCM 畳込み】
 */
-void mobius_mu(int n, vi& mu) {
+vi mobius_mu(int n) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
 	// verify : https://yukicoder.me/problems/no/1514
 
-	mu = vi(n + 1, 0);
+	vi mu(n + 1, 0);
 	mu[1] = 1;
 
 	Divisor_transform<int> dt(n);
 	dt.divisor_mobius(mu);
+
+	return mu;
 }
 
 

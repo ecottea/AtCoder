@@ -30,13 +30,13 @@
 * BFPS f.reminder(BFPS g) : O(n^2 / 64)
 * pair<BFPS, BFPS> f.quotient_remainder(BFPS g) : O(n^2 / 64)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
-* 　制約 : g の最項次の項の係数は 1
+*	制約 : g の最項次の項の係数は 1
 *
 * BFPS f.quotient(SFPS g) : O((n + deg(g)) |g|)
 * BFPS f.reminder(SFPS g) : O((n + deg(g)) |g|)
 * pair<BFPS, BFPS> f.quotient_remainder(SFPS g) : O((n + deg(g)) |g|)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
-* 　制約 : g の最項次の項の係数は 1
+*	制約 : g の最項次の項の係数は 1
 *
 * int f.deg(), int f.size() : O(1)
 *	多項式 f の次数[+1]を返す．

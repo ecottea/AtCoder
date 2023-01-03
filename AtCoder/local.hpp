@@ -228,13 +228,13 @@ template <typename First>
 void dump(First first) {
 	if (mute_dump) return;
 
-	cout << "\033[1;32m" << first << "\033[0m" << endl;
+	cerr << "\033[1;32m" << first << "\033[0m" << endl;
 }
 template <typename First, typename... Rest>
 void dump(First first, Rest... rest) {
 	if (mute_dump) return;
 
-	cout << "\033[1;32m" << first << "\033[0m ";
+	cerr << "\033[1;32m" << first << "\033[0m ";
 	dump(rest...);
 }
 
@@ -242,11 +242,11 @@ template <class T> void dumpel(T a) {
 	if (mute_dump) return;
 
 	int i = 0; 
-	cout << "\033[1;32m";
+	cerr << "\033[1;32m";
 	repe(x, a) {
-		cout << i++ << ": " << x << endl;
+		cerr << i++ << ": " << x << endl;
 	}
-	cout << "\033[0m";
+	cerr << "\033[0m";
 }
 
 // Mathematica ‚Ì‘®‚É‡‚í‚¹‚½o—Í

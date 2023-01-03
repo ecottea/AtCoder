@@ -9,7 +9,8 @@
 /*
 * Σi<j |a[j] - a[i]| の値を返す．
 */
-template <class T> mint difference_sum(vector<T> a) {
+template <class T>
+mint difference_sum(vector<T> a) {
 	// verify : https://atcoder.jp/contests/abc058/tasks/arc071_b
 
 	int n = sz(a);
@@ -30,7 +31,8 @@ template <class T> mint difference_sum(vector<T> a) {
 /*
 * Σi=[0..n)j=[0..m) a[i] XOR b[j] の値を返す．
 */
-template <class T> T xor_sum(const vl& a, const vl& b) {
+template <class T>
+T xor_sum(const vl& a, const vl& b) {
 	// verify : https://atcoder.jp/contests/abc147/tasks/abc147_d
 
 	int n = sz(a), m = sz(b);

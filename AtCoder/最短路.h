@@ -6,15 +6,15 @@
 
 //【幅優先探索】O(|V| + |E|)
 /*
-* グラフ g に対し，始点 st から各頂点 i への最短経路長を dist[i] に格納する．
-* i が st から到達不能な頂点の場合は dist[i] = INF となる．
+* グラフ g に対し，st から各頂点への最短距離（到達不能なら INF）を格納したリストを返す．
 */
-template <class G> void breadth_first_search(const G& g, int st, vi& dist) {
+template <class G>
+vi breadth_first_search(const G& g, int st) {
 	// verify : https://algo-method.com/tasks/414
 
 	int n = sz(g);
 
-	dist = vi(n, INF); // スタートからの最短距離を保持するテーブル : O(n)
+	vi dist(n, INF); // スタートからの最短距離を保持するテーブル : O(n)
 	dist[st] = 0;
 
 	queue<int> que; // 次に探索する頂点を入れておくキュー
@@ -36,22 +36,24 @@ template <class G> void breadth_first_search(const G& g, int st, vi& dist) {
 			que.push(t);
 		}
 	}
+
+	return dist;
 }
 
 
 //【幅優先探索（距離上限指定）】O((max deg(v))^D)
 /*
 * グラフ g に対し始点を st として距離 D 以下の範囲の幅優先探索を行い，
-* st から各頂点 s への最短経路長を dist[s] に格納する．
+* st から到達可能な各頂点への最短距離を格納したリストを返す．
 */
-void BFS_ub(const Graph& g, int st, int D, unordered_map<int, int>& dist) {
+unordered_map<int, int> BFS_ub(const Graph& g, int st, int D) {
 	// verify : https://atcoder.jp/contests/abc254/tasks/abc254_e
 
 	int n = sz(g);
 
 	// dist[v] : st から v までの最短距離
 	//（vi dist(n) とすると距離 D 以下でない頂点の分までテーブルを確保してしまい無駄がある）
-	dist.clear();
+	unordered_map<int, int> dist;
 	dist[st] = 0;
 	if (D == 0) return;
 
@@ -73,15 +75,18 @@ void BFS_ub(const Graph& g, int st, int D, unordered_map<int, int>& dist) {
 			if (dist[t] < D) q.push(t);
 		}
 	}
+
+	return dist;
 }
 
 
 //【幅優先探索（動的）】O(|V| + |E|)
 /*
-* st から到達可能な t までの最短距離を dist[t] に格納したリストを返す．
+* st から到達可能な各頂点への最短距離を格納したリストを返す．
 * nxt(s) は s の次に訪れることのできる頂点のリストを返す．
 */
-template <class T> unordered_map<T, int> dynamic_BFS(T st, const function<vector<T>(T)>& nxt) {
+template <class T>
+unordered_map<T, int> dynamic_BFS(T st, const function<vector<T>(T)>& nxt) {
 	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_f
 
 	unordered_map<T, int> dist; // st からの最短距離を保持するテーブル
@@ -122,15 +127,14 @@ template <class T> unordered_map<T, int> dynamic_BFS(T st, const function<vector
 //【01-BFS】O(|V| + |E|)
 /*
 * 辺のコストが 0, 1 の二値に限られるコスト付きグラフ g に対し，
-* st から各頂点 i への最短経路長を dist[i] に格納する．
-* i が st から到達不能な頂点の場合は dist[i] = INF となる．
+* st から各頂点への最短距離（到達不能なら INF）を格納したリストを返す．
 */
-void binary_BFS(const WGraph& g, int st, vi& dist) {
+vi binary_BFS(const WGraph& g, int st) {
 	// verify : https://atcoder.jp/contests/arc005/tasks/arc005_3
 
 	int n = sz(g);
 
-	dist = vi(n, INF); // スタートからの最短距離を保持するテーブル
+	vi dist(n, INF); // スタートからの最短距離を保持するテーブル
 	dist[st] = 0;
 
 	deque<int> q; // 次に探索する頂点を入れておくデック
@@ -155,20 +159,22 @@ void binary_BFS(const WGraph& g, int st, vi& dist) {
 			}
 		}
 	}
+
+	return dist;
 }
 
 
 //【単一始点最短路】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g に対し，始点 st から各頂点 i への最短距離を dist[i] に格納する．
-* 頂点 i に到達不能の場合は dist[i] = INFL とする．
+* 非負のコスト付きグラフ g に対し
+* st から各頂点への最短距離（到達不能なら INFL）を格納したリストを返す．
 */
-void dijkstra(const WGraph& g, int st, vl& dist) {
+vl dijkstra(const WGraph& g, int st) {
 	// 参考 : https://snuke.hatenablog.com/entry/2021/02/22/102734
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_A
 
 	int n = sz(g);
-	dist = vl(n, INFL); // スタートからの最短距離
+	vl dist(n, INFL); // スタートからの最短距離
 	dist[st] = 0;
 
 	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
@@ -190,17 +196,19 @@ void dijkstra(const WGraph& g, int st, vl& dist) {
 			}
 		}
 	}
+
+	return dist;
 }
 
 
 //【ポテンシャル付きダイクストラ法】O(|V| + |E| log|V|)
 /*
 * 負閉路のないコスト付きグラフ g に対し，実行可能ポテンシャル u[0..n) を与え，
-* 始点 st から各頂点 i への最短距離を dist[i] に格納する．
+* st から各頂点への最短距離を格納したリストを返す．
 *
 * 条件：g[s][t].cost >= u[t] - u[s]
 */
-void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& dist) {
+vl dijkstra_potential(const WGraph& g, const vl& u, int st) {
 	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_e
 
 	//【方法】
@@ -220,7 +228,7 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& dist) {
 	// 参考：https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
 
 	int n = sz(g);
-	dist = vl(n, INFL); // スタートからの最短距離
+	vl dist(n, INFL); // スタートからの最短距離
 	dist[st] = 0;
 
 	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
@@ -248,6 +256,8 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& dist) {
 
 	// 場所依存のコスト Δu を加算する．
 	rep(i, n) dist[i] += u[i] - u[st];
+
+	return dist;
 }
 
 
@@ -262,13 +272,13 @@ void dijkstra_potential(const WGraph& g, const vl& u, int st, vl& dist) {
 
 //【最短路木】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g に対し，始点 st を根とする有向最短路木を gt に格納する．
+* 非負のコスト付きグラフ g に対し，始点 st を根とする有向最短路木を返す．
 */
-void dijkstra_tree(const WGraph& g, int st, WGraph& gt) {
+WGraph dijkstra_tree(const WGraph& g, int st) {
 	// verify : https://atcoder.jp/contests/abc252/tasks/abc252_e
 
 	int n = sz(g);
-	gt = WGraph(n);
+	WGraph gt(n);
 	vl dist(n, INFL); // スタートからの最短距離
 	dist[st] = 0;
 
@@ -305,23 +315,25 @@ void dijkstra_tree(const WGraph& g, int st, WGraph& gt) {
 
 		gt[s].push_back(e);
 	}
+
+	return gt;
 }
 
 
 //【単一始点最短路（負コスト可）】O(|V| |E|)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，
-* st から各頂点 i への最短距離を dist[i] に格納する．
-* もし st から到達可能な負のコストをもつ閉路があれば false を返す．
+* st から各頂点への最短距離を格納したリストを返す．
+* もし st から到達可能な負のコストをもつ閉路があれば空リストを返す．
 */
-bool bellman_ford(const WGraph& g, int st, vl& dist) {
+vl bellman_ford(const WGraph& g, int st) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_B
 
 	//【補足】
 	// min-plus 半環上のスパース行列とベクトルの積の反復とも思える．
 
 	int n = sz(g);
-	dist = vl(n, INFL); // スタートからの最短距離を保持するテーブル
+	vl dist(n, INFL); // スタートからの最短距離を保持するテーブル
 	dist[st] = 0;
 
 	rep(i, n) {
@@ -341,22 +353,22 @@ bool bellman_ford(const WGraph& g, int st, vl& dist) {
 		}
 
 		// もし距離の更新が起こらなければ最短距離確定
-		if (!updated) return true;
+		if (!updated) return dist;
 	}
 
 	// もし全ての辺についての操作を |V| 回繰り返しても距離の更新があったなら，
-	// st から到達可能な負の閉路を持っているので false を返す．
-	return false;
+	// st から到達可能な負の閉路を持っている．
+	return vl();
 }
 
 
 //【全頂点対最短路（負コスト可）】O(|V|^3)
 /*
 * コスト付きグラフ g（負のコストも可）に対し，
-* 頂点 i から頂点 j への最短距離を dist[i][j] に格納する．
-* もし g が負の閉路をもっていれば false を返す．
+* 頂点 i から頂点 j への最短距離を dist[i][j] に格納し dist を返す．
+* もし g が負の閉路をもっていれば空リストを返す．
 */
-bool warshall_floyd(const WGraph& g, vvl& dist) {
+vvl warshall_floyd(const WGraph& g) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_C
 
 	//【補足】
@@ -365,7 +377,7 @@ bool warshall_floyd(const WGraph& g, vvl& dist) {
 	int n = sz(g);
 
 	// dist[i][j] : 頂点 i から頂点 j までの最短距離
-	dist = vvl(n, vl(n, INFL));
+	vvl dist(n, vl(n, INFL));
 
 	rep(s, n) dist[s][s] = 0;
 	rep(s, n) repe(e, g[s]) chmin(dist[s][e.to], e.cost);
@@ -384,8 +396,8 @@ bool warshall_floyd(const WGraph& g, vvl& dist) {
 	}
 
 	// 負の閉路を持っていれば false を返す．
-	rep(i, n) if (dist[i][i] < 0) return false;
-	return true;
+	rep(i, n) if (dist[i][i] < 0) return vvl();
+	return dist;
 }
 
 

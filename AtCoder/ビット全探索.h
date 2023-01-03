@@ -49,7 +49,8 @@
 *
 *（ビット全探索）
 */
-template <class T> int count_2select_sum(vector<T>& a, vector<T>& b, T sum) {
+template <class T>
+int count_2select_sum(vector<T>& a, vector<T>& b, T sum) {
 	int n = sz(a);
 
 	int cnt = 0;
@@ -87,7 +88,8 @@ template <class T> int count_2select_sum(vector<T>& a, vector<T>& b, T sum) {
 *
 *（3 進全探索）
 */
-template <class T> int count_3select_sum(vector<T>& a, vector<T>& b, vector<T>& c, T sum) {
+template <class T>
+int count_3select_sum(vector<T>& a, vector<T>& b, vector<T>& c, T sum) {
 	int n = sz(a);
 
 	int cnt = 0;

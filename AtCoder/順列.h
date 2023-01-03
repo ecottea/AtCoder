@@ -11,7 +11,8 @@
 /*
 * a[0..n) の転倒数を返す．
 */
-template <class T> ll inversion_number(const vector<T>& a) {
+template <class T>
+ll inversion_number(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/arc075/tasks/arc075_c
 
 	int n = sz(a);
@@ -48,7 +49,8 @@ template <class T> ll inversion_number(const vector<T>& a) {
 *
 * 利用：【座標圧縮】
 */
-template <class T> ll inversion_number_cc(const vector<T>& a) {
+template <class T>
+ll inversion_number_cc(const vector<T>& a) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_D
 
 	int n = sz(a);
@@ -78,7 +80,8 @@ template <class T> ll inversion_number_cc(const vector<T>& a) {
 *
 * 利用：【中央値で部分列に分解】
 */
-template <class T> ll inversion_number_01sep(const vector<T>& a) {
+template <class T>
+ll inversion_number_01sep(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/chokudai_s001/tasks/chokudai_S001_j
 
 	//【方法】
@@ -114,14 +117,15 @@ template <class T> ll inversion_number_01sep(const vector<T>& a) {
 
 //【置換のサイクル分解】O(n)
 /*
-* [0..n) の置換 p を巡回置換の積に分解して cycles に格納する．
+* [0..n) の置換 p を巡回置換の積に分解して cycles に格納し cycles を返す．
 * p は任意の i を p[i] に動かすような置換を表す．
 */
-void permutation_decomposition(const vi& p, vvi& cycles) {
+vvi permutation_decomposition(const vi& p) {
 	// verify : https://atcoder.jp/contests/abc175/tasks/abc175_d
 
 	int n = sz(p);
 
+	vvi cycles;
 	vb seen(n);
 
 	rep(i, n) {
@@ -139,6 +143,8 @@ void permutation_decomposition(const vi& p, vvi& cycles) {
 			s = p[s];
 		} while (s != i);
 	}
+	
+	return cycles;
 }
 
 
@@ -188,11 +194,11 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 //【階乗進法 → 順列】O(n log n)
 /*
 * 階乗進法表記で上位桁から順に ds[0..n) が並んだ数を num とする．
-* [0..n) の順列で辞書順で num 番目（0-indexed）の順列を p[0..n) に格納する．
+* [0..n) の順列で辞書順で num 番目（0-indexed）の順列を返す．
 *
 * 利用：【多重集合の動的辞書】
 */
-void factorial_base_to_permutation(const vi& ds, vi& p) {
+vi factorial_base_to_permutation(const vi& ds) {
 	// verify : https://atcoder.jp/contests/arc047/tasks/arc047_c
 
 	//【例】
@@ -210,7 +216,7 @@ void factorial_base_to_permutation(const vi& ds, vi& p) {
 	// より p[0..4) = [1, 0, 3, 2] である．
 
 	int n = sz(ds);
-	p.resize(n);
+	vi p(n);
 
 	vi ini(n);
 	iota(all(ini), 0);
@@ -225,6 +231,8 @@ void factorial_base_to_permutation(const vi& ds, vi& p) {
 		// 選んだ数は消去しておく．
 		dd.erase(p[i], 1);
 	}
+
+	return p;
 }
 
 

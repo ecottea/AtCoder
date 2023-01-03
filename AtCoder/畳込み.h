@@ -17,7 +17,8 @@
 /*
 * a[0..n) と b[0..m) を畳み込んだ数列 c[0..n+m-1) を返す．
 */
-template <class T> vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
+template <class T>
+vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
 	// verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
 
 	int n = sz(a), m = sz(b);
@@ -52,7 +53,8 @@ template <class T> vector<T> naive_convolution(const vector<T>& a, const vector<
 *
 *（繰り返し二乗法）
 */
-template <class T> vector<T> naive_self_convolution(const vector<T>& a, ll k) {
+template <class T>
+vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 	// verify : https://atcoder.jp/contests/arc059/tasks/arc059_d
 
 	int n = sz(a);
@@ -320,6 +322,206 @@ vvm convolution_2D(vvm a, vvm b) {
 }
 
 
+//【オンライン畳込み（mod 998244353）】
+/*
+* Online_convolution(int n) : O(n)
+*	a[0..n) と b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*
+* void set(mint a, mint b) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+*
+* mint [](int i) : O(1)
+*	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
+*	制約 : set を i 回以上呼び出し済でなくてはならない．
+*
+* void update(int i, D c) : O(1)
+*	c[i] を強制的に c に書き換える．
+*
+*/
+class Online_convolution {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vm as, bs, cs;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Online_convolution(int n) : n(n), t(0), as(n), bs(n), cs(n) {}
+	Online_convolution() : n(0), t(0) {}
+
+	// t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+	void set(mint a, mint b) {
+		as[t] = a; bs[t] = b;
+
+		int i1_max = lsb(t + 2), i2_max = i1_max;
+
+		// 対角線上の正方形領域に対する処理を行う場合
+		if (popcount(t + 2) == 1) { i1_max -= 2; i2_max -= 1; }
+
+		// 2^i : 正方形の一辺の長さ（対角線より下）
+		repi(i, 0, i1_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = t + 1 - (1 << i);
+			int y_min = (1 << i) - 1;
+
+			vm as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vm cs_sub = convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		// 2^i : 正方形の一辺の長さ（対角線以上）
+		repi(i, 0, i2_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = (1 << i) - 1;
+			int y_min = t + 1 - (1 << i);
+
+			vm as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vm cs_sub = convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	mint const& operator[](int i) const {
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// c[i] を強制的に c に変更する．
+	void update(int i, mint c) {
+		cs[i] = c;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_convolution& c) {
+		os << "a: " << c.as << endl;
+		os << "b: " << c.bs << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン畳込み（mod 998244353，片側固定）】
+/*
+* Semi_online_convolution(vm b) : O(n)
+*	a[0..n) と固定された b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*
+* void set(mint b) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t] を与える．
+*
+* mint [](int i) : O(1)
+*	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
+*	制約 : set を i 回以上呼び出し済でなくてはならない．
+*
+* void update(int i, mint c) : O(1)
+*	c[i] を強制的に c に書き換える．
+*/
+class Semi_online_convolution {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vm as, cs; vvm bss;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Semi_online_convolution(const vm& bs) : n(sz(bs)), t(0), as(n), cs(n), bss(msb(n) + 1) {
+		// verify : https://atcoder.jp/contests/abc213/tasks/abc213_h
+
+		// b[0], b[1] だけは例外的に bss[0] に格納しておく．
+		int len = min(2, n);
+		copy(bs.begin(), bs.begin() + len, back_inserter(bss[0]));
+
+		// b[2..n) を幅 2^i の区間にあらかじめ分割しておく．
+		repi(i, 1, msb(n)) {
+			int y_min = 1 << i;
+			int len = min(1 << i, n - y_min);
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bss[i]));
+		}
+	}
+	Semi_online_convolution() : n(0), t(0) {}
+
+	// t 回目に呼び出すときは，a=a[t] を与える．
+	void set(mint a) {
+		// verify : https://atcoder.jp/contests/abc213/tasks/abc213_h
+
+		as[t] = a;
+
+		// b[0], b[1] との積だけは例外処理
+		cs[t] += as[t] * bss[0][0];
+		if (t + 1 < n) cs[t + 1] += as[t] * bss[0][1];
+
+		int i_max = lsb(t);
+
+		// 2^i : 正方形の一辺の長さ
+		repi(i, 1, i_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bss[i] を畳み込む．
+			int x_min = t - (1 << i);
+
+			vm as_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+
+			vm cs_sub = convolution(as_sub, bss[i]);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	mint const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/abc213/tasks/abc213_h
+
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// c[i] を強制的に c に変更する．
+	void update(int i, mint c) {
+		// verify : https://atcoder.jp/contests/abc213/tasks/abc213_h
+
+		cs[i] = c;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Semi_online_convolution& c) {
+		os << "a: " << c.as << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
+
+
 //【添字 xor での畳込み】
 /*
 *【対称差畳込み】を利用すればよい．
@@ -450,184 +652,6 @@ template <typename T> vector<T> max_convolution(vector<T> a, vector<T> b) {
 
 	return a;
 }
-
-
-//【数論変換（mod 998244353）】
-/*
-* NTT(int n) : O(n)
-*	長さ n 以下の数列を扱えるよう初期化を行う．
-*
-* ntt(vm a, vm& A) : O(n log n)
-*	a[0..n) に対し mod 998244353 で数論変換を行った結果を A[0..n) に格納する．
-*	制約 : n は 2 の冪乗
-*
-* intt(vm A, vm& a) : O(n log n)
-*	A[0..n) に対し mod 998244353 で逆数論変換を行った結果を a[0..n) に格納する．
-*	制約 : n は 2 の冪乗
-*
-* vm convolution(vm a, vm b) : O((n + m) log(n + m))
-*	a[0..n) と b[0..m) の畳込みを返す．
-*
-* vm cyclic_convolution(vm a, vm b) : O(n log n)
-*	a[0..n) と b[0..n) の巡回畳込みを返す．
-*	制約 : n は 2 の冪乗
-*
-* vm cyclic_convolution_power(vm a, ll d) : O(n log n + n log d)
-*	a[0..n) を d 個巡回畳込みした結果を返す．
-*	制約 : n は 2 の冪乗
-*/
-struct NTT {
-	// 参考 : https://qiita.com/Sen_comp/items/9401382df736e51564c1
-
-	using mint = modint998244353;
-	using vm = vector<mint>;
-
-	// N : 扱える数列の長さの上限（N = 2^M）
-	int N, M;
-
-	// w : 1 の原始 2^M 乗根，w_pow[i] : w^i，w_pow[N-i] : w^(-i)
-	mint w; vm w_pow;
-
-	// 長さ n 以下の数列を扱えるよう初期化を行う．
-	NTT(int n) {
-		// verify : https://judge.yosupo.jp/problem/convolution_mod
-
-		// n 以上の最小の 2 冪 2^M を求める．
-		M = msb(n - 1) + 1;
-		N = 1 << M;
-
-		// 長さ 2^M の数列を扱うためには，1 の原始 2^M 乗根が必要．
-		// 998244353 = 2^23 * 119 + 1 なので，原始根 3 の 119 * 2^(23-M) 乗を計算することで求まる．
-		w = mint(3).pow(119LL << (23 - M));
-
-		// w の累乗を前計算しておく．
-		w_pow.resize(N + 1);
-		w_pow[0] = 1;
-		repi(i, 1, N) w_pow[i] = w_pow[i - 1] * w;
-	}
-
-	// x を (y, z) に分割する
-	void butterfly(const vm& x, vm& y, vm& z) {
-		int n = sz(x) / 2, m = msb(n) + 1;
-		y.resize(n); z.resize(n);
-
-		rep(i, n) {
-			y[i] = x[i] + x[i + n];
-			z[i] = (x[i] - x[i + n]) * w_pow[(ll)i << (M - m)];
-		}
-	}
-
-	// x を (y, z) に分割する（逆変換用）
-	void butterfly_inv(const vm& x, vm& y, vm& z) {
-		int n = sz(x) / 2, m = msb(n) + 1;
-		y.resize(n); z.resize(n);
-
-		rep(i, n) {
-			y[i] = x[i] + x[i + n];
-			z[i] = (x[i] - x[i + n]) * w_pow[N - (i << (M - m))];
-		}
-	}
-
-	// (y, z) を x に統合する
-	void riffle(const vm& y, const vm& z, vm& x) {
-		int n = sz(y);
-		x = vm(2 * n);
-
-		rep(i, n) {
-			x[2 * i] = y[i];
-			x[2 * i + 1] = z[i];
-		}
-	}
-
-	// 長さが 2 冪の列 a に対し mod 998244353 で数論変換を行った結果を A に格納する．
-	void ntt(const vm& a, vm& A) {
-		// verify : https://judge.yosupo.jp/problem/convolution_mod
-		
-		Assert(sz(a) <= N);
-
-		int n = sz(a);
-		if (n == 1) {
-			A = a;
-			return;
-		}
-
-		vm b, c, B, C;
-		butterfly(a, b, c);
-		ntt(b, B); ntt(c, C);
-		riffle(B, C, A);
-	}
-
-	// 長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
-	void intt(const vm& A, vm& a) {
-		// verify : https://judge.yosupo.jp/problem/convolution_mod
-		
-		Assert(sz(A) <= N);
-
-		intt_sub(A, a);
-
-		// 定数倍の調整
-		mint n_inv = mint(sz(A)).inv();
-		rep(i, sz(A)) a[i] *= n_inv;
-	}
-	void intt_sub(const vm& A, vm& a) {
-		int n = sz(A);
-		if (n == 1) {
-			a = A;
-			return;
-		}
-
-		vm b, c, B, C;
-		butterfly_inv(A, B, C);
-		intt_sub(B, b); intt_sub(C, c);
-		riffle(b, c, a);
-	}
-
-	// a と b の畳込みを返す．
-	vm convolution(vm a, vm b) {
-		// verify : https://judge.yosupo.jp/problem/convolution_mod
-
-		Assert(sz(a) + sz(b) - 1 <= N);
-
-		int n = sz(a), m = sz(b);
-
-		int k = 1 << (msb(n + m - 2) + 1);
-		a.resize(k); b.resize(k);
-
-		vm A, B; ntt(a, A); ntt(b, B);
-		rep(i, k) A[i] *= B[i];
-		intt(A, a);
-
-		a.resize(n + m - 1);
-
-		return a;
-	}
-
-	// 長さが 2 冪の列 a と b の巡回畳込みを返す．
-	vm cyclic_convolution(vm a, vm b) {
-		Assert(sz(a) == sz(b) && sz(a) <= N);
-
-		int n = sz(a);
-
-		vm A, B; ntt(a, A); ntt(b, B);
-		rep(i, n) A[i] *= B[i];
-		intt(A, a);
-
-		return a;
-	}
-
-	// 長さが 2 冪の列 a を d 個巡回畳込みした結果を返す．
-	vm cyclic_convolution_power(vm a, ll d) {
-		Assert(sz(a) <= N);
-
-		int n = sz(a);
-
-		vm A; ntt(a, A);
-		rep(i, n) A[i] = A[i].pow(d);
-		intt(A, a);
-
-		return a;
-	}
-};
 
 
 //【高速フーリエ変換】
@@ -844,11 +868,402 @@ struct FFT {
 };
 
 
+//【オンライン畳込み（実数）】
+/*
+* Online_convolution_double<D>(int n) : O(n)
+*	a[0..n) と b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*	制約 : D は double または long double（誤差には注意！）
+*
+* void set(D a, D b) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+*
+* D [](int i) : O(1)
+*	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
+*	制約 : set を i 回以上呼び出し済でなくてはならない．
+*
+* void update(int i, D c) : O(1)
+*	c[i] を強制的に c に書き換える．
+*
+* 利用：【高速フーリエ変換】
+*/
+template<class D = double>
+class Online_convolution_double {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vector<D> as, bs, cs;
+	FFT<D> fft;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Online_convolution_double(int n) : n(n), t(0), as(n), bs(n), cs(n), fft(n) {
+		// verify : https://atcoder.jp/contests/jag2017summer-day1/tasks/jag2017summer_day1_c
+	}
+	Online_convolution_double() : n(0), t(0) {}
+
+	// t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+	void set(D a, D b) {
+		// verify : https://atcoder.jp/contests/jag2017summer-day1/tasks/jag2017summer_day1_c
+
+		as[t] = a; bs[t] = b;
+
+		int i1_max = lsb(t + 2), i2_max = i1_max;
+
+		// 対角線上の正方形領域に対する処理を行う場合
+		if (popcount(t + 2) == 1) { i1_max -= 2; i2_max -= 1; }
+
+		// 2^i : 正方形の一辺の長さ（対角線より下）
+		repi(i, 0, i1_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = t + 1 - (1 << i);
+			int y_min = (1 << i) - 1;
+
+			vector<D> as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vector<D> cs_sub = fft.convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		// 2^i : 正方形の一辺の長さ（対角線以上）
+		repi(i, 0, i2_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = (1 << i) - 1;
+			int y_min = t + 1 - (1 << i);
+
+			vector<D> as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vector<D> cs_sub = fft.convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	D const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/jag2017summer-day1/tasks/jag2017summer_day1_c
+
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// c[i] を強制的に c に変更する．
+	void update(int i, D c) {
+		cs[i] = c;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_convolution_double& c) {
+		os << "a: " << c.as << endl;
+		os << "b: " << c.bs << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン畳込み（片側固定，実数）】
+/*
+* Semi_online_convolution_double<D>(vD b) : O(n)
+*	a[0..n) と固定された b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*	制約 : D は double または long double（誤差には注意！）
+*
+* void set(D b) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t] を与える．
+*
+* D [](int i) : O(1)
+*	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
+*	制約 : set を i 回以上呼び出し済でなくてはならない．
+*
+* void update(int i, D c) : O(1)
+*	c[i] を強制的に c に書き換える．
+*
+* 利用：【高速フーリエ変換】
+*/
+template<class D = double>
+class Semi_online_convolution_double {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vector<D> as, cs; vector<vector<D>> bss;
+	FFT<D> fft;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Semi_online_convolution_double(const vector<D>& bs) : n(sz(bs)), t(0), as(n), cs(n), bss(msb(n) + 1), fft(n) {
+		// verify : https://atcoder.jp/contests/jag2017summer-day1/tasks/jag2017summer_day1_c
+
+		// b[0], b[1] だけは例外的に bss[0] に格納しておく．
+		int len = min(2, n);
+		copy(bs.begin(), bs.begin() + len, back_inserter(bss[0]));
+
+		// b[2..n) を幅 2^i の区間にあらかじめ分割しておく．
+		repi(i, 1, msb(n)) {
+			int y_min = 1 << i;
+			int len = min(1 << i, n - y_min);
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bss[i]));
+		}
+	}
+	Semi_online_convolution_double() : n(0), t(0) {}
+
+	// t 回目に呼び出すときは，a=a[t] を与える．
+	void set(D a) {
+		// verify : https://atcoder.jp/contests/jag2017summer-day1/tasks/jag2017summer_day1_c
+
+		as[t] = a;
+
+		// b[0], b[1] との積だけは例外処理
+		cs[t] += as[t] * bss[0][0];
+		if (t + 1 < n) cs[t + 1] += as[t] * bss[0][1];
+
+		int i_max = lsb(t);
+
+		// 2^i : 正方形の一辺の長さ
+		repi(i, 1, i_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bss[i] を畳み込む．
+			int x_min = t - (1 << i);
+
+			vector<D> as_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+
+			vector<D> cs_sub = fft.convolution(as_sub, bss[i]);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	D const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/jag2017summer-day1/tasks/jag2017summer_day1_c
+
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// c[i] を強制的に c に変更する．
+	void update(int i, D c) {
+		cs[i] = c;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Semi_online_convolution_double& c) {
+		os << "a: " << c.as << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
+
+
 //【数論変換とシフト】
 /*
 * 長さ 2^m の数列 a の数論変換対が A であるとき，
 * b[i] = a[(i - 1) mod 2^m] の数論変換対は B[i] = ζ^i A[i] である．
 * ここで ζ は数論変換に用いた 1 の原始 2^m 乗根である．
 */
+
+
+//【数論変換（mod 998244353）】
+/*
+* NTT(int n) : O(n)
+*	長さ n 以下の数列を扱えるよう初期化を行う．
+*
+* ntt(vm a, vm& A) : O(n log n)
+*	a[0..n) に対し mod 998244353 で数論変換を行った結果を A[0..n) に格納する．
+*	制約 : n は 2 の冪乗
+*
+* intt(vm A, vm& a) : O(n log n)
+*	A[0..n) に対し mod 998244353 で逆数論変換を行った結果を a[0..n) に格納する．
+*	制約 : n は 2 の冪乗
+*
+* vm convolution(vm a, vm b) : O((n + m) log(n + m))
+*	a[0..n) と b[0..m) の畳込みを返す．
+*
+* vm cyclic_convolution(vm a, vm b) : O(n log n)
+*	a[0..n) と b[0..n) の巡回畳込みを返す．
+*	制約 : n は 2 の冪乗
+*
+* vm cyclic_convolution_power(vm a, ll d) : O(n log n + n log d)
+*	a[0..n) を d 個巡回畳込みした結果を返す．
+*	制約 : n は 2 の冪乗
+*/
+struct NTT {
+	// 参考 : https://qiita.com/Sen_comp/items/9401382df736e51564c1
+
+	using mint = modint998244353;
+	using vm = vector<mint>;
+
+	// N : 扱える数列の長さの上限（N = 2^M）
+	int N, M;
+
+	// w : 1 の原始 2^M 乗根，w_pow[i] : w^i，w_pow[N-i] : w^(-i)
+	mint w; vm w_pow;
+
+	// 長さ n 以下の数列を扱えるよう初期化を行う．
+	NTT(int n) {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod
+
+		// n 以上の最小の 2 冪 2^M を求める．
+		M = msb(n - 1) + 1;
+		N = 1 << M;
+
+		// 長さ 2^M の数列を扱うためには，1 の原始 2^M 乗根が必要．
+		// 998244353 = 2^23 * 119 + 1 なので，原始根 3 の 119 * 2^(23-M) 乗を計算することで求まる．
+		w = mint(3).pow(119LL << (23 - M));
+
+		// w の累乗を前計算しておく．
+		w_pow.resize(N + 1);
+		w_pow[0] = 1;
+		repi(i, 1, N) w_pow[i] = w_pow[i - 1] * w;
+	}
+
+	// x を (y, z) に分割する
+	void butterfly(const vm& x, vm& y, vm& z) {
+		int n = sz(x) / 2, m = msb(n) + 1;
+		y.resize(n); z.resize(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[i + n];
+			z[i] = (x[i] - x[i + n]) * w_pow[(ll)i << (M - m)];
+		}
+	}
+
+	// x を (y, z) に分割する（逆変換用）
+	void butterfly_inv(const vm& x, vm& y, vm& z) {
+		int n = sz(x) / 2, m = msb(n) + 1;
+		y.resize(n); z.resize(n);
+
+		rep(i, n) {
+			y[i] = x[i] + x[i + n];
+			z[i] = (x[i] - x[i + n]) * w_pow[N - (i << (M - m))];
+		}
+	}
+
+	// (y, z) を x に統合する
+	void riffle(const vm& y, const vm& z, vm& x) {
+		int n = sz(y);
+		x = vm(2 * n);
+
+		rep(i, n) {
+			x[2 * i] = y[i];
+			x[2 * i + 1] = z[i];
+		}
+	}
+
+	// 長さが 2 冪の列 a に対し mod 998244353 で数論変換を行った結果を A に格納する．
+	void ntt(const vm& a, vm& A) {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod
+
+		Assert(sz(a) <= N);
+
+		int n = sz(a);
+		if (n == 1) {
+			A = a;
+			return;
+		}
+
+		vm b, c, B, C;
+		butterfly(a, b, c);
+		ntt(b, B); ntt(c, C);
+		riffle(B, C, A);
+	}
+
+	// 長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
+	void intt(const vm& A, vm& a) {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod
+
+		Assert(sz(A) <= N);
+
+		intt_sub(A, a);
+
+		// 定数倍の調整
+		mint n_inv = mint(sz(A)).inv();
+		rep(i, sz(A)) a[i] *= n_inv;
+	}
+	void intt_sub(const vm& A, vm& a) {
+		int n = sz(A);
+		if (n == 1) {
+			a = A;
+			return;
+		}
+
+		vm b, c, B, C;
+		butterfly_inv(A, B, C);
+		intt_sub(B, b); intt_sub(C, c);
+		riffle(b, c, a);
+	}
+
+	// a と b の畳込みを返す．
+	vm convolution(vm a, vm b) {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod
+
+		Assert(sz(a) + sz(b) - 1 <= N);
+
+		int n = sz(a), m = sz(b);
+
+		int k = 1 << (msb(n + m - 2) + 1);
+		a.resize(k); b.resize(k);
+
+		vm A, B; ntt(a, A); ntt(b, B);
+		rep(i, k) A[i] *= B[i];
+		intt(A, a);
+
+		a.resize(n + m - 1);
+
+		return a;
+	}
+
+	// 長さが 2 冪の列 a と b の巡回畳込みを返す．
+	vm cyclic_convolution(vm a, vm b) {
+		Assert(sz(a) == sz(b) && sz(a) <= N);
+
+		int n = sz(a);
+
+		vm A, B; ntt(a, A); ntt(b, B);
+		rep(i, n) A[i] *= B[i];
+		intt(A, a);
+
+		return a;
+	}
+
+	// 長さが 2 冪の列 a を d 個巡回畳込みした結果を返す．
+	vm cyclic_convolution_power(vm a, ll d) {
+		Assert(sz(a) <= N);
+
+		int n = sz(a);
+
+		vm A; ntt(a, A);
+		rep(i, n) A[i] = A[i].pow(d);
+		intt(A, a);
+
+		return a;
+	}
+};
 
 

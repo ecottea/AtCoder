@@ -6,11 +6,11 @@
 
 //【部分木の数え上げ（大きさ指定）】O(n^2)
 /*
-* 木 g の頂点 r を含む大きさ i の部分木の個数を cnt[i] に格納する．
+* 各 i∈[0..n] について，木 g の頂点 r を含む大きさ i の部分木の個数を格納したリストを返す．
 *
 *（二乗の木 DP）
 */
-void count_subtree(const Graph& g, int r, vm& cnt) {
+vm count_subtree(const Graph& g, int r) {
 	// 参考 : https://snuke.hatenablog.com/entry/2019/01/15/211812
 
 	int n = sz(g);
@@ -40,7 +40,7 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 				ndps[i + j] += dp[s][i] * dp[t][j];
 			}
 
-			dp[s] = ndps;
+			dp[s] = move(ndps);
 			ws += wt;
 		}
 
@@ -49,9 +49,9 @@ void count_subtree(const Graph& g, int r, vm& cnt) {
 
 		return ws;
 	};
-
 	dfs(r, -1);
-	cnt = dp[r];
+	
+	return dp[r];
 }
 
 
@@ -89,14 +89,13 @@ mint count_subtree(const Graph& g, int r, int k) {
 				ndps[i + j] += dp[s][i] * dp[t][j];
 			}
 
-			dp[s] = ndps;
+			dp[s] = move(ndps);
 			ws += wt;
 		}
 		dp[s][0] = 1; // 空の部分木
 
 		return ws;
 	};
-
 	dfs(r, -1);
 
 	return dp[r][k];
@@ -138,7 +137,7 @@ void count_subtree_leaf(const Graph& g, int r, vm& cnt) {
 				ndps[i + j] += dp[s][i] * dp[t][j];
 			}
 
-			dp[s] = ndps;
+			dp[s] = move(ndps);
 			ws += wt;
 		}
 
@@ -147,7 +146,6 @@ void count_subtree_leaf(const Graph& g, int r, vm& cnt) {
 
 		return ws;
 	};
-
 	dfs(r, -1);
 
 	cnt = dp[r];
@@ -156,12 +154,12 @@ void count_subtree_leaf(const Graph& g, int r, vm& cnt) {
 
 //【部分木の最小コスト】O(n^2)
 /*
-* 頂点にコスト c[0..n) が与えられた木 g について，
-* 頂点 r を含む大きさ i の部分木の最小コストを cost[i] に格納する．
+* 頂点にコスト c[0..n) が与えられた木 g について，各 i∈[0..n] について，
+* 頂点 r を含む大きさ i の部分木の最小コスト格納したリストを返す．
 *
 *（二乗の木 DP）
 */
-void minimum_cost_subtree(const Graph& g, const vl& c, int r, vl& cost) {
+vl minimum_cost_subtree(const Graph& g, const vl& c, int r) {
 	// verify : https://atcoder.jp/contests/arc029/tasks/arc029_4
 
 	int n = sz(g);
@@ -190,7 +188,7 @@ void minimum_cost_subtree(const Graph& g, const vl& c, int r, vl& cost) {
 				chmin(ndps[i + j], dp[s][i] + dp[t][j]);
 			}
 
-			dp[s] = ndps;
+			dp[s] = move(ndps);
 			ws += wt;
 		}
 
@@ -199,9 +197,9 @@ void minimum_cost_subtree(const Graph& g, const vl& c, int r, vl& cost) {
 
 		return ws;
 	};
-
 	dfs(r, -1);
-	cost = dp[r];
+
+	return dp[r];
 }
 
 
@@ -245,13 +243,12 @@ void count_induced_subtree(const Graph& g, vm& cnt) {
 				ndps[ks + kt + 1][1] += dp[s][ks][1] * dp[t][kt][1];
 			}
 
-			dp[s] = ndps;
+			dp[s] = move(ndps);
 			ws += wt;
 		}
 
 		return ws;
 	};
-
 	dfs(0, -1);
 
 	rep(s, n) cnt[s] = dp[0][s][0] + dp[0][s][1];
@@ -312,13 +309,12 @@ mint count_coprime_path(Graph& g, int k) {
 				}
 			}
 
-			dp[s] = ndps;
+			dp[s] = move(ndps);
 			ws += wt;
 		}
 
 		return ws;
 	};
-
 	dfs(0, -1);
 
 	mint res = 0;

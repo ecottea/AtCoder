@@ -594,6 +594,38 @@ mint binomial_mint(ll n, ll r) {
 }
 
 
+//y“ñ€ŒW”iˆêŠ‡Cn ‚ªŒÅ’èCr ‚ª¬‚³‚¢C–@‚ª‘å‚«‚È‘f”jzO(r)
+/*
+* i¸[0..r] ‚É‚Â‚¢‚Ä binomial(n, i) ‚ðŠi”[‚µ‚½ƒŠƒXƒg‚ð•Ô‚·D
+*/
+vm binomial_fixed_n(ll n, int r) {
+	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
+
+	Assert(n >= 0);
+
+	// perm[i] : nPi
+	vm perm(r + 1);
+	perm[0] = 1;
+	repi(i, 1, r) perm[i] = perm[i - 1] * (n + 1 - i);
+
+	// fac[i] : i!
+	vm fac(r + 1);
+	fac[0] = 1;
+	repi(i, 1, r) fac[i] = fac[i - 1] * i;
+
+	// fac_inv[i] : 1 / i!
+	vm fac_inv(r + 1);
+	fac_inv[r] = fac[r].inv(); // mint ‚Ì–@‚Í r ‚æ‚è‘å‚«‚­‚È‚¢‚Æ‚¢‚¯‚È‚¢
+	repir(i, r - 1, 0) fac_inv[i] = fac_inv[i + 1] * (i + 1);
+
+	// bin(n, i) = nPi / i!
+	vm bin(r + 1);
+	repi(i, 0, r) bin[i] = perm[i] * fac_inv[i];
+
+	return bin;
+}
+
+
 //yŠKæimod 1000000007jzO(10^7)
 /*
 * n! mod 1000000007 ‚ð•Ô‚·D
@@ -692,49 +724,18 @@ public:
 };
 
 
-//y“ñ€ŒW”in ‚ªŒÅ’èCr ‚ª¬‚³‚¢C–@‚ª‘å‚«‚È‘f”jzO(r)
+//y“ñ€ŒW”iˆêŠ‡Cr ‚ªŒÅ’è‚Å¬‚³‚¢C–@‚ª‘å‚«‚È‘f”jzO((n2 - n1) + r)
 /*
-* i¸[0..r] ‚É‚Â‚¢‚Ä binomial(n, i) ‚ð bin[i] ‚ÉŠi”[‚·‚éD
+* Še i¸[n1..n2) ‚É‚Â‚¢‚Ä binomial(i, r) ‚ð‡‚ÉŠi”[‚µ‚½ƒŠƒXƒg‚ð•Ô‚·D
 */
-void binomial_fixed_n(ll n, int r, vm& bin) {
-	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
-
-	Assert(n >= 0);
-
-	bin.resize(r + 1);
-
-	// perm[i] : nPi
-	vm perm(r + 1);
-	perm[0] = 1;
-	repi(i, 1, r) perm[i] = perm[i - 1] * (n + 1 - i);
-
-	// fac[i] : i!
-	vm fac(r + 1);
-	fac[0] = 1;
-	repi(i, 1, r) fac[i] = fac[i - 1] * i;
-
-	// fac_inv[i] : 1 / i!
-	vm fac_inv(r + 1);
-	fac_inv[r] = fac[r].inv(); // mint ‚Ì–@‚Í r ‚æ‚è‘å‚«‚­‚È‚¢‚Æ‚¢‚¯‚È‚¢
-	repir(i, r - 1, 0) fac_inv[i] = fac_inv[i + 1] * (i + 1);
-
-	// bin(n, i) = nPi / i!
-	repi(i, 0, r) bin[i] = perm[i] * fac_inv[i];
-}
-
-
-//y“ñ€ŒW”ir ‚ªŒÅ’è‚Å¬‚³‚¢C–@‚ª‘å‚«‚È‘f”jzO((n2 - n1) + r)
-/*
-* i¸[n1..n2) ‚É‚Â‚¢‚Ä binomial(i, r) ‚ð bin[i - n1] ‚ÉŠi”[‚·‚éD
-*/
-void binomial_fixed_r(ll n1, ll n2, int r, vm& bin) {
+vm binomial_fixed_r(ll n1, ll n2, int r) {
 	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
 
 	Assert(n1 >= 0 && n1 <= n2);
 
 	int dn = (int)(n2 - n1);
-	bin.resize(dn);
-	if (dn == 0) return;
+	if (dn == 0) return vm();
+	vm bin(dn);
 
 	// p[i] : n2Pii‚½‚¾‚µ mint::mod ‚Ì”{”‚Í 1 ‚É’u‚«Š·‚¦‚éj
 	vm p(dn + r + 1);
@@ -774,20 +775,22 @@ void binomial_fixed_r(ll n1, ll n2, int r, vm& bin) {
 
 	// bin(i, r) = iPr / r!
 	rep(i, dn) bin[i] = perm[i] * fac_inv;
+
+	return bin;
 }
 
 
-//y“ñ€ŒW”in ‚ªŒÅ’èC–@‚ª¬‚³‚È‘f”jzO((r2 - r1) + p^2 + log n) (?)
+//y“ñ€ŒW”iˆêŠ‡Cn ‚ªŒÅ’èC–@‚ª¬‚³‚È‘f”jzO((r2 - r1) + p^2 + log n) (?)
 /*
-* i¸[r1..r2) ‚É‚Â‚¢‚Ä binomial(n, i) mod p ‚ð bin[i - r1] ‚ÉŠi”[‚·‚éD
+* Še i¸[r1..r2) ‚É‚Â‚¢‚Ä binomial(n, i) mod p ‚ð‡‚ÉŠi”[‚µ‚½ƒŠƒXƒg‚ð•Ô‚·D
 * 
 * §–ñFp ‚Í‘f”
 */
-void binomial_fixed_n(ll n, ll r1, ll r2, int p, vi& bin) {
+vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
 	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
 
 	r2--; // •Â‹æŠÔ [r1..r2] ‚É‚·‚éD
-	bin.clear();
+	vi bin;
 
 	vvi bin_sml(p, vi(p)); // bin_sml[i][j] : binomial(i, j) mod p
 	bin_sml[0][0] = 1;
@@ -875,6 +878,8 @@ void binomial_fixed_n(ll n, ll r1, ll r2, int p, vi& bin) {
 	};
 
 	rfunc(k - 1, false, false, 1);
+
+	return bin;
 }
 
 

@@ -6,13 +6,14 @@
 
 //【連結成分の列挙】O(deg(v)^k |V| k)
 /*
-* 無向グラフ g の大きさ k の連結成分を ccs に列挙する．
+* 無向グラフ g の大きさ k の連結成分全てのリストを返す．
 * 連結成分は頂点番号のリストとして表す．
 */
-void enumerate_connected_component(const Graph& g, int k, vvi& ccs) {
+vvi enumerate_connected_component(const Graph& g, int k) {
 	// verify : https://atcoder.jp/contests/abc211/tasks/abc211_e
 
 	int n = sz(g);
+	vvi ccs;
 
 	// seen[v] : 頂点 v の探索を済ませたか
 	vb seen(n);
@@ -74,18 +75,21 @@ void enumerate_connected_component(const Graph& g, int k, vvi& ccs) {
 		dfs(k - 1);
 		sel.pop_back();
 	}
+
+	return ccs;
 }
 
 
 //【有向木の列挙】O(?)
 /*
-* 参照付きグラフ g の r を根とする大きさ k の有向木の辺集合を dts に列挙する．
+* 参照付きグラフ g の r を根とする大きさ k の有向木の辺集合のリストを返す．
 * 辺集合は辺に付けられた参照番号を並べたリストで表す．
 */
-void enumerate_tree(IGraph& g, int r, int k, vvi& dts) {
+vvi enumerate_tree(IGraph& g, int r, int k) {
 	// verify : https://atcoder.jp/contests/arc009/tasks/arc009_4
 
 	int n = sz(g);
+	vvi dts;
 
 	// seen_v[i] : 頂点 i の探索を済ませたか
 	vb seen_v(n);
@@ -157,6 +161,8 @@ void enumerate_tree(IGraph& g, int r, int k, vvi& dts) {
 	sel.push_back(r);
 	seen_v[r] = true;
 	dfs(k - 1);
+
+	return dts;
 }
 
 

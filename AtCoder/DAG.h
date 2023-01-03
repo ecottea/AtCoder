@@ -39,30 +39,21 @@
 */
 
 
-//【ディルワースの定理】
-/*
-* DAG g の最小パス被覆の大きさは，最大反鎖の大きさに一致する．
-*	パス被覆：パスの集合で，g の任意の頂点がいずれかのパスに属するもの．
-*	反鎖：頂点の集合で，任意の頂点間を結ぶパスが存在しないもの．
-* 
-* verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
-*/
-
-
 //【コスト最小パス】O(|V| + |E|)
 /*
-* DAG g の頂点 s から gl までのコスト最小パスのコストを dist[s] に格納する．
+* DAG g の各頂点から gl までのコスト最小パスのコストを格納したリストを返す．
 */
-void lowest_cost_path(const WGraph& g, int gl, vl& dist) {
+vl lowest_cost_path(const WGraph& g, int gl) {
 	int n = sz(g);
 
 	// dist[s] : 頂点 s から gl までのコスト最小パスのコスト
-	dist.resize(n, INFL);
+	vl dist(n, INFL);
 	vb seen(n);
 
 	dist[gl] = 0;
 	seen[gl] = true;
 
+	// 貰う DP
 	function<ll(int)> dfs = [&](int s) {
 		if (seen[s]) return dist[s];
 		seen[s] = true;
@@ -75,25 +66,25 @@ void lowest_cost_path(const WGraph& g, int gl, vl& dist) {
 
 	// 各頂点 s についての情報を計算する．
 	rep(s, n) dfs(s);
+
+	return dist;
 }
 
 
 //【パスの個数】O(|V| + |E|)
 /*
-* DAG g の頂点 s から gl までのパスの個数を cnt[s] に格納する．
+* DAG g の各頂点から gl までのパスの個数を格納したリストを返す．
 */
-void count_path(const Graph& g, int gl, vm& cnt) {
+vm count_path(const Graph& g, int gl) {
 	// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_b
 
 	int n = sz(g);
 
 	// cnt[s] : 頂点 s からのパスの個数
-	cnt.resize(n);
-	vb seen(n);
+	vm cnt(n); vb seen(n);
+	cnt[gl] = 1; seen[gl] = true;
 
-	cnt[gl] = 1;
-	seen[gl] = true;
-
+	// 貰う DP
 	function<mint(int)> dfs = [&](int s) {
 		if (seen[s]) return cnt[s];
 		seen[s] = true;
@@ -106,50 +97,24 @@ void count_path(const Graph& g, int gl, vm& cnt) {
 
 	// 各頂点 s についての情報を計算する．
 	rep(s, n) dfs(s);
-}
 
-
-//【パスの個数】O(|V| + |E|)
-/*
-* DAG g の頂点 s からのパス（不動も可）の個数を cnt[s] に格納する．
-*/
-void count_all_path(const Graph& g, vm& cnt) {
-	int n = sz(g);
-
-	// cnt[s] : 頂点 s からのパスの個数
-	cnt.resize(n);
-	vb seen(n);
-
-	function<mint(int)> dfs = [&](int s) {
-		if (seen[s]) return cnt[s];
-		seen[s] = true;
-
-		cnt[s] = 1; // 不動の場合に対応
-
-		// s → t と進む場合
-		repe(t, g[s]) cnt[s] += dfs(t);
-
-		return cnt[s];
-	};
-
-	// 各頂点 s についての情報を計算する．
-	rep(s, n) dfs(s);
+	return cnt;
 }
 
 
 //【最長パス】O(|V| + |E|)
 /*
-* DAG g の頂点 s からの最長パスの長さを len[s] に格納する．
+* DAG g の各頂点からの最長パスの長さを格納したリストを返す．
 */
-void longest_path(const Graph& g, vi& len) {
+vi longest_path(const Graph& g) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_g
 
 	int n = sz(g);
 
 	// len[s] : 頂点 s からの最長パスの長さ
-	len.resize(n);
-	vb seen(n);
+	vi len(n); vb seen(n);
 
+	// 貰う DP
 	function<int(int)> dfs = [&](int s) {
 		if (seen[s]) return len[s];
 		seen[s] = true;
@@ -163,22 +128,24 @@ void longest_path(const Graph& g, vi& len) {
 
 	// 各頂点 s についての情報を計算する．
 	rep(s, n) if (!seen[s]) dfs(s);
+
+	return len;
 }
 
 
 //【スコア最大パス】O(|V| + |E|)
 /*
-* コスト付き DAG g の頂点 s からのスコア最大パスのスコアを sc[s] に格納する．
+* コスト付き DAG g の各頂点からのパスの最大スコアを格納したリストを返す．
 */
-void highest_score_path(const WGraph& g, vl& sc) {
+vl highest_score_path(const WGraph& g) {
 	// verify : https://atcoder.jp/contests/code-festival-2017-qualb/tasks/code_festival_2017_qualb_d
 
 	int n = sz(g);
 
-	// sc[s] : 頂点 s からのスコア最大パスのスコア
-	sc.resize(n);
-	vb seen(n);
+	// sc[s] : 頂点 s からのパスの最大スコア
+	vl sc(n); vb seen(n);
 
+	// 貰う DP
 	function<ll(int)> dfs = [&](int s) {
 		if (seen[s]) return sc[s];
 		seen[s] = true;
@@ -192,21 +159,23 @@ void highest_score_path(const WGraph& g, vl& sc) {
 
 	// 各頂点 s についての情報を計算する．
 	rep(s, n) if (!seen[s]) dfs(s);
+
+	return sc;
 }
 
 
 //【スコア最大パス（頂点スコア）】O(|V| + |E|)
 /*
-* 頂点 i に非負スコア w[i] の与えられた DAG g のパス（長さ 0 も可）で，
-* 頂点 s からのパスの最大スコアを sc[s] に格納する．
+* 頂点 i にスコア w[i] の与えられた DAG g のパス（長さ 0 も可）で，
+* 各頂点からのパスの最大スコアを格納したリストを返す．
 */
-void highest_score_path(const Graph& g, const vl& w, vl& sc) {
+vl highest_score_path(const Graph& g, const vl& w) {
 	int n = sz(g);
 
 	// sc[s] : 頂点 s からのパスの最大スコア
-	sc = vl(n, 0);
-	vb seen(n);
+	vl sc(n, 0); vb seen(n);
 
+	// 貰う DP
 	function<ll(int)> dfs = [&](int s) {
 		if (seen[s]) return sc[s];
 		seen[s] = true;
@@ -221,32 +190,30 @@ void highest_score_path(const Graph& g, const vl& w, vl& sc) {
 
 	// 各頂点 s についての情報を計算する．
 	rep(s, n) dfs(s);
+
+	return sc;
 }
 
 
 //【スコア最大パス（頂点スコア，復元）】O(|V| + |E|)
 /*
-* 頂点 i に非負スコア w[i] の与えられた DAG g の r からのパス（長さ 0 も可）で，
-* パスに属する頂点のスコアの和を最大とするパスの頂点列を path に格納する．
-* またそのパスのスコアを返す．
+* 頂点 i にスコア w[i] の与えられた DAG g の r からのパス（長さ 0 も可）の
+* 最大スコアを返し，パスに属する頂点列を path に格納する．
 */
 ll highest_score_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 	int n = sz(g);
 
 	// dp[s] : 頂点 s からの最大スコア
-	vl dp(n);
-	vb seen(n);
-	vi next(n, -1);
+	vl dp(n); vb seen(n); vi next(n, -1);
 
+	// 貰う DP
 	function<ll(int)> dfs = [&](int s) {
 		if (seen[s]) return dp[s];
 		seen[s] = true;
 
 		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		dp[s] = 0;
-		repe(t, g[s]) {
-			if (chmax(dp[s], dfs(t))) next[s] = t;
-		}
+		repe(t, g[s]) if (chmax(dp[s], dfs(t))) next[s] = t;
+
 		dp[s] += w[s];
 
 		return dp[s];
@@ -266,77 +233,73 @@ ll highest_score_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 }
 
 
-//【スコア最大パスの組（頂点スコア，始点任意）】O(|V|^3)
+//【スコア最大パスの組（頂点スコア）】O(|V|^3)
 /*
-* 頂点 i に非負スコア w[i] の与えられた DAG g（トポロジカルソート済）のパスの組で，
+* 頂点 i に非負スコア w[i] の与えられた DAG g（トポロジカルソート済）の頂点 0 からのパスの組で，
 * いずれかのパスに属している頂点のスコアの和の最大値を返す．
 *
 *（DAG 上の二次元 DP）
 *
 * 利用：【幅優先探索】
 */
-ll highest_score_twinpath(const Graph& g_, const vl& w_) {
+ll highest_score_twinpath(const Graph& g, const vl& w) {
 	// 参考 : https://suikaba.hatenablog.com/entry/2017/08/26/172626
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_graph
 
-	int n = sz(g_);
-
-	// 全頂点への有向辺をもちスコアが 0 の頂点 0 を追加する．
-	Graph g(n + 1);
-	repi(t, 1, n) g[0].push_back(t);
-	rep(s, n) repe(t, g_[s]) g[s + 1].push_back(t + 1);
-
-	vl w(n + 1);
-	w[0] = 0;
-	rep(s, n) w[s + 1] = w_[s];
-
-	n++;
+	int n = sz(g);
 
 	// downQ[s][t] : パス s → t が存在するか（いくつかの頂点を飛び越えて移動できるか）
 	vvb downQ(n, vb(n));
 	rep(s, n) {
-		vi dist;
-		breadth_first_search(g, s, dist);
+		vi dist = breadth_first_search(g, s);
 
 		rep(t, n) downQ[s][t] = (dist[t] < INF);
 	}
 
 	// dp[s1][s2] : 頂点 s1 < s2 からのパスの組の最大スコア
-	vvl dp(n, vl(n));
-	vvb seen(n, vb(n));
+	vvl dp(n, vl(n)); vvb seen(n, vb(n));
 
 	function<ll(int, int)> dfs = [&](int s1, int s2) {
 		if (seen[s1][s2]) return dp[s1][s2];
 		seen[s1][s2] = true;
 
+		// ともに不動の場合
 		dp[s1][s2] = w[s1] + w[s2];
 
 		// s2 から行ける頂点 t2 の情報を元に (s1, s2) の情報を計算する．
 		repe(t2, g[s2]) chmax(dp[s1][s2], dfs(s1, t2) + w[s2]);
 
 		// s1 から行ける頂点 t1 の情報を元に (s1, s2) の情報を計算する．
-		// ただし s1 からは s2 を飛び越えるような移動しか認めないこととする．
+		// ただし s1 からは s2 を飛び越えるような移動しか認めないこととして二重カウントを防ぐ．
 		repi(t1, s2 + 1, n - 1) {
 			if (downQ[s1][t1]) chmax(dp[s1][s2], dfs(s2, t1) + w[s1]);
 		}
 
 		return dp[s1][s2];
 	};
-
 	dfs(0, 0);
+	dumpel(dp);
 
 	ll res = 0;
-	rep(s2, n) rep(s1, s2) chmax(res, dp[s1][s2]);
+	rep(s1, n) repi(s2, s1 + 1, n - 1) chmax(res, dp[s1][s2]);
 
 	return res;
 }
 
 
-//【最小パス被覆】O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
+//【ディルワースの定理】
 /*
-* DAG g の最小パス被覆の大きさを返す．
-* 
-* 戻り値は反鎖（互いに行き来できない頂点集合）の大きさの最大値とも解釈できる．
+* DAG g の最小パス被覆の大きさは，最大反鎖の大きさに一致する．
+*	パス被覆：パスの集合で，g の任意の頂点がいずれかのパスに属するもの．
+*	反鎖：頂点の集合で，任意の頂点間を結ぶパスが存在しないもの．
+*
+* verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
+*/
+
+
+//【最小パス被覆（点素）】O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
+/*
+* DAG g の点素なパス被覆で最小のものの大きさを返す． 
 *
 * 利用：【二部グラフの最大マッチング】
 */
@@ -345,15 +308,15 @@ int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
 
 	int n = sz(g);
 
+	// S = V_out, T = V_in とする二部グラフ G=(S,T) を構築する．
 	Bipartite_matching bm(n, n);
 	rep(s, n) repe(t, g[s]) bm.add_edge(s, t);
 
+	// G の最大マッチングの大きさは，g の点素なパス被覆で最小のものの大きさに等しい．
 	int res = n - bm.flow();
-
 	if (paths == nullptr) return res;
 
 	vector<pii> es = bm.maximum_matching();
-
 	dsu uf(n);
 	repe(e, es) {
 		int s, t;
@@ -361,7 +324,6 @@ int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
 
 		uf.merge(s, t);
 	}
-
 	*paths = uf.groups();
 
 	return res;

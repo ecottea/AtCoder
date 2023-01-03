@@ -9,7 +9,8 @@
 * 集合族 S[0..n) について，添字集合が set で表されるような集合族の交わりの大きさ
 * #(∩i∈set S[i]) が c[set] であるときの，どの集合にも属さない要素の個数を返す．
 */
-template <class T> T state_PIE(const vector<T>& c) {
+template <class T>
+T state_PIE(const vector<T>& c) {
 	// verify : https://atcoder.jp/contests/tokiomarine2020/tasks/tokiomarine2020_e
 
 	//【方法】
@@ -85,13 +86,14 @@ mint counting_PIE(const vm& c, const Factorial_mint& fm) {
 //【個数系包除原理（一括）】O(n^2)
 /*
 * 集合族 S[0..n) について，k 個の集合の交わり（k = 0 なら全体集合とする）の大きさが
-* 集合の選び方によらず一律 c[k] であるときの，特定の i 個の集合のみに属する要素の総数を cnt[i] に格納する．
+* 集合の選び方によらず一律 c[k] であるときの，各 i について特定の i 個の集合のみに属する
+* 要素の総数を格納したリストを返す．
 *
 * 制約：fm は n! まで計算可能であること
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-void counting_PIE_all(const vm& c, vm& cnt, const Factorial_mint& fm) {
+vm counting_PIE_all(const vm& c, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
 
 	//【方法】
@@ -105,24 +107,27 @@ void counting_PIE_all(const vm& c, vm& cnt, const Factorial_mint& fm) {
 	//		cnt[0] = 3C0 c[0] - 3C1 c[1] + 3C2 c[2] - 3C3 c[3]
 
 	int n = sz(c) - 1;
-	cnt.resize(n + 1);
+	vm cnt(n + 1);
 
 	repi(i, 0, n) repi(j, i, n) {
 		cnt[i] += ((j - i) % 2 ? -1 : 1) * fm.binomial(n - i, j - i) * c[j];
 	}
+
+	return cnt;
 }
 
 
 //【個数系包除原理（一括，mod998244353）】O(n log n)
 /*
 * 集合族 S[0..n) について，k 個の集合の交わり（k = 0 なら全体集合とする）の大きさが
-* 集合の選び方によらず一律 c[k] であるときの，特定の i 個の集合のみに属する要素の総数を cnt[i] に格納する．
-*
+* 集合の選び方によらず一律 c[k] であるときの，各 i について特定の i 個の集合のみに属する
+* 要素の総数を格納したリストを返す．
+* 
 * 制約：fm は n! まで計算可能であること
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-void counting_PIE_all_fast(vm c, vm& cnt, const Factorial_mint& fm) {
+vm counting_PIE_all_fast(vm c, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
 
 	//【方法】
@@ -145,10 +150,12 @@ void counting_PIE_all_fast(vm c, vm& cnt, const Factorial_mint& fm) {
 	repi(i, 0, n) coef[i] = ((n - i) % 2 ? -1 : 1) * fm.factorial_inv(n - i);
 
 	// coef と c を畳み込んで上側を取得する．
-	cnt = convolution(coef, c);
+	vm cnt = convolution(coef, c);
 	cnt.erase(cnt.begin(), cnt.begin() + n);
 
 	repi(i, 0, n) cnt[i] *= fm.factorial(n - i);
+
+	return cnt;
 }
 
 
@@ -205,7 +212,8 @@ mint count_points_in_BB(int n, int h, int w, Factorial_mint& fm) {
 *
 *（状態系包除原理）
 */
-template <class T> T nonmultiple_sum(vl& ps, function<T(ll)>& mf) {
+template <class T>
+T nonmultiple_sum(vl& ps, function<T(ll)>& mf) {
 	// verify : https://atcoder.jp/contests/abc206/tasks/abc206_e
 
 	int n = sz(ps);

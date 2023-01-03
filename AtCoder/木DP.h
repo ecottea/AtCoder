@@ -6,7 +6,8 @@
 
 //【貰う木 DP】O(n)
 /*
-* r を根とする根付き木 g の部分木 s についての問題の答えを dp[s] に格納し dp を返す．
+* 各 s∈[0..n) について，r を根とする根付き木 g の
+* 部分木 s についての問題の答えを格納したリストを返す．
 *
 * void merge(T& x, T y, int s) :
 *   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
@@ -20,7 +21,7 @@
 *
 * T apply(T x, int p, int s) :
 *   部分木 s についての暫定の答えが x のとき，
-*   辺 p-s を追加した部分木 p についての答えを返す．
+*   辺 p→s を追加した部分木 p についての答えを返す．
 */
 template <class T, void(*merge)(T&, const T&, int), T(*e)(), T(*leaf)(int), T(*apply)(const T&, int, int)>
 vector<T> tree_getDP(const Graph& g, int r) {
@@ -41,7 +42,7 @@ vector<T> tree_getDP(const Graph& g, int r) {
 			// 部分木 t についての答えを計算する．
 			dfs(t, s);
 
-			// 部分木 t に対して辺 s-t を接続した場合の部分木 s についての答えを得る．
+			// 部分木 t に対して辺 s→t を接続した場合の部分木 s についての答えを得る．
 			T sub = apply(dp[t], s, t);
 
 			// それを部分木 s の暫定の答えとマージして答えを更新していく．
@@ -51,7 +52,6 @@ vector<T> tree_getDP(const Graph& g, int r) {
 		// s が葉の場合は自明な答えを代入しておく．
 		if (is_leef) dp[s] = leaf(s);
 	};
-
 	dfs(r, -1);
 
 	return dp;
@@ -69,9 +69,73 @@ vector<T> tree_getDP(const Graph& g, int r) {
 };
 
 
+//【貰う木 DP（森経由）】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする根付き木 g の
+* 部分木 s についての問題の答えを格納したリストを返す．
+*
+* void merge(T& x, T y) :
+*   ある部分森に対する答えが x, ある部分木に対する答えが y のとき，
+*   これらをマージした部分森についての答えを x に上書きする．
+*
+* T e() :
+*   merge() の単位元（空の森に対する答え）を返す．
+*
+* T leaf(int s) :
+*   葉 s のみからなる部分木についての答えを返す．
+*
+* void apply(T& x, int s) :
+*   ある部分森についての答えが x のとき，共通の根 s を追加した部分木についての答えを x に上書きする．
+*/
+template <class T, void(*merge)(T&, const T&), T(*e)(), T(*leaf)(int), void(*apply)(T&, int)>
+vector<T> tree_getDP_forest(const Graph& g, int r) {
+	int n = sz(g);
+
+	// 空の森に対する答えで初期化する．
+	vector<T> dp(n, e());
+
+	// 部分木 s についての答えを計算する．（p : s の親）
+	function<void(int, int)> dfs = [&](int s, int p) {
+		// s が葉か
+		bool is_leef = true;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+			is_leef = false;
+
+			// 部分木 t についての答えを計算する．
+			dfs(t, s);
+
+			// 部分木 t を森に加え答えを更新する．
+			merge(dp[s], dp[t]);
+		}
+
+		// s が葉の場合は葉専用の答えを代入する．
+		if (is_leef) dp[s] = leaf(s);
+		// そうでないときは根 s を森に追加し答えを更新する．
+		else apply(dp[s], s);
+	};
+	dfs(r, -1);
+
+	return dp;
+
+	/* 雛形
+	using T = int;
+	void merge(T& x, const T& y) { chmax(x, y); }
+	T e() { return -INF; }
+	T leaf(int s) { return 0; }
+	void apply(T& x, int s) { x++; }
+	vector<T> solve_by_tree_getDP(const Graph& g, int r) {
+		return tree_getDP_forest<T, merge, e, leaf, apply>(g, r);
+	}
+	*/
+};
+
+
 //【貰う木 DP（コスト付き）】O(n)
 /*
-* r を根とするコスト付き根付き木 g の部分木 s についての問題の答えを dp[s] に格納し dp を返す．
+* 各 s∈[0..n) について，r を根とするコスト付き根付き木 g の
+* 部分木 s についての問題の答えを格納したリストを返す．
 *
 * T merge(T x, T y, int s) :
 *   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
@@ -85,7 +149,7 @@ vector<T> tree_getDP(const Graph& g, int r) {
 *
 * T apply(T x, int p, int s, ll c) :
 *   部分木 s についての暫定の答えが x のとき，
-*   コスト c の辺 p-s を追加した部分木 p についての答えを返す．
+*   コスト c の辺 p→s を追加した部分木 p についての答えを返す．
 */
 template <class T, void(*merge)(T&, const T&, int), T(*e)(), T(*leaf)(int), T(*apply)(const T&, int, int, ll)>
 vector<T> tree_getDP(const WGraph& g, int r) {
@@ -106,7 +170,7 @@ vector<T> tree_getDP(const WGraph& g, int r) {
 			// 部分木 t についての答えを計算する．
 			dfs(t, s);
 
-			// 部分木 t に対して辺 s-t を接続した場合の部分木 s についての答えを得て，
+			// 部分木 t に対して辺 s→t を接続した場合の部分木 s についての答えを得て，
 			// それを部分木 s の暫定の答えとマージして答えを更新していく．
 			merge(dp[s], apply(dp[t], s, t, t.cost), s);
 		}
@@ -114,7 +178,6 @@ vector<T> tree_getDP(const WGraph& g, int r) {
 		// s が葉の場合は自明な答えを代入しておく．
 		if (is_leef) dp[s] = leaf(s);
 	};
-
 	dfs(r, -1);
 
 	return dp;
@@ -134,24 +197,26 @@ vector<T> tree_getDP(const WGraph& g, int r) {
 
 //【木の高さ】O(n)
 /*
-* r を根とする木 g の頂点 i の高さを h[i] に格納する．
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の高さを格納したリストを返す．
+* s の高さとは，s から部分木 s の葉までの辺の本数の最大値のことである．
 *
-* 利用：【貰う木 DP】
+* 利用：【貰う木 DP（森経由）】
 */
-// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/4
+// verify : https://algo-method.com/tasks/528
 using T_hot = int;
-void merge_hot(T_hot& x, const T_hot& y, int s) { chmax(x, y); }
-T_hot e_hot() { return 0; }
+void merge_hot(T_hot& x, const T_hot& y) { chmax(x, y); }
+T_hot e_hot() { return -INF; }
 T_hot leaf_hot(int s) { return 0; }
-T_hot apply_hot(const T_hot& x, int s, int t) { return x + 1; }
+void apply_hot(T_hot& x, int s) { x++; }
 vector<T_hot> height_of_tree(const Graph& g, int r) {
-	return tree_getDP<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r);
+	return tree_getDP_forest<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r);
 }
 
 
 //【木の高さ（コスト付き）】O(n)
 /*
-* r を根とするコスト付き木 g の頂点 i の高さを h[i] に格納する．
+* 各 s∈[0..n) について，r を根とするコスト付き木 g の頂点 s の高さを格納したリストを返す．
+* s の高さとは，s から部分木 s の葉までの辺のコストの和の最大値のことである．
 *
 * 利用：【貰う木 DP（コスト付き）】
 */
@@ -171,7 +236,7 @@ vector<T_hoct> height_of_weighted_tree(const WGraph& g, int r) {
 *
 * 利用：【貰う木 DP】
 */
-using T_cis = pair<mint, mint>; // (根が黒, 根が白)
+using T_cis = pair<mint, mint>; // (根を選択，根を非選択)
 void merge_cis(T_cis& x, const T_cis& y, int s) { x.first *= y.first; x.second *= y.second; }
 T_cis e_cis() { return { 1, 1 }; }
 T_cis leaf_cis(int s) { return { 1, 1 }; }
@@ -190,11 +255,11 @@ mint count_independent_set(const Graph& g) {
 *
 * 利用：【貰う木 DP】
 */
-using T_mis = pii; // (根が存在, 根を削除)
+using T_mis = pii; // (根を選択，根を非選択)
 void merge_mis(T_mis& x, const T_mis& y, int s) { x.first += y.first - 1; x.second += y.second; }
 T_mis e_mis() { return { 1, 0 }; }
 T_mis leaf_mis(int s) { return { 1, 0 }; }
-T_mis apply_mis(const T_mis& x, int s, int t) { return { max(x.first, x.second + 1), max(x.first, x.second) }; }
+T_mis apply_mis(const T_mis& x, int s, int t) { return { x.second + 1, max(x.first, x.second) }; }
 int maximum_independent_set(const Graph& g) {
 	// verify : https://yukicoder.me/problems/no/763
 
@@ -228,7 +293,8 @@ ll distance_sum(const Graph& g) {
 
 //【2 点間距離の和（部分木）】O(n)
 /*
-* 木 g について，部分木 s の全ての 2 点の組についての距離の総和を ds[s] に格納する．
+* 各 s∈[0..n) について，r を根とする木 g について
+* 部分木 s の全ての 2 点の組についての距離の総和を格納したリストを返す．
 *
 * 利用：【貰う木 DP】
 */
@@ -248,16 +314,17 @@ T_dss apply_dss(const T_dss& x, int s, int t) {
 
 	return { ds + ds2 + cnt, ds2 + cnt, cnt + 1 };
 }
-void distance_sum_subtree(const Graph& g, vl& ds) {
+vl distance_sum_subtree(const Graph& g, int r) {
 	// verify : https://atcoder.jp/contests/abc248/tasks/abc248_g
 
 	int n = sz(g);
-	ds.resize(n);
+	vl res(n);
 
-	auto dp = tree_getDP<T_dss, merge_dss, e_dss, leaf_dss, apply_dss>(g, 0);
+	auto dp = tree_getDP<T_dss, merge_dss, e_dss, leaf_dss, apply_dss>(g, r);
 	dumpel(dp);
 
-	rep(s, n) ds[s] = get<0>(dp[s]);
+	rep(s, n) res[s] = get<0>(dp[s]);
+	return res;
 }
 
 

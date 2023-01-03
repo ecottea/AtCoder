@@ -8,28 +8,27 @@
 /*
 * a[0..2^n) を
 *       A[set] = Σsup⊃set a[sup]
-* なる A[0..2^n) に上書きする．（上位集合の値全てを自身に加える）
+* なる A[0..2^n) に上書きする（上位集合の値全てを自身に加える）
 */
-template <class T> void superset_zeta(vector<T>& a) {
-    // verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+template <class T>
+void superset_zeta(vector<T>& a) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
-    // 具体例を書いてみると，次のようにシェルピンスキーのギャスケットのパターンが見える：
-    //	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
-    //	A[1] =      + a[1]        + a[3]        + a[5]        + a[7] + ...
-    //	A[2] =             + a[2] + a[3]               + a[6] + a[7] + ...
-    //	A[3] =                    + a[3]                      + a[7] + ...
-    //	A[4] =                           + a[4] + a[5] + a[6] + a[7] + ...
-    //	A[5] =                                  + a[5]        + a[7] + ...
-    //	A[6] =                                         + a[6] + a[7] + ...
-    //	A[7] =                                                + a[7] + ...
+	//【例（n = 3 のとき）】：
+	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7]
+	//	A[1] =      + a[1]        + a[3]        + a[5]        + a[7]
+	//	A[2] =             + a[2] + a[3]               + a[6] + a[7]
+	//	A[3] =                    + a[3]                      + a[7]
+	//	A[4] =                           + a[4] + a[5] + a[6] + a[7]
+	//	A[5] =                                  + a[5]        + a[7]
+	//	A[6] =                                         + a[6] + a[7]
+	//	A[7] =                                                + a[7]
+	//
+	// シェルピンスキーのギャスケットのパターンが見えている．
 
-    int n = msb(sz(a));
+	int n = msb(sz(a));
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) a[set] += a[set + (1 << i)];
-        }
-    }
+	rep(i, n) repb(set, n) if (!(set & (1 << i))) a[set] += a[set + (1 << i)];
 }
 
 
@@ -37,43 +36,53 @@ template <class T> void superset_zeta(vector<T>& a) {
 /*
 * A[0..2^n) を
 *       A[set] = Σsup⊃set a[sup]
-* なる a[0..2^n) に上書きする．（上位集合からの自身の値への寄与を取り除く）
+* なる a[0..2^n) に上書きする（上位集合からの自身の値への寄与を取り除く）
 */
-template <class T> void superset_mobius(vector<T>& A) {
-    // verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
-    
-    int n = msb(sz(A));
+template <class T>
+void superset_mobius(vector<T>& A) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) A[set] -= A[set + (1 << i)];
-        }
-    }
+	//【例（n = 3 のとき）】：
+	//	a[0] = A[0] - A[1] - A[2] + A[3] - A[4] + A[5] + A[6] - A[7]
+	//	a[1] =      + A[1]        - A[3]        - A[5]        + A[7]
+	//	a[2] =             + A[2] - A[3]               - A[6] + A[7]
+	//	a[3] =                    + A[3]                      - A[7]
+	//	a[4] =                           + A[4] - A[5] - A[6] + A[7]
+	//	a[5] =                                  + A[5]        - A[7]
+	//	a[6] =                                         + A[6] - A[7]
+	//	a[7] =                                                + A[7]
+	//
+	// 符号付きだがシェルピンスキーのギャスケットのパターンが見えている．
+
+	int n = msb(sz(A));
+
+	rep(i, n) repb(set, n) if (!(set & (1 << i))) A[set] -= A[set + (1 << i)];
 }
 
 
 //【積集合畳込み】O(2^n n)
 /*
 * 与えられた a[0..2^n), b[0..2^n) に対して
-*       c[set] = Σ(sup1∩sup2 = set) a[sup1] b[sup2] 
+*       c[set] = Σ(sup1∩sup2 = set) a[sup1] b[sup2]
 * なる c[0..2^n) を返す．
-* 
+*
 * 利用：【ゼータ変換（上位集合）】,【メビウス変換（上位集合）】
 */
-template <class T> vector<T> and_convolution(vector<T> a, vector<T> b) {
-    // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
-    // verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+template <class T>
+vector<T> and_convolution(vector<T> a, vector<T> b) {
+	// 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
-    int n = msb(sz(a));
+	int n = msb(sz(a));
 
-    superset_zeta(a);
-    superset_zeta(b);
+	superset_zeta(a);
+	superset_zeta(b);
 
-    repb(set, n) a[set] *= b[set];
+	repb(set, n) a[set] *= b[set];
 
-    superset_mobius(a);
+	superset_mobius(a);
 
-    return a;
+	return a;
 }
 
 
@@ -83,14 +92,11 @@ template <class T> vector<T> and_convolution(vector<T> a, vector<T> b) {
 *       A[set] = MAX(sup⊃set) a[sup]
 * なる A[0..2^n) に上書きする．
 */
-template <class T> void superset_max_zeta(vector<T>& a) {
-    int n = msb(sz(a));
+template <class T>
+void superset_max_zeta(vector<T>& a) {
+	int n = msb(sz(a));
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) chmax(a[set], a[set + (1 << i)]);
-        }
-    }
+	rep(i, n) repb(set, n) if (!(set & (1 << i))) chmax(a[set], a[set + (1 << i)]);
 }
 
 
@@ -102,15 +108,16 @@ template <class T> void superset_max_zeta(vector<T>& a) {
 *
 * 利用：【max ゼータ変換（上位集合）】
 */
-template <class T> vector<T> superset_and_tropical_convolution(vector<T> a, vector<T> b) {
-    int n = msb(sz(a));
+template <class T>
+vector<T> superset_and_tropical_convolution(vector<T> a, vector<T> b) {
+	int n = msb(sz(a));
 
-    superset_max_zeta(a);
-    superset_max_zeta(b);
+	superset_max_zeta(a);
+	superset_max_zeta(b);
 
-    repb(set, n) a[set] += b[set];
+	repb(set, n) a[set] += b[set];
 
-    return a;
+	return a;
 }
 
 
@@ -120,26 +127,25 @@ template <class T> vector<T> superset_and_tropical_convolution(vector<T> a, vect
 *       A[set] = Σsub⊂set a[sub]
 * なる A[0..2^n) に上書きする．（下位集合の値全てを自身に加える）
 */
-template <class T> void subset_zeta(vector<T>& a) {
-    // verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+template <class T>
+void subset_zeta(vector<T>& a) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
-    // 具体例を書いてみると，次のようにシェルピンスキーのギャスケットのパターンが見える：
-    //	A[0] = a[0]
-    //	A[1] = a[0] + a[1]
-    //	A[2] = a[0] +      + a[2]
-    //	A[3] = a[0] + a[1] + a[2] + a[3]
-    //	A[4] = a[0]                      + a[4]
-    //	A[5] = a[0] + a[1]               + a[4] + a[5]
-    //	A[6] = a[0] +      + a[2]        + a[4]        + a[6]
-    //	A[7] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7]
+	//【例（n = 3 のとき）】：
+	//	A[0] = a[0]
+	//	A[1] = a[0] + a[1]
+	//	A[2] = a[0] +      + a[2]
+	//	A[3] = a[0] + a[1] + a[2] + a[3]
+	//	A[4] = a[0]                      + a[4]
+	//	A[5] = a[0] + a[1]               + a[4] + a[5]
+	//	A[6] = a[0] +      + a[2]        + a[4]        + a[6]
+	//	A[7] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7]
+	//
+	// シェルピンスキーのギャスケットのパターンが見えている．
 
-    int n = msb(sz(a));
+	int n = msb(sz(a));
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) a[set + (1 << i)] += a[set];
-        }
-    }
+	rep(i, n) repb(set, n) if (!(set & (1 << i))) a[set + (1 << i)] += a[set];
 }
 
 
@@ -147,18 +153,27 @@ template <class T> void subset_zeta(vector<T>& a) {
 /*
 * A[0..2^n) を
 *       A[set] = Σsub⊂set a[sub]
-* なる a[0..2^n) に上書きする．（下位集合からの自身の値への寄与を取り除く）
+* なる a[0..2^n) に上書きする（下位集合からの自身の値への寄与を取り除く）
 */
-template <class T> void subset_mobius(vector<T>& A) {
-    // verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
-    
-    int n = msb(sz(A));
+template <class T>
+void subset_mobius(vector<T>& A) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) A[set + (1 << i)] -= A[set];
-        }
-    }
+	//【例（n = 3 のとき）】：
+	//  a[0] =  A[0]
+	//  a[1] = -A[0] + A[1]
+	//  a[2] = -A[0]        + A[2]
+	//  a[3] =  A[0] - A[1] - A[2] + A[3]
+	//  a[4] = -A[0]                      + A[4]
+	//  a[5] =  A[0] - A[1]               - A[4] + A[5]
+	//  a[6] =  A[0]        - A[2]        - A[4]        + A[6]
+	//  a[7] = -A[0] + A[1] + A[2] - A[3] + A[4] - A[5] - A[6] + A[7]
+	//
+	// 符号付きだがシェルピンスキーのギャスケットのパターンが見えている．
+
+	int n = msb(sz(A));
+
+	rep(i, n) repb(set, n) if (!(set & (1 << i))) A[set + (1 << i)] -= A[set];
 }
 
 
@@ -170,20 +185,44 @@ template <class T> void subset_mobius(vector<T>& A) {
 *
 * 利用：【ゼータ変換（下位集合）】,【メビウス変換（下位集合）】
 */
-template <class T> vector<T> or_convolution(vector<T> a, vector<T> b) {
-    // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
-    // verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+template <class T>
+vector<T> or_convolution(vector<T> a, vector<T> b) {
+	// 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
-    int n = msb(sz(a));
+	//【例（n = 2 のとき）】：
+	//  c[0] = a[0]b[0]
+	//  c[1] = a[0]b[1] + a[1]b[0] + a[1]b[1]
+	//  c[2] = a[0]b[2] + a[2]b[0] + a[2]b[2]
+	//  c[3] = a[0]b[3] + a[1]b[2] + a[1]b[3] + a[2]b[1] + a[2]b[3] + a[3]b[0] + a[3]b[1] + a[3]b[2] + a[3]b[3]
+	//
+	// ここで
+	//	A[0] = a[0]
+	//	A[1] = a[0] + a[1]
+	//	A[2] = a[0] +      + a[2]
+	//	A[3] = a[0] + a[1] + a[2] + a[3]
+	// および
+	//	B[0] = b[0]
+	//	B[1] = b[0] + b[1]
+	//	B[2] = b[0] +      + b[2]
+	//	B[3] = b[0] + b[1] + b[2] + b[3]
+	// とおくと，
+	//  A[0]B[0] = c[0]
+	//  A[1]B[1] = c[0] + c[1]
+	//  A[2]B[2] = c[0]        + c[2]
+	//  A[3]B[3] = c[0] + c[1] + c[2] + c[3]
+	// となるので，A[0..4) と B[0..4) の各点積をメビウス変換することで c[0..4) が得られる．
 
-    subset_zeta(a);
-    subset_zeta(b);
+	int n = msb(sz(a));
 
-    repb(set, n) a[set] *= b[set];
+	subset_zeta(a);
+	subset_zeta(b);
 
-    subset_mobius(a);
+	repb(set, n) a[set] *= b[set];
 
-    return a;
+	subset_mobius(a);
+
+	return a;
 }
 
 
@@ -193,14 +232,11 @@ template <class T> vector<T> or_convolution(vector<T> a, vector<T> b) {
 *       A[set] = MAX(sub⊂set) a[sub]
 * なる A[0..2^n) に上書きする．
 */
-template <class T> void subset_max_zeta(vector<T>& a) {
-     int n = msb(sz(a));
+template <class T>
+void subset_max_zeta(vector<T>& a) {
+	int n = msb(sz(a));
 
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) chmax(a[set + (1 << i)], a[set]);
-        }
-    }
+	rep(i, n) repb(set, n) if (!(set & (1 << i))) chmax(a[set + (1 << i)], a[set]);
 }
 
 
@@ -212,15 +248,16 @@ template <class T> void subset_max_zeta(vector<T>& a) {
 *
 * 利用：【max ゼータ変換（下位集合）】
 */
-template <class T> vector<T> subset_or_tropical_convolution(vector<T> a, vector<T> b) {
-    int n = msb(sz(a));
+template <class T>
+vector<T> subset_or_tropical_convolution(vector<T> a, vector<T> b) {
+	int n = msb(sz(a));
 
-    subset_max_zeta(a);
-    subset_max_zeta(b);
+	subset_max_zeta(a);
+	subset_max_zeta(b);
 
-    repb(set, n) a[set] += b[set];
+	repb(set, n) a[set] += b[set];
 
-    return a;
+	return a;
 }
 
 
@@ -230,46 +267,38 @@ template <class T> vector<T> subset_or_tropical_convolution(vector<T> a, vector<
 *       b[set] = MAX(sub1∪sub2 ⊂ set, sub1!=sub2) (a[sub1] + a[sub2])
 * なる b[0..2^n) を返す．
 */
-template <class T> vector<T> distinct_subset_or_tropical_convolution(const vector<T>& a) {
-    // verify : https://atcoder.jp/contests/arc100/tasks/arc100_c
+template <class T>
+vector<T> distinct_subset_or_tropical_convolution(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/arc100/tasks/arc100_c
 
-    int n = msb(sz(a));
-    T T_MIN = numeric_limits<T>::lowest();
+	int n = msb(sz(a));
+	T T_MIN = numeric_limits<T>::lowest();
 
-    // A[set] : sub⊂set についての a[sub] の {max, 2nd max}
-    vector<pair<T, T>> A(1LL << n);
-    rep(x, n) {
-        repb(set, n) {
-            A[set] = { a[set], T_MIN };
-        }
-    }
+	// A[set] : sub⊂set についての a[sub] の {max, 2nd max}
+	vector<pair<T, T>> A(1LL << n);
+	rep(x, n) repb(set, n) A[set] = { a[set], T_MIN };
 
-    // 下位集合での max ゼータ変換を行う．
-    rep(i, n) {
-        repb(set, n) {
-            if (!(set & (1 << i))) {
-                int nset = set + (1 << i);
+	// 下位集合での max ゼータ変換を行う．
+	rep(i, n) repb(set, n) {
+		if (!(set & (1 << i))) {
+			int nset = set + (1 << i);
 
-                vector<T> vals(4);
-                vals[0] = A[nset].first;
-                vals[1] = A[nset].second;
-                vals[2] = A[set].first;
-                vals[3] = A[set].second;
-                sort(all(vals), greater<T>());
+			vector<T> vals(4);
+			vals[0] = A[nset].first;
+			vals[1] = A[nset].second;
+			vals[2] = A[set].first;
+			vals[3] = A[set].second;
+			sort(all(vals), greater<T>());
 
-                A[nset] = { vals[0], vals[1] };
-            }
-        }
-    }
-    dump(A);
+			A[nset] = { vals[0], vals[1] };
+		}
+	}
 
-    vector<T> b(1LL << n);
-    repb(set, n) {
-        b[set] = A[set].first + A[set].second;
-    }
-    b[0] = T_MIN;
+	vector<T> b(1LL << n);
+	repb(set, n) b[set] = A[set].first + A[set].second;
+	b[0] = T_MIN;
 
-    return b;
+	return b;
 }
 
 
@@ -288,26 +317,25 @@ template <class T> T mi_duc(T x) { return -x; }
 template <class T> T mul_duc(T x, T y) { return x * y; }
 template <class T> T e_duc() { return 1; }
 #define Add_mul_cring_duc T, add_duc, o_duc, mi_duc, mul_duc, e_duc
-template <class T> vector<T> disjoint_union_convolution(const vector<T>& a, const vector<T>& b) {
-    // 参考 : https://37zigen.com/subset-convolution/
-    // verify : https://judge.yosupo.jp/problem/subset_convolution
+template <class T>
+vector<T> disjoint_union_convolution(const vector<T>& a, const vector<T>& b) {
+	// 参考 : https://37zigen.com/subset-convolution/
+	// verify : https://judge.yosupo.jp/problem/subset_convolution
 
-    int n = msb(sz(a));
+	int n = msb(sz(a));
 
-    vector<FPS<Add_mul_cring_duc>> f(1LL << n), g(1LL << n);
-    repb(set, n) {
-        f[set] = a[set] * FPS<Add_mul_cring_duc>::monomial(popcount(set));
-        g[set] = b[set] * FPS<Add_mul_cring_duc>::monomial(popcount(set));
-    }
+	vector<FPS<Add_mul_cring_duc>> f(1LL << n), g(1LL << n);
+	repb(set, n) {
+		f[set] = a[set] * FPS<Add_mul_cring_duc>::monomial(popcount(set));
+		g[set] = b[set] * FPS<Add_mul_cring_duc>::monomial(popcount(set));
+	}
 
-    auto h = or_convolution(f, g);
+	auto h = or_convolution(f, g);
 
-    vector<T> c(1LL << n);
-    repb(set, n) {
-        c[set] = h[set][popcount(set)];
-    }
+	vector<T> c(1LL << n);
+	repb(set, n) c[set] = h[set][popcount(set)];
 
-    return c;
+	return c;
 }
 
 
@@ -315,39 +343,40 @@ template <class T> vector<T> disjoint_union_convolution(const vector<T>& a, cons
 /*
 * a[0..2^n) をアダマール変換したものに上書きする．
 */
-template <class T> void hadamard(vector<T>& a) {
-    // verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
+template <class T>
+void hadamard(vector<T>& a) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
 
-    // 具体例：
-    //	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
-    //	A[1] = a[0] - a[1] + a[2] - a[3] + a[4] - a[5] + a[6] - a[7] + ...
-    //	A[2] = a[0] + a[1] - a[2] - a[3] + a[4] + a[5] - a[6] - a[7] + ...
-    //	A[3] = a[0] - a[1] - a[2] + a[3] + a[4] - a[5] - a[6] + a[7] + ...
-    //	A[4] = a[0] + a[1] + a[2] + a[3] - a[4] - a[5] - a[6] - a[7] + ...
-    //	A[5] = a[0] - a[1] + a[2] - a[3] - a[4] + a[5] - a[6] + a[7] + ...
-    //	A[6] = a[0] + a[1] - a[2] - a[3] - a[4] - a[5] + a[6] + a[7] + ...
-    //	A[7] = a[0] - a[1] - a[2] + a[3] - a[4] + a[5] + a[6] - a[7] + ...
-    //
-    // 係数行列の + の部分だけ書くと，
-    //	+ + + + + + + +
-    //	+   +   +   +  
-    //  + +     + +    
-    //  +     + +     +
-    //  + + + +        
-    //  +   +     +   +
-    //  + +         + +
-    //  +     +   + +  
-    // となり，シェルピンスキーのギャスケットっぽいがゴミが付いている．
+	// 具体例：
+	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[1] = a[0] - a[1] + a[2] - a[3] + a[4] - a[5] + a[6] - a[7] + ...
+	//	A[2] = a[0] + a[1] - a[2] - a[3] + a[4] + a[5] - a[6] - a[7] + ...
+	//	A[3] = a[0] - a[1] - a[2] + a[3] + a[4] - a[5] - a[6] + a[7] + ...
+	//	A[4] = a[0] + a[1] + a[2] + a[3] - a[4] - a[5] - a[6] - a[7] + ...
+	//	A[5] = a[0] - a[1] + a[2] - a[3] - a[4] + a[5] - a[6] + a[7] + ...
+	//	A[6] = a[0] + a[1] - a[2] - a[3] - a[4] - a[5] + a[6] + a[7] + ...
+	//	A[7] = a[0] - a[1] - a[2] + a[3] - a[4] + a[5] + a[6] - a[7] + ...
+	//
+	// 係数行列の + の部分だけ書くと，
+	//	+ + + + + + + +
+	//	+   +   +   +  
+	//  + +     + +    
+	//  +     + +     +
+	//  + + + +        
+	//  +   +     +   +
+	//  + +         + +
+	//  +     +   + +  
+	// となり，シェルピンスキーのギャスケットっぽいがゴミが付いている．
 
-    int n = msb(sz(a));
+	int n = msb(sz(a));
 
 	rep(i, n) repb(set, n) {
 		if (!(set & (1 << i))) {
-            T x = a[set];
-            T y = a[set | (1 << i)];
-            
-            a[set] = x + y;
-            a[set + (1 << i)] = x - y;
+			T x = a[set];
+			T y = a[set | (1 << i)];
+
+			a[set] = x + y;
+			a[set + (1 << i)] = x - y;
 		}
 	}
 }
@@ -357,18 +386,19 @@ template <class T> void hadamard(vector<T>& a) {
 /*
 * A[0..2^n) を逆アダマール変換したものに上書きする．
 */
-template <class T> void hadamard_inv(vector<T>& A) {
-    // verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
-    
+template <class T>
+void hadamard_inv(vector<T>& A) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
+
 	int n = msb(sz(A));
 
 	rep(i, n) repb(set, n) {
 		if (!(set & (1 << i))) {
-            T x = A[set];
-            T y = A[set | (1 << i)];
-            
-            A[set] = (x + y) / 2;
-            A[set + (1 << i)] = (x - y) / 2;
+			T x = A[set];
+			T y = A[set | (1 << i)];
+
+			A[set] = (x + y) / 2;
+			A[set + (1 << i)] = (x - y) / 2;
 		}
 	}
 }
@@ -381,13 +411,13 @@ template <class T> void hadamard_inv(vector<T>& A) {
 * 利用：【アダマール変換】
 */
 void hadamard_inv(vm& A) {
-    // verify : https://atcoder.jp/contests/abc265/tasks/abc265_h
+	// verify : https://atcoder.jp/contests/abc265/tasks/abc265_h
 
-    hadamard(A);
+	hadamard(A);
 
-    // まとめて商をとらないと log(mod) 倍遅くなる．
-    mint inv = mint(sz(A)).inv();
-    rep(i, sz(A)) A[i] *= inv;
+	// まとめて商をとらないと log(mod) 倍遅くなる．
+	mint inv = mint(sz(A)).inv();
+	rep(i, sz(A)) A[i] *= inv;
 }
 
 
@@ -400,20 +430,21 @@ void hadamard_inv(vm& A) {
 *
 * 利用：【アダマール変換】,【逆アダマール変換】
 */
-template <class T> vector<T> symmetric_difference_convolution(vector<T> a, vector<T> b) {
-    // 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
-    // verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
+template <class T>
+vector<T> symmetric_difference_convolution(vector<T> a, vector<T> b) {
+	// 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
+	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
 
-    int n = msb(sz(a));
+	int n = msb(sz(a));
 
-    hadamard(a);
-    hadamard(b);
+	hadamard(a);
+	hadamard(b);
 
-    repb(set, n) a[set] *= b[set];
+	repb(set, n) a[set] *= b[set];
 
-    hadamard_inv(a);
+	hadamard_inv(a);
 
-    return a;
+	return a;
 }
 
 

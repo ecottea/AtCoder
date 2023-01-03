@@ -6,9 +6,9 @@
 //【0-1 ナップサック問題（重さが小）と max-plus 半環】
 /*
 * 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，max-plus 半環上で
-*		f(x) := Π_i (0 x^0 + v[i] x^w[i])
+*		f(z) := Π_i (0 z^0 + v[i] z^w[i])
 * と定めれば，重さ W での価値の最大値は
-*		[x^W] f(x)
+*		[z^W] f(z)
 * で求められる．
 *
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B
@@ -18,12 +18,12 @@
 //【ナップサック問題（重さが小）と max-plus 半環】
 /*
 * 重さが w[i] で価値が v[i] の品物が無数にあるとき，max-plus 半環上で
-*		f(x) := Π_i 1 / (0 x^0 - v[i] x^w[i])
+*		f(z) := Π_i 1 / (0 z^0 - v[i] z^w[i])
 * と定めれば，重さ W での価値の最大値は
-*		[x^W] f(x)
+*		[z^W] f(z)
 * で求められる．
 *
-* f(x) の計算には負元が必要に見えるが，実際は累積和で計算できるので問題ない．
+* f(z) の計算には負元が必要に見えるが，実際は累積和で計算できるので問題ない．
 *
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_C
 */
@@ -32,13 +32,13 @@
 //【個数制限付きナップサック問題（重さが小）と max-plus 半環】
 /*
 * 重さが w[i] で価値が v[i] の品物が m[i] 個あるとき，max-plus 半環上で
-*		f(x) := Π_i (0 x^0 + v[i] x^w[i] + ... + (v[i] x^w[i])^m[i])
+*		f(z) := Π_i (0 z^0 + v[i] z^w[i] + ... + (v[i] z^w[i])^m[i])
 * と定めれば，重さ W での価値の最大値は
-*		[x^W] f(x)
+*		[z^W] f(z)
 * で求められる．
 *
-* f(x) を等比数列の和の公式を用いて
-*		f(x) = Π_i (0 x^0 - (v[i] x^w[i])^(m[i]+1)) / (0 x^0 - v[i] x^w[i])
+* f(z) を等比数列の和の公式を用いて
+*		f(z) = Π_i (0 z^0 - (v[i] z^w[i])^(m[i]+1)) / (0 z^0 - v[i] z^w[i])
 * と直したくなるが，これの計算には負元が必要になるので使えない．
 */
 
@@ -46,9 +46,9 @@
 //【0-1 ナップサック問題（価値が小）と min-plus 半環】
 /*
 * 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，min-plus 半環上で
-*		f(x) := Π_i (0 x^0 + w[i] x^v[i])
+*		f(z) := Π_i (0 z^0 + w[i] z^v[i])
 * と定めれば，価値 V での重さの最小値は
-*		[x^V] f(x)
+*		[z^V] f(z)
 * で求められる．
 *
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_F

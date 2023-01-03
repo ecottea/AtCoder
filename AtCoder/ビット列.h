@@ -37,12 +37,12 @@
 
 //【1 の連の長さ】O(n)
 /*
-* ビット列 s[0..n) について，'0' で区切られた '1' の連の長さを順に並べた列を len に格納する．
+* ビット列 s[0..n) について，'0' で区切られた '1' の連の長さを順に並べた列を返す．
 */
-void length1(const string& s, vi& len, char one = '1') {
+vi length1(const string& s, char one = '1') {
 	// verify : https://atcoder.jp/contests/agc046/tasks/agc046_c
 
-	len.clear();
+	vi len;
 
 	int l = 0;
 	repe(c, s) {
@@ -55,6 +55,8 @@ void length1(const string& s, vi& len, char one = '1') {
 		}
 	}
 	len.push_back(l);
+
+	return len;
 }
 
 
@@ -191,8 +193,7 @@ bool interval_balanced_bitseq(int n, const vi& l, const vi& r, vi& b) {
 		ushi.set_ub(i + 1, i, 1);
 	}
 
-	vi diff;
-	ushi.maximize_diff(0, diff);
+	vi diff = ushi.maximize_diff(0);
 
 	rep(i, n) {
 		if (diff[i + 1] - diff[i] == 1) b[i] = 0;

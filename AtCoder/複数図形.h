@@ -671,7 +671,7 @@ void enumerate_point_pair(const vl& x, const vl& y, ll d, vector<pii>& res, ll l
 		const Point<double> o(0, 0);
 		double th = rnd(mt64);
 		rep(i, n) {
-			Point<double> p(x[i], y[i]);
+			Point<double> p((double)x[i], (double)y[i]);
 			pi[i] = { rotate(p, o, th), i };
 		}
 		sort(all(pi));
@@ -998,5 +998,184 @@ mint count_chebyshev_distance_clique_3D(const vector<T>& x, const vector<T>& y, 
 
 	return res;
 }
+
+
+//【狭義単調な点列】
+/*
+* Monotonous_points<T>(bool y_greater = true, T inf = max(T)/2) : O(1)
+*	空で初期化する．x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少]とする．
+*
+* void insert(T x, T y) : ならし O(log n)
+*	点 (x, y) を挿入し，それにより単調性に違反する点は全て削除する．
+*
+* bool find_LL(T x, T y, bool strict = true) : O(log n)
+*	x' < x かつ y' < y なる点 (x', y') が存在するかを返す（strict=false なら等号も許す）
+*
+* bool find_LG(T x, T y, bool strict = true) : O(log n)
+*	x' < x かつ y' > y なる点 (x', y') が存在するかを返す（strict=false なら等号も許す）
+*
+* bool find_GL(T x, T y, bool strict = true) : O(log n)
+*	x' > x かつ y' < y なる点 (x', y') が存在するかを返す（strict=false なら等号も許す）
+*
+* bool find_GG(T x, T y, bool strict = true) : O(log n)
+*	x' > x かつ y' > y なる点 (x', y') が存在するかを返す（strict=false なら等号も許す）
+*
+* pTT lower_bound(T x) : O(log n)
+*	x' >= x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+*
+* pTT upper_bound(T x) : O(log n)
+*	x' > x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+*
+* pTT lower_bound_rev(T x) : O(log n)
+*	x' <= x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+*
+* pTT upper_bound_rev(T x) : O(log n)
+*	x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+*/
+template <class T>
+struct Monotonous_points {
+	// 参考 : https://topcoder-g-hatena-ne-jp.jag-icpc.org/skyaozora/20141216.html
+
+	bool y_greater; // y 座標について狭義単調増加か
+	T inf; // 無限大
+
+	// x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少] な点列
+	map<T, T> x_to_y;
+
+	// 空で初期化する．x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少]とする．
+	Monotonous_points(bool y_greater = true, T inf_ = -1) : y_greater(y_greater) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		inf = (inf_ == -1 ? numeric_limits<T>::max() / 2 : inf_);
+
+		// 番兵を挿入しておく．
+		if (y_greater) { x_to_y[-inf] = -inf; x_to_y[inf] = inf; }
+		else { x_to_y[-inf] = inf; x_to_y[inf] = -inf; }
+	}
+
+	// 点 (x, y) を挿入し，単調性に違反する点は全て削除する．
+	void insert(T x, T y) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		// x <= x' なる最小の x' を指すイテレータを得る．
+		auto it = x_to_y.lower_bound(x);
+
+		// x' から昇順に，y' <= y[ y' >= y ] である限り要素を削除する．
+		if (y_greater) {
+			while (true) {
+				if (it->second > y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+		else {
+			while (true) {
+				if (it->second < y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+
+		// x' から降順に，y' >= y[ y' <= y ] である限り要素を削除する．
+		if (y_greater) {
+			while (true) {
+				it = prev(it);
+				if (it->second < y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+		else {
+			while (true) {
+				it = prev(it);
+				if (it->second > y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+
+		// 点 (x, y) を挿入する．
+		x_to_y[x] = y;
+	}
+
+	// x' < x かつ y' < y なる点が存在するかを返す（strict=false なら等号も許す）
+	bool find_LL(T x, T y, bool strict = true) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/1341
+
+		if (strict) {
+			T y2 = prev(x_to_y.lower_bound(x))->second;
+			return y2 != -inf && y2 < y;
+		}
+		else {
+			T y2 = prev(x_to_y.upper_bound(x))->second;
+			return y2 != -inf && y2 <= y;
+		}
+	}
+
+	// x' < x かつ y' > y なる点が存在するかを返す（strict=false なら等号も許す）
+	bool find_LG(T x, T y, bool strict = true) {
+		if (strict) {
+			T y2 = prev(x_to_y.lower_bound(x))->second;
+			return y2 != inf && y2 > y;
+		}
+		else {
+			T y2 = prev(x_to_y.upper_bound(x))->second;
+			return y2 != inf && y2 >= y;
+		}
+	}
+
+	// x' > x かつ y' < y なる点が存在するかを返す（strict=false なら等号も許す）
+	bool find_GL(T x, T y, bool strict = true) {
+		if (strict) {
+			T y2 = x_to_y.upper_bound(x)->second;
+			return y2 != -inf && y2 < y;
+		}
+		else {
+			T y2 = x_to_y.lower_bound(x)->second;
+			return y2 != -inf && y2 <= y;
+		}
+	}
+
+	// x' > x かつ y' > y なる点が存在するかを返す（strict=false なら等号も許す）
+	bool find_GG(T x, T y, bool strict = true) {
+		if (strict) {
+			T y2 = x_to_y.upper_bound(x)->second;
+			return y2 != inf && y2 > y;
+		}
+		else {
+			T y2 = x_to_y.lower_bound(x)->second;
+			return y2 != inf && y2 >= y;
+		}
+	}
+
+	// x' >= x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+	pair<T, T> lower_bound(T x) {
+		// verify : https://codeforces.com/gym/100633/problem/D
+
+		return *x_to_y.lower_bound(x);
+	}
+
+	// x' > x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+	pair<T, T> upper_bound(T x) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		return *x_to_y.upper_bound(x);
+	}
+
+	// x' <= x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+	pair<T, T> lower_bound_rev(T x) {
+		return *prev(x_to_y.upper_bound(x));
+	}
+
+	// x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+	pair<T, T> upper_bound_rev(T x) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		return *prev(x_to_y.lower_bound(x));
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Monotonous_points& mp) {
+		repe(p, mp.x_to_y) if (abs(p.first) != mp.inf) os << p << " ";
+		return os;
+	}
+#endif
+};
 
 

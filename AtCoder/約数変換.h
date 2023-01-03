@@ -24,14 +24,15 @@
 *
 * 利用：【素数の列挙】
 */
-template <typename T> struct Multiple_transform {
+template <typename T>
+struct Multiple_transform {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
 	// verify : https://judge.yosupo.jp/problem/gcd_convolution
 
 	vi ps; // 素数のリスト
 
 	Multiple_transform() {}
-	Multiple_transform(int n) { eratosthenes(n, ps); }
+	Multiple_transform(int n) { ps = eratosthenes(n); }
 
 	void multiple_zeta(vector<T>& f) {
 		// 具体例：
@@ -90,14 +91,15 @@ template <typename T> struct Multiple_transform {
 *
 * 利用：【素数の列挙】
 */
-template <typename T> struct Divisor_transform {
+template <typename T>
+struct Divisor_transform {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
 	// verify : https://judge.yosupo.jp/problem/lcm_convolution
 
 	vi ps; // 素数のリスト
 
 	Divisor_transform() {}
-	Divisor_transform(int n) { eratosthenes(n, ps); }
+	Divisor_transform(int n) { ps = eratosthenes(n); }
 
 	void divisor_zeta(vector<T>& f) {
 		// 具体例：
@@ -153,7 +155,8 @@ template <typename T> struct Divisor_transform {
 * umap<ll, T> gcd_convolution(umap<ll, T> a, umap<ll, T> b) : O(σ(n) ω(n))
 *   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
 */
-template <typename T> struct Limited_multiple_transform {
+template <typename T>
+struct Limited_multiple_transform {
 	vl ps; // ps : n の素因数の昇順リスト
 	vl divs; // divs : n の約数の昇順リスト
 
@@ -218,7 +221,8 @@ template <typename T> struct Limited_multiple_transform {
 * umap<ll, T> lcm_convolution(umap<ll, T>& a, umap<ll, T>& b) : O(σ(n) ω(n))
 *   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
 */
-template <typename T> struct Limited_divisor_transform {
+template <typename T>
+struct Limited_divisor_transform {
 	vl ps; // ps : n の素因数の昇順リスト
 	vl divs; // divs : n の約数の昇順リスト
 

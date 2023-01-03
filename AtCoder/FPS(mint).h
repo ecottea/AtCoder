@@ -197,7 +197,7 @@ struct MFPS {
 
 		return g.resize(d);
 	}
-	MFPS& operator/=(const MFPS& g) { return *this *= g.inv(n); }
+	MFPS& operator/=(const MFPS& g) { return *this *= g.inv(max(n, g.n)); }
 	MFPS operator/(const MFPS& g) const { return MFPS(*this) /= g; }
 
 	// —]‚è•t‚«œZ
@@ -1104,11 +1104,10 @@ mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
 
 //yüŒ`‘Q‰»®‚Ì”­Œ©zO(n^2)
 /*
-* —^‚¦‚ç‚ê‚½”—ñ a[0..n) ‚É‘Î‚µC
+* —^‚¦‚ç‚ê‚½”—ñ a[0..n) ‚É‘Î‚µCˆÈ‰º‚Ì“™®‚ğ–‚½‚· c[0..d) ‚Å d ‚ğÅ¬‚Æ‚·‚é‚à‚Ì‚ğ•Ô‚·F
 *		a[i] = ƒ°j=[0..d) c[j] a[i-1-j]  (Íi¸[d..n))
-* ‚ğ–‚½‚· d ‚ğ•Ô‚µCc[0..d) ‚ğ c ‚ÉŠi”[‚·‚éD
 */
-int berlekamp_massey(const vm& a, vm& c) {
+vm berlekamp_massey(const vm& a) {
 	// Ql : https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
 	// verify : https://judge.yosupo.jp/problem/find_linear_recurrence
 
@@ -1134,9 +1133,8 @@ int berlekamp_massey(const vm& a, vm& c) {
 			m++;
 		}
 	}
-	c = (-C << 1).c;
 
-	return C.deg();
+	return (-C << 1).c;
 }
 
 
