@@ -13,6 +13,8 @@ ll swap_distance(const string& s, const string& t, char one = '1') {
 	// verify : https://atcoder.jp/contests/tkppc6-2/tasks/tkppc6_2_b
 
 	int n = sz(s);
+
+	// ’·‚³‚ªˆÙ‚È‚é‚È‚ç‚à‚¿‚ë‚ñ•s‰Â”\
 	if (sz(t) != n) return INFL;
 
 	// a[i] : s[0..n) ‚É‚¨‚¯‚é i ”Ô–Ú‚Ì 1 ‚ÌˆÊ’u

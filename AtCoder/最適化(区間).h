@@ -285,8 +285,7 @@ ll maximize_interval_intersection(const vl& l, const vl& r, int* i1 = nullptr, i
 
 	// 区間 (l[i], r[i]) と今までみた区間との共通部分を考える．
 	rep(i, n) {
-		ll l, r;
-		tie(l, r) = lr[i];
+		auto [l, r] = lr[i];
 
 		// l[i] は今までみた区間のどの左端よりも右にあるので，
 		// その中で右端が最大のものと組にするのが最善である．

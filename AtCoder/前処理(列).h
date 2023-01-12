@@ -3,6 +3,21 @@
 // ■■■■■ 列に対する汎用性のある前処理 ■■■■■
 
 
+//【index を足す前処理】
+/*
+* 数列 a[0..n) に対して，
+*		(i) swap(a[i], a[i+1])
+*		(ii) a[i, i+1] += [1, -1]
+* という一連の処理は，
+*		b[i] := a[i] + i
+* と変換すると
+*		swap(b[i], b[i+1])
+* に等価である．
+* 
+* verify : https://atcoder.jp/contests/arc120/tasks/arc120_c
+*/
+
+
 //【自身より小さい数の次の位置】O(n log n)
 /*
 * a[0..n) で，i < j かつ a[i] > a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
@@ -63,7 +78,7 @@ vi next_greater_position(const vector<T>& a, bool eq = false) {
 
 //【自身より小さい数の前の位置】O(n log n)
 /*
-* a[0..n) で，j < i かつ a[j] < a[i] なる最大の j（なければ -1）を pps[i] に格納し pos を返す．
+* a[0..n) で，j < i かつ a[j] < a[i] なる最大の j（なければ -1）を pos[i] に格納し pos を返す．
 * eq = true とすると「自身以下の数の前の位置」を格納する．
 */
 template <class T>

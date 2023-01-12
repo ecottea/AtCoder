@@ -168,7 +168,7 @@ map<ll, int> factor_integer(ll n) {
 	// verify : https://algo-method.com/tasks/553
 
 	map<ll, int> pps;
-	if (n == 1) return;
+	if (n == 1) return map<ll, int>();
 
 	// 検出した約数を記録しておくキュー
 	queue<ll> divs;

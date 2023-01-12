@@ -1,0 +1,114 @@
+#pragma once
+#include "header.h"
+// ■■■■■ アダマール変換 ■■■■■
+
+
+//【アダマール変換】: O(2^n n)
+/*
+* a[0..2^n) をアダマール変換したものに上書きする．
+*/
+template <class T>
+void hadamard(vector<T>& a) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
+
+	// 具体例：
+	//	A[0] = a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + ...
+	//	A[1] = a[0] - a[1] + a[2] - a[3] + a[4] - a[5] + a[6] - a[7] + ...
+	//	A[2] = a[0] + a[1] - a[2] - a[3] + a[4] + a[5] - a[6] - a[7] + ...
+	//	A[3] = a[0] - a[1] - a[2] + a[3] + a[4] - a[5] - a[6] + a[7] + ...
+	//	A[4] = a[0] + a[1] + a[2] + a[3] - a[4] - a[5] - a[6] - a[7] + ...
+	//	A[5] = a[0] - a[1] + a[2] - a[3] - a[4] + a[5] - a[6] + a[7] + ...
+	//	A[6] = a[0] + a[1] - a[2] - a[3] - a[4] - a[5] + a[6] + a[7] + ...
+	//	A[7] = a[0] - a[1] - a[2] + a[3] - a[4] + a[5] + a[6] - a[7] + ...
+	//
+	// 係数行列の + の部分だけ書くと，
+	//	+ + + + + + + +
+	//	+   +   +   +  
+	//  + +     + +    
+	//  +     + +     +
+	//  + + + +        
+	//  +   +     +   +
+	//  + +         + +
+	//  +     +   + +  
+	// となり，シェルピンスキーのギャスケットっぽいがゴミが付いている．
+
+	int n = msb(sz(a));
+
+	rep(i, n) repb(set, n) {
+		if (!(set & (1 << i))) {
+			T x = a[set];
+			T y = a[set | (1 << i)];
+
+			a[set] = x + y;
+			a[set + (1 << i)] = x - y;
+		}
+	}
+}
+
+
+//【逆アダマール変換】: O(2^n n)
+/*
+* A[0..2^n) を逆アダマール変換したものに上書きする．
+*/
+template <class T>
+void hadamard_inv(vector<T>& A) {
+	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
+
+	int n = msb(sz(A));
+
+	rep(i, n) repb(set, n) {
+		if (!(set & (1 << i))) {
+			T x = A[set];
+			T y = A[set | (1 << i)];
+
+			A[set] = (x + y) / 2;
+			A[set + (1 << i)] = (x - y) / 2;
+		}
+	}
+}
+
+
+//【逆アダマール変換（mint）】: O(2^n n + log(mod))
+/*
+* A[0..2^n) を逆アダマール変換したものに上書きする．
+*
+* 利用：【アダマール変換】
+*/
+void hadamard_inv(vm& A) {
+	// verify : https://atcoder.jp/contests/abc265/tasks/abc265_h
+
+	hadamard(A);
+
+	// まとめて商をとらないと log(mod) 倍遅くなる．
+	mint inv = mint(sz(A)).inv();
+	rep(i, sz(A)) A[i] *= inv;
+}
+
+
+//【対称差畳込み】O(2^n n)
+/*
+* 与えられた a[0..2^n), b[0..2^n) に対して
+*       Σ(set1△set2 = set) a[set1] b[set2]
+* なる c[0..2^n) を返す．
+* △ は集合の対称差であり，添字でいうと XOR である．
+*
+* 利用：【アダマール変換】,【逆アダマール変換】
+*/
+template <class T>
+vector<T> symmetric_difference_convolution(vector<T> a, vector<T> b) {
+	// 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
+	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
+
+	int n = msb(sz(a));
+
+	hadamard(a);
+	hadamard(b);
+
+	repb(set, n) a[set] *= b[set];
+
+	hadamard_inv(a);
+
+	return a;
+}
+
+

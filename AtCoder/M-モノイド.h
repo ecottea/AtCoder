@@ -266,7 +266,7 @@ F111 id111() { return { 0, -INFL }; }
 #define TropicalAffine_Max_amonoid S111, op111, e111, F111, act111, comp111, id111
 
 
-//【XOR 作用付き 転倒数 モノイド】
+//【ビット列上 XOR 作用付き 転倒数 モノイド】
 /*
 * S ∋ x = {inv, c0, c1} : 列 x の転倒数，0 の個数，1 の個数の組
 * F ∋ f : f との XOR をとる作用を表す

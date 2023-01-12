@@ -9,7 +9,8 @@
 /*
 * 点 p と直線 l との符号付き距離を返す．
 */
-template <class T> inline double distance_P_L(const Point<T>& p, const Line<T>& l) {
+template <class T>
+inline double distance_P_L(const Point<T>& p, const Line<T>& l) {
 	Point<double> d = (l.second - l.first).normalize();
 	Point<double> n(-d.y, d.x);
 	Point<double> p2 = p - l.first;
@@ -218,7 +219,8 @@ double length_intersection_CPoly_L(const Polygon<T>& p, const Line<T>& l, Point<
 * n 角形は頂点を並べた列として表し，反時計回りのとき面積は正とする．
 * （よって頂点の周る順の判定に用いることもできる．）
 */
-template <class T> T doubled_area_polygon(const Polygon<T>& poly) {
+template <class T>
+T doubled_area_polygon(const Polygon<T>& poly) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_A
 
 	int n = sz(poly);
@@ -360,7 +362,8 @@ double area_intersection_C_C(Circle<T> c1, Circle<T> c2) {
 * 戻り値：poly の直径
 * id = {i, j} : 直径の両端の頂点の番号が {i, j} であることを表す．
 */
-template <class T> double caliper(const Polygon<T>& poly, pii& id) {
+template <class T> 
+double caliper(const Polygon<T>& poly, pii& id) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_B
 
 	int n = sz(poly);

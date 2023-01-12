@@ -185,7 +185,7 @@ vl dijkstra(const WGraph& g, int st) {
 		ll c; int s;
 		tie(c, s) = q.top(); q.pop();
 
-		// すでにより短い距離に更新されていたなら何もしない．（忘れると O(|V|^2)）
+		// すでにより短い距離に更新されていたなら何もしない（忘れると O(|V|^2)）
 		if (dist[s] < c) continue;
 		
 		repe(e, g[s]) {

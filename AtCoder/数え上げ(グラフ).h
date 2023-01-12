@@ -1,6 +1,9 @@
 #pragma once
 #include "header.h"
 #include "ゼータ変換.h"
+#include "二項係数.h"
+#include "列挙(集合).h"
+#include "群論.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
 
@@ -15,16 +18,16 @@
 
 //【最短経路の数え上げ】O(|V| + |E|)
 /*
-* グラフ g に対し，始点 st から各頂点 i への最短距離（到達不能なら INF）を dist[i] に，
-* 最短経路の総数を cnt[i] にそれぞれ格納する．
+* 有向グラフ g に対し，始点 st から各頂点 i への最短経路数を格納したリストを返す．
+* また必要ならそのときの最短距離（到達不能なら INF）を dist[i] に格納する．
 */
-void count_shortest_path(const Graph& g, int st, vm& cnt, vi* dist = nullptr) {
+vm count_shortest_path(const Graph& g, int st, vi* dist = nullptr) {
 	// verify : https://atcoder.jp/contests/abc211/tasks/abc211_d
 
 	int n = sz(g);
 
 	// cnt[i] : st から i までの最短経路の総数
-	cnt.resize(n);
+	vm cnt(n);
 	cnt[st] = 1;
 
 	// dist[i] : st から i までの最短距離
@@ -57,21 +60,23 @@ void count_shortest_path(const Graph& g, int st, vm& cnt, vi* dist = nullptr) {
 			que.push(t);
 		}
 	}
+
+	return cnt;
 }
 
 
 //【最短経路の数え上げ（コスト付きグラフ）】O(|V| + |E| log|V|)
 /*
-* 正のコスト付きグラフ g に対し，始点 st から各頂点 i への最短距離（到達不能なら INFL）を
-* dist[i] に，最短経路の総数を cnt[i] にそれぞれ格納する．
+* 正のコスト付き有向グラフ g に対し，始点 st から各頂点 i への最短経路数を格納したリストを返す．
+* また必要ならそのときの最短距離（到達不能なら INFL）を dist[i] に格納する．
 */
-void count_shortest_path(const WGraph& g, int st, vm& cnt, vl* dist = nullptr) {
+vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {
 	// verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
 
 	int n = sz(g);
 
 	// cnt[i] : st から i までの最短経路の総数
-	cnt.resize(n);
+	vm cnt(n);
 
 	// dist[i] : st から i までの最短距離
 	if (dist == nullptr) dist = new vl;
@@ -105,21 +110,23 @@ void count_shortest_path(const WGraph& g, int st, vm& cnt, vl* dist = nullptr) {
 		// そこから移動できるノードについての情報をキューに追加する．
 		repe(e, g[s]) que.push({ d + e.cost, e.to, s });
 	}
+
+	return cnt;
 }
 
 
 //【独立集合の数え上げ】O(2^|V| |V|)
 /*
-* 無向グラフ g について，頂点集合 set の部分集合のうち
-* g の独立集合を成すものの個数を cnt[set] に格納する．
+* 与えられた無向グラフ g に対し，各頂点集合 set⊂[0..|V|) について，
+* set の部分集合のうち g の独立集合を成すものの個数を格納したリストを返す．
 *
 *（bit DP）
 */
-void count_independent_set(const Graph& g, vm& cnt) {
+vm count_independent_set(const Graph& g) {
 	// verify : https://judge.yosupo.jp/problem/chromatic_number
 
 	int n = sz(g);
-	cnt.resize(1LL << n);
+	vm cnt(1LL << n);
 
 	repb(set, n) {
 		if (set == 0) {
@@ -141,16 +148,18 @@ void count_independent_set(const Graph& g, vm& cnt) {
 		}
 		cnt[set] += cnt[sub];
 	}
+
+	return cnt;
 }
 
 
 //【単純パスの数え上げ】O(2^|V| |V|^2)
 /*
-* グラフ g について単純パス s → t の個数を cnt[s][t] に格納する．
+* 有向グラフ g について単純パス s → t の個数を cnt[s][t] に格納し cnt を返す．
 *
 *（bit DP）
 */
-void count_simple_path(const Graph& g, vvl& cnt) {
+vvl count_simple_path(const Graph& g) {
 	int n = sz(g);
 
 	// dp[s][t][set] : 単純パス s → t で途中 set を通るものの個数
@@ -181,18 +190,18 @@ void count_simple_path(const Graph& g, vvl& cnt) {
 	};
 
 	// 結果の格納
-	cnt = vvl(n, vl(n));
-	rep(s, n) {
-		rep(t, n) {
-			repb(set, n) {
-				if ((set & (1 << s)) || !(set & (1 << t))) continue;
-				cnt[s][t] += rf(s, t, set);
-			}
-
-			// 不動の場合もカウントする．
-			if (s == t) cnt[s][t]++;
+	vvl cnt(n, vl(n));
+	rep(s, n) rep(t, n) {
+		repb(set, n) {
+			if ((set & (1 << s)) || !(set & (1 << t))) continue;
+			cnt[s][t] += rf(s, t, set);
 		}
+
+		// 不動の場合もカウントする．
+		if (s == t) cnt[s][t]++;
 	}
+
+	return cnt;
 }
 
 
@@ -239,11 +248,12 @@ ll count_topological_sort(const Graph& g) {
 
 //【部分グラフの数え上げ】O(2^|V| |V|)
 /*
-* 無向グラフ g について，set を頂点集合とする部分グラフの個数を cnt[set] に格納する．
+* 与えられた無向グラフ g に対し，各頂点集合 set⊂[0..|V|) について，
+* set を頂点集合とする部分グラフの個数を格納したリストを返す．
 *
 * 利用：【下位集合，添字 or での畳込み】
 */
-void count_subgraph(const Graph& g, vm& cnt) {
+vm count_subgraph(const Graph& g) {
 	// 参考：https://drken1215.hatenablog.com/entry/2021/08/12/132500
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_g
 
@@ -261,7 +271,7 @@ void count_subgraph(const Graph& g, vm& cnt) {
 	// と表される．これは下位集合での高速ゼータ変換で計算可能である．
 
 	int n = sz(g);
-	cnt.resize(1LL << n);
+	vm cnt(1LL << n);
 
 	vi f(1LL << n); int cnt_e = 0;
 	rep(s, n) {
@@ -283,16 +293,19 @@ void count_subgraph(const Graph& g, vm& cnt) {
 	repb(set, n) {
 		cnt[set] = pow2[f[set]];
 	}
+
+	return cnt;
 }
 
 
 //【連結部分グラフの数え上げ】O(3^|V| |V|)
 /*
-* 無向グラフ g について，set を頂点集合とする連結部分グラフの個数を cnt[set] に格納する．
+* 与えられた無向グラフ g に対し，各頂点集合 set⊂[0..|V|) について，
+* set を頂点集合とする連結部分グラフの個数を格納したリストを返す．
 *
 * 利用：【部分グラフの数え上げ】,【下位集合の全探索】
 */
-void count_connected_subgraph(const Graph& g, vm& cnt) {
+vm count_connected_subgraph(const Graph& g) {
 	// 参考 : https://drken1215.hatenablog.com/entry/2021/08/12/132500
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_g
 
@@ -307,10 +320,9 @@ void count_connected_subgraph(const Graph& g, vm& cnt) {
 	// と表される．
 
 	int n = sz(g);
-	cnt.resize(1LL << n);
+	vm cnt(1LL << n);
 
-	vm cnt_all;
-	count_subgraph(g, cnt_all);
+	vm cnt_all = count_subgraph(g);
 
 	repb(set, n) {
 		if (set == 0) {
@@ -330,6 +342,55 @@ void count_connected_subgraph(const Graph& g, vm& cnt) {
 
 		cnt[set] = cnt_all[set] - sum;
 	}
+
+	return cnt;
+}
+
+
+//【ラベルなし単純グラフの数え上げ】O(n の分割数)（n=50 くらいまで動く）
+/*
+* n 頂点のラベルなし単純グラフの個数を返す．
+*
+* 利用：【自然数の分割の列挙（値が k 以下）】,【ある型の置換の数え上げ】
+*/
+mint count_unlabeled_simple_graph(int n) {
+	Factorial_mint fm(n);
+
+	// 型 p をもつ置換の頂点集合 [0..n) への作用から誘導される辺集合への作用の軌道の個数を返す．
+	auto edges = [](const vi& p) {
+		int k = sz(p), res = 0;
+
+		// 1 つの巡回置換が作用する頂点集合の中を結ぶ辺についての軌道の個数を数える．
+		//（正 p[i] 角形の対角線の長さが何通りあるかを数えていると思えば分かりやすい．）
+		rep(i, k) res += p[i] / 2;
+
+		// 異なる巡回置換が作用する頂点集合の間を結ぶ辺についての軌道の個数を数える．
+		rep(i, k) repi(j, i + 1, k - 1) res += gcd(p[i], p[j]);
+
+		return res;
+	};
+
+	// [0..n) 上の置換の型を列挙する．
+	auto ips = integer_partitions_val(n, n);
+
+	mint res = 0;
+
+	// ポリアの数え上げ定理を用いて数え上げる．
+	repe(p, ips) {
+		// c : 型 p をもつ置換の個数
+		auto c = count_permutation_type(p, fm);
+
+		// ec : 型 p をもつ置換の辺集合上の軌道の個数．
+		auto ec = edges(p);
+
+		// 辺の有無は 2 色による彩色とみなせる．
+		res += c * mint(2).pow(ec);
+	}
+
+	// |S_n| で割って平均をとる．
+	res *= fm.factorial_inv(n);
+
+	return res;
 }
 
 
@@ -362,7 +423,7 @@ void count_connected_subgraph(const Graph& g, vm& cnt) {
 * 各 i∈[0..n], j∈[0..m] について，頂点 [0..i) を
 * j 個の長さ 1 以上の有向サイクルに分割する方法の数を S1[i][j] に格納し S1 を返す．
 */
-vvm directed_cycle_decomposition(int n, int m) {
+vvm count_directed_cycle_decomposition(int n, int m) {
 	//【方法】
 	// 頂点の有向サイクルへの分割は，置換の巡回置換の積への分解と等価である．
 	// よって S1[i][j] は第 1 種スターリング数に等しい．
@@ -393,7 +454,7 @@ vvm directed_cycle_decomposition(int n, int m) {
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-vvm undirected_path_decomposition(int n, int m, const Factorial_mint& fm) {
+vvm count_undirected_path_decomposition(int n, int m, const Factorial_mint& fm) {
 	// verify : https://yukicoder.me/problems/no/2135
 
 	//【方法】
@@ -441,7 +502,7 @@ vvm undirected_path_decomposition(int n, int m, const Factorial_mint& fm) {
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-vvvm undirected_cycle_decomposition(int n, int m, const Factorial_mint& fm) {
+vvvm count_undirected_cycle_decomposition(int n, int m, const Factorial_mint& fm) {
 	// verify : https://yukicoder.me/problems/no/2135
 
 	//【方法】

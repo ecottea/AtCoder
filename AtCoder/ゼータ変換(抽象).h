@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 集合のゼータ変換・メビウス変換など ■■■■■
+// ■■■■■ 集合のゼータ変換・メビウス変換（抽象代数上） ■■■■■
 
 
 //【ゼータ変換（上位集合，可換モノイド）】O(2^n n)
@@ -160,7 +160,6 @@ vector<S> subset_or_convolution(vector<S> a, vector<S> b) {
 
 	subset_zeta<S, add, o>(a);
 	subset_zeta<S, add, o>(b);
-	dump(a);
 
 	repb(set, n) a[set] = mul(a[set], b[set]);
 

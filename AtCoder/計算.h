@@ -5,6 +5,12 @@
 // ■■■■■ 計算 ■■■■■
 
 
+//【n より大きい最小の 2 冪】
+/*
+* n より大きい最小の 2 冪は 1 << (msb(n) + 1) で得られる．
+*/
+
+
 //【累乗（mint 利用）】
 /*
 * Pow_mint(int n, ll B) : O(n)
@@ -20,6 +26,8 @@ class Pow_mint {
 
 public:
 	Pow_mint(int n, ll B) : n(n) {
+		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
+
 		// B の累乗を計算する．
 		powB.resize(n + 1);
 		powB[0] = 1;
@@ -34,6 +42,8 @@ public:
 
 	// B^i を返す．
 	mint const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
+
 		Assert(abs(i) <= n);
 
 		return i >= 0 ? powB[i] : powB_inv[-i];

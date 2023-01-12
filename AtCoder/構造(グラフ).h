@@ -104,6 +104,33 @@ WGraph read_WGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 }
 
 
+//【コスト付きグラフの出力】O(|V| + |E|)
+/*
+* コスト付きグラフを【コスト付きグラフの入力】で受け取る入力と同じ形式で出力する．
+*
+* undirected : 無向グラフか（省略すれば true）
+* one_indexed : 入力が 1-indexed か（省略すれば true）
+*/
+void write_WGraph(const WGraph& g, bool undirected = true, bool one_indexed = true) {
+	// verify : https://atcoder.jp/contests/discovery2016-final/tasks/discovery_2016_final_d
+
+	int n = sz(g);
+
+	// m : 辺の数
+	int m = 0;
+	rep(s, n) m += sz(g[s]);
+	if (undirected) m /= 2;
+
+	cout << n << " " << m << endl;
+	rep(s, n) repe(t, g[s]) {
+		if (undirected && s > t) continue;
+
+		int u = s + one_indexed, v = t + one_indexed;
+		cout << u << " " << v << " " << t.cost << endl;
+	}
+}
+
+
 //【参照付きグラフの辺】
 /*
 * to : 行き先の頂点番号
@@ -164,6 +191,84 @@ IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 
 		g[a].push_back({ b, i, true });
 		if (undirected) g[b].push_back({ a, i, false });
+	}
+
+	return g;
+}
+
+
+//【Functional Graph】
+/*
+* 任意の頂点の出次数が 1 であるような有向グラフを Functional Graph という．
+* G が Functional Graph であるとき，G の各弱連結成分には閉路がただ 1 つ存在する．
+* G 自身は弱連結とは限らないので注意！！！
+*
+* verify : https://atcoder.jp/contests/abc256/tasks/abc256_e
+*/
+
+
+//【グリッドグラフ上のハミルトンサイクルの構築】
+/*
+* h×w グリッドグラフ上のハミルトンサイクルをなす点列を構築し返す．
+*/
+vector<pii> create_grid_hamilton_cycle(int h, int w) {
+	// verify : https://atcoder.jp/contests/arc118/tasks/arc118_d
+
+	// 幅が 1 の場合は蛇腹が構築できない．
+	if (h == 1 || w == 1) return vector<pii>();;
+
+	// h, w ともに奇数だと頂点数が奇数個になるが，
+	// グリッドグラフは二部グラフなのでハミルトンサイクルは存在し得ない．
+	if (h % 2 == 1 && w % 2 == 1) return vector<pii>();
+
+	vector<pii> res{ {0, 0} };
+
+	// h が偶数のときは，横方向に往復する蛇腹状に構築できる．
+	if (h % 2 == 0) {
+		rep(i, h) {
+			if (i % 2 == 0)	repi(j, 1, w - 1) res.emplace_back(i, j);
+			else repir(j, w - 1, 1) res.emplace_back(i, j);
+		}
+		repir(i, h - 1, 1) res.emplace_back(i, 0);
+	}
+	// w が偶数のときは，縦方向に往復する蛇腹状に構築できる．
+	else {
+		rep(j, w) {
+			if (j % 2 == 0)	repi(i, 1, h - 1) res.emplace_back(i, j);
+			else repir(i, h - 1, 1) res.emplace_back(i, j);
+		}
+		repir(j, w - 1, 1) res.emplace_back(0, j);
+	}
+
+	return res;
+}
+
+
+//【コスト付き有向グラフのランダム生成】O(n^2)
+/*
+* n 頂点で，コストが [c_min..c_max] 内の一様乱数で与えられ，
+* 辺の存在確率が p % であるランダムなコスト付き有向グラフを返す．
+* no_loop : 自己ループを禁止するか（デフォルトでは true）
+*/
+WGraph create_random_WGraph(int n, ll c_min, ll c_max, int p, bool no_loop = true) {
+	// verify : https://atcoder.jp/contests/discovery2016-final/tasks/discovery_2016_final_d
+
+	WGraph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	uniform_int_distribution<ll> rnd_cost(c_min, c_max);
+	uniform_int_distribution<int> rnd_edge(0, 99);
+
+	rep(s, n) rep(t, n) {
+		if (no_loop && s == t) continue;
+		if (rnd_edge(mt) >= p) continue;
+
+		g[s].emplace_back(t, rnd_cost(mt));
 	}
 
 	return g;

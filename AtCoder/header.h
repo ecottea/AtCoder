@@ -83,18 +83,18 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #endif // ê‹ÇËÇΩÇΩÇ›óp
 
 
-//--------------AtCoder êÍóp--------------
+#if __has_include(<atcoder/all>)
 #include <atcoder/all>
 using namespace atcoder;
 
-using mint = modint1000000007;
-//using mint = modint998244353;
+//using mint = modint1000000007;
+using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
-//----------------------------------------
+#endif
 
 
 

@@ -316,7 +316,7 @@ void directed_graph_game(const Graph& g, vi& res) {
 * r を根とする木 g について，交互に辺を切断して着手不能に陥ったほうが負けのゲームを行う．
 * 各 s について部分木 s でゲームを開始した場合のニム値を格納したリストを返す．
 *
-* 利用：【貰う木 DP】
+* 利用：【貰う木 DP（頂点マージ）】
 */
 // verify : https://atcoder.jp/contests/agc017/tasks/agc017_d
 void merge_gct(int& x, const int& y, int s) { x ^= y; }
@@ -324,7 +324,7 @@ int e_gct() { return 0; }
 int leaf_gct(int s) { return 0; }
 int apply_gct(const int& x, int s, int t) { return x + 1; }
 vi tree_cut_game(const Graph& g, int r) {
-	return tree_getDP<int, merge_gct, e_gct, leaf_gct, apply_gct>(g, r);
+	return tree_getDP_vmerge<int, merge_gct, e_gct, leaf_gct, apply_gct>(g, r);
 }
 
 

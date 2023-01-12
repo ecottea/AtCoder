@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "座標圧縮.h"
-#include "複数図形.h"
+#include "クエリ.h"
 // ■■■■■ 部分列 ■■■■■
 
 

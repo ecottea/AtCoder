@@ -11,7 +11,7 @@
 template <typename T>
 T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 	// ŽQl : https://twitter.com/meguru_comp/status/697008509376835584
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_4_D
+	// verify : https://atcoder.jp/contests/abc023/tasks/abc023_d
 
 	// ‹«ŠE‚ªŒˆ’è‚·‚é‚Ü‚Å
 	while (abs(ok - ng) > 1) {

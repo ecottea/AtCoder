@@ -666,11 +666,12 @@ vvi two_edge_connected_component(const Graph& g) {
 */
 
 
-//【Functional Graph】
+//【連結性を保った頂点消去】
 /*
-* 任意の頂点の出次数が 1 であるような有向グラフを Functional Graph という．
-* G が Functional Graph であるとき，G の各弱連結成分には閉路がただ 1 つ存在する．
+* 連結無向グラフ g について，連結性を保ったまま頂点を消去していくには，
+* g の辺を用いて適当な頂点を根とする木を作り，深さ降順に頂点を消去していけばいい．
 * 
-* verify : https://atcoder.jp/contests/abc256/tasks/abc256_e
+* verify : https://atcoder.jp/contests/arc119/tasks/arc119_d
 */
+
 

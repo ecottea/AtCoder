@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "分析(グラフ).h"
+#include "フロー.h"
 // ■■■■■ 0-1 計画問題 ■■■■■
 
 
@@ -22,7 +23,7 @@
 *	X[i] = 1 のとき非負利益 p が得られるようにする．
 *
 * add_cost01(int i, int j, ll c) : O(1)
-*	X[i] = 0 かつ X[j] = 0 のとき非負利益 p が得られるようにする．
+*	X[i] = 0 かつ X[j] = 1 のとき非負コスト c がかかるようにする．
 *
 * add_profit00(int i, int j, ll p) : O(1)
 *	X[i] = 0 かつ X[j] = 0 のとき非負利益 p が得られるようにする．
@@ -303,7 +304,7 @@ struct Two_sat {
 	// 全ての条件を AND したものが充足可能かを返す．
 	bool satisfiable() {
 		// g を強連結成分分解する．
-		strongly_connected_component(g, scc);
+		scc = strongly_connected_component(g);
 
 		// 変数 → 何番目の強連結成分に属するか
 		vi x_to_c(n, -1);
@@ -358,5 +359,53 @@ struct Two_sat {
 /*
 * 2-SAT の解の数え上げを多項式時間で行えるアルゴリズムは見つかっていない．
 */
+
+
+//【割り当て問題】O(n^3 k log(n))
+/*
+* a[0..n)[0..n) の各行各列から k 個以下要素を選択したときの和の最大値を返す．
+* また要素が選ばれたかどうかを sel[0..n)[0..n) に格納する．
+*
+* 利用：【最小費用流（負コスト可，DAG）】
+*/
+ll allocation_problem(const vvl& a, int k, vvb* sel = nullptr) {
+	// verify : https://atcoder.jp/contests/practice2/tasks/practice2_e
+
+	int n = sz(a);
+
+	int L = n * n, R = L + n, ST = R + n, GL = ST + 1;
+	Negative_mcf_graph_DAG g(GL + 1);
+
+	// 始点から各行 i へ，容量 k，コスト 0 の辺を張る．
+	rep(i, n) g.add_edge(ST, L + i, k, 0);
+
+	rep(i, n) rep(j, n) {
+		// 各行 i から各要素 (i,j) へ，容量 1，コスト -a[i][j] の辺を張る．
+		g.add_edge(L + i, i * n + j, 1, -a[i][j]);
+
+		// 各要素 (i,j) から各列 j へ，容量 1，コスト 0 の辺を張る．
+		g.add_edge(i * n + j, R + j, 1, 0);
+	}
+
+	// 各列 j から終点へ，容量 k，コスト 0 の辺を張る．
+	rep(j, n) g.add_edge(R + j, GL, k, 0);
+
+	// 始点から終点へ，容量 ∞，コスト 0 の辺を張り，要素を選択しないことを許す．
+	g.add_edge(ST, GL, INFL, 0);
+
+	auto cost = g.flow(ST, GL, n * k).second;
+
+	if (sel != nullptr) {
+		*sel = vvb(n, vb(n));
+		repe(e, g.g_pos.edges()) {
+			// 行 i から要素 (i,j) への辺にフローが流れていれば (i,j) を選択する．
+			if (L <= e.from && e.from < R && e.flow == 1) {
+				(*sel)[e.to / n][e.to % n] = true;
+			}
+		}
+	}
+
+	return -cost;
+}
 
 

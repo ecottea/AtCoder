@@ -184,16 +184,14 @@ vvl enumerate_strongly_multiple_sequences(ll k) {
 
 	function<void()> rf = [&]() {
 		// —ñ‚Ì‹L˜^
-		seqs.push_back(a);
+		if (!a.empty()) seqs.push_back(a);
 
 		int i_min = (a.empty() ? 1 : 2);
 
 		repi(i, i_min, k) {
-			ll a_max = (a.empty() ? 1 : *a.rbegin());
+			ll a_max = (a.empty() ? 1 : a.back());
 
-			if (a_max * i > k) {
-				break;
-			}
+			if (a_max * i > k) break;
 
 			a.push_back(a_max * i);
 			rf();

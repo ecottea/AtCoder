@@ -115,6 +115,48 @@ ll inversion_number_01sep(const vector<T>& a) {
 }
 
 
+//【最小 swap 回数】O(n log n)
+/*
+* 数列 a[0..n) に対し，隣接要素の swap を繰り返すことで b[0..n) に変化させるときの
+* swap の最小回数を返す（不可能なら INFL）
+*
+* 利用：【転倒数】
+*/
+template <class T>
+ll swap_distance(const vector<T>& a, const vector<T>& b) {
+	// verify : https://atcoder.jp/contests/arc120/tasks/arc120_c
+
+	int n = sz(a);
+
+	// 長さが異なるならもちろん不可能
+	if (sz(b) != n) return INFL;
+
+	vector<pair<T, int>> ai(n), bi(n);
+	rep(i, n) {
+		ai[i] = { a[i], i };
+		bi[i] = { b[i], i };
+	}
+
+	// 安定ソートになるので，左同士，右同士を対応付けてくれる．
+	sort(all(ai));
+	sort(all(bi));
+	dump(ai); dump(bi);
+
+	// p[ia] = ib : a[ia] を b[ib] と対応させることを表す．
+	vi p(n);
+	rep(i, n) {
+		auto& [a, ia] = ai[i];
+		auto& [b, ib] = bi[i];
+		if (a != b) return INFL;
+
+		p[ia] = ib;
+	}
+
+	// 順列 p[0..n) の転倒数が答え．
+	return inversion_number(p);
+}
+
+
 //【置換のサイクル分解】O(n)
 /*
 * [0..n) の置換 p を巡回置換の積に分解して cycles に格納し cycles を返す．

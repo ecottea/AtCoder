@@ -1,8 +1,139 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "木DP.h"
 #include "最短路.h"
 // ■■■■■ 木の性質の分析 ■■■■■
+
+
+//【根付き木の頂点の深さ】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の深さを格納したリストを返す．
+* s の深さとは，根から s までの辺の本数のことである．
+*
+* 利用：【配る木 DP】
+*/
+using T_dot = int;
+T_dot apply_dot(const T_dot& x, int s, int t) { return x + 1; }
+T_dot root_dot(int r) { return 0; }
+vector<T_dot> depth_of_tree(const Graph& g, int r) {
+	// verify : https://algo-method.com/tasks/529
+	
+	return tree_giveDP<T_dot, apply_dot, root_dot>(g, r);
+}
+
+
+//【根付き木の重さ】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の重さを格納したリストを返す．
+* s の重さとは，部分木 s に含まれる辺の本数（s 自身を除く子孫の数）のことである．
+*
+* 利用：【貰う木 DP（頂点マージ）】
+*/
+using T_wot = int;
+void merge_wot(T_wot& x, const T_wot& y, int s) { x += y; }
+T_wot e_wot() { return 0; }
+T_wot leaf_wot(int s) { return 0; }
+T_wot apply_wot(const T_wot& x, int p, int s) { return x + 1; }
+vector<T_wot> weight_of_tree(const Graph& g, int r) {
+	// verify : https://algo-method.com/tasks/434
+	
+	return tree_getDP_vmerge<T_wot, merge_wot, e_wot, leaf_wot, apply_wot>(g, r);
+}
+
+
+//【根付き木の高さ】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の高さを格納したリストを返す．
+* s の高さとは，s から部分木 s の葉までの辺の本数の最大値のことである．
+*
+* 利用：【貰う木 DP（森経由）】
+*/
+using T_hot = int;
+void merge_hot(T_hot& x, const T_hot& y) { chmax(x, y); }
+T_hot e_hot() { return -INF; }
+T_hot leaf_hot(int s) { return 0; }
+void apply_hot(T_hot& x, int s) { x++; }
+vector<T_hot> height_of_tree(const Graph& g, int r) {
+	// verify : https://algo-method.com/tasks/528
+	
+	return tree_getDP_forest<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r);
+}
+
+
+//【根付き木の高さ（コスト付き）】O(n)
+/*
+* 各 s∈[0..n) について，r を根とするコスト付き木 g の頂点 s の高さを格納したリストを返す．
+* s の高さとは，s から部分木 s の葉までの辺のコストの和の最大値のことである．
+*
+* 利用：【貰う木 DP（頂点マージ，コスト付き）】
+*/
+using T_hoct = ll;
+void merge_hoct(T_hoct& x, const T_hoct& y, int s) { chmax(x, y); }
+T_hoct e_hoct() { return 0; }
+T_hoct leaf_hoct(int s) { return 0; }
+T_hoct apply_hoct(const T_hoct& x, int s, int t, ll c) { return x + c; }
+vector<T_hoct> height_of_weighted_tree(const WGraph& g, int r) {
+	return tree_getDP_vmerge<T_hoct, merge_hoct, e_hoct, leaf_hoct, apply_hoct>(g, r);
+}
+
+
+//【木の高さ】O(n)
+/*
+* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
+* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
+*
+* 利用：【全方位木 DP】
+*/
+using T_hut = int;
+T_hut merge_hut(T_hut x, T_hut y, int s) { return max(x, y); }
+T_hut e_hut() { return 0; }
+T_hut leaf_hut(int s) { return 0; }
+T_hut apply_hut(T_hut x, int s, int t) { return x + 1; }
+vi height_of_undirected_tree(Graph& g) {
+	return rerooting<T_hut, merge_hut, e_hut, leaf_hut, apply_hut>(g);
+}
+
+
+//【木の高さ（コスト付き）】O(n)
+/*
+* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
+* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
+*
+* 利用：【全方位木 DP（コスト付き）】
+*/
+using T_hutc = ll;
+T_hutc merge_hutc(T_hutc x, T_hutc y, int s) { return max(x, y); }
+T_hutc e_hutc() { return 0; }
+T_hutc leaf_hutc(int s) { return 0; }
+T_hutc apply_hutc(T_hutc x, int p, int s, ll c) { return x + c; }
+vl height_of_undirected_tree(const WGraph& g) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_B
+
+	return rerooting<T_hutc, merge_hutc, e_hutc, leaf_hutc, apply_hutc>(g);
+}
+
+
+//【部分木の大きさ】O(n)
+/*
+* 与えられた木 g に対し，各 s∈[0..n) および s に隣接する各頂点 t について，
+* s-t 間の辺を切断し t を根と見たときの部分木の頂点数を格納した二次元リストを返す．
+*
+* 利用：【全方位部分木 DP】
+*/
+using T_ss = int;
+T_ss merge_ss(T_ss x, T_ss y, int s) { return x + y - 1; }
+T_ss e_ss() { return 1; }
+T_ss leaf_ss(int s) { return 1; }
+T_ss apply_ss(T_ss x, int p, int s) { return x + 1; }
+vvi subtree_size(Graph& g) {
+	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
+
+	vvi res;
+	rerooting<T_ss, merge_ss, e_ss, leaf_ss, apply_ss>(g, &res);
+
+	return res;
+}
 
 
 //【木の直径】O(n)
@@ -531,31 +662,18 @@ vi leaf_remove_level(const Graph& g) {
 	vi lv(n);
 
 	// 木が 1 頂点のみで次数 1 の頂点が存在しない場合の例外処理
-	if (n == 1) {
-		lv[0] = 0;
-		return;
-	}
+	if (n == 1) return vi{ 0 };
 
 	// 次数を求めておく．
 	vi degree(n);
-	rep(i, n) {
-		repe(t, g[i]) {
-			degree[t]++;
-		}
-	}
+	rep(i, n) repe(t, g[i]) degree[t]++;
 
 	// 次数が 1 の頂点から順に取り除いていく．
 	queue<pii> q;
-	rep(i, n) {
-		if (degree[i] == 1) {
-			q.push({ i, 0 });
-		}
-	}
+	rep(i, n) if (degree[i] == 1) q.push({ i, 0 });
 
 	while (!q.empty()) {
-		int s, d;
-		tie(s, d) = q.front();
-		q.pop();
+		auto [s, d] = q.front(); q.pop();
 
 		lv[s] = d;
 
@@ -564,13 +682,68 @@ vi leaf_remove_level(const Graph& g) {
 			degree[t]--;
 
 			// 新たに次数 1 の頂点が生まれたらキューに追加する．
-			if (degree[t] == 1) {
-				q.push({ t, d + 1 });
-			}
+			if (degree[t] == 1) q.push({ t, d + 1 });
 		}
 	}
 
 	return lv;
+}
+
+
+//【半径 d の木による最小被覆】O(n)
+/*
+* 木 g を g から誘導される半径 d の木で最小被覆するときの，各部分木の中心のリストを返す．
+*/
+vi subtree_covering_radius(const Graph& g, int d) {
+	// verify : https://atcoder.jp/contests/arc116/tasks/arc116_e
+
+	int n = sz(g);
+	vi res;
+
+	// 便宜上 0 を根とする部分木とみなす．
+	// dp[s] : 部分木 s の被覆されていない頂点の最大深さ
+	//         根から親の方の頂点を被覆できるなら負の値をとる．
+	vi dp(n);
+
+	function<void(int, int)> dfs = [&](int s, int p) {
+		// 最も浅い中心を得る．
+		int dp_min = INF;
+		repe(t, g[s]) {
+			if (t == p) continue;
+			dfs(t, s);
+			chmin(dp_min, dp[t]);
+		}
+
+		// s が葉の場合の例外処理
+		if (dp_min == INF) {
+			dp[s] = 0;
+			return;
+		}
+
+		dp[s] = dp_min + 1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// 部分木 t 内で被覆されていない頂点であっても，
+			// 別の部分木内にある中心から距離 d 以内にあるなら無視してよい．
+			if (dp[t] + dp_min <= -3) continue;
+
+			// さもなくばそれは部分木 s の被覆されていない頂点となる．
+			chmax(dp[s], dp[t] + 1);
+		}
+
+		// s を中心として選ぶ場合
+		if (dp[s] == d) {
+			res.emplace_back(s);
+			dp[s] = -(d + 1);
+		}
+	};
+	dfs(0, -1);
+
+	// 根 0 がまだ被覆されていない場合
+	if (dp[0] >= 0) res.emplace_back(0);
+
+	return res;
 }
 
 

@@ -269,4 +269,3 @@ template <class T> void dump_list2D(vector<vector<T>> a) {
 		cout << (i < sz(a) - 1 ? ",\n" : "}\n");
 	}
 }
-

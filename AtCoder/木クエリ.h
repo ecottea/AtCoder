@@ -10,8 +10,8 @@
 * 根付き木 rt のオイラーツアーを求める．
 *
 * in[s] : DFS で最初に頂点 s を訪れた時刻（根なら 0）
-* out[s] : DFS で最後に頂点 s から離れた時刻（根なら 2 n - 1）
-* pos[t] : DFS で時刻 t に訪れていた頂点の番号（長さ 2 n - 1）
+* out[s] : DFS で最後に頂点 s から離れた時刻（根なら 2n-1）
+* pos[t] : DFS で時刻 t に訪れていた頂点の番号（長さ 2n-1）
 */
 template <class TREE>
 void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) {

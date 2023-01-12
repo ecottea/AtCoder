@@ -6,22 +6,19 @@
 //【桁の数の取得】O(log n)
 /*
 * n を b 進表記したときの桁の数字を上位桁から順に並べたリストを返す．
-* 
+*
 * 制約：|b| >= 2
 */
 vi integer_digits(ll n, int b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	Assert(abs(b) >= 2);
-	vi ds;
 
 	// n = 0 の場合の例外処理
-	if (n == 0) {
-		ds.push_back(0);
-		return;
-	}
+	if (n == 0) return vi{ 0 };
 
 	// mod |b| を取れば最下位桁から順に決定していく．
+	vi ds;
 	while (n != 0) {
 		int d = smod(n, abs(b));
 		ds.push_back(d);
@@ -39,7 +36,7 @@ vi integer_digits(ll n, int b = 10) {
 /*
 * b 進表記で上位桁から順に ds[0..n) が並んだ数の値を返す．
 */
-ll from_digits(vi& ds, ll b = 10) {
+ll from_digits(const vi& ds, ll b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	int n = sz(ds);
@@ -58,10 +55,11 @@ ll from_digits(vi& ds, ll b = 10) {
 /*
 * b 進表記で表された数 s[0..n) の値を返す．桁の '0' は zero とする．
 */
-mint from_digits(const string& s, int b = 10, char zero = '0') {
+template <class T>
+T from_digits(const string& s, int b = 10, char zero = '0') {
 	// verify : https://atcoder.jp/contests/abc242/tasks/abc242_e
 
-	mint res = 0, powb = 1;
+	T res = 0, powb = 1;
 
 	int n = sz(s);
 	repir(i, n - 1, 0) {

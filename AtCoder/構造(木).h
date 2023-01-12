@@ -231,11 +231,43 @@ struct Weighted_rooted_tree {
 };
 
 
+//【木のランダム生成】O(n^2)
+/*
+* n 頂点のランダムな木を返す．
+*/
+Graph create_random_tree(int n) {
+	Graph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	vector<pii> es;
+	rep(i, n) repi(j, i + 1, n - 1) es.emplace_back(i, j);
+	shuffle(all(es), mt);
+
+	dsu d(n);
+	repe(e, es) {
+		int u, v;
+		tie(u, v) = e;
+		if (d.same(u, v)) continue;
+
+		g[u].emplace_back(v);
+		g[v].emplace_back(u);
+		d.merge(u, v);
+	}
+
+	return g;
+}
+
+
 //【コスト付き木のランダム生成】O(n^2)
 /*
 * n 頂点でコストが [c_min..c_max] 内の一様乱数で与えられるランダムなコスト付き木を返す．
 */
-WGraph create_random_WTree(int n, ll c_min, ll c_max) {
+WGraph create_random_Wtree(int n, ll c_min, ll c_max) {
 	WGraph g(n);
 
 	static mt19937_64 mt; static bool first_call = true;

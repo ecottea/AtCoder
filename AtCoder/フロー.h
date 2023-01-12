@@ -13,7 +13,7 @@
 *	s から t へ容量 cap，コスト cost の辺を追加する．
 *
 * pll flow(int ST, int GL, ll f_lim = INFL) : O(F (n + m) log n)（F:流量，m:辺の数）
-*	ST から GL まで flow_limit まで流せるだけ流したときの {流量, 最小コスト} を返す．
+*	ST から GL まで f_lim まで流せるだけ流したときの {流量, 最小コスト} を返す．
 *	制約：閉路は存在しない
 */
 struct Negative_mcf_graph_DAG {
@@ -37,20 +37,23 @@ struct Negative_mcf_graph_DAG {
 #endif
 	};
 
-	// 元のグラフ（負辺あり）
+	// g : 元のグラフ（負辺あり）
 	vector<vector<Edge>> g;
 
 	// pot[s] : 頂点 s のポテンシャル
 	vl pot;
 
+	// g_pos : ポテンシャル分だけ下駄を履かせて非負の辺のみにしたグラフ
+	mcf_graph<ll, ll> g_pos;
+
 	// n 頂点で初期化する．
-	Negative_mcf_graph_DAG(int n_) : n(n_), g(n), pot(n, INFL) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2266
+	Negative_mcf_graph_DAG(int n_) : n(n_), g(n), pot(n, INFL), g_pos(n) {
+		// verify : https://atcoder.jp/contests/practice2/tasks/practice2_e
 	}
 
 	// s から t へ容量 cap，コスト cost の辺を追加する．
 	void add_edge(int s, int t, ll cap, ll cost) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2266
+		// verify : https://atcoder.jp/contests/practice2/tasks/practice2_e
 
 		g[s].emplace_back(t, cap, cost);
 	}
@@ -77,15 +80,14 @@ struct Negative_mcf_graph_DAG {
 		rep(s, n) pot[s] *= -1;
 	}
 
-	// ST から GL まで flow_limit まで流せるだけ流したときの {流量, 最小コスト} を返す．
+	// ST から GL まで f_lim まで流せるだけ流したときの {流量, 最小コスト} を返す．
 	pll flow(int ST, int GL, ll f_lim = INFL) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2266
+		// verify : https://atcoder.jp/contests/practice2/tasks/practice2_e
 
 		// DAG 上の DP で v から GL までの距離を求め，その -1 倍をポテンシャル pot[v] とする．
 		DAG_DP(GL);
 
 		// g_pos : 辺 s→t のコストが (元の辺のコスト) - (pot[t] - pot[s]) >= 0 であるようなグラフ
-		mcf_graph<ll, ll> g_pos(n);
 		rep(s, n) repe(e, g[s]) {
 			g_pos.add_edge(s, e.to, e.cap, e.cost - (pot[e.to] - pot[s]));
 		}
@@ -111,7 +113,7 @@ struct Negative_mcf_graph_DAG {
 *	s から t へ容量 cap，コスト cost の辺を追加する．
 *
 * pll flow(int ST, int GL, ll f_lim = INFL) : O(n m + F (n + m) log n)（F:流量，m:辺の数）
-*	ST から GL まで flow_limit まで流せるだけ流したときの {流量, 最小コスト} を返す．
+*	ST から GL まで f_lim まで流せるだけ流したときの {流量, 最小コスト} を返す．
 *	制約：負コストの閉路は存在しない
 */
 struct Negative_mcf_graph {
@@ -328,7 +330,7 @@ struct Generalized_max_profit_flow {
 /*
 * 流量を自由としてコストの最小化を行いたい場合，始点から終点まで容量 ∞，コスト 0 の辺を張れば良い．
 *
-* verify : https://onlinejudge.u-aizu.ac.jp/problems/2293
+* // verify : https://atcoder.jp/contests/practice2/tasks/practice2_e
 */
 
 
@@ -347,7 +349,7 @@ struct Generalized_max_profit_flow {
 */
 
 
-//【最大流問題】O(|E| maxflow)
+//【最大流問題】O(maxflow (|V| + |E|))
 /*
 * コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */
@@ -359,8 +361,7 @@ ll ford_fullkerson(const WGraph& g, int s, int t) {
 
 	// 残余ネットワークを作り初期化する．
 	// また更新のために逆向きの辺の番号を記録しておく．
-	WGraph res(n);
-	vvi rev(n);
+	WGraph res(n); vvi rev(n);
 	rep(i, n) repe(e, g[i]) {
 		// 順方向は g と同じ，逆方向は 0 で初期化．
 		res[i].push_back(e);
@@ -418,5 +419,147 @@ ll ford_fullkerson(const WGraph& g, int s, int t) {
 
 	return mf;
 }
+
+
+//【最小費用流問題】
+/*
+* Ford_fullkerson(int n) : O(n)
+*	n 頂点で初期化する．
+*
+* add_edge(int s, int t, ll cap, ll cost) : O(1)
+*	s から t への容量 cap，コスト cost の辺を追加する．
+*
+* pll flow(int ST, int GL, ll f_lim = INFL) : O(maxflow (|V| + |E|) log |V|)
+*	ST から GL まで f_lim まで流せるだけ流したときの {流量, 最小コスト} を返す．
+*/
+class Ford_fullkerson {
+	// 参考 : https://ikatakos.com/pot/programming_algorithm/graph_theory/minimum_cost_flow
+
+	struct Edge {
+		int from; // どの頂点から出る辺か
+		int to; // どの頂点に行く辺か
+		ll cap; // 空き容量
+		ll cost; // コスト
+		Edge* rev; // 逆辺
+
+		Edge(int from, int to, ll cap, ll cost, Edge* rev = nullptr) :
+			from(from), to(to), cap(cap), cost(cost), rev(rev) {}
+
+#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const Edge& v) {
+			os << "(" << v.from << "→" << v.to << ":" << v.cap << "/" << v.cost << ")";
+			return os;
+		}
+#endif
+	};
+
+	int n;
+	vector<vector<Edge*>> g;
+
+public:
+	Ford_fullkerson(int n) : n(n), g(n) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/6/GRL_6_B
+	}
+
+	void add_edge(int s, int t, ll cap, ll cost) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/6/GRL_6_B
+
+		g[s].push_back(new Edge(s, t, cap, cost));
+		g[t].push_back(new Edge(t, s, 0, -cost));
+		g[s].back()->rev = g[t].back();
+		g[t].back()->rev = g[s].back();
+	}
+
+	// ST から GL まで最小費用流を 1 回流し，{流量, コスト} の組を返す．
+	pll dijkstra(int ST, int GL) {
+		vl cost(n, INFL); // ST からの最小コスト
+		cost[ST] = 0;
+
+		vl flow(n, INFL); // ST から流せる流量
+
+		vector<Edge*> p(n); // 直前に通ってきた辺
+
+		// 組 (ST からのコスト, 頂点番号) を入れる優先度付きキュー
+		priority_queue_rev<pli> q;
+		q.push({ 0, ST });
+
+		while (!q.empty()) {
+			auto [c, s] = q.top(); q.pop();
+
+			// GL までのパスを見つけたら終了．
+			if (s == GL) break;
+
+			// すでにより小さいコストに更新されていたなら何もしない（忘れると O(|V|^2)）
+			if (cost[s] < c) continue;
+
+			repe(e, g[s]) {
+				// 空き容量がなければフローを流さない．
+				if (e->cap == 0) continue;
+
+				// コストが更新できないならフローを流さない．
+				if (cost[s] + e->cost >= cost[e->to]) continue;
+
+				// コストを更新し，その先も探索する．
+				cost[e->to] = cost[s] + e->cost;
+				flow[e->to] = min(flow[s], e->cap);
+				p[e->to] = e;
+				q.push({ cost[e->to], e->to });
+			}
+		}
+
+		// フローが流せない場合は終了．
+		if (cost[GL] == INFL) return { 0, 0 };
+
+		// フローを流し，空き容量を更新する．
+		int s = GL;
+		while (s != ST) {
+			p[s]->cap -= flow[GL];
+			p[s]->rev->cap += flow[GL];
+
+			s = p[s]->from;
+		}
+
+		return { flow[GL], cost[GL] };
+	}
+
+	pll flow(int ST, int GL, ll flow_limit = INFL) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/6/GRL_6_B
+
+		ll flow_sum = 0, cost_sum = 0;
+
+		while (true) {
+			// 始点 s からフローを流す．
+			auto [f, c] = dijkstra(ST, GL);
+
+			// フローが流れなかったら最大まで流し切ったので終了．
+			if (f == 0) break;
+
+			// フローが上限を超えて流せるなら打ち切り．
+			if (flow_sum + f >= flow_limit) {
+				f = flow_limit - flow_sum;
+				flow_sum += f;
+				cost_sum += c * f;
+				break;
+			}
+
+			// フローが流れたら流量とコストを更新する．
+			flow_sum += f;
+			cost_sum += c * f;
+		}
+
+		return { flow_sum, cost_sum };
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Ford_fullkerson& g) {
+		rep(s, g.n) {
+			os << s << ": ";
+			repe(e, g.g[s]) os << *e << " ";
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
 
 

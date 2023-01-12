@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "s—ñ.h"
+#include "ƒgƒƒsƒJƒ‹ô‚İ.h"
 // ¡¡¡¡¡ ”¼ŠÂ ¡¡¡¡¡
 
 
@@ -24,23 +25,23 @@ S801 e801() { return 1; }
 #define Add_mul_semiring S801, add801, o801, mul801, e801
 
 
-//ys—ñ‰ÁZ - æZ ”¼ŠÂz
+//ys—ñ‚Ì ‰ÁZ - æZ ”¼ŠÂz
 int size813 = 3;
 using S813 = Matrix<mint>;
 S813 add813(S813 x, S813 y) { return x + y; }
-S813 o813() { return Matrix<mint>(size813, size813); }
+S813 o813() { return S813(size813, size813); }
 S813 mul813(S813 x, S813 y) { return x * y; }
-S813 e813() { return Matrix<mint>(size813); }
+S813 e813() { return S813(size813); }
 #define MatrixAdd_mul_semiring S813, add813, o813, mul813, e813
 
 
-//yFPS‰ÁZ - æZ ‰ÂŠ·”¼ŠÂz
+//yFPS ‚Ì ‰ÁZ - æZ ‰ÂŠ·”¼ŠÂz
 int size814 = 10;
 using S814 = MFPS;
 S814 add814(S814 x, S814 y) { return x + y; }
-S814 o814() { return MFPS(0); }
+S814 o814() { return S814(0); }
 S814 mul814(S814 x, S814 y) { return (x * y).resize(size814); }
-S814 e814() { return MFPS(1); }
+S814 e814() { return S814(1); }
 #define MFPSAdd_mul_semiring S814, add814, o814, mul814, e814
 
 
@@ -129,6 +130,55 @@ S806 mul806(S806 f, S806 g) {
 }
 S806 e806() { return { 0, -INFL }; }
 #define Tropical_affine_max_invcmposite_semiring S806, add806, o806, mul806, e806
+
+
+//ymax-plus ”—ñ‚Ì Še“_ max - ô‚İ ‰ÂŠ·”¼ŠÂz
+/*
+* S ¹ a : ”—ñ a[0..n) ‚ğ•\‚·D
+* a add b : a[0..n) ‚Æ b[0..m) ‚ÌŠe“_ max ‚ğ•\‚·i–³‚¢—v‘f‚Í -‡ ‚Æ‚·‚éj
+* a mul b : a[0..n) ‚Æ b[0..m) ‚Ì max-plus ô‚İ‚ğ•\‚·D
+*
+* —˜—pFymax-plus ô‚İz
+*/
+using S815 = vl;
+S815 add815(S815 x, S815 y) { // O(n + m)
+	int n = sz(x), m = sz(y);
+
+	S815 res(max(n, m), -INFL);
+	rep(i, n) chmax(res[i], x[i]);
+	rep(j, m) chmax(res[j], y[j]);
+
+	return res;
+}
+S815 o815() { return S815(); }
+S815 mul815(S815 x, S815 y) { return naive_max_plus_convolution(x, y); } // O(n m)
+S815 e815() { return S815(0); }
+#define MPlusSeq_Max_Conv_semiring S815, add815, o815, mul815, e815
+
+
+//ymax-plus ”—ñiã‚É“Êj‚Ì Še“_ max - ô‚İ ‰ÂŠ·”¼ŠÂz
+/*
+* S ¹ a : ã‚É“Ê‚È”—ñ a[0..n) ‚ğ•\‚·D
+* a add b : a[0..n) ‚Æ b[0..m) ‚ÌŠe“_ max ‚ğ•\‚·i–³‚¢—v‘f‚Í -‡ ‚Æ‚·‚éj
+* a mul b : a[0..n) ‚Æ b[0..m) ‚Ì max-plus ô‚İ‚ğ•\‚·D
+*
+* —˜—pFymax-plus ô‚İiã‚É“Êjz
+*/
+/* verify : https://atcoder.jp/contests/abc218/tasks/abc218_h */
+using S816 = vl;
+S816 add816(S816 x, S816 y) { // O(n + m)
+	int n = sz(x), m = sz(y);
+
+	S816 res(max(n, m), -INFL);
+	rep(i, n) chmax(res[i], x[i]);
+	rep(j, m) chmax(res[j], y[j]);
+
+	return res;
+}
+S816 o816() { return S816(); }
+S816 mul816(S816 x, S816 y) { return concave_max_plus_convolution(x, y); } // O(n + m)
+S816 e816() { return S816(0); }
+#define MaxPlusConcaveSeq_Max_Conv_semiring S816, add816, o816, mul816, e816
 
 
 //ymin - max ‰ÂŠÂ”¼ŠÂz

@@ -369,7 +369,7 @@ struct MFPS {
 		if (f.n == 0) os << 0;
 		else {
 			rep(i, f.n) {
-				os << f[i].val() << "x^" << i;
+				os << f[i].val() << "z^" << i;
 				if (i < f.n - 1) os << " + ";
 			}
 		}
@@ -771,7 +771,7 @@ MFPS log(const MFPS& f, int d, const Factorial_mint& fm) {
 
 //【指数関数】O(n log n)
 /*
-* log f(x) mod x^d を返す．
+* exp f(x) mod x^d を返す．
 *
 * 制約 : f(0) = 0，fm は (2d)! まで計算可能であること
 *
@@ -1245,7 +1245,7 @@ MFPS expand(vector<MFPS> fs) {
 
 //【多項式の累積積の和】O(n (log n)^2)
 /*
-* 多項式の列 fs[0..k) について，Σi=[0..k) Πfs[0..i)（次数は n）を返す．
+* 多項式の列 fs[0..k) について，Σi=[0..k] Πfs[0..i)（次数は n）を返す．
 */
 MFPS cumulative_product_sum(const vector<MFPS>& fs_) {
 	// verify : https://atcoder.jp/contests/abc269/tasks/abc269_h
@@ -1276,33 +1276,90 @@ MFPS cumulative_product_sum(const vector<MFPS>& fs_) {
 	//		g1
 	// と表される．
 
-	// 最初に 1 を加算する処理があるので，要素数を 2 冪まで拡張しておく．
-	int pow2 = 1;
-	while (pow2 < sz(fs_) + 1) pow2 *= 2;
-	int n = pow2;
+	int n = sz(fs_);
 
 	// 1-indexed になおして格納する．
-	vector<MFPS> fs(n, MFPS(0));
-	rep(i, sz(fs_)) fs[i + 1] = fs_[i];
+	vector<MFPS> fs(n + 1);
+	rep(i, n) fs[i + 1] = fs_[i];
 
 	// フェニック木の初期化段階
-	for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
-		for (int i = 2 * pow2; i < n; i += 2 * pow2) {
+	for (int pow2 = 1; 2 * pow2 <= n; pow2 *= 2) {
+		for (int i = 2 * pow2; i <= n; i += 2 * pow2) {
 			fs[i] *= fs[i - pow2];
 		}
 	}
 
 	// 奇数番目の要素への 1 の加算
-	for (int i = 1; i < n; i += 2) fs[i] += 1;
+	for (int i = 1; i <= n; i += 2) fs[i] += 1;
 
 	// 積の加算の繰り返し
-	for (int pow2 = 2; pow2 < n; pow2 *= 2) {
-		for (int i = 1; i + pow2 < n; i += 2 * pow2) {
-			fs[i] += fs[i + pow2 - 1] * fs[i + pow2];
+	for (int pow2 = 2; pow2 <= n; pow2 *= 2) {
+		for (int i = 1; i + pow2 - 1 <= n; i += 2 * pow2) {
+			fs[i] += fs[i + pow2 - 1] * (i + pow2 <= n ? fs[i + pow2] : 1);
 		}
 	}
 
 	return fs[1];
+}
+
+
+//【多項式の累積積の加重和】O(n (log n)^2)
+/*
+* 与えられた多項式の列 as[0..k] fs[0..k) に対して Σi=[0..k] as[i] Πfs[0..i)（次数は n）を返す．
+*/
+MFPS weighted_cumulative_product_sum(const vector<MFPS>& as, const vector<MFPS>& fs) {
+	// verify : https://atcoder.jp/contests/abc269/tasks/abc269_h
+
+	//【方法】
+	// f だけ 1-indexed で考える．例えば k=7 のとき，答えは
+	//	a0 + a1 f1 + a2 f1 f2 + a3 f1 f2 f3 + a4 f1 f2 f3 f4 + a5 f1 f2 f3 f4 f5 + a6 f1 f2 f3 f4 f5 f6 + a7 f1 f2 f3 f4 f5 f6 f7
+	//	= (a0 + a1 f1) + f1 f2 (a2 + a3 f3) + f1 f2 f3 f4 (a4 + a5 f5 + f5 f6 (a6 + a7 f7))
+	// である．
+	//
+	// フェニック木の初期化と同様にして
+	//		g1 = f1, g2 = f1 f2, g3 = f3, g4 = f1 f2 f3 f4, ...
+	// と定めれば，答えは
+	//		(a0 + a1 g1) + g2 (a2 + a3 g3) + g4 (a4 + a5 g5 + g6 (a6 + a7 g7))
+	// と表される．
+	//
+	// まず
+	//		g[2i+1] ← a[2i] + a[2i+1] g[2i+1] 
+	// とすれば答えは
+	//		g1 + g2 g3 + g4 (g5 + g6 g7)
+	// と表される．さらに
+	//		g[4i+1] += g[4i+2] g[4i+3]
+	// とすれば答えは
+	//		g1 + g4 g5
+	// と表される．最後に
+	//		g[8i+1] += g[8i+4] g[8i+5]
+	// とすれば答えは
+	//		g1
+	// と表される．
+
+	int n = sz(fs);
+
+	// 1-indexed になおして格納する．
+	vector<MFPS> gs(n + 1);
+	rep(i, n) gs[i + 1] = fs[i];
+
+	// フェニック木の初期化段階
+	for (int pow2 = 1; 2 * pow2 <= n; pow2 *= 2) {
+		for (int i = 2 * pow2; i <= n; i += 2 * pow2) {
+			gs[i] *= gs[i - pow2];
+		}
+	}
+
+	// 奇数番目の要素の変更
+	for (int i = 1; i <= n; i += 2) gs[i] = as[i - 1] + as[i] * gs[i];
+
+	// 積の加算の繰り返し
+	for (int pow2 = 2; pow2 <= n; pow2 *= 2) {
+		for (int i = 1; i + pow2 - 1 <= n; i += 2 * pow2) {
+			gs[i] += gs[i + pow2 - 1] * (i + pow2 <= n ? gs[i + pow2] : as.back());
+		}
+	}
+
+	return gs[1];
 }
 
 

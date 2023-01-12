@@ -85,11 +85,13 @@ vvvi set_partitions(int k, int m) {
 }
 
 
-//【自然数の分割の列挙】O(n の分割数)（n = 50 くらいまで動く）
+//【自然数の分割の列挙（値が k 以下）】O(n の分割数)（n=50 くらいまで動く）
 /*
 * 自然数 n を k 以下の自然数（広義降順）に分割する方法のリストを返す．
 */
 vvi integer_partitions_val(int n, int k) {
+	// verify : https://atcoder.jp/contests/abc226/tasks/abc226_f
+
 	//【具体例】
 	// (n, k) = (6, 3) のとき：
 	//	0: 3 3
@@ -143,7 +145,7 @@ vvi integer_partitions_val(int n, int k) {
 }
 
 
-//【自然数の分割の列挙】O(n の分割数)（n = 50 くらいまで動く）
+//【自然数の分割の列挙（d 個以下）】O(n の分割数)（n=50 くらいまで動く）
 /*
 * 自然数 n を d 個以下の自然数（広義降順）に分割する方法のリストを返す．
 */

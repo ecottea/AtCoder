@@ -73,17 +73,15 @@ int find_primitive_root() {
 	// p - 1 自身だけ削除する．
 	divs.pop_back();
 
-	repi(r, 2, p - 2) {
+	repi(r, 2, p - 1) {
 		// p - 1 の真の約数が全て r の位数でないなら原始根
-		repe(d, divs) {
-			if (mint(r).pow(d) == 1) {
-				goto NEXT_LOOP;
-			}
-		}
+		repe(d, divs) if (mint(r).pow(d) == 1) goto NEXT_LOOP;
+
 		return r;
 
 	NEXT_LOOP:;
 	}
+
 	return -1;
 }
 

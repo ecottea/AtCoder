@@ -122,7 +122,7 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 #endif
 struct mll {
 	__int128 v;
-	static __int128 MOD;
+	inline static __int128 MOD;
 
 	// コンストラクタ
 	mll() : v(0) {};
@@ -209,7 +209,6 @@ struct mll {
 	// 値の確認
 	ll val() const { return (ll)safe_mod(v); }
 };
-__int128 mll::MOD; // 静的メンバ変数は実体を別に宣言する必要がある
 
 
 //【mint → 有理数】（実験用）

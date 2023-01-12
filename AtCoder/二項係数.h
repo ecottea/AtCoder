@@ -544,8 +544,6 @@ template <class T>
 T permutation(ll n, int r) {
 	// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/3
 
-	Assert(n >= r);
-
 	T val = 1;
 	rep(i, r) val *= n - i;
 	return val;

@@ -120,6 +120,7 @@
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,6 +136,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>26451;6297;4334</DisableSpecificWarnings>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,9 +150,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
+    <ClInclude Include="累積和.h" />
+    <ClInclude Include="アダマール変換.h" />
     <ClInclude Include="オートマトン.h" />
+    <ClInclude Include="スコア和(木).h" />
     <ClInclude Include="スコア和(順列).h" />
+    <ClInclude Include="トロピカル畳込み.h" />
     <ClInclude Include="フロー.h" />
+    <ClInclude Include="フーリエ変換.h" />
     <ClInclude Include="マッチング(一般).h" />
     <ClInclude Include="ヤング図形.h" />
     <ClInclude Include="列挙(ビット列).h" />
@@ -159,6 +166,7 @@
     <ClInclude Include="数え上げ(ビット列).h" />
     <ClInclude Include="数え上げ(列).h" />
     <ClInclude Include="数え上げ(集合).h" />
+    <ClInclude Include="数論変換.h" />
     <ClInclude Include="最適化%28分割%29.h" />
     <ClInclude Include="DAG.h" />
     <ClInclude Include="local.hpp" />
@@ -195,9 +203,7 @@
     <ClInclude Include="フェニック木%28抽象%29.h" />
     <ClInclude Include="モノイド.h" />
     <ClInclude Include="M-モノイド.h" />
-    <ClInclude Include="二乗の木DP.h" />
     <ClInclude Include="スコア和%28組%29.h" />
-    <ClInclude Include="全方位木DP.h" />
     <ClInclude Include="分析(文字列).h" />
     <ClInclude Include="列挙(列).h" />
     <ClInclude Include="列挙(文字列).h" />
@@ -260,6 +266,7 @@
     <ClInclude Include="M-集合.h" />
     <ClInclude Include="最適化%28順列%29.h" />
     <ClInclude Include="数え上げ%28順列%29.h" />
+    <ClInclude Include="関数.h" />
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />
     <ClInclude Include="数列の和.h" />

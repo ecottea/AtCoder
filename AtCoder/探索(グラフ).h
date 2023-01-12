@@ -43,15 +43,14 @@ void breadth_first_search(const Graph& g, int st, vi& in) {
 //【幅優先探索（複数始点）】O(|V| + |E|)
 /*
 * グラフ g に対し始点集合を st として幅優先探索を行い，
-* st から各頂点 s への最短経路長の最小値を dist[s] に格納する．
-* s が st のいずれからも到達不能な頂点の場合は dist[s] = INF となる．
+* st から各頂点 s への最短経路長の最小値（到達不能なら INF）を格納したリストを返す．
 */
-void multi_bfs(const Graph& g, const vi& st, vi& dist) {
+vi multi_bfs(const Graph& g, const vi& st) {
 	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_c
 
 	int n = sz(g);
 
-	dist = vi(n, INF); // スタートからの最短距離を保持するテーブル
+	vi dist(n, INF); // スタートからの最短距離を保持するテーブル
 	queue<int> q; // 次に探索する頂点を入れておくキュー
 
 	repe(s, st) {
@@ -74,6 +73,8 @@ void multi_bfs(const Graph& g, const vi& st, vi& dist) {
 			q.push(t);
 		}
 	}
+
+	return dist;
 }
 
 

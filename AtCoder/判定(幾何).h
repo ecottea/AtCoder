@@ -12,11 +12,12 @@
 * 戻り値：
 *	 1 : p が s の左側にある場合（a → b → p が反時計回り）
 *	-1 : p が s の右側にある場合（a → b → p が時計回り）
-*	 2 : p が s の b より前にある場合（a < b < p 順）
+*	 2 : p が s の b より先にある場合（a < b < p 順）
 *	-2 : p が s の a より後ろにある場合（p < a < b 順）
 *	 0 : p が s 上にある場合（a <= p <= b 順）
 */
-template <typename T> inline int ccw(const Point<T>& p, const Line<T>& s) {
+template <typename T>
+inline int ccw(const Point<T>& p, const Line<T>& s) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_C
 
 	auto op = (s.second - s.first).cross(p - s.first);

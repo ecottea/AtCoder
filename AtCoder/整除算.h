@@ -211,6 +211,32 @@ T count_multiple_3chain(ll n) {
 }
 
 
+//【真の倍数列の数え上げ】O(n (log n)^2)
+/*
+* 各 i∈[0..n] について，各項が n 以下の自然数である真の倍数列で，
+* 初項が i で項数が j であるものの個数を cnt[i][j] に格納し cnt を返す．
+*/
+vvm count_multiple_chain(int n) {
+	// verify : https://atcoder.jp/contests/arc116/tasks/arc116_c
+
+	vvm dp(n + 1);
+
+	repir(i, n, 1) {
+		int j_max = msb(n / i) + 1;
+		dp[i].resize(j_max + 1);
+
+		dp[i][1] = 1;
+		repi(j, 2, j_max) {
+			for (int k = 2; (ll)i * k <= n && sz(dp[i * k]) >= j; k++) {
+				dp[i][j] += dp[i * k][j - 1];
+			}
+		}
+	}
+
+	return dp;
+}
+
+
 //【切り捨て除算】O(1)
 /*
 * a, b の正負によらず，数学的な floor(a / b) を返す．

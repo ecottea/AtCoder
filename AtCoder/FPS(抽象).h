@@ -303,7 +303,7 @@ struct FPS {
 		if (f.n == 0) os << o();
 		else {
 			rep(i, f.n) {
-				os << f[i] << "x^" << i;
+				os << f[i] << "z^" << i;
 				if (i < f.n - 1) os << " + ";
 			}
 		}
@@ -646,7 +646,7 @@ struct SemiFPS {
 		if (f.n == 0) os << o();
 		else {
 			rep(i, f.n) {
-				os << f[i] << "x^" << i;
+				os << f[i] << "z^" << i;
 				if (i < f.n - 1) os << " + ";
 			}
 		}

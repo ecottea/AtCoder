@@ -140,13 +140,11 @@ struct Bipartite_matching {
 *	s∈S と t∈T の間にコスト c の辺を張る．
 *
 * pil flow() : O(cost (|V| + |E|) log|V|)
-*	フローを流し計算を行う．
-*	戻り値 : 最大マッチングの大きさと，そのうちの最小コストの組
+*	最大マッチングの大きさと，そのうちの最小コストの組を返す．
 *
-* minimul_cost_maximum_matching(vector<pii>& es) : O(|E|)
-*	最小コスト最大マッチングの例を具体的に求め es に格納する．
-*	flow() の後に呼び出すこと．
-*	es : 最小コスト最大マッチングに含まれる辺 (s, t) ∈ S×T のリスト
+* vector<pii> minimul_cost_maximum_matching() : O(|E|)
+*	最小コスト最大マッチングに含まれる辺 {s, t} ∈ S×T のリストを返す．
+*	制約 : flow() の後に呼び出すこと．
 *
 *（最小費用流問題）
 */
@@ -156,7 +154,7 @@ struct Minimum_cost_bipartite_matching {
 	int ST, GL;
 
 	// |S|, |T| を渡して初期化する．
-	Minimum_cost_bipartite_matching(int n_, int m_) : n(n_), m(m_) {
+	Minimum_cost_bipartite_matching(int n, int m) : n(n), m(m) {
 		g = mcf_graph<int, ll>(n + m + 2);
 
 		// スタートとゴールおよびそれらとの間の辺を先に作っておく．
@@ -181,14 +179,15 @@ struct Minimum_cost_bipartite_matching {
 	}
 
 	// 実現例を具体的に求める．
-	void minimul_cost_maximum_matching(vector<pii>& es) {
-		es.clear();
+	vector<pii> minimul_cost_maximum_matching() {
+		vector<pii> es;
 		repe(e, g.edges()) {
 			// フローが流れている S, T 間の辺がマッチングに対応する．
 			if (e.flow == 1 && e.from != ST && e.to != GL) {
 				es.push_back({ e.from, e.to - n });
 			}
 		}
+		return es;
 	}
 };
 
@@ -336,7 +335,7 @@ ll minimum_cost_elastic_matching(vvl& c, vector<pii>* match = nullptr) {
 *（bit DP）
 */
 template <class T>
-mint count_perfect_matching(const vector<vector<T>>& e, T ex) {
+mint count_bipartite_perfect_matching(const vector<vector<T>>& e, T ex) {
 	// 参考 : https://kyopro-friends.hatenablog.com/entry/2019/01/12/231035
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_o
 
@@ -385,24 +384,73 @@ mint count_perfect_matching(const vector<vector<T>>& e, T ex) {
 */
 
 
+//【二部グラフのマッチングの数え上げ】O(2^|T| |S| |T|)
+/*
+* 各 set⊂T について，誘導二部グラフ (S, set) の大きさ |set| のマッチングの個数を格納したリストを返す．
+* e[i][j] : S[i] と T[j] の間の辺の本数
+*/
+template <class T>
+vector<T> count_bipartite_matching(const vector<vector<T>>& e) {
+	int n = sz(e), m = sz(e[0]);
+
+	// dp[i][set] : S[0..i) と T[set] とのマッチングの個数
+	vector<vector<T>> dp(n + 1, vector<T>(1LL << m));
+	dp[0][0] = 1;
+
+	rep(i, n) repb(set, m) {
+		// S[i] とはマッチさせない場合
+		dp[i + 1][set] += dp[i][set];
+
+		// S[i] と T[j] をマッチさせる場合
+		rep(j, m) {
+			if (set & (1 << j)) continue;
+
+			dp[i + 1][set + (1 << j)] += dp[i][set] * e[i][j];
+		}
+	}
+
+	return dp[n];
+}
+
+
 //【木の最大マッチング】O(n)
 /*
 * 木 g の最大マッチングの大きさを返す．
 *
-* 利用：【貰う木 DP】
+* 利用：【貰う木 DP（頂点マージ）】
 */
-// verify : https://atcoder.jp/contests/agc014/tasks/agc014_d
 using T_tbm = int;
 void merge_tbm(T_tbm& x, const T_tbm& y, int s) { x += y; }
 T_tbm e_tbm() { return 0; }
 T_tbm leaf_tbm(int s) { return 0; }
 T_tbm apply_tbm(const T_tbm& x, int s, int t) { return (T_tbm)(x == 0); }
-int tree_bipartite_matching(const Graph& g) {
-	vector<T_tbm> dp = tree_getDP<T_tbm, merge_tbm, e_tbm, leaf_tbm, apply_tbm>(g, 0);
+int tree_maximum_matching(const Graph& g) {
+	// verify : https://atcoder.jp/contests/agc014/tasks/agc014_d
+	
+	vector<T_tbm> dp = tree_getDP_vmerge<T_tbm, merge_tbm, e_tbm, leaf_tbm, apply_tbm>(g, 0);
 	
 	int res = 0;
 	rep(i, sz(g)) res += (int)(dp[i] > 0);
 	return res;
+}
+
+
+//【木の最大マッチングの共通部分】O(n)
+/*
+* 与えられた木 g に対し，各 s∈[0..n) について，
+* 頂点 s が木 g の全ての最大マッチングに含まれるかを格納したリストを返す．
+*
+* 利用：【全方位木 DP】
+*/
+using T_mmi = bool; // 根を必ず使うか
+T_mmi merge_mmi(T_mmi x, T_mmi y, int s) { return x || y; }
+T_mmi e_mmi() { return false; }
+T_mmi leaf_mmi(int s) { return false; }
+T_mmi apply_mmi(T_mmi x, int p, int s) { return !x; }
+vb tree_maximum_matching_intersection(Graph& g) {
+	// verify : https://atcoder.jp/contests/abc223/tasks/abc223_g
+
+	return rerooting<T_mmi, merge_mmi, e_mmi, leaf_mmi, apply_mmi>(g);
 }
 
 
