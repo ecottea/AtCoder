@@ -148,9 +148,9 @@ mint count_surjections(ll n, int m) {
 //【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）】O(n^2)
 /*
 * 各 i ∈ [0..n], j ∈ [0..n] について，
-* i 点集合をちょうど j 個に分割する方法の数を c[i][j] に格納する．
+* i 点集合をちょうど j 個に分割する方法の数を格納した二次元リストを返す．
 */
-void stirling_S2(int n, vvm& c) {
+vvm stirling_S2(int n) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
 
 	//【方法】
@@ -167,10 +167,12 @@ void stirling_S2(int n, vvm& c) {
 	// を得る．
 
 	// c[i][j] : [0..i) をちょうど j 個に分割する方法の数
-	c = vvm(n + 1, vm(n + 1));
+	vvm c(n + 1, vm(n + 1));
 	c[0][0] = 1;
 
 	repi(i, 1, n) repi(j, 1, n) c[i][j] = c[i - 1][j] * j + c[i - 1][j - 1];
+
+	return c;
 }
 
 

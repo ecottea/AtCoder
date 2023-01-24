@@ -5,20 +5,20 @@
 
 //【最大正方形】O(h w)
 /*
-* a[0..h)[0..w) の able のマスのみを使って作られる，
-* マス (i, j) を右下隅とする最大正方形の一辺の長さを len[i][j] に格納する．
+* a[0..h)[0..w) の able のマスのみを使って作られる，各 i, j についての
+* マス (i, j) を右下隅とする最大正方形の一辺の長さを格納した二次元リストを返す．
 *
 *（二次元 DP）
 */
 template <class T>
-void largest_square(const vector<vector<T>>& a, vvi& len, T able = 1) {
+vvi largest_square(const vector<vector<T>>& a, T able = 1) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-131.html
 	// verify : https://codeforces.com/problemset/problem/713/D
 
 	int h = sz(a), w = sz(a[0]);
 
 	// len[i][j] : (i, j) を右下端とする最大正方形の一辺の長さ
-	len = vvi(h, vi(w));
+	vvi len(h, vi(w));
 
 	int res = 0;
 	rep(i, h) {
@@ -36,6 +36,8 @@ void largest_square(const vector<vector<T>>& a, vvi& len, T able = 1) {
 			len[i][j] = min({ len[i - 1][j], len[i][j - 1], len[i - 1][j - 1] }) + 1;
 		}
 	}
+
+	return len;
 }
 
 
@@ -99,18 +101,14 @@ ll largest_rectangle_in_histogram(vector<T>& hist, int* l = nullptr, int* r = nu
 *
 * 利用：【ヒストグラム内最大長方形】
 */
-ll largest_square(vvi& a) {
+ll largest_rectangle(vvi a) {
 	// 参考：http://algorithms.blog55.fc2.com/blog-entry-133.html
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_B
 
 	int h = sz(a), w = sz(a[0]);
 
 	// a[i][j] を i 行目より上の使えるマスからなるヒストグラムとする．
-	repi(i, 1, h - 1) {
-		rep(j, w) {
-			if (a[i][j]) a[i][j] += a[i - 1][j];
-		}
-	}
+	repi(i, 1, h - 1) rep(j, w) if (a[i][j]) a[i][j] += a[i - 1][j];
 
 	// それぞれのヒストグラム a[i] に対してヒストグラム内最大長方形を求める．
 	ll res = 0;
@@ -246,7 +244,8 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 *
 *（格子上スライド bitDP）
 */
-template <class T> mint nonattacking_king_placement(vector<vector<T>>& c, T ng = '#') {
+template <class T>
+mint nonattacking_king_placement(vector<vector<T>>& c, T ng = '#') {
 	// 参考 : https://twitter.com/e869120/status/1386138990361726978
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_w
 
@@ -318,7 +317,8 @@ template <class T> mint nonattacking_king_placement(vector<vector<T>>& c, T ng =
 * 二次元配列 c の欠損領域を周囲の値の平均で塗りつぶす．
 * 欠損値は defect で表されているとする．
 */
-template <class T> void defect_repair(vector<vector<T>>& c, T defect = -1) {
+template <class T>
+void defect_repair(vector<vector<T>>& c, T defect = -1) {
 	int h = sz(c), w = sz(c[0]);
 
 	vvi seen(h, vi(w));

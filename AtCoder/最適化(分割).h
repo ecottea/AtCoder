@@ -2,6 +2,7 @@
 #include "header.h"
 #include "ビット全探索.h"
 #include "ヒープ.h"
+#include "構造(木).h"
 // ■■■■■ 最適化（集合の分割） ■■■■■
 
 
@@ -162,6 +163,61 @@ ll maximize_sum_coloring3(int x, int y, int z, const vl& a, const vl& b, const v
 	}
 
 	return de_sum + c_sum;
+}
+
+
+//【ハフマン符号木】O(n log n)
+/*
+* n 種類の文字 i の出現頻度が p[i] > 0 であるときのハフマン符号木を構築し返す．
+*
+*（頻度が低い順に貪欲法）
+*
+* 利用：【二分木】
+*/
+template <class T>
+Binary_Tree huffman_tree(const vector<T>& p) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_15_D
+
+	int n = sz(p);
+
+	// 出現頻度の低い順に文字を取り出す優先度付きキュー
+	priority_queue_rev<pair<T, int>> q;
+
+	// s[i] の左の子が l[i]，右の子が r[i] であることの記録用
+	vi s, l, r;
+
+	// ハフマン木の葉となる文字たちをキューに追加する．
+	rep(i, n) {
+		q.push({ p[i], i });
+
+		// 葉であることを記録する．
+		s.push_back(i);
+		l.push_back(-1);
+		r.push_back(-1);
+	}
+
+	// 出現頻度の低い文字 2 つを組にして部分木を作り，
+	// それらを合わせた分の出現頻度をもつ新たな文字とみなすことを繰り返す．
+	int i = n;
+	while (sz(q) > 1) {
+		// 出現頻度の低い文字 2 つを得る．
+		T p1, p2; int i1, i2;
+		tie(p1, i1) = q.top(); q.pop();
+		tie(p2, i2) = q.top(); q.pop();
+
+		// それらを合わせた文字を表すノードを作り，キューに追加する．
+		q.push({ p1 + p2, i });
+
+		// 親子関係を記録する．
+		s.push_back(i);
+		l.push_back(i1);
+		r.push_back(i2);
+
+		i++;
+	}
+
+	// ハフマン木を構築する．
+	return Binary_Tree(s, l, r);
 }
 
 

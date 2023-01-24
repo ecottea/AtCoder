@@ -582,7 +582,11 @@ public:
 
 		repi(j, 1, m - 1) {
 			int d = 1 << (j - 1);
-			rep(i, n - d) acc[j][i] = min(acc[j - 1][i], acc[j - 1][i + d]);
+			rep(i, n - d) {
+				// acc[j - 1] の後ろの方には適切に初期化していない要素が入っているが，
+				// それに基づき計算された acc[j][i] は get で参照されることはない．
+				acc[j][i] = min(acc[j - 1][i], acc[j - 1][i + d]);
+			}
 		}
 	}
 	Sparse_table() : n(0), m(0), min_flag(true) {}

@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
+    <ClInclude Include="列の管理.h" />
     <ClInclude Include="累積和.h" />
     <ClInclude Include="アダマール変換.h" />
     <ClInclude Include="オートマトン.h" />
@@ -178,7 +179,6 @@
     <ClInclude Include="Z-加群.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />
-    <ClInclude Include="クエリ.h" />
     <ClInclude Include="グラフクエリ.h" />
     <ClInclude Include="スコア和%28区間%29.h" />
     <ClInclude Include="スコア和%28ビット列%29.h" />
@@ -272,7 +272,6 @@
     <ClInclude Include="数列の和.h" />
     <ClInclude Include="ビット行列.h" />
     <ClInclude Include="複数図形.h" />
-    <ClInclude Include="二分木.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />
     <ClInclude Include="最適化%28グラフ%29.h" />

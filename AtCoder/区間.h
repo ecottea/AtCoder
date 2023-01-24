@@ -1,6 +1,5 @@
 #pragma once
 #include "header.h"
-#include "二分木.h"
 // ■■■■■ 区間 ■■■■■
 
 
@@ -31,6 +30,15 @@
 *	|c - a| + |d - b| = |d - a| + |c - b|
 * 
 * verify : https://atcoder.jp/contests/arc120/tasks/arc120_d
+*/
+
+
+//【区間内判定】
+/*
+* 列 a[0..n) において値 k をもつ全ての要素が区間 [l..r) 内にあることは，
+* 値 k をもつ要素の最左位置が l 以上かつ最右位置が r 未満であることと同値である．
+* 
+* verify : https://atcoder.jp/contests/abc285/tasks/abc285_f
 */
 
 

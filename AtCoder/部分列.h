@@ -1,7 +1,6 @@
 #pragma once
 #include "header.h"
 #include "À•Wˆ³k.h"
-#include "ƒNƒGƒŠ.h"
 // ¡¡¡¡¡ •”•ª—ñ ¡¡¡¡¡
 
 

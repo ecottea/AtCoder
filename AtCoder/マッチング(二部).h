@@ -15,23 +15,23 @@
 * add_edge(int s, int t) : O(1)
 *	s∈S と t∈T の間に辺を張る．
 *
-* int flow() : O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
-*	フローを流し計算を行うい，最大マッチングの大きさを返す．
+* int solve() : O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
+*	フローを流し計算を行い，最大マッチングの大きさを返す．
 *	戻り値は「|最小点被覆|」，「|V| - |最小辺被覆|」，「|V| - |最大独立集合|」とも解釈できる．
 *
 * vector<pii> maximum_matching() : O(|E|)
 *	最大マッチングに含まれる辺 {s, t} ∈ S×T のリストを返す．
-*	制約：flow() の後に呼び出すこと．
+*	制約：solve() の後に呼び出すこと．
 *
 * vector<pii> minimum_edge_covering() : O(|V| + |E|)
 *	最小辺被覆に含まれる辺 {s, t} ∈ S×T のリストを返す．
 *	es が最小辺被覆であるとは，任意の頂点がある e∈es の端点として現れることをいう．
-*	制約：flow() の後に呼び出すこと．
+*	制約：孤立点が存在しない．solve() の後に呼び出すこと．
 *
 * vvi minimum_vertex_covering() : O(|V| + |E|)
 *	最小点被覆の例を具体的に求め，S の頂点を vs[0], T の頂点を vs[1] に格納し，vs を返す．
 *	vs が最小点被覆であるとは，任意の辺がある v∈vs を端点にもつことをいう．
-*	flow() の後に呼び出すこと．
+*	制約：孤立点が存在しない．solve() の後に呼び出すこと．
 *
 *（最大流問題）
 */
@@ -45,6 +45,8 @@ struct Bipartite_matching {
 
 	// |S|, |T| を渡して初期化する．
 	Bipartite_matching(int n, int m) : n(n), m(m) {
+		// verify : https://judge.yosupo.jp/problem/bipartitematching
+
 		g = mf_graph<int>(n + m + 2);
 
 		// スタートとゴールおよびそれらとの間の辺を先に作っておく．
@@ -55,10 +57,14 @@ struct Bipartite_matching {
 	}
 
 	// s∈S と t∈T の間に辺を張る． 
-	void add_edge(int s, int t) { g.add_edge(s, t + n, 1); }
+	void add_edge(int s, int t) { 
+		// verify : https://judge.yosupo.jp/problem/bipartitematching
+		
+		g.add_edge(s, t + n, 1);
+	}
 
 	// 計算を実行し，最大マッチングの大きさを返す．
-	int flow() {
+	int solve() {
 		// verify : https://judge.yosupo.jp/problem/bipartitematching
 
 		return g.flow(ST, GL);
@@ -237,7 +243,7 @@ ll hungarian(const vvl& c_, vi& p) {
 		// 各行各列に存在する 0 部分の最大マッチング（大きさ k）を求める．
 		Bipartite_matching bm(n, n);
 		rep(i, n) rep(j, n) if (c[i][j] == 0) bm.add_edge(i, j);
-		int k = bm.flow();
+		int k = bm.solve();
 
 		// 完全マッチングが得られたら終了．
 		if (k == n) {

@@ -521,3 +521,15 @@ ll interval_pinning(const vector<pii>& lr, const vl& a) {
 }
 
 
+//【和が s 以下の最大区間長（要素が非負）】
+/*
+* 尺取法.h へ
+*/
+
+
+//【和が s 以上の最小区間長（要素が非負）】
+/*
+* 尺取法.h へ
+*/
+
+

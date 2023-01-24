@@ -29,7 +29,7 @@ mint difference_sum(vector<T> a) {
 
 //【組の XOR の和】O((n + m) log max(a, b))
 /*
-* Σi=[0..n)j=[0..m) a[i] XOR b[j] の値を返す．
+* Σi∈[0..n) Σj∈[0..m) a[i] XOR b[j] の値を返す．
 */
 template <class T>
 T xor_sum(const vl& a, const vl& b) {
@@ -57,7 +57,7 @@ T xor_sum(const vl& a, const vl& b) {
 
 //【組の和の XOR】O(n log m log(max(a, b)))
 /*
-* XORi=[0..n)j=[0..m) (a[i] + b[j]) の値を返す．
+* XOR_i∈[0..n) XOR_j∈[0..m) (a[i] + b[j]) の値を返す．
 */
 int sum_xor(const vi& a, const vi& b) {
 	// verify : https://atcoder.jp/contests/abc091/tasks/arc092_b
@@ -97,9 +97,41 @@ int sum_xor(const vi& a, const vi& b) {
 }
 
 
+//【組の剰余の和】O(n + A log A)（A = max(a)）
+/*
+* 正整数列 a[0..n) について，Σi∈[0..n) Σj∈[0..n) a[i] mod a[j] の値を返す．
+*/
+ll mod_sum(const vi& a) {
+	// verify : https://yukicoder.me/problems/no/1233
+
+	int n = sz(a);
+	int a_max = *max_element(all(a));
+	ll a_sum = accumulate(all(a), 0LL);
+
+	vi cnt(a_max + 1);
+	rep(i, n) cnt[a[i]]++;
+	dump(cnt);
+
+	vl acc(a_max + 2);
+	rep(i, a_max + 1) acc[i + 1] = acc[i] + cnt[i];
+	dump(acc);
+
+	ll res = a_sum * n;
+	repi(i, 1, a_max) {
+		for (int l = i; l <= a_max; l += i) {
+			int r = min(l + i, a_max + 1);
+			res -= cnt[i] * (acc[r] - acc[l]) * l;
+		}
+		dump(i, res);
+	}
+
+	return res;
+}
+
+
 //【組の gcd の総和】O(n + K log(log K))（K = max(a[i], b[j])）
 /*
-* Σi=[0..n)j=[0..m) gcd(a[i], b[j]) の値を返す．
+* Σi∈[0..n) Σj∈[0..m) gcd(a[i], b[j]) の値を返す．
 *
 * 利用：【倍数変換，GCD 畳込み】
 */
@@ -134,7 +166,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 
 //【組の lcm の総和】O(n + m + K log(log K))（K = max(a[i], b[j])）
 /*
-* Σi=[0..n)j=[0..m) lcm(a[i], b[j]) の値を返す．
+* Σi∈[0..n) Σj∈[0..m) lcm(a[i], b[j]) の値を返す．
 *
 * 利用：【倍数変換，GCD 畳込み】,【階乗など（法が大きな素数）】
 */

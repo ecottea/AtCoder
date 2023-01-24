@@ -454,18 +454,85 @@ ll minimize_pair_digit_sum(string num, int b = 10) {
 }
 
 
+//【上から桁 DP，桁上げ状態，スコア最小化】O(n D B)
+/*
+* B 進数で D 桁の非負整数列 a[0..n) について，min_x Σi∈[0..n) digit_sum(a[i] + x) を返す．
+*/
+ll minimize_digit_sums(const vl& a, int D = 18, int B = 10) {
+	// verify : https://atcoder.jp/contests/arc153/tasks/arc153_d
+
+	int n = sz(a);
+
+	vl powB(D + 1);
+	powB[0] = 1;
+	rep(d, D) powB[d + 1] = powB[d] * B;
+
+	// dp[d][j] : 最上位から d 桁目までについて，d 桁目より下でソートしたときの
+	//	降順に j 個の数が下の桁からの繰り上がりを貰っている場合の桁和の最小値
+	vvl dp(D + 1, vl(n + 1, INFL));
+	repi(i, 0, n) dp[D][i] = i;
+
+	// 上の桁から順に貰う DP
+	repir(d, D - 1, 0) {
+		// suf_dig : {d 桁目より下, d 桁目の数字} を昇順ソートしたリスト
+		vector<pll> suf_dig(n);
+		rep(i, n) suf_dig[i] = { a[i] % powB[d], (a[i] / powB[d]) % B };
+		sort(all(suf_dig));
+
+		// cnt[b] : d 桁目にある数字 b の個数
+		vi cnt(B);
+		rep(i, n) cnt[suf_dig[i].second]++;
+
+		// ds : d 桁目の数字和
+		ll ds = 0;
+		rep(b, B) ds += b * cnt[b];
+
+		// acc0 : d 桁目に 0 を足した場合の d+1 桁目への繰り上がり回数
+		int acc0 = 0;
+
+		// d-1 桁目から n-i 個の繰り上がりを貰っている場合
+		repir(i, n, 0) {
+			if (i < n) {
+				// d-1 桁目からの繰り上がりにより d 桁目の数字の個数分布が変わる．
+				cnt[suf_dig[i].second]--;
+				ds -= suf_dig[i].second;
+				cnt[(suf_dig[i].second + 1) % B]++;
+				ds += (suf_dig[i].second + 1) % B;
+
+				// d+1 桁目への繰り上がりがあれば記録しておく．
+				if (suf_dig[i].second + 1 == B) acc0++;
+			}
+
+			// acc : d+1 桁目への累積の繰り上がり回数
+			int acc = 0;
+
+			rep(b, B) {
+				// b と B-b を足すと繰り上がるので，累積繰り上がり回数に B-b の個数を加算する．
+				if (b > 0) acc += cnt[B - b];
+
+				// 元々の d 桁目の数字和に b を加えた分と繰り上がった分の補正を加え，d+1 桁目の結果と合わせる．
+				ll add = ds + b * n - B * acc;
+				chmin(dp[d][n - i], dp[d + 1][acc + acc0] + add);
+			}
+		}
+	}
+
+	return dp[0][0];
+}
+
+
 //【桁の数字の分布】O(n b)
 /*
 * b=10 進数で n 桁の数 num 以下の正の整数すべてについて，
-* 桁の数字に現れる数字 t の個数を cnt[t] に格納する．
+* 桁の数字に現れる数字 t の個数を格納したリストを返す．
 *
 *（桁 DP，未満フラグ，前 0 フラグ）
 */
-void digits_distribution(const string& num, vm& cnt, int b = 10) {
+vm digits_distribution(const string& num, int b = 10) {
 	// verify : https://yukicoder.me/problems/no/1953
 
 	int n = sz(num);
-	cnt.resize(b);
+	vm cnt(b);
 
 	// dp[i][sml][lz][t] : 以下の条件を満たす数の桁の数字に含まれる t の個数
 	//                     ただし t = b のときは条件を満たす数の個数を表すものとする．
@@ -532,6 +599,8 @@ void digits_distribution(const string& num, vm& cnt, int b = 10) {
 	rep(t, b) {
 		cnt[t] = dp[n][0][0][t] + dp[n][1][0][t];
 	}
+
+	return cnt;
 }
 
 

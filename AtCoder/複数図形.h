@@ -18,7 +18,7 @@
 *
 * 利用：【偏角ソート】,【部分文字列判定】
 */
-template <typename T>
+template <class T>
 bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 	// verify : https://atcoder.jp/contests/abc207/tasks/abc207_d
 
@@ -103,7 +103,7 @@ bool congruenceQ(vector<Point<T>> s, vector<Point<T>> t) {
 *
 * 利用：【偏角ソート】,【部分文字列判定】
 */
-template <typename T>
+template <class T>
 double similarityQ(vector<Point<T>> s, vector<Point<T>> t) {
 	// verify : https://atcoder.jp/contests/abc022/tasks/abc022_d
 
@@ -268,20 +268,21 @@ tuple<ll, ll, ll> count_triangles(const vector<Point<T>>& p) {
 
 //【凸包】O(n log n)
 /*
-* 点群 p[0..n) の凸包の頂点を反時計回りに ch に格納する．
-* p[0] は x 座標最小（同じものがあれば y 座標最小）の点とする．
+* 点群 p[0..n) の凸包の頂点を反時計回りに格納したリスト ch を返す．
+* ch[0] は x 座標最小（同じものがあれば y 座標最小）の点とする．
 */
-template <typename T>
-void convex_hull(vector<Point<T>> p, Polygon<T>& ch) {
+template <class T>
+Polygon<T> convex_hull(vector<Point<T>> p) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
 
 	int n = sz(p);
+	if (n == 0) return Polygon<T>();
 
 	// x 座標を優先して昇順ソート（x 座標が同じなら y 座標昇順）
 	sort(all(p));
 
 	// 凸包を成す頂点
-	ch.clear();
+	Polygon<T> ch;
 
 	// まず x 座標昇順に見ていき，凸包の y 座標の小さい側を得る．
 	int pt = 0;
@@ -314,6 +315,8 @@ void convex_hull(vector<Point<T>> p, Polygon<T>& ch) {
 
 	// p[0] が重複してしまっているので取り除く．
 	ch.pop_back();
+
+	return ch;
 }
 
 

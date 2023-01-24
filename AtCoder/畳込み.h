@@ -6,7 +6,7 @@
 //【畳込みの使い所】
 /*
 * 数列 a, b が与えられているとする．
-* 畳込みは，全ての k <= n についての Σi a[i] b[k-i] を一括 O(n log n) で求めたいときに使う．
+* 畳込みは，全ての k <= n についての Σi∈[0..k] a[i] b[k-i] を一括 O(n log n) で求めたいときに使う．
 * 特定の k に対して求めたいだけであれば，愚直に和をとっても O(k) で計算できる．
 * 
 * verify : https://atcoder.jp/contests/abc276/tasks/abc276_g
@@ -24,6 +24,87 @@
 */
 
  
+//【畳込み（法が任意）】O((n + m) log (n + m))
+/*
+* a と b の mod を法とした畳込みを返す．
+*/
+vi convolution_arbitrary_mod(const vi& a, const vi& b, int mod = (int)1e9 + 7) {
+	// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
+
+	int n = sz(a), m = sz(b);
+
+	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
+	rep(i, n) {
+		int ai = smod(a[i], mod);
+		a0[i] = ai % pow2;
+		a1[i] = ai / pow2;
+	}
+	rep(i, m) {
+		int bi = smod(b[i], mod);
+		b0[i] = bi % pow2;
+		b1[i] = bi / pow2;
+	}
+
+	vl c00 = convolution_ll(a0, b0);
+	vl c11 = convolution_ll(a1, b1);
+	rep(i, n) a0[i] += a1[i];
+	rep(i, m) b0[i] += b1[i];
+	vl c01 = convolution_ll(a0, b0);
+	rep(i, n + m - 1) {
+		c00[i] %= mod;
+		c11[i] %= mod;
+		c01[i] = (c01[i] - c00[i] - c11[i] + 2LL * mod) % mod;
+	}
+
+	vi c(n + m - 1);
+	rep(i, n + m - 1) {
+		c[i] = (int)((c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2) % mod);
+	}
+
+	return c;
+}
+
+
+//【畳込み（mint，法が任意）】O((n + m) log (n + m))
+/*
+* a と b の mod を法とした畳込みを返す．
+*/
+vm convolution_arbitrary_mod(const vm& a, const vm& b) {
+	int n = sz(a), m = sz(b);
+	int mod = mint::mod();
+
+	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
+	rep(i, n) {
+		int ai = a[i].val();
+		a0[i] = ai % pow2;
+		a1[i] = ai / pow2;
+	}
+	rep(i, m) {
+		int bi = b[i].val();
+		b0[i] = bi % pow2;
+		b1[i] = bi / pow2;
+	}
+
+	vl c00 = convolution_ll(a0, b0);
+	vl c11 = convolution_ll(a1, b1);
+	rep(i, n) a0[i] += a1[i];
+	rep(i, m) b0[i] += b1[i];
+	vl c01 = convolution_ll(a0, b0);
+	rep(i, n + m - 1) {
+		c00[i] %= mod;
+		c11[i] %= mod;
+		c01[i] = (c01[i] - c00[i] - c11[i] + 2LL * mod) % mod;
+	}
+
+	vm c(n + m - 1);
+	rep(i, n + m - 1) {
+		c[i] = c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2;
+	}
+
+	return c;
+}
+
+
 //【畳込み】O(n m)
 /*
 * a[0..n) と b[0..m) を畳み込んだ数列 c[0..n+m-1) を返す．

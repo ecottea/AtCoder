@@ -6,7 +6,7 @@
 //【組の上から桁 DP，未満フラグ，数え上げ】O(max(n1, n2) b^2)
 /*
 * b=10 進数で n1 桁の非負整数 num1 と n2 桁の非負整数 num2 について，
-* d1 <= num1, d2 <= num2 なる非負整数の組 (d1, d2) の個数を返す．
+* d1 ≦ num1, d2 ≦ num2 なる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_pair(string num1, string num2, int b = 10) {
 	int n = max(sz(num1), sz(num2));
@@ -69,7 +69,7 @@ mint count_pair(string num1, string num2, int b = 10) {
 //【組の上から桁 DP，未満フラグ，比較フラグ，数え上げ】O(max(n1, n2) b^2)
 /*
 * b=10 進数で n 桁の非負整数 num について，
-* d1 <= d2 <= num なる非負整数の組 (d1, d2) の個数を返す．
+* d1 ≦ d2 ≦ num なる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_unordered_pair(string num, int b = 10) {
 	int n = sz(num);
@@ -120,7 +120,7 @@ mint count_unordered_pair(string num, int b = 10) {
 //【組の上から桁 DP，超過フラグ，未満フラグ，比較フラグ，数え上げ】O(max(n1, n2) b^2)
 /*
 * b=10 進数で n1 桁の非負整数 num1 と n2 桁の非負整数 num2 について，
-* num1 <= d1 <= d2 <= num2 なる非負整数の組 (d1, d2) の個数を返す．
+* num1 ≦ d1 ≦ d2 ≦ num2 なる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_unordered_pair(string num1, string num2, int b = 10) {
 	int n = max(sz(num1), sz(num2));
@@ -233,7 +233,7 @@ mint count_pair_sum(const string& num, int b = 10) {
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，比較フラグ，数え上げ】O(n b^2)
 /*
 * b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
-* d1 <= d2 を満たすものの個数を返す．
+* d1 ≦ d2 を満たすものの個数を返す．
 */
 mint count_unordered_pair_sum(const string& num, int b = 10) {
 	int n = sz(num);
@@ -283,7 +283,7 @@ mint count_unordered_pair_sum(const string& num, int b = 10) {
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，比較フラグ，スコア和】O(n b^2)
 /*
 * b 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
-* d1 <= d2 を満たすもの全てにおける繰り上がり回数の総和を返す．
+* d1 ≦ d2 を満たすもの全てにおける繰り上がり回数の総和を返す．
 */
 mint carry_sum_unordered_pair_sum(const string& num, int b = 10) {
 	int n = sz(num);
@@ -341,7 +341,7 @@ mint count_tuple_sum(const string& num, int k, int b = 10) {
 
 	// dp[i][f][c] : 以下の条件を満たす数の個数：
 	//	i : 下からの桁 D[i..n) まで決まっている（D = Σd[0..k) とおく）
-	//	f : D[i..n) <= num[i..n) なら 1，さもなくば 0（以下フラグ）
+	//	f : D[i..n) ≦ num[i..n) なら 1，さもなくば 0（以下フラグ）
 	//  c : D[i] からの桁上げの大きさ（k 未満）
 	vvvm dp(n + 1, vvm(1LL << 1, vm(k)));
 	dp[n][1][0] = 1;

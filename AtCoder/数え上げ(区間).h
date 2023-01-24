@@ -1,40 +1,8 @@
 #pragma once
 #include "header.h"
-#include "二分木.h"
 #include "前処理(列).h"
+#include "辞書(動的).h"
 // ■■■■■ 数え上げ（区間） ■■■■■
-
-
-//【和が 0 の区間の数え上げ】O(n)
-/*
-* 数列 a[0..n) の空でない連続部分列で和が 0 であるものの個数を返す．
-*/
-template <class T>
-ll count_zero_intervals(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/agc023/tasks/agc023_a
-
-	//【方法】
-	// Σa[0..i) の値ごとに個数を数え上げる．
-	// Σa[l..r) = 0 ⇔ Σa[0..l) = Σa[0..r) なので求める個数は三角数の和になる．
-
-	int n = sz(a);
-
-	// acc[i] : Σa[0..i)
-	vector<T> acc(n + 1);
-	rep(i, n) acc[i + 1] = acc[i] + a[i];
-
-	// cnt[v] : Σa[0..i) = v となる i の個数（i = 0 を含む）
-	unordered_map<T, int> cnt;
-	repi(i, 0, n) cnt[acc[i]]++;
-
-	ll res = 0;
-	repe(tmp, cnt) {
-		ll c = tmp.second;
-		res += c * (c - 1) / 2;
-	}
-
-	return res;
-}
 
 
 //【区間端範囲制約を満たす区間の数え上げ】O(n log n)
@@ -79,24 +47,96 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 }
 
 
+//【和が 0 の区間の数え上げ】O(n)
+/*
+* 数列 a[0..n) の空でない連続部分列で和が 0 であるものの個数を返す．
+*/
+template <class T>
+ll count_zerosum_intervals(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/agc023/tasks/agc023_a
+
+	//【方法】
+	// 累積和 A[i] = Σa[0..i) の値ごとに個数を数え上げる．
+	// Σa[l..r) = 0 ⇔ A[l] = A[r] なので求める個数は三角数の和になる．
+
+	int n = sz(a);
+
+	// acc[i] : Σa[0..i)
+	vector<T> acc(n + 1);
+	rep(i, n) acc[i + 1] = acc[i] + a[i];
+
+	// cnt[v] : Σa[0..i) = v となる i の個数（i = 0 を含む）
+	unordered_map<T, int> cnt;
+	repi(i, 0, n) cnt[acc[i]]++;
+
+	ll res = 0;
+	repe(tmp, cnt) {
+		ll c = tmp.second;
+		res += c * (c - 1) / 2;
+	}
+
+	return res;
+}
+
+
+//【和が s 以下の区間の数え上げ（要素が非負）】
+/*
+* 尺取法.h へ
+*/
+
+
+//【和が s 以上の区間の数え上げ】O(n log n)
+/*
+* 整数列 a[0..n)（負も可）で，Σa[l..r) ≧ s となる非空区間の個数を返す．
+*
+* 利用：【binary trie】
+*/
+ll count_sum_intervals_neg(const vl& a, ll s) {
+	// verify : https://www.spoj.com/problems/MEANARR/
+
+	//【方法】
+	// 累積和を A[i] = Σa[0..i) とおくと，Σa[l..r) ≧ s ⇔ A[l] ≦ A[r] - s なので，
+	// r を昇順走査し，A[r] - s 以下の要素の個数を足し込んでいけばいい．
+	// A[0..n] に負の数があると困るので適当に下駄を履かせておく．
+
+	int n = sz(a);
+
+	vl A(n + 1);
+	rep(i, n) A[i + 1] = A[i] + a[i];
+
+	ll A_min = *min_element(all(A));
+	repi(i, 0, n) A[i] -= A_min;
+
+	Binary_trie<> bt;
+	bt.insert(A[0]);
+
+	ll res = 0;
+	repi(r, 1, n) {
+		res += bt.upper_bound(A[r] - s);
+		bt.insert(A[r]);
+	}
+
+	return res;
+}
+
+
 //【最小値ごとの区間の数え上げ】O(n log n)
 /*
-* 列 a[0..n) について，最小値が m の区間 a[l..r) (l < r) の個数を cnt[m] に格納する．
+* 数列 a[0..n) の最小値が m の区間 a[l..r) (l<r) の個数 c を {m, c} の形で格納したリストを返す．
 *
 * 利用：【自身より小さい数の次の位置】,【自身より小さい数の前の位置】
 */
 template <class T>
-void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
+vector<pair<T, ll>>  count_min_intervals(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
 
 	int n = sz(a);
-	cnt.clear();
+	unordered_map<T, ll> cnt;
 
-	vi pl, nl, pleq, nleq;
-	prev_less_position(a, pl);
-	next_less_position(a, nl);
-	prev_less_position(a, pleq, true);
-	next_less_position(a, nleq, true);
+	auto pl = prev_less_position(a);
+	auto nl = next_less_position(a);
+	auto pleq = prev_less_position(a, true);
+	auto nleq = next_less_position(a, true);
 
 	rep(i, n) {
 		if (pl[i] == pleq[i]) {
@@ -105,52 +145,39 @@ void count_min_intervals(const vector<T>& a, unordered_map<T, ll>& cnt) {
 		}
 		cnt[a[i]] -= (ll)(nleq[i] - i - 1) * (nleq[i] - i) / 2;
 	}
+
+	vector<pair<T, ll>> res;
+	repe(tmp, cnt) res.push_back(tmp);
+
+	return res;
 }
 
 
-//【最小値ごとの区間の数え上げ】O(n log n)
+//【最小値ごとの区間の数え上げ】O(n)
 /*
-* 列 a[0..n) について，最小値が m の区間 a[l..r) (l < r) の個数を cnt[m] に格納する．
+* 数列 a[0..n) の最小値が m の区間 a[l..r) (l<r) の個数 c を {m, c} の形で格納したリストを返す．
 *
 * 利用：【デカルト木】
 */
 template <class T>
-void count_min_intervals_dt(const vector<T>& a, unordered_map<T, ll>& cnt) {
+vector<pair<T, ll>> count_min_intervals_ct(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
-	
+
 	//【方法】
-	// min(a[0..n)) = m とすると，最小値が m でない区間は a[i] = m なる a[i] を
-	// 1 つも含まない区間なので，そのような a[i] を境界にして独立に数え上げられる．
+	// min(a[0..n)) = m で a[i] = m であるとする．a[i] を含むような区間 [l, r) は，
+	// l∈[0..i] かつ r∈(i..n] であるような区間の全てであり，min(a[l..r)) = m である．
+	// これと同様のことをデカルト木の各ノードについて行えば良い．
 
 	int n = sz(a);
-	cnt.clear();
+	unordered_map<T, ll> cnt;
 
-	Binary_Tree ct;
-	cartesian_tree(a, ct);
+	Cartesian_tree g(a);
+	rep(s, n) cnt[g[s].val] += (ll)(s - g[s].l + 1) * (g[s].r - s);
 
-	// a[rt] を最小値とする区間 a[l..r) についての処理を行う．
-	function<void(int, int, int)> rf = [&](int rt, int l, int r) {
-		int p = ct[rt].parent;
-		if (p == -1 || a[p] != a[rt]) {
-			cnt[a[rt]] += (ll)(r - l) * (r - l + 1) / 2;
-		}
+	vector<pair<T, ll>> res;
+	repe(tmp, cnt) res.push_back(tmp);
 
-		int lrt = ct[rt].left;
-		if (lrt != -1) {
-			cnt[a[rt]] -= (ll)(rt - l) * (rt - l + 1) / 2;
-			rf(lrt, l, rt);
-		}
-
-		int rrt = ct[rt].right;
-		if (rrt != -1) {
-			if (a[rt] < a[rrt]) {
-				cnt[a[rt]] -= (ll)(r - rt - 1) * (r - rt) / 2;
-			}
-			rf(rrt, rt + 1, r);
-		}
-	};
-
-	rf(ct.root, 0, n);
+	return res;
 }
 
 

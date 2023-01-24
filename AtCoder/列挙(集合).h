@@ -196,3 +196,46 @@ vvi integer_partitions_len(int n, int d) {
 }
 
 
+//【自然数の分割の列挙（値指定）】O(n の分割数)（n=50 くらいまで動く）
+/*
+* 自然数 n を正整数列 a[0..m) の要素に分割する方法のリストを返す．
+*/
+vvi integer_partitions_val(int n, const vi& a) {
+	//【具体例】
+	// n = 6, a[0..3) = [1, 3, 5] のとき：
+	//	0: 5 1
+	//	1: 3 3
+	//	2: 3 1 1 1
+	//	6: 1 1 1 1 1 1
+
+	int m = sz(a);
+	vvi ips; vi ip;
+
+	// n を k 以下の数で分割する．
+	function<void(int, int)> rf = [&](int n, int j) {
+		// 分割しきった場合
+		if (n == 0) {
+			ips.push_back(ip);
+			return;
+		}
+
+		// 分割に使える数がもうない場合
+		if (j == m) return;
+
+		int len = sz(ip);
+
+		// n の分割に a[j] を i 個使用する．
+		repi(i, 0, n / a[j]) {
+			rf(n, j + 1);
+			n -= a[j];
+			ip.push_back(a[j]);
+		}
+
+		ip.resize(len);
+	};
+	rf(n, 0);
+
+	return ips;
+}
+
+

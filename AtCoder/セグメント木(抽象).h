@@ -236,8 +236,7 @@ struct Segtree {
 *	g( Πv[l..r) ) = true となる最小の l を返す．
 *	制約：g( e() ) = true かつ g は単調
 */
-template <class S, S(*op)(S, S), S(*e)(),
-	class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 class Lazy_segtree {
 	// 参考：https://algo-logic.info/segment-tree/
 
@@ -339,7 +338,7 @@ class Lazy_segtree {
 		// 範囲外の場合
 		if (kr <= l || r <= kl) return r;
 
-		// g( op( v[kl, kr) ) ) = true の場合
+		// g( op( v[l, kr) ) ) = true の場合
 		if (g(op(x, v[k]))) {
 			x = op(x, v[k]);
 			return r;
@@ -364,7 +363,7 @@ class Lazy_segtree {
 		// 範囲外の場合
 		if (kr <= l || r <= kl) return l - 1;
 
-		// g( op( v[kl, kr) ) ) = true の場合
+		// g( op( v[kl, r) ) ) = true の場合
 		if (g(op(v[k], x))) {
 			x = op(v[k], x);
 			return l - 1;
@@ -553,10 +552,262 @@ public:
 };
 
 
-//【永続セグメント木（モノイド）】
+//【動的セグメント木（モノイド）】
 /*
-* 永続データ構造.h へ
+* Dynamic_segtree<T, S, op, e>(T n) : O(1)
+*	a[0..n) = e() で初期化する．
+*	位置の型は T，要素はモノイド (S, op, e) の元とする．
+*
+* set(T i, S x) : O(log n)
+*	a[i] = x とする．
+*
+* apply_left(T i, S x) : O(log n)
+*	a[i] = op(x, a[i]) とする．
+*
+* apply_right(T i, S x) : O(log n)
+*	a[i] = op(a[i], x) とする．
+*
+* S get(T i) : O(log n)
+*	a[i] を返す（なければ e() を返す）
+*
+* S prod(T l, T r) : O(log n)
+*	op( a[l..r) ) を返す．空なら e() を返す．
+*
+* S all_prod() : O(1)
+*	op( a[0..n) ) を返す．
+*
+* T max_right(T l, function<bool(S)> f) : O(log n)
+*	f( op( a[l..r) ) ) = true となる最大の r を返す．
+*   制約：f( e() ) = true，f は単調
+*
+* T min_left(T r, function<bool(S)> f) : O(log n)
+*	f( op( a[l..r) ) ) = true となる最小の l を返す．
+*	制約：f( e() ) = true，f は単調
 */
+template <class T, class S, S(*op)(S, S), S(*e)()>
+class Dynamic_segtree {
+	// 参考 : https://lorent-kyopro.hatenablog.com/entry/2021/03/12/025644
+
+	struct Node {
+		T pos; // ノードの位置
+		S val; // ノードの値
+		S acc; // 部分木の値
+		Node* l, * r;
+
+		Node(T pos, S val) : pos(pos), val(val), acc(val), l(nullptr), r(nullptr) {}
+
+		// acc を正しい値にする．
+		void update() {
+			acc = val;
+			if (l) acc = op(l->acc, acc);
+			if (r) acc = op(acc, r->acc);
+		}
+	};
+
+	const int SET = 0, APL = 1, APR = 2;
+
+	T n;
+	Node* root;
+
+	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [il, ir) に対応する）
+	void set(Node*& t, T il, T ir, T pos, S val, int q_type) const {
+		// ノードが存在しなかった場合は新たに作成する．
+		if (!t) {
+			t = new Node(pos, val);
+			return;
+		}
+
+		// ちょうど pos に対応するノードだった場合はそこに val を書き込む．
+		if (t->pos == pos) {
+			if (q_type == SET) t->val = val;
+			else if (q_type = APL) t->val = op(val, t->val);
+			else t->val = op(t->val, val);
+
+			t->update();
+			return;
+		}
+
+		// 区間の中央
+		T im = (il + ir) / 2;
+
+		// 区間の左側に対象位置 pos がある場合
+		if (pos < im) {
+			// pos < t->pos であるようにする．
+			if (pos > t->pos) {
+				swap(pos, t->pos);
+				swap(val, t->val);
+			}
+
+			set(t->l, il, im, pos, val, q_type);
+		}
+		// 区間の右側に対象位置 pos がある場合
+		else {
+			// t->pos < pos であるようにする．
+			if (t->pos > pos) {
+				swap(pos, t->pos);
+				swap(val, t->val);
+			}
+
+			set(t->r, im, ir, pos, val, q_type);
+		}
+
+		t->update();
+	}
+
+	S get(Node* t, T il, T ir, T pos) const {
+		// ノードが存在しなかった場合は単位元を返す．
+		if (!t) return e();
+
+		// ちょうど pos に対応するノードだった場合はそこの val を返す．
+		if (t->pos == pos) return t->val;
+
+		// 区間の中央
+		T im = (il + ir) / 2;
+
+		if (pos < im) return get(t->l, il, im, pos);
+		else return get(t->r, im, ir, pos);
+	}
+
+	S prod(Node* t, T il, T ir, T l, T r) const {
+		// ノードが存在しなかった場合や完全に [il, ir) の範囲外になった場合は単位元を返す．
+		if (!t || ir <= l || r <= il) return e();
+
+		// 完全に [il, ir) の範囲内だった場合はそこの acc を返す．
+		if (l <= il && ir <= r) return t->acc;
+
+		// 区間の中央
+		T im = (il + ir) / 2;
+
+		S res = prod(t->l, il, im, l, r);
+		if (l <= t->pos && t->pos < r) res = op(res, t->val);
+		res = op(res, prod(t->r, im, ir, l, r));
+
+		return res;
+	}
+
+	T max_right(Node* t, T il, T ir, T l, const function<bool(S)>& f, S& acc) const {
+		if (!t || ir <= l) return n;
+		if (f(op(acc, t->acc))) {
+			acc = op(acc, t->acc);
+			return n;
+		}
+		T im = (il + ir) / 2;
+		T res = max_right(t->l, il, im, l, f, acc);
+		if (res != n) return res;
+		if (l <= t->pos) {
+			acc = op(acc, t->val);
+			if (!f(acc)) return t->pos;
+		}
+		return max_right(t->r, im, ir, l, f, acc);
+	}
+
+	T min_left(Node* t, T il, T ir, T r, const function<bool(S)>& f, S& acc) const {
+		if (!t || r <= il) return T(0);
+		if (f(op(t->acc, acc))) {
+			acc = op(t->acc, acc);
+			return T(0);
+		}
+		T im = (il + ir) / 2;
+		T res = min_left(t->r, im, ir, r, f, acc);
+		if (res != 0) return res;
+		if (t->pos < r) {
+			acc = op(t->val, acc);
+			if (!f(acc)) return t->pos + T(1);
+		}
+		return min_left(t->l, il, im, r, f, acc);
+	}
+
+	void print(Node* t, ostream& os) const {
+		if (!t) return;
+
+		print(t->l, os);
+		os << "(" << t->pos << "," << t->val << ") ";
+		print(t->r, os);
+	}
+
+public:
+	// a[0..n) = e() で初期化する．
+	Dynamic_segtree(T n) : n(n), root(nullptr) {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+	}
+	Dynamic_segtree() : n(T(0)), root(nullptr) {}
+
+	// a[i] = x とする．
+	void set(T i, S x) {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+
+		assert(T(0) <= i && i < n);
+
+		set(root, T(0), n, i, x, SET);
+	}
+
+	// a[i] = op(x, a[i]) とする．
+	void apply_left(T i, S x) {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+
+		assert(T(0) <= i && i < n);
+
+		set(root, T(0), n, i, x, APL);
+	}
+
+	// a[i] = op(a[i], x) とする．
+	void apply_right(T i, S x) {
+		assert(T(0) <= i && i < n);
+
+		set(root, T(0), n, i, x, APR);
+	}
+
+	// a[i] を返す．
+	S get(T i) const {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+
+		assert(T(0) <= i && i < n);
+
+		return get(root, T(0), n, i);
+	}
+
+	// op( a[l..r) ) を返す．空なら e() を返す．
+	S prod(T l, T r) const {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+
+		chmax(l, T(0)); chmin(r, n);
+		if (l >= r) return e();
+
+		return prod(root, T(0), n, l, r);
+	}
+
+	// op( a[0..n) ) を返す．
+	S all_prod() const {
+		return root ? root->acc : e();
+	}
+
+	// f( op( a[l..r) ) ) = true となる最大の r を返す．
+	T max_right(T l, const function<bool(S)>& f) const {
+		// verify : https://www.spoj.com/problems/COUNT1IT/
+
+		chmax(l, T(0));
+
+		S acc = e();
+		assert(f(acc));
+		return max_right(root, T(0), n, l, f, acc);
+	}
+
+	// f( op( a[l..r) ) ) = true となる最小の l を返す．
+	T min_left(T r, const function<bool(S)>& f) const {
+		chmin(r, n);
+
+		S acc = e();
+		assert(f(acc));
+		return min_left(root, T(0), n, r, f, acc);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Dynamic_segtree seg) {
+		seg.print(seg.root, os);
+		return os;
+	}
+#endif
+};
 
 
 //【Segment tree beats!（不完全 M-モノイド）】
@@ -819,7 +1070,13 @@ public:
 };
 
 
-//【連想セグメント木（モノイド）】
+//【永続セグメント木（モノイド）】
+/*
+* 永続データ構造.h へ
+*/
+
+
+//【連想セグメント木（モノイド）】（遅い）
 /*
 * Segtree_map<T, lb, ub, S, op, e>() : O(1)
 *	空のセグメント木で初期化する．
@@ -845,8 +1102,7 @@ public:
 * min_left<f>(r) : O(log n)
 *	f( op( v(l..r] ) ) = true となる最小の l を返す．
 */
-template <class T, T(*lb)(), T(*ub)(),
-	class S, S(*op)(S, S), S(*e)()>
+template <class T, T(*lb)(), T(*ub)(), class S, S(*op)(S, S), S(*e)()>
 struct Segtree_map {
 	// セグメント木のノード
 	struct Node {
@@ -1176,7 +1432,7 @@ struct Segtree_map {
 };
 
 
-//【連想遅延評価セグメント木（M-モノイド）】
+//【連想遅延評価セグメント木（M-モノイド）】（遅い）
 /*
 * Lazy_segtree_map<T, lb, ub, S, op, e, F, act, comp, id>() : O(1)
 *	空のセグメント木で初期化する．
@@ -1209,8 +1465,7 @@ struct Segtree_map {
 *	f( op( v(l..r] ) ) = true となる最小の l を返す．
 */
 template <class T, T(*lb)(), T(*ub)(),
-	class S, S(*op)(S, S), S(*e)(),
-	class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+	class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 struct Lazy_segtree_map {
 	// 参考 : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
 	// 参考 : https://algo-logic.info/segment-tree/
@@ -1611,7 +1866,7 @@ struct Lazy_segtree_map {
 };
 
 
-//【平行移動可能連想遅延評価セグメント木（M-モノイド）】
+//【平行移動可能連想遅延評価セグメント木（M-モノイド）】（遅い）
 /*
 * Lazy_segtree_map_shiftable<T, lb, ub, add, zero, S, op, e, F, act, comp, id>() : O(1)
 *	空のセグメント木で初期化する．
@@ -1670,8 +1925,7 @@ struct Lazy_segtree_map {
 *	f( op( v(l..r] ) ) = true となる最小の l を返す．
 */
 template <class T, T(*lb)(), T(*ub)(), T(*add)(T, T), T(*zero)(),
-	class S, S(*op)(S, S), S(*e)(),
-	class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+	class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 struct Lazy_segtree_map_shiftable {
 	// 参考 : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_8_D
 	// 参考 : https://algo-logic.info/segment-tree/

@@ -152,9 +152,6 @@
     <ClInclude Include="線形計画問題.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
-    <ClInclude Include="クエリ.h">
-      <Filter>ヘッダー ファイル\クエリ処理</Filter>
-    </ClInclude>
     <ClInclude Include="ビット行列.h">
       <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
@@ -419,9 +416,6 @@
     <ClInclude Include="スコア和(集合).h">
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
-    <ClInclude Include="二分木.h">
-      <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
-    </ClInclude>
     <ClInclude Include="max.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
@@ -567,6 +561,9 @@
       <Filter>ヘッダー ファイル\畳込み</Filter>
     </ClInclude>
     <ClInclude Include="関数.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="列の管理.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
   </ItemGroup>

@@ -191,7 +191,7 @@ struct FFT {
 		rep(i, n + m - 1) {
 			c00[i] = (ll)(c00_d[i] + 0.5) % mod;
 			c11[i] = (ll)(c11_d[i] + 0.5) % mod;
-			c01[i] = ((ll)(c01_d[i] + 0.5) - c00[i] - c11[i] + 2 * mod) % mod;
+			c01[i] = ((ll)(c01_d[i] + 0.5) - c00[i] - c11[i] + 2LL * mod) % mod;
 		}
 
 		vi c(n + m - 1);

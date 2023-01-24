@@ -1,5 +1,7 @@
 #pragma once
 #include "header.h"
+#include "計算.h"
+#include "関数.h"
 // ■■■■■ 最適化（組） ■■■■■
 
 
@@ -96,6 +98,63 @@ ll minimize_pair_lcm(const vi& a, pii& ids) {
 	}
 
 	return res;
+}
+
+
+//【組の内積の最小化】O((n + m) log n)
+/*
+* min_(i,j)∈[0..n)×[0..m) (a1[i], a2[i])・(b1[j], b2[j]) を返す．
+* min_flag = false とすると最大値を返す．
+*
+* 制約 : b1[j] > 0 （∀j∈[0..m)）
+*
+* 利用：【Convex-Hull Trick】,【有理数】
+*/
+ll minimize_pair_inner_product(const vl& a1, const vl& a2, const vl& b1, const vl& b2, bool min_flag = true) {
+	// verify : https://atcoder.jp/contests/arc051/tasks/arc051_d
+
+	//【方法】
+	// 式を整理すると
+	//		min_(i,j) (a1[i], a2[i])・(b1[j], b2[j])
+	//		= min_(i,j) (a1[i] b1[j] + a2[i] b2[j])
+	//		= min_j (b1[j] min_i (a1[i] + a2[i] b2[j]/b1[j])) （b1[j] > 0 より）
+	// となる．最後の式で i について最小化すべきものは，
+	//		直線 y = a2[i] x + a1[i] の x = b2[j]/b1[j] における値
+	// とみなせるから，CHT を用いて高速に求められる．
+
+	int n = sz(a1), m = sz(b1);
+
+	dump(a1, "\n", a2, "\n", b1, "\n", b2);
+	Convex_hull_trick<Frac> cht(min_flag);
+
+	// 直線群 {y = a2[i] x + a1[i]}_i で初期化する．
+	rep(i, n) cht.insert(Frac(a2[i]), Frac(a1[i]));
+	dump(cht);
+
+	if (min_flag) {
+		ll res = INFL;
+
+		// 各 j について，x = b2[j]/b1[j] における最小値を求める．
+		rep(j, m) {
+			auto frac = cht.get(Frac(b2[j], b1[j])) * b1[j];
+			frac.reduction();
+			chmin(res, frac.num);
+		}
+
+		return res;
+	}
+	else {
+		ll res = -INFL;
+
+		// 各 j について，x = b2[j]/b1[j] における最大値を求める．
+		rep(j, m) {
+			auto frac = cht.get(Frac(b2[j], b1[j])) * b1[j];
+			frac.reduction();
+			chmax(res, frac.num);
+		}
+
+		return res;
+	}
 }
 
 

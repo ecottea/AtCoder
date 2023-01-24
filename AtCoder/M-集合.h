@@ -16,20 +16,22 @@
 
 
 //【行列乗算 左作用付き ベクトル 集合】
+int NB01 = 10;
 using SB01 = vm;
 using FB01 = Matrix<mint>;
 SB01 actB01(FB01 f, SB01 x) { return f * x; }
 FB01 compB01(FB01 f, FB01 g) { return f * g; }
-FB01 idB01() { return Matrix<mint>(10); }
+FB01 idB01() { return Matrix<mint>(NB01); }
 #define MatrixLMul_Vector_mset SB01, FB01, actB01, compB01, idB01
 
 
 //【行列乗算 右作用付き ベクトル 集合】
+int NB02 = 10;
 using SB02 = vm;
 using FB02 = Matrix<mint>;
 SB02 actB02(FB02 f, SB02 x) { return f * x; }
 FB02 compB02(FB02 f, FB02 g) { return g * f; }
-FB02 idB02() { return Matrix<mint>(10); }
+FB02 idB02() { return Matrix<mint>(NB02); }
 #define MatrixRMul_Vector_mset SB02, FB02, actB02, compB02, idB02
 
 

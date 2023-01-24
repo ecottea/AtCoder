@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "ハッシュ.h"
 // ■■■■■ 座標圧縮 ■■■■■
 
 
@@ -11,7 +12,7 @@
 * a に重複する要素がなければ，a_cp[i] は a[i] が昇順で何番目かを表し，
 * xs[j] は昇順で j 番目の要素が何かを表す．
 */
-template <typename T>
+template <class T>
 int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* xs = nullptr) {
 	// verify : https://atcoder.jp/contests/abc036/tasks/abc036_c
 
@@ -36,7 +37,7 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, vector<T>* xs = nullptr
 * また xs[i] に圧縮された座標 i に対応する元の座標を格納する．
 * 戻り値として x 座標の数を返す．
 */
-template <typename T>
+template <class T>
 int coordinate_compression_interval(const vector<T>& x1, const vector<T>& x2,
 	vi& x1_cp, vi& x2_cp, vector<T>* xs = nullptr)
 {
@@ -73,7 +74,7 @@ int coordinate_compression_interval(const vector<T>& x1, const vector<T>& x2,
 * また xs[i], ys[j] に圧縮された座標 i, j に対応する元の座標を格納する．
 * 戻り値として，(x 座標の数, y 座標の数) を返す．
 */
-template <typename T>
+template <class T>
 pii coordinate_compression_rectangle(
 	const vector<T>& x1, const vector<T>& y1, const vector<T>& x2, const vector<T>& y2,
 	vi& x1_cp, vi& y1_cp, vi& x2_cp, vi& y2_cp,
@@ -119,7 +120,7 @@ pii coordinate_compression_rectangle(
 * また xs[i], ys[j], zs[k] に圧縮された座標 i, j, k に対応する元の座標を格納する．
 * 戻り値として，(x 座標の数, y 座標の数, z 座標の数) を返す．
 */
-template <typename T>
+template <class T>
 tuple<int, int, int> coordinate_compression_rectangular(
 	const vector<T>& x1, const vector<T>& y1, const vector<T>& z1,
 	const vector<T>& x2, const vector<T>& y2, const vector<T>& z2,
@@ -170,7 +171,7 @@ tuple<int, int, int> coordinate_compression_rectangular(
 * a[0..n) を全順序 cmp を用いて座標圧縮した結果を a_cp[0..m) に格納し，m を返す．
 * また xs[j] に圧縮された座標 j に対応する元の座標を格納する．
 */
-template <typename T>
+template <class T>
 int coordinate_compression(const vector<T>& a, vi& a_cp, function<bool(T, T)>& cmp, vector<T>* xs = nullptr) {
 	// verify : https://atcoder.jp/contests/tenka1-2014-quala/tasks/tenka1_2014_qualA_d
 
@@ -188,4 +189,96 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, function<bool(T, T)>& c
 
 	return sz(*xs);
 }
+
+
+//【二分木の座標圧縮】
+/*
+* a = pos[i] は，根 0 から左に a[0] 回，右に a[1] 回，左に a[2] 回，右に a[3] 回 ... と
+* 辿ったところに木 T の i 番目の頂点があることを表すものとする．
+* 木 T を座標圧縮し，辺の本数をコストとした 0 を根とするコスト付き二分木 Tc を構築し，その頂点数を返す．
+* Tc の頂点 v の左[右] の {子の頂点番号, 子への辺のコスト} の組を l[v][ r[v] ] に格納する．
+* また T の i 番目の頂点が Tc のどの頂点と対応するかを vs[i] に格納する．
+*
+* 利用：【ローリングハッシュ（列）】
+*/
+int coordinate_compression_binary_tree(const vvl& pos, vector<pil>& l, vector<pil>& r, vi& vs) {
+	// verify : https://atcoder.jp/contests/abc273/tasks/abc273_h
+
+	int n = sz(pos);
+	vs.resize(n);
+
+	unordered_map<ll, int> hash_to_id; int id = 0;
+	vector<vector<pli>> line; vi dir;
+
+	hash_to_id[0] = id++;
+	line.emplace_back();
+	dir.emplace_back();
+
+	rep(i, n) {
+		int m = sz(pos[i]);
+		Rolling_hash<vl> h(pos[i]);
+
+		int t = -1;
+		rep(j, m) {
+			ll hash_t = h.get(0, j + 1);
+			if (!hash_to_id.count(hash_t)) {
+				hash_to_id[hash_t] = id++;
+				line.emplace_back();
+				dir.emplace_back();
+			}
+
+			int s = hash_to_id[h.get(0, j)];
+			t = hash_to_id[hash_t];
+			line[s].emplace_back(pos[i][j], t);
+			dir[s] = j % 2;
+		}
+
+		vs[i] = t;
+	}
+	dump(hash_to_id); dump(id); dumpel(line); dump(dir);
+
+	l.assign(id, { -1, -1 });
+	r.assign(id, { -1, -1 });
+
+	rep(i, id) {
+		uniq(line[i]);
+		int m = sz(line[i]);
+
+		int s = i; ll dist_s = 0;
+		rep(j, m) {
+			int t; ll dist_t;
+			tie(dist_t, t) = line[i][j];
+
+			if (dir[i]) r[s] = { t, dist_t - dist_s };
+			else l[s] = { t, dist_t - dist_s };
+
+			s = t;
+			dist_s = dist_t;
+		}
+	}
+	dump(l); dump(r);
+
+	ll hash0 = Rolling_hash<vl>(vl{ 0 }).get(0, 1);
+	if (!hash_to_id.count(hash0)) return id;
+	int del = hash_to_id[hash0];
+
+	r[0] = r[del];
+	l[0] = l[del];
+
+	swap(l[id - 1], l[del]); l.pop_back();
+	swap(r[id - 1], r[del]); r.pop_back();
+	id--;
+
+	rep(i, id) {
+		if (l[i].first == id) l[i].first = del;
+		if (r[i].first == id) r[i].first = del;
+	}
+	rep(i, n) {
+		if (vs[i] == del) vs[i] = 0;
+		if (vs[i] == id) vs[i] = del;
+	}
+
+	return id;
+}
+
 

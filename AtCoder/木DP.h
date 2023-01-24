@@ -5,54 +5,6 @@
 // ■■■■■ 木 DP ■■■■■
 
 
-//【配る木 DP】O(n)
-/*
-* 各 s∈[0..n) について，r を根とする根付き木 g の
-* 根からのパス r→s についての問題の答えを格納したリストを返す．
-*
-* T apply(T x, int s, int t) :
-*   根からのパス r→s についての答えが x のとき，
-*   辺 s→t を追加した根からのパス r→t についての答えを返す．
-*
-* T root(int r) :
-*   根からのパス r→r に対する問題の答えを返す．
-*/
-template <class T, T(*apply)(const T&, int, int), T(*root)(int)>
-vector<T> tree_giveDP(const Graph& g, int r) {
-	// verify : https://algo-method.com/tasks/529
-
-	int n = sz(g);
-
-	vector<T> dp(n);
-	dp[r] = root(r);
-
-	// s の各子 t について，根からのパス r→t についての答えを計算する．（p : s の親）
-	function<void(int, int)> dfs = [&](int s, int p) {
-		repe(t, g[s]) {
-			if (t == p) continue;
-
-			// 根からのパス r→t についての答えを計算する．
-			dp[t] = apply(dp[s], s, t);
-
-			// t から先の答えを計算する．
-			dfs(t, s);
-		}
-	};
-	dfs(r, -1);
-
-	return dp;
-
-	/* 雛形
-	using T = int;
-	T apply(const T& x, int s, int t) { return x + 1; }
-	T root(int r) { return 0; }
-	vector<T> solve_by_tree_giveDP(const Graph& g, int r) {
-		return tree_giveDP<T, apply, root>(g, r);
-	}
-	*/
-};
-
-
 //【貰う木 DP（頂点マージ）】O(n)
 /*
 * 各 s∈[0..n) について，r を根とする根付き木 g の
@@ -765,6 +717,100 @@ void rerooting(const Graph& g, vector<T>& res) {
 	T apply(T x, int s, int t) { return x + 1; }
 	void solve_by_rerooting(Graph& g, vector<T>& res) {
 		rerooting<T, merge, erase, e, leaf, apply>(g, res);
+	}
+	*/
+};
+
+
+//【配る木 DP】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする根付き木 g の
+* 根からのパス r→s についての問題の答えを格納したリストを返す．
+*
+* T apply(T x, int s, int t) :
+*   根からのパス r→s についての答えが x のとき，
+*   辺 s→t を追加した根からのパス r→t についての答えを返す．
+*
+* T root(int r) :
+*   根からのパス r→r に対する問題の答えを返す．
+*/
+template <class T, T(*apply)(const T&, int, int), T(*root)(int)>
+vector<T> tree_giveDP(const Graph& g, int r) {
+	// verify : https://algo-method.com/tasks/529
+
+	int n = sz(g);
+
+	vector<T> dp(n);
+	dp[r] = root(r);
+
+	// s の各子 t について，根からのパス r→t についての答えを計算する．（p : s の親）
+	function<void(int, int)> dfs = [&](int s, int p) {
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// 根からのパス r→t についての答えを計算する．
+			dp[t] = apply(dp[s], s, t);
+
+			// t から先の答えを計算する．
+			dfs(t, s);
+		}
+	};
+	dfs(r, -1);
+
+	return dp;
+
+	/* 雛形
+	using T = int;
+	T apply(const T& x, int s, int t) { return x + 1; }
+	T root(int r) { return 0; }
+	vector<T> solve_by_tree_giveDP(const Graph& g, int r) {
+		return tree_giveDP<T, apply, root>(g, r);
+	}
+	*/
+};
+
+
+//【配る木 DP（コスト付き）】O(n)
+/*
+* 各 s∈[0..n) について，r を根とするコスト付き根付き木 g の
+* 根からのパス r→s についての問題の答えを格納したリストを返す．
+*
+* T apply(T x, int s, int t, ll c) :
+*   根からのパス r→s についての答えが x のとき，
+*   コスト c の辺 s→t を追加した根からのパス r→t についての答えを返す．
+*
+* T root(int r) :
+*   根からのパス r→r に対する問題の答えを返す．
+*/
+template <class T, T(*apply)(const T&, int, int, ll), T(*root)(int)>
+vector<T> tree_giveDP(const WGraph& g, int r) {
+	int n = sz(g);
+
+	vector<T> dp(n);
+	dp[r] = root(r);
+
+	// s の各子 t について，根からのパス r→t についての答えを計算する．（p : s の親）
+	function<void(int, int)> dfs = [&](int s, int p) {
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// 根からのパス r→t についての答えを計算する．
+			dp[t] = apply(dp[s], s, t, t.cost);
+
+			// t から先の答えを計算する．
+			dfs(t, s);
+		}
+	};
+	dfs(r, -1);
+
+	return dp;
+
+	/* 雛形
+	using T = ll;
+	T apply(const T& x, int s, int t, ll c) { return x + c; }
+	T root(int r) { return 0; }
+	vector<T> solve_by_tree_giveDP(const WGraph& g, int r) {
+		return tree_giveDP<T, apply, root>(g, r);
 	}
 	*/
 };

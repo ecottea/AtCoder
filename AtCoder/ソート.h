@@ -299,22 +299,20 @@ void merge_sort(vector<T>& a) {
 
 	int n = sz(a);
 
-	// 二つの配列を統合する．
+	// 二つの配列 a[l..m) と a[m..r) を統合する．
 	function<void(int, int, int)> merge = [&](int l, int m, int r) {
-		vector<T> left{ a.begin() + l, a.begin() + m };
-		vector<T> right{ a.begin() + m, a.begin() + r };
-		left.push_back(T_INF);
-		right.push_back(T_INF);
+		vector<T> a_lm{ a.begin() + l, a.begin() + m };
+		vector<T> a_mr{ a.begin() + m, a.begin() + r };
+		a_lm.push_back(T_INF);
+		a_mr.push_back(T_INF);
 
 		int i = 0, j = 0;
 		repi(k, l, r - 1) {
-			if (left[i] <= right[j]) {
-				a[k] = left[i];
-				i++;
+			if (a_lm[i] <= a_mr[j]) {
+				a[k] = a_lm[i++];
 			}
 			else {
-				a[k] = right[j];
-				j++;
+				a[k] = a_mr[j++];
 			}
 		}
 	};
@@ -333,7 +331,7 @@ void merge_sort(vector<T>& a) {
 }
 
 
-//【クイックソート】O(n log n)
+//【クイックソート】最悪 O(n^2)
 /*
 * a[0..n) に対してクイックソートを行う．
 */
@@ -344,6 +342,7 @@ void quick_sort(vector<T>& a) {
 	int n = sz(a);
 
 	// a[p, r] を a[r] をピボットとして分割する．
+	// 計算量を良くしたいのならピボットは乱択で決めるべき．
 	function<int(int, int)> partition = [&](int p, int r) {
 		// 分割の基準となる数（ピボット）
 		T x = a[r];

@@ -231,6 +231,131 @@ struct Weighted_rooted_tree {
 };
 
 
+//【二分木】
+/*
+* Binary_Tree() : O(1)
+*	空で初期化する．
+*
+* Binary_Tree(vi s, vi l, vi r) : O(n)
+*	s[i] の左の子が l[i]，右の子が r[i] であるような二分木で初期化する．
+*	存在しない場合は -1 を与える．
+*/
+struct Binary_Tree {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_B
+
+	struct Node {
+		int parent = -1; // 親（なければ -1）
+		int left = -1; // 左の子（なければ -1）
+		int right = -1; // 右の子（なければ -1）
+		int depth = -1; // 深さ（根からのパスの長さ）
+		int height = -1; // 高さ（最も遠い葉へのパスの長さ）
+		int weight = -1; // 重さ（自身を根とする部分木の頂点の数）
+
+#ifdef _MSC_VER
+		// 出力
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "(p:" << v.parent << ", l:" << v.left << ", r:" << v.right <<
+				", d:" << v.depth << ", h:" << v.height << ", w:" << v.weight << ')';
+			return os;
+		}
+#endif
+	};
+
+	int n; // 頂点の数
+	int root; // 根
+	vector<Node> v; // 頂点
+
+	// コンストラクタ（初期化なし，子の情報で初期化）
+	Binary_Tree() : n(0), root(-1) {}
+	Binary_Tree(const vi& s, const vi& l, const vi& r) : n(sz(s)), root(-1), v(n) {
+		// 親子関係を設定する．
+		rep(i, n) {
+			v[s[i]].left = l[i];
+			v[s[i]].right = r[i];
+			if (l[i] != -1) v[l[i]].parent = s[i];
+			if (r[i] != -1) v[r[i]].parent = s[i];
+		}
+
+		// 親が設定されていないノードが根である．
+		rep(i, n) {
+			if (v[i].parent == -1) {
+				root = i;
+				break;
+			}
+		}
+
+		// 頂点の各種情報を決定する（s : 注目ノード，p : s の親）
+		function<void(int)> dfs = [&](int s) {
+			v[s].weight = 1;
+			v[s].height = 0;
+
+			int t = v[s].left;
+			if (t != -1) {
+				v[t].depth = v[s].depth + 1;
+				dfs(t);
+				v[s].weight += v[t].weight;
+				chmax(v[s].height, v[t].height + 1);
+			}
+
+			t = v[s].right;
+			if (t != -1) {
+				v[t].depth = v[s].depth + 1;
+				dfs(t);
+				v[s].weight += v[t].weight;
+				chmax(v[s].height, v[t].height + 1);
+			}
+		};
+
+		// 根 root を始点として再帰関数を呼び出す．
+		v[root].depth = 0;
+		dfs(root);
+	}
+
+	// アクセス
+	Node const& operator[](int i) const { return v[i]; }
+	Node& operator[](int i) { return v[i]; }
+
+	// 大きさ
+	int size() const { return n; }
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Binary_Tree& rt) {
+		rep(i, sz(rt)) os << rt[i] << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【二分木の入力】O(n)
+/*
+* (自身 左の子 右の子) を並べた入力を受け取り，n 頂点の二分木を構築し返す．
+* 非存在を表す入力を nval に与える．
+*
+* one_indexed : 入力が 1-indexed で与えられるなら true
+*/
+Binary_Tree read_binary_tree(int n, bool one_indexed = true, int nval = -1) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_B
+
+	vi s(n), l(n), r(n);
+	rep(i, n) {
+		cin >> s[i] >> l[i] >> r[i];
+
+		if (s[i] == nval) s[i] = -1;
+		if (l[i] == nval) l[i] = -1;
+		if (r[i] == nval) r[i] = -1;
+
+		if (one_indexed) {
+			if (s[i] != -1) s[i]--;
+			if (l[i] != -1) l[i]--;
+			if (r[i] != -1) r[i]--;
+		}
+	}
+
+	return Binary_Tree(s, l, r);
+}
+
+
 //【木のランダム生成】O(n^2)
 /*
 * n 頂点のランダムな木を返す．

@@ -69,29 +69,23 @@ class Map_composite {
 
 public:
 	// [0..n) ã‚ÌÊ‘œ i -> s[i] ‚Å‰Šú‰»‚·‚éD
-	Map_composite(const vi& s, ll k_max = 1LL << 62) : n(sz(s)), K(msb(k_max) + 1), dp(K, vi(n)) {
+	Map_composite(const vi& s, ll k_max = 1LL << 62) : n(sz(s)), K(msb(max(k_max, 1LL)) + 1), dp(K, vi(n)) {
 		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_f
 
 		// s^(2^0)[j] = s[j]
 		rep(j, n) dp[0][j] = s[j];
 
-		rep(i, K - 1) {
-			rep(j, n) {
-				// s^(2^(i+1))[j] = s^(2^i)[ s^(2^i)[j] ]
-				dp[i + 1][j] = dp[i][dp[i][j]];
-			}
-		}
+		// s^(2^(i+1))[j] = s^(2^i)[ s^(2^i)[j] ]
+		rep(i, K - 1) rep(j, n) dp[i + 1][j] = dp[i][dp[i][j]];
 	}
 
 	// s^k[x] ‚ğ•Ô‚·D
 	int apply(int x, ll k) const {
 		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_f
 
-		rep(i, K) {
-			if (k & (1LL << i)) {
-				x = dp[i][x];
-			}
-		}
+		Assert(0 <= x && x < n);
+
+		rep(i, K) if (k & (1LL << i)) x = dp[i][x];
 		return x;
 	}
 

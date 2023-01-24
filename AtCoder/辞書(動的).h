@@ -8,7 +8,7 @@
 //【binary trie】
 /*
 * Binary_trie<T = ll>(int B = 63) : O(1)
-*   型 T の B ビット整数を扱えるよう空で初期化する．
+*   型 T の B ビット非負整数を扱えるよう空で初期化する．
 *
 * ll size() : O(1)
 *   要素数を返す．
@@ -34,11 +34,11 @@
 *
 * ll lower_bound(T val, T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，
-*   val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed）
+*   val 以上の最小の要素が昇順で何番目（0-indexed）の要素かを返す．
 *
 * ll upper_bound(T val, T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，
-*   val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed）
+*   val より大きい最小の要素が昇順で何番目（0-indexed）の要素かを返す．
 *
 * ll count(T val) : O(B)
 *   要素 val の個数を返す．
@@ -227,12 +227,16 @@ public:
 	ll lower_bound(T val, T mask = 0) const {
 		// verify : https://www.spoj.com/problems/SUBXOR/
 
+		if (val <= 0) return 0LL;
+
 		return lower_bound_sub(root, mask, val, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
 	ll upper_bound(T val, T mask = 0) const {
 		// verify : https://codeforces.com/contest/966/problem/C
+
+		if (val < 0) return 0LL;
 
 		// val + 1 が B ビット整数に収まらない場合の例外処理
 		if (val == (T(1) << B) - 1) return size();
@@ -864,21 +868,21 @@ struct Dynamic_dictionary {
 	}
 
 	// 要素の総数を返す．
-	ll size() { return ft.prod(0, n); }
+	ll size() { return ft.sum(0, n); }
 
 	// 要素 v の個数を返す．
 	ll count(int v) { return ft.get(v); }
 
 	// 値 [l..r) をもつ要素の個数を返す．
-	ll count(int l, int r) { return ft.prod(l, r); }
+	ll count(int l, int r) { return ft.sum(l, r); }
 
 	// 要素 v を挿入する．
-	void insert(int v) { ft.apply(v, 1); }
-	void insert(int v, ll k) { ft.apply(v, k); }
+	void insert(int v) { ft.add(v, 1); }
+	void insert(int v, ll k) { ft.add(v, k); }
 
 	// 要素 v を削除する．
-	void erase(int v) { ft.apply(v, -1); }
-	void erase(int v, ll k) { ft.apply(v, -k); }
+	void erase(int v) { ft.add(v, -1); }
+	void erase(int v, ll k) { ft.add(v, -k); }
 
 	// 昇順で i 番目の要素を返す．
 	int get(ll i) {
@@ -887,7 +891,7 @@ struct Dynamic_dictionary {
 	}
 
 	// v が昇順で何番目の要素かを返す．
-	ll lower_bound(int v) { return ft.prod(0, v); }
+	ll lower_bound(int v) { return ft.sum(0, v); }
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Dynamic_dictionary& dd) {

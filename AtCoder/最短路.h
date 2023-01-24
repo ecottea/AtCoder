@@ -80,7 +80,7 @@ unordered_map<int, int> BFS_ub(const Graph& g, int st, int D) {
 }
 
 
-//【幅優先探索（動的）】O(|V| + |E|)
+//【幅優先探索（動的）】O(|V| + |E|)（遅い）
 /*
 * st から到達可能な各頂点への最短距離を格納したリストを返す．
 * nxt(s) は s の次に訪れることのできる頂点のリストを返す．
@@ -198,6 +198,57 @@ vl dijkstra(const WGraph& g, int st) {
 	}
 
 	return dist;
+}
+
+
+//【単一始点最短路（動的）】O(|V| + |E| log|V|)（遅い）
+/*
+* st から到達可能な各頂点への最短距離を格納したリストを返す．
+* nxt(s) は s の次に訪れることのできる {頂点, 移動コスト} の組のリストを返す．
+*/
+template <class T>
+unordered_map<T, ll> dynamic_dijkstra(T st, const function<vector<pair<T, ll>>(T)>& nxt) {
+	// verify : https://algo-method.com/tasks/993
+	
+	unordered_map<T, ll> dist; // st からの最短距離を保持するテーブル
+	dist[st] = 0;
+
+	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
+	multimap<ll, T, greater<ll>> q;
+	q.emplace(0, st);
+
+	while (!q.empty()) {
+		dump(*q.begin());
+		auto [dist_s, s] = *q.begin();
+		q.erase(q.begin());
+
+		// すでにより短い距離に更新されていたなら何もしない（忘れると O(|V|^2)）		
+		if (dist[s] < dist_s) continue;
+
+		for (auto [t, cost_st] : nxt(s)) {
+			// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
+			auto it_t = dist.find(t);
+			if (it_t == dist.end()) {
+				dist[t] = dist_s + cost_st;
+				q.emplace(dist_s + cost_st, t);
+			}
+			else if (dist_s + cost_st < it_t->second) {
+				it_t->second = dist_s + cost_st;
+				q.emplace(dist_s + cost_st, t);
+			}
+		}
+	}
+
+	return dist;
+
+	/* nxt の定義の雛形
+	using T = ll;
+	function<vector<pair<T, ll>>(T)> nxt = [&](T s) {
+		vector<pair<T, ll>> res;
+
+		return res;
+	};
+	*/
 }
 
 
@@ -462,7 +513,7 @@ int shortest_path(const Graph& g, int st, int gl, vi* path = nullptr) {
 }
 
 
-//【最短パス（動的）】O(|V| + |E|)
+//【最短パス（動的）】O(|V| + |E|)（遅い）
 /*
 * st から gl までの最短距離を返し（到達不能なら INF），path に最短パス上の頂点の列を格納する．
 * nxt(s) は s の次に訪れることのできる頂点のリストを返す．

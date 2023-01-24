@@ -493,7 +493,7 @@ void parallel_binary_search(vi& ok, vi& ng,	function<void(const vi&, vb&)>& okQ)
 *	(判定問題) hogehoge な n 個の値の最大値を x 以下にできるか判定せよ
 * に帰着する．これは
 *	(判定問題 2) hogehoge な n 個の値全てを x 以下にできるか判定せよ
-* と同値であり，n 個の値を独立に考えられ扱いやすくなる．
+* と等価であり，n 個の値を独立に考えられ扱いやすくなる．
 *
 * verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
 */

@@ -27,7 +27,6 @@ vector<vector<T>> enumerate_all_sequences(int n, const vector<T>& a) {
 			seq.pop_back();
 		}
 	};
-
 	rf();
 
 	return seqs;
@@ -58,7 +57,38 @@ vvi enumerate_all_sequences(const vi& ub) {
 			seq.pop_back(); i--;
 		}
 	};
+	rf();
 
+	return seqs;
+}
+
+
+//y”CˆÓ—ñ‚Ì—ñ‹“i—v‘f‚²‚Æã‰ºŒÀw’èjzO(ƒ®(ub[0..n)-lb[0..n)) n)
+/*
+* ”—ñ a[0..n) ‚ÅCÍi, lb[i] <= a[i] < ub[i] ‚ğ–‚½‚·‚à‚Ì‘S‚Ä‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
+*/
+vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
+	// verify : https://atcoder.jp/contests/arc066/tasks/arc066_c
+
+	int n = sz(lb);
+	vvi seqs;
+
+	vi seq; // ì¬“r’†‚Ì—ñ
+	int i = 0; // —ñ‚Ì’·‚³
+
+	function<void()> rf = [&]() {
+		// Š®¬‚µ‚Ä‚¢‚ê‚Î‹L˜^‚·‚éD
+		if (i == n) {
+			seqs.push_back(seq);
+			return;
+		}
+
+		repi(x, lb[i], ub[i] - 1) {
+			seq.push_back(x); i++;
+			rf();
+			seq.pop_back(); i--;
+		}
+	};
 	rf();
 
 	return seqs;

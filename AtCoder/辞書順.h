@@ -54,6 +54,46 @@
 */
 
 
+//【任意列の辞書順 d 番目】
+/*
+* [0..k) からなる長さ n 以下の列（空列含む）を辞書順に並べたとき d 番目に現れる列を返す（なければ {-1} を返す）
+*/
+vi lex_order_allseq(int k, int n, ll d) {
+	// verify : https://atcoder.jp/contests/arc084/tasks/arc084_c
+
+	// cnt[i] : 長さ i の列が何個あるか
+	vl cnt(n + 1, INFL);
+	cnt[0] = k;
+	rep(i, n) {
+		if (INFL / k < cnt[i]) break;
+		cnt[i + 1] = cnt[i] * k;
+	}
+	repi(i, 0, n) {
+		if (cnt[i] == INFL) break;
+		cnt[i] = (cnt[i] - 1) / (k - 1);
+	}
+	dump(cnt);
+
+	// 列が足りないなら false を返す．
+	if (d > cnt[n]) return vi{ -1 };
+
+	// 左から順に要素を決定していく．
+	vi res;
+	repir(i, n - 1, 0) {
+		if (d == 0) return res;
+		d--;
+
+		ll q = d / cnt[i];
+		res.push_back((int)q);
+
+		d %= cnt[i];
+		dump(d, res);
+	}
+
+	return res;
+}
+
+
 //【最小部分列】O(n k)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) の部分列のうち，

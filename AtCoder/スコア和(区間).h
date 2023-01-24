@@ -10,11 +10,11 @@
 *
 * 利用：【区間の数え上げ（最小値指定）】
 */
-template <class T> T interval_min_sum(const vector<T>& a) {
+template <class T>
+T interval_min_sum(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
 
-	unordered_map<T, ll> cnt;
-	count_min_intervals(a, cnt);
+	auto cnt = count_min_intervals(a);
 
 	T res = T(0);
 	repe(p, cnt) res += p.first * p.second;

@@ -118,3 +118,11 @@ template <class T>
 using Polygon = vector<Point<T>>;
 
 
+//【直線の標準形】
+/*
+* 与えられた点群のうち少なくとも 2 点を通る直線は，
+* 通る点のうち辞書順最小のものと，互いに素な成分をもつ方向ベクトルの組で一意に表せる．
+* 
+* verify : https://atcoder.jp/contests/arc082/tasks/arc082_c
+*/
+

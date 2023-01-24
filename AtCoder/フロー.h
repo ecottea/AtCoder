@@ -4,6 +4,87 @@
 // ■■■■■ フロー ■■■■■
 
 
+//【最大流（最小流量制約付き）】
+/*
+* Mf_graph_lb(int n) : O(1)
+*	n 頂点で初期化する．
+*
+* add_edge(int s, int t, ll cap) : O(1)
+*	s から t へ容量 cap の辺を追加する．
+*
+* add_edge(int s, int t, ll lb, ll cap) : O(1)
+*	s から t へ最小流量 lb，容量 cap の辺を追加する．
+*
+* ll flow(int s, int t) : O(n^2 m)（m : 辺の数）
+*	s から t まで流せるだけ流したときの流量を返す（不可能なら -1）
+*/
+struct Mf_graph_lb {
+	// 参考 : https://atcoder.jp/contests/abc285/editorial/5500
+
+	int n; // 頂点の数
+	mf_graph<ll> g; // グラフ
+	vl div; // 湧き出し
+
+	// n 頂点で初期化する．
+	Mf_graph_lb(int n) : n(n), g(n + 2), div(n) {
+		// verify : https://atcoder.jp/contests/abc285/tasks/abc285_g
+	}
+
+	// s から t へ容量 cap の辺を追加する．
+	void add_edge(int s, int t, ll cap) {
+		// verify : https://atcoder.jp/contests/abc285/tasks/abc285_g
+
+		if (s == t || cap == 0) return;
+		g.add_edge(s, t, cap);
+	}
+
+	// s から t へ最小流量 lb，容量 cap の辺を追加する．
+	void add_edge(int s, int t, ll lb, ll cap) {
+		// verify : https://atcoder.jp/contests/abc285/tasks/abc285_g
+
+		chmax(lb, 0LL);
+		Assert(lb <= cap);
+		if (s == t || cap == 0) return;
+
+		// lb だけ流したことにし，辺の容量はその分だけ差し引いておく．
+		g.add_edge(s, t, cap - lb);
+
+		// 辺の終点に lb 分だけの湧き出し，始点に lb 分だけの吸い込みを設定する．
+		div[s] -= lb;
+		div[t] += lb;
+	}
+
+	// s から t まで流せるだけ流したときの流量を返す（不可能なら -1）
+	ll flow(int s, int t) {
+		// verify : https://atcoder.jp/contests/abc285/tasks/abc285_g
+
+		int ST = n, GL = n + 1;
+		ll sum = 0;
+
+		// 超始点から湧き出しへ，吸い込みから超終点へと辺を張る．
+		rep(i, n) {
+			if (div[i] > 0) {
+				g.add_edge(ST, i, div[i]);
+				sum += div[i];
+			}
+			else {
+				g.add_edge(i, GL, -div[i]);
+			}
+		}
+
+		ll f_SG = g.flow(ST, GL);
+		ll f_St = g.flow(ST, t);
+		ll f_sG = g.flow(s, GL);
+		ll f_st = g.flow(s, t);
+		dump(f_SG, f_St, f_sG, f_st);
+
+		if (f_SG + f_St < sum) return -1;
+		if (f_SG + f_sG < sum) return -1;
+		return f_sG + f_st;
+	}
+};
+
+
 //【最小費用流（負コスト可，DAG）】
 /*
 * Negative_mcf_graph(int n) : O(1)
@@ -330,7 +411,7 @@ struct Generalized_max_profit_flow {
 /*
 * 流量を自由としてコストの最小化を行いたい場合，始点から終点まで容量 ∞，コスト 0 の辺を張れば良い．
 *
-* // verify : https://atcoder.jp/contests/practice2/tasks/practice2_e
+* verify : https://atcoder.jp/contests/practice2/tasks/practice2_e
 */
 
 

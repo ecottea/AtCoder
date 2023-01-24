@@ -5,33 +5,32 @@
 
 //【フェニック木（アーベル群）】
 /*
-* Fenwick_tree<S, op, o, inv>(n) : O(n)
-*	要素数 n かつ初期値 o で初期化する．
+* Fenwick_tree<S, op, o, inv>(int n) : O(n)
+*	要素数 n かつ初期値 o() で初期化する．
 *	要素はアーベル群 (S, op, o, inv) の元とする．
 *
-* Fenwick_tree<S, op, o, inv>(a) : O(n)
+* Fenwick_tree<S, op, o, inv>(vS a) : O(n)
 *	配列 a[0..n) で初期化する．
 *
-* set(i, x) : O(log n) // 遅いので apply が使えるならそちらを使うべき
-*	v[i] = x とする．
+* set(int i, S x) : O(log n)
+*	a[i] = x とする．
 *
-* get(i) : O(log n)
-*	v[i] を返す．
+* S get(int i) : O(log n)
+*	a[i] を返す．
 *
-* prod(l, r) : O(log n)
-*	op( v[l..r) ) を返す．空なら o() を返す．
+* S sum(int l, int r) : O(log n)
+*	op( a[l..r) ) を返す．空なら o() を返す．
 *
-* apply(i, x) : O(log n)
-*	v[i] = op(v[i], x) とする．
+* add(int i, S x) : O(log n)
+*	a[i] = op(a[i], x) とする．
 *
-* max_right<f>() : O(log n)
-*	f( op( v[0..r) ) ) = true となる最大の r を返す．
-*   f : S → bool で f(o()) = true かつ単調とする．
+* int max_right(function<bool(S)>& f) : O(log n)
+*	f( op( a[0..r) ) ) = true となる最大の r を返す．
+*   f : S → bool で f( o() ) = true かつ単調とする．
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 struct Fenwick_tree {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
-	// verify : https://judge.yosupo.jp/problem/point_add_range_sum
 
 	// ノードの個数（要素数 + 1）
 	int n;
@@ -39,18 +38,15 @@ struct Fenwick_tree {
 	// v[i] : op( [*..i] ) の値（i ： 1-indexed，v[0] は使わない）
 	vector<S> v;
 
-	// コンストラクタ（初期化なし）
-	Fenwick_tree() {}
-
-	// 要素数 n かつ初期値 o で初期化
+	// 要素数 n かつ初期値 o() で初期化
 	Fenwick_tree(int n_) : n(n_ + 1), v(n, o()) {}
 
 	// 配列 a で初期化
 	Fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(n) {
+		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
 		// 配列の値を仮登録する．
-		rep(i, n - 1) {
-			v[i + 1] = v_[i];
-		}
+		rep(i, n - 1) v[i + 1] = v_[i];
 
 		// 正しい値になるよう根に向かって累積 op() をとっていく．
 		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
@@ -59,6 +55,7 @@ struct Fenwick_tree {
 			}
 		}
 	}
+	Fenwick_tree() : n(0) {}
 
 	// v[i] = x とする．（i : 0-indexed）
 	void set(int i, S x) {
@@ -70,22 +67,26 @@ struct Fenwick_tree {
 
 	// v[i] を返す．（i : 0-indexed）
 	S get(int i) const {
-		return prod(i, i + 1);
+		return sum(i, i + 1);
 	}
 
-	// op( v[l..r) ) を返す．空なら o を返す．（l, r : 0-indexed）
-	S prod(int l, int r) const {
+	// op( v[l..r) ) を返す．空なら o() を返す．（l, r : 0-indexed）
+	S sum(int l, int r) const {
+		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
+		if (l >= r) return o();
+
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
 		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
-		return prod_sub(r) - prod_sub(l);
+		return op(sum_sub(r), inv(sum_sub(l)));
 	}
 
-	// op( v[1..r] ) を返す．空なら o を返す．（r : 1-indexed）
-	S prod_sub(int r) const {
+	// op( v[1..r] ) を返す．空なら o() を返す．（r : 1-indexed）
+	S sum_sub(int r) const {
 		S res = o();
 
-		// 子に向かって累積 op() をとっていく．
+		// 根に向かって累積 op() をとっていく．
 		while (r > 0) {
 			res = op(res, v[r]);
 
@@ -96,7 +97,9 @@ struct Fenwick_tree {
 	}
 
 	// v[i] = op(v[i], x) とする．（i : 0-indexed）
-	void apply(int i, S x) {
+	void add(int i, S x) {
+		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
 		// i を 1-indexed に直す．
 		i++;
 
@@ -111,6 +114,8 @@ struct Fenwick_tree {
 
 	// f( op( v[0, r) ) ) = true となる最大の r を返す．（r : 0-indexed）
 	int max_right(const function<bool(S)>& f) const {
+		// verify : https://www.spoj.com/problems/ALLIN1/
+
 		S x = o();
 
 		// 注目している閉区間は [l+1, r] で幅は len
@@ -269,6 +274,135 @@ struct Lazy_fenwick_tree {
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Lazy_fenwick_tree& ft) {
 		rep(i, ft.n - 1) os << ft.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【動的フェニック木（アーベル群）】（遅い）
+/*
+* Fenwick_tree<S, op, o, inv>(int n) : O(1)
+*	要素数 n かつ初期値 o() で初期化する．
+*	要素はアーベル群 (S, op, o, inv) の元とする．
+*
+* add(ll i, S x) : O(log n)
+*	a[i] = op(a[i], x) とする．
+*
+* set(ll i, S x) : O(log n)
+*	a[i] = x とする．
+*
+* S get(ll i) : O(log n)
+*	a[i] を返す．
+*
+* S sum(ll r) : O(log n)
+*	op( a[0..r) ) を返す．空なら o() を返す．
+*
+* S sum(ll l, ll r) : O(log n)
+*	op( a[l..r) ) を返す．空なら o() を返す．
+*
+* ll max_right(function<bool(S)>& f) : O(log n)
+*	f( op( a[0..r) ) ) = true となる最大の r を返す．
+*   f : S → bool で f(o()) = true かつ単調とする．
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+struct Dynamic_fenwick_tree {
+	ll n;
+	unordered_map<ll, S> v;
+
+	// 要素数 n かつ初期値 o() で初期化
+	Dynamic_fenwick_tree(ll n) : n(n) {}
+	Dynamic_fenwick_tree() {}
+
+	// v[i] = x とする．（i : 0-indexed）
+	void set(ll i, S x) {
+		// 差分を求める．
+		S d = op(x, inv(get(i)));
+
+		add(i, d);
+	}
+
+	// v[i] を返す．（i : 0-indexed）
+	S get(ll i) const {
+		return sum(i, i + 1);
+	}
+
+	// op( v[0..r) ) を返す．空なら o() を返す．（l, r : 0-indexed）
+	S sum(ll r) const {
+		if (r <= 0) return o();
+
+		// 0-indexed での半開区間 [0, r) は，
+		// 1-indexed での閉区間 [1, r] に対応する．
+		return sum_sub(r);
+	}
+
+	// op( v[l..r) ) を返す．空なら o() を返す．（l, r : 0-indexed）
+	S sum(ll l, ll r) const {
+		if (l >= r) return o();
+
+		// 0-indexed での半開区間 [l, r) は，
+		// 1-indexed での閉区間 [l + 1, r] に対応する．
+		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
+		return sum_sub(r) - sum_sub(l);
+	}
+
+	// op( v[1..r] ) を返す．空なら o() を返す．（r : 1-indexed）
+	S sum_sub(ll r) const {
+		S res = o();
+
+		// 子に向かって累積 op() をとっていく．
+		while (r > 0) {
+			auto it = v.find(r);
+			if (it != v.end()) res = op(res, it->second);
+
+			// r の最下位ビットから 1 を減算することで次の位置を得る．
+			r -= r & -r;
+		}
+		return res;
+	}
+
+	// v[i] = op(v[i], x) とする．（i : 0-indexed）
+	void add(ll i, S x) {
+		// i を 1-indexed に直す．
+		i++;
+
+		// 根に向かって値を op() していく．
+		while (i < n) {
+			auto it = v.find(i);
+			if (it != v.end()) it->second = op(it->second, x);
+			else v[i] = x;
+
+			// i の最下位ビットに 1 を加算することで次の位置を得る．
+			i += i & -i;
+		}
+	}
+
+	// f( op( v[0, r) ) ) = true となる最大の r を返す．（r : 0-indexed）
+	ll max_right(const function<bool(S)>& f) const {
+		S x = o();
+
+		// 注目している閉区間は [l+1, r] で幅は len
+		ll l = 0;
+		for (ll len = 1LL << msb(n - 1); len > 0; len = len >> 1) {
+			ll r = l + len;
+
+			auto it = v.find(r);
+			S nx = (it != v.end() ? op(x, it->second) : x);
+			if (r < n && f(nx)) {
+				x = nx;
+				l = r;
+			}
+		}
+		return l;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Dynamic_fenwick_tree& ft) {
+		vector<pair<ll, S>> ivs;
+		repe(iv, ft.v) ivs.push_back(iv);
+		sort(all(ivs));
+
+		for (auto& [i, v] : ivs) os << "(" << i << "," << v << ") ";
 		return os;
 	}
 #endif
@@ -592,7 +726,7 @@ struct Lazy_fenwick_tree_2D {
 };
 
 
-//【動的二次元フェニック木（アーベル群）】
+//【動的二次元フェニック木（アーベル群）】（遅い）
 /*
 * Dynamic_fenwick_tree_2D<S, op, o, inv>(int h, int w) : O(h)
 *	要素数 h * w かつ初期値 o() で初期化する．
@@ -659,6 +793,7 @@ struct Dynamic_fenwick_tree_2D {
 	S sum(int x1, int y1, int x2, int y2) const {
 		S res = o();
 
+		// sum(x, y) を 4 つ組合せてもいいが，定数倍改善のため場合わけで実装する．
 		while (x1 != x2) {
 			if (x1 < x2) {
 				int j1 = y1, j2 = y2;
@@ -740,7 +875,8 @@ struct Dynamic_fenwick_tree_2D {
 * sum(l, r) : O(log n)
 *	半開区間 [l, r) の要素の総和を返す．
 */
-template <class T> struct fenwick_tree {
+template <class T>
+struct fenwick_tree {
 	int n;
 	vector<T> v;
 

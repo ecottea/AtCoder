@@ -65,7 +65,7 @@ public:
 *	底を B とし，B^(-n) から B^n (mod M) まで計算可能として初期化する．
 *	制約 : B と M は互いに素
 *
-* mint [](int i) : O(1)
+* ll [](int i) : O(1)
 *	B^i mod M を返す．
 */
 class Pow {
@@ -269,16 +269,14 @@ struct Frac {
 //【整数累乗根】O(n log a)
 /*
 * 非負の数 a の n 乗根（a^(1/n)）の切り捨て値を返す．
-*
-* 利用：【めぐる式二分探索】
 */
 ll integer_root(ll a, int n) {
 	// verify : https://atcoder.jp/contests/abc166/tasks/abc166_d
 
 	if (a <= 1 || n == 1) return a;
-	
+
 	// x^k を返す．ただし a を超えた場合は a + 1 を返す．
-	auto pow = [&](ll x, int k) {
+	auto pow_lim = [&](ll x, int k) {
 		ll v = 1;
 		rep(i, k) {
 			if (v > a / x) return a + 1;
@@ -287,14 +285,16 @@ ll integer_root(ll a, int n) {
 		return v;
 	};
 
-	// x^n <= a かを返す．
-	function<bool(ll)> okQ = [&](ll x) {
-		return pow(x, n) <= a;
-	};
+	ll ok = 1LL, ng = a + 1;
 
-	ll res = meguru_search(1LL, a + 1, okQ);
+	while (abs(ok - ng) > 1) {
+		ll mid = (ok + ng) / 2;
 
-	return res;
+		if (pow_lim(mid, n) <= a) ok = mid;
+		else ng = mid;
+	}
+
+	return ok;
 }
 
 

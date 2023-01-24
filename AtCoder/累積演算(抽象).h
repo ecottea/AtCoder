@@ -1,5 +1,7 @@
 #pragma once
 #include "header.h"
+#include "永続データ構造.h"
+#include "座標圧縮.h"
 // ■■■■■ 累積演算（抽象代数上） ■■■■■
 
 
@@ -282,6 +284,70 @@ public:
 };
 
 
+//【二次元累積和（アーベル群，スパース）】
+/*
+* Static_rectangle_sum(vl x, vl y, vS v) : O(n log n)
+*	値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
+*
+* S sum(ll x1, ll y1, ll x2, ll y2) : O(log n)
+*	[x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
+*
+* 利用：【永続セグメント木（モノイド）】,【座標圧縮】
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+class Static_rectangle_sum {
+	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
+
+	// x[y] 座標の昇順列（x 座標は全て，y 座標はユニーク）
+	vl xs, ys;
+
+	// x 座標を時刻とみなした，圧縮後の y 座標に関する永続セグメント木
+	Persistent_segtree<S, op, o> seg;
+
+public:
+	// 値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
+	Static_rectangle_sum(const vl& x, const vl& y, const vector<S>& v) {
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+		int n = sz(x);
+		xs.resize(n);
+
+		// y 座標を座標圧縮しておく．
+		vi y_cp;
+		int m = coordinate_compression(y, y_cp, &ys);
+
+		// 点群を x 座標昇順にソートする
+		vector<pli> xi(n);
+		rep(i, n) xi[i] = { x[i], i };
+		sort(all(xi));
+
+		// x 座標を時刻とみなして永続セグメント木に乗せる．
+		seg = Persistent_segtree<S, op, o>(m);
+		rep(t, n) {
+			int i;
+			tie(xs[t], i) = xi[t];
+
+			S val = seg.get(y_cp[i], t);
+			seg.set(y_cp[i], op(val, v[i]), t);
+		}
+	}
+
+	// [x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
+	S sum(ll x1, ll y1, ll x2, ll y2) const {
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+		if (x1 >= x2 || y1 >= y2) return o();
+
+		int t1 = lbpos(xs, x1);
+		int t2 = lbpos(xs, x2);
+		int j1 = lbpos(ys, y1);
+		int j2 = lbpos(ys, y2);
+
+		return op(seg.prod(j1, j2, t2), inv(seg.prod(j1, j2, t1)));
+	}
+};
+
+
 //【累積非可逆積（モノイド）】
 /*
 * Cumulative_lossy_prod<S, op, e>(vS a) : O(n)
@@ -424,186 +490,6 @@ struct Cumulative_lossy_sum_2D {
 
 	// Σa[x..h)[y..w) を返す．
 	S dr_sum(int x, int y) { return acc_dr[x][y]; }
-};
-
-
-//【平方分割（モノイド）】
-/*
-* Quadratic_division<S, op, e>(int n) : O(n)
-*	v[0..n) = e() で初期化する．
-*	要素はモノイド (S, op, e) の元とする．
-*
-* Quadratic_division<S, op, e>(vS v) : O(n)
-*	配列 v の要素で初期化する．
-*
-* set(int i, S x) : O(√n)
-*	v[i] = x とする．
-*
-* S get(int i) : O(1)
-*	v[i] を返す．
-*
-* S prod(int l, int r) : O(√n)
-*	op( v[l..r) ) を返す．空なら e() を返す．
-*/
-template <class S, S(*op)(S, S), S(*e)()>
-struct Quadratic_division {
-	// verify : https://judge.yosupo.jp/problem/point_set_range_composite
-
-	using vS = vector<S>;
-
-	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
-	vector<S> v, v_mul;
-
-	// コンストラクタ（e() で初期化）
-	Quadratic_division(int n_) : n(n_) {
-		w = (int)(sqrt(n) + EPS);
-		m = (n + w - 1) / w;
-
-		v = vS(n, e());
-		v_mul = vS(m, e());
-	}
-
-	// コンストラクタ（配列で初期化）
-	Quadratic_division(vector<S>& v_) : Quadratic_division(sz(v_)) {
-		v = v_;
-		v_mul = vS(m, e());
-		rep(i, n) {
-			int j = i / w;
-			v_mul[j] = op(v_mul[j], v[i]);
-		}
-	}
-
-	// v[i] = x とする．
-	void set(int i, S x) {
-		// 要素 v[i] の更新
-		v[i] = x;
-
-		// v[i] を含むブロックの総積を再計算する．
-		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
-		v_mul[j] = e();
-		repi(i, i_min, i_max) v_mul[j] = op(v_mul[j], v[i]);
-	}
-
-	// v[i] を返す．
-	S get(int i) const { return v[i]; }
-
-	// op( v[l..r) ) を返す．空なら e() を返す．
-	S prod(int l, int r) const {
-		S res = e();
-
-		int j_min = l / w + 1, j_max = r / w - 1;
-
-		if (j_min <= j_max) {
-			repi(i, l, j_min * w - 1) res = op(res, v[i]);
-			repi(j, j_min, j_max) res = op(res, v_mul[j]);
-			repi(i, (j_max + 1) * w, r - 1) res = op(res, v[i]);
-		}
-		else {
-			repi(i, l, r - 1) res = op(res, v[i]);
-		}
-
-		return res;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
-		rep(i, qd.n) {
-			os << qd.get(i) << " ";
-		}
-		return os;
-	}
-#endif
-};
-
-
-//【平方分割（モノイド作用付き集合）】
-/*
-* Quadratic_division<S, F, act, comp, id>(int n) : O(n id)
-*	v[0..n) = id() で初期化する．
-*	要素は M-集合 (S, F, act, comp, id) の元とする．
-*
-* Quadratic_division<S, F, act, comp, id>(vF v) : O(n comp)
-*	配列 v[0..n) の要素で初期化する．
-*
-* set(int i, F f) : O(√n comp) // 何度も呼ぶと遅い
-*	v[i] = f とする．
-*
-* F get(int i) : O(id)
-*	v[i] を返す．
-*
-* S prod(int l, int r, S x) : O(√n act)
-*	v[r-1] ... v[l] x を返す．空なら x を返す．
-*/
-template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
-struct Quadratic_division_Mset {
-	using vF = vector<F>;
-
-	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
-	vF v, v_mul;
-
-	// コンストラクタ（e() で初期化）
-	Quadratic_division_Mset(int n_) : n(n_) {
-		w = (int)(sqrt(n) + 0.001);
-		m = (n + w - 1) / w;
-
-		v = vF(n, id());
-		v_mul = vF(m, id());
-	}
-
-	// コンストラクタ（配列で初期化）
-	Quadratic_division_Mset(const vF& v_) {
-		// verify : https://atcoder.jp/contests/arc027/tasks/arc027_4
-
-		n = sz(v_);
-		w = (int)(sqrt(n) + 0.001);
-		m = (n + w - 1) / w;
-
-		v = v_;
-		v_mul = vF(m, id());
-		rep(i, n) {
-			int j = i / w;
-			v_mul[j] = comp(v_mul[j], v[i]);
-		}
-	}
-
-	// v[i] = x とする．
-	void set(int i, F x) {
-		// 要素 v[i] の更新
-		v[i] = x;
-
-		// v[i] を含むブロックの総積を再計算する．
-		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
-		v_mul[j] = id();
-		repi(i, i_min, i_max) v_mul[j] = comp(v_mul[j], v[i]);
-	}
-
-	// v[i] を返す．
-	F get(int i) const { return v[i]; }
-
-	// v[l..r) x を返す．空なら x を返す．
-	S prod(int l, int r, S x) const {
-		// verify : https://atcoder.jp/contests/arc027/tasks/arc027_4
-
-		int j_min = l / w + 1, j_max = r / w - 1;
-
-		if (j_min <= j_max) {
-			repi(i, l, j_min * w - 1) x = act(v[i], x);
-			repi(j, j_min, j_max) x = act(v_mul[j], x);
-			repi(i, (j_max + 1) * w, r - 1) x = act(v[i], x);
-		}
-		else {
-			repi(i, l, r - 1) x = act(v[i], x);
-		}
-
-		return x;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Quadratic_division_Mset qd) {
-		rep(i, qd.n) os << qd.get(i) << " ";
-		return os;
-	}
-#endif
 };
 
 
@@ -761,7 +647,7 @@ class Sparse_table {
 public:
 	// コンストラクタ（初期化なし，配列で初期化）
 	Sparse_table() : n(0), m(0) {}
-	Sparse_table(const vector<S>& a) : n(sz(a)), m(msb(n) + 1), acc(m, vector<S>(n)) {
+	Sparse_table(const vector<S>& a) : n(sz(a)), m(msb(n) + 1), acc(m, vector<S>(n, o())) {
 		// verify : https://codeforces.com/contest/689/problem/D
 
 		rep(i, n) acc[0][i] = a[i];
@@ -859,7 +745,7 @@ struct Sparse_table_2D {
 	// コンストラクタ（初期化なし，二次元配列で初期化）
 	Sparse_table_2D() : h(0), w(0), bh(0), bw(0) {}
 	Sparse_table_2D(const vector<vector<S>>& a) : h(sz(a)), w(sz(a[0])), bh(msb(h) + 1), bw(msb(w) + 1),
-		acc(bh, vector<vector<vector<S>>>(bw, vector<vector<S>>(h, vector<S>(w))))
+		acc(bh, vector<vector<vector<S>>>(bw, vector<vector<S>>(h, vector<S>(w, o()))))
 	{
 		rep(x, h) rep(y, w) acc[0][0][x][y] = a[x][y];
 
