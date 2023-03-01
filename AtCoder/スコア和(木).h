@@ -95,6 +95,29 @@ vl distance_sum(Graph& g) {
 }
 
 
+//【2 点間距離の和（コスト付き）】O(n)
+/*
+* コスト付き木 g の全ての 2 点の組についての距離の総和を返す．
+*
+* 利用：【貰う木 DP（頂点マージ，コスト付き）】
+*/
+using T_dsw = pair<mint, int>; // (距離への寄与の和, 頂点の数)
+int n_dsw;
+void merge_dsw(T_dsw& x, const T_dsw& y, int s) { x.first += y.first; x.second += y.second - 1; }
+T_dsw e_dsw() { return { 0, 1 }; }
+T_dsw leaf_dsw(int s) { return { 0, 1 }; }
+T_dsw apply_dsw(const T_dsw& x, int s, int t, ll c) {
+	return { x.first + mint(c) * x.second * (n_dsw - x.second), x.second + 1 };
+}
+mint distance_sum(const WGraph& g) {
+	// verify : https://yukicoder.me/problems/no/1207
+
+	n_dsw = sz(g);
+	auto dp = tree_getDP_vmerge<T_dsw, merge_dsw, e_dsw, leaf_dsw, apply_dsw>(g, 0);
+	return dp[0].first;
+}
+
+
 //【重さの和 = 深さの和】
 /*
 * 任意の根付き木 g について，以下の等式が成り立つ：

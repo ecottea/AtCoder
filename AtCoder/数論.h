@@ -218,25 +218,40 @@ vector<T> divisors(map<T, int>& pps) {
 }
 
 
-//y–ñ”ŠÖ”zO(ãn k)
+//y–ñ”‚ÌŒÂ”zO(ãn)
 /*
-* –ñ”ŠÖ” ƒĞ_k(n) = (n ‚Ì–ñ”‚»‚ê‚¼‚ê‚ğ k æ‚µ‚½˜a) ‚ğ•Ô‚·D
-* “Á‚É k = 0 ‚È‚ç–ñ”‚ÌŒÂ”Ck = 1 ‚È‚ç–ñ”‚Ì‘˜a‚Æ“™‰¿‚Å‚ ‚éD
+* n ‚Ì³‚Ì–ñ”‚ÌŒÂ”‚ğ•Ô‚·D
 */
-ll divisor_sigma(int k, ll n) {
-	// verify(k=0) : https://algo-method.com/tasks/344
+ll count_divisors(ll n) {
+	// verify : https://algo-method.com/tasks/344
 
+	Assert(n != 0);
+	n = abs(n);
+
+	ll res = 0, i = 1;
+	for (; i * i < n; i++) if (n % i == 0) res += 2;
+	if (i * i == n) res++;
+
+	return res;
+}
+
+
+//y–ñ”‚Ì‘˜azO(ãn)
+/*
+* n ‚Ì³‚Ì–ñ”‚Ì‘˜a‚ğ•Ô‚·D
+*/
+ll divisors_sum(ll n) {
 	if (n == 1) return 1;
-	
+
 	ll res = 0, i = 1;
 	for (; i * i < n; i++) {
 		if (n % i == 0) {
-			res += pow(i, k);
-			res += pow(n / i, k);
+			res += i;
+			res += n / i;
 		}
 	}
-	if (i * i == n) res += pow(i, k);
-	
+	if (i * i == n) res += i;
+
 	return res;
 }
 

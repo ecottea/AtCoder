@@ -3,7 +3,7 @@
 // ■■■■■ 列に対する汎用性のある前処理 ■■■■■
 
 
-//【index を足す前処理】
+//【index を足す前処理による swap への帰着】
 /*
 * 数列 a[0..n) に対して，
 *		(i) swap(a[i], a[i+1])
@@ -15,6 +15,18 @@
 * に等価である．
 * 
 * verify : https://atcoder.jp/contests/arc120/tasks/arc120_c
+*/
+
+
+//【隣接 3 項 XOR の swap への帰着】
+/*
+* 隣接 3 項 XOR
+*		a[i] ← a[i-1] XOR a[i] XOR a[i+1]
+* は，
+*		b[i] = a[i] XOR a[i+1]
+* とおくことで swap(b[i], b[i+1]) と等価になる．
+*
+* verify : https://yukicoder.me/problems/no/1209
 */
 
 

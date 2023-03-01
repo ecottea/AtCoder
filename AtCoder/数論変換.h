@@ -3,11 +3,18 @@
 // ■■■■■ 数論変換（mod 998244353） ■■■■■
 
 
-//【畳込み（mod 998244353，長さ 4,194,304 以下）】O((|a| + |b|) log(|a| + |b|))
+//【巡回畳込みと多項式の積】
+/*
+* F_p 上の数列 a[0..2^n), b[0..2^n) の巡回畳込みは，
+* 剰余環 F_p[z]/(z^(2^n)-1) における多項式の積と等価である．
+*/
+
+
+//【畳込み（mod 998244353，長さ 4,194,304 以下）】O((n + m) log(n + m))
 /*
 * ACL の vm convolution(vm a, vm b) を利用すればよい．
 * 
-* 制約：|a| + |b| - 1 <= 8388608 = 2^23
+* 制約：n + m - 1 <= 8388608 = 2^23
 */
 
 
@@ -177,6 +184,54 @@ vm multi_convoluion(vvm a) {
 	}
 
 	return a[q.top().second];
+}
+
+
+//【二次元畳込み（mod 998244353）】O((ha + hb) (wa + wb) (log(ha + hb) + log(wa + wb)))
+/*
+* a[0..ha)[0..wa) と b[0..hb)[0..wb) の二次元畳込みを返す．
+*/
+vvm convolution_2D(vvm a, vvm b) {
+	int ha = sz(a), wa = sz(a[0]);
+	int hb = sz(b), wb = sz(b[0]);
+
+	// 高さと幅を 2 冪に拡張しておく．
+	int H = 1 << (msb(ha + hb - 2) + 1);
+	int W = 1 << (msb(wa + wb - 2) + 1);
+	a.resize(H); b.resize(H);
+	rep(i, H) { a[i].resize(W); b[i].resize(W); }
+
+	// 行方向の ntt
+	rep(i, H) { internal::butterfly(a[i]); internal::butterfly(b[i]); }
+
+	// 転置
+	vvm aT(W, vm(H)), bT(W, vm(H));
+	rep(i, H) rep(j, W) { aT[j][i] = a[i][j]; bT[j][i] = b[i][j]; }
+
+	// 列方向の ntt
+	rep(j, W) { internal::butterfly(aT[j]); internal::butterfly(bT[j]); }
+
+	// 各点積
+	rep(j, W) rep(i, H) aT[j][i] *= bT[j][i];
+
+	// 列方向の intt
+	rep(j, W) internal::butterfly_inv(aT[j]);
+
+	// 転置
+	rep(i, H) rep(j, W) a[i][j] = aT[j][i];
+
+	// 行方向の intt
+	rep(i, H) internal::butterfly_inv(a[i]);
+
+	// 不要な部分の削除
+	a.resize(ha + hb - 1);
+	rep(i, ha + hb - 1) a[i].resize(wa + wb - 1);
+
+	// 定数倍の調整
+	mint inv = mint(H * W).inv();
+	rep(i, ha + hb - 1) rep(j, wa + wb - 1) a[i][j] *= inv;
+
+	return a;
 }
 
 

@@ -27,14 +27,18 @@
 template <typename T>
 struct Multiple_transform {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
-	// verify : https://judge.yosupo.jp/problem/gcd_convolution
-
+	
 	vi ps; // 素数のリスト
 
 	Multiple_transform() {}
-	Multiple_transform(int n) { ps = eratosthenes(n); }
+	Multiple_transform(int n) {
+		// verify : https://judge.yosupo.jp/problem/gcd_convolution
+		ps = eratosthenes(n);
+	}
 
 	void multiple_zeta(vector<T>& f) {
+		// verify : https://judge.yosupo.jp/problem/gcd_convolution
+
 		// 具体例：
 		//	A[1] = a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + a[8] + ...
 		//	A[2] =        a[2]        + a[4]        + a[6]        + a[8] + ...
@@ -52,6 +56,8 @@ struct Multiple_transform {
 	}
 
 	void multiple_mobius(vector<T>& f) {
+		// verify : https://judge.yosupo.jp/problem/gcd_convolution
+		
 		int n = sz(f);
 
 		// 各素因数ごとに下からの差分をとる
@@ -59,6 +65,8 @@ struct Multiple_transform {
 	}
 
 	vector<T> gcd_convolution(vector<T> a, vector<T> b) {
+		// verify : https://judge.yosupo.jp/problem/gcd_convolution
+		
 		int n = sz(a);
 
 		// 各素因数の min をとったものが gcd なので min 畳込みを行う．

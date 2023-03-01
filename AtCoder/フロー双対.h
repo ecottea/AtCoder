@@ -129,7 +129,7 @@ struct Ushige {
 * vl maximize_diff(a) : O(n + m log n)（m : 制約の数）
 *	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
 *
-* 利用：【単一始点最短路／ダイクストラ法】
+* 利用：【単一始点最短路】
 */
 struct Ushige_ub_only {
 	int n;

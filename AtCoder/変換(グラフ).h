@@ -245,9 +245,9 @@ Graph vertex_contraction(const Graph& g, const vvi& p) {
 */
 
 
-//【頂点の縮約と二辺連結成分】
+//【頂点の縮約と二重辺連結成分】
 /*
-* 無向グラフ g の二辺連結成分を成す頂点集合を縮約すると森が得られる．
+* 無向グラフ g の二重辺連結成分を成す頂点集合を縮約すると森が得られる．
 * 
 * verify : https://atcoder.jp/contests/tenka1-2015-quala/tasks/tenka1_2015_qualA_d
 */

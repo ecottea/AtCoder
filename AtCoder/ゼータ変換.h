@@ -234,6 +234,8 @@ vector<T> or_convolution(vector<T> a, vector<T> b) {
 */
 template <class T>
 void subset_max_zeta(vector<T>& a) {
+	// verify : https://yukicoder.me/problems/no/119
+
 	int n = msb(sz(a));
 
 	rep(i, n) repb(set, n) if (!(set & (1 << i))) chmax(a[set + (1 << i)], a[set]);
@@ -337,5 +339,26 @@ vector<T> disjoint_union_convolution(const vector<T>& a, const vector<T>& b) {
 
 	return c;
 }
+
+
+//【高速ゼータ／メビウス変換と行列のクロネッカー積】
+/*
+* a[0..2^n) を上位集合で高速ゼータ変換して A[0..2^n) にする線形変換の表現行列は，
+* 上三角行列 [1 1] の d 個のクロネッカー積に等しい．
+*           [0 1]
+*
+* a[0..2^n) を下位集合で高速ゼータ変換して A[0..2^n) にする線形変換の表現行列は，
+* 下三角行列 [1 0] の d 個のクロネッカー積に等しい．
+*           [1 1]
+* verify : https://atcoder.jp/contests/arc137/tasks/arc137_d
+*
+* A[0..2^n) を上位集合で高速メビウス変換して a[0..2^n) にする線形変換の表現行列は，
+* 上三角行列 [1 -1] の d 個のクロネッカー積に等しい．
+*           [0  1]
+*
+* A[0..2^n) を下位集合で高速メビウス変換して a[0..2^n) にする線形変換の表現行列は，
+* 下三角行列 [ 1 0] の d 個のクロネッカー積に等しい．
+*           [-1 1]
+*/
 
 

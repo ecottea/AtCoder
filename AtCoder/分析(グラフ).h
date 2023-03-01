@@ -521,16 +521,16 @@ void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 template <class E>
 void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* b = nullptr) {
 	// 参考 : https://algo-logic.info/articulation-points/
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
+	// verify(関節点) : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
+	// verify(橋) : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
 
 	int n = sz(g);
 	if (a != nullptr) a->clear();
 	if (b != nullptr) b->clear();
 
-	// e_cnt[s * n + t] : 頂点 s, t を結ぶ辺の本数
-	unordered_map<ll, int> e_cnt;
-	rep(s, n) repe(t, g[s]) e_cnt[(ll)s * n + t]++;
+	// e_cnt[s][t] : 頂点 s, t を結ぶ辺の本数
+	vector<unordered_map<int, int>> e_cnt(n);
+	rep(s, n) repe(t, g[s]) e_cnt[s][t]++;
 
 	// in[s] : DFS で頂点 s を何番目に探索したか
 	// low[s] : s から DFS 木を逆走せず後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
@@ -575,7 +575,7 @@ void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* 
 				chmin(low[s], low[t]);
 
 				// 橋であれば記録する（ただし多重辺は橋にはなりえない）
-				if (in[s] < low[t] && e_cnt[(ll)s * n + t] == 1) {
+				if (in[s] < low[t] && e_cnt[s][t] == 1) {
 					if (b != nullptr) b->push_back({ s, t });
 				}
 
@@ -602,14 +602,15 @@ void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* 
 }
 
 
-//【二辺連結成分分解】O(|V| + |E|)
+//【二重辺連結成分分解】O(|V| + |E|)
 /*
-* 無向グラフ g を二辺連結成分分解し，二辺連結成分の頂点集合のリストを返す．
-* 二辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
+* 無向グラフ g を二重辺連結成分分解し，二重辺連結成分の頂点集合のリストを返す．
+* 二重辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
 *
-* 利用：【グラフの関節点と橋】,【連結成分分解】
+* 利用：【グラフの関節点と橋】
 */
-vvi two_edge_connected_component(const Graph& g) {
+template <class G>
+vvi two_edge_connected_component(const G& g) {
 	// verify : https://judge.yosupo.jp/problem/two_edge_connected_components
 
 	//【方法】
@@ -617,26 +618,151 @@ vvi two_edge_connected_component(const Graph& g) {
 
 	int n = sz(g);
 
+	// b : g の橋のリスト
 	vector<pii> b;
 	lowlink(g, nullptr, &b);
 
-	unordered_set<ll> bridges;
+	// 同じ (s, t) 間を結ぶ辺は複数あるかもしれないが，それらは橋になりえないので気にしない．
+	vector<set<int>> bridges(n);
 	repe(e, b) {
-		int s, t;
-		tie(s, t) = e;
+		auto& [s, t] = e;
 
-		bridges.insert((ll)s * n + t);
-		bridges.insert((ll)t * n + s);
+		bridges[s].insert(t);
+		bridges[t].insert(s);
 	}
 
-	Graph g2(n);
+	// g2 : 橋を除去したグラフ
+	G g2(n);
 	rep(s, n) repe(t, g[s]) {
-		if (!bridges.count((ll)s * n + t)) {
-			g2[s].push_back(t);
-		}
+		auto it = bridges[s].find(t);
+		if (it != bridges[s].end()) bridges[s].erase(it);
+		else g2[s].push_back(t);
 	}
 
-	return connected_component(g2);
+	// ccs : g2 の連結成分のリスト
+	vvi ccs; vb seen(n);
+
+	function<void(int, int)> dfs = [&](int s, int p) {
+		if (seen[s]) return;
+		seen[s] = true;
+
+		ccs.rbegin()->push_back(s);
+
+		repe(t, g2[s]) {
+			if (t == p) continue;
+
+			dfs(t, s);
+		}
+	};
+
+	// 適当な点を始点として DFS を行う．
+	rep(s, n) {
+		if (seen[s]) continue;
+
+		ccs.push_back(vi());
+		dfs(s, -1);
+	}
+
+	return ccs;
+}
+
+
+//【二重頂点連結成分分解】O(|V| + |E|)
+/*
+* 無向グラフ g を二重頂点連結成分分解し，二重頂点連結成分の {始点, 辺} の組の集合のリストを返す．
+* 二重頂点連結成分：任意の 1 頂点を取り除いても連結な部分グラフ
+* 
+* 制約：孤立した頂点は存在しない
+*/
+template <class E>
+vector<vector<pair<int, E>>> two_vertex_connected_component(const vector<vector<E>>& g) {
+	// 参考 : https://ei1333.github.io/luzhiled/snippets/graph/bi-connected-components.html
+	// verify : https://judge.yosupo.jp/problem/biconnected_components
+
+	int n = sz(g);
+
+	// in[s] : DFS で頂点 s を何番目に探索したか
+	// low[s] : s から DFS 木を逆走せず後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
+	//			後退辺とは，DFS でなぞられなかった g の辺のことをいう．
+	vi in(n), low(n); vb seen(n);
+
+	int time = 0;
+
+	// in, low を定める再帰用の関数
+	function<void(int, int)> dfs = [&](int s, int p) {
+		// s を最初に訪れた
+		in[s] = time++;
+		low[s] = in[s];
+		seen[s] = true;
+
+		repe(t, g[s]) {
+			// 親に戻る辺と自己ループは通らない．
+			//	自己ループは連結性に影響を与えないので無視できる
+			if (t == p || t == s) continue;
+
+			// t を既に訪れていた場合
+			if (seen[t]) {
+				// s→t または t→s は後退辺なので in[t] で low[s] を更新する．
+				//	s→t が後退辺のとき：
+				//		t から DFS 木の辺を辿って他の頂点 v に行けたとしても，
+				//		必ず in[t] < in[v] となっているので無視できる．
+				//	t→s が後退辺のとき：
+				//		s→t は DFS 木に対するショートカットとなるので，
+				//		必ず in[s] < in[t] となり更新は起こらないので安心．
+				chmin(low[s], in[t]);
+			}
+			// t をまだ訪れていない場合
+			else {
+				// 再帰的になぞりにいく．
+				dfs(t, s);
+
+				// s→t は DFS 木の辺なので low[t] で low[s] を更新する．
+				chmin(low[s], low[t]);
+			}
+		}
+	};
+
+	// 適当な点を根（始点）として DFS を行う．
+	rep(s, n) if (!seen[s])	dfs(s, -1);
+
+	// cces : 二重頂点連結成分のリスト
+	vector<vector<pair<int, E>>> cces;
+	stack<pair<int, E>> stk; // 作業用スタック
+	seen.assign(n, false);
+
+	function<void(int, int)> dfs2 = [&](int s, int p) {
+		seen[s] = true;
+
+		repe(t, g[s]) {
+			// 親には帰らない．
+			if (t == p) continue;
+
+			// まだ訪れていない頂点への辺と後退辺は記録しておく．
+			if (!seen[t] || in[t] < in[s]) {
+				stk.push({ s, t });
+			}
+
+			// t がまだ訪れていない頂点なら，t から先の二重頂点連結成分を先に見つける．
+			if (seen[t]) continue;
+			int stk_size = sz(stk);
+			dfs2(t, s);
+
+			// t から後退辺を通って s の祖先まで戻れない場合
+			if (low[t] >= in[s]) {
+				// 二重頂点連結成分が見つかったので記録する．
+				cces.emplace_back();
+				while (sz(stk) >= stk_size) {
+					cces.back().emplace_back(stk.top());
+					stk.pop();
+				}
+			}
+		}
+	};
+
+	// 先と同じ順で DFS を行う．
+	rep(s, n) if (!seen[s]) dfs2(s, -1);
+
+	return cces;
 }
 
 

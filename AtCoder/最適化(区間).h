@@ -2,7 +2,106 @@
 #include "header.h"
 #include "座標圧縮.h"
 #include "ダブリング.h"
+#include "列の管理.h"
 // ■■■■■ 区間に関する最適化問題 ■■■■■
+
+
+//【尺取り法（群）】O(n)
+/*
+* 群 (S, op, e, inv) の元を要素とする与えられた列 a[0..n) について，
+* 各 l∈[0..n] について f(Πa[l..r)) = true となる最大の r≦n を max_right[l] に，
+* 各 r∈[0..n] について f(Πa[l..r)) = true となる最小の l≧0 を min_left[r] にそれぞれ格納する．
+*
+* 制約：f(e()) = true，f は単調
+*/
+template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S)>
+void two_pointers(const vector<S>& a, const function<bool(S)>& f, vi& max_right, vi& min_left) {
+	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_d
+
+	int n = sz(a);
+	max_right.resize(n + 1); min_left.resize(n + 1);
+
+	// l, r : a[l..r) を走査中であることを表す．
+	int l = 0, r = 0;
+
+	// val : Πa[l..r)
+	S val = e();
+
+	while (true) {
+		// f( Πa[l..r) ) = true の場合
+		if (f(val)) {
+			// いまの l は固定された r に対して最小の l となっている．
+			min_left[r] = l;
+
+			// 走査完了
+			if (r == n) break;
+
+			// 右を 1 つ進める．
+			val = op(val, a[r++]);
+		}
+		// f( Πa[l..r) ) = false の場合
+		else {
+			// いまの r は固定された l に対して最大の r より 1 だけ大きい．
+			max_right[l] = r - 1;
+
+			// 左を 1 つ進める．
+			val = op(inv(a[l++]), val);
+		}
+	}
+
+	// いま f( Πa[l..n) ) = true なので，l をより大きくしても true となる．
+	for (; l <= n; l++) max_right[l] = n;
+}
+
+
+//【尺取り法（モノイド）】O(n)
+/*
+* モノイド (S, op, e) の元を要素とする与えられた列 a[0..n) について，
+* 各 l∈[0..n] について f(Πa[l..r)) = true となる最大の r≦n を max_right[l] に，
+* 各 r∈[0..n] について f(Πa[l..r)) = true となる最小の l≧0 を min_left[r] にそれぞれ格納する．
+*
+* 制約：f(e()) = true，f は単調
+*
+* 利用：【キュー（モノイド）】
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+void two_pointers(const vector<S>& a, const function<bool(S)>& f, vi& max_right, vi& min_left) {
+	// verify : https://yukicoder.me/problems/no/1036
+
+	int n = sz(a);
+	max_right.resize(n + 1); min_left.resize(n + 1);
+
+	// l, r : a[l..r) を走査中であることを表す．
+	int l = 0, r = 0;
+
+	// a[l..r) の要素を入れるキュー
+	Queue_SWAG<S, op, e> q;
+
+	while (true) {
+		// f( Πa[l..r) ) = true の場合
+		if (f(q.prod())) {
+			// いまの l は固定された r に対して最小の l となっている．
+			min_left[r] = l;
+
+			// 走査完了
+			if (r == n) break;
+
+			// 右を 1 つ進める．
+			q.push(a[r++]);
+		}
+		// f( Πa[l..r) ) = false の場合
+		else {
+			// いまの r は固定された l に対して最大の r より 1 だけ大きい．
+			max_right[l] = r - 1;
+
+			// 左を 1 つ進める．
+			q.pop(); l++;
+		}
+	}
+
+	// いま f( Πa[l..n) ) = true なので，l をより大きくしても true となる．
+	for (; l <= n; l++) max_right[l] = n;
+}
 
 
 //【区間スケジューリング問題の双対】

@@ -137,7 +137,8 @@ struct Partially_persistent_union_find {
 * int pop(int t = n - 1) : O(1)
 *	t 番目の履歴に対し先頭要素を積む前のスタックの履歴番号を返す．
 */
-template <class T> class Persistent_stack {
+template <class T>
+class Persistent_stack {
 	// 参考 : https://qiita.com/wotsushi/items/72e7f8cdd674741ffd61
 
 	struct Node {
@@ -233,7 +234,8 @@ public:
 * int pop(int t) : O(1)
 *	t 番目の履歴に対し先頭要素を削除したキューを最新の履歴として記録し，履歴番号を返す．
 */
-template <class T> class Persistent_queue {
+template <class T>
+class Persistent_queue {
 	struct Node {
 		T val = -1; // キューの末尾の値
 		vector<Node*> nx; // nx[i] : 2^i 個先のノードへのポインタ（ダブリング用）
@@ -576,7 +578,8 @@ public:
 * S get(int i, int t) : O(log n)
 *	t 番目の履歴の v[i] を返す．
 */
-template <class S> class Persistent_array {
+template <class S>
+class Persistent_array {
 	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
 
 	static const int M = 20; // 子の数

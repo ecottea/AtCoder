@@ -150,7 +150,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01計画問題.h" />
+    <ClInclude Include="monotone.h" />
+    <ClInclude Include="スコア和%28区間分割%29.h" />
     <ClInclude Include="列の管理.h" />
+    <ClInclude Include="列挙(部分列).h" />
+    <ClInclude Include="前処理(ビット列).h" />
+    <ClInclude Include="数え上げ(区間分割).h" />
+    <ClInclude Include="数え上げ(部分列).h" />
+    <ClInclude Include="最適化(列).h" />
     <ClInclude Include="累積和.h" />
     <ClInclude Include="アダマール変換.h" />
     <ClInclude Include="オートマトン.h" />
@@ -208,7 +215,7 @@
     <ClInclude Include="列挙(列).h" />
     <ClInclude Include="列挙(文字列).h" />
     <ClInclude Include="列挙(格子).h" />
-    <ClInclude Include="列挙(集合).h" />
+    <ClInclude Include="列挙%28分割%29.h" />
     <ClInclude Include="前処理(列).h" />
     <ClInclude Include="文脈自由文法.h" />
     <ClInclude Include="最適化(ビット列).h" />
@@ -253,7 +260,7 @@
     <ClInclude Include="混合基数.h" />
     <ClInclude Include="確率.h" />
     <ClInclude Include="確率分布.h" />
-    <ClInclude Include="約数変換.h" />
+    <ClInclude Include="約数倍数変換.h" />
     <ClInclude Include="累積演算%28抽象%29.h" />
     <ClInclude Include="最適化%28組%29.h" />
     <ClInclude Include="不偏ゲーム.h" />

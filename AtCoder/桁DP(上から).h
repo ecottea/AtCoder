@@ -398,7 +398,7 @@ ll maximize_pair_digit_sum(const string& num, int b = 10) {
 }
 
 
-//【上から桁 DP，未満フラグ，桁上げフラグ，スコア最小化】O(n b)
+//【上から桁 DP，未満フラグ，桁上げフラグ，コスト最小化】O(n b)
 /*
 * b=10 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
 * d の数字和と num + d の数字和の合計の最小値を返す．
@@ -454,7 +454,7 @@ ll minimize_pair_digit_sum(string num, int b = 10) {
 }
 
 
-//【上から桁 DP，桁上げ状態，スコア最小化】O(n D B)
+//【上から桁 DP，桁上げ状態，コスト最小化】O(n D B)
 /*
 * B 進数で D 桁の非負整数列 a[0..n) について，min_x Σi∈[0..n) digit_sum(a[i] + x) を返す．
 */

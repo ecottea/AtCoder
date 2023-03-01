@@ -220,8 +220,7 @@ int chromatic_number(const Graph& g) {
 	if (n == 0) return 0;
 
 	// ind[set] : set ‚Ì•”•ªW‡‚Ì‚¤‚¿C“Æ—§W‡‚ğ‚È‚·‚à‚Ì‚ÌŒÂ”
-	vm ind;
-	count_independent_set(g, ind);
+	vm ind = count_independent_set(g);
 
 	// pow_k[set] : (-1)^#(V - set) ind[set]^k
 	vm pow(1LL << n);

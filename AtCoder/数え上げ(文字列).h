@@ -217,7 +217,7 @@ mint count_supersequences(const string& s, int n, int k = 26) {
 		// 位置 i より左への s[0..m-1) の配置の仕方が bin(i-1, m-1) 通り．
 		// 位置 i より左の残り文字の選び方が (k-1)^(i-m) 通り．
 		// 位置 i より右の残り文字の選び方が k^(n-i) 通り．
-		res += fm.binomial(i - 1, m - 1) * pow25[i - m] * pow26[n - i];
+		res += fm.bin(i - 1, m - 1) * pow25[i - m] * pow26[n - i];
 	}
 
 	return res;
@@ -264,13 +264,13 @@ mint count_shuffleed_subseq(const string& s) {
 		if (cnt[i] == 0) continue;
 
 		vm c(cnt[i] + 1);
-		repi(j, 0, cnt[i]) c[j] = fm.factorial_inv(j);
+		repi(j, 0, cnt[i]) c[j] = fm.fact_inv(j);
 
 		dp = convolution(dp, c);
 	}
 
 	mint res = 0;
-	repi(j, 0, n) res += dp[j] * fm.factorial(j);
+	repi(j, 0, n) res += dp[j] * fm.fact(j);
 
 	return res;
 }

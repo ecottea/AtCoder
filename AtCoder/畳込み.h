@@ -32,6 +32,7 @@ vi convolution_arbitrary_mod(const vi& a, const vi& b, int mod = (int)1e9 + 7) {
 	// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
 
 	int n = sz(a), m = sz(b);
+	if (n == 0 || m == 0) return vi();
 
 	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
 	rep(i, n) {
@@ -71,6 +72,8 @@ vi convolution_arbitrary_mod(const vi& a, const vi& b, int mod = (int)1e9 + 7) {
 */
 vm convolution_arbitrary_mod(const vm& a, const vm& b) {
 	int n = sz(a), m = sz(b);
+	if (n == 0 || m == 0) return vm();
+
 	int mod = mint::mod();
 
 	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
@@ -114,6 +117,7 @@ vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
 	// verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
 
 	int n = sz(a), m = sz(b);
+	if (n == 0 || m == 0) return vector<T>();
 
 	// c[i] = É∞jÅ∏[0..i] a[j] b[i-j]  (ÅÕiÅ∏[0..n+m-1))
 	vector<T> c(n + m - 1);
@@ -150,6 +154,7 @@ vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 	// verify : https://atcoder.jp/contests/arc059/tasks/arc059_d
 
 	int n = sz(a);
+	if (n == 0) return vector<T>();
 
 	vector<T> res(n);
 	res[0] = 1;

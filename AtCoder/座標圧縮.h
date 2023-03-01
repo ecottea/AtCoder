@@ -172,7 +172,7 @@ tuple<int, int, int> coordinate_compression_rectangular(
 * ‚Ü‚½ xs[j] ‚Éˆ³k‚³‚ê‚½À•W j ‚É‘Î‰‚·‚éŒ³‚ÌÀ•W‚ğŠi”[‚·‚éD
 */
 template <class T>
-int coordinate_compression(const vector<T>& a, vi& a_cp, function<bool(T, T)>& cmp, vector<T>* xs = nullptr) {
+int coordinate_compression(const vector<T>& a, vi& a_cp, const function<bool(T, T)>& cmp, vector<T>* xs = nullptr) {
 	// verify : https://atcoder.jp/contests/tenka1-2014-quala/tasks/tenka1_2014_qualA_d
 
 	int n = sz(a);

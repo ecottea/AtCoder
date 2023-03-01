@@ -124,12 +124,10 @@ ll minimize_pair_inner_product(const vl& a1, const vl& a2, const vl& b1, const v
 
 	int n = sz(a1), m = sz(b1);
 
-	dump(a1, "\n", a2, "\n", b1, "\n", b2);
-	Convex_hull_trick<Frac> cht(min_flag);
+	Convex_hull_trick<Frac<ll>> cht(min_flag);
 
 	// ’¼üŒQ {y = a2[i] x + a1[i]}_i ‚Å‰Šú‰»‚·‚éD
 	rep(i, n) cht.insert(Frac(a2[i]), Frac(a1[i]));
-	dump(cht);
 
 	if (min_flag) {
 		ll res = INFL;

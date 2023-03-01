@@ -259,6 +259,8 @@ void count_manhattan_path(const vvc& c_, int d, vvm& seq, char WALL = '#') {
 * n 個の点 (x[i], y[i]) に非負スコア c[i] が与えられており，その他の点のスコアは 0 である．
 * (-inf, -inf) から (inf, inf) までの最短路のうち，スコアの和が最大のもののスコアを返す．
 *
+* 利用：【座標圧縮】
+* 
 *（コスト最大増加部分列）
 */
 ll op_mcp(ll a, ll b) { return max(a, b); }
@@ -322,7 +324,7 @@ mint dummy_path_lemma(int h, int w, const vi& x, const vi& y) {
 	repi(i, 0, n) repi(j, 0, n) {
 		int h = t[j].first - s[i].first;
 		int w = t[j].second - s[i].second;
-		dpl[i][j] = fm.binomial(h + w, h);
+		dpl[i][j] = fm.bin(h + w, h);
 	}
 
 	// 列基本変形で第 1 列の 2 行目以降を消去する．
@@ -359,8 +361,8 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 
 	mint res = 0;
 	repi(k, -kl, kr) {
-		res -= fm.binomial(h + w, h + k * d - l);
-		res += fm.binomial(h + w, h + k * d);
+		res -= fm.bin(h + w, h + k * d - l);
+		res += fm.bin(h + w, h + k * d);
 	}
 
 	return res;
@@ -392,7 +394,7 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 	//		0 * (n - k) + (-2) * k = x + y - n
 	// を解いて
 	//		k = (n - x - y) / 2
-	// と分かり，その係数は二項定理より binomial(n, (n-x-y)/2) である．
+	// と分かり，その係数は二項定理より bin(n, (n-x-y)/2) である．
 	//
 	// 第二因子からは s, t の次数の差が 0 の項しか作れないので，
 	// 第一因子から作るべき項の次数の差は x - y である．
@@ -400,10 +402,10 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 	//		(n - k) - k = x - y
 	// を解いて
 	//		k = (n - x + y) / 2
-	// と分かり，その係数は二項定理より binomial(n, (n-x+y)/2) である．
+	// と分かり，その係数は二項定理より bin(n, (n-x+y)/2) である．
 	//
 	// 以上より，求める場合の数は
-	//		binomial(n, (n-x-y)/2) binomial(n, (n-x+y)/2)
+	//		bin(n, (n-x-y)/2) bin(n, (n-x+y)/2)
 	// である．
 
 	//【別の方法】
@@ -415,7 +417,7 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 	// 明らかに 0 通りの場合
 	if (x + y > n || (n - x - y) % 2 == 1) return 0;
 
-	return fm.binomial(n, (n - x - y) / 2) * fm.binomial(n, (n - x + y) / 2);
+	return fm.bin(n, (n - x - y) / 2) * fm.bin(n, (n - x + y) / 2);
 }
 
 

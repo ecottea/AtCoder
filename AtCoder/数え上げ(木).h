@@ -298,7 +298,7 @@ vm count_subtree(Graph& g) {
 using T_cctc = pair<mint, int>; // (\’z•û–@‚Ì”, •Ó‚Ì”)
 Factorial_mint fm_cctc;
 T_cctc merge_cctc(T_cctc x, T_cctc y, int s) {
-	mint cnt = x.first * y.first * fm_cctc.binomial(x.second + y.second, x.second);
+	mint cnt = x.first * y.first * fm_cctc.bin(x.second + y.second, x.second);
 	return { cnt, x.second + y.second };
 }
 T_cctc e_cctc() { return { 1, 0 }; }

@@ -71,14 +71,14 @@ S020 e020() { return Matrix<mint>(3); }
 #define InvMul_monoid S020, op020, e020
 
 
-//【xor 可換モノイド】
+//【XOR 可換モノイド】
 using S010 = int;
 S010 op010(S010 a, S010 b) { return a ^ b; }
 S010 e010() { return 0; }
 #define XOR_monoid S010, op010, e010
 
 
-//【or 可換モノイド】
+//【OR 可換モノイド】
 /* verify: https://atcoder.jp/contests/abc157/tasks/abc157_e */
 using S011 = int;
 S011 op011(S011 a, S011 b) { return a | b; }
@@ -86,14 +86,14 @@ S011 e011() { return 0; }
 #define OR_monoid S011, op011, e011
 
 
-//【and 可換モノイド】
+//【AND 可換モノイド】
 using S012 = int;
 S012 op012(S012 a, S012 b) { return a & b; }
 S012 e012() { return ~0; }
 #define AND_monoid S012, op012, e012
 
 
-//【gcd 可換モノイド】
+//【GCD 可換モノイド】
 /* verify : https://atcoder.jp/contests/abc125/tasks/abc125_c */
 using S015 = ll;
 S015 op015(S015 a, S015 b) { return gcd(a, b); }
@@ -101,7 +101,7 @@ S015 e015() { return 0; }
 #define GCD_monoid S015, op015, e015
 
 
-//【lcm 可換モノイド】
+//【LCM 可換モノイド】
 using S016 = ll;
 S016 op016(S016 a, S016 b) { return a / gcd(a, b) * b; }
 S016 e016() { return 1; }
@@ -157,9 +157,8 @@ S008 e008() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 // verify : https://judge.yosupo.jp/problem/point_set_range_composite
 using S009 = pair<mint, mint>;
 S009 op009(S009 f, S009 g) {
-	mint a, b, c, d;
-	tie(a, b) = g; // g(x) = a x + b;
-	tie(c, d) = f; // f(x) = c x + d;
+	auto [a, b] = g; // g(x) = a x + b;
+	auto [c, d] = f; // f(x) = c x + d;
 
 	// (g o f)(x) = a (c x + d) + b = (a c)x + (a d + b)
 	return { a * c, a * d + b };
@@ -274,9 +273,10 @@ S019 e019() { return S019(); }
 
 //【第二最大値 可換モノイド】
 /* verify: https://atcoder.jp/contests/arc100/tasks/arc100_c */
-using S021 = pair<ll, ll>; // (最大値, 第二最大値)
+using T021 = ll;
+using S021 = pair<T021, T021>; // (最大値, 第二最大値)
 S021 op021(S021 a, S021 b) {
-	vector<ll> vals(4);
+	vector<T021> vals(4);
 	vals[0] = a.first;
 	vals[1] = a.second;
 	vals[2] = b.first;
@@ -290,9 +290,10 @@ S021 e021() { return { -INFL, -INFL }; }
 
 
 //【第二最小値 可換モノイド】
-using S022 = pair<ll, ll>; // (最小値, 第二最小値)
+using T022 = ll;
+using S022 = pair<T022, T022>; // (最小値, 第二最小値)
 S022 op022(S022 a, S022 b) {
-	vector<ll> vals(4);
+	vector<T022> vals(4);
 	vals[0] = a.first;
 	vals[1] = a.second;
 	vals[2] = b.first;
@@ -363,5 +364,159 @@ S026 op026(S026 f, S026 g) {
 }
 S026 e026() { return S026{ 0, INFL, -INFL }; }
 #define MixedTropicalAffineInvcomposite_monoid S026, op026, e026
+
+
+
+//【スパース多項式の巡回畳込み モノイド】
+/*
+* S ∋ f = {fs, fd} : fs はスパースな場合，fd は密な場合に多項式を表すのに用いる．
+*	fs ∋ {i, v} : v x^i の項を表す．／fd[0..k) : 多項式の係数列を表す．
+* f op g : f と g の長さ d の巡回畳込みを返す．
+*/
+// verify : https://yukicoder.me/problems/no/2215
+int d027;
+using T027 = mint;
+using S027 = pair<vector<pair<int, T027>>, vector<T027>>; // (スパース, 密)
+S027 op027(S027 a, S027 b) {
+	// b がスパースな場合は a と交換する．
+	if (b.second.empty()) swap(a, b);
+
+	// a がスパース，b がスパースの場合
+	if (a.second.empty() && b.second.empty()) {
+		// 積が密になる場合
+		if (sz(a.first) * sz(b.first) >= d027) {
+			vector<T027> res_d(d027);
+			for (auto& [ia, va] : a.first) for (auto& [ib, vb] : b.first) {
+				res_d[(ia + ib) % d027] += va * vb;
+			}
+			return { vector<pair<int, T027>>(), res_d };
+		}
+		// 積もスパースの場合
+		else {
+			vector<pair<int, T027>> res_s;
+			for (auto& [ia, va] : a.first) for (auto& [ib, vb] : b.first) {
+				res_s.emplace_back((ia + ib) % d027, va * vb);
+			}
+			return { res_s, vector<T027>() };
+		}
+	}
+	// a がスパース，b が密の場合
+	else if (a.second.empty() && b.first.empty()) {
+		vector<T027> res_d(d027);
+		for (auto& [ia, va] : a.first) rep(ib, d027) {
+			T027 vb(b.second[ib]);
+			res_d[(ia + ib) % d027] += va * vb;
+		}
+		return { vector<pair<int, T027>>(), res_d };
+	}
+	// a が密，b が密の場合
+	else {
+		vector<T027> res_d(d027);
+		rep(ia, d027) rep(ib, d027) {
+			T027 va(a.second[ia]), vb(b.second[ib]);
+			res_d[(ia + ib) % d027] += va * vb;
+		}
+
+		//// mod 998244353 ならこちらを使える．
+		//auto res_d = convolution(a.second, b.second);
+		//rep(i, d027 - 1) res_d[i] += res_d[i + d027];
+		//res_d.resize(d027);
+
+		return { vector<pair<int, T027>>(), res_d };
+	}
+}
+S027 e027() {
+	return { vector<pair<int, T027>>{ {0, 1} }, vector<T027>() };
+}
+#define SPolyCconv_monoid S027, op027, e027
+
+
+//【区間和の最大値 モノイド】
+/*
+* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
+*	fl[fr] : 左[右]端を含む区間和の最大値, fa : 任意の区間和の最大値, fs : 総和
+* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
+*/
+// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
+// verify : https://yukicoder.me/problems/no/2223
+using T028 = ll;
+using S028 = tuple<T028, T028, T028, T028>; // (左端を含む, 右端を含む, 任意, 総和)
+S028 op028(S028 f, S028 g) {
+	auto [fl, fr, fa, fs] = f;
+	auto [gl, gr, ga, gs] = g;
+
+	T028 hl = max(fl, fs + gl);
+	T028 hr = max(gr, fr + gs);
+	T028 ha = max({ fa, ga, fr + gl });
+	T028 hs = fs + gs;
+
+	return { hl, hr, ha, hs };
+}
+S028 e028() { return { -INFL, -INFL, -INFL, 0 }; }
+#define RangeSumMax_monoid S028, op028, e028
+
+
+//【区間和の最小値 モノイド】
+/*
+* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
+*	fl[fr] : 左[右]端を含む区間和の最小値, fa : 任意の区間和の最小値, fs : 総和
+* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
+*/
+// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
+using T029 = ll;
+using S029 = tuple<T029, T029, T029, T029>; // (左端を含む, 右端を含む, 任意, 総和)
+S029 op029(S029 f, S029 g) {
+	auto [fl, fr, fa, fs] = f;
+	auto [gl, gr, ga, gs] = g;
+
+	T029 hl = min(fl, fs + gl);
+	T029 hr = min(gr, fr + gs);
+	T029 ha = min({ fa, ga, fr + gl });
+	T029 hs = fs + gs;
+
+	return { hl, hr, ha, hs };
+}
+S029 e029() { return { INFL, INFL, INFL, 0 }; }
+#define RangeSumMin_monoid S029, op029, e029
+
+
+//【モノイド】
+/*
+* モノイド (S, op, e) の元を表す（op は * をオーバーロードする）
+*/
+template <class S, S(*op)(S, S), S(*e_)()>
+struct Monoid {
+	S v;
+
+	// 単位元
+	static S e() { return e_(); }
+
+	// コンストラクタ
+	Monoid() : v(e()) {}
+	Monoid(S v) : v(v) {}
+
+	// キャスト
+	operator S() const { return v; }
+
+	// 比較
+	bool operator==(const Monoid& x) const { return v == x.v; }
+	bool operator!=(const Monoid& x) const { return v != x.v; }
+
+	// 積
+	Monoid operator*(const Monoid& x) const {
+		if (v == e()) return x;
+		if (x.v == e()) return *this;
+		return op(v, x.v);
+	}
+
+	// 入出力
+	friend istream& operator>>(istream& is, Monoid& x) { is >> x.v; return is; }
+	friend ostream& operator<<(ostream& os, const Monoid& x) {
+#ifdef _MSC_VER
+		if (x.v == e()) return os << "e";
+#endif
+		return os << x.v;
+	}
+};
 
 

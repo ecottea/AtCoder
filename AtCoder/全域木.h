@@ -98,13 +98,13 @@ ll prim(const WGraph& g, int r, WGraph& mst) {
 
 //y‘SˆæXzO(|V| + |E|)
 /*
-* –³ŒüƒOƒ‰ƒt g ‚Ì‘SˆæX‚ğ sf ‚É\¬‚µCŠe‘Sˆæ–Ø‚Ì‘ã•\Œ³‚ğ v ‚ÉŠi”[‚·‚éD
+* –³ŒüƒOƒ‰ƒt g ‚Ì‘SˆæX‚ğ•Ô‚·D‚Ü‚½Še‘Sˆæ–Ø‚Ì‘ã•\Œ³‚ğ v ‚ÉŠi”[‚·‚éD
 */
-void spanning_forest(const Graph& g, Graph& sf, vi* v = nullptr) {
+Graph spanning_forest(const Graph& g, vi* v = nullptr) {
 	// verify : https://atcoder.jp/contests/abc233/tasks/abc233_f
 
 	int n = sz(g);
-	sf = Graph(n);
+	Graph sf(n);
 
 	dsu d(n);
 	rep(s, n) {
@@ -122,6 +122,8 @@ void spanning_forest(const Graph& g, Graph& sf, vi* v = nullptr) {
 		v->clear();
 		repe(tmp, d.groups()) v->push_back(tmp[0]);
 	}
+
+	return sf;
 }
 
 

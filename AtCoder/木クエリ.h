@@ -265,8 +265,8 @@ struct Path_sum_query {
 * top[s] : 頂点 s を含む連結成分の最も浅い頂点
 */
 template <class TREE>
-void heavy_light_decomposition(TREE& rt, vi& in, vi& out, vi& pos, vi& top) {
-	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
+void heavy_light_decomposition(const TREE& rt, vi& in, vi& out, vi& pos, vi& top) {
+	// 参考 : https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 	// verify : https://judge.yosupo.jp/problem/vertex_add_path_sum
 
 	int n = sz(rt);
@@ -442,7 +442,7 @@ struct Imos_tree_arbitrary_path {
 * ll sum(int v1, int v2) : O((log n)^2)
 *	頂点 v1 から v2 までの辺の値の和を返す．
 *
-* 利用：【根付き木の HL 分解】,【遅延評価フェニック木（Z-加群）】
+* 利用：【根付き木の HL 分解】,【区間加算フェニック木（Z-加群）】
 */
 ll op_teasq(ll x, ll y) { return x + y; }
 ll o_teasq() { return 0; }
@@ -464,7 +464,7 @@ struct Tree_edge_add_sum_query {
 
 	// 列 pos に対する区間加算／区間総和クエリを処理する．
 	// rasq[i] : i 番目になぞる頂点に入る辺の値（rasq[0] は使わない）
-	using RASQ = Lazy_fenwick_tree<ll, op_teasq, o_teasq, inv_teasq, mul_teasq>;
+	using RASQ = Fenwick_tree_range_add<ll, op_teasq, o_teasq, inv_teasq, mul_teasq>;
 	RASQ rasq;
 
 	// コンストラクタ（コスト付き根付き木で初期化）
@@ -498,7 +498,7 @@ struct Tree_edge_add_sum_query {
 	ll get(int v) { return rasq.get(in[v]); }
 
 	// 頂点 v の部分木の辺に val を加算する．
-	void add_subtree(int v, ll val) { rasq.apply(in[v] + 1, out[v], val); }
+	void add_subtree(int v, ll val) { rasq.add(in[v] + 1, out[v], val); }
 
 	// 頂点 v1 から v2 までの辺に val を加算する．
 	void add(int v1, int v2, ll val) {
@@ -511,7 +511,7 @@ struct Tree_edge_add_sum_query {
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
-			rasq.apply(in[top[v2]], in[v2] + 1, val);
+			rasq.add(in[top[v2]], in[v2] + 1, val);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt[top[v2]].parent;
@@ -520,11 +520,11 @@ struct Tree_edge_add_sum_query {
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
 		// その間の辺のみに対して val を加算する．
 		if (in[v1] > in[v2]) swap(v1, v2);
-		rasq.apply(in[v1] + 1, in[v2] + 1, val);
+		rasq.add(in[v1] + 1, in[v2] + 1, val);
 	}
 
 	// 頂点 v の部分木の辺の値の和を返す．
-	ll sum_subtree(int v) { return rasq.prod(in[v] + 1, out[v]); }
+	ll sum_subtree(int v) { return rasq.sum(in[v] + 1, out[v]); }
 
 	// 頂点 v1 から v2 までの辺の値の和を返す．
 	ll sum(int v1, int v2) {
@@ -539,7 +539,7 @@ struct Tree_edge_add_sum_query {
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲の和を求める．
-			res += rasq.prod(in[top[v2]], in[v2] + 1);
+			res += rasq.sum(in[top[v2]], in[v2] + 1);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt[top[v2]].parent;
@@ -548,7 +548,7 @@ struct Tree_edge_add_sum_query {
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
 		// その間の辺のみの和を res に加算する．
 		if (in[v1] > in[v2]) swap(v1, v2);
-		res += rasq.prod(in[v1] + 1, in[v2] + 1);
+		res += rasq.sum(in[v1] + 1, in[v2] + 1);
 
 		return res;
 	}
@@ -592,7 +592,7 @@ struct Tree_edge_add_sum_query {
 * sum(v1, v2) : O((log n)^2)
 *	頂点 v1 から v2 までの頂点（両端含む）の値の和を返す．
 *
-* 利用：【根付き木の HL 分解】,【遅延評価フェニック木（Z-加群）】
+* 利用：【根付き木の HL 分解】,【区間加算フェニック木（Z-加群）】
 */
 ll op_tvasq(ll x, ll y) { return x + y; }
 ll o_tvasq() { return 0; }
@@ -614,7 +614,7 @@ struct Tree_vertex_add_sum_query {
 
 	// 列 pos に対する区間加算／区間総和クエリを処理する．
 	// rasq[i] : i 番目になぞる頂点の値
-	using RASQ = Lazy_fenwick_tree<ll, op_tvasq, o_tvasq, inv_tvasq, mul_tvasq>;
+	using RASQ = Fenwick_tree_range_add<ll, op_tvasq, o_tvasq, inv_tvasq, mul_tvasq>;
 	RASQ rasq;
 
 	// コンストラクタ（根付き木で初期化）
@@ -645,14 +645,14 @@ struct Tree_vertex_add_sum_query {
 	void add(int v, ll val) {
 		// verify : https://judge.yosupo.jp/problem/vertex_add_path_sum
 
-		rasq.apply(in[v], val);
+		rasq.add(in[v], val);
 	}
 
 	// 頂点 v の値を返す．
 	ll get(int v) { return rasq.get(in[v]); }
 
 	// 頂点 v の部分木の頂点に val を加算する．
-	void add_subtree(int v, ll val) { rasq.apply(in[v], out[v], val); }
+	void add_subtree(int v, ll val) { rasq.add(in[v], out[v], val); }
 
 	// 頂点 v1 から v2 までの頂点（両端含む）に val を加算する．
 	void add(int v1, int v2, ll val) {
@@ -663,7 +663,7 @@ struct Tree_vertex_add_sum_query {
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
-			rasq.apply(in[top[v2]], in[v2] + 1, val);
+			rasq.add(in[top[v2]], in[v2] + 1, val);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt[top[v2]].parent;
@@ -672,14 +672,14 @@ struct Tree_vertex_add_sum_query {
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
 		// その間の頂点のみに対して val を加算する．
 		if (in[v1] > in[v2]) swap(v1, v2);
-		rasq.apply(in[v1], in[v2] + 1, val);
+		rasq.add(in[v1], in[v2] + 1, val);
 	}
 
 	// 頂点 v の部分木の頂点の値の和を返す．
 	ll sum_subtree(int v) {
 		// verify : https://judge.yosupo.jp/problem/vertex_add_subtree_sum
 
-		return rasq.prod(in[v], out[v]);
+		return rasq.sum(in[v], out[v]);
 	}
 
 	// 頂点 v1 から v2 までの頂点（両端含む）の値の和を返す．
@@ -695,7 +695,7 @@ struct Tree_vertex_add_sum_query {
 
 			// v2 を含む連結成分は pos で並んで配置されているので，
 			// 最も浅い頂点 top[v2] から v2 までの範囲の和を求める．
-			res += rasq.prod(in[top[v2]], in[v2] + 1);
+			res += rasq.sum(in[top[v2]], in[v2] + 1);
 
 			// 一つ浅い連結成分に移動する．
 			v2 = rt[top[v2]].parent;
@@ -704,7 +704,7 @@ struct Tree_vertex_add_sum_query {
 		// ここまできたら v1 と v2 は同じ連結成分に属するので，
 		// その間の頂点のみの和を res に加算する．
 		if (in[v1] > in[v2]) swap(v1, v2);
-		res += rasq.prod(in[v1], in[v2] + 1);
+		res += rasq.sum(in[v1], in[v2] + 1);
 
 		return res;
 	}

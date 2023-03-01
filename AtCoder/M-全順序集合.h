@@ -7,7 +7,7 @@
 /*
 * モノイド左作用付き全順序集合 (S, leq(≦), inf, F, act, comp, id) を表す．
 *
-* すなわち，(S, leq, inf) が全順序集合，(F, act, comp, id) がモノイドで，
+* すなわち，(S, leq, inf) が全順序集合，(S, F, act, comp, id) がモノイド左作用付き集合で，
 *	両立性 : ∀x, y ∈ S，∀f ∈ F,  x ≦ y ⇒ f(x) ≦ f(y)
 * を満たすものとする．
 */

@@ -8,22 +8,22 @@
 * Factorial_mint(int n_max) : O(n_max)
 *	n_max! まで計算可能として初期化する．
 *
-* mint factorial(int n) : O(1)
+* mint fact(int n) : O(1)
 *	n! を返す．
 *
-* mint factorial_inv(int n) : O(1)
-*	1 / n! を返す．
+* mint fact_inv(int n) : O(1)
+*	1/n! を返す（n が負なら 0 を返す）
 *
 * mint inv(int n) : O(1)
-*	1 / n を返す．
+*	1/n を返す．
 *
-* mint permutation(int n, int r) : O(1)
+* mint perm(int n, int r) : O(1)
 *	順列の数 nPr を返す．
 *
-* mint binomial(int n, int r) : O(1)
+* mint bin(int n, int r) : O(1)
 *	二項係数 nCr を返す．
 *
-* mint multinomial(vi rs) : O(|rs|)
+* mint mul(vi rs) : O(|rs|)
 *	多項係数 nC[rs] を返す．（n = Σrs）
 */
 class Factorial_mint {
@@ -44,23 +44,24 @@ public:
 	}
 	Factorial_mint() : n_max(0) {} // ダミー
 
-	// n! を返す．O(1)
-	mint factorial(int n) const {
+	// n! を返す．
+	mint fact(int n) const {
 		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 
 		Assert(0 <= n && n <= n_max);
 		return fac[n];
 	}
 
-	// 1 / n! を返す．O(1)
-	mint factorial_inv(int n) const {
-		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
+	// 1/n! を返す（n が負なら 0 を返す）
+	mint fact_inv(int n) const {
+		// verify : https://atcoder.jp/contests/abc289/tasks/abc289_h
 
-		Assert(0 <= n && n <= n_max);
+		Assert(n <= n_max);
+		if (n < 0) return 0;
 		return fac_inv[n];
 	}
 
-	// 1 / n を返す．O(1)
+	// 1/n を返す．
 	mint inv(int n) const {
 		// verify : https://atcoder.jp/contests/exawizards2019/tasks/exawizards2019_d
 
@@ -68,16 +69,16 @@ public:
 		return fac[n - 1] * fac_inv[n];
 	}
 
-	// 順列の数 nPr を返す．O(1)
-	mint permutation(int n, int r) const {
+	// 順列の数 nPr を返す．
+	mint perm(int n, int r) const {
 		Assert(n <= n_max);
 
 		if (r < 0 || n - r < 0) return 0;
 		return fac[n] * fac_inv[n - r];
 	}
 
-	// 二項係数 nCr を返す．O(1)
-	mint binomial(int n, int r) const {
+	// 二項係数 nCr を返す．
+	mint bin(int n, int r) const {
 		// verify : https://atcoder.jp/contests/abc034/tasks/abc034_c
 
 		Assert(n <= n_max);
@@ -85,8 +86,8 @@ public:
 		return fac[n] * fac_inv[r] * fac_inv[n - r];
 	}
 
-	// 多項係数 nC[r] を返す．O(|r|)
-	mint multinomial(const vi& rs) const {
+	// 多項係数 nC[rs] を返す．
+	mint mul(const vi& rs) const {
 		// verify : https://yukicoder.me/problems/no/2141
 
 		if (*min_element(all(rs)) < 0) return 0;
@@ -103,33 +104,31 @@ public:
 
 //【階乗など（法が小さな素数）】
 /*
-* Factorial_small_prime_mod(int p) : O(p)
+* Factorial_small_prime_mod<p>() : O(p)
 *	p を法として初期化する．
 *
-* int factorial(ll n) : O(log n)
+* int fact(ll n) : O(log n)
 *	n! mod p を返す．
 *
-* int binomial(ll n, ll r) : O(log n + log p)
+* int bin(ll n, ll r) : O(log n + log p)
 *	nCr mod p を返す．
+*
+* mint mul(vi rs) : O(|rs|)
+*	多項係数 nC[rs] mod p を返す．（n = Σrs）
 */
+template <int p>
 struct Factorial_small_prime_mod {
-	int p; // 利用する法（素数）
-
 	// 階乗の値を保持するテーブル
-	using mint_p = dynamic_modint<31415>; // 他と被らなければ何でも良い．
+	using mint_p = static_modint<p>;
 	vector<mint_p> fac;
 
 	// (p-1)! までの階乗を法を p として前計算しておく．
-	Factorial_small_prime_mod(int p_) : p(p_) {
+	Factorial_small_prime_mod() {
 		// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
-
-		mint_p::set_mod(p);
 
 		fac = vector<mint_p>(p);
 		fac[0] = 1;
-		repi(i, 1, p - 1) {
-			fac[i] = fac[i - 1] * i;
-		}
+		repi(i, 1, p - 1) fac[i] = fac[i - 1] * i;
 	}
 
 	pair<ll, mint_p> factorial_qr(ll n) const {
@@ -151,7 +150,7 @@ struct Factorial_small_prime_mod {
 	}
 
 	// n! mod p を返す．
-	int factorial(ll n) {
+	int fact(ll n) {
 		// n が p 以上なら明らかに p の倍数
 		if (n >= (ll)p) return 0;
 
@@ -160,7 +159,7 @@ struct Factorial_small_prime_mod {
 	}
 
 	// 二項係数 nCr mod p を返す．
-	int binomial(ll n, ll r) {
+	int bin(ll n, ll r) {
 		// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
 
 		if (r < 0 || n - r < 0) return 0;
@@ -171,8 +170,26 @@ struct Factorial_small_prime_mod {
 		auto fac_nr = factorial_qr(n - r);
 
 		// pow は加減，mod は乗除して結果を得る．
-		ll pow = fac_n.first - fac_r.first - fac_nr.first;
-		mint_p mod = fac_n.second / fac_r.second / fac_nr.second;
+		ll pow = fac_n.first - (fac_r.first + fac_nr.first);
+		mint_p mod = fac_n.second / (fac_r.second * fac_nr.second);
+
+		return pow == 0 ? mod.val() : 0;
+	}
+
+	// 多項係数 nC[rs] を返す．
+	int mul(const vi& rs) const {
+		if (*min_element(all(rs)) < 0) return 0;
+		ll n = accumulate(all(rs), 0);
+
+		auto num = factorial_qr(n);
+		ll dnm_pow = 0; mint_p dnm_mod = 1;
+		repe(r, rs) {
+			auto dnm = factorial_qr(r);
+			dnm_pow += dnm.first, dnm_mod *= dnm.second;
+		}
+
+		ll pow = num.first - dnm_pow;
+		mint_p mod = num.second / dnm_mod;
 
 		return pow == 0 ? mod.val() : 0;
 	}
@@ -184,11 +201,11 @@ struct Factorial_small_prime_mod {
 * Factorial_arbitrary_small_mod(int m) : O(m)
 *	m を法として初期化する．
 *
-* int factorial(ll n) : O(ω(m) (log n + log m))
+* int fact(ll n) : O(ω(m) (log n + log m))
 *	n! mod m を返す．
 *  （ω(m) : m の素因数の種類数）
 *
-* int binomial(ll n, ll r) : O(ω(m) (log n + log m))
+* int bin(ll n, ll r) : O(ω(m) (log n + log m))
 *	nCr mod m を返す．
 */
 struct Factorial_arbitrary_small_mod {
@@ -268,7 +285,7 @@ struct Factorial_arbitrary_small_mod {
 	}
 
 	// n! mod m を返す．
-	int factorial(ll n) const {
+	int fact(ll n) const {
 		Assert(n >= 0);
 
 		// n! の情報を得る．
@@ -287,7 +304,7 @@ struct Factorial_arbitrary_small_mod {
 	}
 
 	// 二項係数 nCr mod m を返す．
-	int binomial(ll n, ll r) const {
+	int bin(ll n, ll r) const {
 		if (r < 0 || n - r < 0) return 0;
 
 		// n, r, n-r それぞれの pow および mod を得る．
@@ -319,11 +336,11 @@ struct Factorial_arbitrary_small_mod {
 * Factorial_arbitrary_mod(int m, int n_max) : O(min(m, n_max))
 *	m を法として，n_max! まで計算可能として初期化する．
 *
-* int factorial(int n) : O(ω(m) (log n + log m))
+* int fact(int n) : O(ω(m) (log n + log m))
 *	n! mod m を返す．
 *  （ω(m) : m の素因数の種類数）
 *
-* int binomial(int n, int r) : O(ω(m) (log n + log m))
+* int bin(int n, int r) : O(ω(m) (log n + log m))
 *	nCr mod m を返す．
 */
 struct Factorial_arbitrary_mod {
@@ -408,7 +425,7 @@ struct Factorial_arbitrary_mod {
 	}
 
 	// n! mod m を返す．
-	int factorial(int n) const {
+	int fact(int n) const {
 		Assert(0 <= n && n <= n_max);
 
 		// n! の情報を得る．
@@ -427,7 +444,7 @@ struct Factorial_arbitrary_mod {
 	}
 
 	// 二項係数 nCr mod m を返す．
-	int binomial(int n, int r) const {
+	int bin(int n, int r) const {
 		Assert(n <= n_max);
 
 		if (r < 0 || n - r < 0) return 0;
@@ -461,16 +478,16 @@ struct Factorial_arbitrary_mod {
 * Factorial_log(int n_max) : O(n_max)
 *	n_max! まで計算可能として初期化する．
 *
-* double factorial(int n) : O(1)
+* double fact(int n) : O(1)
 *	log n! を返す．
 *
-* double permutation(int n, int r) : O(1)
+* double perm(int n, int r) : O(1)
 *	順列の数の対数 log nPr を返す．
 *
-* double binomial(int n, int r) : O(1)
+* double bin(int n, int r) : O(1)
 *	二項係数の対数 log nCr を返す．
 *
-* double multinomial(vi r) : O(|r|)
+* double mul(vi r) : O(|r|)
 *	多項係数の対数 log nC[r] を返す．（n = Σr）
 */
 class Factorial_log {
@@ -488,20 +505,20 @@ public:
 	Factorial_log() : n_max(0) {} // ダミー
 
 	// log n! を返す．O(1)
-	double factorial(int n) const {
+	double fact(int n) const {
 		Assert(0 <= n && n <= n_max);
 		return fac[n];
 	}
 
 	// 順列の数の対数 log nPr を返す．O(1)
-	double permutation(int n, int r) const {
+	double perm(int n, int r) const {
 		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
 		return fac[n] - fac[n - r];
 	}
 
 	// 二項係数の対数 log nCr を返す．O(1)
-	double binomial(int n, int r) const {
+	double bin(int n, int r) const {
 		// verify : https://atcoder.jp/contests/arc035/tasks/arc035_d
 
 		Assert(n <= n_max);
@@ -510,7 +527,7 @@ public:
 	}
 
 	// 多項係数の対数 log nC[r] を返す．O(|r|)
-	double multinomial(const vi& r) const {
+	double mul(const vi& r) const {
 		int n = accumulate(all(r), 0);
 		Assert(n <= n_max);
 
@@ -527,7 +544,7 @@ public:
 * n! を返す．
 */
 template <class T>
-T factorial(int n) {
+T fact(int n) {
 	// verify : https://atcoder.jp/contests/arc106/tasks/arc106_f
 
 	T val = 1;
@@ -541,7 +558,7 @@ T factorial(int n) {
 * nPr を返す．
 */
 template <class T>
-T permutation(ll n, int r) {
+T perm(ll n, int r) {
 	// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/3
 
 	T val = 1;
@@ -554,7 +571,7 @@ T permutation(ll n, int r) {
 /*
 * nCr を返す．
 */
-ll binomial(ll n, ll r) {
+ll bin(ll n, ll r) {
 	// verify : https://atcoder.jp/contests/arc106/tasks/arc106_f
 
 	Assert(n >= 0);
@@ -576,7 +593,7 @@ ll binomial(ll n, ll r) {
 /*
 * nCr を返す．
 */
-mint binomial_mint(ll n, ll r) {
+mint bin_mint(ll n, ll r) {
 	Assert(n >= 0);
 
 	mint num = 1, dnm = 1;
@@ -594,7 +611,7 @@ mint binomial_mint(ll n, ll r) {
 
 //【二項係数（一括，n が固定，r が小さい，法が大きな素数）】O(r)
 /*
-* i∈[0..r] について binomial(n, i) を格納したリストを返す．
+* 各 i∈[0..r] について bin(n, i) を格納したリストを返す．
 */
 vm binomial_fixed_n(ll n, int r) {
 	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
@@ -624,107 +641,40 @@ vm binomial_fixed_n(ll n, int r) {
 }
 
 
-//【階乗（mod 1000000007）】O(10^7)
+//【二項係数（一括，r が固定，n が小さい，法が大きな素数）】O(n - r)
 /*
-* n! mod 1000000007 を返す．
-* 
-*（埋め込み）
+* 各 i∈[r..n] について bin(i, r) を順に格納したリストを返す．
 */
-mint factorial_1000000007(ll n) {
-	// verify : https://yukicoder.me/problems/no/502
+vm binomial_fixed_r(int n, int r) {
+	// verify : https://yukicoder.me/problems/no/1102
 
-	if (n >= 1000000007) return 0;
+	// fac[i] : i!
+	vm fac(n - r + 1);
+	fac[0] = 1;
+	repi(i, 1, n - r) fac[i] = fac[i - 1] * i;
 
-	// FACT[i] = (i * 10^7)! mod 1000000007
-	const vi FACT = { 1,682498929,491101308,76479948,723816384,67347853,27368307,625544428,199888908,888050723,927880474,281863274,661224977,623534362,970055531,261384175,195888993,66404266,547665832,109838563,933245637,724691727,368925948,268838846,136026497,112390913,135498044,217544623,419363534,500780548,668123525,128487469,30977140,522049725,309058615,386027524,189239124,148528617,940567523,917084264,429277690,996164327,358655417,568392357,780072518,462639908,275105629,909210595,99199382,703397904,733333339,97830135,608823837,256141983,141827977,696628828,637939935,811575797,848924691,131772368,724464507,272814771,326159309,456152084,903466878,92255682,769795511,373745190,606241871,825871994,957939114,435887178,852304035,663307737,375297772,217598709,624148346,671734977,624500515,748510389,203191898,423951674,629786193,672850561,814362881,823845496,116667533,256473217,627655552,245795606,586445753,172114298,193781724,778983779,83868974,315103615,965785236,492741665,377329025,847549272,698611116 };
+	// fac_inv : 1 / (n - r)!
+	mint fac_inv = fac[n - r].inv();
 
-	const ll W = (ll)1e7;
-	int q = (int)(n / W);
+	// inv[i] : 1 / i
+	vm inv(n - r + 1);
+	repir(i, n - r, 1) {
+		inv[i] = fac[i - 1] * fac_inv;
+		fac_inv *= i;
+	}
 
-	mint res = FACT[q];
-	repi(i, q * W + 1, n) res *= i;
+	// bin[i] : bin(r + i, r)
+	vm bin(n - r + 1);
+	bin[0] = 1;
+	repi(i, r + 1, n) bin[i - r] = bin[i - 1 - r] * i * inv[i - r];
 
-	return res;
+	return bin;
 }
-
-
-//【二項係数の累積和（法が小さな奇素数）】
-/*
-* Binomial_sum(int p) : O(p^2)
-*	法を p として初期化する．
-*
-* binomial_sum(ll n, ll r) : O(log n)
-*	Σbin[n][0..r) mod p を返す．
-* 
-* 制約：p は奇素数
-*/
-class Binomial_sum {
-	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
-
-	int p; // 法となる素数
-	vvi bin; // bin[i][j] : binomial(i, j)
-	vvi acc; // acc[i][j] : Σbin[i][0..j)
-	vi pow2; // pow2[i] : 2^i
-
-public:
-	// p を法として初期化する． : O(p^2)
-	Binomial_sum(int p_) : p(p_) {
-		bin = vvi(p, vi(p));
-		acc = vvi(p, vi(p + 1));
-		pow2.resize(p - 1);
-
-		bin[0][0] = 1;
-		repi(i, 1, p - 1) repi(j, 0, i) {
-			if (j > 0) bin[i][j] += bin[i - 1][j - 1];
-			if (j < i) bin[i][j] += bin[i - 1][j];
-			bin[i][j] %= p;
-		}
-
-		rep(i, p) rep(j, p) {
-			acc[i][j + 1] = acc[i][j] + bin[i][j];
-			acc[i][j + 1] %= p;
-		}
-
-		pow2[0] = 1;
-		repi(i, 1, p - 2) pow2[i] = (pow2[i - 1] * 2) % p;
-	}
-	Binomial_sum() : p(0) {} // ダミー
-
-	// Σbin[n][0..r) を返す． : O(log n)
-	int binomial_sum(ll n, ll r) {
-		if (n == 0) return (int)(r > 0);
-		if (r <= 0) return 0;
-		if (r > n) return pow2[n % (p - 1)];
-
-		// dn, dr : n, r の p 進表示の桁の数（上位から順）
-		vi dn, dr; ll n_ = n, r_ = r;
-		while (n_ > 0) {
-			dn.push_back((int)(n_ % p));
-			dr.push_back((int)(r_ % p));
-			n_ /= p;
-			r_ /= p;
-		}
-		reverse(all(dn));
-		reverse(all(dr));
-		int k = sz(dn);
-
-		int res = 0, mul = 1;
-		rep(i, k) {
-			n -= dn[i] * pow(p, k - 1 - i);
-			res += acc[dn[i]][dr[i]] * pow2[n % (p - 1)] * mul;
-			mul *= bin[dn[i]][dr[i]];
-			res %= p;
-			mul %= p;
-		}
-
-		return res;
-	}
-};
 
 
 //【二項係数（一括，r が固定で小さい，法が大きな素数）】O((n2 - n1) + r)
 /*
-* 各 i∈[n1..n2) について binomial(i, r) を順に格納したリストを返す．
+* 各 i∈[n1..n2) について bin(i, r) を順に格納したリストを返す．
 */
 vm binomial_fixed_r(ll n1, ll n2, int r) {
 	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
@@ -778,9 +728,143 @@ vm binomial_fixed_r(ll n1, ll n2, int r) {
 }
 
 
+//【二項係数の累積和（法が大きな素数）】
+/*
+* Binomial_sum_mint(int n) : O(n√n)
+*	bin(n, -) まで計算可能として初期化する．
+*
+* get(int n, int r) : O(√n)
+*	Σbin[n][0..r) を返す．
+*
+* 利用：【階乗など（法が大きな素数）】
+*/
+class Binomial_sum_mint {
+	// 参考 : https://yukicoder.me/problems/no/2206/editorial
+
+	//【方法】
+	// S(n, r) := Σj∈[0..r) bin(n, j) とおくと，
+	//		S(n+1, r) = 2 S(n, r) - bin(n, r-1)
+	// が成り立つ．
+	// よって適当な間隔の n について S(n, r) 全てを前計算しておけば途中から計算を始められる．
+	//
+	// なお，他の漸化式
+	//		S(n-1, r) = (S(n, r) + bin(n-1, r-1)) / 2
+	//		S(n, r+1) = S(n, r) + bin(n, r)
+	//		S(n, r-1) = S(n, r) - bin(n, r-1)
+	// も使えば，記憶量を減らしたり，1/2 倍高速化したり，Mo's に乗せたりできる．
+
+	int N, M;
+
+	// S[i][r] : Σj∈[0..r) bin(M i, j)
+	vvm S;
+
+	Factorial_mint fm;
+
+public:
+	// bin(n, -) まで計算可能として初期化する．
+	Binomial_sum_mint(int n) : N(n), M((int)(sqrt(N) + 0.01)), S(N / M + 1), fm(N) {
+		// verify : https://yukicoder.me/problems/no/2206
+
+		repi(i, 0, N / M) {
+			S[i].resize(M * i + 2);
+			repi(j, 0, M * i) S[i][j + 1] = S[i][j] + fm.bin(M * i, j);
+		}
+	}
+	Binomial_sum_mint() : N(0), M(0) {}
+
+	// Σbin[n][0..r) を返す．
+	mint get(int n, int r) {
+		// verify : https://yukicoder.me/problems/no/2206
+
+		Assert(n <= N);
+		chmax(r, 0);
+
+		int i0 = n / M;
+		mint res = S[i0][min(r, sz(S[i0]) - 1)];
+		repi(i, i0 * M + 1, n) res = 2 * res - fm.bin(i - 1, r - 1);
+
+		return res;
+	}
+};
+
+
+//【二項係数の累積和（法が小さな奇素数）】
+/*
+* Binomial_sum_small_prime_mod(int p) : O(p^2)
+*	法を p として初期化する．
+*
+* get(ll n, ll r) : O(log n)
+*	Σbin[n][0..r) mod p を返す．
+* 
+* 制約：p は奇素数
+*/
+class Binomial_sum_small_prime_mod {
+	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
+
+	int p; // 法となる素数
+	vvi bin; // bin[i][j] : binomial(i, j)
+	vvi acc; // acc[i][j] : Σbin[i][0..j)
+	vi pow2; // pow2[i] : 2^i
+
+public:
+	// p を法として初期化する． : O(p^2)
+	Binomial_sum_small_prime_mod(int p_) : p(p_) {
+		bin = vvi(p, vi(p));
+		acc = vvi(p, vi(p + 1));
+		pow2.resize(p - 1);
+
+		bin[0][0] = 1;
+		repi(i, 1, p - 1) repi(j, 0, i) {
+			if (j > 0) bin[i][j] += bin[i - 1][j - 1];
+			if (j < i) bin[i][j] += bin[i - 1][j];
+			bin[i][j] %= p;
+		}
+
+		rep(i, p) rep(j, p) {
+			acc[i][j + 1] = acc[i][j] + bin[i][j];
+			acc[i][j + 1] %= p;
+		}
+
+		pow2[0] = 1;
+		repi(i, 1, p - 2) pow2[i] = (pow2[i - 1] * 2) % p;
+	}
+	Binomial_sum_small_prime_mod() : p(0) {} // ダミー
+
+	// Σbin[n][0..r) を返す． : O(log n)
+	int get(ll n, ll r) {
+		if (n == 0) return (int)(r > 0);
+		if (r <= 0) return 0;
+		if (r > n) return pow2[n % (p - 1)];
+
+		// dn, dr : n, r の p 進表示の桁の数（上位から順）
+		vi dn, dr; ll n_ = n, r_ = r;
+		while (n_ > 0) {
+			dn.push_back((int)(n_ % p));
+			dr.push_back((int)(r_ % p));
+			n_ /= p;
+			r_ /= p;
+		}
+		reverse(all(dn));
+		reverse(all(dr));
+		int k = sz(dn);
+
+		int res = 0, mul = 1;
+		rep(i, k) {
+			n -= dn[i] * pow(p, k - 1 - i);
+			res += acc[dn[i]][dr[i]] * pow2[n % (p - 1)] * mul;
+			mul *= bin[dn[i]][dr[i]];
+			res %= p;
+			mul %= p;
+		}
+
+		return res;
+	}
+};
+
+
 //【二項係数（一括，n が固定，法が小さな素数）】O((r2 - r1) + p^2 + log n) (?)
 /*
-* 各 i∈[r1..r2) について binomial(n, i) mod p を順に格納したリストを返す．
+* 各 i∈[r1..r2) について bin(n, i) mod p を順に格納したリストを返す．
 * 
 * 制約：p は素数
 */
@@ -887,7 +971,10 @@ vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
 *	n = [n[0], n[1], ..., n[k-1]]_(p)
 *	r = [r[0], r[1], ..., r[k-1]]_(p)
 * と表されるとき，以下の合同式が成り立つ：
-*	bin(n, r) = Πi=[0..k) bin(n[i], r[i])  (mod p)
+*	bin(n, r) ≡ Πi=[0..k) bin(n[i], r[i])  (mod p)
+* 
+* 特に p = 2 のときは以下の合同式が成り立つ：
+*	bin(n, r) ≡ boole[(n & r) == r]  (mod 2)
 */
 
 
@@ -947,9 +1034,47 @@ vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
 */
 
 
+//【半整数の階乗】
+/*
+* n ≧ 0 のとき，以下の式が成り立つ：
+*	(n + 1/2)! = ((2n+1)!! / 2^(n+1)) √π = ((2n+1)! / (2^(2n+1) n!)) √π
+* 
+* また n ≧ 2 のとき，以下の式が成り立つ：
+*	(1/2 - n)! = ((-2)^(n-1) / (2n-3)!!) √π = ((-1)^(n-1) 2^(2n-3) (n-2)! / (2n-3)!) √π
+* 
+* 例外は，(-1/2)! = √π
+* 
+* verify : https://atcoder.jp/contests/abc290/tasks/abc290_f
+*/
+
+
 //【二項係数の畳込み】
 /*
 * 母関数.h へ
 */
+
+
+//【階乗（mod 1000000007）】O(10^7)
+/*
+* n! mod 1000000007 を返す．
+*
+*（埋め込み）
+*/
+mint factorial_1000000007(ll n) {
+	// verify : https://yukicoder.me/problems/no/502
+
+	if (n >= 1000000007) return 0;
+
+	// FACT[i] = (i * 10^7)! mod 1000000007
+	const vi FACT = { 1,682498929,491101308,76479948,723816384,67347853,27368307,625544428,199888908,888050723,927880474,281863274,661224977,623534362,970055531,261384175,195888993,66404266,547665832,109838563,933245637,724691727,368925948,268838846,136026497,112390913,135498044,217544623,419363534,500780548,668123525,128487469,30977140,522049725,309058615,386027524,189239124,148528617,940567523,917084264,429277690,996164327,358655417,568392357,780072518,462639908,275105629,909210595,99199382,703397904,733333339,97830135,608823837,256141983,141827977,696628828,637939935,811575797,848924691,131772368,724464507,272814771,326159309,456152084,903466878,92255682,769795511,373745190,606241871,825871994,957939114,435887178,852304035,663307737,375297772,217598709,624148346,671734977,624500515,748510389,203191898,423951674,629786193,672850561,814362881,823845496,116667533,256473217,627655552,245795606,586445753,172114298,193781724,778983779,83868974,315103615,965785236,492741665,377329025,847549272,698611116 };
+
+	const ll W = (ll)1e7;
+	int q = (int)(n / W);
+
+	mint res = FACT[q];
+	repi(i, q * W + 1, n) res *= i;
+
+	return res;
+}
 
 

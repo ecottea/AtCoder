@@ -353,3 +353,17 @@ vector<T> leq_max_convolution_dD(int n, int d, vector<T> a, vector<T> b) {
 }
 
 
+//【多次元高速ゼータ／メビウス変換と行列のクロネッカー積】
+/*
+* a[0..n)^d を上位要素で多次元高速ゼータ変換して A[0..n)^d にする線形変換の表現行列は，
+* 上三角成分が全て 1 の n×n 行列 d 個のクロネッカー積に等しい．
+* verify : https://yukicoder.me/problems/no/2178
+* 
+* a[0..n)^d を下位要素で多次元高速ゼータ変換して A[0..n)^d にする線形変換の表現行列は，
+* 下三角成分が全て 1 の n×n 行列 d 個のクロネッカー積に等しい．
+* verify : https://atcoder.jp/contests/arc136/tasks/arc136_d
+* 
+* 多次元高速メビウス変換の表現行列は，上記行列の逆行列 d 個のクロネッカー積に等しい．
+*/
+
+

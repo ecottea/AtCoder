@@ -59,7 +59,7 @@ vector<T> sugoroku(const vi& a, const vector<T>& p, int n) {
 * [1..m] の目が順に p[0..m) の確率で出る m 面サイコロを用いてすごろくを行う．
 * 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
 *
-* 利用：【形式的冪級数（mod 998244353）】
+* 利用：【形式的冪級数】
 */
 vm sugoroku(const vm& p, int n) {
 	// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e

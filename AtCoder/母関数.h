@@ -12,7 +12,7 @@
 * と表す．
 * 
 * 畳込み		: Σi∈[0..n] a[i] b[n-i] ⇔ A(z) B(z)
-* 複数畳込み	: Σ_(i+j+k=n) a[i] b[j] c[k] ⇔ A(z) B(z) C(z)
+* 複数畳込み	: ΣΣ_(i+j+k=n) a[i] b[j] c[k] ⇔ A(z) B(z) C(z)
 * n 倍		: n a[n] ⇔ z A'(z)
 * 1/n 倍		: a[n]/n ⇔ ∫ A(z)/z dz（ただし a[0]=0）
 * 右シフト	: a[n-1] ⇔ z A(z)
@@ -33,7 +33,7 @@
 * と表す．
 *
 * bin畳込み	: Σi∈[0..n] bin(n,i) a[i] b[n-i] ⇔ A(z) B(z)
-* mul畳込み	: Σ_(i+j+k=n) mul(n,[i,j,k]) a[i] b[j] c[k] ⇔ A(z) B(z) C(z)
+* mul畳込み	: ΣΣ_(i+j+k=n) mul(n,[i,j,k]) a[i] b[j] c[k] ⇔ A(z) B(z) C(z)
 * n 倍		: n a[n] ⇔ z A'(z)
 * 1/n 倍		: a[n]/n ⇔ ∫ A(z)/z dz（ただし a[0]=0）
 * 右シフト	: a[n-1] ⇔ ∫ A(z) dz（ただし a[0]=0）

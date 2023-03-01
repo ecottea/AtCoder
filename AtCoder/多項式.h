@@ -167,13 +167,13 @@ int quadratic_equation(ll a, ll b, ll c, vd& sol) {
 
 //【疎多項式】
 /*
-* SPoly() : O(1)
+* SPoly<T>() : O(1)
 *	零多項式 f(x) = 0 で初期化する．
 *
-* SPoly(T c0) : O(1)
+* SPoly<T>(T c0) : O(1)
 *	定数多項式 f(x) = c0 で初期化する．
 *
-* SPoly(vector<pair<ll, T>> dcs) : O(n)
+* SPoly<T>(vector<pair<ll, T>> dcs) : O(n)
 *	n 個の (次数, 係数) の組で初期化する．
 *
 * c + f, f + c : O(n), f + g : O(n + m)（n, m は f, g それぞれの項数）
@@ -248,7 +248,7 @@ struct SPoly {
 };
 
 
-//【展開係数／ボスタン－森法】O(n m^2 log d)
+//【展開係数】O(n m^2 log d)
 /*
 * 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
 *

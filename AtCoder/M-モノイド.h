@@ -8,7 +8,7 @@
 * モノイド左作用付きモノイド (S, op, e, F, act, comp, id) を表す．
 *
 * すなわち，(S, op, e), (F, comp, id) がそれぞれモノイドであり，
-* F の S への左作用 * : F × S → S が
+* F の S への左作用 act : F × S → S が
 *	準同型 : ∀x, y ∈ S，∀f ∈ F,	f(x y) = f(x) f(y)
 *	合成   : ∀x ∈ S, ∀f, g ∈ F,	(f g)(x) = f(g(x))
 *   恒等射 : ∀x ∈ S,				id(x) = x
@@ -224,7 +224,7 @@ F109 comp109(F109 f, F109 g) {
 #define Update_Sum_amonoid S109, op109, e109, F109, act109, comp109, id109
 
 
-//【and 作用付き xor モノイド】
+//【AND 作用付き XOR モノイド】
 using S110 = int;
 S110 op110(S110 x, S110 y) { return x ^ y; }
 S110 e110() { return 0; }

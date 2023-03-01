@@ -125,7 +125,7 @@ mint count_different_color_matching(const vector<T>& c) {
 		a.push_back(vm(ni / 2 + 1));
 
 		repi(j, 0, ni / 2) {
-			a.back()[j] = fm.binomial(ni, 2 * j) * df[j];
+			a.back()[j] = fm.bin(ni, 2 * j) * df[j];
 		}
 	}
 

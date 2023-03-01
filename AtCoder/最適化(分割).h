@@ -10,7 +10,7 @@
 /*
 * a[0..2n) を組に分割する．各組のスコアを 2 つの要素の差，
 * 分割のスコアを各組のスコアの総和と定めるとき，スコア最大の分割は次にようにして得られる：
-*	a[0..2n) をソートし，a[0..n) から 1 つ，a[n..2n) から 1 つ要素を選ぶ組にする．
+*	a[0..2n) をソートし，a[0..n) から 1 つ，a[n..2n) から 1 つ要素を選び組にする．
 * 
 * verify : https://atcoder.jp/contests/arc120/tasks/arc120_d
 */
@@ -21,7 +21,7 @@
 * i と j の距離が dist[i][j] で与えられる n 点を，クラスタ直径の最大値が最小になるように
 * k 個のクラスタに分割したときの直径の大きさを返す．
 *
-*（bit DP）
+*（SoS bit DP）
 *
 * 利用：【下位集合の全探索】
 */
@@ -45,7 +45,7 @@ ll minimize_diameter_clustering(const vvl& dist, int k) {
 		}
 	}
 
-	// bit DP
+	// SoS bit DP
 	repb(set, n) {
 		if (set == 0) continue;
 
@@ -69,7 +69,7 @@ ll minimize_diameter_clustering(const vvl& dist, int k) {
 * i と j が同クラスタに居るとスコア sc[i][j] が得られる条件で，
 * n 点をいくつかのクラスタに分割して得られるスコアの最大値を返す．
 *
-*（bit DP）
+*（SoS bit DP）
 *
 * 利用：【下位集合の全探索】
 */

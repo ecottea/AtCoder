@@ -585,6 +585,286 @@ public:
 };
 
 
+//【キュー（モノイド）】
+/*
+* Queue_SWAG<S, op, e>() : O(1)
+*	空のキューで初期化する．要素はモノイド (S, op, e) の元とする．
+*
+* push(S x) : O(1)
+*	キューの末尾に x を追加する．
+*
+* pop() : ならし O(1)
+*	キューの先頭の要素を削除する（空なら何もしない）
+*
+* S prod() : O(1)
+*	キューの要素の先頭から順にとった総積を返す（空なら e() を返す）
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Queue_SWAG {
+	// 参考 : https://motsu-xe.hatenablog.com/entry/2021/05/13/224016
+
+	// acc_f[b] : キューの先頭[末尾] 側の要素の先頭側から順にとった累積積を格納するスタック
+	// raw_b : キューの末尾側の要素を格納するスタック
+	stack<S> acc_f, acc_b, raw_b;
+
+	// 末尾側の要素をまとめて先頭側に移動する．
+	void move() {
+		while (!raw_b.empty()) {
+			S l = raw_b.top(); raw_b.pop(); acc_b.pop();
+			S r = acc_f.empty() ? e() : acc_f.top();
+			acc_f.push(op(l, r));
+		}
+	}
+
+public:
+	// 空のキューで初期化する．
+	Queue_SWAG() {
+		// verify : https://judge.yosupo.jp/problem/queue_operate_all_composite
+	}
+
+	// キューの末尾に x を追加する．
+	void push(S x) {
+		// verify : https://judge.yosupo.jp/problem/queue_operate_all_composite
+
+		raw_b.push(x);
+		S l = acc_b.empty() ? e() : acc_b.top();
+		acc_b.push(op(l, x));
+	}
+
+	// キューの先頭の要素を削除する．
+	void pop() {
+		// verify : https://judge.yosupo.jp/problem/queue_operate_all_composite
+
+		if (acc_f.empty()) move();
+		if (acc_f.empty()) return;
+		acc_f.pop();
+	}
+
+	// キューの要素の先頭から順にとった総積を返す．
+	S prod() {
+		// verify : https://judge.yosupo.jp/problem/queue_operate_all_composite
+
+		S l = acc_f.empty() ? e() : acc_f.top();
+		S r = acc_b.empty() ? e() : acc_b.top();
+		return op(l, r);
+	}
+};
+
+
+//【両端キュー（モノイド）】
+/*
+* Deque_SWAG<S, op, e>() : O(1)
+*	空の両端キューで初期化する．要素はモノイド (S, op, e) の元とする．
+*
+* push_front(S x) : O(1)
+*	両端キューの先頭に x を追加する．
+*
+* push_back(S x) : O(1)
+*	両端キューの末尾に x を追加する．
+*
+* pop_front() : ならし O(log n) ?
+*	両端キューの先頭の要素を削除する（空なら何もしない）
+*
+* pop_back() : ならし O(log n) ?
+*	両端キューの末尾の要素を削除する（空なら何もしない）
+*
+* S prod() : O(1)
+*	両端キューの要素の先頭から順にとった総積を返す（空なら e() を返す）
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Deque_SWAG {
+	// 参考 : https://motsu-xe.hatenablog.com/entry/2021/05/13/224016
+
+	// acc_f[b] : 両端キューの先頭[末尾] 側の要素の先頭側から順にとった累積積を格納する両端キュー
+	// raw : 元の要素を格納する両端キュー
+	deque<S> acc_f, acc_b, raw;
+
+	// 末尾側の要素の半分を先頭側へ移動する．
+	void move_to_front() {
+		// n : 要素数
+		int n = sz(raw), hn = (n + 1) / 2;
+
+		// 中央より前を先頭側に移す．
+		repir(i, hn - 1, 0) {
+			S l = raw[i];
+			S r = (i == hn - 1) ? e() : acc_f.front();
+			acc_f.push_front(op(l, r));
+		}
+
+		// 中央より後を末尾側に残す．
+		deque<S> nacc_b;
+		repi(i, hn, n - 1) {
+			S l = (i == hn) ? e() : nacc_b.back();
+			S r = raw[i];
+			nacc_b.push_back(op(l, r));
+		}
+		acc_b = move(nacc_b);
+	}
+
+	// 先頭側の要素の半分を末尾側へ移動する．
+	void move_to_back() {
+		// n : 要素数
+		int n = sz(raw), hn = n / 2;
+
+		// 中央より後を末尾側に移す．
+		repi(i, hn, n - 1) {
+			S l = (i == hn) ? e() : acc_b.back();
+			S r = raw[i];
+			acc_b.push_back(op(l, r));
+		}
+
+		// 中央より前を先頭側に残す．
+		deque<S> nacc_f;
+		repir(i, hn - 1, 0) {
+			S l = raw[i];
+			S r = (i == hn - 1) ? e() : nacc_f.front();
+			nacc_f.push_front(op(l, r));
+		}
+		acc_f = move(nacc_f);
+	}
+
+public:
+	// 空の両端キューで初期化する．
+	Deque_SWAG() {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+	}
+
+	// 両端キューの先頭に x を追加する．
+	void push_front(S x) {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		S r = acc_f.empty() ? e() : acc_f.front();
+		acc_f.push_front(op(x, r));
+		raw.push_front(x);
+	}
+
+	// 両端キューの末尾に x を追加する．
+	void push_back(S x) {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		S l = acc_b.empty() ? e() : acc_b.back();
+		acc_b.push_back(op(l, x));
+		raw.push_back(x);
+	}
+
+	// 両端キューの先頭の要素を削除する．
+	void pop_front() {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		// 両端キューが空の場合の例外処理
+		if (raw.empty()) return;
+
+		// 先頭側が空だった場合は末尾側の要素の半分を移してくる．
+		if (acc_f.empty()) move_to_front();
+
+		acc_f.pop_front();
+		raw.pop_front();
+	}
+
+	// 両端キューの末尾の要素を削除する．
+	void pop_back() {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		// 両端キューが空の場合の例外処理
+		if (raw.empty()) return;
+
+		// 末尾側が空だった場合は先頭側の要素の半分を移してくる．
+		if (acc_b.empty()) move_to_back();
+
+		acc_b.pop_back();
+		raw.pop_back();
+	}
+
+	// 両端キューの要素の先頭から順にとった総積を返す．
+	S prod() {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		S l = acc_f.empty() ? e() : acc_f.front();
+		S r = acc_b.empty() ? e() : acc_b.back();
+		return op(l, r);
+	}
+};
+
+
+//【両端キュー（群）】
+/*
+* Deque_group<S, op, e, inv>() : O(1)
+*	空の両端キューで初期化する．要素は群 (S, op, e, inv) の元とする．
+*
+* push_front(S x) : O(1)
+*	両端キューの先頭に x を追加する．
+*
+* push_back(S x) : O(1)
+*	両端キューの末尾に x を追加する．
+*
+* pop_front() : ならし O(log n) ?
+*	両端キューの先頭の要素を削除する（空なら何もしない）
+*
+* pop_back() : ならし O(log n) ?
+*	両端キューの末尾の要素を削除する（空なら何もしない）
+*
+* S prod() : O(1)
+*	両端キューの要素の先頭から順にとった総積を返す（空なら e() を返す）
+*/
+template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S)>
+class Deque_group {
+	// acc : 累積積
+	S acc;
+
+	// 元の要素を格納する両端キュー
+	deque<S> raw;
+
+public:
+	// 空の両端キューで初期化する．
+	Deque_group() : acc(e()) {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+	}
+
+	// 両端キューの先頭に x を追加する．
+	void push_front(S x) {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		acc = op(x, acc);
+		raw.push_front(x);
+	}
+
+	// 両端キューの末尾に x を追加する．
+	void push_back(S x) {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		acc = op(acc, x);
+		raw.push_back(x);
+	}
+
+	// 両端キューの先頭の要素を削除する．
+	void pop_front() {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		if (raw.empty()) return;
+
+		acc = op(inv(raw.front()), acc);
+		raw.pop_front();
+	}
+
+	// 両端キューの末尾の要素を削除する．
+	void pop_back() {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		if (raw.empty()) return;
+
+		acc = op(acc, inv(raw.back()));
+		raw.pop_back();
+	}
+
+	// 両端キューの要素の先頭から順にとった総積を返す．
+	S prod() {
+		// verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
+
+		return acc;
+	}
+};
+
+
 //【平方分割（モノイド）】
 /*
 * Quadratic_division<S, op, e>(int n) : O(n e)
@@ -592,7 +872,7 @@ public:
 *	要素はモノイド (S, op, e) の元とする．
 *
 * Quadratic_division<S, op, e>(vS v) : O(n op)
-*	配列 v の要素で初期化する．
+*	v[0..n) で初期化する．
 *
 * set(int i, S x) : O(√n op)
 *	v[i] = x とする．
@@ -601,7 +881,7 @@ public:
 *	v[i] を返す．
 *
 * S prod(int l, int r) : O(√n op)
-*	op( v[l..r) ) を返す．空なら e() を返す．
+*	Πv[l..r) を返す．空なら e() を返す．
 */
 template <class S, S(*op)(S, S), S(*e)()>
 struct Quadratic_division {
@@ -766,79 +1046,6 @@ struct Quadratic_division_Mset {
 		return os;
 	}
 #endif
-};
-
-
-//【区間への一次式との最小値／一点参照クエリ】
-/*
-* Range_minimize1d_query(int n) : O(1)
-*	要素数 n かつ初期値 INF で初期化する．
-*
-* Range_minimize1d_query(vl v) : O(n)
-*	配列 v[0..n) で初期化する．
-*
-* set(int l, int r, ll a, ll b) : O(log n)
-*	各 i∈[l, r) について v[i] を a i + b との最小値に変更する．
-*
-* ll get(int i) : O(m log n)（m : 一次の項の係数の種類）
-*	v[i] を返す．
-*/
-ll op5(ll x, ll y) { return min(x, y); }
-ll e5() { return INFL; }
-ll mapping5(ll f, ll x) { return min(f, x); }
-ll composition5(ll f, ll g) { return min(f, g); }
-ll id5() { return INFL; }
-ll op6(ll x, ll y) { return max(x, y); }
-ll e6() { return -INFL; }
-ll mapping6(ll f, ll x) { return max(f, x); }
-ll composition6(ll f, ll g) { return max(f, g); }
-ll id6() { return -INFL; }
-struct Range_minimize1d_query {
-	// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
-
-	// 内部では値 v[i] を一次の項の係数 a で分けて
-	//		min(a[1] i + b[1], a[2] i + b[2], ...)
-	// の形で保持する．
-	// a が同じであればその符号に応じて b の min や max に帰着できる．
-
-	int n;
-	using rmq = lazy_segtree<ll, op5, e5, ll, mapping5, composition5, id5>;
-	using rMq = lazy_segtree<ll, op6, e6, ll, mapping6, composition6, id6>;
-	unordered_map<ll, rmq> pos_segs;
-	unordered_map<ll, rMq> neg_segs;
-
-	Range_minimize1d_query(int n_) : n(n_) {}
-	Range_minimize1d_query(const vl& v) : n(sz(v)) { pos_segs[0] = rmq(v); }
-
-	void set(int l, int r, ll a, ll b) {
-		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
-
-		if (a >= 0) {
-			if (!pos_segs.count(a)) {
-				pos_segs[a] = rmq(n);
-			}
-			pos_segs[a].apply(l, r, b);
-		}
-		else {
-			if (!neg_segs.count(a)) {
-				neg_segs[a] = rMq(n);
-			}
-			neg_segs[a].apply(l, r, b);
-		}
-	}
-
-	ll get(int i) {
-		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
-
-		ll res = INFL;
-		repea(p, pos_segs) {
-			chmin(res, p.first * i + p.second.get(i));
-		}
-		repea(p, neg_segs) {
-			chmin(res, p.first * i + p.second.get(i));
-		}
-		return res;
-	}
 };
 
 

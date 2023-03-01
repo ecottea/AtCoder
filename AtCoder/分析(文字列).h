@@ -212,12 +212,19 @@ void manacher(const STR& s, vi& lo, vi& le) {
 	rep(i, n) s_riffled[2 * i + 1] = s[i];
 	rep(i, n + 1) s_riffled[2 * i] = '$'; // '$' ‚Í s ‚ÉŠÜ‚Ü‚ê‚È‚¢•¶š
 
-	vi r;
-	manacher(s_riffled, r);
+	vi r = manacher(s_riffled);
 
 	rep(i, n) lo[i] = r[2 * i + 1] - 1;
 	rep(i, n - 1) le[i] = r[2 * (i + 1)] - 1;
 }
+
+
+//y‰ñ•¶‚Ìí—Ş”z
+/*
+* s[0..n) ‚É•”•ª•¶š—ñ‚Æ‚µ‚ÄŒ»‚ê‚é‰ñ•¶‚Í‚X n í—Ş‚Å‚ ‚éD
+* 
+* verify : https://mojacoder.app/users/dyktr_06/problems/2762-count-unique-palindrome
+*/
 
 
 //y‰ñ•¶‚ğ˜AŒ‹‚µ‚½‰ñ•¶z

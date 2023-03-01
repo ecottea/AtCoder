@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
-#include "約数変換.h"
+#include "約数倍数変換.h"
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
@@ -14,7 +14,7 @@ vi eratosthenes(int n) {
 
 	vi ps;
 
-	// 素数かどうかを記録しておくためのテーブル
+	// is_prime[i] : i が素数か
 	vb is_prime(n + 1, true);
 	is_prime[0] = is_prime[1] = false;
 
@@ -70,12 +70,10 @@ vl eratosthenes_interval(ll l, ll r) {
 * Factor_integer(int n) : O(n log(log n))
 *	n 以下の自然数を高速に素因数分解する準備を行う．
 *
-* factor_integer(int i, map<int, int>& pps) : O(log n)
+* get(int i, map<int, int>& pps) : O(log n)
 *	i の素因数分解結果を pps に格納する．
 */
 struct Factor_integer {
-	// verify : https://atcoder.jp/contests/abc215/tasks/abc215_d
-
 	int n;
 
 	// d[i] : i を割り切る最小の素数
@@ -83,27 +81,28 @@ struct Factor_integer {
 
 	// n 以下の自然数を高速に素因数分解する準備を行う．
 	Factor_integer(int n_) : n(n_), d(n + 1) {
+		// verify : https://yukicoder.me/problems/no/2207
+
 		iota(all(d), 0);
 
 		for (int p = 2; p * p <= n; p++) {
 			if (d[p] != p) continue;
-
-			for (int i = p; i <= n; i += p) {
-				d[i] = p;
-			}
+			for (int i = p; i <= n; i += p) d[i] = p;
 		}
 	}
 
-	// i の素因数分解結果を pps に格納する．
-	void factor_integer(int i, map<int, int>& pps) {
+	// i の素因数分解結果を返す．
+	map<int, int> get(int i) {
+		// verify : https://yukicoder.me/problems/no/2207
+
 		Assert(i <= n);
 
-		pps.clear();
-
+		map<int, int> pps;
 		while (i > 1) {
 			pps[d[i]]++;
 			i /= d[i];
 		}
+		return pps;
 	}
 };
 
@@ -111,8 +110,6 @@ struct Factor_integer {
 //【一括素因数分解】O(n log(log n))
 /*
 * n 以下の自然数 i の素因数分解を pps[i] に格納し pps を返す（pps[0] は使わない）
-*
-*（エラトステネスの篩）
 */
 vector<map<int, int>> factor_integer_all(int n) {
 	// verify : https://atcoder.jp/contests/abc052/tasks/arc067_a
@@ -138,9 +135,7 @@ vector<map<int, int>> factor_integer_all(int n) {
 	}
 
 	// √n より大きい p の処理（この p は素数とは限らないので注意）
-	for (; p <= n; p++) {
-		if (a[p] != 1) pps[p][a[p]]++;
-	}
+	for (; p <= n; p++) if (a[p] != 1) pps[p][a[p]]++;
 
 	return pps;
 }
@@ -149,8 +144,6 @@ vector<map<int, int>> factor_integer_all(int n) {
 //【一括素因数分解（区間）】O((√r + (r - l))log(log r))
 /*
 * [l..r) に含まれる自然数 i の素因数分解を pps[i - l] に格納し，pps を返す．
-*
-*（エラトステネスの区間篩）
 *
 * 利用：【素数の列挙】
 */

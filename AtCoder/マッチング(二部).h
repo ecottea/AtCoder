@@ -419,6 +419,61 @@ vector<T> count_bipartite_matching(const vector<vector<T>>& e) {
 }
 
 
+//【二部グラフのマッチングの数え上げ（大小指定）】O(n^2)
+/*
+* |S| = |T| = n なる二部グラフ (S, T) の完全マッチングのうち以下の条件を満たすものの個数を返す：
+* S[i] が T[i] 以前[自身, 以降] とマッチングすることを許すなら sb[i] の第 0[1, 2] ビットが 1
+* T[j] が S[j] 以前[自身, 以降] とマッチングすることを許すなら tb[i] の第 0[1, 2] ビットが 1
+*
+*（箱根駅伝 DP）
+*/
+mint count_bipartite_perfect_matching_LEG(const vi& sb, const vi& tb) {
+	// 参考 : https://drken1215.hatenablog.com/entry/2019/10/05/173700
+	// verify : https://yukicoder.me/problems/no/1001
+
+	int n = sz(sb);
+
+	// dp_i[j] : S[0..i) と T[0..i) までで，マッチングが j 箇所ある場合の数
+	vm dp(n + 1);
+	dp[0] = 1;
+
+	rep(i, n) {
+		vm ndp(n + 1);
+
+		repi(j, 0, n) {
+			// S[i] とは T[i] 以前，T[i] とは S[i] 以前をマッチングさせる場合
+			if ((sb[i] & 1) && (tb[i] & 1)) {
+				if (j + 2 <= n) ndp[j + 2] += dp[j] * (i - j) * (i - j);
+			}
+
+			// S[i] とは T[i] 以前，T[i] とは S[i] 以降をマッチングさせる場合
+			if ((sb[i] & 1) && (tb[i] & 4)) {
+				if (j + 1 <= n) ndp[j + 1] += dp[j] * (i - j);
+			}
+
+			// S[i] とは T[i] 以降，T[i] とは S[i] 以前をマッチングさせる場合
+			if ((sb[i] & 4) && (tb[i] & 1)) {
+				if (j + 1 <= n) ndp[j + 1] += dp[j] * (i - j);
+			}
+
+			// S[i] とは T[i] 以降，T[i] とは S[i] 以降をマッチングさせる場合
+			if ((sb[i] & 4) && (tb[i] & 4)) {
+				ndp[j] += dp[j];
+			}
+
+			// S[i] と T[i] とをマッチングさせる場合
+			if ((sb[i] & 2) && (tb[i] & 2)) {
+				if (j + 1 <= n) ndp[j + 1] += dp[j];
+			}
+		}
+
+		dp = move(ndp);
+	}
+
+	return dp[n];
+}
+
+
 //【木の最大マッチング】O(n)
 /*
 * 木 g の最大マッチングの大きさを返す．

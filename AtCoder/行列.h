@@ -6,10 +6,10 @@
 
 //【行列】
 /*
-* Matrix<T>(m, n) : O(m n)
+* Matrix<T>(int m, int n) : O(m n)
 *	m * n 零行列で初期化する．
 *
-* Matrix<T>(n) : O(n^2)
+* Matrix<T>(int n) : O(n^2)
 *	n * n 単位行列で初期化する．
 *
 * Matrix<T>(vvT a) : O(m n)
@@ -395,7 +395,7 @@ Matrix<T> inverse_matrix(const Matrix<T>& mat) {
 	Matrix<T> aug(m, 2 * m);
 	rep(i, m) rep(j, m) {
 		aug.v[i][j] = mat.v[i][j];
-		aug.v[i][m + j] = T(i == j);
+		if (i == j) aug.v[i][m + j] = 1;
 	}
 	int n = 2 * m;
 	auto& v = aug.v;
@@ -632,7 +632,7 @@ void hessenberg_reduction(Matrix<T>& a) {
 /*
 * 正方行列 A = a[0..n)[0..n) の特性多項式 |zI - A| を返す．
 *
-* 利用：【形式的冪級数（mod 998244353）】,【ヘッセンベルグ縮約】
+* 利用：【形式的冪級数】,【ヘッセンベルグ縮約】
 */
 MFPS characteristic_polynomial(Matrix<mint> a) {
 	// verify : https://judge.yosupo.jp/problem/characteristic_polynomial
@@ -731,7 +731,6 @@ vector<T> kronecker_matrix_vector_product(const vector<Matrix<T>>& mats, vector<
 	// このように右から順に行列ベクトル積を計算していけば，巨大な行列になりうる M を陽に求める必要はない．
 
 	int K = sz(mats);
-	dump(mats); dump(vec);
 
 	// Ws : vec が大きさ Ws の小ブロックに分割されていることを表す
 	int Ws = 1;
@@ -762,10 +761,48 @@ vector<T> kronecker_matrix_vector_product(const vector<Matrix<T>>& mats, vector<
 		Ws *= mat.m;
 
 		vec = move(nvec);
-		dump(vec);
 	}
 
 	return vec;
+}
+
+
+//【テプリッツ行列の累乗（mod998244353）】O(n log n log d)
+/*
+* 左下から右上までの成分が順に a(-n..n) であるテプリッツ行列を d 乗したテプリッツ行列を返す．
+* 
+* 制約：結果もテプリッツ行列
+*/
+vm toeplitz_pow(const vm& a, ll d) {
+	int n = (sz(a) + 1) / 2;
+
+	// テプリッツ行列 a, b の積を返す（制約 : 結果もテプリッツ行列）
+	auto mul = [&](const vm& a, const vm& b) {
+		vm bl(n), br(n);
+		rep(i, n) bl[i] = b[i];
+		rep(i, n) br[i] = b[n - 1 + i];
+
+		auto resl = convolution(a, bl);
+		auto resr = convolution(a, br);
+
+		vm res(2 * n - 1);
+		rep(i, n) res[i] = resl[n - 1 + i];
+		repi(i, 1, n - 1) res[n - 1 + i] = resr[n - 1 + i];
+
+		return res;
+	};
+
+	vm res(2 * n - 1), pow2 = a;
+	res[n - 1] = 1;
+
+	// ダブリングでテプリッツ行列を累乗する．
+	while (d > 0) {
+		if (d & 1) res = mul(res, pow2);
+		pow2 = mul(pow2, pow2);
+		d /= 2;
+	}
+
+	return res;
 }
 
 

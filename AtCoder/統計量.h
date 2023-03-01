@@ -94,7 +94,7 @@ template <class T> tuple<T, T, T> doubled_quartile(vector<T> a) {
 * 台集合 [0..n) の上の確率質量関数 P(X=x) = p[x] をもつ確率変数 X について，
 * 各 k∈[0..m) に対し X の k 次モーメント E[X^k] を mom[k] に格納する．
 *
-* 利用：【形式的冪級数（mod 998244353）】,【有理式の通分】
+* 利用：【形式的冪級数】,【有理式の通分】
 */
 void moment(const vm& p, int m, vm& mom) {
 	// 参考：https://atcoder.jp/contests/abc260/editorial/4434

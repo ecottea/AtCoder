@@ -643,8 +643,8 @@ ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 
 //【重さ最小化ナップサック問題（価値が小）】時間 O(N V) / 空間 O(N V)
 /*
-* 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V で
-* 重さが最小になるよう品物を選んだときの重さを返す（不可能なら -1 を返す．）
+* 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V になるよう
+* 品物を選んだときの重さの最小値を返す（不可能なら INFL を返す．）
 * また可能なら各品物を何個選んだかの一例を sel に格納する．
 * 
 *（価値を状態とした状態 DP）
@@ -679,9 +679,7 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
 	}
 
 	// 不可能なら終了．
-	if (dp[N][V] == INFL) {
-		return -1;
-	}
+	if (dp[N][V] == INFL) return INFL;
 
 	// 可能なら DP 復元を行う．
 	sel = vi(N);
@@ -706,8 +704,8 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
 
 //【重さ最小化ナップサック問題（価値が小）】時間 O(N V) / 空間 O(V)
 /*
-* 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V で
-* 重さが最小になるよう品物を選んだときの個数を返す（不可能なら -1 を返す．）
+* 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V になるよう
+* 品物を選んだときの重さの最小値を返す（不可能なら INFL を返す．）
 * 
 *（価値を状態としたインライン状態 DP）
 */
@@ -733,11 +731,6 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
 			// j 番目の品物を選ぶ方が個数を少なくできるなら更新する．
 			chmin(dp[i + v[j]], dp[i] + w[j]);
 		}
-	}
-
-	// 不可能なら終了．
-	if (dp[V] == INFL) {
-		return -1;
 	}
 
 	return dp[V];
@@ -1042,7 +1035,7 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll w_max, vl*
 	vvl dp(n + 1, vl(v_max + 1, INFL));
 	dp[0][0] = 0;
 
-	// 配る DP
+	// 配る DP（スライド最小値を用いて高速化）
 	rep(i, n) {
 		if (v[i] <= 0) {
 			repi(j, 0, v_max) dp[i + 1][j] = dp[i][j];
@@ -1078,7 +1071,7 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll w_max, vl*
 		}
 	}
 
-	// 単位重さあたりの価値と番号の組（昇順）
+	// 単位重さあたりの価値と番号の組（降順）
 	vector<pair<double, int>> val_per_weight(n);
 	rep(i, n) val_per_weight[i] = { (double)v[i] / w[i], i };
 	sort(all(val_per_weight), greater<pair<double, int>>());
@@ -1136,7 +1129,135 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll w_max, vl*
 }
 
 
-//【個数制限付き重さ最小化ナップサック問題（価値が小）】O(N V log m)
+//【重さ最小化個数制限付きナップサック問題（単価が小）】O(n^2 max(v)^2) 
+/*
+* 価値 v[i]，重さ w[i], 最大個数 m[i] の定まった n 個の品物から，価値がちょうど V になるよう
+* 品物を選んだときの重さの最小値を返す（不可能なら INFL を返す．）
+* また品物 i を何個選んだかを sel[i] に格納する．
+*/
+ll knapsack_problem_minimize_weight(const vi& v, const vl& w, const vl& m, ll V, vl* sel = nullptr) {
+	// verify : https://yukicoder.me/problems/no/31
+
+	//【方法】
+	// 品物の個数を m2[i] = min(m[i], max(v)) に制限すれば，
+	// 価値の和が小さい場合の重さ最小化ナップサック問題として解ける．
+	// その解それぞれに対し，残る価値を単位重さについて貪欲に埋めていく．
+
+	int n = sz(v);
+
+	// m2[i] : 制限後の品物 i の個数
+	vi m2(n);
+	int v_m = *max_element(all(v));
+	rep(i, n) m2[i] = (int)min(m[i], (ll)v_m);
+
+	// 価値の和が小さい場合の重さ最小化個数制限付きナップサック問題を解く．
+	int v_max = 0;
+	rep(i, n) v_max += v[i] * m2[i];
+
+	// dp[i][j] : 品物 [0..i) の中で価値 j を実現できる最小重さ
+	vvl dp(n + 1, vl(v_max + 1, INFL));
+	dp[0][0] = 0;
+
+	// 配る DP（スライド最小値を用いて高速化）
+	rep(i, n) {
+		if (v[i] <= 0) {
+			repi(j, 0, v_max) dp[i + 1][j] = dp[i][j];
+			continue;
+		}
+
+		// 価値が jr (mod v[i]) のところだけを見ていく．
+		rep(jr, v[i]) {
+			// 現在の最小値の位置と，今後最大値になりうる数の位置を昇順に入れておくデック
+			deque<int> q;
+
+			repi(jq, 0, (v_max - jr) / v[i]) {
+				int j = jq * v[i] + jr;
+
+				// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+				if (!q.empty() && q.front() <= j - (m2[i] + 1) * v[i]) q.pop_front();
+
+				// 新しく区間に入る数以上の数は，今後最小値とはなりえないのでデックの末尾から削除する．
+				while (!q.empty()) {
+					ll dp2_j = dp[i][j] - jq * w[i];
+					ll dp2_back = dp[i][q.back()] - q.back() / v[i] * w[i];
+					if (dp2_j > dp2_back) break;
+
+					q.pop_back();
+				}
+
+				// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
+				q.push_back(j);
+
+				// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+				dp[i + 1][j] = dp[i][q.front()] - q.front() / v[i] * w[i] + jq * w[i];
+			}
+		}
+	}
+
+	// 単位価値あたりの重さと番号の組（昇順）
+	vector<pair<double, int>> weight_per_val(n);
+	rep(i, n) weight_per_val[i] = { (double)w[i] / v[i], i };
+	sort(all(weight_per_val));
+
+	ll res = INFL; int j_res = -1;
+
+	// 残る価値を単位重さについて貪欲に埋めていく．
+	repi(j, 0, v_max) {
+		// v1 : 残り価値
+		ll v1 = V - j;
+		if (v1 < 0) continue;
+
+		ll w1 = 0;
+		rep(i1, n) {
+			int i = weight_per_val[i1].second;
+
+			ll cnt = min(v1 / v[i], m[i] - m2[i]);
+			w1 += cnt * w[i];
+			v1 -= cnt * v[i];
+		}
+
+		// 価値ちょうど V しか許さない．
+		if (v1 > 0) continue;
+
+		if (chmin(res, dp[n][j] + w1)) j_res = j;
+	}
+
+	if (res == INFL) return INFL;
+
+	// DP 復元を行う．
+	if (sel != nullptr) {
+		sel->resize(n);
+		int i = n, j = j_res;
+		while (i >= 1) {
+			// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
+			if (dp[i][j] != dp[i - 1][j]) {
+				// 選んでいたなら 1 個分記録し，価値を減じておく．
+				(*sel)[i - 1]++;
+				j -= v[i - 1];
+			}
+			else {
+				// 選んでいなかったなら 1 つ前の品物について調べに行く．
+				i--;
+			}
+		}
+
+		// v1 : 残り価値
+		ll v1 = V - j_res;
+
+		rep(i1, n) {
+			int i = weight_per_val[i1].second;
+
+			ll cnt = min(v1 / v[i], m[i] - m2[i]);
+			(*sel)[i] += cnt;
+			v1 -= cnt * v[i];
+		}
+	}
+
+	return res;
+}
+
+
+//【重さ最小化個数制限付きナップサック問題（価値が小）】O(N V log m)
 /*
 * 価値 v[i]，重さ w[i]，最大個数 m[i] の定まった N 個の品物から，価値がちょうど V で
 * 重さが最小になるよう品物を選んだときの重さを返す（不可能なら -1 を返す．）

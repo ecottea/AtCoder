@@ -14,6 +14,7 @@
 template <class T>
 vector<T> count_partial_sum(const vi& a, int v) {
 	// Ql : https://qiita.com/suisen_cp/items/794f24d31852b97d58a6
+	// verify : https://yukicoder.me/problems/no/1043
 
 	int n = sz(a);
 
@@ -41,7 +42,7 @@ vector<T> count_partial_sum(const vi& a, int v) {
 /*
 * ”ñ•‰®”—ñ a[0..n) ‚Ì•”•ª˜a‚Æ‚µ‚ÄŠe i¸[0..v] ‚ğì‚é•û–@‚ª‰½’Ê‚è‚ ‚é‚©‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 *
-* —˜—pFyŒ`®“I™p‹‰”imod 998244353jz,yw”ŠÖ”z,yŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
+* —˜—pFyŒ`®“I™p‹‰”z,yw”ŠÖ”z,yŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
 */
 vm count_partial_sum_fps(const vi& a, int v) {
 	// Ql : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
@@ -568,16 +569,14 @@ int minimize_unlimited_partial_sum(const vi& a, int v) {
 
 //y•”•ª˜a–â‘èiŒÂ”§ŒÀ•t‚«C‘¶İ”»’èjzO(n v)
 /*
-* ’·‚³ n ‚Ì³®”—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä j¸[0..v] ‚ğì‚ê‚é‚©‚ğ able[j] ‚ÉŠi”[‚·‚éD
+* ’·‚³ n ‚Ì³®”—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚ÄŠe j¸[0..v] ‚ğì‚ê‚é‚©‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 * Še a[i] ‚Í [0..m[i]] ŒÂ—p‚¢‚é‚±‚Æ‚ª‚Å‚«‚éD
-*
-*i˜a‚ğó‘Ô‚É‚à‚Âó‘Ô DPj
 */
-void limited_partial_sum(const vi& a, const vi& m, int v, vb& able) {
+vb limited_partial_sum(const vi& a, const vi& m, int v) {
 	// Ql : https://algo-method.com/tasks/313/editorial
 
 	int n = sz(a);
-	able.resize(v + 1);
+	vb able(v + 1);
 
 	// dp[i][j] : a[0..i) ‚Ì’†‚Å˜a‚ğ‚¿‚å‚¤‚Ç j ‚É‚·‚é‚Æ‚«‚Ì a[i-1] ‚ÌŒÂ”‚ÌÅ¬’l
 	vvi dp(n + 1, vi(v + 1, INF));
@@ -610,6 +609,8 @@ void limited_partial_sum(const vi& a, const vi& m, int v, vb& able) {
 	}
 
 	repi(j, 0, v) able[j] = (dp[n][j] != INF);
+
+	return able;
 }
 
 
@@ -652,9 +653,50 @@ mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 }
 
 
+//y•”•ª˜a–â‘èi•‰’l‰ÂC”‚¦ã‚°jzO(n ƒ°|a[i]|)
+/*
+* ®”—ñ a[0..n) ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ğì‚é•û–@‚Ì”‚ğ cnt[v - MIN] ‚ÉŠi”[‚µCMIN ‚ğ•Ô‚·D
+*
+*i˜a‚ğó‘Ô‚É‚à‚ÂƒCƒ“ƒ‰ƒCƒ“–á‚¤ DPj
+*/
+int count_signed_partial_sum(const vi& a, vm& cnt) {
+	int n = sz(a);
+
+	// MIN, MAX : •”•ª˜a‚ÌÅ¬’l‚¨‚æ‚ÑÅ‘å’l
+	int MIN = 0, MAX = 0;
+	rep(i, n) {
+		MIN += min(a[i], 0);
+		MAX += max(a[i], 0);
+	}
+
+	// cnt_i[j - MIN] : a[0..i) ‚Ì’†‚Å˜a‚ª‚¿‚å‚¤‚Ç j ‚É‚È‚é•”•ªW‡‚ÌŒÂ”
+	cnt.assign(MAX - MIN + 1, 0);
+	cnt[0 - MIN] = 1; // ‹ó˜a‚ª 0 ‚Å‚ ‚é‚±‚Æ‚É‘Î‰
+
+	// –á‚¤ DP
+	rep(i, n) {
+		// a[i] ‚Ì•„†‚Å‘–¸•ûŒü‚ğ•Ï‚¦‚é
+		if (a[i] >= 0) {
+			repir(j, MAX, MIN + a[i]) {
+				// i ”Ô–Ú‚Ì”‚ğ‘I‚Ôê‡
+				cnt[j - MIN] += cnt[j - a[i] - MIN];
+			}
+		}
+		else if (a[i] < 0) {
+			repi(j, MIN, MAX + a[i]) {
+				// i ”Ô–Ú‚Ì”‚ğ‘I‚Ôê‡
+				cnt[j - MIN] += cnt[j - a[i] - MIN];
+			}
+		}
+	}
+
+	return MIN;
+}
+
+
 //y•”•ª˜a–â‘èi•‰’l‰ÂCŒÂ”Å¬‰»jzO(n ƒ°|a[i]|)
 /*
-* ’·‚³ n ‚Ì®”—ñ a ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ğì‚é‚Ì‚É•K—v‚È—v‘f”‚ÌÅ¬’l‚ğ cnt[v - MIN] ‚ÉŠi”[‚µCMIN ‚ğ•Ô‚·D
+* ®”—ñ a[0..n) ‚Ì•”•ª˜a‚Æ‚µ‚Ä v ‚ğì‚é‚Ì‚É•K—v‚È—v‘f”‚ÌÅ¬’l‚ğ cnt[v - MIN] ‚ÉŠi”[‚µCMIN ‚ğ•Ô‚·D
 *
 *i˜a‚ğó‘Ô‚É‚à‚ÂƒCƒ“ƒ‰ƒCƒ“–á‚¤ DPj
 */

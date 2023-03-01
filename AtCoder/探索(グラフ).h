@@ -78,49 +78,6 @@ vi multi_bfs(const Graph& g, const vi& st) {
 }
 
 
-//【幅優先探索（動的）】O(|V| + |E|)（遅い）
-/*
-* st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
-*/
-template <class T>
-set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt) {
-	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_c
-
-	set<T> vs; // st から到達可能な頂点のリスト
-	vs.insert(st);
-
-	queue<T> que; // 次に探索する頂点を入れておくキュー
-	que.push(st);
-
-	while (!que.empty()) {
-		// 未探索の頂点 s を得る．
-		auto s = que.front(); que.pop();
-
-		repe(t, nxt(s)) {
-			// t が発見済みの頂点なら何もしない．
-			if (vs.count(t)) continue;
-
-			// t に到達したことを記録する．
-			vs.insert(t);
-
-			// 未探索の頂点として t を追加する．
-			que.push(t);
-		}
-	}
-
-	return vs;
-
-	/* nxt の定義の雛形
-	using T = ll;
-	function<vector<T>(T)> nxt = [&](T s) {
-		vector<T> res;
-
-		return res;
-	};
-	*/
-}
-
-
 //【トポロジカル探索（無向グラフ）】O(|V| + |E|)
 /*
 * 無向グラフ g に対し始点の集合 st から幅優先探索を行う．

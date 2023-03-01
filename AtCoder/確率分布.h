@@ -64,7 +64,7 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 			repi(k, 0, K) {
 				dp[i][j][k] = dp[i - 1][j][k];
 				repi(t, 0, k) {
-					dp[i][j][k] += fm.binomial(k, t) * p_pow[i - 1][k - t] * dp[i - 1][j - 1][t];
+					dp[i][j][k] += fm.bin(k, t) * p_pow[i - 1][k - t] * dp[i - 1][j - 1][t];
 				}
 			}
 		}
@@ -73,7 +73,7 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 	// •ïœŒ´—‚Å‹‚ß‚éŠm—¦‚ğ“¾‚éD
 	repi(m, 0, min(n, K)) {
 		repi(j, 0, m) {
-			pr[m] += ((m - j) % 2 == 0 ? 1 : -1) * fm.binomial(n - j, m - j) * dp[n][j][K];
+			pr[m] += ((m - j) % 2 == 0 ? 1 : -1) * fm.bin(n - j, m - j) * dp[n][j][K];
 		}
 	}
 }

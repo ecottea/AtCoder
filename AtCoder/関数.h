@@ -3,70 +3,77 @@
 // ■■■■■ 関数 ■■■■■
 
 
-//【Convex-Hull Trick（挿入単調，クエリ単調）】
+//【Convex-Hull Trick（挿入単調，クエリ単調）】（オーバーフロー注意）
 /*
-* Convex_hull_trick_monotonous() : O(1)
-*	空で初期化する．
+* Convex_hull_trick_monotonous<T>(bool min_flag = true) : O(1)
+*	空で初期化する．min_flag = true[false] なら最小値[最大値] クエリに対応する．
 *
-* insert(pll l) : ならし O(1)
-*	l = {a, b} が表す直線 y = a x + b を追加する．
-*	制約：呼び出す際の挿入する直線の傾き a は狭義降順でなくてはならない．
+* insert(T a, T b) : ならし O(1)
+*	直線 y = a x + b を追加する．
+*	制約：呼び出す際の挿入する直線の傾き a は狭義降順[昇順] でなくてはならない．
 *
-* ll min(ll x) : ならし O(1)
-*	a x + b の最小値を返す．
+* T get(T x) : ならし O(1)
+*	a x + b の最小値[最大値] を返す（直線がなければ INFL[-INFL]）
 *	制約：呼び出す際の x 座標は狭義昇順でなくてはならない．
 */
-struct Convex_hull_trick_monotonous {
+template <class T = ll>
+class Convex_hull_trick_monotonous {
 	// 参考 : https://satanic0258.hatenablog.com/entry/2016/08/16/181331
-	// verify : https://atcoder.jp/contests/dp/tasks/dp_z
 
 	int n; // 記録している直線の本数
-	deque<pll> lines; // 直線を傾き狭義降順に記録したデック
+	bool min_flag;
+	deque<pair<T, T>> lines; // 直線を傾き狭義降順に記録したリスト
 
-	Convex_hull_trick_monotonous() : n(0) {}
+public:
+	Convex_hull_trick_monotonous(bool min_flag = true) : n(0), min_flag(min_flag) {
+		// verify : https://atcoder.jp/contests/dp/tasks/dp_z
+	}
 
-	void insert(pll l) {
-		ll a3, b3;
-		tie(a3, b3) = l;
+	// 直線 y = a x + b を追加する．
+	void insert(T a, T b) {
+		// verify : https://atcoder.jp/contests/dp/tasks/dp_z
+
+		if (!min_flag) { a *= -1; b *= -1; }
 
 		while (n >= 2) {
-			ll a1, b1, a2, b2;
-			tie(a1, b1) = lines[n - 2];
-			tie(a2, b2) = lines[n - 1];
+			const auto& [a1, b1] = lines[n - 2];
+			const auto& [a2, b2] = lines[n - 1];
 
 			// y = a2 x + b2 が必要な直線なら消去をここまでにする．
-			// 積をとってしまっているのでオーバーフローに注意．
-			if ((a1 - a2) * (b3 - b2) > (a2 - a3) * (b2 - b1)) {
-				break;
-			}
+			if ((a1 - a2) * (b - b2) > (a2 - a) * (b2 - b1)) break;
+
 			lines.pop_back();
 			n--;
 		}
-		lines.push_back(l);
+		lines.emplace_back(a, b);
 		n++;
 	}
 
-	ll min(ll x) {
-		while (n >= 2) {
-			ll a1, b1, a2, b2;
-			tie(a1, b1) = lines[0];
-			tie(a2, b2) = lines[1];
+	// a x + b の最小値[最大値] を返す．
+	T get(T x) {
+		// verify : https://atcoder.jp/contests/dp/tasks/dp_z
 
-			if (a1 * x + b1 < a2 * x + b2) {
-				break;
-			}
+		while (n >= 2) {
+			const auto& [a1, b1] = lines[0];
+			const auto& [a2, b2] = lines[1];
+
+			if (a1 * x + b1 < a2 * x + b2) break;
 			lines.pop_front();
 			n--;
 		}
 
-		ll a, b;
-		tie(a, b) = lines[0];
-		return a * x + b;
+		T val(INFL);
+		if (!lines.empty()) {
+			const auto& [a, b] = lines[0];
+			val = a * x + b;
+		}
+		if (!min_flag) val *= -1;
+		return val;
 	}
 };
 
 
-//【Convex-Hull Trick】
+//【Convex-Hull Trick】（オーバーフロー注意）
 /*
 * Convex_hull_trick<T>(bool min_flag = true) : O(1)
 *	空で初期化する．min_flag = true[false] なら最小値[最大値] クエリに対応する．
@@ -78,11 +85,10 @@ struct Convex_hull_trick_monotonous {
 *	a x + b の最小値[最大値] を返す．
 *	制約：直線集合は空でない
 */
-template <class T>
+template <class T = ll>
 class Convex_hull_trick {
-	// 参考(理屈)：https://satanic0258.hatenablog.com/entry/2016/08/16/181331
-	// 参考(実装)：https://github.com/satanic0258/Cpp_snippet/blob/master/src/technique/ConvexHullTrick.cpp
-
+	// 参考 : https://satanic0258.hatenablog.com/entry/2016/08/16/181331
+	
 	// 1 本の直線を表す構造体
 	struct Line {
 		// 直線の式が y = a x + b であることを表す．
@@ -685,6 +691,609 @@ public:
 		repi(a, f.a_min, f.a_max) {
 			os << a << " x + " << f.bs[a - f.a_min];
 			if (a < f.a_max) os << ", ";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【Li Chao Tree】
+/*
+* Li_Chao_tree(int n, bool min_flag = true) : O(n)
+*	直線 y = 0 x + INFL[-INFL] (x∈[0..n)) で初期化する．
+*	min_flag = true[false] なら最小値[最大値] クエリに対応する．
+*
+* add_line(ll a, ll b) : O(log n)
+*	直線 a x + b (x∈[0..n)) を追加する．
+*
+* add_segment(int l, int r, ll a, ll b) : O((log n)^2)
+*	線分 a x + b (x∈[l..r)) を追加する．
+*
+* ll get(int x) : O(log n)
+*	x を定義域に含む線分 a x + b らの最小値[最大値] を返す．
+*/
+class Li_Chao_tree {
+	// 参考 : https://smijake3.hatenablog.com/entry/2018/06/16/144548
+	
+	// 完全二分木の葉の数（必ず 2 冪）
+	int n;
+	int actual_n; // 実際の要素数
+	bool min_flag;
+
+	// 対応する区間全体で最小となる直線の a : 傾き，b : 切片（なければ a=0, b=∞）
+	// 完全二分木を実現する大きさ 2n の配列
+	// v[0] は使用せず，根は v[1] で，v[i] の親は v[i/2]，子は v[2i], v[2i+1]．
+	// 0-indexed での i 番目のデータは葉である v[i+n] に入っている．
+	vl as, bs;
+
+	// 区間 [L..R) に対応する部分木 i に線分 a x + b (x∈[l..r)) を追加する．
+	void add_segment(int i, int L, int R, int l, int r, ll a, ll b) {
+		if (i >= 2 * n) return;
+
+		// [L..R) が [l..r) と共通部分をもたない場合，何もせず終了．
+		if (r <= L || R <= l) return;
+
+		// [L..R) の中央
+		int M = (L + R) / 2;
+
+		// [L..R) が [l..r) に包含されていない場合
+		if (L < l || r < R) {
+			// 左右の区間それぞれに対して再帰的に処理を行う．
+			add_segment(2 * i, L, M, l, r, a, b);
+			add_segment(2 * i + 1, M, R, l, r, a, b);
+			return;
+		}
+
+		// [L..R) が [l..r) に包含されている場合
+
+		// 記録されている直線 L0 の L, R での値
+		ll yL0 = as[i] * L + bs[i], yR0 = as[i] * R + bs[i];
+
+		// 追加しようとしている直線 L1 の L, R での値
+		ll yL1 = a * L + b, yR1 = a * R + b;
+
+		// L1 が L0 の上側にある場合，L1 は追加する意味がないので何もせず終了．
+		if (yL1 >= yL0 && yR1 >= yR0) return;
+
+		// L1 が L0 の下側にある場合，L0 を捨てて L1 に取り替え終了．
+		if (yL1 <= yL0 && yR1 <= yR0) {
+			as[i] = a; bs[i] = b;
+			return;
+		}
+
+		// 記録されている直線 L0 の M での値
+		ll yM0 = as[i] * M + bs[i];
+
+		// 追加しようとしている直線 L1 の M での値
+		ll yM1 = a * M + b;
+
+		// [M..R) で L1 が L0 の上側にある場合，[L..M) の探索のみを進める．
+		if (yM1 >= yM0 && yR1 >= yR0) {
+			add_segment(2 * i, L, M, l, r, a, b);
+			return;
+		}
+
+		// [L..M) で L1 が L0 の上側にある場合，[M..R) の探索のみを進める．
+		if (yL1 >= yL0 && yM1 >= yM0) {
+			add_segment(2 * i + 1, M, R, l, r, a, b);
+			return;
+		}
+
+		// [M..R) で L1 が L0 の下側にある場合，L1 と L0 を交換して [L..M) の探索のみを進める．
+		if (yM1 <= yM0 && yR1 <= yR0) {
+			swap(as[i], a); swap(bs[i], b);
+			add_segment(2 * i, L, M, l, r, a, b);
+			return;
+		}
+
+		// [L..M) で L1 が L0 の下側にある場合，L1 と L0 を交換して [M..R) の探索のみを進める．
+		if (yL1 <= yL0 && yM1 <= yM0) {
+			swap(as[i], a); swap(bs[i], b);
+			add_segment(2 * i + 1, M, R, l, r, a, b);
+			return;
+		}
+	}
+
+	// 区間 [L..R) に対応する部分木 i を定義域に含む線分 a x + b らの最小値を返す．
+	ll get(int i, int L, int R, int x) const {
+		if (i >= 2 * n) return INFL;
+
+		// [L..R) の中央
+		int M = (L + R) / 2;
+
+		ll y = as[i] * x + bs[i];
+		if (x < M) chmin(y, get(2 * i, L, M, x));
+		else chmin(y, get(2 * i + 1, M, R, x));
+
+		return y;
+	}
+
+public:
+	// 直線 y = 0 x + INFL (x∈[0..n)) で初期化する．
+	Li_Chao_tree(int n_, bool min_flag = true) : actual_n(n_), n(1 << (msb(n_ - 1) + 1)),
+		min_flag(min_flag), as(2 * n, 0), bs(2 * n, INFL)
+	{
+		// verify : https://yukicoder.me/problems/no/704
+	}
+	Li_Chao_tree() : n(0), actual_n(0), min_flag(1) {}
+
+	// 直線 a x + b (x∈[0..n)) を追加する．
+	void add_line(ll a, ll b) {
+		if (!min_flag) { a *= -1; b *= -1; }
+		add_segment(1, 0, n, 0, n, a, b);
+	}
+
+	// 線分 a x + b (x∈[l..r)) を追加する．
+	void add_segment(int l, int r, ll a, ll b) {
+		// verfiy : https://yukicoder.me/problems/no/704
+		
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return;
+
+		if (!min_flag) { a *= -1; b *= -1; }
+		add_segment(1, 0, n, l, r, a, b);
+	}
+
+	// x を定義域に含む線分 a x + b らの最小値[最大値] を返す．
+	ll get(int x) const {
+		// verfiy : https://yukicoder.me/problems/no/704
+		
+		ll y = get(1, 0, n, x);
+		if (!min_flag) y *= -1;
+		return y;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Li_Chao_tree seg) {
+		rep(i, seg.actual_n) {
+			os << seg.get(i) << " ";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【動的 Li Chao Tree】
+/*
+* Dynamic_Li_Chao_tree<T>(ll x_min, ll x_max, bool min_flag = true) : O(1)
+*	直線 y = 0 x + INFL[-INFL] (x∈[x_min..x_max]) で初期化する．
+*	min_flag = true[false] なら最小値[最大値] クエリに対応する．
+*
+* add_line(T a, T b) : O(log n)
+*	直線 a x + b (x∈[0..n)) を追加する．
+*
+* add_segment(ll l, ll r, T a, T b) : O((log n)^2)
+*	線分 a x + b (x∈[l..r)) を追加する．
+*
+* add_segment_right(ll l, ll r, T w0, T w1) : O((log n)^2)
+*	x∈[l..r) に (x, y) = (l, w0), (l+1, w1) を通る線分を追加する．
+*
+* add_segment_left(ll r, ll l, T w0, T w1) : O((log n)^2)
+*	x∈(l..r] に (x, y) = (r, w0), (r-1, w1) を通る線分を追加する．
+*
+* T get(ll x) : O(log n)
+*	x を定義域に含む線分 a x + b らの最小値[最大値] を返す．
+*/
+template <class T = ll>
+class Dynamic_Li_Chao_tree {
+	// 参考 : https://smijake3.hatenablog.com/entry/2018/06/16/144548
+
+	struct Node {
+		T a, b; // 線分の傾きと切片
+		Node* l, * r;
+
+		Node(T a, T b) : a(a), b(b), l(nullptr), r(nullptr) {}
+	};
+
+	ll x_min, x_max;
+	bool min_flag;
+	Node* root;
+
+	// 区間 [L..R) に対応する部分木 t に線分 a x + b (x∈[l..r)) を追加する．
+	void add_segment(Node*& t, ll L, ll R, ll l, ll r, T a, T b) {
+		if (L == R) return;
+
+		// [L..R) が [l..r) と共通部分をもたない場合，何もせず終了．
+		if (r <= L || R <= l) return;
+
+		// ノードが存在しなかった場合は新たに作成する（短絡していないので遅い）
+		if (!t) t = new Node(0, T(INFL));
+
+		// [L..R) の中央
+		ll M = (L + R) / 2;
+
+		// [L..R) が [l..r) に包含されていない場合
+		if (L < l || r < R) {
+			// 左右の区間それぞれに対して再帰的に処理を行う．
+			add_segment(t->l, L, M, l, r, a, b);
+			add_segment(t->r, M, R, l, r, a, b);
+			return;
+		}
+
+		// [L..R) が [l..r) に包含されている場合
+
+		// 記録されている直線 L0 の L, R での値
+		T yL0 = t->a * L + t->b, yR0 = t->a * R + t->b;
+
+		// 追加しようとしている直線 L1 の L, R での値
+		T yL1 = a * L + b, yR1 = a * R + b;
+
+		// L1 が L0 の上側にある場合，L1 は追加する意味がないので何もせず終了．
+		if (yL1 >= yL0 && yR1 >= yR0) return;
+
+		// L1 が L0 の下側にある場合，L0 を捨てて L1 に取り替え終了．
+		if (yL1 <= yL0 && yR1 <= yR0) {
+			t->a = a; t->b = b;
+			return;
+		}
+
+		// 記録されている直線 L0 の M での値
+		T yM0 = t->a * M + t->b;
+
+		// 追加しようとしている直線 L1 の M での値
+		T yM1 = a * M + b;
+
+		// [M..R) で L1 が L0 の上側にある場合，[L..M) の探索のみを進める．
+		if (yM1 >= yM0 && yR1 >= yR0) {
+			add_segment(t->l, L, M, l, r, a, b);
+			return;
+		}
+
+		// [L..M) で L1 が L0 の上側にある場合，[M..R) の探索のみを進める．
+		if (yL1 >= yL0 && yM1 >= yM0) {
+			add_segment(t->r, M, R, l, r, a, b);
+			return;
+		}
+
+		// [M..R) で L1 が L0 の下側にある場合，L1 と L0 を交換して [L..M) の探索のみを進める．
+		if (yM1 <= yM0 && yR1 <= yR0) {
+			swap(t->a, a); swap(t->b, b);
+			add_segment(t->l, L, M, l, r, a, b);
+			return;
+		}
+
+		// [L..M) で L1 が L0 の下側にある場合，L1 と L0 を交換して [M..R) の探索のみを進める．
+		if (yL1 <= yL0 && yM1 <= yM0) {
+			swap(t->a, a); swap(t->b, b);
+			add_segment(t->r, M, R, l, r, a, b);
+			return;
+		}
+	}
+
+	// 区間 [L..R) に対応する部分木 i を定義域に含む線分 a x + b らの最小値を返す．
+	T get(Node* t, ll L, ll R, ll x) const {
+		if (!t) return T(INFL);
+
+		// [L..R) の中央
+		ll M = (L + R) / 2;
+
+		T y = t->a * x + t->b;
+		if (x < M) chmin(y, get(t->l, L, M, x));
+		else chmin(y, get(t->r, M, R, x));
+
+		return y;
+	}
+
+public:
+	// 直線 y = 0 x + INFL (x∈[0..n)) で初期化する．
+	Dynamic_Li_Chao_tree(ll x_min, ll x_max, bool min_flag = true)
+		: x_min(x_min), x_max(x_max), min_flag(min_flag), root(nullptr) {
+		// verify : https://judge.yosupo.jp/problem/segment_add_get_min
+	}
+	Dynamic_Li_Chao_tree() : x_min(-INF), x_max(INF), min_flag(true), root(nullptr) {}
+
+	// 直線 a x + b (x∈[0..n)) を追加する．
+	void add_line(T a, T b) {
+		if (!min_flag) { a *= -1; b *= -1; }
+		add_segment(root, x_min, x_max + 1, x_min, x_max + 1, a, b);
+	}
+
+	// 線分 a x + b (x∈[l..r)) を追加する．
+	void add_segment(ll l, ll r, T a, T b) {
+		// verify : https://judge.yosupo.jp/problem/segment_add_get_min
+
+		chmax(l, x_min); chmin(r, x_max + 1);
+		if (l >= r) return;
+
+		if (!min_flag) { a *= -1; b *= -1; }
+		add_segment(root, x_min, x_max + 1, l, r, a, b);
+	}
+
+	// x∈[l..r) に (x, y) = (l, w0), (l+1, w1) を通る線分を追加する．
+	void add_segment_right(ll l, ll r, T w0, T w1) {
+		// verify : https://www.codechef.com/problems/STREETTA
+
+		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
+		T a = w1 - w0;
+		T b = w0 - a * l;
+		add_segment(l, r, a, b);
+	}
+
+	// x∈(l..r] に (x, y) = (r, w0), (r-1, w1) を通る線分を追加する．
+	void add_segment_left(ll r, ll l, T w0, T w1) {
+		// verify : https://www.codechef.com/problems/ARCTR
+
+		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
+		T a = w0 - w1;
+		T b = w0 - a * r;
+		add_segment(l + 1, r + 1, a, b);
+	}
+
+	// x を定義域に含む線分 a x + b らの最小値[最大値] を返す．
+	T get(ll x) const {
+		// verify : https://judge.yosupo.jp/problem/segment_add_get_min
+
+		T y = get(root, x_min, x_max + 1, x);
+		if (!min_flag) y *= -1;
+		return y;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Dynamic_Li_Chao_tree seg) {
+		repi(x, seg.x_min, seg.x_max) {
+			os << seg.get(x) << " ";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【Li Chao Tree（1 交差関数群）】
+/*
+* Li_Chao_tree_1cross_function<P, T>(int n, function<T(P p, int x)> f, P p) : O(n)
+*	関数 y = f(p; x) (x∈[0..n)) のみで初期化する．
+*	関数はパラメータ p で表し，x における値は f(p, x) で与えられる．
+*
+* add_function(P p) : O(log n)
+*	関数 y = f(p; x) (x∈[0..n)) を追加する．
+*	制約：他の関数との交差は高々 1 回
+*
+* add_function(int l, int r, P p) : O((log n)^2)
+*	部分関数 y = f(p; x) (x∈[l..r)) を追加する．
+*	制約：他の関数との交差は高々 1 回
+*
+* T get(int x) : O(log n)
+*	x を定義域に含む関数 y = f(p; x) らの最小値を返す．
+*/
+template <class P, class T = ll>
+class Li_Chao_tree_1cross_function {
+	// 参考 : https://smijake3.hatenablog.com/entry/2018/06/16/144548
+
+	//【備考】
+	// f(p; 0) 昇順に関数を並べ替え，x∈[0..n) における関数値を列ベクトルにもつ行列を作ると，
+	// その行列は totally monotone 性をもつ．逆もしかり．
+	//
+	// 行列 a[0..n)[0..m) が totally monotone であるとは，任意の i1 < i2, j1 < j2 について
+	//		[ a[i1][j1] > a[i1][j2] ] 
+	//		[ a[i2][j1] < a[i2][j2] ] ではない
+	// を満たすことをいう（Monge のように 2x2 小行列を全チェックするだけではだめなので注意）
+
+	int n; // 完全二分木の葉の数（必ず 2 冪）
+	int actual_n; // 実際の要素数
+
+	// パラメータ p を元に x における関数値 f(p; x) を計算する．
+	function<T(P p, int x)> f;
+
+	// ps[i] : ノード i に対応する区間全体で最小となる関数を表すパラメータ
+	vector<P> ps;
+
+	// 区間 [L..R) に対応するノード i とその部分木に関数 y = f(p; x) (x∈[l..r)) を追加する．
+	void add_function(int i, int L, int R, int l, int r, const P& p) {
+		if (i >= 2 * n) return;
+
+		// [L..R) が [l..r) と共通部分をもたない場合，何もせず終了．
+		if (r <= L || R <= l) return;
+
+		// [L..R) の中央
+		int M = (L + R) / 2;
+
+		// [L..R) が [l..r) に包含されていない場合
+		if (L < l || r < R) {
+			// 左右の区間それぞれに対して再帰的に処理を行う．
+			add_function(2 * i, L, M, l, r, p);
+			add_function(2 * i + 1, M, R, l, r, p);
+			return;
+		}
+
+		// [L..R) が [l..r) に包含されている場合
+
+		// 記録されている関数 F0 の L, R での値
+		T yL0 = f(ps[i], L), yR0 = f(ps[i], R);
+
+		// 追加しようとしている関数 F1 の L, R での値
+		T yL1 = f(p, L), yR1 = f(p, R);
+
+		// F1 が F0 の上側にある場合，F1 は追加する意味がないので何もせず終了．
+		if (yL1 >= yL0 && yR1 >= yR0) return;
+
+		// F1 が F0 の下側にある場合，F0 を捨てて F1 に取り替え終了．
+		if (yL1 <= yL0 && yR1 <= yR0) { ps[i] = p; return; }
+
+		// 記録されている関数 F0 の M での値
+		T yM0 = f(ps[i], M);
+
+		// 追加しようとしている関数 F1 の M での値
+		T yM1 = f(p, M);
+
+		// [M..R) で F1 が F0 の上側にある場合，[L..M) の探索のみを進める．
+		if (yM1 >= yM0 && yR1 >= yR0) {
+			add_function(2 * i, L, M, l, r, p);
+			return;
+		}
+
+		// [L..M) で F1 が F0 の上側にある場合，[M..R) の探索のみを進める．
+		if (yL1 >= yL0 && yM1 >= yM0) {
+			add_function(2 * i + 1, M, R, l, r, p);
+			return;
+		}
+
+		// [M..R) で F1 が F0 の下側にある場合，F1 と F0 を交換して [L..M) の探索のみを進める．
+		if (yM1 <= yM0 && yR1 <= yR0) {
+			auto pi(ps[i]); ps[i] = p;
+			add_function(2 * i, L, M, l, r, pi);
+			return;
+		}
+
+		// [L..M) で F1 が F0 の下側にある場合，F1 と F0 を交換して [M..R) の探索のみを進める．
+		if (yL1 <= yL0 && yM1 <= yM0) {
+			auto pi(ps[i]); ps[i] = p;
+			add_function(2 * i + 1, M, R, l, r, pi);
+			return;
+		}
+	}
+
+	// 区間 [L..R) に対応するノード i とその部分木に記録されている関数 y = f(x) らの最小値を返す．
+	T get(int i, int L, int R, int x) const {
+		if (i >= 2 * n) return INFL;
+
+		// [L..R) の中央
+		int M = (L + R) / 2;
+
+		T y = f(ps[i], x);
+		if (x < M) chmin(y, get(2 * i, L, M, x));
+		else chmin(y, get(2 * i + 1, M, R, x));
+
+		return y;
+	}
+
+public:
+	// 関数 y = f(p; x) (x∈[0..n)) のみで初期化する．
+	Li_Chao_tree_1cross_function(int n_, const function<T(P p, int x)>& f, const P& p)
+		: actual_n(n_), n(1 << (msb(n_ - 1) + 1)), f(f), ps(2 * n, p)
+	{
+		// verify : https://yukicoder.me/problems/no/705
+	}
+	Li_Chao_tree_1cross_function() : n(0), actual_n(0) {}
+
+	// 関数 y = f(p; x) (x∈[0..n)) を追加する．
+	void add_function(const P& p) {
+		// verify : https://yukicoder.me/problems/no/705
+
+		add_function(1, 0, n, 0, n, p);
+	}
+
+	// 部分関数 y = f(p; x) (x∈[l..r)) を追加する．
+	void add_function(int l, int r, const P& p) {
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return;
+
+		add_function(1, 0, n, l, r, p);
+	}
+
+	// x を定義域に含む関数 y = f(p; x) らの最小値を返す．
+	T get(int x) const {
+		// verify : https://yukicoder.me/problems/no/705
+
+		return get(1, 0, n, x);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Li_Chao_tree_1cross_function seg) {
+		rep(i, seg.actual_n) {
+			os << seg.get(i) << " ";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【線分群の最小値（傾きの種類が少ない）】
+/*
+* Segment_min(int n, int a_min, int a_max, bool min_flag = true) : O(n (a_max - a_min))
+*	v[0..n) = INFL で初期化する．set クエリで与える a の範囲は [a_min..a_max] とする．
+*	min_flag = true[false] なら最小値[最大値] クエリに対応する．
+*
+* Segment_min(vl v, int a_min, int a_max, bool min_flag = true) : O(n (a_max - a_min))
+*	配列 v[0..n) で初期化する．
+*
+* add_line(ll a, ll b) : O(log n)
+*	直線 a x + b (x∈[0..n)) を追加する．
+*
+* add_segment(int a, ll b, int l, int r) : O(log n)
+*	線分 a x + b (x∈[l..r)) を追加する．
+*
+* ll get(int x) : O(log n (a_max - a_min))
+*	x を定義域に含む線分 a x + b らの最小値[最大値] を返す．
+*/
+ll op_rmq(ll x, ll y) { return min(x, y); }
+ll e_rmq() { return INFL; }
+ll mapping_rmq(ll f, ll x) { return min(f, x); }
+ll composition_rmq(ll f, ll g) { return min(f, g); }
+ll id_rmq() { return INFL; }
+struct Segment_min {
+	// 内部では値 v[i] を一次の項の係数 a で分けて
+	//		min(a[1] i + b[1], a[2] i + b[2], ...)
+	// の形で保持する．a が同じであれば単に b の minに帰着できる．
+
+	int n;
+	int a_min, a_max;
+	bool min_flag;
+
+	using rmq = lazy_segtree<ll, op_rmq, e_rmq, ll, mapping_rmq, composition_rmq, id_rmq>;
+	vector<rmq> segs;
+
+	// v[0..n) = INFL で初期化する．set クエリで与える a の範囲は [a_min..a_max] とする．
+	Segment_min(int n, int a_min_, int a_max_, bool min_flag = true)
+		: n(n), min_flag(min_flag), segs(a_max_ - a_min_ + 1, rmq(n))
+	{
+		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
+
+		if (min_flag) { a_min = a_min_; a_max = a_max_; }
+		else { a_min = -a_max_; a_max = -a_min_; }
+	}
+
+	// 配列 v[0..n) で初期化する．
+	Segment_min(const vl& v, int a_min_, int a_max_, bool min_flag = true)
+		: n(sz(v)), min_flag(min_flag), segs(a_max_ - a_min_ + 1, rmq(n))
+	{
+		if (min_flag) { a_min = a_min_; a_max = a_max_; }
+		else { a_min = -a_max_; a_max = -a_min_; }
+
+		vl b(n);
+		if (min_flag) rep(i, n) b[i] = v[i] - a_min * i;
+		else rep(i, n) b[i] = -v[i] - a_min * i;
+		segs[a_min - a_min] = rmq(b);
+	}
+
+	// 線分 a x + b (x∈[l..r)) を追加する．
+	void add_segment(int a, ll b, int l, int r) {
+		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return;
+
+		if (!min_flag) { a *= -1; b *= -1; }
+		Assert(a_min <= a && a <= a_max);
+
+		segs[a - a_min].apply(l, r, b);
+	}
+
+	// 直線 a x + b (x∈[0..n)) を追加する．
+	void add_line(int a, ll b) {
+		add_segment(a, b, 0, n);
+	}
+
+	// x を定義域に含む線分 a x + b らの最小値[最大値] を返す．
+	ll get(int x) {
+		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_g
+
+		ll y = INFL;
+		repi(a, a_min, a_max) {
+			ll b = segs[a - a_min].get(x);
+			if (b != INFL) chmin(y, (ll)a * x + b);
+		}
+		if (!min_flag) y *= -1;
+		return y;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Segment_min seg) {
+		rep(i, seg.n) {
+			os << seg.get(i) << " ";
 		}
 		return os;
 	}

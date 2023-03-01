@@ -2,7 +2,7 @@
 #include "header.h"
 #include "“ñ€ŒW”.h"
 #include "”˜_.h"
-#include "–ñ”•ÏŠ·.h"
+#include "–ñ””{”•ÏŠ·.h"
 #include "—ñ‹“(W‡).h"
 // ¡¡¡¡¡ ŒQ˜_ ¡¡¡¡¡
 
@@ -41,14 +41,14 @@ mint count_permutation_type(const vi& p, const Factorial_mint& fm) {
 
 		// V‚µ‚¢’·‚³‚É•Ï‚í‚Á‚½‚ç‚»‚ê‚Ü‚Å‚Ì (ŒÂ”)! ‚ğ•ª•ê‚ÉŠ|‚¯‚Ä‚¨‚­D
 		if (i > 0 && p[i - 1] != p[i]) {
-			dnm *= fm.factorial(cnt);
+			dnm *= fm.fact(cnt);
 			cnt = 1;
 		}
 		else cnt++;
 	}
-	dnm *= fm.factorial(cnt);
+	dnm *= fm.fact(cnt);
 
-	return fm.factorial(n) / dnm;
+	return fm.fact(n) / dnm;
 }
 
 

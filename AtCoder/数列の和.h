@@ -144,7 +144,7 @@ mint powered_geometric_series(mint r, int d) {
 	mint res = 0;
 	repi(i, 0, d) {
 		res += ((d - i) % 2 == 0 ? 1 : -1) * pow_r[d - i]
-			* fm.binomial(d + 1, i + 1) * acc[i + 1];
+			* fm.bin(d + 1, i + 1) * acc[i + 1];
 	}
 
 	res /= mint(1 - r).pow(d + 1);

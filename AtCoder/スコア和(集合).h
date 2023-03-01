@@ -45,7 +45,7 @@ void total_sum(const vector<T>& a, vm& res) {
 	Factorial_mint fm(n);
 	mint a_sum = accumulate(all(a), mint(0));
 
-	repi(k, 0, n) res[k] = a_sum * fm.binomial(n - 1, k - 1);
+	repi(k, 0, n) res[k] = a_sum * fm.bin(n - 1, k - 1);
 }
 
 
@@ -55,7 +55,7 @@ void total_sum(const vector<T>& a, vm& res) {
 *		Σ|set|=k Πi∈set a[i]
 * の値を res[k] に格納する．
 *
-* 利用：【形式的冪級数（mod 998244353）】,【一次式の積の展開（基本対称式）】
+* 利用：【形式的冪級数】,【一次式の積の展開（基本対称式）】
 */
 template <class T>
 void multiple_sum(const vector<T>& a, vm& res) {

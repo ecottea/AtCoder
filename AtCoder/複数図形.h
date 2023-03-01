@@ -377,71 +377,169 @@ int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>
 }
 
 
-//【線分群の交点（軸平行）】O(n log n)
+//【線分群の交点（軸平行）】O(n log w)
 /*
-* 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分の共有点の数を返す．
+* 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分について，
+* (L 字型の共有点の個数, T 字型の共有点の個数, 十字型の共有点の個数) の 3 つ組を返す．
 *
-* 制約：線分は軸平行，互いに平行な線分同士は共有点をもたない．
+* 制約：y1[i]≧0，線分は軸平行，互いに平行な線分同士は共有点をもたない．
 */
-ll count_intersection(const vl& x1, const vl& y1, const vl& x2, const vl& y2) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_6_A
+tuple<ll, ll, ll> count_intersections(const vi& x1, const vi& y1, const vi& x2, const vi& y2) {
+	// verify : https://yukicoder.me/problems/no/1920
 
 	int n = sz(x1);
 
-	// 各線分が x1 <= x2, y1 <= y2 を満たすようにしつつ，x1 ごとに昇順に記録する．
-	// 線分が x 軸平行のとき type = 0，y 軸平行のとき type = 1 とし，
-	// 同じ x1 をもつ線分同士については type 0 が先，type 1 が後に並ぶようにする．
-	map<ll, set<tuple<int, ll, ll>>> seg;
+	// (x 座標，イベントタイプ，左位置，右位置) の組
+	vector<tuple<int, int, int, int>> ev;
+	const int EPU = 0; // 縦方向の線分の上の端点
+	const int VSG = 1; // 縦方向の線分の胴体
+	const int EPD = 2; // 縦方向の線分の下の端点
+	const int ERS = 3; // 縦方向の線分の消滅
+	const int HSG = 4; // 横方向の線分
+
+	int w = 0;
 	rep(i, n) {
-		if (x1[i] != x2[i]) {
-			seg[min(x1[i], x2[i])].insert({ 0, max(x1[i], x2[i]), y2[i] });
+		// 縦方向の線分の場合
+		if (y1[i] == y2[i]) {
+			int xu = x1[i], xd = x2[i], y = y1[i];
+			if (xu > xd) swap(xu, xd);
+
+			ev.emplace_back(xu, EPU, y, y);
+			ev.emplace_back(xu + 1, VSG, y, y);
+			ev.emplace_back(xd, EPD, y, y);
+			ev.emplace_back(xd + 1, ERS, y, y);
+
+			chmax(w, y);
 		}
-		else {
-			seg[x1[i]].insert({ 1, min(y1[i], y2[i]), max(y1[i], y2[i]) });
+		// 横方向の線分の場合
+		else if (x1[i] == x2[i]) {
+			int yl = y1[i], yr = y2[i], x = x1[i];
+			if (yl > yr) swap(yl, yr);
+
+			ev.emplace_back(x, HSG, yl, yr);
+
+			chmax(w, yr);
+		}
+		else Assert(!"illegal segment!!");
+	}
+
+	// イベント混合ソート
+	sort(all(ev));
+
+	fenwick_tree<int> ep(w + 1), seg(w + 1);
+	ll cntL = 0, cntT = 0, cntX = 0;
+
+	// 下方向に平面走査していく．
+	for (auto& [x, tp, yl, yr] : ev) {
+		if (tp == EPU) ep.add(yl, 1);
+		else if (tp == VSG) ep.add(yl, -1), seg.add(yl, 1);
+		else if (tp == EPD) seg.add(yl, -1), ep.add(yl, 1);
+		else if (tp == ERS) ep.add(yl, -1);
+		else if (tp == HSG) {
+			cntL += ep.sum(yl, yl + 1) + ep.sum(yr, yr + 1);
+			cntT += seg.sum(yl, yl + 1) + seg.sum(yr, yr + 1);
+			if (yl + 1 <= yr) {
+				cntT += ep.sum(yl + 1, yr);
+				cntX += seg.sum(yl + 1, yr);
+			}
 		}
 	}
 
-	ll res = 0;
+	return { cntL, cntT, cntX };
+}
 
-	// 走査中の x 座標と交点をもつような x 軸平行な線分の y 座標を記録するテーブル．
-	// 二分探索を利用するため vector でなく set を用いている．
-	set<ll> sx;
 
-	// x 軸平行な線分の終端まで走査したらそれをテーブルから取り除くために，
-	// 終端の x 座標について昇順に取り出すことのできる優先度付きキュー．
-	priority_queue_rev<pll> q;
+//【線分群の連結成分数（軸平行）】O(n log w)
+/*
+* 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分について，連結成分数を返す．
+*
+* 制約：y1[i]≧0，線分は軸平行，互いに平行な線分同士は共有点をもたない．
+*/
+int opccc(int x, int y) { return min(x, y); }
+int eccc() { return INF; }
+int opccc2(int a, int b) { return max(a, b); }
+int eccc2() { return -1; }
+int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const vi& y2) {
+	// verify : https://yukicoder.me/problems/no/1920
 
-	// x 座標について昇順に走査していく．
-	// 実際に幅の分だけ走査するのではなく，x1 の値となっているものだけを走査する．
-	repe(p, seg) {
-		// x 軸平行な線分のうち x2 が走査位置の手前であるものをテーブルから取り除く．
-		while (!q.empty() && (q.top().first < p.first)) {
-			sx.erase(q.top().second);
-			q.pop();
+	int n = sz(x1);
+
+	// (x 座標，イベントタイプ，左位置，右位置, 辺番号) の組
+	vector<tuple<int, int, int, int, int>> ev;
+	const int EPU = 0; // 縦方向の線分の上の端点
+	const int ERS = 1; // 縦方向の線分の消滅
+	const int HSG = 2; // 横方向の線分
+
+	int w = 0;
+	rep(i, n) {
+		// 縦方向の線分の場合
+		if (y1[i] == y2[i]) {
+			int xu = x1[i], xd = x2[i], y = y1[i];
+			if (xu > xd) swap(xu, xd);
+
+			ev.emplace_back(xu, EPU, y, y, i);
+			ev.emplace_back(xd + 1, ERS, y, y, i);
+
+			chmax(w, y);
 		}
+		// 横方向の線分の場合
+		else if (x1[i] == x2[i]) {
+			int yl = y1[i], yr = y2[i], x = x1[i];
+			if (yl > yr) swap(yl, yr);
 
-		// x1 が同じものを順に見ていく．
-		// まずは type 0 が処理され，その後 type 1 が処理される．
-		repe(s, p.second) {
-			int type; ll x2_or_y1, y2;
-			tie(type, x2_or_y1, y2) = s;
+			ev.emplace_back(x, HSG, yl, yr, i);
 
-			// x 軸平行な線分の場合
-			if (type == 0) {
-				// 走査中の x 軸平行な線分のテーブルに追加する．
-				sx.insert(y2);
+			chmax(w, yr);
+		}
+		else Assert(!"illegal segment!!");
+	}
 
-				// 終端まで走査したときにテーブルから削除するためのキューに登録する．
-				q.push({ x2_or_y1, y2 });
+	// イベント混合ソート
+	sort(all(ev));
+
+	// vid[y] : 位置 y にある縦方向の線分の番号（なければ -1）
+	segtree<int, opccc2, eccc2> vid(w + 1);
+
+	// 次に見るべき右の座標
+	lazy_segtree<int, opccc, eccc, int, opccc, opccc, eccc> rgt(w + 1);
+
+	dsu d(n); int res = n;
+
+	// 下方向に平面走査していく．
+	for (auto& [x, tp, yl, yr, id] : ev) {
+		if (tp == EPU) {
+			// 縦方向の線分を追加する．
+			vid.set(yl, id);
+
+			// より左からのジャンプをここで止める．
+			rgt.apply(0, yl, yl);
+		}
+		else if (tp == ERS) {
+			// 縦方向の線分を削除する．
+			vid.set(yl, -1);
+
+			// 右方向の最も近い線分まではジャンプできる．
+			int ny = vid.max_right(yl, [](int t) { return t == -1; });
+			rgt.set(yl, ny);
+		}
+		else if (tp == HSG) {
+			// 途中で見た縦方向の線分の位置
+			vi seen;
+
+			// yl から yr まで可能ならジャンプしながら線分を拾っていく．
+			int y = yl;
+			while (y <= yr) {
+				int id2 = vid.get(y);
+				if (id2 != -1) {
+					if (!d.same(id, id2)) res--;
+					d.merge(id, id2);
+					seen.push_back(y);
+				}
+				y = rgt.get(y);
 			}
-			// y 軸平行な線分の場合
-			else {
-				// 走査中の x 軸平行な線分のテーブルから，
-				// y 座標が y1 以上 y2 以下のものを数える．
-				auto it1 = sx.lower_bound(x2_or_y1);
-				auto it2 = sx.upper_bound(y2);
-				res += (ll)distance(it1, it2);
-			}
+
+			// 連結成分からは一気に右端までジャンプできる．
+			repe(y2, seen) rgt.set(y2, y);
 		}
 	}
 
@@ -518,7 +616,7 @@ class Line_intersections_lhplane {
 	vl a, b, c;
 
 	// y 軸と平行な直線の x 座標の昇順列
-	vector<Frac> xs;
+	vector<Frac<ll>> xs;
 	vd xs_d;
 
 public:
@@ -527,7 +625,7 @@ public:
 		// verify : https://atcoder.jp/contests/tenka1-2017/tasks/tenka1_2017_e
 
 		// x = -inf における点 i の y 座標を，{y, i} の形で昇順に並べたもの（y 軸非平行な直線のみ）
-		vector<pair<Frac, int>> yi;
+		vector<pair<Frac<ll>, int>> yi;
 
 		rep(i, sz(a_)) {
 			// 直線 i が y 軸平行でない場合
@@ -554,9 +652,9 @@ public:
 	}
 
 	// x 座標が r より小さい交点の数を返す．
-	ll count(const Frac& r) {
+	ll count(const Frac<ll>& r) {
 		// y[i] : i 番目の直線の x = r における y 座標
-		vector<Frac> y(n);
+		vector<Frac<ll>> y(n);
 		rep(i, n) y[i] = (c[i] - a[i] * r) / b[i];
 
 		// y 座標の転倒数が交点の個数となる．

@@ -12,12 +12,13 @@
 *	Σa[l..r) を返す．（空なら 0 を返す．範囲外の値は 0 とみなす）
 */
 template <class T>
-struct Cumulative_sum {
+class Cumulative_sum {
 	int n;
 
 	// acc[i] : Σa[0..i)
 	vector<T> acc;
 
+public:
 	// 配列 a[0..n) で初期化する．
 	Cumulative_sum(const vector<T>& a) : n(sz(a)), acc(n + 1) {
 		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_h
@@ -34,6 +35,154 @@ struct Cumulative_sum {
 		if (l >= r) return 0;
 
 		return acc[r] - acc[l];
+	}
+};
+
+
+//【間引き累積和】
+/*
+* Thinning_cumulative_sum<T>(vT a, int m) : O(n)
+*	配列 a[0..n) と法 m で初期化する．
+*
+* T sum(int l, int r, int k) : O(1)
+*	set = {i∈[l..r) | i=k (mod m)} とし Σa[set] を返す．
+*	（空なら 0 を返す．範囲外の値は 0 とみなす）
+*/
+template <class T>
+struct Thinning_cumulative_sum {
+	int n, m;
+
+	// acc[r] : set = {i∈[0..r) | i=r (mod m)} とし Σa[set]
+	vector<T> acc;
+
+	// 配列 a[0..n) で初期化する．
+	Thinning_cumulative_sum(const vector<T>& a, int m) : n(sz(a)), m(m), acc(n + m) {
+		// verify : https://atcoder.jp/contests/abc288/tasks/abc288_d
+
+		Assert(m > 0);
+		rep(i, n) acc[i + m] = acc[i] + a[i];
+	}
+	Thinning_cumulative_sum() : n(0) {} // ダミー
+
+	// set = {i∈[l..r) | i=k (mod m)} とし Σa[set] を返す．
+	T sum(int l, int r, int k) {
+		// verify : https://atcoder.jp/contests/abc288/tasks/abc288_d
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		r += smod(k - r, m);
+		l += smod(k - l, m);
+		return acc[r] - acc[l];
+	}
+};
+
+
+//【線形加重累積和】
+/*
+* Linear_weighted_cumulative_sum<T>(vT v) : O(n)
+*	配列 v[0..n) で初期化する．
+*
+* T sum(int l, int r, ll a, ll b) : O(1)
+*	Σj∈[l..r) (a j + b) v[j] を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
+*
+* T sum_right(int l, int r, ll w0, ll w1) : O(1)
+*	v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+*
+* T sum_left(int r, int l, ll w0, ll w1) : O(1)
+*	v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+*/
+template <class T>
+class Linear_weighted_cumulative_sum {
+	int n;
+
+	// acc[0][i] : Σj∈[0..i) v[j]
+	// acc[1][i] : Σj∈[0..i) j v[j]
+	vector<vector<T>> acc;
+
+public:
+	// 配列 a[0..n) で初期化する．
+	Linear_weighted_cumulative_sum(const vector<T>& v) : n(sz(v)), acc(2, vector<T>(n + 1)) {
+		acc[0][0] = acc[1][0] = T(0);
+		rep(i, n) {
+			acc[0][i + 1] = acc[0][i] + v[i];
+			acc[1][i + 1] = acc[1][i] + i * v[i];
+		}
+	}
+	Linear_weighted_cumulative_sum() : n(0) {}
+
+	// Σj∈[l..r) (a j + b) v[j] を返す．
+	T sum(int l, int r, ll a, ll b) {
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return T(0);
+
+		T res = a * (acc[1][r] - acc[1][l]);
+		res += b * (acc[0][r] - acc[0][l]);
+		return res;
+	}
+
+	// v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+	T sum_right(int l, int r, ll w0, ll w1) {
+		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
+
+		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
+		ll a = w1 - w0;
+		ll b = w0 - a * l;
+		return sum(l, r, a, b);
+	}
+
+	// v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
+	T sum_left(int r, int l, ll w0, ll w1) {
+		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
+
+		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
+		ll a = w0 - w1;
+		ll b = w0 - a * r;
+		return sum(l + 1, r + 1, a, b);
+	}
+};
+
+
+//【指数加重累積和】
+/*
+* Exponential_weighted_cumulative_sum(vT v, T B) : O(n)
+*	配列 v[0..n) と底 B で初期化する．
+*
+* mint sum(int l, int r) : O(1)
+*	Σi∈[l..r) B^(i-l) v[i] を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
+*/
+template <class T>
+class Exponential_weighted_cumulative_sum {
+	int n;
+
+	// acc[l] : Σi∈[l..n) B^(l-i) v[i]
+	vm acc;
+
+	// powB[i] : B^i
+	vm powB;
+
+public:
+	// 配列 a[0..n) と底 B で初期化する．
+	Exponential_weighted_cumulative_sum(const vector<T>& v, T B) : n(sz(v)), acc(n + 1), powB(n + 1) {
+		// verify : https://yukicoder.me/problems/no/2170
+
+		// B の冪の計算
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = powB[i] * B;
+
+		// 上からの指数加重累積和の計算
+		repir(i, n - 1, 0) acc[i] = acc[i + 1] * B + v[i];
+	}
+	Exponential_weighted_cumulative_sum() : n(0) {}
+
+	// Σi∈[l..r) B^(i-l) v[i] を返す．
+	mint sum(int l, int r) {
+		// verify : https://yukicoder.me/problems/no/2170
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		return acc[l] - acc[r] * powB[r - l];;
 	}
 };
 
@@ -290,116 +439,6 @@ public:
 		res -= acc[x1][y1][z1];
 
 		return res;
-	}
-};
-
-
-//【線形加重累積和】
-/*
-* Linear_weighted_cumulative_sum<T>(vT v) : O(n)
-*	配列 v[0..n) で初期化する．
-*
-* T sum(int l, int r, ll a, ll b) : O(1)
-*	Σj∈[l..r) (a j + b) v[j] を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
-*
-* T sum_right(int l, int r, ll w0, ll w1) : O(1)
-*	v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-*
-* T sum_left(int r, int l, ll w0, ll w1) : O(1)
-*	v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-*/
-template <class T>
-class Linear_weighted_cumulative_sum {
-	int n;
-
-	// acc[0][i] : Σj∈[0..i) v[j]
-	// acc[1][i] : Σj∈[0..i) j v[j]
-	vector<vector<T>> acc;
-
-public:
-	// 配列 a[0..n) で初期化する．
-	Linear_weighted_cumulative_sum(const vector<T>& v) : n(sz(v)), acc(2, vector<T>(n + 1)) {
-		acc[0][0] = acc[1][0] = T(0);
-		rep(i, n) {
-			acc[0][i + 1] = acc[0][i] + v[i];
-			acc[1][i + 1] = acc[1][i] + i * v[i];
-		}
-	}
-	Linear_weighted_cumulative_sum() : n(0) {}
-
-	// Σj∈[l..r) (a j + b) v[j] を返す．
-	T sum(int l, int r, ll a, ll b) {
-		chmax(l, 0);
-		chmin(r, n);
-		if (l >= r) return T(0);
-
-		T res = a * (acc[1][r] - acc[1][l]);
-		res += b * (acc[0][r] - acc[0][l]);
-		return res;
-	}
-
-	// v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-	T sum_right(int l, int r, ll w0, ll w1) {
-		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
-
-		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
-		ll a = w1 - w0;
-		ll b = w0 - a * l;
-		return sum(l, r, a, b);
-	}
-
-	// v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-	T sum_left(int r, int l, ll w0, ll w1) {
-		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
-
-		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
-		ll a = w0 - w1;
-		ll b = w0 - a * r;
-		return sum(l + 1, r + 1, a, b);
-	}
-};
-
-
-//【指数加重累積和】
-/*
-* Exponential_weighted_cumulative_sum(vT v, T B) : O(n)
-*	配列 v[0..n) と底 B で初期化する．
-*
-* mint sum(int l, int r) : O(1)
-*	Σi∈[l..r) B^(i-l) v[i] を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
-*/
-template <class T>
-class Exponential_weighted_cumulative_sum {
-	int n;
-
-	// acc[l] : Σi∈[l..n) B^(l-i) v[i]
-	vm acc;
-
-	// powB[i] : B^i
-	vm powB;
-
-public:
-	// 配列 a[0..n) と底 B で初期化する．
-	Exponential_weighted_cumulative_sum(const vector<T>& v, T B) : n(sz(v)), acc(n + 1), powB(n + 1) {
-		// verify : https://yukicoder.me/problems/no/2170
-
-		// B の冪の計算
-		powB[0] = 1;
-		rep(i, n) powB[i + 1] = powB[i] * B;
-
-		// 上からの指数加重累積和の計算
-		repir(i, n - 1, 0) acc[i] = acc[i + 1] * B + v[i];
-	}
-	Exponential_weighted_cumulative_sum() : n(0) {}
-
-	// Σi∈[l..r) B^(i-l) v[i] を返す．
-	mint sum(int l, int r) {
-		// verify : https://yukicoder.me/problems/no/2170
-
-		chmax(l, 0); chmin(r, n);
-		if (l >= r) return 0;
-
-		return acc[l] - acc[r] * powB[r - l];;
 	}
 };
 
@@ -685,7 +724,7 @@ public:
 
 //【間引き Sparse Table（最小値）】
 /*
-* Sparse_table_mod<T>(vT a, int m, bool min_flag = true) : O(n log n)
+* Thinning_sparse_table<T>(vT a, int m, bool min_flag = true) : O(n log n)
 *	配列 a[0..n) と法 m で初期化する．min_flag = true[false] のときは最小値[最大値] を求める．
 *
 * T get(int l, int r, int k) : O(1)

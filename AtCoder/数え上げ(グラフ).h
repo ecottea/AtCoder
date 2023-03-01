@@ -388,7 +388,7 @@ mint count_unlabeled_simple_graph(int n) {
 	}
 
 	// |S_n| ‚ÅŠ„‚Á‚Ä•½‹Ï‚ğ‚Æ‚éD
-	res *= fm.factorial_inv(n);
+	res *= fm.fact_inv(n);
 
 	return res;
 }
@@ -472,20 +472,20 @@ vvm count_undirected_path_decomposition(int n, int m, const Factorial_mint& fm) 
 
 	vvm res(n + 1, vm(m + 1));
 	repi(i, 0, n) repi(j, 1, min(i - 1, m)) {
-		res[i - j][j] = fm.binomial(i - j - 1, j - 1) * fm.factorial(i) * fm.factorial_inv(j) * pow2inv[j];
-		res[i - j][j] *= fm.factorial_inv(i);
+		res[i - j][j] = fm.bin(i - j - 1, j - 1) * fm.fact(i) * fm.fact_inv(j) * pow2inv[j];
+		res[i - j][j] *= fm.fact_inv(i);
 	}
 	res[0][0] = 1;
 
 	vm fac(m + 1);
-	repi(j, 0, m) fac[j] = fm.factorial_inv(j);
+	repi(j, 0, m) fac[j] = fm.fact_inv(j);
 	repi(i, 0, n) {
 		res[i] = convolution(res[i], fac);
 		res[i].resize(m + 1);
 	}
 
 	repir(i, n, 0) repi(j, 0, m) {
-		if (j <= i) res[i][j] = res[i - j][j] * fm.factorial(i);
+		if (j <= i) res[i][j] = res[i - j][j] * fm.fact(i);
 		else res[i][j] = 0;
 	}
 
@@ -559,7 +559,7 @@ vvvm count_undirected_cycle_decomposition(int n, int m, const Factorial_mint& fm
 	dp2[1][1][1] = 1;
 	dp2[2][1][2] = inv2;
 	repi(i, 3, n) {
-		dp2[i][1][i] = fm.factorial(i - 1) * inv2 * fm.factorial_inv(i);
+		dp2[i][1][i] = fm.fact(i - 1) * inv2 * fm.fact_inv(i);
 	}
 	repi(i, 0, n) repi(k, 0, n) {
 		acc2i[i + 1][1][k] = acc2i[i][1][k] + dp2[i][1][k];
@@ -595,7 +595,7 @@ vvvm count_undirected_cycle_decomposition(int n, int m, const Factorial_mint& fm
 	}
 
 	auto res(dp2);
-	repi(i, 0, n) repi(j, 0, m) repi(k, 0, n) res[i][j][k] *= fm.factorial(i);
+	repi(i, 0, n) repi(j, 0, m) repi(k, 0, n) res[i][j][k] *= fm.fact(i);
 
 	return res;
 }

@@ -185,34 +185,38 @@ bool comp(ll a, ll b, string op_, ll c) {
 
 //【有理数】
 /*
-* Frac() : O(1)
+* Frac<T>() : O(1)
 *	0 で初期化する．
 *
-* Frac(ll num) : O(1)
+* Frac<T>(T num) : O(1)
 *	num で初期化する．
 *
-* Frac(ll num, ll dnm) : O(1)
-*	num / dnm で初期化する．
+* Frac<T>(T num, T dnm) : O(1)
+*	num / dnm で初期化する（分母は自動的に正にする）
 *
 * a == b, a != b, a < b, a > b, a <= b, a >= b : O(1)
-*	大小比較を行う．
+*	大小比較を行う（分母が共通の場合は積はとらない）
 *
 * a + b, a - b, a * b, a / b : O(1)
-*	加減乗除を行う．一方が整数でも構わない．複合代入演算子も使用可．
+*	加減乗除を行う（和と差については，分母が共通の場合は積はとらない）
+*	一方が整数でも構わない．複合代入演算子も使用可．
 *
 * reduction() : O(log min(num, dnm))
 *	約分を行う．
 */
+template <class T = ll>
 struct Frac {
 	// verify : https://atcoder.jp/contests/abc057/tasks/abc057_d
 
 	// 分子，分母
-	ll num, dnm;
+	T num, dnm;
 
 	// コンストラクタ
 	Frac() : num(0), dnm(1) {}
-	Frac(ll num_) : num(num_), dnm(1) {}
-	Frac(ll num_, ll dnm_) : num(num_), dnm(dnm_) {}
+	Frac(T num) : num(num), dnm(1) {}
+	Frac(T num, T dnm) : num(num), dnm(dnm) {
+		if (dnm < 0) { num *= -1; dnm *= -1; }
+	}
 
 	// 代入
 	Frac(const Frac& b) = default;
@@ -222,19 +226,54 @@ struct Frac {
 	operator double() const { return (double)num / dnm; }
 
 	// 比較
-	bool operator==(const Frac& b) const { return num * b.dnm == b.num * dnm; }
+	bool operator==(const Frac& b) const {
+		// 分母が等しいときはオーバーフロー防止のために掛け算はせず比較する．
+		if (dnm == b.dnm) return num == b.num;
+		return num * b.dnm == b.num * dnm;
+	}
 	bool operator!=(const Frac& b) const { return !(*this == b); }
 	bool operator<(const Frac& b) const {
-		if (dnm * b.dnm > 0) return (num * b.dnm < b.num* dnm);
-		else return (num * b.dnm > b.num * dnm);
+		// verify : https://www.codechef.com/problems/ARCTR
+
+		// 分母が等しいときはオーバーフロー防止のために掛け算はせず比較する．
+		if (dnm == b.dnm) return num < b.num;
+		return (num * b.dnm < b.num* dnm);
 	}
 	bool operator>=(const Frac& b) const { return !(*this < b); }
 	bool operator>(const Frac& b) const { return b < *this; }
 	bool operator<=(const Frac& b) const { return !(*this > b); }
 
+	// 整数との比較
+	bool operator==(T b) const { return num == b * dnm; }
+	bool operator!=(T b) const { return !(*this == b); }
+	bool operator<(T b) const { return num < b * dnm; }
+	bool operator>=(T b) const { return !(*this < b); }
+	bool operator>(T b) const { return b < *this; }
+	bool operator<=(T b) const { return !(*this > b); }
+	friend bool operator==(T b, const Frac& a) { return a.num == b * a.dnm; }
+	friend bool operator!=(T b, const Frac& a) { return !(a == b); }
+	friend bool operator<(T b, const Frac& a) { return b * a.dnm < a.num; }
+	friend bool operator>=(T b, const Frac& a) { return !(a < b); }
+	friend bool operator>(T b, const Frac& a) { return b < a; }
+	friend bool operator<=(T b, const Frac& a) { return !(a > b); }
+
 	// 四則演算
-	Frac& operator+=(const Frac& b) { num = num * b.dnm + b.num * dnm; dnm *= b.dnm; return *this; }
-	Frac& operator-=(const Frac& b) { num = num * b.dnm - b.num * dnm; dnm *= b.dnm; return *this; }
+	Frac& operator+=(const Frac& b) {
+		// verify : https://www.codechef.com/problems/ARCTR
+		
+		// 分母が等しいときはオーバーフロー防止のために掛け算はせず加算する．
+		if (dnm == b.dnm) num += b.num;
+		else { num = num * b.dnm + b.num * dnm; dnm *= b.dnm; }
+		return *this;
+	}
+	Frac& operator-=(const Frac& b) {
+		// verify : https://www.codechef.com/problems/ARCTR
+
+		// 分母が等しいときはオーバーフロー防止のために掛け算はせず加算する．
+		if (dnm == b.dnm) num -= b.num;
+		else { num = num * b.dnm - b.num * dnm; dnm *= b.dnm; }
+		return *this;
+	}
 	Frac& operator*=(const Frac& b) { num *= b.num; dnm *= b.dnm; return *this; }
 	Frac& operator/=(const Frac& b) { num *= b.dnm; dnm *= b.num; return *this; }
 	Frac operator+(const Frac& b) const { Frac a = *this; return a += b; }
@@ -244,21 +283,28 @@ struct Frac {
 	Frac operator-() const { return Frac(*this) *= Frac(-1); }
 
 	// 整数との四則演算
-	Frac& operator+=(ll c) { return *this += Frac(c); }
-	Frac& operator-=(ll c) { return *this -= Frac(c); }
-	Frac& operator*=(ll c) { return *this *= Frac(c); }
-	Frac& operator/=(ll c) { return *this /= Frac(c); }
-	Frac operator+(ll c) const { Frac a = *this; return a += c; }
-	Frac operator-(ll c) const { Frac a = *this; return a -= c; }
-	Frac operator*(ll c) const { Frac a = *this; return a *= c; }
-	Frac operator/(ll c) const { Frac a = *this; return a /= c; }
-	friend Frac operator+(ll c, const Frac& a) { return a + c; }
-	friend Frac operator-(ll c, const Frac& a) { return Frac(c) - a; }
-	friend Frac operator*(ll c, const Frac& a) { return a * c; }
-	friend Frac operator/(ll c, const Frac& a) { return Frac(c) / a; }
+	Frac& operator+=(T c) { num += dnm * c; return *this; }
+	Frac& operator-=(T c) { num -= dnm * c; return *this; }
+	Frac& operator*=(T c) { num *= c; return *this; }
+	Frac& operator/=(T c) {
+		dnm *= c;
+		if (c < 0) { num *= -1; dnm *= -1; }
+		return *this;
+	}
+	Frac operator+(T c) const { Frac a = *this; return a += c; }
+	Frac operator-(T c) const { Frac a = *this; return a -= c; }
+	Frac operator*(T c) const { Frac a = *this; return a *= c; }
+	Frac operator/(T c) const { Frac a = *this; return a /= c; }
+	friend Frac operator+(T c, const Frac& a) { return a + c; }
+	friend Frac operator-(T c, const Frac& a) { return Frac(c) - a; }
+	friend Frac operator*(T c, const Frac& a) { return a * c; }
+	friend Frac operator/(T c, const Frac& a) { return Frac(c) / a; }
 
-	// 約分
-	void reduction() { ll g = gcd(abs(num), abs(dnm)); num /= g; dnm /= g; }
+	// 約分を行う．
+	void reduction() {
+		auto g = gcd(abs(num), abs(dnm));
+		num /= g; dnm /= g;
+	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Frac& a) { os << a.num << '/' << a.dnm; return os; }

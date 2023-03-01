@@ -58,3 +58,9 @@ mint count_distance_clique_1D(vector<T> a, T d) {
 }
 
 
+//y•”•ª˜a–â‘èi”‚¦ã‚°jz
+/*
+* •”•ª˜a–â‘è.h ‚Ö
+*/
+
+

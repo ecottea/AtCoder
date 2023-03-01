@@ -8,7 +8,7 @@
 
 //【フィボナッチ数】O(n)
 /*
-* フィボナッチ数のリスト fib[0..n) を返す（fib[0]=0, fib[1]=1 とする．）
+* フィボナッチ数のリスト fib[0..n) を返す（fib[0]=0, fib[1]=1 とする）
 */
 template <class T>
 vector<T> fibonacci(int n) {
@@ -26,7 +26,7 @@ vector<T> fibonacci(int n) {
 
 //【フィボナッチ数】O(log n)
 /*
-* n 番目のフィボナッチ数 fib[n] を返す（fib[0] = 0, fib[1] = 1 とする．）
+* n 番目のフィボナッチ数 fib[n] を返す（fib[0]=0, fib[1]=1 とする）
 *
 * 利用：【行列】
 */
@@ -76,7 +76,7 @@ void k_nacci_acc(int n, int k, vector<T>& seq) {
 		// seq[i] = Σseq[i-k..i) = acc[i] - acc[i-k]
 		seq[i] = acc[i] - acc[i - k];
 
-		// acc[i+1] = Σseq[i-k..i] = acc[i] + seq[i]
+		// acc[i+1] = Σseq[0..i] = acc[i] + seq[i]
 		acc[i + 1] = acc[i] + seq[i];
 	}
 }
@@ -194,7 +194,7 @@ void delannoy_number_imos(int h, int w, int s, int t, vector<vector<T>>& seq) {
 *
 * 制約：fm は (2(n+1))! まで計算可能であること
 *
-* 利用：【形式的冪級数（mod 998244353）】,【指数関数】,【階乗など（法が大きな素数）】
+* 利用：【形式的冪級数】,【指数関数】,【階乗など（法が大きな素数）】
 */
 void bernoulli(int n, vm& b, const Factorial_mint& fm) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%99%E3%83%AB%E3%83%8C%E3%83%BC%E3%82%A4%E6%95%B0
@@ -210,7 +210,7 @@ void bernoulli(int n, vm& b, const Factorial_mint& fm) {
 	f = f.inv(n);
 
 	b.resize(n);
-	rep(i, n) b[i] = f[i] * fm.factorial(i);
+	rep(i, n) b[i] = f[i] * fm.fact(i);
 }
 
 

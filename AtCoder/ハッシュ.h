@@ -6,14 +6,17 @@
 
 //【ローリングハッシュ（列）】
 /*
-* 列 s[0..n) の連続部分列 s[l, r) のハッシュ値を計算する．
+* 列 s[0..n) の部分文字列 s[l, r) のハッシュ値を計算する．
 *
 * Rolling_hash(STR s) : O(n)
 *	列 s[0..n) で初期化する．
 *	STR は string，vector<T> など．
 *
 * ll get(int l, int r) : O(1)
-*	連続部分列 s[l, r) のハッシュ値を返す（空なら 0）
+*	部分文字列 s[l, r) のハッシュ値を返す（空なら 0）
+*
+* ll get_rev(int l, int r) : O(1)
+*	部分文字列 s[l, r) を反転した文字列のハッシュ値を返す（空なら 0）
 *
 * ll join(ll hs, ll ht, int ls) : O(1)
 *	ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
@@ -22,9 +25,6 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 	using mint = static_modint<MOD>;
 	using vm = vector<mint>;
 
-	mint B = BASE; // 適当な基数
-	mint S = SHIFT; // 適当なシフト
-
 	// 列の長さ
 	int n;
 
@@ -32,22 +32,24 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 	vm powB, powB_inv;
 
 	// v[i] : s[0, i) のハッシュ値
-	vm v;
+	vm v, v_rev;
 
 	// コンストラクタ（列 s で初期化）
-	Rolling_hash_sub() : n(0) {}
-	Rolling_hash_sub(const STR& s) : n(sz(s)), powB(n + 1), powB_inv(n + 1), v(n + 1) {
+	Rolling_hash_sub(const STR& s) : n(sz(s)), powB(n + 1), powB_inv(n + 1), v(n + 1), v_rev(n + 1) {
 		// ハッシュ値計算用の B の累乗
 		powB[0] = 1;
-		rep(i, n) powB[i + 1] = powB[i] * B;
+		rep(i, n) powB[i + 1] = powB[i] * BASE;
 
 		// ハッシュ値計算用の B の逆元の累乗
-		mint invB = B.inv();
+		mint invB = mint(BASE).inv();
 		powB_inv[0] = 1;
 		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB;
 
 		// s[0, i) のハッシュ値 v[i] の計算
-		rep(i, n) v[i + 1] = v[i] + (s[i] + S) * powB[i];
+		rep(i, n) {
+			v[i + 1] = v[i] + (s[i] + SHIFT) * powB[i];
+			v_rev[i + 1] = v_rev[i] + (s[n - 1 - i] + SHIFT) * powB[i];
+		}
 	}
 
 	// 代入
@@ -60,6 +62,12 @@ template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
 		return ((v[r] - v[l]) * powB_inv[l]).val();
 	}
 
+	// s[l, r) を反転した文字列のハッシュ値の取得
+	int get_rev(int l, int r) {
+		// s[l, r) を反転した文字列は s_rev[n-r, n-l) に等しい．
+		return ((v_rev[n - l] - v_rev[n - r]) * powB_inv[n - r]).val();
+	}
+
 	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
 	int join(int hs, int ht, int ls) {
 		return (hs + ht * powB[ls]).val();
@@ -70,13 +78,15 @@ class Rolling_hash {
 	int n; // 列の長さ
 
 	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
-	Rolling_hash_sub<STR, 1999987657, 114521, 17> rh1;
-	Rolling_hash_sub<STR, 1999901261, 314159, 91> rh2;
+	Rolling_hash_sub<STR, 1999987657, 123456, 789> rh1;
+	Rolling_hash_sub<STR, 1999901261, 987654, 321> rh2;
 
 public:
 	// コンストラクタ（文字列 s で初期化）
+	Rolling_hash(const STR& s) : n(sz(s)), rh1(s), rh2(s) {
+		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
+	}
 	Rolling_hash() : n(0) {}
-	Rolling_hash(const STR& s) : n(sz(s)), rh1(s), rh2(s) {}
 
 	// 代入
 	Rolling_hash(const Rolling_hash& rh) = default;
@@ -87,16 +97,27 @@ public:
 
 	// s[l, r) のハッシュ値の取得
 	ll get(int l, int r) {
-		// verify : https://atcoder.jp/contests/abc175/tasks/abc175_f
+		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
 
-		if (r <= 0 || l >= n || l >= r) return 0;
 		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
 		return (ll(rh1.get(l, r)) << 32) + ll(rh2.get(l, r));
+	}
+
+	// s[l, r) を逆順にした文字列のハッシュ値の取得
+	ll get_rev(int l, int r) {
+		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		return (ll(rh1.get_rev(l, r)) << 32) + ll(rh2.get_rev(l, r));
 	}
 
 	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
 	ll join(ll hs, ll ht, int ls) {
-		// verify : https://atcoder.jp/contests/arc050/tasks/arc050_d
+		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
 
 		int hs1 = (int)(hs >> 32), hs2 = (int)(hs % (1LL << 32));
 		int ht1 = (int)(ht >> 32), ht2 = (int)(ht % (1LL << 32));

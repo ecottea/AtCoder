@@ -143,7 +143,7 @@ shuffle(all(a), mt);
 
 // 型 T の最小値[最大値] を取得する．
 numeric_limits<T>::lowest();
-numeric_limits<T>::max();
+numeric_limits<T>::max();（__int128 だと 0 になるので注意）
 
 // 時間計測して TLE 寸前に終了
 auto start = chrono::system_clock::now();

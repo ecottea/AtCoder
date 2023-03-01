@@ -8,8 +8,8 @@
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
-template <typename T>
-T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
+template <class T>
+T meguru_search(T ok, T ng, const function<bool(T)>& okQ) {
 	// 参考 : https://twitter.com/meguru_comp/status/697008509376835584
 	// verify : https://atcoder.jp/contests/abc023/tasks/abc023_d
 
@@ -37,8 +37,8 @@ T meguru_search(T ok, T ng, function<bool(T)>& okQ) {
 /*
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 */
-template <typename T>
-T binary_search(T ok, T ng, function<bool(T)>& okQ) {
+template <class T>
+T binary_search(T ok, T ng, const function<bool(T)>& okQ) {
 	// verify : https://atcoder.jp/contests/abc189/tasks/abc189_f
 
 	// 誤差 EPS で境界が決定するまで
@@ -72,11 +72,12 @@ T binary_search(T ok, T ng, function<bool(T)>& okQ) {
 * 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l, r) における最大値を与える x を返す．
 */
 template <class T>
-ll ternary_search_uc(ll l, ll r, function<T(ll)>& f) {
+ll ternary_search_uc(ll l, ll r, const function<T(ll)>& f) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_f
 
 	while (r - l > 2) {
-		ll m1 = (l + r) / 2;
+		ll s = l + r;
+		ll m1 = s / 2 - (s % 2 < 0);
 		ll m2 = m1 + 1;
 
 		if (f(m1) < f(m2)) l = m1;
@@ -97,11 +98,12 @@ ll ternary_search_uc(ll l, ll r, function<T(ll)>& f) {
 * 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
 */
 template <class T>
-ll ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
+ll ternary_search_lc(ll l, ll r, const function<T(ll)>& f) {
 	// verify : https://atcoder.jp/contests/abc279/tasks/abc279_d
 
 	while (r - l > 2) {
-		ll m1 = (l + r) / 2;
+		ll s = l + r;
+		ll m1 = s / 2 - (s % 2 < 0);
 		ll m2 = m1 + 1;
 
 		if (f(m1) > f(m2)) l = m1;
@@ -123,7 +125,7 @@ ll ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
 * そうでなくても運が良ければ正しい x を返す．
 */
 template <class T>
-ll random_ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
+ll random_ternary_search_lc(ll l, ll r, const function<T(ll)>& f) {
 	static bool first_call = true;
 
 	mt19937 mt;
@@ -137,11 +139,8 @@ ll random_ternary_search_lc(ll l, ll r, function<T(ll)>& f) {
 	while (r - l > 2) {
 		ll m1 = l + 1 + rnd(mt) % (r - l - 1);
 		ll m2 = l + 1 + rnd(mt) % (r - l - 1);
+		if (m1 == m2) continue;
 		if (m1 > m2) swap(m1, m2);
-		else if (m1 == m2) {
-			if (m1 == l + 1) m2++;
-			else m1--;
-		}
 
 		if (f(m1) > f(m2)) l = m1;
 		else r = m2;
@@ -249,7 +248,7 @@ struct Fibonacci_search {
 /*
 * 全域で狭義に上に凸な関数 f(x) の開区間 (left, right) における最大値を与える x を返す．
 */
-double golden_search_uc(double left, double right, function<double(double)>& f) {
+double golden_search_uc(double left, double right, const function<double(double)>& f) {
 	const double phi = (1 + sqrt(5)) / 2;
 
 	// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点
@@ -307,7 +306,7 @@ double golden_search_uc(double left, double right, function<double(double)>& f) 
 /*
 * 全域で狭義に下に凸な関数 f(x) の開区間 (left, right) における最小値を与える x を返す．
 */
-double golden_search_lc(double left, double right, function<double(double)>& f) {
+double golden_search_lc(double left, double right, const function<double(double)>& f) {
 	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_b
 	
 	const double phi = (1 + sqrt(5)) / 2;
@@ -368,7 +367,7 @@ double golden_search_lc(double left, double right, function<double(double)>& f) 
 * 全域で狭義に下に凸な関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
 * 下に凸じゃなくても運が良ければ正しい x を返す．
 */
-double random_ternary_search_lc(double l, double r, function<double(double)>& f) {
+double random_ternary_search_lc(double l, double r, const function<double(double)>& f) {
 	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_f
 
 	mt19937 mt;
@@ -410,7 +409,7 @@ double random_ternary_search_lc(double l, double r, function<double(double)>& f)
 * 境界を二分探索し，ok[i][ng[i]] を境界に接する OK[NG] 側の要素に変更する．
 * okQ は，okQ(mid, res) で呼び出すと mid[i] が条件を満たすかが res[i] に格納されるとする．
 */
-void parallel_binary_search(vi& ok, vi& ng,	function<void(const vi&, vb&)>& okQ) {
+void parallel_binary_search(vi& ok, vi& ng, const function<void(const vi&, vb&)>& okQ) {
 	// 参考 : https://betrue12.hateblo.jp/entry/2019/08/14/152227
 	// verify : https://yukicoder.me/problems/no/1982
 
@@ -467,6 +466,89 @@ void parallel_binary_search(vi& ok, vi& ng,	function<void(const vi&, vb&)>& okQ)
 			// mid = t のものに対する判定
 			repe(id, mid_to_id[t]) res[id] = (seg.get(I[id]) >= x[id]);
 		}
+	};
+	*/
+}
+
+
+//【幅優先探索（動的）】O(|V| + |E|)（遅い）
+/*
+* st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
+*/
+template <class T>
+set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt) {
+	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_c
+
+	set<T> vs; // st から到達可能な頂点のリスト
+	vs.insert(st);
+
+	queue<T> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		// 未探索の頂点 s を得る．
+		auto s = que.front(); que.pop();
+
+		repe(t, nxt(s)) {
+			// t が発見済みの頂点なら何もしない．
+			if (vs.count(t)) continue;
+
+			// t に到達したことを記録する．
+			vs.insert(t);
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+	}
+
+	return vs;
+
+	/* nxt の定義の雛形
+	using T = ll;
+	function<vector<T>(T)> nxt = [&](T s) {
+		vector<T> res;
+
+		return res;
+	};
+	*/
+}
+
+
+//【山登り法】O(?)（遅い）
+/*
+* 初期解 st から始めて，スコアが改善される限り近傍への移動を続け，到達した局所解を返す．
+* neib(s) は解 s の近傍解のリストを返す．calc(s) は解 s のスコアを返す．
+*/
+template <class T>
+T hill_climbing(T st, const function<vector<T>(T)>& neib, const function<ll(T)>& calc) {
+	ll sc = calc(st);
+
+	while (true) {
+		ll sc_max(sc);
+
+		repe(nst, neib(st)) {
+			ll nsc = calc(nst);
+
+			if (chmax(sc_max, nsc)) st = nst;
+		}
+
+		if (sc_max == sc) break;
+		sc = sc_max;
+	}
+
+	return st;
+
+	/* neib と calc の定義の雛形
+	using T = vl;
+	function<vector<T>(T)> neib = [&](T s) {
+		vector<T> res;
+
+		return res;
+	};
+	function<ll(T)> calc = [&](T s) {
+		ll sc = 0;
+
+		return sc;
 	};
 	*/
 }

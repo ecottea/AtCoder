@@ -43,10 +43,10 @@ void montmort_number(int n, vm& mon) {
 }
 
 
-//【順列の数（p[i] != i, p[i] != i + 1）】
+//【二重撹乱順列の数（p[i] != i, p[i] != i+1）】
 /*
 * 順列 p[0..n) で，任意の i∈[0..n) について
-*		p[i] != i かつ p[i] != i + 1 (i < n - 1)
+*		p[i] != i かつ p[i] != i+1 (i < n - 1)
 * を満たすものの個数は
 *		Σk=[0..n] (-1)^k bin(2n-k, k) (n-k)!
 * である．
@@ -62,10 +62,10 @@ void montmort_number(int n, vm& mon) {
 */
 
 
-//【メナージュ数】
+//【メナージュ数（p[i] != i, p[i] != i+1 mod n）】
 /*
 * 順列 p[0..n) で，任意の i∈[0..n) について
-*		p[i] != i かつ p[i] != i + 1 (mod n)
+*		p[i] != i かつ p[i] != i+1 (mod n)
 * を満たすものの個数は
 *		Σk=[0..n] (-1)^k 2n/(2n-k) bin(2n-k, k) (n-k)!
 * である．
@@ -268,9 +268,9 @@ mint count_permutations_2IS(int n) {
 * 利用：【階乗など（法が大きな素数）】
 */
 mint count_permutations_single_bound(const vi& ub, const vi& lb) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/2439
+	// verify : https://yukicoder.me/problems/no/1001
 
-	int nu = sz(ub), nl = sz(lb), n = nu + nl, n_min = min(nu, nl);
+	int nu = sz(ub), nl = sz(lb), n = nu + nl;
 
 	// ub_cnt[i] : 上界が i であると指定されている p の要素の個数
 	vi ub_cnt(n);
@@ -279,48 +279,46 @@ mint count_permutations_single_bound(const vi& ub, const vi& lb) {
 		ub_cnt[min(ub[j], n - 1)]++;
 	}
 
-	// lb_cnt[i] : 下界が v であると指定されている p の要素の個数
+	// lb_cnt[i] : 下界が i であると指定されている p の要素の個数
 	vi lb_cnt(n);
 	rep(k, nl) {
 		if (lb[k] >= n) return 0;
 		lb_cnt[max(lb[k], 0)]++;
 	}
 
-	Factorial_mint fm(n);
+	Factorial_mint fm(nu);
 
-	dump(ub_cnt); dump(lb_cnt);
-
-	// dp_i[j] : [0..i) までの数について，
-	//	p[0..nu) のいずれかに割り当てることだけが決まっている数が j 個ある場合の数
-	vm dp(n_min + 1);
+	// dp_i[j] : [0..i) までの数について，上界が指定された要素のうちの
+	//	いずれかに割り当てることだけが決まっている数が j 個ある場合の数
+	vm dp(nu + 1);
 	dp[0] = 1;
 
+	// ub_acc : 上界が i 未満だと指定された要素の数
+	// lb_acc : 下界が i 以下だと指定された要素の数
 	int ub_acc = 0, lb_acc = 0;
+
 	rep(i, n) {
 		lb_acc += lb_cnt[i];
-		dump(i);
 
-		vm dp2(n_min + 1);
-		repi(j, 0, n_min) {
-			// i を p[0..nu) のいずれかに割り当てる予約をする場合
-			if (j < n_min) dp2[j + 1] += dp[j];
+		vm dp2(nu + 1);
+		repi(j, 0, nu) {
+			// i を上界が指定された要素のいずれかに割り当てる予約をする場合
+			if (j < nu) dp2[j + 1] += dp[j];
 
-			// i を p[nu..nu+nl) のいずれかに確定的に割り当てる場合
-			// k : p[nu..nu+nl) の中の割り当て待ちの数
+			// i を下界が指定された要素のいずれかに確定的に割り当てる場合
+			// k : 下界が指定された要素の中の割り当て待ちのものの個数
 			int k = lb_acc - (i - ub_acc - j);
 			if (k > 0) dp2[j] += k * dp[j];
 		}
-		dump(dp2);
 
-		dp = vm(n_min + 1);
-		repi(j, ub_cnt[i], n_min) {
-			// p[0..nu) に割り当てることだけが決まっていた未確定の j 個の数のうち，
+		dp.assign(nu + 1, 0);
+		repi(j, ub_cnt[i], nu) {
+			// 上界が指定された要素に割り当てることだけが決まっていた未確定の j 個の数のうち，
 			// 上界が i だと指定されている ub_cnt[i] 個だけ具体的な数を確定させる．
-			dp[j - ub_cnt[i]] += dp2[j] * fm.permutation(j, ub_cnt[i]);
+			dp[j - ub_cnt[i]] += dp2[j] * fm.perm(j, ub_cnt[i]);
 		}
 
 		ub_acc += ub_cnt[i];
-		dump(dp);
 	}
 
 	return dp[0];
@@ -441,12 +439,12 @@ void count_adjacent_sequence(const vi& cnt, vm& res, Factorial_mint& fm) {
 					//	数の区別を無視すれば，まず数を k 個減らしておき，重複組合せの考え方を用いて
 					//	'o' を (c - k) 個と '|' を (k - 1) 個の並べ方を数えれば良い．
 					//	実際には c 個の数には区別があるので，c! 倍する．
-					add *= fm.binomial(c - 1, k - 1) * fm.factorial(c);
+					add *= fm.bin(c - 1, k - 1) * fm.fact(c);
 
 					// k 個の固まりをどこに挿入するか
 					//	順序は先に定めたので，後は挿入位置だけを考えれば良い．
 					//	同色の間が j 箇所中 l 箇所，異色の間が残り len - 1 - j 箇所中 k - l 箇所．
-					add *= fm.binomial(j, l) * fm.binomial(len - 1 - j, k - l);
+					add *= fm.bin(j, l) * fm.bin(len - 1 - j, k - l);
 
 					dp[i + 1][nj] += add;
 				}
@@ -483,28 +481,28 @@ void count_adjacent_sequence_fast(const vi& cnt, vm& res, Factorial_mint& fm) {
 
 		g.emplace_back(vm(cnt[c] + 1));
 		repi(k, 0, cnt[c]) {
-			g.back()[k] = fm.binomial(cnt[c] - 1, k - 1) * fm.factorial_inv(k);
+			g.back()[k] = fm.bin(cnt[c] - 1, k - 1) * fm.fact_inv(k);
 		}
 
-		fac *= fm.factorial(cnt[c]);
+		fac *= fm.fact(cnt[c]);
 	}
 
 	vm q = multi_convoluion(g);
 
-	rep(i, sz(q)) q[i] *= fm.factorial(i);
+	rep(i, sz(q)) q[i] *= fm.fact(i);
 
 	reverse(all(q));
 	q.resize(n);
 
-	rep(i, n) q[i] *= fm.factorial(i);
+	rep(i, n) q[i] *= fm.fact(i);
 
 	vm coef(n);
-	rep(i, n) coef[i] = ((n - 1 - i) % 2 ? -1 : 1) * fm.factorial_inv(n - 1 - i);
+	rep(i, n) coef[i] = ((n - 1 - i) % 2 ? -1 : 1) * fm.fact_inv(n - 1 - i);
 
 	res = convolution(coef, q);
 	res.erase(res.begin(), res.begin() + n - 1);
 
-	rep(i, n) res[i] *= fm.factorial_inv(i) * fac;
+	rep(i, n) res[i] *= fm.fact_inv(i) * fac;
 }
 
 
@@ -587,16 +585,16 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 								// cnt[i] 個の文字を順序込みで k 個に分ける方法の数
 								//	まず文字を k 個減らしておき，重複組合せの考え方を用いて
 								//	'o' cnt[i] - k 個と '|' k - 1 個の並べ方を数えれば良い．
-								add *= fm.binomial(cnt[i] - 1, k - 1);
+								add *= fm.bin(cnt[i] - 1, k - 1);
 
 								// k 個の固まりをどこに挿入するか
 								//	順序は先に定めたので，後は挿入位置だけを考えれば良い．
 								//	それぞれ j* 箇所中 ij* 箇所を選び順に挿入する．
-								add *= fm.binomial(j0, ij0);
-								add *= fm.binomial(j1, ij1);
-								add *= fm.binomial(j2, ij2);
-								add *= fm.binomial(J1, iJ1);
-								add *= fm.binomial(J2, iJ2);
+								add *= fm.bin(j0, ij0);
+								add *= fm.bin(j1, ij1);
+								add *= fm.bin(j2, ij2);
+								add *= fm.bin(J1, iJ1);
+								add *= fm.bin(J2, iJ2);
 
 								dp[i + 1][hash(nj0, nj1, nJ1)] += add;
 							}

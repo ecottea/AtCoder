@@ -32,6 +32,29 @@ vi integer_digits(ll n, int b = 10) {
 }
 
 
+//【桁の数の取得（桁数固定）】O(log n)
+/*
+* n を len 桁で b 進表記したときの桁の数字を上位桁から順に並べたリストを返す．
+*
+* 制約：|b| >= 2
+*/
+vi integer_digits(ll n, int len, int b = 10) {
+	// verify : https://yukicoder.me/problems/no/327
+
+	Assert(abs(b) >= 2);
+
+	// mod |b| を取れば最下位桁から順に決定していく．
+	vi ds(len);
+	rep(i, len) {
+		int d = smod(n, abs(b));
+		ds[len - 1 - i] = d;
+		n = (n - d) / b;
+	}
+
+	return ds;
+}
+
+
 //【桁の数からの復元】O(n)
 /*
 * b 進表記で上位桁から順に ds[0..n) が並んだ数の値を返す．
@@ -230,11 +253,20 @@ pll from_real_digits(const vi& noncycle, const vi& cycle, int base = 10) {
 }
 
 
-//【小数第 n 位の数】
+//【完全循環素数と原始根】
+/*
+* b 進法において，b と互いに素な素数 p について以下が成り立つ：
+*	1/p の循環節の長さが p-1 ⇔ b は mod p の原始根
+* 
+* verify : https://yukicoder.me/problems/no/1177
+*/
+
+
+//【小数第 n 位の数】O(log n)
 /*
 * num / dnm の b 進法での小数第 n 位の数を返す．
 *
-* 制約：dnm * b <= 2 * 10^9 + 1000
+* 制約：dnm * b <= 2*10^9+1000
 */
 int real_digit(int num, int dnm, ll n, int b = 10) {
 	// verify : https://yukicoder.me/problems/no/1842

@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "約数変換.h"
+#include "約数倍数変換.h"
 #include "二項係数.h"
 // ■■■■■ 組（スコア和） ■■■■■
 
@@ -27,7 +27,7 @@ mint difference_sum(vector<T> a) {
 }
 
 
-//【組の XOR の和】O((n + m) log max(a, b))
+//【組の XOR の総和】O((n + m) log max(a, b))
 /*
 * Σi∈[0..n) Σj∈[0..m) a[i] XOR b[j] の値を返す．
 */
@@ -55,49 +55,57 @@ T xor_sum(const vl& a, const vl& b) {
 }
 
 
-//【組の和の XOR】O(n log m log(max(a, b)))
+//【組の和の総 XOR】O(n log m log(max(a, b)))
 /*
 * XOR_i∈[0..n) XOR_j∈[0..m) (a[i] + b[j]) の値を返す．
 */
 int sum_xor(const vi& a, const vi& b) {
 	// verify : https://atcoder.jp/contests/abc091/tasks/arc092_b
 
-	int n = sz(a), m = sz(b);
-	const int d = 30;
+	//【方法】
+	// 一旦繰り上がりを無視すると全ての演算が XOR になるので，総 XOR を分解して
+	//		XOR_i∈[0..n) XOR_j∈[0..m) (a[i] ^ b[j])
+	//		= XOR_j∈[0..m) (XOR_i∈[0..n) a[i]) ^ XOR_i∈[0..n) (XOR_j∈[0..m) b[j]))
+	// となる．x ^ x = 0 に注意すると，第一項は
+	//		Boole[m ≡ 1 (mod 2)] XOR_i∈[0..n) a[i]
+	// と書き直せる（第二項も同様）
+	//
+	// 後は（下位からの累積も加味して）各桁ごとに繰り上がりが何回起こるかを求めればよい．
+	// これは下位ビットでソートして二分探索を行うことで求められる．
 
-	// 各ビット位置に現れる 1 の個数の偶奇
+	int n = sz(a), m = sz(b);
+	const int K = 31;
+
+	// 繰り上がりを無視した場合の結果を求める．
 	int a_xor = accumulate(all(a), 0, [](int x, int y) { return x ^ y; });
 	int b_xor = accumulate(all(b), 0, [](int x, int y) { return x ^ y; });
+	int res = (m & 1 ? a_xor : 0) ^ (n & 1 ? b_xor : 0);
 
-	int res = 0;
-	rep(k, d) {
-		ll cnt = 0;
-
-		// (1,0), (0,1) の組合せがあるごとに xor 結果のビットが反転する．
-		if ((a_xor & (1 << k)) && (((b_xor & (1 << k)) ^ (n % 2 == 1)))) cnt++;
-		if ((b_xor & (1 << k)) && (((a_xor & (1 << k)) ^ (n % 2 == 1)))) cnt++;
-
-		// 注目ビットより上を全て 0 にする．
-		vi a_masked(n), b_masked(n);
-		rep(i, n) a_masked[i] = a[i] & ((1 << k) - 1);
-		rep(i, m) b_masked[i] = b[i] & ((1 << k) - 1);
+	rep(k, K) {
+		// 第 k ビット以上を全て 0 にし，b を昇順ソートしておく．
+		vi a_masked(n), b_masked(m); int mask = (1 << k) - 1;
+		rep(i, n) a_masked[i] = a[i] & mask;
+		rep(j, m) b_masked[j] = b[j] & mask;
 		sort(all(b_masked));
 
-		// 各 a[i] ごとに下位桁からの繰り上がりが起こる回数を数える．
+		int bit = 0;
 		rep(i, n) {
-			auto it = lower_bound(all(b_masked), (1 << k) - a_masked[i]);
-			cnt += (ll)distance(it, b_masked.end());
+			// cnt : a[i] と足すと繰り上がりが起こる b[j] の個数
+			int cnt = m - lbpos(b_masked, (1 << k) - a_masked[i]);
+
+			// 繰り上がりが起こるたびに結果のビットが反転する．
+			bit ^= cnt & 1;
 		}
 
-		// これらの和の偶奇に応じて xor 結果のビットが求まる．
-		res += (cnt % 2) << k;
+		// 結果の第 k ビットが確定する．
+		res ^= bit << k;
 	}
 
 	return res;
 }
 
 
-//【組の剰余の和】O(n + A log A)（A = max(a)）
+//【組の剰余の総和】O(n + A log A)（A = max(a)）
 /*
 * 正整数列 a[0..n) について，Σi∈[0..n) Σj∈[0..n) a[i] mod a[j] の値を返す．
 */

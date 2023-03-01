@@ -5,15 +5,12 @@
 
 //【和が s 以下の最大区間長】O(n)
 /*
-* 非負整数列 a[0..n) で，Σa[l..r) <= s となる連続部分列の長さの最大値 r - l を返す．
+* 非負整数列 a[0..n) で，Σa[l..r) ≦ s となる連続部分列の長さの最大値 r - l を返す．
 *
 *（尺取り法）
 */
 int maximize_interval_length(const vl& a, ll s) {
 	int n = sz(a);
-
-	// 空和は 0 とする．
-	int res = 0;
 
 	// l, r : a[l..r) を走査中であることを表す．
 	int l = 0, r = 0;
@@ -21,8 +18,9 @@ int maximize_interval_length(const vl& a, ll s) {
 	// sum : Σa[l..r)
 	ll sum = 0;
 
+	int res = -INF;
 	while (true) {
-		// Σa[l..r) <= s の場合
+		// Σa[l..r) ≦ s の場合
 		if (sum <= s) {
 			// r で場合分けして考える．
 			// いまの l は固定された r に対して最小の l となっているので，
@@ -175,7 +173,6 @@ ll count_intervals(const vl& a, ll s) {
 			// 右を 1 つ進める．
 			sum += a[r];
 			r++;
-
 		}
 		// Σa[l..r) > s の場合
 		else {

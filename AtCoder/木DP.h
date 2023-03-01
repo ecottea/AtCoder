@@ -288,7 +288,7 @@ vector<T> tree_getDP_once(const Graph& g, int r) {
 *   ある部分森に対応する多項式が f(z) で，これらに共通の根 s を追加した部分木に
 *	対応する多項式が a(z) f(z) + b(z) のとき，組 {a(z), b(z)} を返す．
 *
-* 利用：【形式的冪級数（mod 998244353）】,【多項式の積の展開】,【多項式の累積積の和】
+* 利用：【形式的冪級数】,【多項式の積の展開】,【多項式の累積積の和】
 */
 template <MFPS(*leaf)(int), pair<MFPS, MFPS>(*apply)(int)>
 MFPS tree_getDP_forest_MFPS(Graph g, int r) {

@@ -32,6 +32,27 @@
 */
 
 
+//【繰り上がりビット】O(log max(x, y))
+/*
+* 非負整数 x, y の 2 進法での加算で繰り上がりの起こるビットだけを 1 にした数を返す．
+*/
+template <class T>
+T get_carry(T x, T y) {
+	// verify : https://atcoder.jp/contests/arc156/tasks/arc156_d
+
+	T res = 0;
+
+	while (y != 0) {
+		T ny = x & y;
+		res |= ny;
+		x ^= y;
+		y = ny << 1;
+	}
+
+	return res;
+}
+
+
 //【x との XOR の和】
 /*
 * XOR_sum(vT a) : O(n log max(a))

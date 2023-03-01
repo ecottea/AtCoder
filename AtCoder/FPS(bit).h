@@ -57,7 +57,8 @@
 * BFPS power_mod(BFPS f, ll d, BFPS g) : O(m^2 log d / 64)@im = deg gj
 *	f(x)^d % g(x) ‚ğ•Ô‚·D
 */
-template <int N> struct BFPS {
+template <int N>
+struct BFPS {
 	using SFPS = vi;
 
 	int n; // ŒW”‚ÌŒÂ”iŸ” + 1j
@@ -106,10 +107,8 @@ template <int N> struct BFPS {
 
 		n += g.n - 1;
 		bitset<N> res;
-		rep(i, g.n) {
-			if (g[i]) res ^= c << i;
-		}
-		c = res;
+		rep(i, g.n) if (g[i]) res ^= c << i;
+		c = move(res);
 		return *this;
 	}
 	BFPS operator*(const BFPS& g) const { return BFPS(*this) *= g; }
@@ -257,7 +256,8 @@ template <int N> struct BFPS {
 /*
 * f(x)^k mod g(x) ‚ğ•Ô‚·D
 */
-template <int N> BFPS<N> pow(const typename BFPS<N>::SFPS& f_sp, ll k, const typename BFPS<N>::SFPS& g_sp) {
+template <int N>
+BFPS<N> pow(const typename BFPS<N>::SFPS& f_sp, ll k, const typename BFPS<N>::SFPS& g_sp) {
 	// verify : https://atcoder.jp/contests/arc147/tasks/arc147_f
 	
 	//y•û–@z
@@ -283,13 +283,14 @@ template <int N> BFPS<N> pow(const typename BFPS<N>::SFPS& f_sp, ll k, const typ
 }
 
 
-//y“WŠJŒW”zO(n^2 log d)
+//y“WŠJŒW”zO(n^2 log d / 64)
 /*
 * —L—® f(x) / g(x) ‚ğŒ`®“I™p‹‰”‚É“WŠJ‚µ‚½‚Æ‚«‚Ì x^d ‚ÌŒW”‚ğ•Ô‚·D
 *
 * §–ñ : deg f < deg g, g[0] = 1, 2 deg g < N
 */
-template <int N> bool bostan_mori(const BFPS<N>& f, const BFPS<N>& g, ll d) {
+template <int N>
+bool bostan_mori(const BFPS<N>& f, const BFPS<N>& g, ll d) {
 	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
 
 	Assert(g.n >= 1 && g[0]);
@@ -321,7 +322,7 @@ template <int N> bool bostan_mori(const BFPS<N>& f, const BFPS<N>& g, ll d) {
 }
 
 
-//yüŒ`‘Q‰»®zO(d log d log n)
+//yüŒ`‘Q‰»®zO(d log d log n / 64)
 /*
 * ‰€ a[0..d) ‚Æ‘Q‰»® a[i] = ƒ°j=[0..d) c[j]a[i-1-j] ‚Å’è‹`‚³‚ê‚é
 * ”—ñ a ‚É‚Â‚¢‚ÄCa[n] ‚Ì’l‚ğ•Ô‚·D
@@ -339,7 +340,7 @@ bool linearly_recurrent_sequence(const bitset<N>& a, const bitset<N>& c, int d, 
 }
 
 
-//yŠg’£ƒ†[ƒNƒŠƒbƒh‚ÌŒİœ–@zO(deg(a) deg(b)) (?)
+//yŠg’£ƒ†[ƒNƒŠƒbƒh‚ÌŒİœ–@zO(deg(a) deg(b) / 64) (?)
 /*
 * g(x) = gcd(a(x), b(x)) ‚ğ g ‚ÉŠi”[‚·‚éD
 * a(x) u(x) + b(x) v(x) = g(x) ‚Ì‰ğ (u(x), v(x)) ‚ğ u, v ‚ÉŠi”[‚·‚éD
@@ -366,7 +367,7 @@ BFPS<N> extended_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& u, BFPS<N>& v) {
 }
 
 
-//y‘½€®‹tŒ³zO(deg(a) deg(b)) (?)
+//y‘½€®‹tŒ³zO(deg(a) deg(b) / 64) (?)
 /*
 * a(x) u(x) = 1 (mod b(x)) ‚ğ–‚½‚· u(x) ‚ğ u ‚ÉŠi”[‚·‚éD‚È‚¯‚ê‚Î false ‚ğ•Ô‚·D
 *
@@ -381,7 +382,7 @@ bool polynomial_inverse(const BFPS<N>& a, const BFPS<N>& b, BFPS<N>& u) {
 }
 
 
-//y‘½€®‚Ì—£U‘Î”–â‘èzO(2^(deg(g)/2) deg(g)^2)
+//y‘½€®‚Ì—£U‘Î”–â‘èzO(2^(deg(g)/2) deg(g)^2 / 64)
 /*
 * a(x) f(x)^d = b(x) mod g(x) ‚ÌÅ¬‰ğ d >= 0 ‚ğ•Ô‚·Di‚È‚¯‚ê‚Î INFLj
 *

@@ -142,14 +142,14 @@ struct Fenwick_tree {
 };
 
 
-//【遅延評価フェニック木（Z-加群）】
+//【区間加算フェニック木（Z-加群）】
 /*
-* Lazy_fenwick_tree<S, op, o, inv, mul>(int n) : O(n)
-*	要素数 n かつ初期値 o で初期化する．
+* Fenwick_tree_range_add<S, op, o, inv, mul>(int n) : O(n)
+*	要素数 n かつ初期値 o() で初期化する．
 *	要素は Z 加群 (S, op, o, inv, mul) の元とする．
 *
-* Lazy_fenwick_tree<S, op, o, inv, mul>(vS a) : O(n)
-*	配列 a で初期化する．
+* Fenwick_tree_range_add<S, op, o, inv, mul>(vS v) : O(n)
+*	v[0..n) で初期化する．
 *
 * set(int i, S x) : O(log n)
 *	v[i] = x とする．
@@ -157,36 +157,33 @@ struct Fenwick_tree {
 * S get(int i) : O(log n)
 *	v[i] を返す．
 *
-* S prod(int l, int r) : O(log n)
+* S sum(int l, int r) : O(log n)
 *	Σv[l..r) を返す．空なら o() を返す．
 *
-* apply(int i, S x) : O(log n)
+* add(int i, S x) : O(log n)
 *	v[i] += x とする．
 *
-* apply(int l, int r, S x) : O(log n)
+* add(int l, int r, S x) : O(log n)
 *	v[l..r) += x とする．
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S), S(*mul)(ll, S)>
-struct Lazy_fenwick_tree {
+struct Fenwick_tree_range_add {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_G
 
 	// ノードの個数（要素数 + 1）
 	int n;
 
-	// op( [1..i] ) を acc0[i] + i acc1[i] と分解する．
-	// さらに acc?[i] = Σraw?[1..i] と表されるような raw? を導入する．
-	// v[?][i] : Σraw?[*..i] の値（i ： 1-indexed，v[?][0] は使わない）
+	// Σv[1..i] を acc0[i] + i acc1[i] と分解する．
+	// さらに accD[i] = ΣrawD[1..i] と表されるような rawD を導入する．
+	// v[D][i] : ΣrawD[*..i] の値（i:1-indexed，v[D][0] は使わない）
 	vector<vector<S>> v;
-
-	// コンストラクタ（初期化なし）
-	Lazy_fenwick_tree() : n(0) {}
-
-	// 要素数 n かつ初期値 o で初期化
-	Lazy_fenwick_tree(int n_) : n(n_ + 1), v(2, vector<S>(n, o())) {}
+	
+	// 要素数 n かつ初期値 o() で初期化
+	Fenwick_tree_range_add(int n_) : n(n_ + 1), v(2, vector<S>(n, o())) {}
 
 	// 配列 a で初期化
-	Lazy_fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(2, vector<S>(n, o())) {
+	Fenwick_tree_range_add(const vector<S>& v_) : n(sz(v_) + 1), v(2, vector<S>(n, o())) {
 		// 配列の値を仮登録する．
 		rep(i, n - 1) v[0][i + 1] = v_[i];
 
@@ -197,35 +194,36 @@ struct Lazy_fenwick_tree {
 			}
 		}
 	}
+	Fenwick_tree_range_add() : n(0) {}
 
 	// v[i] = x とする．（i : 0-indexed）
 	void set(int i, S x) {
 		// 差分を求める．
 		S d = op(x, inv(get(i)));
 
-		apply(i, d);
+		add(i, d);
 	}
 
 	// v[i] を返す．（i : 0-indexed）
 	S get(int i) const {
-		return prod(i, i + 1);
+		return sum(i, i + 1);
 	}
 
-	// Σv[l..r) を返す．空なら o を返す．（l, r : 0-indexed）
-	S prod(int l, int r) const {
+	// Σv[l..r) を返す．空なら o() を返す．（l, r : 0-indexed）
+	S sum(int l, int r) const {
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
 		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
-		return op(prod_sub(r), inv(prod_sub(l)));
+		return op(sum_sub(r), inv(sum_sub(l)));
 	}
 
-	// Σv[1..r] を返す．空なら o を返す．（r : 1-indexed）
-	S prod_sub(int r) const {
-		return op(prod_sub(r, 0), mul((ll)r, prod_sub(r, 1)));
+	// Σv[1..r] を返す．空なら o() を返す．（r : 1-indexed）
+	S sum_sub(int r) const {
+		return op(sum_sub(r, 0), mul((ll)r, sum_sub(r, 1)));
 	}
 
-	// Σv[d][1..r] を返す．空なら o を返す．（r : 1-indexed）
-	S prod_sub(int r, int d) const {
+	// Σv[d][1..r] を返す．空なら o() を返す．（r : 1-indexed）
+	S sum_sub(int r, int d) const {
 		S res = o();
 
 		// 子に向かって累積 op() をとっていく．
@@ -239,29 +237,29 @@ struct Lazy_fenwick_tree {
 	}
 
 	// v[i] += x とする．（i : 0-indexed）
-	void apply(int i, S x) {
+	void add(int i, S x) {
 		// i を 1-indexed に直す．
 		i++;
 
-		apply_sub(i, x, 0);
+		add_sub(i, x, 0);
 	}
 
 	// v[l..r) += x とする．（l, r : 0-indexed） 
-	void apply(int l, int r, S x) {
+	void add(int l, int r, S x) {
 		// 0-indexed での半開区間 [l, r) は，
 		// 1-indexed での閉区間 [l + 1, r] に対応する．
 		l++;
 
 		// 区間の端の値を調整する．
-		apply_sub(l, mul((ll)(l - 1), inv(x)), 0);
-		apply_sub(r + 1, mul((ll)r, x), 0);
+		add_sub(l, mul((ll)(l - 1), inv(x)), 0);
+		add_sub(r + 1, mul((ll)r, x), 0);
 
-		apply_sub(l, x, 1);
-		apply_sub(r + 1, inv(x), 1);
+		add_sub(l, x, 1);
+		add_sub(r + 1, inv(x), 1);
 	}
 
 	// v[d][i] += x とする．（i : 1-indexed）
-	void apply_sub(int i, S x, int d) {
+	void add_sub(int i, S x, int d) {
 		// 根に向かって値を op() していく．
 		while (i < n) {
 			v[d][i] = op(v[d][i], x);
@@ -272,7 +270,179 @@ struct Lazy_fenwick_tree {
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Lazy_fenwick_tree& ft) {
+	friend ostream& operator<<(ostream& os, const Fenwick_tree_range_add& ft) {
+		rep(i, ft.n - 1) os << ft.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【区間線型加算フェニック木】
+/*
+* Fenwick_tree_range_linear_add<S>(int n) : O(n)
+*	v[0..n) = 0 で初期化する．
+*	制約 : S の元は 2 で割れる．
+*
+* Fenwick_tree_range_linear_add<S>(vS v) : O(n)
+*	v[0..n) で初期化する．
+*
+* set(int i, S b) : O(log n)
+*	v[i] = b とする．
+*
+* S get(int i) : O(log n)
+*	v[i] を返す．
+*
+* S sum(int l, int r) : O(log n)
+*	Σv[l..r) を返す．空なら 0 を返す．
+*
+* add(int i, S b) : O(log n)
+*	v[i] += b とする．
+*
+* add_const(int l, int r, S b) : O(log n)
+*	v[l..r) += b とする．
+*
+* add_linear(int l, int r, S a, S b) : O(log n)
+*	i∈[l..r) について，v[i] += a i + b とする．
+*
+* add_linear_right(int l, int r, S w0, S w1) : O(log n)
+*	v[l..r) に昇順に等差数列 w0, w1, ... を加える．
+*
+* add_linear_left(int r, int l, S w0, S w1) : O(log n)
+*	v(l..r] に降順に等差数列 w0, w1, ... を加える．
+*/
+template <class S>
+class Fenwick_tree_range_linear_add {
+	// ノードの個数（要素数 + 1）
+	int n;
+
+	// Σv[1..i] を acc0[i] + i acc1[i] + i^2 acc2[i] と分解する．
+	// さらに accD[i] = (1/2)ΣrawD[1..i] と表されるような rawD を導入する．
+	// v[D][i] : ΣrawD[*..i] の値（i:1-indexed，v[D][0] は使わない）
+	vector<vector<S>> v;
+
+	// Σv[1..r] を返す．空なら 0 を返す．（r : 1-indexed）
+	S sum_sub(int r) const {
+		return sum_sub(r, 0) + sum_sub(r, 1) * r + sum_sub(r, 2) * r * r;
+	}
+
+	// Σv[d][1..r] を返す．空なら 0 を返す．（r : 1-indexed）
+	S sum_sub(int r, int d) const {
+		S res = 0;
+
+		// 子に向かって累積和をとっていく．
+		while (r > 0) {
+			res += v[d][r];
+
+			// r の最下位ビットから 1 を減算することで次の位置を得る．
+			r -= r & -r;
+		}
+
+		return res;
+	}
+
+	// v[d][i] += x とする．（i : 0-indexed）
+	void add_sub(int i, S x, int d) {
+		// 1-indexed に直す．
+		i++;
+
+		// 根に向かって値を加算していく．
+		while (i < n) {
+			v[d][i] += x;
+
+			// i の最下位ビットに 1 を加算することで次の位置を得る．
+			i += i & -i;
+		}
+	}
+
+public:
+	// v[0..n) = 0 で初期化する．
+	Fenwick_tree_range_linear_add(int n_) : n(n_ + 1), v(3, vector<S>(n)) {}
+
+	// v[0..n) で初期化する．
+	Fenwick_tree_range_linear_add(const vector<S>& v_) : n(sz(v_) + 1), v(3, vector<S>(n)) {
+		// 配列の値を仮登録する．
+		rep(i, n - 1) v[0][i + 1] = 2 * v_[i];
+
+		// 正しい値になるよう根に向かって累積和をとっていく．
+		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
+			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
+				v[0][i] += v[0][i - pow2];
+			}
+		}
+	}
+	Fenwick_tree_range_linear_add() : n(0) {}
+
+	// v[i] = b とする．（i : 0-indexed）
+	void set(int i, S b) {
+		add(i, b - get(i));
+	}
+
+	// v[i] を返す．（i : 0-indexed）
+	S get(int i) const {
+		return sum(i, i + 1);
+	}
+
+	// Σv[l..r) を返す．空なら 0 を返す．（l, r : 0-indexed）
+	S sum(int l, int r) const {
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		// 0-indexed での半開区間 [l, r) は，
+		// 1-indexed での閉区間 [l + 1, r] に対応する．
+		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
+		return (sum_sub(r) - sum_sub(l)) / 2;
+	}
+
+	// v[i] += b とする．（i : 0-indexed）
+	void add(int i, S b) {
+		if (i < 0 || n <= i) return;
+
+		add_sub(i, 2 * b, 0);
+	}
+
+	// v[l..r) += b とする．（l, r : 0-indexed） 
+	void add_const(int l, int r, S b) {
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return;
+
+		add_sub(l, -2 * l * b, 0);
+		add_sub(r, 2 * r * b, 0);
+		add_sub(l, 2 * b, 1);
+		add_sub(r, -2 * b, 1);
+	}
+
+	// i∈[l..r) について，v[i] += a i + b とする．
+	void add_linear(int l, int r, S a, S b) {
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return;
+
+		add_sub(l, -l * (a * (l - 1) + 2 * b), 0);
+		add_sub(r, r * (a * (r - 1) + 2 * b), 0);
+		add_sub(l, -a + 2 * b, 1);
+		add_sub(r, a - 2 * b, 1);
+		add_sub(l, a, 2);
+		add_sub(r, -a, 2);
+	}
+
+	// v[l..r) に昇順に等差数列 w0, w1, ... を加える．
+	void add_linear_right(int l, int r, S w0, S w1) {
+		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
+		ll a = w1 - w0;
+		ll b = w0 - a * l;
+		add_linear(l, r, a, b);
+	}
+
+	// v(l..r] に降順に等差数列 w0, w1, ... を加える．
+	void add_linear_left(int r, int l, S w0, S w1) {
+		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
+		ll a = w0 - w1;
+		ll b = w0 - a * r;
+		add_linear(l + 1, r + 1, a, b);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Fenwick_tree_range_linear_add& ft) {
 		rep(i, ft.n - 1) os << ft.get(i) << " ";
 		return os;
 	}
@@ -403,6 +573,176 @@ struct Dynamic_fenwick_tree {
 		sort(all(ivs));
 
 		for (auto& [i, v] : ivs) os << "(" << i << "," << v << ") ";
+		return os;
+	}
+#endif
+};
+
+
+//【動的区間線型加算フェニック木】（遅い）
+/*
+* Fenwick_tree_range_linear_add<S>(int n) : O(n)
+*	v[0..n) = 0 で初期化する．
+*	制約 : S の元は 2 で割れる．
+*
+* Fenwick_tree_range_linear_add<S>(vS v) : O(n)
+*	v[0..n) で初期化する．
+*
+* set(int i, S b) : O(log n)
+*	v[i] = b とする．
+*
+* S get(int i) : O(log n)
+*	v[i] を返す．
+*
+* S sum(int l, int r) : O(log n)
+*	Σv[l..r) を返す．空なら 0 を返す．
+*
+* add(int i, S b) : O(log n)
+*	v[i] += b とする．
+*
+* add_const(int l, int r, S b) : O(log n)
+*	v[l..r) += b とする．
+*
+* add_linear(int l, int r, S a, S b) : O(log n)
+*	i∈[l..r) について，v[i] += a i + b とする．
+*
+* add_linear_right(int l, int r, S w0, S w1) : O(log n)
+*	v[l..r) に昇順に等差数列 w0, w1, ... を加える．
+*
+* add_linear_left(int r, int l, S w0, S w1) : O(log n)
+*	v(l..r] に降順に等差数列 w0, w1, ... を加える．
+*/
+template <class S>
+class Dynamic_Fenwick_tree_range_linear_add {
+	// ノードの個数（要素数 + 1）
+	ll n;
+
+	// Σv[1..i] を acc0[i] + i acc1[i] + i^2 acc2[i] と分解する．
+	// さらに accD[i] = (1/2)ΣrawD[1..i] と表されるような rawD を導入する．
+	// v[D][i] : ΣrawD[*..i] の値（i:1-indexed，v[D][0] は使わない）
+	unordered_map<ll, vector<S>> v;
+
+	// Σv[1..r] を返す．空なら 0 を返す．（r : 1-indexed）
+	S sum_sub(ll r) const {
+		return sum_sub(r, 0) + sum_sub(r, 1) * r + sum_sub(r, 2) * r * r;
+	}
+
+	// Σv[d][1..r] を返す．空なら 0 を返す．（r : 1-indexed）
+	S sum_sub(ll r, ll d) const {
+		S res = 0;
+
+		// 子に向かって累積和をとっていく．
+		while (r > 0) {
+			auto it = v.find(r);
+			if (it != v.end()) res += it->second[d];
+
+			// r の最下位ビットから 1 を減算することで次の位置を得る．
+			r -= r & -r;
+		}
+
+		return res;
+	}
+
+	// v[d][i] += x とする．（i : 0-indexed）
+	void add_sub(ll i, S x, int d) {
+		// 1-indexed に直す．
+		i++;
+
+		// 根に向かって値を加算していく．
+		while (i < n) {
+			auto it = v.find(i);
+			if (it != v.end()) it->second[d] += x;
+			else {
+				vl ini(3);
+				ini[d] = x;
+				v[i] = ini;
+			}
+
+			// i の最下位ビットに 1 を加算することで次の位置を得る．
+			i += i & -i;
+		}
+	}
+
+public:
+	// v[0..n) = 0 で初期化する．
+	Dynamic_Fenwick_tree_range_linear_add(ll n_) : n(n_ + 1) {}
+	Dynamic_Fenwick_tree_range_linear_add() : n(0) {}
+
+	// v[i] = b とする．（i : 0-indexed）
+	void set(ll i, S b) {
+		add(i, b - get(i));
+	}
+
+	// v[i] を返す．（i : 0-indexed）
+	S get(ll i) const {
+		// verify : https://www.codechef.com/problems/STREETTA
+
+		return sum(i, i + 1);
+	}
+
+	// Σv[l..r) を返す．空なら 0 を返す．（l, r : 0-indexed）
+	S sum(ll l, ll r) const {
+		chmax(l, 0LL); chmin(r, n);
+		if (l >= r) return 0;
+
+		// 0-indexed での半開区間 [l, r) は，
+		// 1-indexed での閉区間 [l + 1, r] に対応する．
+		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
+		return (sum_sub(r) - sum_sub(l)) / 2;
+	}
+
+	// v[i] += b とする．（i : 0-indexed）
+	void add(ll i, S b) {
+		if (i < 0 || n <= i) return;
+
+		add_sub(i, 2 * b, 0);
+	}
+
+	// v[l..r) += b とする．（l, r : 0-indexed） 
+	void add_const(ll l, ll r, S b) {
+		chmax(l, 0LL); chmin(r, n);
+		if (l >= r) return;
+
+		add_sub(l, -2 * l * b, 0);
+		add_sub(r, 2 * r * b, 0);
+		add_sub(l, 2 * b, 1);
+		add_sub(r, -2 * b, 1);
+	}
+
+	// i∈[l..r) について，v[i] += a i + b とする．
+	void add_linear(ll l, ll r, S a, S b) {
+		chmax(l, 0LL); chmin(r, n);
+		if (l >= r) return;
+
+		add_sub(l, -l * (a * (l - 1) + 2 * b), 0);
+		add_sub(r, r * (a * (r - 1) + 2 * b), 0);
+		add_sub(l, -a + 2 * b, 1);
+		add_sub(r, a - 2 * b, 1);
+		add_sub(l, a, 2);
+		add_sub(r, -a, 2);
+	}
+
+	// v[l..r) に昇順に等差数列 w0, w1, ... を加える．
+	void add_linear_right(ll l, ll r, S w0, S w1) {
+		// verify : https://www.codechef.com/problems/STREETTA
+
+		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
+		ll a = w1 - w0;
+		ll b = w0 - a * l;
+		add_linear(l, r, a, b);
+	}
+
+	// v(l..r] に降順に等差数列 w0, w1, ... を加える．
+	void add_linear_left(ll r, ll l, S w0, S w1) {
+		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
+		ll a = w0 - w1;
+		ll b = w0 - a * r;
+		add_linear(l + 1, r + 1, a, b);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Dynamic_Fenwick_tree_range_linear_add& ft) {
+		rep(i, ft.n - 1) os << ft.get(i) << " ";
 		return os;
 	}
 #endif
@@ -547,7 +887,7 @@ struct Fenwick_tree_2D {
 };
 
 
-//【二次元遅延評価フェニック木（Z-加群）】
+//【二次元領域加算フェニック木（Z-加群）】
 /*
 * Lazy_fenwick_tree_2D<S, op, o, inv, mul>(int h, int w) : O(h w)
 *	要素数 h * w かつ初期値 o で初期化する．
@@ -877,6 +1217,8 @@ struct Dynamic_fenwick_tree_2D {
 */
 template <class T>
 struct fenwick_tree {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_6_A
+
 	int n;
 	vector<T> v;
 
@@ -889,7 +1231,7 @@ struct fenwick_tree {
 			p += p & -p;
 		}
 	}
-	T sum_sub(int r) {
+	T sum_sub(int r) const {
 		T res = 0;
 		while (r > 0) {
 			res += v[r];
@@ -897,9 +1239,18 @@ struct fenwick_tree {
 		}
 		return res;
 	}
-	T sum(int l, int r) {
+	T sum(int l, int r) const {
 		return sum_sub(r) - sum_sub(l);
 	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const fenwick_tree& ft) {
+		rep(i, ft.n - 1) {
+			os << ft.sum(i, i + 1) << " ";
+		}
+		return os;
+	}
+#endif
 };
 
 

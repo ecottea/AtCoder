@@ -75,7 +75,7 @@ mint counting_PIE(const vm& c, const Factorial_mint& fm) {
 
 	int sign = 1;
 	repi(k, 0, n) {
-		res += sign * fm.binomial(n, k) * c[k];
+		res += sign * fm.bin(n, k) * c[k];
 		sign *= -1;
 	}
 
@@ -110,7 +110,7 @@ vm counting_PIE_all(const vm& c, const Factorial_mint& fm) {
 	vm cnt(n + 1);
 
 	repi(i, 0, n) repi(j, i, n) {
-		cnt[i] += ((j - i) % 2 ? -1 : 1) * fm.binomial(n - i, j - i) * c[j];
+		cnt[i] += ((j - i) % 2 ? -1 : 1) * fm.bin(n - i, j - i) * c[j];
 	}
 
 	return cnt;
@@ -144,16 +144,16 @@ vm counting_PIE_all_fast(vm c, const Factorial_mint& fm) {
 
 	int n = sz(c) - 1;
 
-	repi(i, 0, n) c[i] *= fm.factorial_inv(n - i);
+	repi(i, 0, n) c[i] *= fm.fact_inv(n - i);
 
 	vm coef(n + 1);
-	repi(i, 0, n) coef[i] = ((n - i) % 2 ? -1 : 1) * fm.factorial_inv(n - i);
+	repi(i, 0, n) coef[i] = ((n - i) % 2 ? -1 : 1) * fm.fact_inv(n - i);
 
 	// coef と c を畳み込んで上側を取得する．
 	vm cnt = convolution(coef, c);
 	cnt.erase(cnt.begin(), cnt.begin() + n);
 
-	repi(i, 0, n) cnt[i] *= fm.factorial(n - i);
+	repi(i, 0, n) cnt[i] *= fm.fact(n - i);
 
 	return cnt;
 }
@@ -181,23 +181,23 @@ mint count_points_in_BB(int n, int h, int w, Factorial_mint& fm) {
 	mint res = 0;
 
 	// 無条件の場合
-	res += fm.binomial(h * w, n);
+	res += fm.bin(h * w, n);
 
 	// 少なくとも 1 個の辺が条件を満たしていない場合
-	res -= 2 * fm.binomial((h - 1) * w, n); // 上または下
-	res -= 2 * fm.binomial(h * (w - 1), n); // 左または右
+	res -= 2 * fm.bin((h - 1) * w, n); // 上または下
+	res -= 2 * fm.bin(h * (w - 1), n); // 左または右
 
 	// 少なくとも 2 個の辺が条件を満たしていない場合
-	res += fm.binomial((h - 2) * w, n); // 上下
-	res += fm.binomial(h * (w - 2), n); // 左右
-	res += 4 * fm.binomial((h - 1) * (w - 1), n); //（上または下）かつ（左または右）
+	res += fm.bin((h - 2) * w, n); // 上下
+	res += fm.bin(h * (w - 2), n); // 左右
+	res += 4 * fm.bin((h - 1) * (w - 1), n); //（上または下）かつ（左または右）
 
 	// 少なくとも 3 個の辺が条件を満たしていない場合
-	res -= 2 * fm.binomial((h - 2) * (w - 1), n); // 上下かつ（左または右）
-	res -= 2 * fm.binomial((h - 1) * (w - 2), n); //（上または下）かつ左右
+	res -= 2 * fm.bin((h - 2) * (w - 1), n); // 上下かつ（左または右）
+	res -= 2 * fm.bin((h - 1) * (w - 2), n); //（上または下）かつ左右
 
 	// 全ての辺が条件を満たしていない場合
-	if (h >= 2 && w >= 2) res += fm.binomial((h - 2) * (w - 2), n); // 上下かつ左右
+	if (h >= 2 && w >= 2) res += fm.bin((h - 2) * (w - 2), n); // 上下かつ左右
 
 	return res;
 }

@@ -313,7 +313,7 @@ int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
 	rep(s, n) repe(t, g[s]) bm.add_edge(s, t);
 
 	// G の最大マッチングの大きさは，g の点素なパス被覆で最小のものの大きさに等しい．
-	int res = n - bm.flow();
+	int res = n - bm.solve();
 	if (paths == nullptr) return res;
 
 	vector<pii> es = bm.maximum_matching();

@@ -43,7 +43,7 @@ ll inversion_number(const vector<T>& a) {
 }
 
 
-//y“]“|”zO(n log n)
+//y“]“|”iÀˆ³jzO(n log n)
 /*
 * a[0..n) ‚Ì“]“|”‚ğ•Ô‚·D
 *
@@ -74,7 +74,7 @@ ll inversion_number_cc(const vector<T>& a) {
 }
 
 
-//y“]“|”zO(n (log n)^2)
+//y“]“|”i•ªŠ„“¡jzO(n (log n)^2)
 /*
 * a[0..n) ‚Ì“]“|”‚ğ•Ô‚·D
 *

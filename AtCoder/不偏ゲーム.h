@@ -45,9 +45,9 @@ map<T, int> calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt) {
 }
 
 
-//【最小除外数（mex）】
+//【最小除外数】
 /*
-* Nimber() : O(1)
+* Mex() : O(1)
 *	空で初期化する．
 *
 * insert(int v) : O(log n)
@@ -56,10 +56,10 @@ map<T, int> calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt) {
 * erase(int v) : O(log n)
 *	ニム値 v をもつ局面を 1 つ削除する．
 *
-* int mex() : O(log n)
+* int get() : O(log n)
 *	現在記録されている局面のニム値の mex を返す．
 */
-struct Nimber {
+struct Mex {
 	// lrs : 連続したニム値をもつ閉区間 [l, r] の集合
 	set<pii> lrs;
 
@@ -67,7 +67,7 @@ struct Nimber {
 	unordered_map<int, int> cnt;
 
 	// コンストラクタ（空で初期化）
-	Nimber() {}
+	Mex() {}
 
 	// ニム値 v をもつ局面を 1 つ追加する．
 	void insert(int v) {
@@ -134,7 +134,7 @@ struct Nimber {
 	}
 
 	// 現在記録されている局面のニム値の最小除外数を返す．
-	int mex() {
+	int get() {
 		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
 
 		if (lrs.empty() || lrs.begin()->first > 0) return 0;
@@ -142,7 +142,7 @@ struct Nimber {
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Nimber nm) {
+	friend ostream& operator<<(ostream& os, Mex nm) {
 		vi res;
 		repe(p, nm.cnt) rep(hoge, p.second) res.push_back(p.first);
 		sort(all(res));
@@ -155,14 +155,14 @@ struct Nimber {
 
 //【区間 mex】O(n log n)
 /*
-* 状態 i のニム値 nimber[i] が次式で与えられる場合のニム値を一括計算する．
-*	nimber[i] = mex{ nimber[j] | j ∈ [i-c[i]..i) }（直前 c[i] 個の mex）
+* 状態 i のニム値 nimber[i] が次式で与えられる場合のニム値を一括計算し nimber を返す．
+*	nimber[i] = get{ nimber[j] | j ∈ [i-c[i]..i) }（直前 c[i] 個の mex）
 */
 int op_rm(int a, int b) { return min(a, b); }
 int e_rm() { return INF; }
-void range_mex(const vi& c, vi& nimber) {
+vi range_mex(const vi& c) {
 	int n = sz(c);
-	nimber = vi(n);
+	vi nimber(n);
 
 	// seg[v] : 今まで見てきた中でニム値 v が最後に現れた局面（なければ -1）
 	vi ini(n, -1);
@@ -179,19 +179,21 @@ void range_mex(const vi& c, vi& nimber) {
 		// ニム値 v が最後に現れた局面が i であることを記録する．
 		seg.set(v, i);
 	}
+
+	return nimber;
 }
 
 
 //【個数制限付きニム】O(n m)
 /*
 * 山から取り除ける石の個数が c[0..m) に限られるルールのニムについて，
-* i∈[0..n] 個の石からなる山のニム値を nimber[i] に格納する．
+* 各 i∈[0..n] 個の石からなる山のニム値を格納したリストを返す．
 */
-void selection_nim(const vi& c, int n, vi& nimber) {
+vi selection_nim(const vi& c, int n) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_k
 
 	int m = sz(c);
-	nimber.resize(n + 1);
+	vi nimber(n + 1);
 
 	nimber[0] = 0;
 	repi(i, 1, n) {
@@ -203,10 +205,12 @@ void selection_nim(const vi& c, int n, vi& nimber) {
 			if (i - c[j] >= 0) bucket[nimber[i - c[j]]] = true;
 		}
 
-		// 記録された局面のニム値の mex を求める．
+		// 記録された局面のニム値の get を求める．
 		nimber[i] = 0;
 		while (bucket[nimber[i]]) nimber[i]++;
 	}
+
+	return nimber;
 }
 
 	
@@ -214,15 +218,14 @@ void selection_nim(const vi& c, int n, vi& nimber) {
 /*
 * DAG g のある頂点 v にコマが置かれている．
 * 先手と後手は交互にコマを辺で繋がれた頂点へ動かし，先に移動不可能になった方が負けとする．
-* コマが v にある状態のニム値を nimber[v] に格納する．
+* コマが各 v∈[0..n) にある状態のニム値を格納したリストを返す．
 *
-* 利用：【最小除外数（mex）】
+* 利用：【最小除外数】
 */
-void DAG_game(const Graph& g, vi& nimber) {
+vi DAG_game(const Graph& g) {
 	int n = sz(g);
-
-	vb seen(n);
-	nimber = vi(n);
+		
+	vi nimber(n); vb seen(n);
 
 	function<int(int)> dfs = [&](int s) {
 		// s の情報を計算済だったらすぐに返す．
@@ -230,15 +233,17 @@ void DAG_game(const Graph& g, vi& nimber) {
 		seen[s] = true;
 
 		// s から行ける頂点 t の情報を元に s の情報を計算する．
-		Nimber nx;
+		Mex nx;
 		repe(t, g[s]) nx.insert(dfs(t));
-		nimber[s] = nx.mex();
+		nimber[s] = nx.get();
 
 		return nimber[s];
 	};
 
 	// 各頂点 s についての情報を計算する．
 	rep(s, n) dfs(s);
+
+	return nimber;
 }
 
 
@@ -246,11 +251,11 @@ void DAG_game(const Graph& g, vi& nimber) {
 /*
 * 有向グラフ（閉路可）g のある頂点 v にコマが置かれている．
 * 先手と後手は交互にコマを辺で繋がれた頂点へ動かし，先に移動不可能になった方が負けとする．
-* コマが v にある状態からの結果（1:先手勝ち，0:後手勝ち，-1:引き分け）を res[v] に格納する．
+* コマが各 v∈[0..n) にある状態からの結果（1:先手勝ち，0:後手勝ち，-1:引き分け）を格納したリストを返す．
 *
 *（後退解析）
 */
-void directed_graph_game(const Graph& g, vi& res) {
+vi directed_graph_game(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc209/tasks/abc209_e
 
 	int n = sz(g);
@@ -261,7 +266,7 @@ void directed_graph_game(const Graph& g, vi& res) {
 
 	// res[i] : 先手番で局面 i のときの勝敗（1:勝ち，0:負け，-1:引き分け）
 	const int WIN = 1, LOSE = 0, DRAW = -1;
-	res = vi(n, DRAW);
+	vi res(n, DRAW);
 
 	// rem[i] : まだ調べていない局面 i から遷移可能な局面がいくつあるか
 	vi rem(n);
@@ -307,7 +312,9 @@ void directed_graph_game(const Graph& g, vi& res) {
 			}
 		}
 	}
+
 	// 後退解析が終わっても勝敗が決定されていない局面は全て引き分け．
+	return res;
 }
 
 

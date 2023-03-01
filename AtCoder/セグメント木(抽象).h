@@ -34,7 +34,7 @@
 */
 template <class S, S(*op)(S, S), S(*e)()>
 struct Segtree {
-	// 参考：https://algo-logic.info/segment-tree/
+	// 参考 : https://algo-logic.info/segment-tree/
 
 	// 完全二分木の葉の数（必ず 2 冪）
 	int n;
@@ -554,47 +554,47 @@ public:
 
 //【動的セグメント木（モノイド）】
 /*
-* Dynamic_segtree<T, S, op, e>(T n) : O(1)
+* Dynamic_segtree<S, op, e>(ll n) : O(1)
 *	a[0..n) = e() で初期化する．
-*	位置の型は T，要素はモノイド (S, op, e) の元とする．
+*	位置の型は ll，要素はモノイド (S, op, e) の元とする．
 *
-* set(T i, S x) : O(log n)
+* set(ll i, S x) : O(log n)
 *	a[i] = x とする．
 *
-* apply_left(T i, S x) : O(log n)
+* apply_left(ll i, S x) : O(log n)
 *	a[i] = op(x, a[i]) とする．
 *
-* apply_right(T i, S x) : O(log n)
+* apply_right(ll i, S x) : O(log n)
 *	a[i] = op(a[i], x) とする．
 *
-* S get(T i) : O(log n)
+* S get(ll i) : O(log n)
 *	a[i] を返す（なければ e() を返す）
 *
-* S prod(T l, T r) : O(log n)
+* S prod(ll l, ll r) : O(log n)
 *	op( a[l..r) ) を返す．空なら e() を返す．
 *
 * S all_prod() : O(1)
 *	op( a[0..n) ) を返す．
 *
-* T max_right(T l, function<bool(S)> f) : O(log n)
+* ll max_right(ll l, function<bool(S)> f) : O(log n)
 *	f( op( a[l..r) ) ) = true となる最大の r を返す．
 *   制約：f( e() ) = true，f は単調
 *
-* T min_left(T r, function<bool(S)> f) : O(log n)
+* ll min_left(ll r, function<bool(S)> f) : O(log n)
 *	f( op( a[l..r) ) ) = true となる最小の l を返す．
 *	制約：f( e() ) = true，f は単調
 */
-template <class T, class S, S(*op)(S, S), S(*e)()>
+template <class S, S(*op)(S, S), S(*e)()>
 class Dynamic_segtree {
 	// 参考 : https://lorent-kyopro.hatenablog.com/entry/2021/03/12/025644
 
 	struct Node {
-		T pos; // ノードの位置
+		ll pos; // ノードの位置
 		S val; // ノードの値
 		S acc; // 部分木の値
 		Node* l, * r;
 
-		Node(T pos, S val) : pos(pos), val(val), acc(val), l(nullptr), r(nullptr) {}
+		Node(ll pos, S val) : pos(pos), val(val), acc(val), l(nullptr), r(nullptr) {}
 
 		// acc を正しい値にする．
 		void update() {
@@ -606,11 +606,11 @@ class Dynamic_segtree {
 
 	const int SET = 0, APL = 1, APR = 2;
 
-	T n;
+	ll n;
 	Node* root;
 
 	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [il, ir) に対応する）
-	void set(Node*& t, T il, T ir, T pos, S val, int q_type) const {
+	void set(Node*& t, ll il, ll ir, ll pos, S val, int q_type) const {
 		// ノードが存在しなかった場合は新たに作成する．
 		if (!t) {
 			t = new Node(pos, val);
@@ -628,7 +628,7 @@ class Dynamic_segtree {
 		}
 
 		// 区間の中央
-		T im = (il + ir) / 2;
+		ll im = (il + ir) / 2LL;
 
 		// 区間の左側に対象位置 pos がある場合
 		if (pos < im) {
@@ -654,7 +654,7 @@ class Dynamic_segtree {
 		t->update();
 	}
 
-	S get(Node* t, T il, T ir, T pos) const {
+	S get(Node* t, ll il, ll ir, ll pos) const {
 		// ノードが存在しなかった場合は単位元を返す．
 		if (!t) return e();
 
@@ -662,13 +662,13 @@ class Dynamic_segtree {
 		if (t->pos == pos) return t->val;
 
 		// 区間の中央
-		T im = (il + ir) / 2;
+		ll im = (il + ir) / 2LL;
 
 		if (pos < im) return get(t->l, il, im, pos);
 		else return get(t->r, im, ir, pos);
 	}
 
-	S prod(Node* t, T il, T ir, T l, T r) const {
+	S prod(Node* t, ll il, ll ir, ll l, ll r) const {
 		// ノードが存在しなかった場合や完全に [il, ir) の範囲外になった場合は単位元を返す．
 		if (!t || ir <= l || r <= il) return e();
 
@@ -676,7 +676,7 @@ class Dynamic_segtree {
 		if (l <= il && ir <= r) return t->acc;
 
 		// 区間の中央
-		T im = (il + ir) / 2;
+		ll im = (il + ir) / 2;
 
 		S res = prod(t->l, il, im, l, r);
 		if (l <= t->pos && t->pos < r) res = op(res, t->val);
@@ -685,14 +685,14 @@ class Dynamic_segtree {
 		return res;
 	}
 
-	T max_right(Node* t, T il, T ir, T l, const function<bool(S)>& f, S& acc) const {
+	ll max_right(Node* t, ll il, ll ir, ll l, const function<bool(S)>& f, S& acc) const {
 		if (!t || ir <= l) return n;
 		if (f(op(acc, t->acc))) {
 			acc = op(acc, t->acc);
 			return n;
 		}
-		T im = (il + ir) / 2;
-		T res = max_right(t->l, il, im, l, f, acc);
+		ll im = (il + ir) / 2;
+		ll res = max_right(t->l, il, im, l, f, acc);
 		if (res != n) return res;
 		if (l <= t->pos) {
 			acc = op(acc, t->val);
@@ -701,18 +701,18 @@ class Dynamic_segtree {
 		return max_right(t->r, im, ir, l, f, acc);
 	}
 
-	T min_left(Node* t, T il, T ir, T r, const function<bool(S)>& f, S& acc) const {
-		if (!t || r <= il) return T(0);
+	ll min_left(Node* t, ll il, ll ir, ll r, const function<bool(S)>& f, S& acc) const {
+		if (!t || r <= il) return 0LL;
 		if (f(op(t->acc, acc))) {
 			acc = op(t->acc, acc);
-			return T(0);
+			return 0L;
 		}
-		T im = (il + ir) / 2;
-		T res = min_left(t->r, im, ir, r, f, acc);
+		ll im = (il + ir) / 2;
+		ll res = min_left(t->r, im, ir, r, f, acc);
 		if (res != 0) return res;
 		if (t->pos < r) {
 			acc = op(t->val, acc);
-			if (!f(acc)) return t->pos + T(1);
+			if (!f(acc)) return t->pos + 1LL;
 		}
 		return min_left(t->l, il, im, r, f, acc);
 	}
@@ -727,53 +727,51 @@ class Dynamic_segtree {
 
 public:
 	// a[0..n) = e() で初期化する．
-	Dynamic_segtree(T n) : n(n), root(nullptr) {
+	Dynamic_segtree(ll n) : n(n), root(nullptr) {
 		// verify : https://www.spoj.com/problems/ADAAPHID/
 	}
-	Dynamic_segtree() : n(T(0)), root(nullptr) {}
+	Dynamic_segtree() : n(0LL), root(nullptr) {}
 
 	// a[i] = x とする．
-	void set(T i, S x) {
+	void set(ll i, S x) {
 		// verify : https://www.spoj.com/problems/ADAAPHID/
 
-		assert(T(0) <= i && i < n);
+		assert(0LL <= i && i < n);
 
-		set(root, T(0), n, i, x, SET);
+		set(root, 0LL, n, i, x, SET);
 	}
 
 	// a[i] = op(x, a[i]) とする．
-	void apply_left(T i, S x) {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+	void apply_left(ll i, S x) {
+		assert(0LL <= i && i < n);
 
-		assert(T(0) <= i && i < n);
-
-		set(root, T(0), n, i, x, APL);
+		set(root, 0LL, n, i, x, APL);
 	}
 
 	// a[i] = op(a[i], x) とする．
-	void apply_right(T i, S x) {
-		assert(T(0) <= i && i < n);
+	void apply_right(ll i, S x) {
+		assert(0LL <= i && i < n);
 
-		set(root, T(0), n, i, x, APR);
+		set(root, 0LL, n, i, x, APR);
 	}
 
 	// a[i] を返す．
-	S get(T i) const {
+	S get(ll i) const {
 		// verify : https://www.spoj.com/problems/ADAAPHID/
 
-		assert(T(0) <= i && i < n);
+		assert(0LL <= i && i < n);
 
-		return get(root, T(0), n, i);
+		return get(root, 0LL, n, i);
 	}
 
 	// op( a[l..r) ) を返す．空なら e() を返す．
-	S prod(T l, T r) const {
+	S prod(ll l, ll r) const {
 		// verify : https://www.spoj.com/problems/ADAAPHID/
 
-		chmax(l, T(0)); chmin(r, n);
+		chmax(l, 0LL); chmin(r, n);
 		if (l >= r) return e();
 
-		return prod(root, T(0), n, l, r);
+		return prod(root, 0LL, n, l, r);
 	}
 
 	// op( a[0..n) ) を返す．
@@ -781,24 +779,30 @@ public:
 		return root ? root->acc : e();
 	}
 
-	// f( op( a[l..r) ) ) = true となる最大の r を返す．
-	T max_right(T l, const function<bool(S)>& f) const {
-		// verify : https://www.spoj.com/problems/COUNT1IT/
+	// a[l..r) を全て e() にする．
+	void reset(ll l, ll r) {
+		chmax(l, 0LL); chmin(r, n);
+		if (l >= r) return;
 
-		chmax(l, T(0));
+		return reset(root, 0LL, n, l, r);
+	}
+
+	// f( op( a[l..r) ) ) = true となる最大の r を返す．
+	ll max_right(ll l, const function<bool(S)>& f) const {
+		chmax(l, 0LL);
 
 		S acc = e();
 		assert(f(acc));
-		return max_right(root, T(0), n, l, f, acc);
+		return max_r(root, 0LL, n, l, f, acc);
 	}
 
 	// f( op( a[l..r) ) ) = true となる最小の l を返す．
-	T min_left(T r, const function<bool(S)>& f) const {
+	ll min_left(ll r, const function<bool(S)>& f) const {
 		chmin(r, n);
 
 		S acc = e();
 		assert(f(acc));
-		return min_left(root, T(0), n, r, f, acc);
+		return min_l(root, 0LL, n, r, f, acc);
 	}
 
 #ifdef _MSC_VER

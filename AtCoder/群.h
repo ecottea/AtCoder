@@ -71,7 +71,7 @@ S604 inv604(S604 f) {
 
 //【可逆アフィン変換の逆合成 群】
 /*
-* S ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．（a != 0）
+* S ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．（a ≠ 0）
 * f op g : 合成した一次関数 g o f を返す．
 *
 * 正則行列 (a, b; 0, 1) の全体が積に関して作っている群ともみなせる．
@@ -79,17 +79,15 @@ S604 inv604(S604 f) {
 // verify : https://judge.yosupo.jp/problem/deque_operate_all_composite
 using S608 = pair<mint, mint>;
 S608 op608(S608 f, S608 g) {
-	mint a, b, c, d;
-	tie(a, b) = g; // g(x) = a x + b;
-	tie(c, d) = f; // f(x) = c x + d;
+	auto [a, b] = g; // g(x) = a x + b;
+	auto [c, d] = f; // f(x) = c x + d;
 
 	// (g o f)(x) = a (c x + d) + b = (a c)x + (a d + b)
 	return { a * c, a * d + b };
 }
 S608 e608() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 S608 inv608(S608 f) {
-	mint a, b;
-	tie(a, b) = f; // f(x) = a x + b;
+	auto [a, b] = f; // f(x) = a x + b;
 
 	// f(x) = a x + b ⇔ x = (1/a) f(x) - b/a
 	return { a.inv(), -b / a };

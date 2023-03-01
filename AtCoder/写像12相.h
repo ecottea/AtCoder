@@ -76,7 +76,7 @@ mint count_surjections(ll n, int m) {
 
 	mint res = 0;
 	repi(j, 0, m) {
-		res += ((m - j) % 2 == 0 ? 1 : -1) * fm.binomial(m, j) * mint(j).pow(n);
+		res += ((m - j) % 2 == 0 ? 1 : -1) * fm.bin(m, j) * mint(j).pow(n);
 	}
 
 	return res;
@@ -196,9 +196,9 @@ mint stirling_S2(int n, int k) {
 
 	mint res = 0;
 	repi(j, 1, k) {
-		res += ((k - j) % 2 == 0 ? 1 : -1) * fm.binomial(k, j) * mint(j).pow(n);
+		res += ((k - j) % 2 == 0 ? 1 : -1) * fm.bin(k, j) * mint(j).pow(n);
 	}
-	res *= fm.factorial_inv(k);
+	res *= fm.fact_inv(k);
 
 	return res;
 }
@@ -217,7 +217,7 @@ void stirling_S2(int n, vm& s) {
 	//【方法】
 	// 第 2 種スターリング数の一般項は
 	//		s(n, k)
-	//		= (1/k!) Σm=[1..k] (-1)^(k-m) binomial(k, m) m^n
+	//		= (1/k!) Σm=[1..k] (-1)^(k-m) bin(k, m) m^n
 	//		= Σm=[1..k] ((-1)^(k-m) / (k-m)!) (m^n / m!)
 	// と書け，これは畳込みの形である．
 
@@ -225,8 +225,8 @@ void stirling_S2(int n, vm& s) {
 	Factorial_mint fm(n);
 
 	repi(i, 0, n) {
-		f[i] = (i & 1 ? -1 : 1) * fm.factorial_inv(i);
-		g[i] = mint(i).pow(n) * fm.factorial_inv(i);
+		f[i] = (i & 1 ? -1 : 1) * fm.fact_inv(i);
+		g[i] = mint(i).pow(n) * fm.fact_inv(i);
 	}
 
 	s = convolution(f, g);

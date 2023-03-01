@@ -329,7 +329,7 @@ struct Imos_3D {
 * set_right(int l, int r, T w0, T w1) : O(1)
 *	[l, r) に昇順に等差数列 v0, v1, ... を一括加算する準備を行う．
 *
-* set_left(int l, int r, T w0, T w1) : O(1)
+* set_left(int r, int l, T w0, T w1) : O(1)
 *	(l, r] に降順に等差数列 v0, v1, ... を一括加算する準備を行う．
 *
 * void sum() : O(n)
@@ -346,7 +346,9 @@ class Linear_imos {
 
 public:
 	// [0, n) 上の a を 0 で初期化する．
-	Linear_imos(int n_) : n(n_), v(2, vector<T>(n + 1)) {}
+	Linear_imos(int n_) : n(n_), v(2, vector<T>(n + 1)) {
+		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
+	}
 
 	// アクセス
 	T const& operator[](int i) const { return v[0][i]; }
@@ -399,7 +401,6 @@ public:
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Linear_imos imos) {
-		imos.sum();
 		rep(i, imos.n) os << imos[i] << " ";
 		return os;
 	}

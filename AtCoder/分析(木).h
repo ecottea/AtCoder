@@ -6,150 +6,18 @@
 // ■■■■■ 木の性質の分析 ■■■■■
 
 
-//【根付き木の頂点の深さ】O(n)
-/*
-* 各 s∈[0..n) について，r を根とする木 g の頂点 s の深さを格納したリストを返す．
-* s の深さとは，根から s までの辺の本数のことである．
-*
-* 利用：【配る木 DP】
-*/
-using T_dot = int;
-T_dot apply_dot(const T_dot& x, int s, int t) { return x + 1; }
-T_dot root_dot(int r) { return 0; }
-vector<T_dot> depth_of_tree(const Graph& g, int r) {
-	// verify : https://algo-method.com/tasks/529
-	
-	return tree_giveDP<T_dot, apply_dot, root_dot>(g, r);
-}
-
-
-//【根付き木の重さ】O(n)
-/*
-* 各 s∈[0..n) について，r を根とする木 g の頂点 s の重さを格納したリストを返す．
-* s の重さとは，部分木 s に含まれる辺の本数（s 自身を除く子孫の数）のことである．
-*
-* 利用：【貰う木 DP（頂点マージ）】
-*/
-using T_wot = int;
-void merge_wot(T_wot& x, const T_wot& y, int s) { x += y; }
-T_wot e_wot() { return 0; }
-T_wot leaf_wot(int s) { return 0; }
-T_wot apply_wot(const T_wot& x, int p, int s) { return x + 1; }
-vector<T_wot> weight_of_tree(const Graph& g, int r) {
-	// verify : https://algo-method.com/tasks/434
-	
-	return tree_getDP_vmerge<T_wot, merge_wot, e_wot, leaf_wot, apply_wot>(g, r);
-}
-
-
-//【根付き木の高さ】O(n)
-/*
-* 各 s∈[0..n) について，r を根とする木 g の頂点 s の高さを格納したリストを返す．
-* s の高さとは，s から部分木 s の葉までの辺の本数の最大値のことである．
-*
-* 利用：【貰う木 DP（森経由）】
-*/
-using T_hot = int;
-void merge_hot(T_hot& x, const T_hot& y) { chmax(x, y); }
-T_hot e_hot() { return -INF; }
-T_hot leaf_hot(int s) { return 0; }
-void apply_hot(T_hot& x, int s) { x++; }
-vector<T_hot> height_of_tree(const Graph& g, int r) {
-	// verify : https://algo-method.com/tasks/528
-	
-	return tree_getDP_forest<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r);
-}
-
-
-//【根付き木の高さ（コスト付き）】O(n)
-/*
-* 各 s∈[0..n) について，r を根とするコスト付き木 g の頂点 s の高さを格納したリストを返す．
-* s の高さとは，s から部分木 s の葉までの辺のコストの和の最大値のことである．
-*
-* 利用：【貰う木 DP（頂点マージ，コスト付き）】
-*/
-using T_hoct = ll;
-void merge_hoct(T_hoct& x, const T_hoct& y, int s) { chmax(x, y); }
-T_hoct e_hoct() { return 0; }
-T_hoct leaf_hoct(int s) { return 0; }
-T_hoct apply_hoct(const T_hoct& x, int s, int t, ll c) { return x + c; }
-vector<T_hoct> height_of_weighted_tree(const WGraph& g, int r) {
-	return tree_getDP_vmerge<T_hoct, merge_hoct, e_hoct, leaf_hoct, apply_hoct>(g, r);
-}
-
-
-//【木の高さ】O(n)
-/*
-* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
-* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
-*
-* 利用：【全方位木 DP】
-*/
-using T_hut = int;
-T_hut merge_hut(T_hut x, T_hut y, int s) { return max(x, y); }
-T_hut e_hut() { return 0; }
-T_hut leaf_hut(int s) { return 0; }
-T_hut apply_hut(T_hut x, int s, int t) { return x + 1; }
-vi height_of_undirected_tree(Graph& g) {
-	return rerooting<T_hut, merge_hut, e_hut, leaf_hut, apply_hut>(g);
-}
-
-
-//【木の高さ（コスト付き）】O(n)
-/*
-* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
-* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
-*
-* 利用：【全方位木 DP（コスト付き）】
-*/
-using T_hutc = ll;
-T_hutc merge_hutc(T_hutc x, T_hutc y, int s) { return max(x, y); }
-T_hutc e_hutc() { return 0; }
-T_hutc leaf_hutc(int s) { return 0; }
-T_hutc apply_hutc(T_hutc x, int p, int s, ll c) { return x + c; }
-vl height_of_undirected_tree(const WGraph& g) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_B
-
-	return rerooting<T_hutc, merge_hutc, e_hutc, leaf_hutc, apply_hutc>(g);
-}
-
-
-//【部分木の大きさ】O(n)
-/*
-* 与えられた木 g に対し，各 s∈[0..n) および s に隣接する各頂点 t について，
-* s-t 間の辺を切断し t を根と見たときの部分木の頂点数を格納した二次元リストを返す．
-*
-* 利用：【全方位部分木 DP】
-*/
-using T_ss = int;
-T_ss merge_ss(T_ss x, T_ss y, int s) { return x + y - 1; }
-T_ss e_ss() { return 1; }
-T_ss leaf_ss(int s) { return 1; }
-T_ss apply_ss(T_ss x, int p, int s) { return x + 1; }
-vvi subtree_size(Graph& g) {
-	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
-
-	vvi res;
-	rerooting<T_ss, merge_ss, e_ss, leaf_ss, apply_ss>(g, &res);
-
-	return res;
-}
-
-
 //【木の直径】O(n)
 /*
 * 木 g の直径の長さ d を返し，直径の端点間を結ぶパスを path[0..d] に格納する．
-* 直径の端点は path[0], path[d] である．
 * 直径の中点[辺上なら辺の両端点] は path[d/2], path[(d+1)/2] である．
 */
 int tree_diameter(const Graph& g, vi* path = nullptr) {
-	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_c
 	// verify : https://atcoder.jp/contests/abc221/tasks/abc221_f
 
 	int n = sz(g);
 
 	// 頂点 0 から幅優先探索を行う．
-	vi dist(n, INF); // 頂点 0 からの最短距離：O(n)
+	vi dist(n, INF); // 頂点 0 からの最短距離
 	dist[0] = 0;
 	queue<int> q; // 次に探索する頂点を入れておくキュー
 	q.push(0);
@@ -171,11 +39,11 @@ int tree_diameter(const Graph& g, vi* path = nullptr) {
 	}
 
 	// 頂点 0 からの距離が最も遠い点 v1 を見つける．
-	int d = -INF, v1 = 0;
+	int d = -INF, v1 = -1;
 	rep(i, n) if (chmax(d, dist[i])) v1 = i;
 
 	// 頂点 v1 から幅優先探索を行う．
-	dist.assign(n, INF); // v1 からの最短距離：O(n)
+	dist.assign(n, INF); // v1 からの最短距離
 	dist[v1] = 0;
 	vi parent(n); // 直前に通ってきた頂点（経路復元用）
 	parent[v1] = -1;
@@ -197,7 +65,7 @@ int tree_diameter(const Graph& g, vi* path = nullptr) {
 	}
 
 	// 頂点 v1 からの距離が最も遠い点 v2 を見つける．
-	d = -INF; int v2 = v1;
+	d = -INF; int v2 = -1;
 	rep(i, n) if (chmax(d, dist[i])) v2 = i;
 
 	// v1 から v2 への経路を復元する．
@@ -213,30 +81,80 @@ int tree_diameter(const Graph& g, vi* path = nullptr) {
 }
 
 
-//【コスト付き木の直径】O(n log n)
+//【コスト付き木の直径】O(n)
 /*
-* コスト付き木の直径の長さを返す．また直径の両端となる頂点の組を p に格納する．
-*
-* 利用：【単一始点最短路／ダイクストラ法】
+* コスト付き木 g の直径の長さ d を返し，直径の端点間を結ぶパスを path[0..d] に格納する．
 */
-ll tree_diameter(const WGraph& g, pii& p) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_A
+ll tree_diameter(const WGraph& g, vi* path = nullptr) {
+	// verify : https://judge.yosupo.jp/problem/tree_diameter
 
 	int n = sz(g);
 
-	// 適当な頂点（0 とする）を始点にして最遠の点 s を求める．
-	vl dist = dijkstra(g, 0);
+	// 頂点 0 から幅優先探索を行う．
+	vl dist(n, INFL); // 頂点 0 からの最短距離
+	dist[0] = 0;
+	queue<int> q; // 次に探索する頂点を入れておくキュー
+	q.push(0);
 
-	ll max_dist = -1; int s;
-	rep(i, n) if (chmax(max_dist, dist[i])) s = i;
+	while (!q.empty()) {
+		// 未探索の頂点を 1 つ得る．
+		auto s = q.front(); q.pop();
 
-	// s を始点にして最遠の点 t を求めれば，s と t の距離が木の直径である．
-	max_dist = -1; int t;
-	dist = dijkstra(g, s);
-	rep(i, n) if (chmax(max_dist, dist[i])) t = i;
+		repe(t, g[s]) {
+			// 発見済みの頂点なら何もしない．
+			if (dist[t] != INFL) continue;
 
-	p = { s, t };
-	return max_dist;
+			// 頂点 0 からの最短距離を確定する．
+			dist[t] = dist[s] + t.cost;
+
+			// 未探索の頂点として t を追加する．
+			q.push(t);
+		}
+	}
+
+	// 頂点 0 からの距離が最も遠い点 v1 を見つける．
+	ll d = -INFL; int v1 = -1;
+	rep(i, n) if (chmax(d, dist[i])) v1 = i;
+
+	// 頂点 v1 から幅優先探索を行う．
+	dist.assign(n, INFL); // v1 からの最短距離
+	dist[v1] = 0;
+	vi parent(n); // 直前に通ってきた頂点（経路復元用）
+	parent[v1] = -1;
+	q.push(v1); // 次に探索する頂点を入れておくキュー
+
+	while (!q.empty()) {
+		auto s = q.front(); q.pop();
+
+		repe(t, g[s]) {
+			// 発見済みの頂点なら何もしない．
+			if (dist[t] != INFL) continue;
+
+			// v からの最短距離を確定する．
+			dist[t] = dist[s] + t.cost;
+			parent[t] = s;
+
+			q.push(t);
+		}
+	}
+
+	// 頂点 v1 からの距離が最も遠い点 v2 を見つける．
+	d = -INFL; int v2 = -1;
+	rep(i, n) if (chmax(d, dist[i])) v2 = i;
+
+	// v1 から v2 への経路を復元する．
+	if (path != nullptr) {
+		path->clear();
+
+		int v = v2;
+		path->push_back(v);
+		while (v != v1) {
+			v = parent[v];
+			path->push_back(v);
+		}
+	}
+
+	return d;
 }
 
 
@@ -742,6 +660,136 @@ vi subtree_covering_radius(const Graph& g, int d) {
 
 	// 根 0 がまだ被覆されていない場合
 	if (dp[0] >= 0) res.emplace_back(0);
+
+	return res;
+}
+
+
+//【根付き木の頂点の深さ】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の深さを格納したリストを返す．
+* s の深さとは，根から s までの辺の本数のことである．
+*
+* 利用：【配る木 DP】
+*/
+using T_dot = int;
+T_dot apply_dot(const T_dot& x, int s, int t) { return x + 1; }
+T_dot root_dot(int r) { return 0; }
+vector<T_dot> depth_of_tree(const Graph& g, int r) {
+	// verify : https://algo-method.com/tasks/529
+
+	return tree_giveDP<T_dot, apply_dot, root_dot>(g, r);
+}
+
+
+//【根付き木の重さ】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の重さを格納したリストを返す．
+* s の重さとは，部分木 s に含まれる辺の本数（s 自身を除く子孫の数）のことである．
+*
+* 利用：【貰う木 DP（頂点マージ）】
+*/
+using T_wot = int;
+void merge_wot(T_wot& x, const T_wot& y, int s) { x += y; }
+T_wot e_wot() { return 0; }
+T_wot leaf_wot(int s) { return 0; }
+T_wot apply_wot(const T_wot& x, int p, int s) { return x + 1; }
+vector<T_wot> weight_of_tree(const Graph& g, int r) {
+	// verify : https://algo-method.com/tasks/434
+
+	return tree_getDP_vmerge<T_wot, merge_wot, e_wot, leaf_wot, apply_wot>(g, r);
+}
+
+
+//【根付き木の高さ】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の高さを格納したリストを返す．
+* s の高さとは，s から部分木 s の葉までの辺の本数の最大値のことである．
+*
+* 利用：【貰う木 DP（森経由）】
+*/
+using T_hot = int;
+void merge_hot(T_hot& x, const T_hot& y) { chmax(x, y); }
+T_hot e_hot() { return -INF; }
+T_hot leaf_hot(int s) { return 0; }
+void apply_hot(T_hot& x, int s) { x++; }
+vector<T_hot> height_of_tree(const Graph& g, int r) {
+	// verify : https://algo-method.com/tasks/528
+
+	return tree_getDP_forest<T_hot, merge_hot, e_hot, leaf_hot, apply_hot>(g, r);
+}
+
+
+//【根付き木の高さ（コスト付き）】O(n)
+/*
+* 各 s∈[0..n) について，r を根とするコスト付き木 g の頂点 s の高さを格納したリストを返す．
+* s の高さとは，s から部分木 s の葉までの辺のコストの和の最大値のことである．
+*
+* 利用：【貰う木 DP（頂点マージ，コスト付き）】
+*/
+using T_hoct = ll;
+void merge_hoct(T_hoct& x, const T_hoct& y, int s) { chmax(x, y); }
+T_hoct e_hoct() { return 0; }
+T_hoct leaf_hoct(int s) { return 0; }
+T_hoct apply_hoct(const T_hoct& x, int s, int t, ll c) { return x + c; }
+vector<T_hoct> height_of_weighted_tree(const WGraph& g, int r) {
+	return tree_getDP_vmerge<T_hoct, merge_hoct, e_hoct, leaf_hoct, apply_hoct>(g, r);
+}
+
+
+//【木の高さ】O(n)
+/*
+* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
+* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
+*
+* 利用：【全方位木 DP】
+*/
+using T_hut = int;
+T_hut merge_hut(T_hut x, T_hut y, int s) { return max(x, y); }
+T_hut e_hut() { return 0; }
+T_hut leaf_hut(int s) { return 0; }
+T_hut apply_hut(T_hut x, int s, int t) { return x + 1; }
+vi height_of_undirected_tree(Graph& g) {
+	return rerooting<T_hut, merge_hut, e_hut, leaf_hut, apply_hut>(g);
+}
+
+
+//【木の高さ（コスト付き）】O(n)
+/*
+* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
+* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
+*
+* 利用：【全方位木 DP（コスト付き）】
+*/
+using T_hutc = ll;
+T_hutc merge_hutc(T_hutc x, T_hutc y, int s) { return max(x, y); }
+T_hutc e_hutc() { return 0; }
+T_hutc leaf_hutc(int s) { return 0; }
+T_hutc apply_hutc(T_hutc x, int p, int s, ll c) { return x + c; }
+vl height_of_undirected_tree(const WGraph& g) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_B
+
+	return rerooting<T_hutc, merge_hutc, e_hutc, leaf_hutc, apply_hutc>(g);
+}
+
+
+//【部分木の大きさ】O(n)
+/*
+* 与えられた木 g に対し，各 s∈[0..n) および s に隣接する各頂点 t について，
+* s-t 間の辺を切断し t を根と見たときの部分木の頂点数を格納した二次元リストを返す．
+*
+* 利用：【全方位部分木 DP】
+*/
+using T_ss = int;
+T_ss merge_ss(T_ss x, T_ss y, int s) { return x + y - 1; }
+T_ss e_ss() { return 1; }
+T_ss leaf_ss(int s) { return 1; }
+T_ss apply_ss(T_ss x, int p, int s) { return x + 1; }
+vvi subtree_size(Graph& g) {
+	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
+
+	vvi res;
+	rerooting<T_ss, merge_ss, e_ss, leaf_ss, apply_ss>(g, &res);
 
 	return res;
 }

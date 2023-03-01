@@ -95,47 +95,6 @@ vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
 }
 
 
-//y•”•ª—ñ‚Ì—ñ‹“zO(2^n n)
-/*
-* a[0..n) ‚Ì•”•ª—ñ‘S‚Ä‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
-*/
-template <class T>
-vector<vector<T>> enumerate_subsequences(const vector<T>& a) {
-	int n = sz(a);
-	vector<vector<T>> seqs;
-
-	repb(set, n) {
-		vector<T> seq;
-		rep(i, n) if (set & (1 << i)) seq.push_back(a[i]);
-		seqs.push_back(seq);
-	}
-
-	return seqs;
-}
-
-
-//y•”•ª—ñ‚Ì—ñ‹“i’·‚³w’èjzO(bin(n, m) m)
-/*
-* a[0..n) ‚Ì’·‚³ m ‚Ì•”•ª—ñ‘S‚Ä‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
-*/
-template <class T>
-vector<vector<T>> enumerate_subsequences(const vector<T>& a, int m) {
-	int n = sz(a);
-	vector<vector<T>> seqs;
-
-	vb p(n);
-	rep(i, m) p[i] = true;
-
-	repp(p) {
-		vector<T> seq;
-		rep(i, n) if (p[i]) seq.push_back(a[i]);
-		seqs.push_back(seq);
-	}
-
-	return seqs;
-}
-
-
 //y‹·‹`’P’²‘‰Á—ñ‚Ì—ñ‹“zO(bin(m, n) n)
 /*
 * 0 <= a[0] < a[1] < ... < a[n-1] < m ‚È‚é—ñ a[0..n) ‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D

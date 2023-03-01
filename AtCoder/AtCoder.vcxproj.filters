@@ -85,11 +85,20 @@
     <Filter Include="ヘッダー ファイル\列%28ビット列%29">
       <UniqueIdentifier>{ca4b84a6-6a56-4d54-82ac-a5172193457f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\畳込み">
-      <UniqueIdentifier>{f67acbe2-b999-4677-8f6d-a1b5cd25b10f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\抽象代数">
+    <Filter Include="ヘッダー ファイル\データ構造%28抽象代数%29">
       <UniqueIdentifier>{56f5b44a-7edc-4f7f-835f-e9b5763fd635}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\集合%28組%29">
+      <UniqueIdentifier>{c8a085d6-79b3-44b6-b44e-61a201bb5f70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\列%28区間分割%29">
+      <UniqueIdentifier>{4c2b708f-6680-4cdf-8c4c-0ba5d4bd3e06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\列%28部分列%29">
+      <UniqueIdentifier>{d8cab15c-a200-4520-a0c2-da03eaa9a672}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\計算%28畳込み%29">
+      <UniqueIdentifier>{f67acbe2-b999-4677-8f6d-a1b5cd25b10f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -136,9 +145,6 @@
     </ClInclude>
     <ClInclude Include="構造(グラフ).h">
       <Filter>ヘッダー ファイル\グラフ</Filter>
-    </ClInclude>
-    <ClInclude Include="部分列.h">
-      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
     <ClInclude Include="部分和問題.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
@@ -216,19 +222,19 @@
       <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="モノイド.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="M-モノイド.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="Z-加群.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="半環.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="環.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="ヒープ.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
@@ -270,7 +276,7 @@
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
     <ClInclude Include="群.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="計算.h">
       <Filter>ヘッダー ファイル\計算</Filter>
@@ -279,7 +285,7 @@
       <Filter>ヘッダー ファイル\行列</Filter>
     </ClInclude>
     <ClInclude Include="全順序集合.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="一変数最適化.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
@@ -326,7 +332,7 @@
     <ClInclude Include="列挙(格子).h">
       <Filter>ヘッダー ファイル\格子</Filter>
     </ClInclude>
-    <ClInclude Include="列挙(集合).h">
+    <ClInclude Include="列挙%28分割%29.h">
       <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
     <ClInclude Include="前処理%28文字列%29.h">
@@ -426,10 +432,10 @@
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
     <ClInclude Include="M-全順序集合.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="不完全M-モノイド.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="辞書%28動的%29.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
@@ -438,7 +444,7 @@
       <Filter>ヘッダー ファイル\グラフ</Filter>
     </ClInclude>
     <ClInclude Include="M-集合.h">
-      <Filter>ヘッダー ファイル\抽象代数</Filter>
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
     </ClInclude>
     <ClInclude Include="順列.h">
       <Filter>ヘッダー ファイル\列%28順列%29</Filter>
@@ -452,9 +458,6 @@
     <ClInclude Include="母関数.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
-    <ClInclude Include="尺取り法.h">
-      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
-    </ClInclude>
     <ClInclude Include="最適化(区間).h">
       <Filter>ヘッダー ファイル\列%28区間%29</Filter>
     </ClInclude>
@@ -466,12 +469,6 @@
     </ClInclude>
     <ClInclude Include="オートマトン.h">
       <Filter>ヘッダー ファイル\形式言語</Filter>
-    </ClInclude>
-    <ClInclude Include="スコア和%28組%29.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
-    <ClInclude Include="最適化%28組%29.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
     <ClInclude Include="最適化%28分割%29.h">
       <Filter>ヘッダー ファイル\集合</Filter>
@@ -512,12 +509,6 @@
     <ClInclude Include="フロー双対.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
     </ClInclude>
-    <ClInclude Include="累積演算%28抽象%29.h">
-      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
-    </ClInclude>
-    <ClInclude Include="累積演算.h">
-      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
-    </ClInclude>
     <ClInclude Include="積の和典型.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
@@ -534,37 +525,76 @@
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
     <ClInclude Include="畳込み.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="ゼータ変換.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="ゼータ変換(抽象).h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
-    <ClInclude Include="約数変換.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+    <ClInclude Include="約数倍数変換.h">
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="トロピカル畳込み.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="数論変換.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="フーリエ変換.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="アダマール変換.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="累積和.h">
-      <Filter>ヘッダー ファイル\畳込み</Filter>
+      <Filter>ヘッダー ファイル\計算%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="関数.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
     <ClInclude Include="列の管理.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和%28組%29.h">
+      <Filter>ヘッダー ファイル\集合%28組%29</Filter>
+    </ClInclude>
+    <ClInclude Include="最適化%28組%29.h">
+      <Filter>ヘッダー ファイル\集合%28組%29</Filter>
+    </ClInclude>
+    <ClInclude Include="monotone.h">
+      <Filter>ヘッダー ファイル\行列</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和%28区間分割%29.h">
+      <Filter>ヘッダー ファイル\列%28区間分割%29</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(区間分割).h">
+      <Filter>ヘッダー ファイル\列%28区間分割%29</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ(部分列).h">
+      <Filter>ヘッダー ファイル\列%28部分列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="部分列.h">
+      <Filter>ヘッダー ファイル\列%28部分列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙(部分列).h">
+      <Filter>ヘッダー ファイル\列%28部分列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="前処理(ビット列).h">
+      <Filter>ヘッダー ファイル\列%28ビット列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="累積演算.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="累積演算%28抽象%29.h">
+      <Filter>ヘッダー ファイル\データ構造</Filter>
+    </ClInclude>
+    <ClInclude Include="尺取り法.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="最適化(列).h">
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
