@@ -29,6 +29,15 @@
 #define repbc(set, n, r) for(int set = (1 << int(r)) - 1, lb, nx; set < (1 << int(n)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
 
 
+//【bitDP の遷移を細分化】
+/*
+* bitDP を「集合 → 集合」の遷移をする DP と解釈すれば，
+* 遷移を細かくして「要素 → 要素」の遷移を考えることで計算量を落とせる場合がある．
+* 
+* verify : https://atcoder.jp/contests/typical90/tasks/typical90_w
+*/
+
+
 //【i 番目のグレイコード】
 /*
 * i 番目（0-indexed）のグレイコード c = g(i) は以下の式で得られる：

@@ -352,7 +352,7 @@ struct Generalized_max_profit_flow {
 
 	// 頂点 s から頂点 t まで，流量下限[上限] が cap_min[ cap_max ] で非負コストが cost である辺を張る．
 	void add_cost_edge(int s, int t, ll cap_min, ll cap_max, ll cost) {
-		// verify : https://atcoder.jp/contests/jag2013summer-day4/tasks/icpc2013summer_day4_i
+		// verify : https://atcoder.jp/contests/abc231/submissions/me
 
 		if (cap_min > cap_max) return;
 		Assert(cost >= 0);

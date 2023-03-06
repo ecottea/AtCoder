@@ -10,12 +10,10 @@
 *   n までの素数を持って初期化する．
 *
 * multiple_zeta(vT& a) : O(n log(log n))
-*   A[j] = Σ_(j | i) a[i] なる A に上書きする．
-*  （倍数ゼータ変換，約数への累積和）
+*   A[j] = Σ_(j | i) a[i] なる A に上書きする（倍数からの寄与を足し込む）
 *
 * multiple_mobius(vT& A) : O(n log(log n))
-*   A[j] = Σ_(j | i) a[i] なる a に上書きする．
-*  （倍数メビウス変換，倍数への差分）
+*   A[j] = Σ_(j | i) a[i] なる a に上書きする（倍数からの寄与を取り除く）
 *
 * vT gcd_convolution(vT a, vT b) : O(n log(log n))
 *   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
@@ -39,7 +37,7 @@ struct Multiple_transform {
 	void multiple_zeta(vector<T>& f) {
 		// verify : https://judge.yosupo.jp/problem/gcd_convolution
 
-		// 具体例：
+		//【例】
 		//	A[1] = a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + a[8] + ...
 		//	A[2] =        a[2]        + a[4]        + a[6]        + a[8] + ...
 		//	A[3] =               a[3]               + a[6]               + ...
@@ -84,12 +82,10 @@ struct Multiple_transform {
 *   n までの素数を持って初期化する．
 *
 * divisor_zeta(vT& a) : O(n log(log n))
-*   A[j] = Σ_(i | j) a[i] なる A に上書きする．
-*  （約数ゼータ変換，倍数への累積和）
+*   A[j] = Σ_(i | j) a[i] なる A に上書きする（約数からの寄与を足し込む）
 *
 * divisor_mobius(vT& A) : O(n log(log n))
-*   A[j] = Σ_(i | j) a[i] なる a に上書きする．
-*  （約数メビウス変換，約数への差分）
+*   A[j] = Σ_(i | j) a[i] なる a に上書きする（約数からの寄与を取り除く）
 *
 * vT lcm_convolution(vT a, vT b) : O(n log(log n))
 *   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．
@@ -110,7 +106,7 @@ struct Divisor_transform {
 	Divisor_transform(int n) { ps = eratosthenes(n); }
 
 	void divisor_zeta(vector<T>& f) {
-		// 具体例：
+		//【例】
 		//	A[1] = a[1]
 		//	A[2] = a[1] + a[2]
 		//	A[3] = a[1]        + a[3]
@@ -153,12 +149,10 @@ struct Divisor_transform {
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * multiple_zeta(umap<ll, T>& a) : O(σ(n) ω(n))
-*   A[j] = Σ_(j | i) a[i] なる A に上書きする．
-*  （倍数ゼータ変換，約数への累積和）
+*   A[j] = Σ_(j | i) a[i] なる A に上書きする（倍数からの寄与を足し込む）
 *
 * multiple_mobius(umap<ll, T>& A) : O(σ(n) ω(n))
-*   A[j] = Σ_(j | i) a[i] なる a に上書きする．
-*  （倍数メビウス変換，倍数への差分）
+*   A[j] = Σ_(j | i) a[i] なる a に上書きする（倍数からの寄与を取り除く）
 
 * umap<ll, T> gcd_convolution(umap<ll, T> a, umap<ll, T> b) : O(σ(n) ω(n))
 *   c[k] = Σ_(gcd(i, j) = k) a[i] b[j] なる c を返す．
@@ -219,12 +213,10 @@ struct Limited_multiple_transform {
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * divisor_zeta(umap<ll, T>& a) : O(σ(n) ω(n))
-*   A[j] = Σ_(i | j) a[i] なる A に上書きする．
-*  （約数ゼータ変換，倍数への累積和）
+*   A[j] = Σ_(i | j) a[i] なる A に上書きする（約数からの寄与を足し込む）
 *
 * divisor_mobius(umap<ll, T>& A) : O(σ(n) ω(n))
-*   A[j] = Σ_(i | j) a[i] なる a に上書きする．
-*  （約数メビウス変換，約数への差分）
+*   A[j] = Σ_(i | j) a[i] なる a に上書きする（約数からの寄与を取り除く）
 *
 * umap<ll, T> lcm_convolution(umap<ll, T>& a, umap<ll, T>& b) : O(σ(n) ω(n))
 *   c[k] = Σ_(lcm(i, j) = k) a[i] b[j] なる c を返す．

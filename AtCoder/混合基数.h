@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "辞書(動的).h"
 // ■■■■■ 混合基数 ■■■■■
 
 
@@ -164,5 +165,103 @@ public:
 		return ds;
 	}
 };
+
+
+//【階乗進法 → 順列】O(n log n)
+/*
+* 階乗進法表記で上位桁から順に ds[0..n) が並んだ数を num とする．
+* [0..n) の順列で辞書順で num 番目（0-indexed）の順列を返す．
+*
+* 利用：【多重集合】
+*/
+vi factorial_base_to_permutation(const vi& ds) {
+	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_h
+
+	//【例】
+	// 階乗進法表記で "1010" と表される数は，
+	//		[1, 0, 1, 0].[3!, 2!, 1!, 0!] = 6 + 0 + 1 + 0 = 7
+	// である．[0..4) の順列のうち辞書順で 7 番目のものは，
+	//		0: [0, 1, 2, 3]
+	//		1: [0, 1, 3, 2]
+	//		2: [0, 2, 1, 3]
+	//		3: [0, 2, 3, 1]
+	//		4: [0, 3, 1, 2]
+	//		5: [0, 3, 2, 1]
+	//		6: [1, 0, 2, 3]
+	//		7: [1, 0, 3, 2]
+	// より p[0..4) = [1, 0, 3, 2] である．
+
+	int n = sz(ds);
+	vi p(n);
+
+	vi ini(n);
+	iota(all(ini), 0);
+
+	// s : [0..n) の中で残っている数
+	Multi_set s(n, ini);
+
+	rep(i, n) {
+		// [0..n) の中で残っている数のうち ds[i] 番目のものを選ぶ．
+		p[i] = s.get(ds[i]);
+
+		// 選んだ数は消去しておく．
+		s.erase(p[i]);
+	}
+
+	return p;
+}
+
+
+//【順列 → 階乗進法】O(n log n)
+/*
+* [0..n) の順列 p が何番目（0-indexed）かを階乗進法表示したものを返す．
+*
+* 利用：【多重集合】
+*/
+vi permutation_to_factorial_base(const vi& p) {
+	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_h
+
+	int n = sz(p);
+	vi ds(n);
+
+	vi ini(n);
+	iota(all(ini), 0);
+
+	// s : [0..n) の中で残っている数
+	Multi_set s(n, ini);
+
+	rep(i, n) {
+		// [0..n) の中で残っている数のうち ds[i] が何番目かを調べる．
+		ds[i] = (int)s.lower_bound(p[i]);
+
+		// 選んだ数は消去しておく．
+		s.erase(p[i]);
+	}
+
+	return ds;
+}
+
+
+//【加算（階乗進法）】O(n)
+/*
+* 階乗進法表示された数 a[0..n), b[0..n) の和を mod n! で計算し結果の階乗進法表示を返す．
+*/
+vi factorial_base_add(const vi& a, const vi& b) {
+	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_h
+
+	int n = sz(a);
+	vi res(n);
+
+	int carry = 0;
+	repir(i, n - 1, 0) {
+		int w = n - i;
+		res[i] = a[i] + b[i] + carry;
+
+		carry = res[i] / w;
+		res[i] %= w;
+	}
+
+	return res;
+}
 
 

@@ -8,7 +8,7 @@
 * •sŠ®‘Sƒ‚ƒmƒCƒh¶ì—p•t‚«ƒ‚ƒmƒCƒh (S, op, e, F, act, comp, id, fail) ‚ğ•\‚·D
 *
 * ‚·‚È‚í‚¿C(S, op, e), (F, comp, id) ‚ª‚»‚ê‚¼‚êƒ‚ƒmƒCƒh‚Å‚ ‚èC
-* F ‚Ì S ‚Ö‚Ì¶ì—p * : F ~ S ¨ S ‚ª
+* F ‚Ì S ‚Ö‚Ì¶ì—p act : F ~ S ¨ S ‚ª
 *	‚Ù‚Ú€“¯Œ^	: Íx, y ¸ SCÍf ¸ F,	f(x y) = f(x) f(y) or fail
 *	‡¬			: Íx ¸ S, Íf, g ¸ F,	(f g)(x) = f(g(x))
 *   P“™Ë		: Íx ¸ S,				id(x) = x
@@ -18,7 +18,7 @@
 
 //y®œZ,•ÏX •sŠ®‘Sì—p•t‚« ‘˜a,max ƒ‚ƒmƒCƒhz
 /*
-* S ¹ x = {s, c, e} :
+* S ¹ x = {s, m, c, e} :
 *	s : Œ³‚Ì˜a
 *	m : Œ³‚Ì max
 *	c : Œ³‚ÌŒÂ”
@@ -81,7 +81,7 @@ FA01 idA01() { return { 1, 0 }; }
 
 //yGCD,•ÏX •sŠ®‘Sì—p•t‚« ‘˜a,max,GCD,LCM ƒ‚ƒmƒCƒhz
 /*
-* S ¹ x = {s, m, g, l, c, b} :
+* S ¹ x = {s, m, g, l, c} :
 *	s : Œ³‚Ì˜a
 *	m : Œ³‚Ì max
 *	g : Œ³‚Ì GCD
@@ -184,7 +184,7 @@ FA03 idA03() { return FA03{ ~0, 0 }; }
 
 //ymin,max,add •sŠ®‘Sì—p•t‚« min,max,sum ƒ‚ƒmƒCƒhz
 /*
-* S ¹ x = {l, u, l2, u2, s} :
+* S ¹ x = {l, u, l2, u2, s, cl, cu} :
 *	l : Œ³‚Ì min
 *	u : Œ³‚Ì max
 *	l2 : Œ³‚Ì 2nd min (>min)

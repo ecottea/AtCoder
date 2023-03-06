@@ -4,6 +4,7 @@
 
 
 //y—LŒÀ‘Ì F_p ã‚ÌŒvZi32 bitjz
+/*
 template <ll MOD> struct static_modint {
 	ll v;
 
@@ -108,6 +109,7 @@ template <ll MOD> struct static_modint {
 using mint = static_modint<1000000007>;
 //using mint = static_modint<998244353>;
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
+*/
 
 
 //y—LŒÀ‘Ì F_p ã‚ÌŒvZi64 bitjz

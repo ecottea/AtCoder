@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "探索.h"
+#include "フェニック木(抽象).h"
 // ■■■■■ 動的辞書 ■■■■■
 
 
@@ -803,6 +804,115 @@ public:
 		};
 		dfs(0);
 
+		return os;
+	}
+#endif
+};
+
+
+//【多重集合】
+/*
+* Multi_set(int n) : O(n)
+*	[0..n) を記録可能な辞書を空で初期化する．
+*
+* Multi_set(int n, vi a) : O(n)
+*	[0..n) を記録可能な辞書を多重集合 a で初期化する．
+*
+* ll size() : O(log n)
+*	要素の総数を返す．
+*
+* ll count(int v) : O(log n)
+*	要素 v の個数を返す．
+*
+* ll count(int l, int r) : O(log n)
+*	値 [l..r) をもつ要素の個数を返す．
+*
+* insert(int v, ll k = 1) : O(log n)
+*	要素 v を k 個挿入する．
+*
+* erase(int v, ll k = 1) : O(log n)
+*	要素 v を k 個削除する．個数は負数にもなる．
+*
+* int get(ll i) : O(log n)
+*	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
+*
+* ll lower_bound(int v) : O(log n)
+*	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
+*
+* 利用：【フェニック木】
+*/
+ll opdd(ll x, ll y) { return x + y; }
+ll edd() { return 0; }
+ll invdd(ll x) { return -x; }
+struct Multi_set {
+	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_c
+
+	int n;
+
+	// ft[v] : 要素 v の個数
+	using RSQ = Fenwick_tree<ll, opdd, edd, invdd>;
+	RSQ ft;
+
+	// コンストラクタ（何もしない）
+	Multi_set() : n(0) {}
+
+	// [0..n) を記録可能な辞書を空で初期化する．
+	Multi_set(int n_) : n(n_), ft(n) {}
+
+	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
+	Multi_set(int n_, const vi& a) : n(n_) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		vl cnt(n);
+		repe(v, a) cnt[v]++;
+		ft = RSQ(cnt);
+	}
+
+	// 要素の総数を返す．
+	ll size() { return ft.sum(0, n); }
+
+	// 要素 v の個数を返す．
+	ll count(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		return ft.get(v);
+	}
+
+	// 値 [l..r) をもつ要素の個数を返す．
+	ll count(int l, int r) { return ft.sum(l, r); }
+
+	// 要素 v を k 個挿入する．
+	void insert(int v, ll k = 1) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		ft.add(v, k);
+	}
+
+	// 要素 v を k 個削除する．
+	void erase(int v, ll k = 1) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		ft.add(v, -k);
+	}
+
+	// 昇順で i 番目の要素を返す．
+	int get(ll i) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		auto f = [&](ll x) { return x <= i; };
+		return ft.max_right(f);
+	}
+
+	// v が昇順で何番目の要素かを返す．
+	ll lower_bound(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		return ft.sum(0, v);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Multi_set& dd) {
+		rep(v, dd.n) rep(hoge, dd.ft.get(v)) os << v << " ";
 		return os;
 	}
 #endif

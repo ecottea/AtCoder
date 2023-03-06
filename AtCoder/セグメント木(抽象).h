@@ -816,11 +816,11 @@ public:
 
 //【Segment tree beats!（不完全 M-モノイド）】
 /*
-* Lazy_segtree<S, op, e, F, act, comp, id, fail>(int n) : O(n)
+* Segtree_beats<S, op, e, F, act, comp, id, fail>(int n) : O(n)
 *	v[0..n) = e() で初期化する．
 *	要素は不完全左作用付きモノイド (S, op, e, F, act, comp, id, fail) の元とする．
 *
-* Lazy_segtree<S, op, e, F, act, comp, id, fail>(vS v) : O(n)
+* Segtree_beats<S, op, e, F, act, comp, id, fail>(vS v) : O(n)
 *	配列 v[0..n) の要素で初期化する．
 *
 * set(int i, S x) : O(α log n)

@@ -34,7 +34,7 @@
 *	実数列 a[0..n) と b[0..n) の巡回畳込みを返す．
 *	制約 : n は 2 の冪乗
 */
-template<class D = double>
+template <class D = double>
 struct FFT {
 	using vD = vector<D>;
 	using cD = complex<D>;
@@ -242,7 +242,7 @@ struct FFT {
 *
 * 利用：【高速フーリエ変換】
 */
-template<class D = double>
+template <class D = double>
 class Online_convolution_double {
 	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
 
@@ -354,7 +354,7 @@ public:
 *
 * 利用：【高速フーリエ変換】
 */
-template<class D = double>
+template <class D = double>
 class Semi_online_convolution_double {
 	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
 

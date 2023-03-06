@@ -127,19 +127,42 @@ int longest_common_substring(const STR& s, const STR& t) {
 }
 
 
-//【最短周期長】
+//【最小周期】O(n)
 /*
-* s[0..n) の最長共通接頭尾辞長 len(0..n] が【最長共通接頭尾辞】で得られていれば，
-* s[0..i) の最短周期長は i-len[i] で得られる．
-* 
-* 例：
-*	i:			0 1 2 3 4 5 6 7 8 9
-*	s[i-1]:		  a b a b a b c a a
-*	len[i]:		- 0 0 1 2 3 4 0 1 1
-*	i-len[i]:	- 1 2 2 2 2 2 7 7 8
-* 
-* 参考 : https://snuke.hatenablog.com/entry/2015/04/05/184819
+* 与えられた列 s[0..n) に対し，各 i∈[1..n] について s[0..i) の最小周期を格納したリストを返す．
 */
+template <class STR>
+vi cycle_length(const STR& s) {
+	// 参考 : https://snuke.hatenablog.com/entry/2015/04/05/184819
+	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_f
+
+	//【方法】
+	// Morris-Pratt で s[0..n) の最長共通接頭尾辞長 len(0..n] を求める．
+	// s[0..i) の最短周期長は i-len[i] で得られる．
+
+	//【例】s = "abababcaa"
+	//	i:			0 1 2 3 4 5 6 7 8 9
+	//	s[i-1]:		  a b a b a b c a a
+	//	len[i]:		- 0 0 1 2 3 4 0 1 1
+	//	i-len[i]:	- 1 2 2 2 2 2 7 7 8
+
+	// Morris-Pratt で最長共通接頭尾辞長を求める．
+	int n = sz(s);
+	vi len(n + 1);
+	len[0] = -1;
+
+	int j = -1;
+	rep(i, n) {
+		while (j >= 0 && s[i] != s[j]) j = len[j];
+		len[i + 1] = ++j;
+	}
+
+	// 最小周期長に書き換える．
+	len[0] = 0;
+	repi(i, 1, n) len[i] = i - len[i];
+
+	return len;
+}
 
 
 //【最長回文長（文字中心）】O(n)

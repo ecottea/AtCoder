@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "二項係数.h"
 // ■■■■■ 桁 DP（組） ■■■■■
  
  
@@ -384,6 +385,48 @@ mint count_tuple_sum(const string& num, int k, int b = 10) {
 	}
 
 	return dp[0][1][0];
+}
+
+
+//【k 個組の下から桁 DP，桁上げ状態，数え上げ（mod998244353）】O(n k log k)
+/*
+* 2 進数で n 桁の数 S, X について，総和が S，総 XOR が X になる非負整数の k 個組 d[0..k) の個数を返す．
+*
+* 利用：【階乗など（法が大きな素数）】
+*/
+mint count_tuple_sum(const string& S, const string& X, int k) {
+	// verify : https://yukicoder.me/problems/no/2237
+
+	int n = sz(S);
+
+	// dp[i][c] : 以下の条件を満たす数の個数：
+	//	i : 下からの桁 D[i..n) まで決まっている（D = Σd[0..k) とおく）
+	//  c : D[i] からの桁上げの大きさ（k 未満）
+	vvm dp(n + 1, vm(k));
+	dp[n][0] = 1;
+
+	Factorial_mint fm(k);
+
+	// coef[b][j] : 総 XOR が b，総和が j になるような d のある桁の定め方
+	vvm coef(2, vm(k + 1));
+	repi(j, 0, k) coef[j % 2][j] = fm.bin(k, j);
+
+	// 下の桁から順に配る DP
+	repir(i, n - 1, 0) {
+		int s = S[i] - '0';
+		int x = X[i] - '0';
+
+		// ndp[j] : D[i] からの桁上げを保留した状態での D[i] = j である d[0..k) の個数
+		// 桁上げを保留しているので，D[i+1] からの桁上げと Σd[i] とで j は最大 2*k-1 になる．
+		vm ndp = convolution(dp[i + 1], coef[x]);
+
+		// これらのうち，総和 mod 2 が S[i] に等しいものだけを残し，桁上げの大きさを半分にする．
+		for (int j = s; j < 2 * k; j += 2) {
+			dp[i][j / 2] = ndp[j];
+		}
+	}
+
+	return dp[0][0];
 }
 
 

@@ -140,7 +140,6 @@ ll swap_distance(const vector<T>& a, const vector<T>& b) {
 	// 安定ソートになるので，左同士，右同士を対応付けてくれる．
 	sort(all(ai));
 	sort(all(bi));
-	dump(ai); dump(bi);
 
 	// p[ia] = ib : a[ia] を b[ib] と対応させることを表す．
 	vi p(n);
@@ -233,48 +232,8 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 }
 
 
-//【階乗進法 → 順列】O(n log n)
+//【階乗進法】
 /*
-* 階乗進法表記で上位桁から順に ds[0..n) が並んだ数を num とする．
-* [0..n) の順列で辞書順で num 番目（0-indexed）の順列を返す．
-*
-* 利用：【多重集合の動的辞書】
+* 混合基数.h へ
 */
-vi factorial_base_to_permutation(const vi& ds) {
-	// verify : https://atcoder.jp/contests/arc047/tasks/arc047_c
-
-	//【例】
-	// 階乗進法表記で "1010" と表される数は，
-	//		[1, 0, 1, 0].[3!, 2!, 1!, 0!] = 6 + 0 + 1 + 0 = 7
-	// である．[0..4) の順列のうち辞書順で 7 番目のものは，
-	//		0: [0, 1, 2, 3]
-	//		1: [0, 1, 3, 2]
-	//		2: [0, 2, 1, 3]
-	//		3: [0, 2, 3, 1]
-	//		4: [0, 3, 1, 2]
-	//		5: [0, 3, 2, 1]
-	//		6: [1, 0, 2, 3]
-	//		7: [1, 0, 3, 2]
-	// より p[0..4) = [1, 0, 3, 2] である．
-
-	int n = sz(ds);
-	vi p(n);
-
-	vi ini(n);
-	iota(all(ini), 0);
-
-	// dd : [0..n) の中で残っている数を昇順に記録した辞書
-	Dynamic_dictionary dd(n, ini);
-
-	rep(i, n) {
-		// [0..n) の中で残っている数のうち ds[i] 番目のものを選ぶ．
-		p[i] = dd.get(ds[i]);
-
-		// 選んだ数は消去しておく．
-		dd.erase(p[i], 1);
-	}
-
-	return p;
-}
-
 

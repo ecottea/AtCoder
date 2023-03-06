@@ -132,51 +132,56 @@ struct Union_find {
 /*
 * Potential_union_find<T>(int n) : O(n)
 *	非連結で大きさ n の重み付き Union-Find を構築する．
-* 
+*
 * bool set_diff(int a, int b, T d) : O(α(n))
 *	v[b] - v[a] = d という関係を追加する．失敗は false を返す．
-* 
+*
 * bool same(int a, int b) : O(α(n))
 *	頂点 a と頂点 b が同じ連結成分に属するかを返す．
 *
 * T get_diff(int a, int b) : O(α(n))
 *	v[b] - v[a] を返す．（差が未確定なら戻り値は未定義とする）
-* 
+*
 * int leader(int a) : O(α(n))
 *	頂点 a の属する連結成分の親を返す．
-* 
+*
 * int size(int a) : O(α(n))
 *	頂点 a の属する連結成分の大きさを返す．
+*
+* int size() : O(1)
+*	連結成分の個数を返す．
+*
+* vv<piT> groups() : O(n α(n))
+*	連結成分の (頂点番号, ポテンシャル) の組のリストを返す．
 */
 template <class T>
 struct Potential_union_find {
 	int n; // 頂点の個数
+	int m; // 連結成分の個数
 
 	// parent_or_size[i] : 頂点 i の親または集合の大きさ
 	// 頂点 i が根でない場合は親の番号（非負）を，
 	// 根の場合は属する連結成分の大きさの -1 倍（負）を表す．
 	vi parent_or_size;
 
-	// diff[i] : 親からみた頂点 i との差
-	vector<T> diff;
+	// pot[i] : 根からみた頂点 i との差（ポテンシャル）
+	vector<T> pot;
 
-	// コンストラクタ（初期化なし）
-	Potential_union_find() : n(0) {}
-
-	// コンストラクタ（大きさ n で初期化）
-	Potential_union_find(int n_) : n(n_), parent_or_size(n, -1), diff(n) {}
+	// 非連結で大きさ n の重み付き Union-Find を構築する．
+	Potential_union_find(int n_) : n(n_), m(n), parent_or_size(n, -1), pot(n) {}
+	Potential_union_find() : n(0), m(0) {}
 
 	// 頂点 a, b 間の差 v[b] - v[a] を設定する．
 	bool set_diff(int a, int b, T d) {
+		// verify : https://atcoder.jp/contests/code-festival-2016-quala/tasks/codefestival_2016_qualA_d
+
 		// 頂点 a, b の属する連結成分の根 ra, rb を得る．
 		int ra = leader(a);
 		int rb = leader(b);
 
 		// 根が同じであれば既に連結であるから何もしない．
 		// 既にある関係と整合しているかを返す．
-		if (ra == rb) {
-			return diff[b] - diff[a] == d;
-		}
+		if (ra == rb) return pot[b] - pot[a] == d;
 
 		// 根が異なる場合，大きい連結成分の根を改めて ra，小さい方を rb とする．
 		if (-parent_or_size[ra] < -parent_or_size[rb]) {
@@ -188,7 +193,10 @@ struct Potential_union_find {
 		// 小さい方の連結成分を ra を根とする連結成分に統合する．
 		parent_or_size[ra] += parent_or_size[rb];
 		parent_or_size[rb] = ra;
-		diff[rb] = diff[a] - diff[b] + d;
+		pot[rb] = pot[a] - pot[b] + d;
+
+		// 連結成分の数を 1 つ減らす．
+		m--;
 
 		return true;
 	}
@@ -202,16 +210,14 @@ struct Potential_union_find {
 	// v[b] - v[a] を返す．
 	T get_diff(int a, int b) {
 		// 差が確定していると仮定し，根からの差の差として計算する．
-		return diff[b] - diff[a];
+		return pot[b] - pot[a];
 	}
 
 	// 頂点 a の属する連結成分の根を返す．
 	int leader(int a) {
 		// a が根であれば自分自身を返す．
 		int pa = parent_or_size[a];
-		if (pa < 0) {
-			return a;
-		}
+		if (pa < 0) return a;
 
 		// a が根でなければ，a の親 pa の根 ra を求める．
 		// 再帰的な処理が回り，pa の親は ra になっていることに注意．
@@ -219,7 +225,7 @@ struct Potential_union_find {
 
 		// a の親を ra に更新しつつ，a の根 ra を返す．
 		parent_or_size[a] = ra;
-		diff[a] += diff[pa];
+		pot[a] += pot[pa];
 		return ra;
 	}
 
@@ -228,6 +234,37 @@ struct Potential_union_find {
 		// a の根を調べ，そこに記録されている大きさの情報を返す．
 		return -parent_or_size[leader(a)];
 	}
+
+	// 連結成分の個数を返す．
+	int size() {
+		return m;
+	}
+
+	// 連結成分の (頂点番号, ポテンシャル) の組のリストを返す．
+	vector<vector<pair<int, T>>> groups() {
+		// verify : https://atcoder.jp/contests/code-festival-2016-quala/tasks/codefestival_2016_qualA_d
+
+		vector<vector<pair<int, T>>> res(m);
+
+		vi r_to_i(n, -1); int i = 0;
+		rep(a, n) {
+			int r = leader(a);
+			if (r_to_i[r] == -1) r_to_i[r] = i++;
+			res[r_to_i[r]].emplace_back(a, pot[a]);
+		}
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Potential_union_find d) {
+		repe(g, d.groups()) {
+			repe(v, g) os << v << " ";
+			os << endl;
+		}
+		return os;
+	}
+#endif
 };
 
 
@@ -768,7 +805,7 @@ public:
 	// 空の Union-Find を構築する．
 	Union_find_set() : m(0) {}
 
-	// 頂点 a, b を結合する．d
+	// 頂点 a, b を結合する．
 	void merge(T a, T b) {
 		// verify : https://atcoder.jp/contests/abc277/tasks/abc277_c
 

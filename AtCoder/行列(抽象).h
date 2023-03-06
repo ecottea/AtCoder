@@ -267,7 +267,7 @@ S linearly_recurrent_sequence(vector<S> a, const vector<S>& c, ll n) {
 	reverse(all(a));
 
 	// 行列累乗をし，初項ベクトルに掛けて結果を得る．
-	return (mat.pow(n - 1) * a)[d - 1];
+	return (mat.pow(n) * a)[d - 1];
 }
 
 

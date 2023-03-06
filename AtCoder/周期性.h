@@ -83,16 +83,14 @@ struct Periodic_sequence_sum {
 * a[nc] から始まる周期列の長さ c の組 {nc, c} を返す．
 */
 template <class T>
-pii floyds_cycle_finding(function<T(T)>& f, T a0) {
+pii floyds_cycle_finding(const function<T(T)>& f, T a0) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89%E3%81%AE%E5%BE%AA%E7%92%B0%E6%A4%9C%E5%87%BA%E6%B3%95
 	// verify : https://atcoder.jp/contests/abc030/tasks/abc030_d
 
 	T x = a0, y = a0;
-	int m = 0;
 	do {
 		x = f(x);
 		y = f(f(y));
-		m++;
 	} while (x != y);
 
 	x = a0;
@@ -125,4 +123,9 @@ pii floyds_cycle_finding(function<T(T)>& f, T a0) {
 * verify : https://atcoder.jp/contests/abc229/tasks/abc229_f
 */
 
+
+//【列の最小周期】O(n)
+/*
+* 分析(文字列).h へ
+*/
 

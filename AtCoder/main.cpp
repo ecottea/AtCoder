@@ -97,6 +97,6 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
-	
 
+	
 }
