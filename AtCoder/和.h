@@ -1,13 +1,247 @@
 #pragma once
 #include "header.h"
-// ■■■■■ フーリエ変換（複素数） ■■■■■
+// ■■■■■ 添字和畳込み（FPS の積） ■■■■■
 
 
-//【巡回畳込みと多項式の積】
+//【上側畳込み】
 /*
-* 複素数列 a[0..2^n), b[0..2^n) の巡回畳込みは，
-* 剰余環 C[z]/(z^(2^n)-1) における多項式の積と等価である．
+* 与えられた a[0..n], b[0..n] に対して
+*		c[i] = Σj∈[i..n] a[n+i-j] b[j]
+* なる c[0..n] を求めたい場合，convolution(a, b)[n..2n] を取得すればよい．
+*
+* verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
 */
+
+
+//【畳込み（素朴）】O(n m)
+/*
+* a[0..n) と b[0..m) を畳み込んだ数列 c[0..n+m-1) を返す．
+* すなわち c[k] = Σ_(i+j=k) a[i] b[j] である．
+*/
+template <class T>
+vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
+	// verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
+
+	int n = sz(a), m = sz(b);
+	if (n == 0 || m == 0) return vector<T>();
+
+	// c[k] = Σ_(i+j=k) a[i] b[j]
+	vector<T> c(n + m - 1);
+	rep(i, n) rep(j, m) c[i + j] += a[i] * b[j];
+
+	return c;
+}
+
+
+//【自己畳込み（素朴）】O(n^2 log k)
+/*
+* a[0..n) を k 個畳み込んで切り詰めた数列 c[0..n) を返す．
+*
+* 利用：【畳込み（素朴）】
+*/
+template <class T>
+vector<T> naive_self_convolution(const vector<T>& a, ll k) {
+	// verify : https://atcoder.jp/contests/arc059/tasks/arc059_d
+
+	int n = sz(a);
+	if (n == 0) return vector<T>();
+
+	vector<T> res(n);
+	res[0] = 1;
+
+	// 繰り返し二乗法
+	vector<T> pow2(a);
+	while (k > 0) {
+		if (k & 1) {
+			res = naive_convolution(res, pow2);
+			res.resize(n);
+		}
+
+		pow2 = naive_convolution(pow2, pow2);
+		pow2.resize(n);
+
+		k /= 2;
+	}
+
+	return res;
+}
+
+
+//【二次元畳込み（素朴）】O(h1 w1 h2 w2)
+/*
+* a[0..h1)[0..w1) と b[0..h2)[0..w2) を畳み込んだ二次元配列 c[0..h1+h2-1)[0..w1+w2-1) を返す．
+* すなわち c[k][k'] = Σ_(i+j=k) Σ_(i'+j'=k') a[i][i'] b[j][j'] である．
+*/
+template <class T>
+vector<vector<T>> naive_convolution_2D(const vector<vector<T>>& a, const vector<vector<T>>& b) {
+	int h1 = sz(a), w1 = sz(a[0]), h2 = sz(b), w2 = sz(b[0]);
+
+	// c[k][k'] = Σ_(i+j=k) Σ_(i'+j'=k') a[i][i'] b[j][j']
+	vector<vector<T>> c(h1 + h2 - 1, vector<T>(w1 + w2 - 1));
+	rep(i, h1) rep(j, h2) rep(k, w1) rep(l, w2) {
+		c[i + j][k + l] += a[i][k] * b[j][l];
+	}
+
+	return c;
+}
+
+
+//【畳込み（法が任意）】O((n + m) log(n + m))
+/*
+* a と b の mod を法とした畳込みを返す．
+*/
+vi convolution_arbitrary_mod(const vi& a, const vi& b, int mod = (int)1e9 + 7) {
+	// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
+
+	int n = sz(a), m = sz(b);
+	if (n == 0 || m == 0) return vi();
+
+	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
+	rep(i, n) {
+		int ai = smod(a[i], mod);
+		a0[i] = ai % pow2;
+		a1[i] = ai / pow2;
+	}
+	rep(i, m) {
+		int bi = smod(b[i], mod);
+		b0[i] = bi % pow2;
+		b1[i] = bi / pow2;
+	}
+
+	vl c00 = convolution_ll(a0, b0);
+	vl c11 = convolution_ll(a1, b1);
+	rep(i, n) a0[i] += a1[i];
+	rep(i, m) b0[i] += b1[i];
+	vl c01 = convolution_ll(a0, b0);
+	rep(i, n + m - 1) {
+		c00[i] %= mod;
+		c11[i] %= mod;
+		c01[i] = (c01[i] - c00[i] - c11[i] + 2LL * mod) % mod;
+	}
+
+	vi c(n + m - 1);
+	rep(i, n + m - 1) {
+		c[i] = (int)((c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2) % mod);
+	}
+
+	return c;
+}
+
+
+//【畳込み（法が任意，mint）】O((n + m) log(n + m))
+/*
+* a と b の mod を法とした畳込みを返す．
+*/
+vm convolution_arbitrary_mod(const vm& a, const vm& b) {
+	int n = sz(a), m = sz(b);
+	if (n == 0 || m == 0) return vm();
+
+	int mod = mint::mod();
+
+	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
+	rep(i, n) {
+		int ai = a[i].val();
+		a0[i] = ai % pow2;
+		a1[i] = ai / pow2;
+	}
+	rep(i, m) {
+		int bi = b[i].val();
+		b0[i] = bi % pow2;
+		b1[i] = bi / pow2;
+	}
+
+	vl c00 = convolution_ll(a0, b0);
+	vl c11 = convolution_ll(a1, b1);
+	rep(i, n) a0[i] += a1[i];
+	rep(i, m) b0[i] += b1[i];
+	vl c01 = convolution_ll(a0, b0);
+	rep(i, n + m - 1) {
+		c00[i] %= mod;
+		c11[i] %= mod;
+		c01[i] = (c01[i] - c00[i] - c11[i] + 2LL * mod) % mod;
+	}
+
+	vm c(n + m - 1);
+	rep(i, n + m - 1) {
+		c[i] = c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2;
+	}
+
+	return c;
+}
+
+
+//【max-plus 畳込み（素朴）】O(n m)
+/*
+* 数列 a[0..n) と b[0..m) を max-plus 代数にて畳み込んだ数列 c[0..n+m-1) を返す．
+* すなわち c[k] = MAX_(i+j=k) (a[i] + b[j]) である．
+*/
+template <class T>
+vector<T> naive_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
+	int n = sz(a), m = sz(b);
+	if (min(n, m) == 0) return vector<T>();
+
+	T T_MIN = numeric_limits<T>::lowest();
+
+	// c[k] = MAX_(i+j=k) (a[i] + b[j])
+	vector<T> c(n + m - 1, T_MIN);
+	rep(i, n) rep(j, m) chmax(c[i + j], a[i] + b[j]);
+
+	return c;
+}
+
+
+//【max-plus 畳込み（上に凸）】O(n + m)
+/*
+* 上に凸な数列 a[0..n) と b[0..m) を max-plus 代数にて畳み込んだ数列 c[0..n+m-1) を返す．
+* 数列が上に凸であるとは，階差数列が広義単調減少であることをいう．
+*/
+template <class T>
+vector<T> concave_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
+	// 参考 : https://twitter.com/maspy_stars/status/1396750434824450051
+	// verify : https://atcoder.jp/contests/abc218/tasks/abc218_h
+
+	//【方法】
+	// 添字が小さい順に c を決定していく．c[0], c[1] は
+	//		c[0] = a[0] + b[0]
+	//		c[1] = max(a[0] + b[1], a[1] + b[0])
+	// となる．
+	// 
+	// c[1] = a[0] + b[1] の場合を例として考える．c[2] は定義通りだと
+	//		c[2] = max(a[0] + b[2], a[1] + b[1], a[2] + b[0])
+	// であるが，
+	//		a[2] + b[0]
+	//		= (a[1] + b[0]) + (a[2] - a[1])
+	//		≦ (a[0] + b[1]) + (a[2] - a[1]) （c[1] = a[0] + b[1] より）
+	//		≦ (a[0] + b[1]) + (a[1] - a[0]) （a が上に凸より）
+	//		= a[1] + b[1]
+	// なので，候補を 2 つに絞り
+	//		c[2] = max(a[0] + b[2], a[1] + b[1])
+	// としてしまって良い．
+	//
+	// c[3] 以降も同様に考え候補を 2 つに絞ることができる．
+
+	int n = sz(a), m = sz(b);
+
+	// 一方が空数列だった場合は空数列を返す．
+	if (min(n, m) == 0) return vector<T>();
+
+	vector<T> c(n + m - 1);
+	c[0] = a[0] + b[0];
+
+	int i = 0, j = 0;
+	while (i + j < n + m - 2) {
+		if (i == n - 1 || (j != m - 1 && a[i + 1] - a[i] < b[j + 1] - b[j])) {
+			c[i + j + 1] = c[i + j] + (b[j + 1] - b[j]);
+			j++;
+		}
+		else {
+			c[i + j + 1] = c[i + j] + (a[i + 1] - a[i]);
+			i++;
+		}
+	}
+
+	return c;
+}
 
 
 //【高速フーリエ変換】

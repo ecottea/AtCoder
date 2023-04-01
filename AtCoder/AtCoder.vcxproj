@@ -149,6 +149,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="スコア和%28分割%29.h" />
     <ClInclude Include="01計画問題.h" />
     <ClInclude Include="monotone.h" />
     <ClInclude Include="スコア和%28区間分割%29.h" />
@@ -158,14 +159,12 @@
     <ClInclude Include="数え上げ(区間分割).h" />
     <ClInclude Include="数え上げ(部分列).h" />
     <ClInclude Include="最適化(列).h" />
-    <ClInclude Include="累積和.h" />
-    <ClInclude Include="アダマール変換.h" />
+    <ClInclude Include="大小,min,max.h" />
+    <ClInclude Include="XOR.h" />
     <ClInclude Include="オートマトン.h" />
     <ClInclude Include="スコア和(木).h" />
     <ClInclude Include="スコア和(順列).h" />
-    <ClInclude Include="トロピカル畳込み.h" />
     <ClInclude Include="フロー.h" />
-    <ClInclude Include="フーリエ変換.h" />
     <ClInclude Include="マッチング(一般).h" />
     <ClInclude Include="ヤング図形.h" />
     <ClInclude Include="列挙(ビット列).h" />
@@ -174,7 +173,7 @@
     <ClInclude Include="数え上げ(ビット列).h" />
     <ClInclude Include="数え上げ(列).h" />
     <ClInclude Include="数え上げ(集合).h" />
-    <ClInclude Include="数論変換.h" />
+    <ClInclude Include="和%28数論変換%29.h" />
     <ClInclude Include="最適化%28分割%29.h" />
     <ClInclude Include="DAG.h" />
     <ClInclude Include="local.hpp" />
@@ -191,8 +190,7 @@
     <ClInclude Include="スコア和%28ビット列%29.h" />
     <ClInclude Include="スコア和(集合).h" />
     <ClInclude Include="セグメント木%28抽象%29.h" />
-    <ClInclude Include="ゼータ変換(抽象).h" />
-    <ClInclude Include="ゼータ変換.h" />
+    <ClInclude Include="包含,AND,OR.h" />
     <ClInclude Include="ダブリング.h" />
     <ClInclude Include="デザイン.h" />
     <ClInclude Include="ハッシュ.h" />
@@ -224,6 +222,8 @@
     <ClInclude Include="構文解析.h" />
     <ClInclude Include="母関数.h" />
     <ClInclude Include="フロー双対.h" />
+    <ClInclude Include="畳込み.h" />
+    <ClInclude Include="積.h" />
     <ClInclude Include="積の和典型.h" />
     <ClInclude Include="累積演算.h" />
     <ClInclude Include="辞書%28動的%29.h" />
@@ -260,7 +260,7 @@
     <ClInclude Include="混合基数.h" />
     <ClInclude Include="確率.h" />
     <ClInclude Include="確率分布.h" />
-    <ClInclude Include="約数倍数変換.h" />
+    <ClInclude Include="整除,GCD,LCM.h" />
     <ClInclude Include="累積演算%28抽象%29.h" />
     <ClInclude Include="最適化%28組%29.h" />
     <ClInclude Include="不偏ゲーム.h" />
@@ -291,7 +291,7 @@
     <ClInclude Include="分析%28木%29.h" />
     <ClInclude Include="木クエリ.h" />
     <ClInclude Include="構造(グラフ).h" />
-    <ClInclude Include="畳込み.h" />
+    <ClInclude Include="和.h" />
     <ClInclude Include="疎行列.h" />
     <ClInclude Include="数の表示.h" />
     <ClInclude Include="線形計画問題.h" />

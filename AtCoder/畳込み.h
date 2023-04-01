@@ -1,203 +1,118 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 畳込み ■■■■■
+// ■■■■■ 広義の畳込み ■■■■■
 
 
 //【畳込みの使い所】
 /*
 * 数列 a[0..n), b[0..n) が与えられているとする．
-* 畳込みは，全ての k∈[0..n) についての Σi∈[0..k] a[i] b[k-i] を一括 O(n log n) で求めたいときに使う．
+* 例えば通常の畳込みは，全ての k∈[0..n) についての Σi∈[0..k] a[i] b[k-i] を
+* 一括で O(n log n) で求めたいときに使う．
 * 特定の k に対して求めたいだけであれば，愚直に和をとっても O(k) で計算できる．
-* 
+*
 * verify : https://atcoder.jp/contests/abc276/tasks/abc276_g
 */
 
 
-//【畳込みの一般化】
+//【畳込み ⇔ モノイド半環上の積】
 /*
-* R(+,x) を要素の属する半環，M(o) を添字の属するモノイドとし，モノイド半環 R[M] を構成する．
-* 形式和 A = Σi a[i] i, B = Σj b[j] j ∈ R[M] の積 C = Σk c[k] k ∈ R[M] は
-*	c[k] = +_(ioj=k) a[i] x b[j]
-* によって定義され，これが数列 a, b のある種の畳込みと同一視できる．
+* R(+,×) を要素の属する半環，M(o) を添字の属するモノイドとし，モノイド半環 R[M] を構成する．
+* R[M] の元（M(o) の元の R(+,×) 係数の形式和）
+*	A = Σi a[i] [i]
+*	B = Σj b[j] [j]
+* の積 C は
+*	C = Σk c[k] [k]
+*	c[k] = +_(ioj=k) a[i] × b[j]
+* によって定義され，数列 c は数列 a, b のある種の畳込みとなる．
+*/
+
+
+//【下位ゼータ変換 ⇔ モノイド半環上での ζ との積】
+/*
+* 添字の属するモノイド M(o) に対応して，半順序 ≦ が
+*	i ≦ j ⇔ ∃x∈M(o), i o x = j
+* と定義できるものとする．また全ての成分が R(+,×) の乗法単位元 e であるような M(o) の元を
+*	ζ = Σi e [i]
+* とおく．このとき A = Σi a[i] [i] と ζ との積は
+*	A ζ
+*	= Σk (+_(ioj=k) a[i] × e) [k]
+*	= Σk (+_(ioj=k) a[i]) [k]
+*	= Σk (+_(i≦k) a[i]) [k]
+* となる．係数に注目すると
+*	a[k] → +_(i≦k) a[i]
+* となっており，これは半順序 ≦ に関する下位ゼータ変換である．
+*/
+
+
+//【max 畳込み ⇔ 各点積】
+/*
+* M(o) の先の半順序に関して，∀i,j∈M(o) の最小上界 max(i,j) が定まるものとする．R[M] の元
+*	A = Σi a[i] [i]
+*	B = Σj b[j] [j]
+* に ζ を掛けたものの [k] の係数同士の積を計算すると，
+*	(A ζ)_[k] × (B ζ)_[k]
+*	= (+_(i≦k) a[i]) × (+_(j≦k) b[j])
+*	= +_(i≦k) +_(j≦k) a[i] × b[j]
+*	= +_(max(i,j)≦k) a[i] × b[j]
+*	= +_t≦k +_(max(i,j)=t) a[i] × b[j]
+* となる．これは
+*	c[k] = +_(max(i,j)=k) a[i] × b[j]
+*	C = Σk c[k] [k]
+* と定めれば，
+*	(A ζ)_[k] × (B ζ)_[k] = (C ζ)_[k]
+* と表される．すなわち max に関する畳込みが，「ζ 倍 → 各点積 → 1/ζ 倍」に変換できる．
+*/
+
+
+//【畳込み ⇔ 級数の積】
+/*
+* M(o) が特定のモノイドのとき，数列の畳込みをある種の自然な級数の積と解釈できる．
 * 
-*					要素			添字
-* 通常の畳込み：		+, x		+
-* ゼータ変換：		+, x		|, &
-* アダマール変換：	+, x		^
+* o が和 + : 形式的冪級数
+*	数列 a, b を畳込んだ数列 c が
+*		c[k] = Σ_(i+j=k) a[i] b[j]
+*	で定義されるとき，数列に対応する形式的冪級数を
+*		A(z) = Σi a[i] z^i
+*	などとおけば，
+*		A(z) B(z) = C(z)
+*	が成り立つ．
 * 
-* 例えば整数列の通常の畳込みは Z(+,x) 半環と Z(+) モノイドに対応する．
+* o が積 × : ディリクレ級数 
+*	数列 a, b を畳込んだ数列 c が
+*		c[k] = Σ_(i×j=k) a[i] b[j]
+*	で定義されるとき，数列に対応するディリクレ級数を
+*		A(s) = Σi a[i] / i^s
+*	などとおけば，
+*		A(s) B(s) = C(s)
+*	が成り立つ．
 */
 
- 
-//【畳込み（法が任意）】O((n + m) log (n + m))
+
+//【下位ゼータ変換 ⇔ 級数との積】
 /*
-* a と b の mod を法とした畳込みを返す．
-*/
-vi convolution_arbitrary_mod(const vi& a, const vi& b, int mod = (int)1e9 + 7) {
-	// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
-
-	int n = sz(a), m = sz(b);
-	if (n == 0 || m == 0) return vi();
-
-	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
-	rep(i, n) {
-		int ai = smod(a[i], mod);
-		a0[i] = ai % pow2;
-		a1[i] = ai / pow2;
-	}
-	rep(i, m) {
-		int bi = smod(b[i], mod);
-		b0[i] = bi % pow2;
-		b1[i] = bi / pow2;
-	}
-
-	vl c00 = convolution_ll(a0, b0);
-	vl c11 = convolution_ll(a1, b1);
-	rep(i, n) a0[i] += a1[i];
-	rep(i, m) b0[i] += b1[i];
-	vl c01 = convolution_ll(a0, b0);
-	rep(i, n + m - 1) {
-		c00[i] %= mod;
-		c11[i] %= mod;
-		c01[i] = (c01[i] - c00[i] - c11[i] + 2LL * mod) % mod;
-	}
-
-	vi c(n + m - 1);
-	rep(i, n + m - 1) {
-		c[i] = (int)((c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2) % mod);
-	}
-
-	return c;
-}
-
-
-//【畳込み（mint，法が任意）】O((n + m) log (n + m))
-/*
-* a と b の mod を法とした畳込みを返す．
-*/
-vm convolution_arbitrary_mod(const vm& a, const vm& b) {
-	int n = sz(a), m = sz(b);
-	if (n == 0 || m == 0) return vm();
-
-	int mod = mint::mod();
-
-	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
-	rep(i, n) {
-		int ai = a[i].val();
-		a0[i] = ai % pow2;
-		a1[i] = ai / pow2;
-	}
-	rep(i, m) {
-		int bi = b[i].val();
-		b0[i] = bi % pow2;
-		b1[i] = bi / pow2;
-	}
-
-	vl c00 = convolution_ll(a0, b0);
-	vl c11 = convolution_ll(a1, b1);
-	rep(i, n) a0[i] += a1[i];
-	rep(i, m) b0[i] += b1[i];
-	vl c01 = convolution_ll(a0, b0);
-	rep(i, n + m - 1) {
-		c00[i] %= mod;
-		c11[i] %= mod;
-		c01[i] = (c01[i] - c00[i] - c11[i] + 2LL * mod) % mod;
-	}
-
-	vm c(n + m - 1);
-	rep(i, n + m - 1) {
-		c[i] = c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2;
-	}
-
-	return c;
-}
-
-
-//【畳込み】O(n m)
-/*
-* a[0..n) と b[0..m) を畳み込んだ数列 c[0..n+m-1) を返す．
-*/
-template <class T>
-vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
-	// verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
-
-	int n = sz(a), m = sz(b);
-	if (n == 0 || m == 0) return vector<T>();
-
-	// c[i] = Σj∈[0..i] a[j] b[i-j]  (∀i∈[0..n+m-1))
-	vector<T> c(n + m - 1);
-	rep(i, n + m - 1) {
-		repi(j, max(i - (m - 1), 0), min(i, n - 1)) {
-			c[i] += a[j] * b[i - j];
-		}
-	}
-
-	return c;
-}
-
-
-//【上側畳込み】
-/*
-* 与えられた a[0..n], b[0..n] に対して
-*		c[i] = Σj∈[i..n] a[n+i-j] b[j]
-* なる c[0..n] を求めたい場合，convolution(a, b)[n..2n] を取得すればよい．
+* M(o) が特定のモノイドのとき，下位ゼータ変換をある種の級数との積と解釈できる．
 * 
-* verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
+* 大小関係 ≦ : 形式的冪級数 ζ(z) = 1/(1-z)
+*	数列 a の下位ゼータ変換 b が
+*		b[i] = Σ_(j≦i) a[j]
+*	で定義されるとき，これは
+*		b[k] = Σ_(i+j=k) a[i] 1[j]
+*	と書き直せるので，数列に対応する形式的冪級数を
+*		A(z) = Σi a[i] z^i
+*	などとおけば，
+*		B(z) = A(z) / (1-z)
+*	が成り立つ．
+* 
+* 整除関係 | : ディリクレ級数 ζ(s) = Σi 1/i^s（リーマンゼータ関数）
+*	数列 a の下位ゼータ変換 b が
+*		b[i] = Σ_(j|i) a[j]
+*	で定義されるとき，これは
+*		b[k] = Σ_(i×j=k) a[i] 1[j]
+*	と書き直せるので，数列に対応するディリクレ級数を
+*		A(s) = Σi a[i] i^s
+*	などとおけば，
+*		B(s) = A(s) ζ(s)
+*	が成り立つ．
 */
-
-
-//【自己畳込み】O(n^2 log k)
-/*
-* a[0..n) を k 個畳み込んだ数列 c[0..n) を返す．
-*
-* 利用：【畳込み】
-*
-*（繰り返し二乗法）
-*/
-template <class T>
-vector<T> naive_self_convolution(const vector<T>& a, ll k) {
-	// verify : https://atcoder.jp/contests/arc059/tasks/arc059_d
-
-	int n = sz(a);
-	if (n == 0) return vector<T>();
-
-	vector<T> res(n);
-	res[0] = 1;
-
-	vector<T> pow2(a);
-	while (k > 0) {
-		if ((k & 1) != 0) {
-			res = naive_convolution(res, pow2);
-			res.resize(n);
-		}
-
-		pow2 = naive_convolution(pow2, pow2);
-		pow2.resize(n);
-
-		k /= 2;
-	}
-
-	return res;
-}
-
-
-//【二次元畳込み】O(h1 w1 h2 w2)
-/*
-* a[0..h1)[0..w1) と b[0..h2)[0..w2) を畳み込んだ二次元配列 c[0..h1+h2-1)[0..w1+w2-1) を返す．
-*/
-template <class T>
-vector<vector<T>> naive_convolution_2D(const vector<vector<T>>& a, const vector<vector<T>>& b) {
-	int h1 = sz(a), w1 = sz(a[0]), h2 = sz(b), w2 = sz(b[0]);
-
-	// c[i][j] = Σs Σt a[s][t] b[i-s][j-t]  (∀i∈[0..h1+h2-1), j∈[0..w1+w2-1))
-	vector<vector<T>> c(h1 + h2 - 1, vector<T>(w1 + w2 - 1));
-	rep(i, h1 + h2 - 1) rep(j, w1 + w2 - 1) {
-		repi(s, max(i - (h2 - 1), 0), min(i, h1 - 1)) repi(t, max(j - (w2 - 1), 0), min(j, w1 - 1)) {
-			c[i][j] += a[s][t] * b[i - s][j - t];
-		}
-	}
-
-	return c;
-}
 
 

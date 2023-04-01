@@ -49,7 +49,7 @@ void total_sum(const vector<T>& a, vm& res) {
 }
 
 
-//【要素積の和（要素数ごと，mod998244353）】O(n (log n)^2)
+//【要素積の和（要素数ごと，mod 998244353）】O(n (log n)^2)
 /*
 * 与えられた a[0..n) について，各 k=[0..n] について
 *		Σ|set|=k Πi∈set a[i]

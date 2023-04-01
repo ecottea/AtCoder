@@ -182,6 +182,17 @@ struct Negative_mcf_graph_DAG {
 
 		return make_pair(cap, cost);
 	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Negative_mcf_graph_DAG& g) {
+		rep(s, g.n) {
+			os << s << ": ";
+			repe(e, g.g[s]) os << e << " ";
+			os << endl;
+		}
+		return os;
+	}
+#endif
 };
 
 
@@ -279,9 +290,9 @@ struct Negative_mcf_graph {
 };
 
 
-//【一般化最大利得流】
+//【一般化最小費用流】
 /*
-* Generalized_max_profit_flow(int n) : O(1)
+* Generalized_min_cost_flow(int n) : O(1)
 *	n 頂点で初期化する．
 *
 * add_source(int s, ll cap) : O(1)
@@ -301,26 +312,26 @@ struct Negative_mcf_graph {
 *	頂点 s から頂点 t まで，流量下限[上限] が cap_min[ cap_max ] で非負利得が prof である辺を張る．
 *
 * pll flow() : O(F (n + m) log n)（F : 流量，m : 辺の数）
-*	湧き出しから吸い込みまでなるだけ多くフローを流し，最大流量とそのときの最大利得の組を返す．
+*	湧き出しから吸い込みまでなるだけ多くフローを流し，最大流量とそのときの最小費用の組を返す．
 *	循環流には要注意．可能なら SCC して頂点を縮約し DAG にしてからの方が良い．
 *
 * add_profit 系を使うとその辺の容量分だけ流量が増え計算量が悪化するので注意．
 */
-struct Generalized_max_profit_flow {
+struct Generalized_min_cost_flow {
 	// 参考 : https://snuke.hatenablog.com/entry/2017/06/07/115821
 
 	// n : 頂点の数
 	int n;
 	mcf_graph<ll, ll> g;
 
-	// profit : 前借りしている利得
-	ll profit = 0;
+	// precost : 前払いしているコスト
+	ll precost = 0;
 
 	// div[i] : 頂点 i からの湧き出し（負値なら吸い込み）
 	vl div;
 
 	// n 頂点で初期化
-	Generalized_max_profit_flow(int n_) : n(n_), g(n + 2), div(n) {}
+	Generalized_min_cost_flow(int n_) : n(n_), g(n + 2), div(n) {}
 
 	// 頂点 s に湧き出し量 cap を加算する（cap が負値なら吸い込み）．
 	void add_source(int s, ll cap) {
@@ -331,6 +342,8 @@ struct Generalized_max_profit_flow {
 
 	// 頂点 s から頂点 t まで，流量上限が cap で非負コストが cost である辺を張る．
 	void add_cost_edge(int s, int t, ll cap, ll cost) {
+		// verify : https://atcoder.jp/contests/abc231/tasks/abc231_h
+
 		Assert(cost >= 0);
 
 		// 普通に辺を張れば良い．
@@ -344,7 +357,7 @@ struct Generalized_max_profit_flow {
 		Assert(prof >= 0);
 
 		// 予めフローを最大まで流しておき，そこを逆流することに正のコストをかければよい．
-		profit += cap * prof;
+		precost -= cap * prof;
 		div[s] -= cap;
 		div[t] += cap;
 		g.add_edge(t, s, cap, prof);
@@ -358,7 +371,7 @@ struct Generalized_max_profit_flow {
 		Assert(cost >= 0);
 
 		// 予めフローを cap_min だけ流しておけばいい．
-		profit -= cap_min * cost;
+		precost += cap_min * cost;
 		div[s] -= cap_min;
 		div[t] += cap_min;
 		g.add_edge(s, t, cap_max - cap_min, cost);
@@ -370,7 +383,7 @@ struct Generalized_max_profit_flow {
 		Assert(prof >= 0);
 
 		// 予めフローを最大まで流しておき，そこを逆流することに非負のコストをかければいい．
-		profit += cap_max * prof;
+		precost -= cap_max * prof;
 		div[s] -= cap_max;
 		div[t] += cap_max;
 		g.add_edge(t, s, cap_max - cap_min, prof);
@@ -393,12 +406,12 @@ struct Generalized_max_profit_flow {
 		ll cap, cost;
 		tie(cap, cost) = g.flow(ST, GL);
 
-		return make_pair(cap, profit - cost);
+		return make_pair(cap, precost + cost);
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Generalized_max_profit_flow& g) {
-		os << "profit: " << g.profit << endl;
+	friend ostream& operator<<(ostream& os, const Generalized_min_cost_flow& g) {
+		os << "precost: " << g.precost << endl;
 		os << "div: " << g.div << endl;
 		os << "graph:" << endl << g.g;
 		return os;

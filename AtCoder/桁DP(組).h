@@ -67,7 +67,7 @@ mint count_pair(string num1, string num2, int b = 10) {
 }
 
 
-//【組の上から桁 DP，未満フラグ，比較フラグ，数え上げ】O(max(n1, n2) b^2)
+//【組の上から桁 DP，未満フラグ，比較フラグ，数え上げ】O(n b^2)
 /*
 * b=10 進数で n 桁の非負整数 num について，
 * d1 ≦ d2 ≦ num なる非負整数の組 (d1, d2) の個数を返す．
@@ -184,6 +184,80 @@ mint count_unordered_pair(string num1, string num2, int b = 10) {
 }
 
 
+//【組の上から桁 DP，未満フラグ，比較フラグ，積の和】O(n b^2)
+/*
+* b=10 進数で n 桁の数 num について，
+* d1 ≦ d2 ≦ num なる非負整数の組 (d1, d2) を渡る積 d1 d2 の和を返す．
+*/
+mint multiple_sum_unordered_pair_downward(const string& num, int b = 10) {
+	int n = sz(num);
+
+	// dp[i][f][j] : 以下の条件を満たす数のスコア和：
+	//	i : 上からの桁 d[0..i) まで決まっている．
+	//	f : d2[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
+	//		d1[0..i) < d2[0..i) なら 2，さもなくば 0（比較フラグ）
+	//	j : スコアが 0:個数，1:d1の和，2:d2の和，3:積 d1 d2 の和
+	vvvm dp(n + 1, vvm(1LL << 2, vm(4)));
+	dp[0][0 | 0][0] = 1;
+
+	// 上の桁から順に配る DP
+	rep(i, n) {
+		// x : num の上から i 桁目の数
+		int x = num[i] - '0';
+
+		repb(f, 2) {
+			int smaller = (f >> 0) & 1;
+			int cmp = (f >> 1) & 1;
+
+			// d1 : d1[i]
+			repi(d1, 0, b - 1) {
+				// d2 : d2[i]
+				int d2_min = (cmp ? 0 : d1);
+				int d2_max = (smaller ? b - 1 : x);
+				repi(d2, d2_min, d2_max) {
+					int n_smaller = (int)(smaller || (d2 < d2_max));
+					int n_cmp = (int)(cmp || d1 < d2);
+					int nf = (n_smaller << 0) | (n_cmp << 1);
+
+					// 例えば
+					//	17 * 28 + 37 * 48 + 57 * 68
+					//		= (1 + 1 + 1) * 7 * 8
+					//		+ (1 + 3 + 5) * 8 * 10
+					//		+ (2 + 4 + 6) * 7 * 10
+					//		+ (1 * 2 + 3 * 4 + 5 * 6) * 10 * 10
+					// となる．
+
+					// 個数
+					dp[i + 1][nf][0] += dp[i][f][0];
+
+					// d1 の和
+					dp[i + 1][nf][1] += dp[i][f][0] * d1;
+					dp[i + 1][nf][1] += dp[i][f][1] * b;
+					
+					// d2 の和
+					dp[i + 1][nf][2] += dp[i][f][0] * d2;
+					dp[i + 1][nf][2] += dp[i][f][2] * b;
+				
+					// 積 d1 d2 の和
+					dp[i + 1][nf][3] += dp[i][f][0] * d1 * d2;
+					dp[i + 1][nf][3] += dp[i][f][1] * d2 * b;
+					dp[i + 1][nf][3] += dp[i][f][2] * d1 * b;
+					dp[i + 1][nf][3] += dp[i][f][3] * b * b;
+				}
+			}
+		}
+
+		dump("----", i + 1, "----");
+		repb(f, 2) dump("(cmp, smaller) =", bitset<2>(f), ":", dp[i + 1][f]);
+	}
+
+	mint res = 0;
+	repb(f, 2) res += dp[n][f][3];
+
+	return res;
+}
+
+
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，数え上げ】O(n b^2)
 /*
 * b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) の個数を返す．
@@ -242,9 +316,9 @@ mint count_unordered_pair_sum(const string& num, int b = 10) {
 	// dp[i][f] : 以下の条件を満たす数の個数：
 	//	i : 下からの桁 d[i..n) まで決まっている．
 	//      ここで d = d1 + d2 である．
-	//	f : d[i..n) <= num[i..n) なら 1，さもなくば 0（以下フラグ）
+	//	f : d[i..n) ≦ num[i..n) なら 1，さもなくば 0（以下フラグ）
 	//      d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
-	//      d1[i..n) <= d2[i..n) なら 4，さもなくば 0（比較フラグ）
+	//      d1[i..n) ≦ d2[i..n) なら 4，さもなくば 0（比較フラグ）
 	//      f はこれら 3 つのフラグの OR をとったもの
 	vvm dp(n + 1, vm(1LL << 3, 0));
 	dp[n][1 | 0 | 4] = 1;
@@ -253,7 +327,7 @@ mint count_unordered_pair_sum(const string& num, int b = 10) {
 	repir(i, n - 1, 0) {
 		int x = num[i] - '0';
 
-		rep(f, 8) {
+		repb(f, 3) {
 			int leq = (f >> 0) & 1;
 			int carry = (f >> 1) & 1;
 			int cmp = (f >> 2) & 1;
@@ -281,9 +355,83 @@ mint count_unordered_pair_sum(const string& num, int b = 10) {
 }
 
 
+//【組の下から桁 DP，以下フラグ，桁上げフラグ，比較フラグ，積の和】O(n b^2)
+/*
+* b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
+* d1 ≦ d2 を満たすもの全てを渡る積 d1 d2 の和を返す．
+*/
+mint multiple_sum_unordered_pair_upward(const string& num, int b = 10) {
+	int n = sz(num);
+
+	// dp[i][f][j] : 以下の条件を満たす数のスコア和：
+	//	i : 下からの桁 d[i..n) まで決まっている．
+	//      ここで d = d1 + d2 である．
+	//	f : d[i..n) ≦ num[i..n) なら 1，さもなくば 0（以下フラグ）
+	//      d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
+	//      d1[i..n) ≦ d2[i..n) なら 4，さもなくば 0（比較フラグ）
+	//      f はこれら 3 つのフラグの OR をとったもの
+	//	j : スコアが 0:個数，1:d1の和，2:d2の和，3:積 d1 d2 の和
+	vvvm dp(n + 1, vvm(1LL << 3, vm(4)));
+	dp[n][1 | 0 | 4][0] = 1;
+
+	// 下の桁から順に配る DP
+	mint b_pow = 1;
+	repir(i, n - 1, 0) {
+		// x : num の上から i 桁目の数
+		int x = num[i] - '0';
+
+		repb(f, 3) {
+			int leq = (f >> 0) & 1;
+			int carry = (f >> 1) & 1;
+			int cmp = (f >> 2) & 1;
+
+			// d1 : d1[i], d2 : d2[i]
+			rep(d1, b) {
+				rep(d2, b) {
+					int d = d1 + d2 + carry;
+
+					int n_leq = (d % b < x) || (d % b == x && leq);
+					int n_carry = (d >= b);
+					int n_cmp = (d1 < d2) || (d1 == d2 && cmp);
+					int nf = (n_leq << 0) | (n_carry << 1) | (n_cmp << 2);
+
+					// 例えば
+					//	71 * 82 + 73 * 84 + 75 * 86
+					//		= (1 + 1 + 1) * 7 * 8 * 10 * 10
+					//		+ (1 + 3 + 5) * 8 * 10
+					//		+ (2 + 4 + 6) * 7 * 10
+					//		+ (1 * 2 + 3 * 4 + 5 * 6)
+					// となる．
+
+					// 個数
+					dp[i][nf][0] += dp[i + 1][f][0];
+
+					// d1 の和
+					dp[i][nf][1] += dp[i + 1][f][0] * d1 * b_pow;
+					dp[i][nf][1] += dp[i + 1][f][1];
+
+					// d2 の和
+					dp[i][nf][2] += dp[i + 1][f][0] * d2 * b_pow;
+					dp[i][nf][2] += dp[i + 1][f][2];
+
+					// 積 d1 d2 の和
+					dp[i][nf][3] += dp[i + 1][f][0] * d1 * d2 * b_pow * b_pow;
+					dp[i][nf][3] += dp[i + 1][f][1] * d2 * b_pow;
+					dp[i][nf][3] += dp[i + 1][f][2] * d1 * b_pow;
+					dp[i][nf][3] += dp[i + 1][f][3];
+				}
+			}
+		}
+		b_pow *= b;
+	}
+
+	return dp[0][1 | 0 | 4][3];
+}
+
+
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，比較フラグ，スコア和】O(n b^2)
 /*
-* b 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
+* b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
 * d1 ≦ d2 を満たすもの全てにおける繰り上がり回数の総和を返す．
 */
 mint carry_sum_unordered_pair_sum(const string& num, int b = 10) {
@@ -388,7 +536,7 @@ mint count_tuple_sum(const string& num, int k, int b = 10) {
 }
 
 
-//【k 個組の下から桁 DP，桁上げ状態，数え上げ（mod998244353）】O(n k log k)
+//【k 個組の下から桁 DP，桁上げ状態，数え上げ（mod 998244353）】O(n k log k)
 /*
 * 2 進数で n 桁の数 S, X について，総和が S，総 XOR が X になる非負整数の k 個組 d[0..k) の個数を返す．
 *

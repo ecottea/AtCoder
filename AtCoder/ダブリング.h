@@ -3,7 +3,7 @@
 // ■■■■■ ダブリング ■■■■■
 
 
-//【累乗】O(log n)
+//【累乗（モノイド）】O(log n)
 /*
 * モノイド (S, op, e) の元 x の n 乗を返す．
 * 
@@ -23,7 +23,7 @@ S pow(const S& x, ll n) {
 }
 
 
-//【等比数列の和】O(log n)
+//【等比数列の和（半環）】O(log n)
 /*
 * 半環 (S, add, o, mul, e) の元 r について Σi∈[0..n) r^i を返す．
 *
@@ -90,7 +90,7 @@ public:
 	}
 
 	// okQ[s^k[x]] = true かつ okQ[s^(k+1)[x]] = false なる k を返す．
-	ll max_right(int x, function<bool(int)>& okQ) const {
+	ll max_right(int x, const function<bool(int)>& okQ) const {
 		// verify : https://atcoder.jp/contests/arc060/tasks/arc060_c
 
 		ll res = 0;
@@ -196,7 +196,7 @@ struct Map_accumulate {
 };
 
 
-//【倍数の数え上げ（桁の数の制限あり）】O(b^2 log n)
+//【倍数の数え上げ（数字指定）】O(b^2 log n)
 /*
 * 桁の数に 1 <= c[i] <= 9 しか含まない n 桁の正の b の倍数の個数を返す．
 *

@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "二項係数.h"
 // ■■■■■ 桁 DP（上の桁から） ■■■■■
 
 
@@ -199,14 +200,14 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 }
 
 
-//【上から桁 DP，未満フラグ，スコア和】O(n b)
+//【上から桁 DP，未満フラグ，和】O(n b)
 /*
 * b=10 進数で n 桁の数 num 以下の非負の整数の和を返す．
 */
-mint sum_digit(const string& num, int b = 10) {
+mint sum_digit_downward(const string& num, int b = 10) {
 	int n = sz(num);
 
-	// dp[i][f][j] : 以下の条件を満たす数の和（cnt は個数）：
+	// dp[i][f] : 以下の条件を満たす数の和（cnt は個数）：
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	vvm dp(n + 1, vm(1LL << 1));
@@ -226,7 +227,11 @@ mint sum_digit(const string& num, int b = 10) {
 			repi(d, 0, d_max) {
 				int nf = (int)(f || (d < d_max));
 
+				// 個数は単に増えるだけ．
 				cnt[i + 1][nf] += cnt[i][f];
+
+				// 総和については，いままでの数全てが桁上げのため一律 b 倍され，
+				// 新たに 1 の位に d が cnt 個増える．
 				dp[i + 1][nf] += dp[i][f] * b + cnt[i][f] * d;
 			}
 		}
@@ -237,6 +242,63 @@ mint sum_digit(const string& num, int b = 10) {
 	}
 
 	return dp[n][0] + dp[n][1];
+}
+
+
+//【上から桁 DP，未満フラグ，累乗和】O(n m^2 b)
+/*
+* b=10 進数で n 桁の数 num 以下の非負の整数の m 乗和を返す．
+*
+* 利用：【階乗など（法が大きな素数）】
+*/
+mint power_sum_digit_downward(const string& num, int m, int b = 10) {
+	int n = sz(num);
+
+	Factorial_mint fm(m);
+
+	vvm d_pow(b + 1, vm(m + 1, 1));
+	repi(d, 0, b) rep(j, m) d_pow[d][j + 1] = d_pow[d][j] * d;
+
+	// dp[i][f][j] : 以下の条件を満たす数の j 乗和：
+	//	i : 上からの桁 d[0..i) まで決まっている．
+	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
+	vvvm dp(n + 1, vvm(1LL << 1, vm(m + 1)));
+	dp[0][0][0] = 1;
+
+	// 上の桁から順に配る DP
+	rep(i, n) {
+		// x : num の上から i 桁目の数
+		int x = num[i] - '0';
+
+		repb(f, 1) {
+			// d_max : d[i] のとれる値の最大値
+			int d_max = (f ? b - 1 : x);
+
+			// d : d[i]
+			repi(d, 0, d_max) {
+				int nf = (int)(f || (d < d_max));
+
+				// 例えば
+				//		17^m + 27^m + 37^m
+				//		= Σj∈[0..m] bin(m,j) (10^j + 20^j + 30^j) 7^(m-j)
+				//		= Σj∈[0..m] bin(m,j) (1^j + 2^j + 3^j) 10^j 7^(m-j)
+				// となるように，
+				//		dp[i + 1][nf][nj] = Σj∈[0..nj] bin(nj, j) dp[i][f][j] b^j d^(nj - j)
+				// である．
+				// 
+				// これは指数型母関数を導入すれば畳込みで一括計算できる．
+				repi(nj, 0, m) repi(j, 0, nj) {
+					dp[i + 1][nf][nj] += fm.bin(nj, j) * (dp[i][f][j] * d_pow[b][j]) * d_pow[d][nj - j];
+				}
+			}
+		}
+
+		//dump(i + 1);
+		//dump("!smaller"); dump(dp[i + 1][0]);
+		//dump("smaller"); dump(dp[i + 1][1]);
+	}
+
+	return dp[n][0][m] + dp[n][1][m];
 }
 
 
@@ -333,10 +395,9 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 			}
 		}
 
-		//dump(i + 1);
+		//dump(i + 1, ":");
 		//rep(f, 4) {
-		//	dumps("(lz, smaller) =");
-		//	dump(bitset<2>(f));
+		//	dump("(lz, smaller) =", bitset<2>(f));
 		//	dump(dp[i + 1][f]);
 		//}
 	}
@@ -353,7 +414,7 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 ll maximize_pair_digit_sum(const string& num, int b = 10) {
 	int n = sz(num);
 
-	// dp[i][f] : 以下の条件を満たす数の個数：
+	// dp[i][f] : 以下の条件を満たす数の最大スコア：
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	    d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）
@@ -409,7 +470,7 @@ ll minimize_pair_digit_sum(string num, int b = 10) {
 	num.insert(num.begin(), '0');
 	int n = sz(num);
 
-	// dp[i][f] : 以下の条件を満たす数の個数：
+	// dp[i][f] : 以下の条件を満たす数の最小コスト：
 	//	i : 上からの桁 d[0..i) まで決まっている．
 	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
 	//	    d[i] から桁上げがあるなら 2，さもなくば 0（桁上げフラグ）

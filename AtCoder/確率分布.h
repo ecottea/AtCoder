@@ -104,3 +104,13 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 */
 
 
+//【順序統計量の分布（一様分布）】
+/*
+* X[0..n) が互いに独立な [0..1] 上の一様分布に従う確率変数であるとき，
+* X[0..n) のうち昇順で k 番目（1-indexed）の値 Y(k) はベータ分布 B(k, n+1-k) に従う．
+* 特に E[Y(k)] = k/(n+1) である．
+* 
+* verify : https://atcoder.jp/contests/abc226/tasks/abc226_h
+*/
+
+

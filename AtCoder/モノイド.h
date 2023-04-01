@@ -366,11 +366,11 @@ S026 e026() { return S026{ 0, INFL, -INFL }; }
 #define MixedTropicalAffineInvcomposite_monoid S026, op026, e026
 
 
-
 //【スパース多項式の巡回畳込み モノイド】
 /*
 * S ∋ f = {fs, fd} : fs はスパースな場合，fd は密な場合に多項式を表すのに用いる．
-*	fs ∋ {i, v} : v x^i の項を表す．／fd[0..k) : 多項式の係数列を表す．
+*	fs ∋ {i, v} : v x^i の項を表す．
+*	fd[0..k) : 多項式の係数列を表す．
 * f op g : f と g の長さ d の巡回畳込みを返す．
 */
 // verify : https://yukicoder.me/problems/no/2215
@@ -434,7 +434,9 @@ S027 e027() {
 //【区間和の最大値 モノイド】
 /*
 * S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
-*	fl[fr] : 左[右]端を含む区間和の最大値, fa : 任意の区間和の最大値, fs : 総和
+*	fl[fr] : 左[右]端を含む区間和の最大値
+*	fa : 任意の区間和の最大値
+*	fs : 総和
 * f op g : f, g に対応する区間をこの順に繋げた区間を表す．
 */
 // 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
@@ -459,7 +461,9 @@ S028 e028() { return { -INFL, -INFL, -INFL, 0 }; }
 //【区間和の最小値 モノイド】
 /*
 * S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
-*	fl[fr] : 左[右]端を含む区間和の最小値, fa : 任意の区間和の最小値, fs : 総和
+*	fl[fr] : 左[右]端を含む区間和の最小値
+*	fa : 任意の区間和の最小値
+*	fs : 総和
 * f op g : f, g に対応する区間をこの順に繋げた区間を表す．
 */
 // 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
@@ -478,6 +482,29 @@ S029 op029(S029 f, S029 g) {
 }
 S029 e029() { return { INFL, INFL, INFL, 0 }; }
 #define RangeSumMin_monoid S029, op029, e029
+
+
+//【F_2 線形空間上 和空間 モノイド】
+/*
+* S ∋ f : 部分空間の基底
+* f op g : f, g の張る部分空間の和空間の基底を返す．
+*/
+// verify : https://atcoder.jp/contests/abc223/tasks/abc223_h
+using S030 = vl;
+S030 op030(S030 x, S030 y) {
+	// 次元の小さい部分空間を次元の大きい部分空間にマージする．
+	if (sz(x) < sz(y)) swap(x, y);
+
+	// 和空間の noshi 基底を得る．
+	for (auto v : y) {
+		repe(b, x) chmin(v, v ^ b);
+		if (v) x.push_back(v);
+	}
+
+	return x;
+}
+S030 e030() { return S030(); }
+#define XorBaseSum_monoid S030, op030, e030
 
 
 //【モノイド】

@@ -120,39 +120,6 @@ ll count_sum_intervals_neg(const vl& a, ll s) {
 }
 
 
-//yÅ¬’l‚²‚Æ‚Ì‹æŠÔ‚Ì”‚¦ã‚°zO(n log n)
-/*
-* ”—ñ a[0..n) ‚ÌÅ¬’l‚ª m ‚Ì‹æŠÔ a[l..r) (l<r) ‚ÌŒÂ” c ‚ğ {m, c} ‚ÌŒ`‚ÅŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
-*
-* —˜—pFy©g‚æ‚è¬‚³‚¢”‚ÌŸ‚ÌˆÊ’uz,y©g‚æ‚è¬‚³‚¢”‚Ì‘O‚ÌˆÊ’uz
-*/
-template <class T>
-vector<pair<T, ll>> count_min_intervals(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
-
-	int n = sz(a);
-	unordered_map<T, ll> cnt;
-
-	auto pl = prev_less_position(a);
-	auto nl = next_less_position(a);
-	auto pleq = prev_less_position(a, true);
-	auto nleq = next_less_position(a, true);
-
-	rep(i, n) {
-		if (pl[i] == pleq[i]) {
-			cnt[a[i]] += (ll)(nl[i] - pl[i] - 1) * (nl[i] - pl[i]) / 2;
-			cnt[a[i]] -= (ll)(i - pleq[i] - 1) * (i - pleq[i]) / 2;
-		}
-		cnt[a[i]] -= (ll)(nleq[i] - i - 1) * (nleq[i] - i) / 2;
-	}
-
-	vector<pair<T, ll>> res;
-	repe(tmp, cnt) res.push_back(tmp);
-
-	return res;
-}
-
-
 //yÅ¬’l‚²‚Æ‚Ì‹æŠÔ‚Ì”‚¦ã‚°zO(n)
 /*
 * ”—ñ a[0..n) ‚ÌÅ¬’l‚ª m ‚Ì‹æŠÔ a[l..r) (l<r) ‚ÌŒÂ” c ‚ğ {m, c} ‚ÌŒ`‚ÅŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
@@ -160,7 +127,7 @@ vector<pair<T, ll>> count_min_intervals(const vector<T>& a) {
 * —˜—pFyƒfƒJƒ‹ƒg–Øz
 */
 template <class T>
-vector<pair<T, ll>> count_min_intervals_ct(const vector<T>& a) {
+vector<pair<T, ll>> count_min_intervals(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
 
 	//y•û–@z

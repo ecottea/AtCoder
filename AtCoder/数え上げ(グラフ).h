@@ -1,8 +1,8 @@
 #pragma once
 #include "header.h"
-#include "ゼータ変換.h"
+#include "包含,AND,OR.h"
 #include "二項係数.h"
-#include "列挙(集合).h"
+#include "列挙(分割).h"
 #include "群論.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
@@ -351,7 +351,7 @@ vm count_connected_subgraph(const Graph& g) {
 /*
 * n 頂点のラベルなし単純グラフの個数を返す．
 *
-* 利用：【自然数の分割の列挙（値が k 以下）】,【ある型の置換の数え上げ】
+* 利用：【自然数の分割の列挙（値が k 以下）】,【置換の数え上げ（型指定）】
 */
 mint count_unlabeled_simple_graph(int n) {
 	Factorial_mint fm(n);
@@ -599,6 +599,18 @@ vvvm count_undirected_cycle_decomposition(int n, int m, const Factorial_mint& fm
 
 	return res;
 }
+
+
+//【k-彩色の数え上げ】
+/*
+* 無向グラフ G=(V,E) の k-彩色の数を P(G, k) と表すとき，∀e∈E について，
+*	P(G, k) = P(G-e, k) - P(G/e, k)
+* が成り立つ（G-e は G から辺 e を取り除いたグラフ，G/e は G の辺 e を縮約したグラフ）
+*
+* また G が n 頂点の木であれば，P(G, k) = k (k-1)^(n-1) である．
+*
+* verify : https://atcoder.jp/contests/abc294/tasks/abc294_h
+*/
 
 
 //【全域木に関する数え上げ】

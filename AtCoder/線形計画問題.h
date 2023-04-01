@@ -8,10 +8,10 @@
 * 主問題（変数は x）
 *	maximize	c^T x			minimize	c^T x
 *	subject to	A x = b			subject to	A x = b
-*				x >= 0						x >= 0
+*				x ≧ 0						x ≧ 0
 * の双対問題（変数は y）はそれぞれ
 *	minimize	b^T y			maximize	b^T y
-*	subject to	A^T y >= c		subject to	A^T y <= c
+*	subject to	A^T y ≧ c		subject to	A^T y ≦ c
 * であり，目的関数の最適値は等しい．
 * 
 * 双対をとると変数の数と制約条件の数が入れ替わるので，
@@ -23,12 +23,12 @@
 /*
 * 主問題（変数は x）
 *	maximize	c^T x			minimize	c^T x
-*	subject to	A x <= b		subject to	A x >= b
-*				x >= 0						x >= 0
+*	subject to	A x ≦ b			subject to	A x ≧ b
+*				x ≧ 0						x ≧ 0
 * の双対問題（変数は y）はそれぞれ
 *	minimize	b^T y			maximize	b^T y
-*	subject to	A^T y >= c		subject to	A^t y <= c
-*				y >= 0						y >= 0
+*	subject to	A^T y ≧ c		subject to	A^t y ≦ c
+*				y ≧ 0						y ≧ 0
 * であり，目的関数の最適値は等しい．
 * 
 * verify : https://atcoder.jp/contests/abc275/tasks/abc275_g
@@ -39,15 +39,15 @@
 /*
 * 主問題（変数は x）
 *	maximize	c^T x								minimize	c^T x
-*	subject to	A1 x <= b1							subject to	A1 x <= b1
-*				A2 x >= b2										A2 x >= b2
+*	subject to	A1 x ≦ b1							subject to	A1 x ≦ b1
+*				A2 x ≧ b2										A2 x ≧ b2
 *				A3 x = b3										A3 x = b3
-*				x >= 0											x >= 0
+*				x ≧ 0											x ≧ 0
 * の双対問題（変数は y）はそれぞれ
 *	minimize	b1^T y1 - b2^T y2 + b3^T y3			maximize	-b1^T y1 + b2^T y2 + b3^T y3
-*	subject to	A1^T y1 - A2^T y2 + A3^T y3 >= c	subject to	-A1^T y1 + A2^T y2 + A3^T y3 <= c
-*				y1 >= 0											y1 >= 0
-*				y2 >= 0											y2 >= 0
+*	subject to	A1^T y1 - A2^T y2 + A3^T y3 ≧ c		subject to	-A1^T y1 + A2^T y2 + A3^T y3 ≦ c
+*				y1 ≧ 0											y1 ≧ 0
+*				y2 ≧ 0											y2 ≧ 0
 * であり，目的関数の最適値は等しい．
 */
 
@@ -56,11 +56,11 @@
 /*
 * 主問題
 *	maximize_x	c^T x
-*	subject to	A x <= b
+*	subject to	A x ≦ b
 *				D x = k
 * のラグランジュ双対は
 *	minimize_λ	max_x {c^T x - λ(D x - k)}
-*	subject to	A x <= b
+*	subject to	A x ≦ b
 * であり，目的関数の最適値は等しい．
 * 
 * 解ける問題に邪魔な制約が付いているとき，制約を目的関数に移すことができる．
@@ -72,12 +72,12 @@
 /*
 * 主問題
 *	maximize_x	c^T x
-*	subject to	A x <= b
-*				D x <= k
+*	subject to	A x ≦ b
+*				D x ≦ k
 * のラグランジュ双対は
 *	minimize_λ	max_x {c^T x - λ(D x - k)}
-*	subject to	A x <= b
-*				λ >= 0
+*	subject to	A x ≦ b
+*				λ ≧ 0
 * であり，目的関数の最適値は等しい．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/problems/2736
@@ -90,19 +90,19 @@
 *	minimize	|x| 
 * という因子があった場合，変数 y を導入して
 *	minimize	y
-*	subject to	|x| <= y
-*				(y >= 0)
-* に書き換える．絶対値を含む不等式 |x| <= y であれば，場合分けをすることにより
-*	subject to	x <= y
-*				-x <= y
+*	subject to	|x| ≦ y
+*				(y ≧ 0)
+* に書き換える．絶対値を含む不等式 |x| ≦ y であれば，場合分けをすることにより
+*	subject to	x ≦ y
+*				-x ≦ y
 * と書き換えられる．結局，全体は
 *	minimize	y
-*	subject to	x - y <= 0
-*				-x - y <= 0
-*				(y >= 0)
+*	subject to	x - y ≦ 0
+*				-x - y ≦ 0
+*				(y ≧ 0)
 * と書き換えられる．
 * 
-* maximize |x| だと，x >= y OR -x >= y になってしまいうまくいかなさそう．
+* maximize |x| だと，x ≧ y OR -x ≧ y になってしまいうまくいかなさそう．
 */
 
 
@@ -110,12 +110,12 @@
 /*
 * 変数 x, y についての整数計画問題
 *	maximize	a x + b y
-*	subject to	c x + d y <= e
-*				x >= 0
-*				y >= 0
+*	subject to	c x + d y ≦ e
+*				x ≧ 0
+*				y ≧ 0
 * の解の目的関数値を返し，実行可能解を sx, sy に格納する．
 *
-* 制約：c > 0, d > 0, e >= 0
+* 制約：c > 0, d > 0, e ≧ 0
 *
 *（平方分割）
 */

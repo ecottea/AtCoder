@@ -1,7 +1,8 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
-#include "約数倍数変換.h"
+#include "整除,GCD,LCM.h"
+#include "積.h"
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
@@ -46,7 +47,7 @@ vl eratosthenes_interval(ll l, ll r) {
 	// verify : https://algo-method.com/tasks/332
 
 	vl ps;
-	vi ps_sub = eratosthenes(int(sqrt(r) + EPS));
+	vi ps_sub = eratosthenes(int(sqrt(r) + 0.01));
 
 	// 素数かどうかを記録しておくためのテーブル
 	vb is_prime(r - l, true);
@@ -57,9 +58,7 @@ vl eratosthenes_interval(ll l, ll r) {
 		}
 	}
 
-	rep(i, r - l) {
-		if (is_prime[i]) ps.push_back(l + i);
-	}
+	rep(i, r - l) if (is_prime[i]) ps.push_back(l + i);
 
 	return ps;
 }
@@ -134,7 +133,7 @@ vector<map<int, int>> factor_integer_all(int n) {
 		}
 	}
 
-	// √n より大きい p の処理（この p は素数とは限らないので注意）
+	// √n より大きい p の処理（if 内に入っても p は素数とは限らないので注意）
 	for (; p <= n; p++) if (a[p] != 1) pps[p][a[p]]++;
 
 	return pps;
@@ -166,75 +165,155 @@ vector<map<ll, int>> factor_integer_interval(ll l, ll r) {
 		}
 	}
 
-	for (ll j = l; j < r; j++) {
-		if (a[j - l] != 1) pps[j - l][a[j - l]]++;
-	}
+	for (ll j = l; j < r; j++) if (a[j - l] != 1) pps[j - l][a[j - l]]++;
 
 	return pps;
 }
 
 
-//【約数関数 σ_k(n)】O(n log(log n))
+//【約数和関数（一括）】O(n log(log n))
 /*
-* 各 i∈[1..n] について約数関数 σ_k(i)=(i の約数の k 乗和) を格納したリストを返す．
+* 各 i∈[1..n] について約数和関数 σ_k(i) = (i の約数の k 乗和) を格納したリストを返す．
 * 特に k = 0 なら約数の個数，k = 1 なら約数の総和と等価である．
 *
-* 利用：【約数変換，LCM 畳込み】
+* 利用：【約数倍数変換】
 */
 template <class T>
 vector<T> divisor_sigma(int k, int n) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
-	// verify : https://atcoder.jp/contests/arc068/tasks/arc068_c
+	// verify : https://atcoder.jp/contests/abc172/tasks/abc172_d
 
-	vector<T> s(n + 1);
-	s[0] = 0;
-	repi(i, 1, n) s[i] = T(pow(i, k));
+	//【方法】
+	// 約数和関数の定義より，等式
+	//		σ_k(i) = Σ_(d|i) d^k
+	// を得る．これは σ_k が a[i] = i^k を約数ゼータ変換したものであることを意味する．
 
-	Divisor_transform<T> dt(n);
-	dt.divisor_zeta(s);
+	vector<T> a(n + 1);
+	a[0] = 0;
+	repi(i, 1, n) a[i] = T(pow(i, k));
 
-	return s;
+	Div_mul_transform<T> dt(n);
+	dt.divisor_zeta(a);
+
+	return a;
 }
 
 
-//【オイラー関数 φ(n)】O(n log(log n))
+//【オイラー関数（一括）】O(n log(log n))
 /*
 * 各 i∈[1..n] についてオイラー関数 φ(i) の値を格納したリストを返す．
 *
-* 利用：【約数変換，LCM 畳込み】
+* 利用：【約数倍数変換】
 */
-vi euler_phi(int n) {
+vl euler_phi(int n) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
-	// verify : https://onlinejudge.u-aizu.ac.jp/challenges/sources/VPC/RUPC/2286?year=2011
+	// verify : https://yukicoder.me/problems/no/2249
 
-	vi phi(n + 1);
-	phi[0] = 0;
-	repi(i, 1, n) phi[i] = i;
+	//【方法】
+	// 各 i の約数 d について，GCD(i, x) = d となる x∈[1..i] の個数は，
+	// x が GCD(i/d, y) = 1 なる y∈[1..i/d] を用いて x = y d と表されるので
+	// オイラー関数の定義より φ(i/d) に等しい．
+	// これらを全ての d にわたって足し合わせることで，等式
+	//		i = Σ_(d|i) φ(i/d)
+	//		⇔ i = Σ_(d|i) φ(d)
+	// を得る．これは φ を約数ゼータ変換したものが a[i] = i であることを意味する．
 
-	Divisor_transform<int> dt(n);
-	dt.divisor_mobius(phi);
+	vl a(n + 1);
+	repi(i, 1, n) a[i] = i;
 
-	return phi;
+	// int にすると途中計算でオーバーフローするので注意
+	Div_mul_transform<ll> dt(n);
+	dt.divisor_mobius(a);
+
+	return a;
 }
 
 
-//【メビウス関数 μ(n)】O(n log(log n))
+//【メビウス関数（一括）】O(n log(log n))
 /*
 * 各 i∈[1..n] についてメビウス関数 μ(i) の値を格納したリストを返す．
 *
-* 利用：【約数変換，LCM 畳込み】
+* 利用：【約数倍数変換】
 */
 vi mobius_mu(int n) {
 	// 参考 : https://maspypy.com/%E6%95%B0%E5%AD%A6-%E7%95%B3%E3%81%BF%E8%BE%BC%E3%81%BF%E5%85%A5%E9%96%80%EF%BC%9Adirichlet%E7%A9%8D%E3%81%A8%E3%82%BC%E3%83%BC%E3%82%BF%E5%A4%89%E6%8F%9B%E3%83%BB%E3%83%A1%E3%83%93%E3%82%A6
 	// verify : https://yukicoder.me/problems/no/1514
 
-	vi mu(n + 1, 0);
-	mu[1] = 1;
+	vi a(n + 1, 0);
+	a[1] = 1;
 
-	Divisor_transform<int> dt(n);
-	dt.divisor_mobius(mu);
+	Div_mul_transform<int> dt(n);
+	dt.divisor_mobius(a);
 
-	return mu;
+	return a;
+}
+
+
+//【オイラー関数の累積和（一括）】O(n^(2/3) log(log n)^(1/3))
+/*
+* 各 i∈[1..nl] について bl[i] = φ(i) を，
+* 各 i∈[1..nh] について Bh[i] = Σj∈[1..n/i] φ(j) をそれぞれ格納する．
+*
+* 制約：nh ≦ nl ≦ n ≦ nl nh
+*
+* 利用：【ディリクレ畳込みの累積和（乗法的，mint，一括）】
+*/
+void euler_phi_sum(ll n, int nl, int nh, vm& bl, vm& Bh) {
+	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
+	// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
+
+	//【方法】
+	// オイラー関数 φ(i) と対応するディリクレ級数を Φ(s) とおくと，
+	//		ζ(s) Φ(s) = ζ(s-1)
+	// が成り立つ．
+	// ζ(s) は乗法的数論関数 a[i] = 1 に対応するディリクレ級数であり，
+	// ζ(s-1) は数論関数 c[i] = i に対応するディリクレ級数である．
+
+	if (nl <= 0 || nh <= 0) return;
+	Multiplicative_dirichlet_invconvolution_acc_mint mdia(nl);
+
+	vm al(nl + 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1); mint inv2 = mint(2).inv();
+	repi(i, 1, nl) {
+		al[i] = 1;
+		cl[i] = i;
+	}
+	repi(i, 1, nh) {
+		Ah[i] = n / i;
+		Ch[i] = mint(n / i) * (n / i + 1) * inv2;
+	}
+
+	mdia.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
+}
+
+
+//【メビウス関数の累積和（一括）】O(n^(2/3) log(log n)^(1/3))
+/*
+* 各 i∈[1..nl] について bl[i] = μ(i) を，
+* 各 i∈[1..nh] について Bh[i] = Σj∈[1..n/i] μ(j) をそれぞれ格納する．
+*
+* 制約：nh ≦ nl ≦ n ≦ nl nh
+*
+* 利用：【ディリクレ畳込みの累積和（乗法的，一括）】
+*/
+void mertens(ll n, int nl, int nh, vl& bl, vl& Bh) {
+	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
+	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_i
+
+	//【方法】
+	// メビウス関数 μ(i) と対応するディリクレ級数を M(s) とおくと，
+	//		ζ(s) M(s) = 1
+	// が成り立つ．
+	// ζ(s) は乗法的数論関数 a[i] = 1 に対応するディリクレ級数であり，
+	// 1 は数論関数 c[i] = (i = 1 ? 1 : 0) に対応するディリクレ級数である．
+
+	if (nl <= 0 || nh <= 0) return;
+	Multiplicative_dirichlet_invconvolution_acc<ll> mdia(nl);
+
+	vl al(nl + 1, 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1, 1);
+	cl[1] = 1;
+	repi(i, 1, nh) Ah[i] = n / i;
+
+	mdia.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
 }
 
 

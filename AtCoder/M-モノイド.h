@@ -386,3 +386,31 @@ F118 comp118(F118 f, F118 g) { return f == id118() ? g : f; }
 #define Update_OR_amonoid S118, op118, e118, F118, act118, comp118, id118
 
 
+//【加算 作用付き 最小元の個数 モノイド】
+/*
+* S ∋ x = {v, c} : 最小値 v をもつ要素が c 個あることを表す．
+* F ∋ f : f 加算する作用を表す．
+*/
+using S119 = pair<ll, int>; // (v, c)
+using F119 = ll;
+S119 op119(S119 x, S119 y) {
+	auto [vx, cx] = x;
+	auto [vy, cy] = y;
+
+	if (vx < vy) return x;
+	if (vx > vy) return y;
+	return { vx, cx + cy };
+}
+S119 e119() { return { INFL, 0 }; }
+S119 act119(F119 f, S119 x) {
+	auto [vx, cx] = x;
+
+	return { vx + f, cx };
+}
+F119 comp119(F119 f, F119 g) {
+	return f + g;
+}
+F119 id119() { return 0; }
+#define Add_CntMin_amonoid S119, op119, e119, F119, act119, comp119, id119
+
+

@@ -889,7 +889,7 @@ struct Sparse_table_2D {
 
 //【Disjoint Sparse Table（モノイド）】
 /*
-* Sparse_table<S, op, o>(vS a) : O(n log n)
+* Sparse_table<S, op, e>(vS a) : O(n log n)
 *	配列 a[0..n) で初期化する．要素はモノイド <S, op, e> の元とする．
 *
 * S get(int l, int r) : O(1)

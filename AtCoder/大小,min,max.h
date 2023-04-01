@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 累積和，max 畳込み，min 畳込み ■■■■■
+// ■■■■■ 累積和・差分，min 畳込み，max 畳込み ■■■■■
 
 
 //【ゼータ変換（上位要素）】O(n)

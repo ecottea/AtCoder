@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "行列.h"
-#include "トロピカル畳込み.h"
+#include "トロピカル和"
 // ■■■■■ 半環 ■■■■■
 
 

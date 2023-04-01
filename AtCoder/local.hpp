@@ -80,6 +80,12 @@ inline ostream& operator<< (ostream& os, const list<T>& v) {
 	return os;
 }
 
+template <class T, size_t N>
+inline ostream& operator<< (ostream& os, const array<T, N>& v) {
+	repe(x, v) os << x << " ";
+	return os;
+}
+
 template <class T>
 inline ostream& operator<< (ostream& os, const set<T>& s) {
 	repe(x, s) os << x << " ";

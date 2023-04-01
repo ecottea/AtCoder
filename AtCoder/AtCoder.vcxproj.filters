@@ -100,6 +100,9 @@
     <Filter Include="ヘッダー ファイル\代数%28畳込み%29">
       <UniqueIdentifier>{f67acbe2-b999-4677-8f6d-a1b5cd25b10f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\集合%28分割%29">
+      <UniqueIdentifier>{e49f190c-5288-4bc3-b2c4-62365c2b65d5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -332,9 +335,6 @@
     <ClInclude Include="列挙(格子).h">
       <Filter>ヘッダー ファイル\格子</Filter>
     </ClInclude>
-    <ClInclude Include="列挙%28分割%29.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
     <ClInclude Include="前処理%28文字列%29.h">
       <Filter>ヘッダー ファイル\文字列</Filter>
     </ClInclude>
@@ -470,9 +470,6 @@
     <ClInclude Include="オートマトン.h">
       <Filter>ヘッダー ファイル\形式言語</Filter>
     </ClInclude>
-    <ClInclude Include="最適化%28分割%29.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
-    </ClInclude>
     <ClInclude Include="最適化%28順列%29.h">
       <Filter>ヘッダー ファイル\列%28順列%29</Filter>
     </ClInclude>
@@ -524,31 +521,22 @@
     <ClInclude Include="スコア和(木).h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="畳込み.h">
+    <ClInclude Include="和.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
-    <ClInclude Include="ゼータ変換.h">
+    <ClInclude Include="包含,AND,OR.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
-    <ClInclude Include="ゼータ変換(抽象).h">
+    <ClInclude Include="整除,GCD,LCM.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
-    <ClInclude Include="約数倍数変換.h">
+    <ClInclude Include="和%28数論変換%29.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
-    <ClInclude Include="トロピカル畳込み.h">
+    <ClInclude Include="XOR.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
-    <ClInclude Include="数論変換.h">
-      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
-    </ClInclude>
-    <ClInclude Include="フーリエ変換.h">
-      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
-    </ClInclude>
-    <ClInclude Include="アダマール変換.h">
-      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
-    </ClInclude>
-    <ClInclude Include="累積和.h">
+    <ClInclude Include="大小,min,max.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="関数.h">
@@ -595,6 +583,21 @@
     </ClInclude>
     <ClInclude Include="最適化(列).h">
       <Filter>ヘッダー ファイル\列</Filter>
+    </ClInclude>
+    <ClInclude Include="積.h">
+      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
+    </ClInclude>
+    <ClInclude Include="畳込み.h">
+      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙%28分割%29.h">
+      <Filter>ヘッダー ファイル\集合%28分割%29</Filter>
+    </ClInclude>
+    <ClInclude Include="最適化%28分割%29.h">
+      <Filter>ヘッダー ファイル\集合%28分割%29</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和%28分割%29.h">
+      <Filter>ヘッダー ファイル\集合%28分割%29</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

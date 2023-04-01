@@ -81,22 +81,17 @@ ll maximize_sum_clustering(const vvl& sc) {
 	// dp[set] : 部分集合 set での得点の最大値
 	vl dp(1LL << n);
 
+	// SoS bit DP
 	repb(set, n) {
 		// set 全体を 1 つのクラスタとする場合
 		rep(i, n) {
 			if (!(set & (1 << i))) continue;
 
-			rep(j, i) {
-				if (set & (1 << j)) {
-					dp[set] += sc[i][j];
-				}
-			}
+			rep(j, i) if (set & (1 << j)) dp[set] += sc[i][j];
 		}
 
 		// set の部分集合 sub を全探索する．
-		repbs(sub, set) {
-			chmax(dp[set], dp[sub] + dp[set - sub]);
-		}
+		repbs(sub, set) chmax(dp[set], dp[sub] + dp[set - sub]);
 	}
 
 	return dp[(1LL << n) - 1];
@@ -105,7 +100,7 @@ ll maximize_sum_clustering(const vvl& sc) {
 
 //【スコア和最大化 3 彩色】O(n log n)
 /*
-* 玉 i∈[0..n) を色 A[B, C] で彩色するとスコア a[i][b[i], c[i]] が得られるとする．
+* 玉 i∈[0..n) を色 A[B, C] で彩色すると非負スコア a[i][b[i], c[i]] が得られるとする．
 * x[y, z] 個（n=x+y+z）の玉を A[B, C] で彩色するときの最大スコアを返す．
 *
 * 利用：【多重集合の和（大小分離）】

@@ -436,7 +436,7 @@ struct Imos_tree_arbitrary_path {
 * add(int v1, int v2, ll val) : O((log n)^2)
 *	頂点 v1 から v2 までの辺に val を加算する．
 *
-* ll su_subtreem(int v) : O(log n)
+* ll sum_subtree(int v) : O(log n)
 *	頂点 v の部分木の辺の値の和を返す．
 *
 * ll sum(int v1, int v2) : O((log n)^2)

@@ -144,6 +144,7 @@ struct IEdge {
 	bool dir; // 順方向か
 
 	IEdge() : to(-1), id(-1), dir(true) {}
+	IEdge(int to, int id) : to(to), id(id), dir(true) {}
 	IEdge(int to, int id, bool dir) : to(to), id(id), dir(dir) {}
 
 	// プレーングラフで呼ばれたとき用

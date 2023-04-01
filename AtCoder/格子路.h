@@ -316,6 +316,7 @@ mint dummy_path_lemma(int h, int w, const vi& x, const vi& y) {
 		if (x[i] < 0 || x[i] > h || y[i] < 0 || y[i] > w) continue;
 		s.emplace_back(x[i], y[i]);
 	}
+	n = sz(s) - 1;
 	sort(next(s.begin()), s.end());
 	repi(i, 1, n) t.push_back(s[i]);
 

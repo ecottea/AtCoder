@@ -57,10 +57,10 @@ mint count_noncontinuous_bitsequences(ll n, int k) {
 }
 
 
-//【0 のみからなる区間を含まないビット列の数え上げ】O(n + m)
+//【ビット列の数え上げ（区間 OR 指定）】O(n + m)
 /*
 * ビット列 s[0..n) で，m 個の半開区間 [l[j]..r[j]) それぞれについて
-* 少なくとも 1 つの '1' が含まれるものの個数を返す．
+* OR s[l[j]..r[j]) = 1 であるものの個数を返す．
 */
 mint count_non0interval_bitsequences(int n, const vi& l, const vi& r) {
 	int m = sz(l);

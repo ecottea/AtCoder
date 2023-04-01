@@ -5,56 +5,93 @@
 
 //【商列挙】O(√n)
 /*
-* i=[1..n] に対し，n/i の商が q となる i の範囲が [i1..i2) であることを
-* {q, i1, i2} として q について降順に格納したリストを返す．
+* i=[1..n] に対し，n/i = q（切り捨て）となる i の範囲が [il..ir) であることを
+* {il, ir, q} として il について昇順に格納したリストを返す．
 * 各範囲においては余りは公差 -q の等差数列を成す．
 */
 vector<tuple<ll, ll, ll>> quotient_range(ll n) {
+	// 参考 : https://ei1333.github.io/luzhiled/snippets/math/quotient-range.html
 	// verify : https://atcoder.jp/contests/abc230/tasks/abc230_e
 
 	//【方法】
 	// n/i の商が q となるような i の範囲を考える．条件を i について整理すると
-	//		q = floor(n / i)
-	//		⇔ q <= n / i < q + 1
-	//		⇔ i q <= n < i(q + 1)
-	//		⇔ n / (q + 1) < i <= n / q
+	//		q = floor(n/i)
+	//		⇔ q ≦ n/i < q+1
+	//		⇔ i q ≦ n < i(q+1)
+	//		⇔ n/(q+1) < i ≦ n/q
 	// となる．
 	//
 	// この幅が 1 以下であれば，q に対応する i は高々 1 個である．その条件は
-	//		n / q - n / (q + 1) <= 1
-	//		⇔ (q + 1)n - q n <= q(q + 1)
-	//		⇔ n <= q(q + 1)
+	//		n/q - n/(q+1) ≦ 1
+	//		⇔ (q+1)n - q n ≦ q(q+1)
+	//		⇔ n ≦ q(q+1)
 	// である．条件をやや弱めて
-	//		n <= q^2
-	//		⇔ √n <= q
+	//		n ≦ q^2 ⇔ √n ≦ q
 	// としてもオーダーに影響はない．
 
 	//（例）
 	// 例えば n = 15 のときは以下のように分類できる：
-	//		商 n/i	i の範囲		余り n%i
-	//		15		[1..2)		[0]
-	//		7		[2..3)		[1]
-	//		5		[3..4)		[0]
-	//		3		[4..6)		[3, 0]
-	//		2		[6..8)		[3, 1]
-	//		1		[8..16)		[7, 6, 5, 4, 3, 2, 1, 0]
+	//		i の範囲		n/i		n mod i
+	//		[1..2)		15		[0]
+	//		[2..3)		7		[1]
+	//		[3..4)		5		[0]
+	//		[4..6)		3		[3, 0]
+	//		[6..8)		2		[3, 1]
+	//		[8..16)		1		[7, 6, 5, 4, 3, 2, 1, 0]
 
-	ll m = (ll)(sqrt(n) + 0.01);
-	vector<tuple<ll, ll, ll>> qis;
+	ll m = (ll)(sqrt(n) + 1e-12);
+	vector<tuple<ll, ll, ll>> res;
 
 	// q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
-	for (int i = 1; n / i > m; i++) {
-		qis.push_back({ n / i, i, i + 1 });
-	}
+	for (int i = 1; n / i > m; i++) res.emplace_back(i, i + 1, n / i);
 
 	// そうでない部分は q ごとにまとめて考える．
 	repir(q, m, 1) {
-		ll i0 = n / (q + 1LL) + 1;
+		ll i0 = n / (q + 1) + 1;
 		ll i1 = n / q + 1;
-		qis.push_back({ q, i0, i1 });
+		res.emplace_back(i0, i1, q);
 	}
 
-	return qis;
+	return res;
+}
+
+
+//【商列挙（組）】O(√max(n1, n2))
+/*
+* i=[1..max(n1,n2)] に対し，(n1/i, n2/i) = (q1, q2)（切り捨て）となる i の範囲が [il..ir) であることを
+* {il, ir, q1, q2} として il について昇順に格納したリストを返す．
+* 各範囲においては余りは公差 (-q1, -q2) の等差数列を成す．
+*/
+vector<tuple<ll, ll, ll, ll>> quotient_range(ll n1, ll n2) {
+	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_i
+
+	ll n_max = max(n1, n2);
+
+	ll m = (ll)(sqrt(n_max) + 1e-12);
+	vector<tuple<ll, ll, ll, ll>> res;
+
+	// どちらかの q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
+	int i = 1;
+	for (; n_max / i > m; i++) res.emplace_back(i, i + 1, n1 / i, n2 / i);
+
+	// そうでない部分は (q1, q2) ごとにまとめて考える．
+	ll q1 = n1 / i, q2 = n2 / i;
+	while (q1 > 0 || q2 > 0) {
+		// [il1..ir1) : n1/i = q1 となる i の範囲
+		ll il1 = n1 / (q1 + 1) + 1, ir1 = (q1 > 0 ? n1 / q1 + 1 : INFL);
+
+		// [il2..ir2) : n2/i = q2 となる i の範囲
+		ll il2 = n2 / (q2 + 1) + 1, ir2 = (q2 > 0 ? n2 / q2 + 1 : INFL);
+
+		// 両区間の共通部分を記録する．
+		ll il = max(il1, il2), ir = min(ir1, ir2);
+		if (il < ir) res.emplace_back(il, ir, q1, q2);
+
+		if (ir1 < ir2) q1--;
+		else q2--;
+	}
+
+	return res;
 }
 
 
@@ -98,7 +135,7 @@ ll mod_min_linear(ll n, ll m, ll a, ll b) {
 }
 
 
-//【m で割った余りの和】
+//【余りの和】
 /*
 * Mod_sum(a) : O(n log n)
 *	配列 a で初期化する．
@@ -176,11 +213,12 @@ T ceil_div(T a, T b) {
 }
 
 
-//【切り捨て除算の結合法則】
+//【整除算の結合法則】
 /*
-* 切り捨て除算は結合法則を満たす．すなわち以下の式が成り立つ：
+* 切り捨て除算や切り上げ除算は結合法則を満たす．すなわち以下の式が成り立つ：
 *		floor(floor(a / b) / c) = floor(a / (b * c))
-* 
+*		ceil(ceil(a / b) / c) = ceil(a / (b * c))
+*
 * verify : https://atcoder.jp/contests/abc256/tasks/abc256_h
 */
 
@@ -269,29 +307,38 @@ T count_by_reminder(T l, T r, T m, T k) {
 */
 
 
-//【gcd と階差】
+//【集合の GCD と商】
+/*
+* (L..R] の元からなる集合 S のうち GCD(S) = g となるものの個数は，
+* (L/g..R/g]（切り捨て）の元からなる集合 S のうち GCD(S) = 1 となるものの個数に等しい．
+* 
+* verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_i
+*/
+
+
+//【列の GCD と階差】
 /*
 * 数列 a[0..n) の階差を d[0..n-1)（d[i] = a[i+1] - a[i]）とするとき，
-*		gcd(a[l..r)) = gcd( a[i], gcd(d[l..r-1)) )（i∈[l..r)）
+*		GCD(a[l..r)) = GCD( a[i], GCD(d[l..r-1)) )（i∈[l..r)）
 *
 * verify : https://atcoder.jp/contests/arc017/tasks/arc017_4
 */
 
 
-//【部分集合の gcd】
+//【部分集合の GCD】
 /*
 * 与えられた非負整数の集合 U と非負整数 g について，
-*	gcd(S) = g となるような S ⊂ U が存在する
-*	⇔ g の倍数である U の元全ての gcd が g に一致する
+*	GCD(S) = g となるような S ⊂ U が存在する
+*	⇔ g の倍数である U の元全ての GCD が g に一致する
 *
 * verify : https://codeforces.com/contest/1627/problem/D
 */
 
 
-//【レピュニットの gcd】
+//【レピュニットの GCD】
 /*
 * rep(n) := (10^n - 1) / 9（1 が n 個並んだ数）とおくと，
-*		gcd(rep(n), rep(m)) = rep(gcd(n, m))
+*		GCD(rep(n), rep(m)) = rep(GCD(n, m))
 *
 * 証明：
 * 筆算をイメージすることで自明に思える以下の式

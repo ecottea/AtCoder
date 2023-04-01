@@ -30,120 +30,151 @@
 */
 
 
-//【自身より小さい数の次の位置】O(n log n)
+//【最近大小元】
 /*
-* a[0..n) で，i < j かつ a[i] > a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
-* eq = true とすると「自身以下の数の次の位置」を格納する．
+* Inc_dec_jump(vT a) : O(n)
+*	数列 a[0..n) で初期化する．
+*
+* set_prev_less(strict = true) : O(n)
+*	自身より小さい数の前の位置を一括計算する．strict = false にすると自身以下とする．
+*
+* set_prev_greater(strict = true) : O(n)
+*	自身より大きい数の前の位置を一括計算する．strict = false にすると自身以上とする．
+*
+* set_next_less(strict = true) : O(n)
+*	自身より小さい数の次の位置を一括計算する．strict = false にすると自身以下とする．
+*
+* set_next_greater(strict = true) : O(n)
+*	自身より大きい数の次の位置を一括計算する．strict = false にすると自身以上とする．
+*
+* set_all(strict = true) : O(n)
+*	以上の 4 つを一括計算する．
+*
+* int prev_less(int i) : O(1)
+*	a[0..i) 内にある a[i] より小さい[以下の] 要素の最右位置を返す（なければ -1）
+*
+* int prev_greater(int i) : O(1)
+*	a[0..i) 内にある a[i] より大きい[以上の] 要素の最右位置を返す（なければ -1）
+*
+* int next_less(int i) : O(1)
+*	a(i..n) 内にある a[i] より小さい[以下の] 要素の最左位置を返す（なければ n）
+*
+* int next_greater(int i) : O(1)
+*	a(i..n) 内にある a[i] より大きい[以上の] 要素の最左位置を返す（なければ n）
 */
 template <class T>
-vi next_less_position(const vector<T>& a, bool eq = false) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
+class Nearest_LG_element {
+	int n;
+	vector<T> a;
+	vi pl, pg, nl, ng;
 
-	int n = sz(a);
-	vi nxt_les(n, n);
+public:
+	// 数列 a[0..n) で初期化する．
+	Nearest_LG_element(const vector<T>& a) : n(sz(a)), a(a), pl(n, -1), pg(n, -1), nl(n, n), ng(n, n) { }
+	Nearest_LG_element() {}
 
-	priority_queue<pair<T, int>> q;
-
-	rep(i, n) {
-		while (!q.empty() && q.top().first >= a[i]) {
-			if (!eq && q.top().first == a[i]) break;
-
-			nxt_les[q.top().second] = i;
-			q.pop();
+	// 自身より小さい数の前の位置を一括計算する．strict = false にすると自身以下とする．
+	void set_prev_less(bool strict = true) {
+		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+		
+		stack<pair<int, T>> st;
+		repir(i, n - 1, 0) {
+			while (!st.empty() && st.top().second >= a[i]) {
+				if (strict && st.top().second == a[i]) break;
+				pl[st.top().first] = i;
+				st.pop();
+			}
+			st.push({ i, a[i] });
 		}
-
-		q.push({ a[i], i });
 	}
 
-	return nxt_les;
-}
+	// 自身より大きい数の前の位置を一括計算する．strict = false にすると自身以上とする．
+	void set_prev_greater(bool strict = true) {
+		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
 
-
-//【自身より大きい数の次の位置】O(n log n)
-/*
-* a[0..n) で，i < j かつ a[i] < a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
-* eq = true とすると「自身以上の数の次の位置」を格納する．
-*/
-template <class T>
-vi next_greater_position(const vector<T>& a, bool eq = false) {
-	// verify : https://atcoder.jp/contests/code-festival-2014-qualb/tasks/code_festival_qualB_d
-
-	int n = sz(a);
-	vi nxt_grt(n, n);
-
-	priority_queue_rev<pair<T, int>> q;
-
-	rep(i, n) {
-		while (!q.empty() && q.top().first <= a[i]) {
-			if (!eq && q.top().first == a[i]) break;
-
-			nxt_grt[q.top().second] = i;
-			q.pop();
+		stack<pair<int, T>> st;
+		repir(i, n - 1, 0) {
+			while (!st.empty() && st.top().second <= a[i]) {
+				if (strict && st.top().second == a[i]) break;
+				pg[st.top().first] = i;
+				st.pop();
+			}
+			st.push({ i, a[i] });
 		}
-
-		q.push({ a[i], i });
 	}
 
-	return nxt_grt;
-}
-
-
-//【自身より小さい数の前の位置】O(n log n)
-/*
-* a[0..n) で，j < i かつ a[j] < a[i] なる最大の j（なければ -1）を pos[i] に格納し pos を返す．
-* eq = true とすると「自身以下の数の前の位置」を格納する．
-*/
-template <class T>
-vi prev_less_position(const vector<T>& a, bool eq = false) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_3_C
-
-	int n = sz(a);
-	vi prv_les(n, -1);
-
-	priority_queue<pair<T, int>> q;
-
-	repir(i, n - 1, 0) {
-		while (!q.empty() && q.top().first >= a[i]) {
-			if (!eq && q.top().first == a[i]) break;
-
-			prv_les[q.top().second] = i;
-			q.pop();
+	// 自身より小さい数の次の位置を一括計算する．strict = false にすると自身以下とする．
+	void set_next_less(bool strict = true) {
+		stack<pair<int, T>> st;
+		rep(i, n) {
+			while (!st.empty() && st.top().second >= a[i]) {
+				if (strict && st.top().second == a[i]) break;
+				nl[st.top().first] = i;
+				st.pop();
+			}
+			st.push({ i, a[i] });
 		}
-
-		q.push({ a[i], i });
 	}
 
-	return prv_les;
-}
-
-
-//【自身より大きい数の前の位置】O(n log n)
-/*
-* a[0..n) で，j < i かつ a[j] > a[i] なる最大の j（なければ -1）を pos[i] に格納し pos を返す．
-* eq = true とすると「自身以上の数の前の位置」を格納する．
-*/
-template <class T>
-vi prev_greater_position(const vector<T>& a, bool eq = false) {
-	// verify : https://atcoder.jp/contests/code-festival-2014-qualb/tasks/code_festival_qualB_d
-
-	int n = sz(a);
-	vi prv_grt(n, -1);
-
-	priority_queue_rev<pair<T, int>> q;
-
-	repir(i, n - 1, 0) {
-		while (!q.empty() && q.top().first <= a[i]) {
-			if (!eq && q.top().first == a[i]) break;
-
-			prv_grt[q.top().second] = i;
-			q.pop();
+	// 自身より大きい数の次の位置を一括計算する．strict = false にすると自身以上とする．
+	void set_next_greater(bool strict = true) {
+		stack<pair<int, T>> st;
+		rep(i, n) {
+			while (!st.empty() && st.top().second <= a[i]) {
+				if (strict && st.top().second == a[i]) break;
+				ng[st.top().first] = i;
+				st.pop();
+			}
+			st.push({ i, a[i] });
 		}
-
-		q.push({ a[i], i });
 	}
 
-	return prv_grt;
-}
+	// 以上の 4 つを一括計算する．
+	void set_all(bool strict = true) {
+		set_prev_less(strict);
+		set_prev_greater(strict);
+		set_next_less(strict);
+		set_next_greater(strict);
+	}
+
+	// a[0..i) 内にある a[i] より小さい[以下の] 要素の最右位置を返す（なければ -1）
+	int prev_less(int i) {
+		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+
+		chmax(i, 0), chmin(i, n);
+		return pl[i];
+	}
+
+	// a[0..i) 内にある a[i] より大きい[以上の] 要素の最右位置を返す（なければ -1）
+	int prev_greater(int i) {
+		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+
+		chmax(i, 0), chmin(i, n);
+		return pg[i];
+	}
+
+	// a(i..n) 内にある a[i] より小さい[以下の] 要素の最左位置を返す（なければ n）
+	int next_less(int i) {
+		chmax(i, 0), chmin(i, n);
+		return nl[i];
+	}
+
+	// a(i..n) 内にある a[i] より大きい[以上の] 要素の最左位置を返す（なければ n）
+	int next_greater(int i) {
+		chmax(i, 0), chmin(i, n);
+		return ng[i];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Nearest_LG_element& idj) {
+		os << "pl: " << idj.pl << endl;
+		os << "pg: " << idj.pg << endl;
+		os << "nl: " << idj.nl << endl;
+		os << "ng: " << idj.ng << endl;
+		return os;
+	}
+#endif
+};
 
 
 //【自身より大きい数の次以降 k 個の位置】O(k n log n)

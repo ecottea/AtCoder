@@ -168,6 +168,14 @@ int reduced_row_echelon_form(Bit_matrix<N>& mat, vi* pjs = nullptr) {
 }
 
 
+//【行列式】
+/*
+*【行簡約階段形】を用いて，ランクが n なら 1，さもなくば 0 と判断できる．
+* 
+* verify : https://yukicoder.me/problems/no/2255
+*/
+
+
 //【逆行列】O(n^3 / 64)
 /*
 * n 次正方行列 mat の逆行列が存在すればそれを mat_inv に格納する．

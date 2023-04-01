@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 数論変換（mod 998244353） ■■■■■
+// ■■■■■ 数論変換（mod 998244353），添字和畳込み ■■■■■
 
 
 //【巡回畳込みと多項式の積】
@@ -175,9 +175,8 @@ vm multi_convoluion(vvm a) {
 
 	// 積のコストが小さい順に掛けていく（マージテク）
 	while (sz(q) >= 2) {
-		int ni, i, nj, j;
-		tie(ni, i) = q.top(); q.pop();
-		tie(nj, j) = q.top(); q.pop();
+		auto [ni, i] = q.top(); q.pop();
+		auto [nj, j] = q.top(); q.pop();
 
 		a[i] = convolution(a[i], a[j]);
 		q.push({ ni + nj - 1, i });
@@ -237,9 +236,9 @@ vvm convolution_2D(vvm a, vvm b) {
 
 //【数論変換とシフト】
 /*
-* 長さ 2^m の数列 a の数論変換対が A であるとき，
-* b[i] = a[(i - 1) mod 2^m] の数論変換対は B[i] = ζ^i A[i] である．
-* ここで ζ は数論変換に用いた 1 の原始 2^m 乗根である．
+* 数列 a[0..2^m) の数論変換対が A[0..2^m) であるとき，
+* b[i] = a[(i - 1) mod 2^m] の数論変換対は B[i] = ω^i A[i] である．
+* ここで ω は数論変換に用いた 1 の原始 2^m 乗根である．
 */
 
 

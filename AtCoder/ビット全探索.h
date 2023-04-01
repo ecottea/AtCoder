@@ -29,6 +29,15 @@
 #define repbc(set, n, r) for(int set = (1 << int(r)) - 1, lb, nx; set < (1 << int(n)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
 
 
+//【ビット全探索の高速化】
+/*
+* repb(set, n) rep(i, n) で O(2^n n) かかるビット全探索は，
+* 再帰関数を用いて書く，グレイコードを使うなどして O(2^n) に高速化できる．
+* 
+* verify : https://yukicoder.me/problems/no/3105
+*/
+
+
 //【bitDP の遷移を細分化】
 /*
 * bitDP を「集合 → 集合」の遷移をする DP と解釈すれば，

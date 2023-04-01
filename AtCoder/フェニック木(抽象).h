@@ -62,7 +62,7 @@ struct Fenwick_tree {
 		// 差分を求める．
 		S d = op(x, inv(get(i)));
 
-		apply(i, d);
+		add(i, d);
 	}
 
 	// v[i] を返す．（i : 0-indexed）
@@ -1215,6 +1215,7 @@ struct Dynamic_fenwick_tree_2D {
 * sum(l, r) : O(log n)
 *	半開区間 [l, r) の要素の総和を返す．
 */
+/*
 template <class T>
 struct fenwick_tree {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_6_A
@@ -1252,5 +1253,5 @@ struct fenwick_tree {
 	}
 #endif
 };
-
+*/
 

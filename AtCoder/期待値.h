@@ -7,6 +7,22 @@
 // ■■■■■ 期待値 ■■■■■
 
 
+//【期待値 → 確率】
+/*
+* X が [0..∞) を台とする確率変数のとき，
+*		E[X] = Σk∈[0..∞) P(X > k)
+* 
+* 証明：期待値の定義に従い計算すると以下のようになる：
+*	E[X]
+*	= Σx∈[0..∞) x P(X = x)
+*	= Σx∈[0..∞) Σk∈[0..x) P(X = x)
+*	= Σk∈[0..∞) Σx∈(k..∞) P(X = x)
+*	= Σk∈[0..∞) P(X > k)
+* 
+* verify : https://atcoder.jp/contests/abc295/tasks/abc295_e
+*/
+
+
 //【すごろくの確率と期待値】
 /*
 * すごろくにおいて，
@@ -523,7 +539,8 @@ double blurred_shooting(const vi& x) {
 *
 * 利用：【行列】，【連立一次方程式】
 */
-template <class T> class Random_walk_weighted {
+template <class T>
+class Random_walk_weighted {
 	int n;
 	Matrix<T> mat;
 
@@ -567,4 +584,12 @@ public:
 #endif
 };
 
+
+//【DAG 上のランダムウォーク】
+/*
+* DAG g 上のランダムウォークで始点 ST から終点 GL まで移動するのにかかるターン数の期待値は，
+* Σv∈V\{GL} Pr(v に止まる) / Pr(v から出る | v に居る) で与えられる．
+* 
+* verify : https://atcoder.jp/contests/abc242/tasks/abc242_h
+*/
 

@@ -40,11 +40,11 @@ mint max_product_sum(const vi& a) {
 	//		dp[i+1] = Σj=[0..i] dp[j] max(a[j..i])
 	// を用いて求めることができる．
 	//
-	// j0 < i を a[j0] >= a[i] を満たす最大のもの（なければ -1）と定めると，
-	//		max(a[j..i]) = max(a[j..i))	(j <= j0 のとき)
+	// j0 < i を a[j0] ≧ a[i] を満たす最大のもの（なければ -1）と定めると，
+	//		max(a[j..i]) = max(a[j..i))	(j ≦ j0 のとき)
 	//		max(a[j..i]) = a[i]			(j > j0 のとき)
 	// となる．これを踏まえると，漸化式は
-	//		dp[i+1] = dp[i] - Σj=(j0..i] dp[j] max(a[j..i)) + a[i] Σj=(j0..i] dp[j]
+	//		dp[i+1] = dp[i] - Σj=(j0..i] dp[j] max(a[j..i)) + a[i] Σdp(j0..i]
 	// と書き直せる．
 	//
 	// この更新を高速に行うため，max(a[j..i]) の値で j の値を分類し，

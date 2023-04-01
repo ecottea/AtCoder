@@ -34,11 +34,11 @@
 *
 * ll lower_bound(T val, T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，
-*   val 以上の最小の要素が昇順で何番目（0-indexed）の要素かを返す．
+*   val 以上の最小の要素が昇順で何番目（0-indexed）の要素かを返す（なければ要素数）
 *
 * ll upper_bound(T val, T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，
-*   val より大きい最小の要素が昇順で何番目（0-indexed）の要素かを返す．
+*   val より大きい最小の要素が昇順で何番目（0-indexed）の要素かを返す（なければ要素数）
 *
 * ll count(T val) : O(B)
 *   要素 val の個数を返す．
@@ -228,6 +228,7 @@ public:
 		// verify : https://www.spoj.com/problems/SUBXOR/
 
 		if (val <= 0) return 0LL;
+		if (val >= (T(1) << B)) return size();
 
 		return lower_bound_sub(root, mask, val, B - 1);
 	}
@@ -235,11 +236,6 @@ public:
 	// mask[=0] との XOR をとったときの val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
 	ll upper_bound(T val, T mask = 0) const {
 		// verify : https://codeforces.com/contest/966/problem/C
-
-		if (val < 0) return 0LL;
-
-		// val + 1 が B ビット整数に収まらない場合の例外処理
-		if (val == (T(1) << B) - 1) return size();
 
 		return lower_bound_sub(root, mask, val + 1, B - 1);
 	}

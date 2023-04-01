@@ -566,7 +566,11 @@ struct Separated_multiset_sum {
 	bool empty_h() const { return nh == 0; }
 
 	// ‘½dW‡‚Ì‘å‚«‚³‚ğ•Ô‚·D
-	int size_l() const { return nl; }
+	int size_l() const { 
+		// verify : https://atcoder.jp/contests/pakencamp-2022-day2/tasks/pakencamp_2022_day2_e
+
+		return nl; 
+	}
 	int size_h() const {
 		// verify : https://yukicoder.me/problems/no/2028
 

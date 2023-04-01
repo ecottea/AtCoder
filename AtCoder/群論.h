@@ -2,12 +2,12 @@
 #include "header.h"
 #include "二項係数.h"
 #include "数論.h"
-#include "約数倍数変換.h"
-#include "列挙(集合).h"
+#include "整除,GCD,LCM.h"
+#include "列挙(分割).h"
 // ■■■■■ 群論 ■■■■■
 
 
-//【ある型の置換の数え上げ】O(k)
+//【置換の数え上げ（型指定）】O(k)
 /*
 * 自然数の分割 p[0..k)（広義単調減少）で表される型をもつ置換の個数を返す．
 *
@@ -52,13 +52,13 @@ mint count_permutation_type(const vi& p, const Factorial_mint& fm) {
 }
 
 
-//【対称群の元の位数分布】O(n の分割数）（n = 50 くらいまで動く）
+//【位数分布（対称群）】O(n の分割数）（n = 50 くらいまで動く）
 /*
 * n 次対称群に位数 d の元が c 個あるとし，{d, c} を昇順に並べたリストを返す．
 *
 * 制約 : fm は n! まで計算可能であること．
 *
-* 利用：【自然数の分割の列挙（値が k 以下）】,【ある型の置換の数え上げ】,【階乗など（法が大きな素数）】
+* 利用：【自然数の分割の列挙（値が k 以下）】,【置換の数え上げ（型指定）】,【階乗など（法が大きな素数）】
 */
 vector<pair<int, mint>> permutation_order_distribution(int n, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc226/tasks/abc226_f
@@ -84,11 +84,11 @@ vector<pair<int, mint>> permutation_order_distribution(int n, const Factorial_mi
 }
 
 
-//【Z/nZ の位数分布】O(√n)
+//【位数分布（Z/nZ）】O(√n)
 /*
 * Z/nZ に位数 d の元が c 個あるとし，{d, c} を昇順に並べたリストを返す．
 *
-* 利用：【倍数変換（添字約数制限）】,【素因数と約数の列挙】
+* 利用：【約数倍数変換（添字約数制限）】,【素因数と約数の列挙】
 */
 vector<pll> order_distribution(ll n) {
 	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
@@ -96,12 +96,12 @@ vector<pll> order_distribution(ll n) {
 	vl ps, divs;
 	primefactors_and_divisors(n, ps, divs);
 
-	Limited_multiple_transform<ll> lmt(ps, divs);
+	Limited_div_mul_transform<ll> dmt(ps, divs);
 
 	unordered_map<ll, ll> cnt;
 	repe(d, divs) cnt[d] = d;
 
-	lmt.multiple_mobius(cnt);
+	dmt.multiple_mobius(cnt);
 
 	vector<pll> res;
 	for (auto& [d, c] : cnt) res.emplace_back(d, c);
@@ -131,7 +131,7 @@ vector<pll> order_distribution(ll n) {
 */
 
 
-//【互換で生成される対称群の部分群】
+//【互換で生成される置換群】
 /*
 * 対称群 S_n の互換の集合 E で生成される部分群 H は次のように決定できる：
 *

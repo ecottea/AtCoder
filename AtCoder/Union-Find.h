@@ -203,12 +203,16 @@ struct Potential_union_find {
 
 	// 頂点 a, b が同じ連結成分に属するかを返す．
 	bool same(int a, int b) {
+		// verify : https://yukicoder.me/problems/no/2251
+
 		// 根が同じなら連結である．
 		return leader(a) == leader(b);
 	}
 
 	// v[b] - v[a] を返す．
 	T get_diff(int a, int b) {
+		// verify : https://yukicoder.me/problems/no/2251
+
 		// 差が確定していると仮定し，根からの差の差として計算する．
 		return pot[b] - pot[a];
 	}
@@ -237,6 +241,8 @@ struct Potential_union_find {
 
 	// 連結成分の個数を返す．
 	int size() {
+		// verify : https://yukicoder.me/problems/no/2251
+
 		return m;
 	}
 

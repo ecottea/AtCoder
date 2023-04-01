@@ -62,7 +62,7 @@ struct Thinning_cumulative_sum {
 		Assert(m > 0);
 		rep(i, n) acc[i + m] = acc[i] + a[i];
 	}
-	Thinning_cumulative_sum() : n(0) {} // ダミー
+	Thinning_cumulative_sum() : n(0), m(1) {} // ダミー
 
 	// set = {i∈[l..r) | i=k (mod m)} とし Σa[set] を返す．
 	T sum(int l, int r, int k) {

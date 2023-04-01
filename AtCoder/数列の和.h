@@ -124,7 +124,7 @@ mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
 /*
 * Σi∈[0..∞) i^d r^i を返す．
 *
-* 制約 : r != 1
+* 制約：r != 1
 * 
 * 利用：【階乗など（法が大きな素数）】
 */
@@ -143,8 +143,8 @@ mint powered_geometric_series(mint r, int d) {
 
 	mint res = 0;
 	repi(i, 0, d) {
-		res += ((d - i) % 2 == 0 ? 1 : -1) * pow_r[d - i]
-			* fm.bin(d + 1, i + 1) * acc[i + 1];
+		int sign = ((d - i) % 2 == 0 ? 1 : -1);
+		res += sign * pow_r[d - i] * fm.bin(d + 1, i + 1) * acc[i + 1];
 	}
 
 	res /= mint(1 - r).pow(d + 1);

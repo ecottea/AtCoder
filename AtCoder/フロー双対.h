@@ -16,7 +16,7 @@
 *	subject to	Σv→t f[v][t] - Σs→v f[s][v] = 0 （∀v ∈ V\{S, T}）
 *				ΣS→t f[S][t] - Σs→S f[s][S] = 1
 *				ΣT→t f[T][t] - Σs→T f[s][T] = -1
-*				0 <= f[s][t] （∀s→t ∈ E）
+*				0 ≦ f[s][t] （∀s→t ∈ E）
 * なる線形計画問題として定式化できる．
 * 
 * これは，最小費用流問題において辺の容量を全て ∞ とし，流量を 1 としたものに等価である．
@@ -27,7 +27,7 @@
 /*
 *【最短路問題の LP 定式化】の双対をとると，p[v] を変数とする
 *	maximize	-p[S] + p[T]
-*	subject to	p[t] - p[s] <= c[s][t] （∀s→t ∈ E）
+*	subject to	p[t] - p[s] ≦ c[s][t] （∀s→t ∈ E）
 * なる線形計画問題（いわゆる牛ゲー）になる．
 */
 
@@ -38,10 +38,10 @@
 *	n 変数で初期化する．
 *
 * set_ub(int a, int b, ll d) : O(1)
-*	v[b] - v[a] <= d という制約を追加する．
+*	v[b] - v[a] ≦ d という制約を追加する．
 *
 * set_lb(int a, int b, ll d) : O(1)
-*	v[b] - v[a] >= d という制約を追加する．
+*	v[b] - v[a] ≧ d という制約を追加する．
 *
 * vl maximize_diff(int a) : O(n m)（m : 制約の数）
 *	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
@@ -124,7 +124,7 @@ struct Ushige {
 *	n 変数で初期化する．
 *
 * set_ub(a, b, d) : O(1)
-*	v[b] - v[a] <= d という制約を追加する．（d >= 0）
+*	v[b] - v[a] ≦ d という制約を追加する．（d >= 0）
 *
 * vl maximize_diff(a) : O(n + m log n)（m : 制約の数）
 *	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
@@ -170,7 +170,7 @@ struct Ushige_ub_only {
 *	n 変数で初期化する．
 *
 * set_ub(a, b, d) : O(1)
-*	v[b] - v[a] <= d という制約を追加する．（d ∈ {0, 1}）
+*	v[b] - v[a] ≦ d という制約を追加する．（d ∈ {0, 1}）
 *
 * vi maximize_diff(a) : O(n + m)（m : 制約の数）
 *	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
@@ -222,7 +222,7 @@ struct Ushige_ub01_only {
 *	n 変数で初期化する．
 *
 * set_lb1(int a, int b) : O(1)
-*	v[b] - v[a] >= 1 という制約を追加する．
+*	v[b] - v[a] ≧ 1 という制約を追加する．
 *
 * vi minimize_range() : O(n + m)（m : 制約の数）
 *	min(v) = 0 で max(v) を最小とする v[i] の一例を返す（無ければ空リスト）
@@ -273,14 +273,14 @@ struct Ushige_lb1_only {
 *	n 変数で初期化する．
 *
 * set_ub(int a, int b, ll d) : O(1)
-*	v[b] - v[a] <= d という制約を追加する．
+*	v[b] - v[a] ≦ d という制約を追加する．
 *
 * set_lb(int a, int b, ll d) : O(1)
-*	v[b] - v[a] >= d という制約を追加する．
+*	v[b] - v[a] ≧ d という制約を追加する．
 *
 * vl maximize_diff(int a) : O(n + m)（m : 制約の数）
 *	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
-*	制約：v[s] <= ... <= v[s] のような制約の循環は存在しない
+*	制約：v[s]+d ≦ ... ≦ v[s]+d' のような制約の循環は存在しない
 *
 * 利用：【コスト最小パス】
 */
@@ -329,7 +329,7 @@ struct Ushige_DAG {
 *	subject to	Σv→t f[v][t] - Σs→v f[s][v] = 0 （∀v ∈ V\{S, T}）
 *				ΣS→t f[S][t] - Σs→S f[s][S] = F
 *				ΣT→t f[T][t] - Σs→T f[s][T] = -F
-*				0 <= f[s][t] <= u[s][t] （∀s→t ∈ E）
+*				0 ≦ f[s][t] ≦ u[s][t] （∀s→t ∈ E）
 * なる線形計画問題として定式化できる．
 */
 
@@ -338,9 +338,9 @@ struct Ushige_DAG {
 /*
 *【最大流問題の LP 定式化】の双対をとると，y[s][t], p[v] を変数とする
 *	minimize	Σs→t u[s][t] y[s][t]
-*	subject to	y[s][t] + p[t] - p[s] >= 0 （∀s→t ∈ E）
+*	subject to	y[s][t] + p[t] - p[s] ≧ 0 （∀s→t ∈ E）
 *				p[S] - p[T] >= 1
-*				y[s][t] >= 0 （∀s→t ∈ E）
+*				y[s][t] ≧ 0 （∀s→t ∈ E）
 * なる線形計画問題になる．
 * 
 * 結局 p[v] には {0, 1} を割り当てるのが最善となり，最小カット問題と等価である．
@@ -359,7 +359,7 @@ struct Ushige_DAG {
 *	subject to	Σv→t f[v][t] - Σs→v f[s][v] = 0 （∀v ∈ V\{S, T}）
 *				ΣS→t f[S][t] - Σs→S f[s][S] = F
 *				ΣT→t f[T][t] - Σs→T f[s][T] = -F
-*				0 <= f[s][t] <= u[s][t] （∀s→t ∈ E）
+*				0 ≦ f[s][t] ≦ u[s][t] （∀s→t ∈ E）
 * なる線形計画問題として定式化できる．
 */
 
@@ -368,8 +368,8 @@ struct Ushige_DAG {
 /*
 *【最小費用流問題の LP 定式化】の双対をとると，y[s][t], p[v] を変数とする
 *	maximize	-Σs→t u[s][t] y[s][t] - F p[S] + F p[T]
-*	subject to	-y[s][t] + p[t] - p[s] <= c[s][t] （∀s→t ∈ E）
-*				y[s][t] >= 0 （∀s→t ∈ E）
+*	subject to	-y[s][t] + p[t] - p[s] ≦ c[s][t] （∀s→t ∈ E）
+*				y[s][t] ≧ 0 （∀s→t ∈ E）
 * なる線形計画問題になる．
 */
 
@@ -386,7 +386,7 @@ struct Ushige_DAG {
 * とおくと，一般化最小費用流問題は，f[e] を変数とする
 *	minimize	Σe c[e] f[e]
 *	subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = g[v] （∀v ∈ V）
-*				0 <= f[e] <= u[e] （∀e ∈ E）
+*				0 ≦ f[e] ≦ u[e] （∀e ∈ E）
 * なる線形計画問題として定式化できる．
 */
 
@@ -395,8 +395,8 @@ struct Ushige_DAG {
 /*
 *【一般化最小費用流問題の LP 定式化】の双対をとると，y[e], p[v] を変数とする
 *	maximize	-Σe u[e] y[e] - Σv d[v] p[v]
-*	subject to	-y[e] + p[t] - p[s] <= c[e] （∀e = s→t ∈ E）
-*				y[e] >= 0 （∀e ∈ E）
+*	subject to	-y[e] + p[t] - p[s] ≦ c[e] （∀e = s→t ∈ E）
+*				y[e] ≧ 0 （∀e ∈ E）
 * なる線形計画問題になる．
 */
 
@@ -424,9 +424,9 @@ struct Ushige_DAG {
 *【一般化最小費用流問題の LP 定式化（最小流量付き）】の双対をとると，
 * x[e], y[e], p[v] を変数とする
 *	maximize	Σe l[e] x[e] - Σe u[e] y[e] - Σv d[v] p[v]
-*	subject to	x[e] - y[e] + p[t] - p[s] <= c[e] （∀e = s→t ∈ E）
-*				x[e] >= 0 （∀e ∈ E）
-*				y[e] >= 0 （∀e ∈ E）
+*	subject to	x[e] - y[e] + p[t] - p[s] ≦ c[e] （∀e = s→t ∈ E）
+*				x[e] ≧ 0 （∀e ∈ E）
+*				y[e] ≧ 0 （∀e ∈ E）
 * なる線形計画問題になる．
 */
 
@@ -447,14 +447,14 @@ struct Ushige_DAG {
 *
 * add_dif_relu(int s, int t, ll u, ll c) : O(1)
 *	目的関数に u max(0, p[t] - p[s] - c) を加算する．
-*   制約：u >= 0
+*   制約：u ≧ 0
 *
 * add_dif_abs(int s, int t, ll u, ll c) : O(1)
 *	目的関数に u |p[t] - p[s] - c| を加算する．
-*   制約：u >= 0
+*   制約：u ≧ 0
 *
 * add_dif_ub(int s, int t, ll ub) : O(1)
-*	制約条件に p[t] - p[s] <= ub を追加する．
+*	制約条件に p[t] - p[s] ≦ ub を追加する．
 *	注意：ub < 0 だと流量が INF 増加して計算量がやばいかもしんない．
 *
 * ll solve() : O(F (n + m) log n)（F : 係数の絶対値の和，m : ReLU 項の数）
@@ -496,22 +496,24 @@ class Generalized_dual_mcf {
 	int n;
 	mcf_graph<ll, ll> g; // 双対な最小費用流問題を解くためのグラフ
 
-	// adv_cost : 前払いしているコスト
-	ll adv_cost = 0;
+	// precost : 前払いしているコスト
+	ll precost = 0;
 
 	// div[i] : 頂点 i からの湧き出し（負値なら吸い込み）
 	vl div;
 
 public:
 	// n 変数で初期化
-	Generalized_dual_mcf(int n_) : n(n_), g(n + 2), div(n) {}
+	Generalized_dual_mcf(int n_) : n(n_), g(n + 2), div(n) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2230
+	}
 
 	// 目的関数に定数 c を加算する．
 	void add_const(ll c) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2230
 
 		// 前払いしているコストを c 減らしておく．
-		adv_cost -= c;
+		precost -= c;
 	}
 
 	// 目的関数に d p[v] を加算する．
@@ -524,8 +526,9 @@ public:
 
 	// 目的関数に u max(0, p[t] - p[s] - c) を加算する．
 	void add_dif_relu(int s, int t, ll u, ll c) {
-		// s から t に流用 u でコスト c の辺を張りたい．
+		// verify : https://atcoder.jp/contests/abc224/tasks/abc224_h
 
+		// s から t に流用 u でコスト c の辺を張りたい．
 		// コストが非負の場合
 		if (c >= 0) {
 			// 普通に張ればいい．
@@ -534,7 +537,7 @@ public:
 		// コストが負の場合
 		else {
 			// 予めフローを最大まで流しておき，そこを逆流することに正のコストをかければよい．
-			adv_cost += u * c;
+			precost += u * c;
 			div[s] -= u;
 			div[t] += u;
 			g.add_edge(t, s, u, -c);
@@ -582,17 +585,35 @@ public:
 		ll cap, cost;
 		tie(cap, cost) = g.flow(ST, GL);
 
-		return -(adv_cost + cost);
+		return -(precost + cost);
 	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Generalized_dual_mcf& g) {
-		os << "cost: " << g.adv_cost << endl;
+		os << "cost: " << g.precost << endl;
 		os << "div: " << g.div << endl;
 		os << "graph:" << endl << g.g;
 		return os;
 	}
 #endif
 };
+
+
+//【二部グラフの和制約 → 差制約】
+/*
+* 制約が p[t] + p[s] ≦ ub（s∈S, t∈T）の形のみであるとき，
+* -p[s] を改めて p[s] とおくことにより p[t] - p[s] ≦ ub なる差制約の形にできる．
+* 
+* verify : https://atcoder.jp/contests/abc224/tasks/abc224_h
+*/
+
+
+//【非負制約 → 差制約】
+/*
+* 制約 p[s] ≧ 0 がある場合，新たな変数 p[z] を導入し，制約を p[z] - p[s] ≦ 0，
+* 目的関数に単独で現れる p[s] を max(0, p[s] - p[z]) に書き換えれば良い．
+* 
+* verify : https://atcoder.jp/contests/abc224/tasks/abc224_h
+*/
 
 

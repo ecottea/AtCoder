@@ -64,7 +64,7 @@ Graph wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, T 
 
 //【隣接行列 → グラフ】O(|V|^2)
 /*
-* 隣接行列 e[0..n)[0..n) 辺の有無が表される有向グラフ g を返す．
+* 隣接行列 e[0..n)[0..n) で辺の有無が表される有向グラフ g を返す．
 */
 template <class T>
 Graph construct_graph(const vector<vector<T>>& e, T exist = 1) {

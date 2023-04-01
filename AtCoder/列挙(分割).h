@@ -3,37 +3,37 @@
 // ■■■■■ 列挙（集合の分割） ■■■■■
 
 
-//【集合の分割の列挙】O(n 番目のベル数)（n=12 くらいまで動く）
+//【集合の分割の列挙】O(BellB(n))（n=12 くらいまで動く）
 /*
 * [0..n) の分割全てからなるリストを返す．
-* 例えば [0..6) の分割 {{0, 1, 4}, {2, 5}, {3}} は [0,0,1,2,0,1] と一意的に表す．
+* 例えば [0..6) の分割の 1 つに {{0, 1, 4}, {2, 5}, {3}} がある．
 */
-vvi set_partitions(int n) {
-	vi sp(n);
-	vvi sps;
+vvvi set_partitions(int n) {
+	vvi sp;
+	vvvi sps;
 
-	// [0..i) までを m 個の集合に分割し終えているとする．
-	function<void(int, int)> rf = [&](int i, int m) {
+	function<void(int)> rf = [&](int x) {
 		// 全ての要素の所属を決め終えた場合
-		if (i == n) {
+		if (x == n) {
 			sps.push_back(sp);
 			return;
 		}
 
-		// 要素 i を既に存在する集合に含める場合
-		rep(j, m) {
-			sp[i] = j;
-			rf(i + 1, m);
+		// 要素 x を既に存在する集合に含める場合
+		rep(i, sz(sp)) {
+			sp[i].push_back(x);
+			rf(x + 1);
+			sp[i].pop_back();
 		}
 
-		// 要素 i を単独で新たな集合とする場合
-		sp[i] = m;
-		rf(i + 1, m + 1);
+		// 要素 x を単独で新たな集合とする場合
+		sp.push_back(vi{ x });
+		rf(x + 1);
+		sp.pop_back();
 
 		return;
 	};
-
-	rf(0, 0);
+	rf(0);
 
 	return sps;
 }
@@ -78,14 +78,13 @@ vvvi set_partitions(int k, int m) {
 
 		return;
 	};
-
 	rf(0);
 
 	return sps;
 }
 
 
-//【自然数の分割の列挙（値が k 以下）】O(n の分割数)（n=50 くらいまで動く）
+//【自然数の分割の列挙（値が k 以下）】O(PartitionsP(n))（n=50 くらいまで動く）
 /*
 * 自然数 n を k 以下の自然数（広義降順）に分割する方法のリストを返す．
 */
@@ -145,7 +144,7 @@ vvi integer_partitions_val(int n, int k) {
 }
 
 
-//【自然数の分割の列挙（d 個以下）】O(n の分割数)（n=50 くらいまで動く）
+//【自然数の分割の列挙（d 個以下）】O(PartitionsP(n))（n=50 くらいまで動く）
 /*
 * 自然数 n を d 個以下の自然数（広義降順）に分割する方法のリストを返す．
 */
@@ -196,7 +195,7 @@ vvi integer_partitions_len(int n, int d) {
 }
 
 
-//【自然数の分割の列挙（値指定）】O(n の分割数)（n=50 くらいまで動く）
+//【自然数の分割の列挙（値指定）】O(PartitionsP(n))（n=50 くらいまで動く）
 /*
 * 自然数 n を正整数列 a[0..m) の要素に分割する方法のリストを返す．
 */

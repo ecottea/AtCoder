@@ -8,6 +8,7 @@
 //yn ‚æ‚è‘å‚«‚¢Å¬‚Ì 2 ™pz
 /*
 * n ‚æ‚è‘å‚«‚¢Å¬‚Ì 2 ™p‚Í 1 << (msb(n) + 1) ‚Å“¾‚ç‚ê‚éD
+* n ˆÈã‚ÌÅ¬‚Ì 2 ™p‚Í 1 << (msb(n - 1) + 1) ‚Å“¾‚ç‚ê‚éi‚½‚¾‚µ n ‚ 0j
 */
 
 
@@ -214,7 +215,9 @@ struct Frac {
 	// ƒRƒ“ƒXƒgƒ‰ƒNƒ^
 	Frac() : num(0), dnm(1) {}
 	Frac(T num) : num(num), dnm(1) {}
-	Frac(T num, T dnm) : num(num), dnm(dnm) {
+	Frac(T num_, T dnm_) : num(num_), dnm(dnm_) {
+		// verify : https://atcoder.jp/contests/abc244/tasks/abc244_h
+
 		if (dnm < 0) { num *= -1; dnm *= -1; }
 	}
 
@@ -237,7 +240,7 @@ struct Frac {
 
 		// •ª•ê‚ª“™‚µ‚¢‚Æ‚«‚ÍƒI[ƒo[ƒtƒ[–h~‚Ì‚½‚ß‚ÉŠ|‚¯Z‚Í‚¹‚¸”äŠr‚·‚éD
 		if (dnm == b.dnm) return num < b.num;
-		return (num * b.dnm < b.num* dnm);
+		return (num * b.dnm < b.num * dnm);
 	}
 	bool operator>=(const Frac& b) const { return !(*this < b); }
 	bool operator>(const Frac& b) const { return b < *this; }
@@ -245,22 +248,22 @@ struct Frac {
 
 	// ®”‚Æ‚Ì”äŠr
 	bool operator==(T b) const { return num == b * dnm; }
-	bool operator!=(T b) const { return !(*this == b); }
+	bool operator!=(T b) const { return num != b * dnm; }
 	bool operator<(T b) const { return num < b * dnm; }
-	bool operator>=(T b) const { return !(*this < b); }
-	bool operator>(T b) const { return b < *this; }
-	bool operator<=(T b) const { return !(*this > b); }
-	friend bool operator==(T b, const Frac& a) { return a.num == b * a.dnm; }
-	friend bool operator!=(T b, const Frac& a) { return !(a == b); }
-	friend bool operator<(T b, const Frac& a) { return b * a.dnm < a.num; }
-	friend bool operator>=(T b, const Frac& a) { return !(a < b); }
-	friend bool operator>(T b, const Frac& a) { return b < a; }
-	friend bool operator<=(T b, const Frac& a) { return !(a > b); }
+	bool operator>=(T b) const { return num >= b * dnm; }
+	bool operator>(T b) const { return num > b * dnm; }
+	bool operator<=(T b) const { return num <= b * dnm; }
+	friend bool operator==(T a, const Frac& b) { return a * b.dnm == b.num; }
+	friend bool operator!=(T a, const Frac& b) { return a * b.dnm != b.num; }
+	friend bool operator<(T a, const Frac& b) { return a * b.dnm < b.num; }
+	friend bool operator>=(T a, const Frac& b) { return a * b.dnm >= b.num; }
+	friend bool operator>(T a, const Frac& b) { return a * b.dnm > b.num; }
+	friend bool operator<=(T a, const Frac& b) { return a * b.dnm <= b.num; }
 
 	// l‘¥‰‰Z
 	Frac& operator+=(const Frac& b) {
 		// verify : https://www.codechef.com/problems/ARCTR
-		
+
 		// •ª•ê‚ª“™‚µ‚¢‚Æ‚«‚ÍƒI[ƒo[ƒtƒ[–h~‚Ì‚½‚ß‚ÉŠ|‚¯Z‚Í‚¹‚¸‰ÁZ‚·‚éD
 		if (dnm == b.dnm) num += b.num;
 		else { num = num * b.dnm + b.num * dnm; dnm *= b.dnm; }
@@ -288,7 +291,7 @@ struct Frac {
 	Frac& operator*=(T c) { num *= c; return *this; }
 	Frac& operator/=(T c) {
 		dnm *= c;
-		if (c < 0) { num *= -1; dnm *= -1; }
+		if (dnm < 0) { num *= -1; dnm *= -1; }
 		return *this;
 	}
 	Frac operator+(T c) const { Frac a = *this; return a += c; }

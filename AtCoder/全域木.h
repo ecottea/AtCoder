@@ -7,10 +7,10 @@
 // ■■■■■ 全域木 ■■■■■
 
 
-//【最小全域森／クラスカル法】O(|E| log|V|)
+//【最小全域森】O(|E| log|V|)
 /*
 * コスト付き無向グラフ g の最小全域森を求め，そのコストを返す．
-* 最小全域森は msf に構成し，各最小全域木の代表元を rs に格納する．
+* 最小全域森を msf に構成し，各最小全域木の代表元を rs に格納する．
 */
 ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 	int n = sz(g);
@@ -18,11 +18,7 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 
 	// 辺を集めてコスト昇順にソートする．
 	priority_queue_rev<tuple<ll, int, int>> q;
-	rep(s, n) {
-		repe(e, g[s]) {
-			q.push({ e.cost, s, e.to });
-		}
-	}
+	rep(s, n) repe(e, g[s]) q.push({ e.cost, s, e.to });
 
 	ll cost = 0; // 最小コスト
 	dsu d(n); // 連結判定用
@@ -53,7 +49,7 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 }
 
 
-//【最小全域木／プリム法】O(|E| log|V|)
+//【最小全域木】O(|E| log|V|)
 /*
 * コスト付き無向グラフ g の頂点 r を含む連結成分の最小全域木を rs に格納する．
 * また戻り値として最小コストを返す．
@@ -124,6 +120,86 @@ Graph spanning_forest(const Graph& g, vi* v = nullptr) {
 	}
 
 	return sf;
+}
+
+
+//【最小全域森（圧縮）】O(|V| + |E| log|V|)
+/*
+* コスト付き無向グラフ g とその頂点集合 vs から，vs を頂点集合にもち，
+* 辺 s-t のコストを g における s,t 間の距離と定めたコスト付き無向グラフ g2 を構成する．
+* g2 の最小全域森を msf に構成し，各最小全域木の代表元を rs に格納し，msf の総コストを返す．
+*/
+ll compressed_minimum_spanning_forest(const WGraph& g, const vi& vs, WGraph* msf = nullptr, vi* rs = nullptr) {
+	// 参考 : https://tokoharuland.hateblo.jp/entry/2018/04/01/155743
+	// verify : https://atcoder.jp/contests/abc250/tasks/abc250_h
+
+	int n = sz(g), n2 = sz(vs);
+
+	// nn[s] : g の頂点 s と最も近い vs の頂点が何番目の頂点か
+	vi nn(n, -1);
+
+	// dist[s] : g の頂点 s と最も近い vs の頂点との距離
+	vl dist(n, INFL);
+
+	// クラスカル法で考慮する g2 の辺の集合
+	vector<tuple<ll, int, int>> es;
+
+	// 複数始点ダイクストラ法で用いる優先度付きキュー
+	priority_queue_rev<pli> q;
+	rep(i, n2) {
+		q.emplace(0, vs[i]);
+		nn[vs[i]] = i;
+		dist[vs[i]] = 0;
+	}
+
+	// 複数始点ダイクストラ
+	while (!q.empty()) {
+		auto [c, s] = q.top(); q.pop();
+
+		if (dist[s] < c) continue;
+
+		repe(e, g[s]) {
+			// e.to に最も近い vs の頂点とを結ぶ辺だけを考慮すればいい．
+			if (c + e.cost >= dist[e.to]) {
+				es.emplace_back(dist[e.to] + c + e.cost, nn[s], nn[e.to]);
+				continue;
+			}
+
+			dist[e.to] = c + e.cost;
+			nn[e.to] = nn[s];
+
+			q.push({ dist[e.to], e.to });
+		}
+	}
+
+	// クラスカル法で考慮する g2 の辺の集合をコスト昇順にソートする．
+	sort(all(es));
+
+	ll cost = 0; // 最小コスト
+	dsu d(n2); // 連結判定用
+	if (msf != nullptr)	*msf = WGraph(n2);
+
+	for (auto [c, s, t] : es) {
+		// もし辺の両端が既に連結なら繋がない．
+		if (d.same(s, t)) continue;
+
+		// そうでないならコスト最小の辺なのでそれで繋ぐ．
+		cost += c;
+		d.merge(s, t);
+
+		if (msf != nullptr) {
+			(*msf)[s].push_back({ t, c });
+			(*msf)[t].push_back({ s, c });
+		}
+	}
+
+	// 連結成分のそれぞれが最小全域木なので，その代表元を記録．
+	if (rs != nullptr) {
+		rs->clear();
+		repe(tmp, d.groups()) rs->push_back(tmp[0]);
+	}
+
+	return cost;
 }
 
 

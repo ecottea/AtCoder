@@ -56,19 +56,11 @@ vi topological_sort(const Graph& g) {
 
 	// 入次数を求めておく．
 	vi in_degree(n);
-	rep(i, n) {
-		repe(t, g[i]) {
-			in_degree[t]++;
-		}
-	}
+	rep(i, n) repe(t, g[i]) in_degree[t]++;
 
 	// 入次数が 0 の頂点から順に取り除いていく．
 	queue<int> q;
-	rep(i, n) {
-		if (in_degree[i] == 0) {
-			q.push(i);
-		}
-	}
+	rep(i, n) if (in_degree[i] == 0) q.push(i);
 
 	vi seq;
 	while (!q.empty()) {
@@ -82,9 +74,7 @@ vi topological_sort(const Graph& g) {
 			in_degree[t]--;
 
 			// 新たに入次数 0 の頂点が生まれたらキューに追加する．
-			if (in_degree[t] == 0) {
-				q.push(t);
-			}
+			if (in_degree[t] == 0) q.push(t);
 		}
 	}
 
@@ -400,8 +390,7 @@ void directed_cycle_detection(const G& g, vi& cycle) {
 	};
 
 	// まず強連結成分分解する．
-	vvi scc;
-	strongly_connected_component(g, scc);
+	vvi scc = strongly_connected_component(g);
 
 	// 各強連結成分 vs について
 	repe(vs, scc) {

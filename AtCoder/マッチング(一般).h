@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "数論変換.h"
+#include "和(数論変換).h"
 #include "二項係数.h"
 // ■■■■■ 一般グラフのマッチング ■■■■■
 
@@ -142,7 +142,7 @@ mint count_different_color_matching(const vector<T>& c) {
 }
 
 
-//【パスグラフの大きさ k のマッチングの数え上げ】
+//【パスグラフのマッチングの数え上げ（大きさ毎）】
 /*
 * パスグラフ P_n の大きさ k のマッチングは bin(n-k, k) 通り存在する．
 *
@@ -157,7 +157,7 @@ mint count_different_color_matching(const vector<T>& c) {
 */
 
 
-//【サイクルグラフの大きさ k のマッチングの数え上げ】
+//【サイクルグラフのマッチングの数え上げ（大きさ毎）】
 /*
 * サイクルグラフ C_n(n>=1) の大きさ k のマッチングは n/(n-k) bin(n-k, k) 通り存在する．
 *
@@ -238,7 +238,7 @@ vector<vector<pii>> enumerate_perfect_matching(int n) {
 }
 
 
-//【大きさ k のマッチングの列挙】O(√perm(|V|, 2k) k)
+//【マッチングの列挙（大きさ毎）】O(√perm(|V|, 2k) k)
 /*
 * 無向グラフ g の大きさ k のマッチング全てのリストを返す．
 * マッチングは n 個の頂点対のリストとして表す．

@@ -767,7 +767,7 @@ vector<T> kronecker_matrix_vector_product(const vector<Matrix<T>>& mats, vector<
 }
 
 
-//【テプリッツ行列の累乗（mod998244353）】O(n log n log d)
+//【テプリッツ行列の累乗（mod 998244353）】O(n log n log d)
 /*
 * 左下から右上までの成分が順に a(-n..n) であるテプリッツ行列を d 乗したテプリッツ行列を返す．
 * 

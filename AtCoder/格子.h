@@ -44,6 +44,7 @@ vvi largest_square(const vector<vector<T>>& a, T able = 1) {
 //【ヒストグラム内最大長方形】O(n)
 /*
 * ヒストグラム hist[0..n) に包まれる長方形の面積の最大値を返す．
+* すなわち max_(l<r) (r-l) min(hist[l..r)) を返す．
 * また長方形が [l..r) * [0..h) であることを l, r, h に格納する．
 */
 template <class T>

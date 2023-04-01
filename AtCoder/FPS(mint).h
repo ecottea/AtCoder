@@ -3,7 +3,7 @@
 #include "合同式.h"
 #include "二項係数.h"
 #include "多項式.h"
-#include "畳込み.h"
+#include "和.h"
 // ■■■■■ 形式的冪級数 ■■■■■
 
 
@@ -886,7 +886,7 @@ MFPS taylor_shift(const MFPS& f, mint c, const Factorial_mint& fm) {
 
 //【一次式の積の展開（基本対称式）】O(n (log n)^2)
 /*
-* Πi∈[0..n) (x - x[i]) を返す．
+* Πi∈[0..n) (z - x[i]) を返す．
 * 
 * 戻り値の i 次の項の係数は，x[0..n) の符号付き n - i 次基本対称式になる．
 */
@@ -1080,14 +1080,14 @@ pair<MFPS, MFPS> reduction(vector<MFPS> num, vector<MFPS> dnm) {
 
 //【多点評価】O(m (log m)^2 + n log n)
 /*
-* n 次多項式 f について，f(x[0..m)) の値を y[0..m) に格納する．
+* n 次多項式 f について，f(x[0..m)) の値をまとめたリストを返す．
 */
-void multipoint_evaluation(const MFPS& f, const vm& x, vm& y) {
+vm multipoint_evaluation(const MFPS& f, const vm& x) {
 	// 参考 : https://37zigen.com/multipoint-evaluation/
 	// verify : https://judge.yosupo.jp/problem/multipoint_evaluation
 
 	int m = sz(x);
-	y = vm(m);
+	vm y(m);
 	int m2 = 1 << (msb(m - 1) + 1);
 
 	// sp : (x - x[i]) の連続する 2 冪個の積からなる完全二分木
@@ -1103,6 +1103,8 @@ void multipoint_evaluation(const MFPS& f, const vm& x, vm& y) {
 
 	// sr の葉は (x - x[i]) で割った余りなので，因数定理よりこれが f(x[i]) に等しい．
 	rep(i, m) y[i] = sr[m2 + i][0];
+
+	return y;
 }
 
 
@@ -1190,8 +1192,7 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 
 	MFPS g = expand(x);
 	g = derivative(g);
-	vm b;
-	multipoint_evaluation(g, x, b);
+	vm b = multipoint_evaluation(g, x);
 
 	vector<MFPS> num(n), dnm(n);
 	rep(i, n) {

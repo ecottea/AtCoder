@@ -148,6 +148,7 @@ ll knapsack01_problem_giveDP(const vl& v, const vi& w, int w_max, vb* sel = null
 /*
 * 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
+* また品物 i を選んだかを sel[i] に格納する．
 *
 * 制約：重さを昇順ソートしたとき増加の勢いが指数関数的
 *
@@ -299,6 +300,7 @@ ll knapsack01_problem(const vi& v, const vl& w, ll w_max, vb* sel = nullptr) {
 /*
 * 価値 v[i] と重さ w[i] の定まった n 個の品物から，重さ w_max 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
+* また品物 i を選んだかを sel[i] に格納する．
 *
 * 制約：価値を昇順ソートしたとき増加の勢いが指数関数的
 *

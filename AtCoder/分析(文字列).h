@@ -246,7 +246,7 @@ void manacher(const STR& s, vi& lo, vi& le) {
 /*
 * s[0..n) ‚É•”•ª•¶š—ñ‚Æ‚µ‚ÄŒ»‚ê‚é‰ñ•¶‚Í‚X n í—Ş‚Å‚ ‚éD
 * 
-* verify : https://mojacoder.app/users/dyktr_06/problems/2762-count-unique-palindrome
+* verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
 */
 
 

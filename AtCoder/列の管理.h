@@ -891,8 +891,8 @@ struct Quadratic_division {
 	vector<S> v, v_mul;
 
 	// コンストラクタ（e() で初期化）
-	Quadratic_division(int n_) : n(n_) {
-		w = (int)(sqrt(n) + 0.001);
+	Quadratic_division(int n) : n(n) {
+		w = (int)(sqrt(n) + 1e-12);
 		m = (n + w - 1) / w;
 
 		v = vS(n, e());
@@ -927,10 +927,13 @@ struct Quadratic_division {
 	// v[i] を返す．
 	S get(int i) const { return v[i]; }
 
-	// op( v[l..r) ) を返す．空なら e() を返す．
+	// Πv[l..r) を返す．空なら e() を返す．
 	S prod(int l, int r) const {
 		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
 		
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return e();
+
 		S res = e();
 
 		int j_min = l / w + 1, j_max = r / w - 1;

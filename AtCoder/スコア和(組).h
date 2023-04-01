@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "約数倍数変換.h"
+#include "整除,GCD,LCM.h"
 #include "二項係数.h"
 // ■■■■■ 組（スコア和） ■■■■■
 
@@ -137,23 +137,23 @@ ll mod_sum(const vi& a) {
 }
 
 
-//【組の gcd の総和】O(n + K log(log K))（K = max(a[i], b[j])）
+//【組の GCD の総和】O(n + K log(log K))（K = max(a[i], b[j])）
 /*
 * Σi∈[0..n) Σj∈[0..m) gcd(a[i], b[j]) の値を返す．
 *
-* 利用：【倍数変換，GCD 畳込み】
+* 利用：【約数倍数変換】
 */
 mint gcd_sum(const vi& a, const vi& b) {
 	//【方法】
 	// a[i] に含まれる x の個数を a_cnt[x] などとおき，a, b の最大値を K とおくと，
-	//		Σi=[0.n) Σj=[0..m) gcd(a[i], b[j])
-	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] gcd(x, y)
-	//		= Σk=[1..K] ΣΣgcd(x,y)=k a_cnt[x] b_cnt[y] k
+	//		Σi=[0.n) Σj=[0..m) GCD(a[i], b[j])
+	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] GCD(x, y)
+	//		= Σk=[1..K] ΣΣGCD(x,y)=k a_cnt[x] b_cnt[y] k
 	// となる．この
-	//		ΣΣgcd(x,y)=k a_cnt[x] b_cnt[y]
-	// は gcd 畳込みであるから高速に求まる．
+	//		ΣΣGCD(x,y)=k a_cnt[x] b_cnt[y]
+	// は GCD 畳込みであるから高速に求まる．
 	//
-	// これは gcd 加重和を高速に計算する方法にもなる．
+	// これは GCD 加重和を高速に計算する方法にもなる．
 
 	int n = sz(a), m = sz(b);
 
@@ -162,7 +162,7 @@ mint gcd_sum(const vi& a, const vi& b) {
 	rep(i, n) a_cnt[a[i]]++;
 	rep(j, m) b_cnt[b[j]]++;
 
-	Multiple_transform<mint> g(K);
+	Div_mul_transform<mint> g(K);
 	auto c = g.gcd_convolution(a_cnt, b_cnt);
 
 	mint res = 0;
@@ -172,24 +172,24 @@ mint gcd_sum(const vi& a, const vi& b) {
 }
 
 
-//【組の lcm の総和】O(n + m + K log(log K))（K = max(a[i], b[j])）
+//【組の LCM の総和】O(n + m + K log(log K))（K = max(a[i], b[j])）
 /*
-* Σi∈[0..n) Σj∈[0..m) lcm(a[i], b[j]) の値を返す．
+* Σi∈[0..n) Σj∈[0..m) LCM(a[i], b[j]) の値を返す．
 *
-* 利用：【倍数変換，GCD 畳込み】,【階乗など（法が大きな素数）】
+* 利用：【約数倍数変換】,【階乗など（法が大きな素数）】
 */
 mint lcm_sum(const vi& a, const vi& b) {
 	//【方法】
 	// a[i] に含まれる x の個数を a_cnt[x] などとおき，a, b の最大値を K とおくと，
-	//		Σi=[0.n) Σj=[0..m) lcm(a[i], b[j])
-	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] lcm(x, y)
+	//		Σi=[0.n) Σj=[0..m) LCM(a[i], b[j])
+	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] LCM(x, y)
 	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] x y / gcd(x, y)
 	//		= Σk=[1..K] ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y]) / k
 	// となる．この
 	//		ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y])
 	// は gcd 畳込みであるから高速に求まる．
 	//
-	// これは lcm 加重和を高速に計算する方法にもなる．
+	// これは LCM 加重和を高速に計算する方法にもなる．
 
 	int n = sz(a), m = sz(b);
 
@@ -198,7 +198,7 @@ mint lcm_sum(const vi& a, const vi& b) {
 	rep(i, n) a_cnt[a[i]] += a[i];
 	rep(j, m) b_cnt[b[j]] += b[j];
 
-	Multiple_transform<mint> g(K);
+	Div_mul_transform<mint> g(K);
 	auto c = g.gcd_convolution(a_cnt, b_cnt);
 
 	Factorial_mint fm(K);

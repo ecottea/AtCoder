@@ -34,7 +34,7 @@
 *	a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
 *
 * vector<tlii> intersection(int l1, int r1, int l2, int r2) : O(min((r1 - l1) + (r2 - l2), A) log A)
-*	a[l1..r1) と a[l2..r2) に共通する要素を求め，その値とそれぞれにおける出現頻度の三つ組のリストを返す
+*	a[l1..r1) と a[l2..r2) に共通する要素を求め，その値とそれぞれにおける出現頻度の三つ組のリストを返す．
 *
 * ll abs_sum(int l, int r, ll v) : O(log A)
 *	Σi∈[l..r) |a[i] - v| を返す．
@@ -160,6 +160,7 @@ public:
 
 	// 昇順で i 番目の要素を返す．
 	ll get(int i) {
+		Assert(0 <= i && i < n);
 		ll res = 0;
 
 		// 最上位ビットから順に見ていく
@@ -184,6 +185,7 @@ public:
 		// verify : https://judge.yosupo.jp/problem/static_range_frequency
 
 		chmax(l, 0); chmin(r, n); v += shift;
+		if (l >= r) return 0;
 		return count_sub(r, v) - count_sub(l, v);
 	}
 
@@ -210,6 +212,7 @@ public:
 		// verify : https://judge.yosupo.jp/problem/range_kth_smallest
 
 		chmax(l, 0); chmin(r, n);
+		Assert(0 <= i && i < r - l);
 		ll res = 0;
 
 		repir(j, k - 1, 0) {
@@ -235,6 +238,7 @@ public:
 	vector<pli> frequency(int l, int r, int c) {
 		chmax(l, 0); chmin(r, n);
 		vector<pli> freq;
+		if (l >= r) return freq;
 
 		priority_queue<tuple<int, int, int, int, ll>> q;
 		q.push({ r - l, k - 1, l, r, 0 });
@@ -268,6 +272,7 @@ public:
 	// a[l..r) の和を返す．
 	ll sum(int l, int r) {
 		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
 		return acc[k][r] - acc[k][l] - shift * (r - l);
 	}
 
@@ -276,6 +281,7 @@ public:
 	vector<tuple<ll, int, int>> intersection(int l1, int r1, int l2, int r2) {
 		chmax(l1, 0); chmin(r1, n); chmax(l2, 0); chmin(r2, n);
 		vector<tuple<ll, int, int>> freq;
+		if (l1 >= r1 || l2 >= r2) return freq;
 
 		queue<tuple<int, int, int, int, int, ll>> q;
 		q.push({ k - 1, l1, r1, l2, r2, 0 });
@@ -312,7 +318,7 @@ public:
 		// verify : https://atcoder.jp/contests/arc097/tasks/arc097_c
 
 		chmax(l, 0); chmin(r, n); v0 += shift; v1 += shift; chmax(v0, 0LL);
-		if (v0 >= v1) return 0;
+		if (l >= r || v0 >= v1) return 0;
 
 		return count_rsub(l, r, v1) - count_rsub(l, r, v0);
 	}
@@ -322,7 +328,7 @@ public:
 		// verify : https://atcoder.jp/contests/abc276/tasks/abc276_f
 
 		chmax(l, 0); chmin(r, n); v0 += shift; v1 += shift; chmax(v0, 0LL);
-		if (v0 >= v1) return 0;
+		if (l >= r || v0 >= v1) return 0;
 
 		ll res = sum_rsub(l, r, v1) - sum_rsub(l, r, v0);
 		if (shift != 0) res -= shift * (count_rsub(l, r, v1) - count_rsub(l, r, v0));
@@ -335,6 +341,7 @@ public:
 		// verify : https://yukicoder.me/problems/no/2169
 
 		chmax(l, 0); chmin(r, n); v += shift;
+		if (l >= r) return 0;
 		if (v <= 0) return sum_rsub(l, r, INFL) - v * (r - l);
 
 		ll res = sum_rsub(l, r, INFL);
@@ -343,6 +350,113 @@ public:
 		res += 2 * count_rsub(l, r, v) * v;
 
 		return res;
+	}
+};
+
+
+//【間引きウェーブレット行列】
+/*
+* Thinning_wavelet_matrix(vl a, int m) : O(n)
+*	配列 a[0..n) と法 m で初期化する．
+*
+* ll get(int i, int k) : O(log A)
+*	昇順で i 番目の要素を返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* ll get(int l, int r, int i, int k) : O(log A))
+*	a[l..r) の中で昇順で i 番目の要素を返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* int count(int l, int r, ll v, int k) : O(log A)
+*	a[l..r) に v が何個あるかを返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* int count(int l, int r, ll v0, ll v1, int k) : O(log A)
+*	a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* int position(ll v, int c, int k) : O(log n log A)
+*	昇順で c 番目の v の位置を返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* vector<pli> frequency(int l, int r, int c, int k) : O(min(r - l, A) log A)
+*	a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組のリストを返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* ll sum(int l, int r, int k) : O(1)
+*	a[l..r) の和を返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* ll sum(int l, int r, ll v0, ll v1, int k) : O(log A)
+*	a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* vector<tlii> intersection(int l1, int r1, int l2, int r2, int k) : O(min((r1 - l1) + (r2 - l2), A) log A)
+*	a[l1..r1) と a[l2..r2) に共通する要素を求め，その値とそれぞれにおける出現頻度の三つ組のリストを返す．添字は ≡ k (mod m) の部分だけ見る．
+*
+* ll abs_sum(int l, int r, ll v, int k) : O(log A)
+*	Σi∈[l..r) |a[i] - v| を返す．添字は ≡ k (mod m) の部分だけ見る．
+*/
+struct Thinning_wavelet_matrix {
+	int m; // 法
+	vector<Wavelet_matrix> wms;
+
+public:
+	// 配列 a[0..n) と法 m で初期化する
+	Thinning_wavelet_matrix(const vl& a, int m) : m(m), wms(m) {
+		// verify : https://codeforces.com/contest/1808/problem/D
+		
+		vvl a2(m);
+		rep(i, sz(a)) a2[i % m].push_back(a[i]);
+		rep(j, m) if (sz(a2[j]) > 0) wms[j] = Wavelet_matrix(a2[j]);
+	}
+	Thinning_wavelet_matrix() : m(1) {} // ダミー
+
+	// 昇順で i 番目の要素を返す．
+	ll get(int i, int k) {
+		return wms[k].get((i - k + m - 1) / m);
+	}
+
+	// a[l..r) に v が何個あるかを返す．
+	int count(int l, int r, ll v, int k) {
+		return wms[k].count((l - k + m - 1) / m, (r - k + m - 1) / m, v);
+	}
+
+	// 昇順で c 番目の v の位置を返す．
+	int position(ll v, int c, int k) {
+		int i = wms[k].position(v, c);
+		return k + i * m;
+	}
+
+	// a[l..r) のうち昇順で i 番目の要素を返す．
+	ll get(int l, int r, int i, int k) {
+		return wms[k].get((l - k + m - 1) / m, (r - k + m - 1) / m, i);
+	}
+
+	// a[l..r) の中で出現頻度降順に最大 c 個の要素と頻度の組を返す．
+	vector<pli> frequency(int l, int r, int c, int k) {
+		return wms[k].frequency((l - k + m - 1) / m, (r - k + m - 1) / m, c);
+	}
+
+	// a[l..r) の和を返す．
+	ll sum(int l, int r, int k) {
+		return wms[k].sum((l - k + m - 1) / m, (r - k + m - 1) / m);
+	}
+
+	// a[l1..r1) と a[l2..r2) に共通する要素を求め，
+	// その値とそれぞれにおける出現頻度の三つ組のリストを freq に格納する．
+	vector<tuple<ll, int, int>> intersection(int l1, int r1, int l2, int r2, int k) {
+		return wms[k].intersection((l1 - k + m - 1) / m, (r1 - k + m - 1) / m,
+			(l2 - k + m - 1) / m, (r2 - k + m - 1) / m);
+	}
+
+	// a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
+	int count(int l, int r, ll v0, ll v1, int k) {
+		// verify : https://codeforces.com/contest/1808/problem/D
+
+		return wms[k].count((l - k + m - 1) / m, (r - k + m - 1) / m, v0, v1);
+	}
+
+	// a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
+	ll sum(int l, int r, ll v0, ll v1, int k) {
+		return wms[k].sum((l - k + m - 1) / m, (r - k + m - 1) / m, v0, v1);
+	}
+
+	// Σi∈[l..r) |a[i] - v| を返す．
+	ll abs_sum(int l, int r, ll v, int k) {
+		return wms[k].abs_sum((l - k + m - 1) / m, (r - k + m - 1) / m, v);
 	}
 };
 

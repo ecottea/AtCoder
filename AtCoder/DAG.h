@@ -3,6 +3,7 @@
 #include "構造(グラフ).h"
 #include "最短路.h"
 #include "マッチング(二部).h"
+#include "フロー.h"
 // ■■■■■ DAG（有向非巡回グラフ） ■■■■■
 
 
@@ -293,18 +294,19 @@ ll highest_score_twinpath(const Graph& g, const vl& w) {
 *	パス被覆：パスの集合で，g の任意の頂点がいずれかのパスに属するもの．
 *	反鎖：頂点の集合で，任意の頂点間を結ぶパスが存在しないもの．
 *
-* verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
+* verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
 */
 
 
-//【最小パス被覆（点素）】O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
+//【最小パス被覆（点素）】O( min(n^(2/3) (n + m), (n + m)^(3/2)) )（m : 辺の数）
 /*
 * DAG g の点素なパス被覆で最小のものの大きさを返す． 
 *
 * 利用：【二部グラフの最大マッチング】
 */
-int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
+int minimum_disjoint_path_cover(const Graph& g, vvi* paths = nullptr) {
 	// 参考 : https://kyopro.hateblo.jp/entry/2018/06/04/000659
+	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
 
 	int n = sz(g);
 
@@ -328,5 +330,47 @@ int minimum_path_cover(const Graph& g, vvi* paths = nullptr) {
 
 	return res;
 }
+
+
+//【最小パス被覆】O(n (n + m) log n) ?（m : 辺の数）
+/*
+* DAG g のパス被覆で最小のものの大きさを返す．
+*
+* 利用：【一般化最小費用流】
+*/
+int minimum_path_cover(const Graph& g) {
+	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
+
+	int n = sz(g);
+
+	// 頂点 v を (v_in=2v, v_out=2v+1) と倍化し，始点 ST を導入する．
+	int ST = n * 2;
+	Generalized_min_cost_flow mcf(ST + 1);
+
+	rep(i, n) {
+		// ST から各頂点 v_in にコスト 1 の辺を張る（パスを引く度にコスト 1）
+		mcf.add_cost_edge(ST, 2 * i, INFL, 1);
+
+		// 各頂点の v_in から v_out に最小流量 1 の辺を張る（全ての頂点を被覆しなければならない）
+		mcf.add_cost_edge(2 * i, 2 * i + 1, 1, INFL, 0);
+
+		// 各頂点から ST に辺を張る（流量は任意）
+		mcf.add_cost_edge(2 * i + 1, ST, INFL, 0);
+	}
+
+	// g に辺 s→t が存在するときに限り辺 s_out → t_in を張る（パスがここを通ることを許す）
+	rep(s, n) repe(t, g[s]) mcf.add_cost_edge(2 * s + 1, 2 * t, INFL, 0);
+
+	return (int)mcf.flow().second;
+}
+
+
+//【推移的 DAG の最小パス被覆】
+/*
+* DAG g が推移的（辺 s→t, t→u がある ⇒ 辺 s→u がある）ならば，
+* 点素な最小パス被覆の大きさと（点素とは限らない）最小パス被覆の大きさは等しい．
+* 
+* verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
+*/
 
 

@@ -27,22 +27,18 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 	vb is_ind1(1LL << n1, true);
 
 	// 辺の両端からなる 2 点集合 {s, t} ⊂ V1 は独立集合ではない．
-	rep(s, n1) {
-		repe(t, g[s]) {
-			if (t >= n1) continue;
+	rep(s, n1) repe(t, g[s]) {
+		if (t >= n1) continue;
 
-			int set = (1 << s) + (1 << t);
-			is_ind1[set] = false;
-		}
+		int set = (1 << s) + (1 << t);
+		is_ind1[set] = false;
 	}
 
 	// 独立集合でない集合を部分集合にもつ集合は独立集合ではない．
-	repb(set1, n1) {
-		rep(i, n1) {
-			if (set1 & (1 << i)) {
-				int sub1 = set1 - (1 << i);
-				is_ind1[set1] = is_ind1[set1] && is_ind1[sub1];
-			}
+	repb(set1, n1) rep(i, n1) {
+		if (set1 & (1 << i)) {
+			int sub1 = set1 - (1 << i);
+			is_ind1[set1] = is_ind1[set1] && is_ind1[sub1];
 		}
 	}
 
@@ -64,13 +60,11 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 	}
 
 	// 2 点以上の集合 set1 ⊂ V1 については 1 点集合の相手との共通部分を考える．
-	repb(set1, n1) {
-		rep(i, n1) {
-			if (set1 & (1LL << i)) {
-				int sub1 = set1 - (1LL << i);
-				no_edge[set1] = no_edge[1LL << i] & no_edge[sub1];
-				break;
-			}
+	repb(set1, n1) rep(i, n1) {
+		if (set1 & (1LL << i)) {
+			int sub1 = set1 - (1LL << i);
+			no_edge[set1] = no_edge[1LL << i] & no_edge[sub1];
+			break;
 		}
 	}
 
@@ -85,13 +79,11 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 	}
 
 	// 辺の両端からなる 2 点集合 {s, t} ⊂ V2 は独立集合ではない．
-	rep(i, n2) {
-		repe(t, g[n1 + i]) {
-			if (t < n1) continue;
+	rep(i, n2) repe(t, g[n1 + i]) {
+		if (t < n1) continue;
 
-			int set2 = (1 << i) + (1 << (t - n1));
-			max_ind2[set2] = 1 << i;
-		}
+		int set2 = (1 << i) + (1 << (t - n1));
+		max_ind2[set2] = 1 << i;
 	}
 
 	// 3 点以上の集合 set2 ⊂ V2 については，それが独立集合ならそれ自身，
@@ -100,22 +92,21 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 		int pc = popcount(set2);
 		if (pc <= 2) {
 			// どの辺の両端ともならない 2 点集合 {s, t} ⊂ V2 は独立集合である．
-			if (pc == 2 && max_ind2[set2] == 0) {
-				max_ind2[set2] = set2;
-			}
+			if (pc == 2 && max_ind2[set2] == 0) max_ind2[set2] = set2;
+
 			continue;
 		}
 
+		// ind_flag : set2 自身が独立集合か
 		bool ind_flag = true;
+
 		rep(i, n2) {
 			if (set2 & (1 << i)) {
 				int sub2 = set2 - (1 << i);
 				if (popcount(max_ind2[set2]) < popcount(max_ind2[sub2])) {
 					max_ind2[set2] = max_ind2[sub2];
 				}
-				if (max_ind2[sub2] != sub2) {
-					ind_flag = false;
-				}
+				if (max_ind2[sub2] != sub2) ind_flag = false;
 			}
 		}
 
@@ -188,23 +179,23 @@ int chromatic_number(const Graph& g) {
 
 	//【方法】
 	// 判定問題
-	//		(P): k 個の独立集合へ分割可能か
+	//		(P): k 個の独立集合へ分割可能か ⇔ k-彩色可能か
 	// を考え，(P) を満たす最小の k を線形探索する．
 	//
 	// (P) の代わりに
-	//		(P2): 長さ k の独立集合の列で被覆可能か
+	//		(P2): k 個の独立集合で被覆可能か
 	// を考えても，可能性は変わらない．
 	//
 	// (P2) の代わりに
-	//		(P3): 長さ k の独立集合の列で被覆する方法は何通りか
+	//		(P3): k 個の独立集合で被覆する方法は何通りか
 	// を考え，この答えが 0 か否かを見ることにする．そこで
-	//		g[set] : set を長さ k の独立集合の列で被覆する方法の数
-	// とおく．これは彩色多項式とは関係ないので注意．
+	//		g[set] : set を k 個の独立集合で被覆する方法の数
+	// とおく．（これは彩色多項式ではないので注意．）
 	//
 	// g の下位集合でのゼータ変換を
 	//		f[set] = Σ_(sub ⊂ set) g[sub]
 	// とおく．f は
-	//		f[set] = set から 長さ k の独立集合の列を選ぶ方法の数
+	//		f[set] = set から k 個の独立集合を選ぶ方法の数
 	// と解釈できるので，
 	//		f[set] = (set の独立集合の数)^k
 	// と表される．
@@ -222,7 +213,7 @@ int chromatic_number(const Graph& g) {
 	// ind[set] : set の部分集合のうち，独立集合をなすものの個数
 	vm ind = count_independent_set(g);
 
-	// pow_k[set] : (-1)^#(V - set) ind[set]^k
+	// pow_k[set] : (-1)^|V - set| ind[set]^k
 	vm pow(1LL << n);
 	repb(set, n) pow[set] = (n - popcount(set)) % 2 ? -1 : 1;
 

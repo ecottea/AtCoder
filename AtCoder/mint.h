@@ -138,8 +138,8 @@ struct mll {
 	mll& operator=(const ll& a) { v = safe_mod(a); return *this; }
 
 	// 入出力
-	friend istream& operator>> (istream& is, mll& x) { ll tmp; is >> tmp; x.v = safe_mod(tmp); return is; }
-	friend ostream& operator<< (ostream& os, const mll& x) { os << (ll)x.v; return os; }
+	friend istream& operator>>(istream& is, mll& x) { ll tmp; is >> tmp; x.v = safe_mod(tmp); return is; }
+	friend ostream& operator<<(ostream& os, const mll& x) { os << (ll)x.v; return os; }
 
 	// 非負 mod
 	template <class T> static __int128 safe_mod(T a) { return ((a % MOD) + MOD) % MOD; }
@@ -213,6 +213,245 @@ struct mll {
 };
 
 
+//【有理数（mint）】
+/*
+* Frac_mint() : O(1)
+*	0 で初期化する．
+*
+* Frac_mint(T num) : O(1)
+*	num で初期化する．
+*
+* Frac_mint(T num, T dnm) : O(1)
+*	num / dnm で初期化する．
+*
+* a + b, a - b, a * b, a / b : O(1)
+*	加減乗除を行う．一方が mint でも構わない．複合代入演算子も使用可．
+*
+* Frac_mint inv() : O(1)
+*	逆数を返す．
+* 
+* Frac_mint pow(ll n) : O(log n)
+*	自身の n 乗を返す．
+*/
+struct Frac_mint {
+	// verify : https://atcoder.jp/contests/agc060/tasks/agc060_c
+
+	// 分子，分母
+	mint num, dnm;
+
+	// コンストラクタ
+	Frac_mint() : num(0), dnm(1) {}
+	Frac_mint(mint num) : num(num), dnm(1) {}
+	Frac_mint(mint num, mint dnm) : num(num), dnm(dnm) {}
+	Frac_mint(int num) : num(num), dnm(1) {}
+	Frac_mint(int num, int dnm) : num(num), dnm(dnm) {}
+
+	// 代入
+	Frac_mint(const Frac_mint& b) = default;
+	Frac_mint& operator=(const Frac_mint& b) = default;
+
+	// キャスト
+	operator mint() const { return num * dnm.inv(); }
+
+	// 比較
+	bool operator==(const Frac_mint& b) const { return num * b.dnm == b.num * dnm; }
+	bool operator!=(const Frac_mint& b) const { return !(*this == b); }
+
+	// 整数との比較
+	bool operator==(mint b) const { return num == b * dnm; }
+	bool operator!=(mint b) const { return !(*this == b); }
+	bool operator==(int b) const { return num == b * dnm; }
+	bool operator!=(int b) const { return !(*this == b); }
+	friend bool operator==(mint b, const Frac_mint& a) { return a.num == b * a.dnm; }
+	friend bool operator!=(mint b, const Frac_mint& a) { return !(a == b); }
+	friend bool operator==(int b, const Frac_mint& a) { return a.num == b * a.dnm; }
+	friend bool operator!=(int b, const Frac_mint& a) { return !(a == b); }
+
+	// 四則演算
+	Frac_mint& operator+=(const Frac_mint& b) {
+		num = num * b.dnm + b.num * dnm; dnm *= b.dnm;
+		return *this;
+	}
+	Frac_mint& operator-=(const Frac_mint& b) {
+		num = num * b.dnm - b.num * dnm; dnm *= b.dnm;
+		return *this;
+	}
+	Frac_mint& operator*=(const Frac_mint& b) { num *= b.num; dnm *= b.dnm; return *this; }
+	Frac_mint& operator/=(const Frac_mint& b) { num *= b.dnm; dnm *= b.num; return *this; }
+	Frac_mint operator+(const Frac_mint& b) const { Frac_mint a = *this; return a += b; }
+	Frac_mint operator-(const Frac_mint& b) const { Frac_mint a = *this; return a -= b; }
+	Frac_mint operator*(const Frac_mint& b) const { Frac_mint a = *this; return a *= b; }
+	Frac_mint operator/(const Frac_mint& b) const { Frac_mint a = *this; return a /= b; }
+	Frac_mint operator-() const { return Frac_mint(*this) *= Frac_mint(-1); }
+	Frac_mint inv() const { return Frac_mint(dnm, num); }
+
+	// 整数との四則演算
+	Frac_mint& operator+=(mint c) { num += dnm * c; return *this; }
+	Frac_mint& operator-=(mint c) { num -= dnm * c; return *this; }
+	Frac_mint& operator*=(mint c) { num *= c; return *this; }
+	Frac_mint& operator/=(mint c) { dnm *= c; return *this; }
+	Frac_mint operator+(mint c) const { Frac_mint a = *this; return a += c; }
+	Frac_mint operator-(mint c) const { Frac_mint a = *this; return a -= c; }
+	Frac_mint operator*(mint c) const { Frac_mint a = *this; return a *= c; }
+	Frac_mint operator/(mint c) const { Frac_mint a = *this; return a /= c; }
+	friend Frac_mint operator+(mint c, const Frac_mint& a) { return a + c; }
+	friend Frac_mint operator-(mint c, const Frac_mint& a) { return Frac_mint(c) - a; }
+	friend Frac_mint operator*(mint c, const Frac_mint& a) { return a * c; }
+	friend Frac_mint operator/(mint c, const Frac_mint& a) { return Frac_mint(c) / a; }
+	Frac_mint& operator+=(int c) { num += dnm * c; return *this; }
+	Frac_mint& operator-=(int c) { num -= dnm * c; return *this; }
+	Frac_mint& operator*=(int c) { num *= c; return *this; }
+	Frac_mint& operator/=(int c) { dnm *= c; return *this; }
+	Frac_mint operator+(int c) const { Frac_mint a = *this; return a += c; }
+	Frac_mint operator-(int c) const { Frac_mint a = *this; return a -= c; }
+	Frac_mint operator*(int c) const { Frac_mint a = *this; return a *= c; }
+	Frac_mint operator/(int c) const { Frac_mint a = *this; return a /= c; }
+	friend Frac_mint operator+(int c, const Frac_mint& a) { return a + c; }
+	friend Frac_mint operator-(int c, const Frac_mint& a) { return Frac_mint(c) - a; }
+	friend Frac_mint operator*(int c, const Frac_mint& a) { return a * c; }
+	friend Frac_mint operator/(int c, const Frac_mint& a) { return Frac_mint(c) / a; }
+
+	// 累乗
+	Frac_mint pow(ll d) const {
+		// verify : https://atcoder.jp/contests/abc295/tasks/abc295_e
+
+		Frac_mint res(1), pow2 = *this;
+		while (d > 0) {
+			if (d & 1) res *= pow2;
+			pow2 *= pow2;
+			d /= 2;
+		}
+		return res;
+	}
+
+	// 約分を行う．
+	void reduction() {
+		int x = num.val(), y = dnm.val();
+		auto g = gcd(x, y);
+		num = x / g; dnm = y / g;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Frac_mint a) {
+		if ((int)(a.dnm.val()) >= (int)(mint::mod()) / 2) a *= Frac_mint(-1, -1);
+		if ((int)(a.num.val()) < (int)(mint::mod()) / 2) {
+			a.reduction();
+			os << a.num << '/' << a.dnm;
+		}
+		else {
+			a *= -1;
+			a.reduction();
+			os << '-' << a.num << '/' << a.dnm;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【二次拡大体】
+/*
+* a + b √d ∈ F_p(√d) を表す．
+*
+* set_base(mint d) : O(1)
+*	体を F_p(√d) とする（p = mint::mod）
+*	制約：√d !∈ F_p
+*
+* QF() : O(1)
+*	0 で初期化する．
+*
+* QF(mint a) : O(1)
+*	a で初期化する．
+*
+* QF(mint a, mint b) : O(1)
+*	a + b √d で初期化する．
+*
+* x + y, x - y, x * y : O(1)
+*	和，差，積を返す．複合代入演算子も使用可．
+*
+* x / y : O(log p)
+*	商を返す．複合代入演算子も使用可．
+*
+* QF inv() : O(log p)
+*	逆元を返す．
+*
+* QF pow(ll n) : O(log n)
+*	n 乗を返す．
+*/
+struct QF {
+	// a + b √d を表す．
+	inline static mint d;
+	mint a, b;
+
+	// d を定める
+	static void set_base(mint d_) {
+		// verify : https://judge.yosupo.jp/problem/sqrt_mod
+
+		d = d_;
+	}
+
+	// 初期化
+	QF() : a(0), b(0) {}
+	QF(const mint& a) : a(a), b(0) {}
+	QF(const mint& a, const mint& b) : a(a), b(b) {
+		// verify : https://judge.yosupo.jp/problem/sqrt_mod
+	}
+
+	// 代入
+	QF(const QF&) = default;
+	QF& operator=(const QF&) = default;
+
+	// 和
+	QF& operator+=(const QF& y) {
+		a += y.a; b += y.b;
+		return *this;
+	}
+	QF operator+(const QF& y) const { QF x = *this; return x += y; }
+
+	// 差
+	QF& operator-=(const QF& y) {
+		// verify : https://judge.yosupo.jp/problem/sqrt_mod
+
+		a -= y.a; b -= y.b;
+		return *this;
+	}
+	QF operator-(const QF& y) const { QF x = *this; return x -= y; }
+
+	// 積
+	QF operator*(const QF& y) const {
+		// verify : https://judge.yosupo.jp/problem/sqrt_mod
+
+		// (a1 + b1√d)(a2 + b2√d) = (a1 a2 + b1 b2 d) + (a1 b2 + a2 b1)√d
+		return QF(a * y.a + b * y.b * d, a * y.b + b * y.a);
+	}
+	QF& operator*=(const QF& y) { *this = *this * y; return *this; }
+
+	// 逆元
+	QF inv() const {
+		// 1/(a + b√d) = (a - b√d) / (a^2 - b^2 d)
+		mint dnm = (a * a - b * b * d).inv();
+		return QF(a * dnm, -b * dnm);
+	}
+
+	// 商
+	QF& operator/=(const QF& y) { return *this *= y.inv(); }
+	QF operator/(const QF& y) const { return *this * y.inv(); }
+
+	// 累乗
+	QF pow(ll n) const {
+		// verify : https://judge.yosupo.jp/problem/sqrt_mod
+
+		QF res(1), pow2 = *this;
+		while (n > 0) {
+			if (n & 1) res *= pow2;
+			pow2 *= pow2;
+			n /= 2;
+		}
+		return res;
+	}
+};
+
+
 //【mint → 有理数】（実験用）
 /*
 * mint の値をそれっぽい有理数に変換する．
@@ -224,6 +463,12 @@ void mint_to_frac() {
 		mint j_inv = mint(j).inv();
 
 		repi(i, 1, 1024) {
+			int v = (i * j_inv).val();
+
+			if (!nd.count(v)) nd[v] = { i, j };
+		}
+
+		repir(i, -1, -1024) {
 			int v = (i * j_inv).val();
 
 			if (!nd.count(v)) nd[v] = { i, j };
