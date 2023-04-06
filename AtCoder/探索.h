@@ -581,6 +581,21 @@ T hill_climbing(T st, const function<vector<T>(T)>& neib, const function<ll(T)>&
 */
 
 
+//【昇順 k 番目の要素】
+/*
+*	(求値問題) 昇順で k 番目（1-indexed）の hogehoge な要素を求めよ
+* の答えは，
+*	(判定問題) 昇順で k 番目（1-indexed）の hogehoge な要素は x 以下か
+* を導入すると，
+*	(最適化問題) 先の判定問題の答えを真とする最小の x を求めよ
+* と等価となる．さらに (判定問題) は
+*	(判定問題 2) x 以下の hogehoge な要素は k 個以上か
+* と等価であるから，hogehoge な要素を x 以下か否かで 0-1 変数化することができる．
+* 
+* verify : https://onlinejudge.u-aizu.ac.jp/problems/2270
+*/
+
+
 //【濃度の最大化】O(n log(1/EPS))
 /*
 * 質量 a[0..n) で濃度が p[0..n) の液体を k 個混ぜ合わせたときの最大濃度を返す．

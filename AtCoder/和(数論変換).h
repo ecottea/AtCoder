@@ -186,6 +186,217 @@ vm multi_convoluion(vvm a) {
 }
 
 
+//【オンライン畳込み（mod 998244353）】
+/*
+* Online_convolution(int n) : O(n)
+*	a[0..n) と b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*
+* void set(mint a, mint b) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+*
+* mint [](int i) : O(1)
+*	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
+*	制約 : a[0..i], b[0..i] を指定済でなくてはならない．
+*
+* void update(int i, mint c) : O(1)
+*	c[i] を強制的に c に書き換える．
+*/
+class Online_convolution {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vm as, bs, cs;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Online_convolution(int n) : n(n), t(0), as(n), bs(n), cs(n) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+	}
+	Online_convolution() : n(0), t(0) {}
+
+	// t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+	void set(mint a, mint b) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+
+		as[t] = a; bs[t] = b;
+
+		int i1_max = lsb(t + 2), i2_max = i1_max;
+
+		// 対角線上の正方形領域に対する処理を行う場合
+		if (popcount(t + 2) == 1) { i1_max -= 2; i2_max -= 1; }
+
+		// 2^i : 正方形の一辺の長さ（対角線より下）
+		repi(i, 0, i1_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = t + 1 - (1 << i);
+			int y_min = (1 << i) - 1;
+
+			vm as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vm cs_sub = convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		// 2^i : 正方形の一辺の長さ（対角線以上）
+		repi(i, 0, i2_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = (1 << i) - 1;
+			int y_min = t + 1 - (1 << i);
+
+			vm as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vm cs_sub = convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	mint const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// c[i] を強制的に c に変更する．
+	void update(int i, mint c) {
+		cs[i] = c;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_convolution& c) {
+		os << "a: " << c.as << endl;
+		os << "b: " << c.bs << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン畳込み（片側固定，mod 998244353）】
+/*
+* Semi_online_convolution(vm b) : O(n)
+*	a[0..n) と固定された b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*
+* void set(mint b) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t] を与える．
+*
+* mint [](int i) : O(1)
+*	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
+*	制約 : a[0..i] を指定済でなくてはならない．
+*
+* void update(int i, mint c) : O(1)
+*	c[i] を強制的に c に書き換える．
+*/
+class Semi_online_convolution {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vm as, cs; vvm bss;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Semi_online_convolution(const vm& bs) : n(sz(bs)), t(0), as(n), cs(n), bss(msb(n) + 1) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+		
+		// b[0], b[1] だけは例外的に bss[0] に格納しておく．
+		int len = min(2, n);
+		copy(bs.begin(), bs.begin() + len, back_inserter(bss[0]));
+
+		// b[2..n) を幅 2^i の区間にあらかじめ分割しておく．
+		repi(i, 1, msb(n)) {
+			int y_min = 1 << i;
+			int len = min(1 << i, n - y_min);
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bss[i]));
+		}
+	}
+	Semi_online_convolution() : n(0), t(0) {}
+
+	// t 回目に呼び出すときは，a=a[t] を与える．
+	void set(mint a) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+		
+		as[t] = a;
+
+		// b[0], b[1] との積だけは例外処理
+		cs[t] += as[t] * bss[0][0];
+		if (t + 1 < n) cs[t + 1] += as[t] * bss[0][1];
+
+		int i_max = lsb(t);
+
+		// 2^i : 正方形の一辺の長さ
+		repi(i, 1, i_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bss[i] を畳み込む．
+			int x_min = t - (1 << i);
+
+			vm as_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+
+			vm cs_sub = convolution(as_sub, bss[i]);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	mint const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+		
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// c[i] を強制的に c に変更する．
+	void update(int i, mint c) {
+		cs[i] = c;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Semi_online_convolution& c) {
+		os << "a: " << c.as << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン畳込みの使い所】
+/*
+* DP の遷移式が
+*		dp[i + 1] = φ_i( Σj∈[0..i] dp[j] b[i-j] )
+* の形をしている場合，オンライン畳込み（片側固定）で高速に計算できる．
+*/
+
+
 //【二次元畳込み（mod 998244353）】O((ha + hb) (wa + wb) (log(ha + hb) + log(wa + wb)))
 /*
 * a[0..ha)[0..wa) と b[0..hb)[0..wb) の二次元畳込みを返す．

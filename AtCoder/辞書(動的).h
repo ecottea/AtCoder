@@ -835,7 +835,7 @@ public:
 * ll lower_bound(int v) : O(log n)
 *	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
 *
-* 利用：【フェニック木】
+* 利用：【フェニック木（アーベル群）】
 */
 ll opdd(ll x, ll y) { return x + y; }
 ll edd() { return 0; }

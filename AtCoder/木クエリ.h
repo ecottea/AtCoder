@@ -7,7 +7,7 @@
 
 //【根付き木のオイラーツアー】O(n)
 /*
-* 根付き木 rt のオイラーツアーを求める．
+* n 頂点の根付き木 rt のオイラーツアーを求める．
 *
 * in[s] : DFS で最初に頂点 s を訪れた時刻（根なら 0）
 * out[s] : DFS で最後に頂点 s から離れた時刻（根なら 2n-1）
@@ -20,9 +20,9 @@ void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) {
 	int n = sz(rt);
 
 	int time = 0;
-	in = vi(n);
-	out = vi(n);
-	pos = vi(2 * n - 1);
+	in.resize(n);
+	out.resize(n);
+	pos.resize(2 * n - 1);
 
 	// 再帰用の関数
 	function<void(int)> rf = [&](int s) {
@@ -69,9 +69,9 @@ struct Lowest_common_ancestor {
 	TREE rt;
 
 	// オイラーツアーの結果の記録用
-	// in[v] : v に最初に入った時刻
-	// out[v] : v から最後に出た時刻
-	// pos[t] : 時刻 t に居た頂点の番号
+	//	in[v] : v に最初に入った時刻
+	//	out[v] : v から最後に出た時刻
+	//	pos[t] : 時刻 t に居た頂点の番号
 	vi in, out, pos;
 
 	// 深さに関する区間最小クエリを処理するためのセグメント木
@@ -98,10 +98,10 @@ struct Lowest_common_ancestor {
 	int lca(int s, int t) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
 
-		// 初めて u または v に訪れたとき
+		// 初めて s または t に訪れたとき
 		int left = min(in[s], in[t]);
 
-		// 最後に u または v から離れたとき
+		// 最後に s または t から離れたとき
 		int right = max(out[s], out[t]);
 
 		// その途中で訪れたことのある最も浅い頂点が最小共通祖先
@@ -419,7 +419,7 @@ struct Imos_tree_arbitrary_path {
 //【辺加算（パス，部分木）／総和（パス，部分木）クエリ】
 /*
 * Tree_edge_add_sum_query<WRtree>(WRtree rt) : O(n)
-*	コスト付き根付き木 rt で初期化する．
+*	重み付き根付き木 rt で初期化する．
 *
 * Tree_edge_add_sum_query<RTree>(RTree rt, vl c) : O(n)
 *	根付き木 rt と初期値 c で初期化する．
@@ -467,7 +467,7 @@ struct Tree_edge_add_sum_query {
 	using RASQ = Fenwick_tree_range_add<ll, op_teasq, o_teasq, inv_teasq, mul_teasq>;
 	RASQ rasq;
 
-	// コンストラクタ（コスト付き根付き木で初期化）
+	// コンストラクタ（重み付き根付き木で初期化）
 	Tree_edge_add_sum_query(TREE& rt_) : rt(rt_) {
 		// rt を HL 分解する．
 		heavy_light_decomposition(rt, in, out, pos, top);
@@ -842,7 +842,7 @@ struct Segtree_on_tree_vertex {
 //【木の辺上のセグメント木】
 /*
 * Segtree_on_tree_edge<S, op, e>(WRtree rt) : O(n)
-*	コスト付き根付き木 rt で初期化する．
+*	重み付き根付き木 rt で初期化する．
 *	制約：S = ll
 *
 * set(int v, S c) : O(log n)
@@ -877,7 +877,7 @@ struct Segtree_on_tree_edge {
 	using SEG = Segtree<S, op, e>;
 	SEG seg, seg_rev;
 
-	// コンストラクタ（コスト付き根付き木で初期化）
+	// コンストラクタ（重み付き根付き木で初期化）
 	Segtree_on_tree_edge(Weighted_rooted_tree& rt_) : rt(rt_), n(rt.n) {
 		// verify : https://codeforces.com/contest/609/problem/E
 
@@ -976,68 +976,349 @@ void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
 }
 
 
-//【Mo's algorithm（部分木クエリ）】O(n√q α + q log q)
+//【Mo's algorithm（部分木クエリ，頂点）】O(n√q α + q log q)
 /*
-* 頂点コスト c[s] の与えられた n 頂点の根付き木 rt について，
-* st[j] を根とする q 個の部分木クエリに対する解を res[j] に格納する．
-* 頂点集合に i を追加[削除]する場合，新たな解は insert[erase]（計算量 O(α)）で計算されるとする．
+* 頂点重み c[s] の与えられた n 頂点の根付き木 rt について，
+* st[0..q) を根とする部分木クエリに対する解を格納したリストを返す．
 *
+* 制約：任意箇所の頂点の追加[削除] が O(α) で可能
+* 
 * 利用：【根付き木のユニークオイラーツアー】
 *
-*（平方分割）
+*（クエリ平方分割）
 */
 template <class T, class S>
-void mos_algorithm(const Rooted_tree& rt, const vector<T>& c, const vi& st, vector<S>& res) {
+vector<S> mos_algorithm_subtree(const Rooted_tree& rt, const vector<T>& c, const vi& st) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://codeforces.com/contest/375/problem/D
 
 	int n = sz(rt), q = sz(st);
-	int sqrt_q = (int)(sqrt(q) + EPS);
-	res.resize(q);
+	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
+	vector<S> res(q);
 
 	vi l, r, pos;
 	unique_euler_tour(rt, l, r, pos);
 
-	// a[0..n) を幅 √n のブロックに分割する．
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
 	vector<tuple<int, int, int>> lb_sr_j(q);
 	rep(j, q) {
-		int b = l[st[j]] / sqrt_q;
+		int b = l[st[j]] / width;
 		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[st[j]], j };
 	}
 	sort(all(lb_sr_j));
 
 	// ----------------------- ここを実装する -----------------------
 	
-	// 頂点集合に i を追加する場合の解 sol を更新する．
-	auto insert = [&](int i, S& sol) {
-		sol = sol;
+	// 必要なデータ構造を用意する．
+	vl freq((int)2e5 + 10);
+	S sol = 0;
+
+	// 区間に a[i] を追加し，データ構造を更新する．
+	auto insert = [&](int i) {
+		if (freq[a[i]] == 0) sol++;
+		freq[a[i]]++;
 	};
 
-	// 頂点集合から i を削除する場合の解 sol を更新する．
-	auto erase = [&](int i, S& sol) {
-		sol = sol;
+	// 区間から a[i] を削除し，データ構造を更新する．
+	auto erase = [&](int i) {
+		freq[a[i]]--;
+		if (freq[a[i]] == 0) sol--;
 	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	auto get_sol = [&](int j) {
+		return sol;
+	};
+
 	// --------------------------------------------------------------
 
-	// 初期化
-	int lpt = 0, rpt = 0; S sol = 0;
+	// lpt[rpt] : 半開区間の左[右] 端の位置
+	int lpt = 0, rpt = 0;
 
-	// クエリを順に処理していく
-	rep(jj, q) {
-		int j = get<2>(lb_sr_j[jj]);
+	// クエリを順に処理していく．
+	rep(tmp, q) {
+		int j = get<2>(lb_sr_j[tmp]);
 
-		// 区間を広げる
-		while (lpt > l[st[j]]) { insert(pos[--lpt], sol); }
-		while (rpt < r[st[j]]) { insert(pos[rpt++], sol); }
+		// 区間を広げる．
+		while (lpt > l[st[j]]) insert(pos[--lpt]);
+		while (rpt < r[st[j]]) insert(pos[rpt++]);
 
-		// 区間を狭める
-		while (lpt < l[st[j]]) { erase(pos[lpt++], sol); }
-		while (rpt > r[st[j]]) { erase(pos[--rpt], sol); }
+		// 区間を狭める．
+		while (lpt < l[st[j]]) erase(pos[lpt++]);
+		while (rpt > r[st[j]]) erase(pos[--rpt]);
 
-		res[j] = sol;
+		// クエリ j に対する解を得る．
+		res[j] = get_sol(j);
 	}
+
+	return res;
+}
+
+
+//【Mo's algorithm（パスクエリ，辺）】O(n√q α + q log q)
+/*
+* 与えられた n 頂点の重み付き木 g に対し，各 j∈[0..q) について，
+* u[j] と v[j] を結ぶパスクエリに対する解を順に格納したリストを返す．
+*
+* 制約：任意箇所の辺の追加[削除] が O(α) で可能
+*
+*（クエリ平方分割）
+*/
+template <class S>
+vector<S> mos_algorithm_path_edge(const WGraph& g, const vi& u, const vi& v) {
+	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
+
+	int n = sz(g), q = sz(u);
+	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
+	vector<S> res(q);
+
+	// 便宜上 g を 0 を根とする根付き木とみなす．
+	//	in[s] : オイラーツアーで最初に頂点 s を訪れた時刻（根なら 0）
+	//	w[t] : t 番目に通った辺の重み
+	//	c[t] : t 番目に通った辺の両端の頂点のうち子の方の番号（辺の識別用）
+	vi in(n); vl w(2 * (n - 1)); vi c(2 * (n - 1));
+
+	// 0 を根とする根付き木とみなしてオイラーツアーを行う．
+	int time = 0;
+	function<void(int, int)> rf = [&](int s, int p) {
+		in[s] = time;
+		time++;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			w[time - 1] = t.cost, c[time - 1] = t;
+			rf(t, s);
+			w[time - 1] = t.cost, c[time - 1] = t;
+			time++;
+		}
+	};
+	rf(0, -1);
+
+	// クエリを左端の位置するブロックについて昇順に，
+	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
+	vi l(q), r(q);
+	vector<tuple<int, int, int>> lb_sr_j(q);
+	rep(j, q) {
+		l[j] = in[u[j]];
+		r[j] = in[v[j]];
+		if (l[j] > r[j]) swap(l[j], r[j]);
+
+		int b = l[j] / width;
+		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
+	}
+	sort(all(lb_sr_j));
+
+	// ----------------------- ここを実装する ------------------------
+
+	// 必要なデータ構造を用意する．
+	vl freq((int)2e5 + 10);
+	S sol = 0;
+
+	// 区間に要素 w を追加し，データ構造を更新する．
+	auto insert = [&](ll w) {
+		if (freq[w] == 0) sol++;
+		freq[w]++;
+	};
+
+	// 区間から要素 w を削除し，データ構造を更新する．
+	auto erase = [&](ll w) {
+		freq[w]--;
+		if (freq[w] == 0) sol--;
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	auto get_sol = [&](int j) {
+		return sol;
+	};
+
+	// --------------------------------------------------------------
+
+	// exist[i] : 子 i をもつ辺がデータ構造に含まれているか
+	vi exist(n);
+
+	// 辺の有無を切り替える．
+	auto flip = [&](int t) {
+		if (exist[c[t]]) erase(w[t]);
+		else insert(w[t]);
+
+		exist[c[t]] ^= 1;
+	};
+
+	// lpt[rpt] : 半開区間の左[右] 端の位置
+	int lpt = 0, rpt = 0;
+
+	// クエリを順に処理していく．
+	rep(tmp, q) {
+		int j = get<2>(lb_sr_j[tmp]);
+
+		// 区間を広げる．
+		while (lpt > l[j]) flip(--lpt);
+		while (rpt < r[j]) flip(rpt++);
+
+		// 区間を狭める．
+		while (lpt < l[j]) flip(lpt++);
+		while (rpt > r[j]) flip(--rpt);
+
+		// クエリ j に対する解を得る．
+		res[j] = get_sol(j);
+	}
+
+	return res;
+}
+
+
+//【Mo's algorithm（パスクエリ，頂点）】O(n√q α + q log q)
+/*
+* 頂点重み a[0..n) が与えられた木 g に対し，各 j∈[0..q) について，
+* u[j] と v[j] を結ぶパスクエリに対する解を順に格納したリストを返す．
+*
+* 制約：任意箇所の頂点の追加[削除] が O(α) で可能
+*
+*（クエリ平方分割）
+*/
+pli op_moLCA(pli a, pli b) { return min(a, b); }
+pli e_moLCA() { return { INFL, -1 }; }
+template <class T, class S>
+vector<S> mos_algorithm_path_vertex(const Graph& g, const vector<T>& a, const vi& u, const vi& v) {
+	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
+	// verify : https://www.spoj.com/problems/COT2/
+
+	int n = sz(g), q = sz(u);
+	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
+	vector<S> res(q);
+
+	// 便宜上 g を 0 を根とする根付き木とみなす．
+	//	in[s] : オイラーツアーで最初に頂点 s を訪れた時刻（根なら 0）
+	//	out[s] : オイラーツアーで最後に頂点 s から離れた時刻（根なら 2n-1）
+	//	pos[t] : オイラーツアーで時刻 t に訪れていた頂点の番号
+	//	dep[s] : 頂点 s の深さ
+	//	c[t] : t 番目に通った辺の両端の頂点のうち子の方の番号（辺の識別用）
+	//	w[t] : t 番目に通った辺の両端の頂点のうち子の方の重み
+	vi in(n), out(n), pos(2 * n - 1), dep(n), c(2 * (n - 1)); vector<T> w(2 * (n - 1));
+
+	// 0 を根とする根付き木とみなしてオイラーツアーを行う．
+	int time = 0;
+	function<void(int, int)> rf = [&](int s, int p) {
+		in[s] = time;
+		pos[time++] = s;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			w[time - 1] = a[t];
+			c[time - 1] = t;
+
+			dep[t] = dep[s] + 1;
+			rf(t, s);
+
+			w[time - 1] = a[t];
+			c[time - 1] = t;
+
+			pos[time++] = s;
+		}
+
+		out[s] = time;
+	};
+	rf(0, -1);
+
+	// seg : 深さに関する RmQ を処理するためのセグ木
+	vector<pli> ini(2 * n - 1);
+	rep(t, 2 * n - 1) ini[t] = { dep[pos[t]], pos[t] };
+	Segtree<pli, op_moLCA, e_moLCA> seg(ini);
+
+	// 頂点 s, t の LCA を返す．
+	auto lca = [&](int s, int t) {
+		// 初めて s または t に訪れたとき
+		int left = min(in[s], in[t]);
+
+		// 最後に s または t から離れたとき
+		int right = max(out[s], out[t]);
+
+		// その途中で訪れたことのある最も浅い頂点が LCA
+		return seg.prod(left, right).second;
+	};
+
+	// クエリを左端の位置するブロックについて昇順に，
+	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
+	vi l(q), r(q);
+	vector<tuple<int, int, int>> lb_sr_j(q);
+	rep(j, q) {
+		l[j] = in[u[j]];
+		r[j] = in[v[j]];
+		if (l[j] > r[j]) swap(l[j], r[j]);
+
+		int b = l[j] / width;
+		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
+	}
+	sort(all(lb_sr_j));
+
+	// ----------------------- ここを実装する ------------------------
+
+	// 必要なデータ構造を用意する．
+	vl freq((int)2e5 + 10);
+	S sol = 0;
+
+	// 区間に要素 w を追加し，データ構造を更新する．
+	auto insert = [&](T w) {
+		if (freq[w] == 0) sol++;
+		freq[w]++;
+	};
+
+	// 区間から要素 w を削除し，データ構造を更新する．
+	auto erase = [&](T w) {
+		freq[w]--;
+		if (freq[w] == 0) sol--;
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	auto get_sol = [&](int j) {
+		return sol;
+	};
+
+	// --------------------------------------------------------------
+
+	// exist[i] : 子 i をもつ辺がデータ構造に含まれているか
+	vi exist(n);
+
+	// 辺の有無を切り替える．
+	auto flip = [&](int t) {
+		if (exist[c[t]]) erase(w[t]);
+		else insert(w[t]);
+
+		exist[c[t]] ^= 1;
+	};
+
+	// lpt[rpt] : 半開区間の左[右] 端の位置
+	int lpt = 0, rpt = 0;
+
+	// クエリを順に処理していく．
+	rep(tmp, q) {
+		int j = get<2>(lb_sr_j[tmp]);
+
+		// 区間を広げる．
+		while (lpt > l[j]) flip(--lpt);
+		while (rpt < r[j]) flip(rpt++);
+
+		// 区間を狭める．
+		while (lpt < l[j]) flip(lpt++);
+		while (rpt > r[j]) flip(--rpt);
+
+		// パスの両端点の LCA の重みを追加する．
+		insert(a[lca(u[j], v[j])]);
+
+		// クエリ j に対する解を得る．
+		res[j] = get_sol(j);
+
+		// パスの両端点の LCA の重みを削除する．
+		erase(a[lca(u[j], v[j])]);
+	}
+
+	return res;
 }
 
 

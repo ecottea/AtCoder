@@ -136,7 +136,7 @@ vi longest_path(const Graph& g) {
 
 //【スコア最大パス】O(|V| + |E|)
 /*
-* コスト付き DAG g の各頂点からのパスの最大スコアを格納したリストを返す．
+* 重み付き DAG g の各頂点からのパスの最大スコアを格納したリストを返す．
 */
 vl highest_score_path(const WGraph& g) {
 	// verify : https://atcoder.jp/contests/code-festival-2017-qualb/tasks/code_festival_2017_qualb_d

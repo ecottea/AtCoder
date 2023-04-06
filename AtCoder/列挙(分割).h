@@ -9,8 +9,9 @@
 * 例えば [0..6) の分割の 1 つに {{0, 1, 4}, {2, 5}, {3}} がある．
 */
 vvvi set_partitions(int n) {
-	vvi sp;
-	vvvi sps;
+	// verify : https://yukicoder.me/problems/no/1561
+
+	vvvi sps; vvi sp;
 
 	function<void(int)> rf = [&](int x) {
 		// 全ての要素の所属を決め終えた場合

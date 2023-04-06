@@ -52,6 +52,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
 template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; return true; } return false; } // 最大値を更新（更新されたら true を返す）
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
+template <class T> inline T get(T set, int i) { return (set >> i) & T(1); }
 
 // 演算子オーバーロード
 template <class T, class U> inline istream& operator>>(istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
@@ -148,7 +149,7 @@ numeric_limits<T>::max();（__int128 だと 0 になるので注意）
 // 時間計測して TLE 寸前に終了
 auto start = chrono::system_clock::now();
 auto now = chrono::system_clock::now();
-auto msec = chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+auto msec = chrono::duration_cast<chrono::milliseconds>(now - start).count();
 if (msec >= 1950) break;
 
 // いろいろ高速化

@@ -39,16 +39,16 @@ Graph read_Graph(int n, int m = -1, bool undirected = true, bool one_indexed = t
 }
 
 
-//【コスト付きグラフの辺】
+//【重み付きグラフの辺】
 /*
 * to : 行き先の頂点番号
-* cost : 辺のコスト
+* cost : 辺の重み
 */
 struct WEdge {
 	// verify : https://judge.yosupo.jp/problem/shortest_path
 
 	int to; // 行き先の頂点番号
-	ll cost; // 辺のコスト
+	ll cost; // 辺の重み
 
 	WEdge() : to(-1), cost(-INFL) {}
 	WEdge(int to, ll cost) : to(to), cost(cost) {}
@@ -65,7 +65,7 @@ struct WEdge {
 };
 
 
-//【コスト付きグラフ】
+//【重み付きグラフ】
 /*
 * WGraph g
 * g[v] : 頂点 v から出る辺を並べたリスト
@@ -75,9 +75,9 @@ struct WEdge {
 using WGraph = vector<vector<WEdge>>;
 
 
-//【コスト付きグラフの入力】O(|V| + |E|)
+//【重み付きグラフの入力】O(|V| + |E|)
 /*
-* (始点, 終点, コスト) の組からなる入力を受け取り，n 頂点 m 辺のコスト付きグラフを構築して返す．
+* (始点, 終点, 重み) の組からなる入力を受け取り，n 頂点 m 辺の重み付きグラフを構築して返す．
 *
 * n : グラフの頂点の数
 * m : グラフの辺の数（省略すれば n-1）
@@ -104,9 +104,9 @@ WGraph read_WGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 }
 
 
-//【コスト付きグラフの出力】O(|V| + |E|)
+//【重み付きグラフの出力】O(|V| + |E|)
 /*
-* コスト付きグラフを【コスト付きグラフの入力】で受け取る入力と同じ形式で出力する．
+* 重み付きグラフを【重み付きグラフの入力】で受け取る入力と同じ形式で出力する．
 *
 * undirected : 無向グラフか（省略すれば true）
 * one_indexed : 入力が 1-indexed か（省略すれば true）
@@ -245,10 +245,10 @@ vector<pii> create_grid_hamilton_cycle(int h, int w) {
 }
 
 
-//【コスト付き有向グラフのランダム生成】O(n^2)
+//【重み付き有向グラフのランダム生成】O(n^2)
 /*
 * n 頂点で，コストが [c_min..c_max] 内の一様乱数で与えられ，
-* 辺の存在確率が p % であるランダムなコスト付き有向グラフを返す．
+* 辺の存在確率が p % であるランダムな重み付き有向グラフを返す．
 * no_loop : 自己ループを禁止するか（デフォルトでは true）
 */
 WGraph create_random_WGraph(int n, ll c_min, ll c_max, int p, bool no_loop = true) {

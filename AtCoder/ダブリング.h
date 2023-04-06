@@ -49,49 +49,51 @@ S geometric_series(S r, ll n) {
 
 //【写像の合成】
 /*
-* Map_composite(vi s, ll k_max) : O(n log(k_max))
-*	[0..n) 上の写像 i -> s[i] で初期化する．
-*	以降で apply() に渡す k の最大値を k_max とする．
+* Map_composite(vi f, ll k_max = 2^62) : O(n log(k_max))
+*	[0..n) 上の写像 f : i → f[i] で初期化する．f^(k_max) まで計算可能とする．
 *
 * int apply(int x, ll k) : O(log(k_max))
-*	s^k[x] を返す．
+*	f^k(x) を返す．
 *
 * ll max_right(int x, function<bool(int)>& okQ) : O(log(k_max))
-*	okQ(s^k[x]) = true かつ okQ(s^(k+1)[x]) = false なる k を返す．
+*	okQ(f^k(x)) = true かつ okQ(f^(k+1)(x)) = false なる k を返す．
 *
 *（ダブリング）
 */
 class Map_composite {
 	int n, K;
 
-	// dp[i][j] : s^(2^i)[j]
+	// dp[i][j] : f^(2^i)[j]
 	vvi dp;
 
 public:
-	// [0..n) 上の写像 i -> s[i] で初期化する．
-	Map_composite(const vi& s, ll k_max = 1LL << 62) : n(sz(s)), K(msb(max(k_max, 1LL)) + 1), dp(K, vi(n)) {
+	// [0..n) 上の写像 i → f[i] で初期化する．
+	Map_composite(const vi& f, ll k_max = 1LL << 62) : n(sz(f)), K(msb(max(k_max, 1LL)) + 1), dp(K, vi(n)) {
 		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_f
 
-		// s^(2^0)[j] = s[j]
-		rep(j, n) dp[0][j] = s[j];
+		// f^(2^0)[j] = f[j]
+		rep(j, n) dp[0][j] = f[j];
 
-		// s^(2^(i+1))[j] = s^(2^i)[ s^(2^i)[j] ]
+		// f^(2^(i+1))[j] = f^(2^i)[ f^(2^i)[j] ]
 		rep(i, K - 1) rep(j, n) dp[i + 1][j] = dp[i][dp[i][j]];
 	}
 
-	// s^k[x] を返す．
+	// f^k[x] を返す．
 	int apply(int x, ll k) const {
 		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_f
 
 		Assert(0 <= x && x < n);
 
-		rep(i, K) if (k & (1LL << i)) x = dp[i][x];
+		rep(i, K) if (get(k, i)) x = dp[i][x];
 		return x;
 	}
 
-	// okQ[s^k[x]] = true かつ okQ[s^(k+1)[x]] = false なる k を返す．
+	// okQ[f^k[x]] = true かつ okQ[f^(k+1)[x]] = false なる k を返す．
 	ll max_right(int x, const function<bool(int)>& okQ) const {
 		// verify : https://atcoder.jp/contests/arc060/tasks/arc060_c
+
+		Assert(0 <= x && x < n);
+		if (!okQ(x)) return -1;
 
 		ll res = 0;
 		repir(i, K - 1, 0) {
@@ -118,64 +120,100 @@ public:
 
 //【写像の累積和】
 /*
-* Map_accumulate(vi s, vT f, ll k_max) : O(n log(k_max))
-*	[0..n) 上の写像 i -> s[i] と関数 i -> f[i] で初期化する．
-*	以降で accumulate() に渡す k の最大値を k_max とする．
+* Map_accumulate(vi s, vT a, ll k_max = 2^62) : O(n log(k_max))
+*	[0..n) 上の写像 f : i → f[i] と数列 a[0..n) で初期化する．f^(k_max) まで計算可能とする．
 *
-* T accumulate(T x, ll k) : O(log(k_max))
-*	Σt=[0..k) f(s^t[x]) を返す．
+* int apply(int x, ll k) : O(log(k_max))
+*	f^k(x) を返す．
+*
+* ll max_right(int x, function<bool(int)>& okQ) : O(log(k_max))
+*	okQ(f^k(x)) = true かつ okQ(f^(k+1)(x)) = false なる k を返す．
+*
+* T accumulate(T x, ll r) : O(log(k_max))
+*	Σk=[0..r) a[ f^k(x) ] を返す．
 *
 *（ダブリング）
 */
 template <class T>
-struct Map_accumulate {
-	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
-
+class Map_accumulate {
 	int n, K;
 
-	// dp[i][j] : s^(2^i)[j]
+	// dp[i][j] : f^(2^i)[j]
 	vvi dp;
 
-	// dp_acc[i][j] : Σt=[0..2^i) f(s^t[j])
+	// dp_acc[i][j] : Σk=[0..2^i) a[f^k[j]]
 	using vT = vector<T>; using vvT = vector<vT>;
 	vvT dp_acc;
 
-	// [0..n) 上の写像 i -> s[i] と関数 i -> f[i] で初期化する．
-	Map_accumulate(const vi& s, const vT& f, ll k_max = 1LL << 62)
-		: n(sz(s)), K(msb(k_max) + 1), dp(K, vi(n)), dp_acc(K, vT(n))
+public:
+	// [0..n) 上の写像 i → f[i] と数列 a[0..n) で初期化する．
+	Map_accumulate(const vi& f, const vT& a, ll k_max = 1LL << 62)
+		: n(sz(f)), K(msb(max(k_max, 1LL)) + 1), dp(K, vi(n)), dp_acc(K, vT(n))
 	{
-		// s^(2^0)[j] = s[j]
-		rep(j, n) dp[0][j] = s[j];
+		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
 
-		// Σt=[0..2^0) f(s^t[j]) = f(j)
-		rep(j, n) dp_acc[0][j] = f[j];
+		// f^(2^0)[j] = f[j]
+		rep(j, n) dp[0][j] = f[j];
+
+		// Σk=[0..2^0) a[f^k[j]] = a[j]
+		rep(j, n) dp_acc[0][j] = a[j];
 
 		rep(i, K - 1) {
 			rep(j, n) {
 				// 例：
-				// s^8[j] = s^4[ s^4[j] ]
+				// f^8[j] = f^4[ f^4[j] ]
 				dp[i + 1][j] = dp[i][dp[i][j]];
 
 				// 例：
-				// f(s^0[j]) + f(s^1[j]) + f(s^2[j]) + f(s^3[j])
-				//	+ f(s^4[j]) + f(s^5[j]) + f(s^6[j]) + f(s^7[j])
-				// = f(s^0[j]) + f(s^1[j]) + f(s^2[j]) + f(s^3[j])
-				//	+ f(s^0[ s^4[j] ]) + f(s^1[ s^4[j] ]) + f(s^2[ s^4[j] ]) + f(s^3[ s^4[j] ])
+				// a[f^0[j]] + a[f^1[j]] + a[f^2[j]] + a[f^3[j]]
+				//	+ a[f^4[j]] + a[f^5[j]] + a[f^6[j]] + a[f^7[j]]
+				// = a[f^0[j]] + a[f^1[j]] + a[f^2[j]] + a[f^3[j]]
+				//	+ a[f^0[ f^4[j] ]] + a[f^1[ f^4[j] ]] + a[f^2[ f^4[j] ]] + a[f^3[ f^4[j] ]]
 				dp_acc[i + 1][j] = dp_acc[i][j] + dp_acc[i][dp[i][j]];
 			}
 		}
 	}
 
-	// Σt=[0..k) f(s^t[x]) を返す．
-	T accumulate(T x, ll k) const {
+	// f^k[x] を返す．
+	int apply(int x, ll k) const {
+		Assert(0 <= x && x < n);
+
+		rep(i, K) if (get(k, i)) x = dp[i][x];
+		return x;
+	}
+
+	// okQ[f^k[x]] = true かつ okQ[f^(k+1)[x]] = false なる k を返す．
+	ll max_right(int x, const function<bool(int)>& okQ) const {
+		// verify : https://atcoder.jp/contests/acl1/tasks/acl1_d
+
+		Assert(0 <= x && x < n);
+		if (!okQ(x)) return -1;
+
+		ll res = 0;
+		repir(i, K - 1, 0) {
+			res <<= 1;
+			if (okQ(dp[i][x])) {
+				res++;
+				x = dp[i][x];
+			}
+		}
+		return res;
+	}
+
+	// Σk=[0..r) a[f^k[x]) を返す．
+	T accumulate(T x, ll r) const {
+		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
+
 		// 例：
-		// f(s^0[x]) + f(s^1[x]) + f(s^2[x]) + f(s^3[x]) + f(s^4[x]) + f(s^5[x])
-		// = f(s^0[x]) + f(s^1[x])
-		//	+ f(s^0[ s^2[x] ]) + f(s^1[ s^2[x] ]) + f(s^2[ s^2[x] ]) + f(s^3[ s^2[x] ])
+		// a[f^0[x]] + a[f^1[x]] + a[f^2[x]] + a[f^3[x]] + a[f^4[x]] + a[f^5[x]]
+		// = a[f^0[x]] + a[f^1[x]]
+		//	+ a[f^0[ f^2[x] ]] + a[f^1[ f^2[x] ]] + a[f^2[ f^2[x] ]] + a[f^3[ f^2[x] ]]
+
+		Assert(0 <= x && x < n);
 
 		T res = 0;
 		rep(i, K) {
-			if (k & (1LL << i)) {
+			if (get(r, i)) {
 				res += dp_acc[i][x];
 				x = dp[i][x];
 			}

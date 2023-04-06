@@ -4,6 +4,7 @@
 #include "探索.h"
 #include "行列.h"
 #include "FPS(mint).h"
+#include "和(数論変換).h"
 // ■■■■■ 期待値 ■■■■■
 
 
@@ -195,6 +196,55 @@ vm sugoroku_dcFFT(const vm& p, int n) {
 		rf(m, r);
 	};
 	rf(1, n + 1);
+
+	return dp;
+}
+
+
+//【すごろく（確率が任意，mod 998244353）】O(n (log n)^2)
+/*
+* [1..k] の目が順に p[0..k) の確率で出る k 面サイコロを用いてすごろくを行う．
+* 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
+*
+*（オンライン畳込み）
+*
+* 利用：【オンライン畳込み（片側固定，mod 998244353）】
+*/
+vm sugoroku_oc(vm p, int n) {
+	// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+
+	//【方法】
+	// 出る目で場合分けを行って dp[i] を求める漸化式を導出する．
+	// 便宜上 p を 1-indexed とし p[1..k] として記述する．
+	// 
+	// j の目が出た場合，
+	//		j の目を出すのに 1 ターン
+	//		残り i-j マス以上進むのにかかるターン数の期待値が dp[i-j]
+	// かかる．これを j の目が出る確率 p[j] で重み付けながら足し合わせることで，
+	//		dp[i] = Σj∈[1..k] p[j] (1 + dp[i-j])
+	// なる漸化式が得られ，Σp[1..k]=1 を用いて変形すると
+	//		dp[i] = 1 + Σj∈[1..k] p[j] dp[i-j]
+	// となる．
+	//
+	// i → i+1 とすると
+	//		dp[i+1] = 1 + Σj∈[1..k] p[j] dp[i+1-j]
+	// となり，j → j+1 とすると
+	//		dp[i+1] = 1 + Σj∈[0..k) p[j+1] dp[i-j]
+	// となる．
+	//		a[i] = p[i+1]（i∈[0..k)）
+	// とおき，その他の a[i] を 0 とおけば，
+	//		dp[i+1] = 1 + Σj∈[0..i] a[j] dp[i-j]
+	// となる．これをオンライン畳込みで計算する．
+
+	p.resize(n);
+	Semi_online_convolution soc(p);
+
+	vm dp(n + 1);
+
+	rep(i, n) {
+		soc.set(dp[i]);
+		dp[i + 1] = 1 + soc[i];
+	}
 
 	return dp;
 }

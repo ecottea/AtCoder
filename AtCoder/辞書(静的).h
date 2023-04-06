@@ -144,7 +144,7 @@ public:
 
 			// 注目ビットが 0 のものを左，1 のものを右に寄せる安定ソートを行う．
 			stable_sort(all(bt), [](auto const& lhs, auto const& rhs) {
-				return lhs.first < rhs.first;
+					return lhs.first < rhs.first;
 				});
 		}
 

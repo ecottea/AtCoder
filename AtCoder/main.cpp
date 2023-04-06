@@ -95,9 +95,309 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 #endif
 
 
+//【永続配列】
+/*
+* Persistent_array<S>(int n) : O(n)
+*	v[0..n) = 0 で初期化する．履歴番号は 0 とする．
+*
+* Persistent_segtree<S>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．履歴番号は 0 とする．
+*
+* int set(int i, S x, int t) : O(log n)
+*	t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+*
+* S get(int i, int t) : O(log n)
+*	t 番目の履歴の v[i] を返す．
+*/
+template <class S>
+class Persistent_array {
+	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
+
+	static const int M = 20; // 子の数
+
+	struct Node {
+		int l, r;
+		S val; // 葉なら値
+		vi ch; // 子
+
+		Node(int l, int r, S val) : l(l), r(r), val(val) {}
+	};
+
+	// ノードを貯めておくプール
+	vector<Node> pool;
+
+	int n; // 配列の大きさ
+	int T; // 履歴の個数
+	vi his; // 履歴
+
+	// ノードの新規作成
+	int new_node(int l, int r, S val = 0) {
+		pool.emplace_back(l, r, val);
+		return sz(pool) - 1;
+	}
+
+	int init_rf(const vector<S>& v, int l, int r) {
+		if (r - l <= 0) return -1;
+
+		// 葉を作る場合
+		if (r - l == 1) return new_node(l, r, v[l]);
+
+		int id = new_node(l, r);
+		pool[id].ch.resize(M);
+		int w = r - l;
+		rep(k, M) pool[id].ch[k] = init_rf(v, l + w * k / M, l + w * (k + 1) / M);
+
+		return id;
+	}
+
+	int set_rf(int id, int i, S x) {
+		// pool[id] が葉の場合
+		if (pool[id].ch.empty()) return new_node(pool[id].l, pool[id].r, x);
+
+		int nid = new_node(pool[id].l, pool[id].r);
+		pool[nid].ch = pool[id].ch;
+		int w = pool[id].r - pool[id].l;
+		int k = ((i - pool[id].l + 1) * M - 1) / w;
+		pool[nid].ch[k] = set_rf(pool[id].ch[k], i, x);
+
+		return nid;
+	}
+
+	S get_rf(int id, int i) const {
+		const Node& p = pool[id];
+
+		// p が葉の場合
+		if (p.ch.empty()) return p.val;
+
+		int w = p.r - p.l;
+		int k = ((i - p.l + 1) * M - 1) / w;
+		return get_rf(p.ch[k], i);
+	}
+
+	void print_rf(int id, ostream& os) const {
+		if (id == -1) return;
+
+		const Node& p = pool[id];
+
+		if (p.ch.empty()) {
+			os << p.val << " ";
+			return;
+		}
+
+		rep(k, M) print_rf(p.ch[k], os);
+	}
+
+public:
+	// 配列 v[0..n) の要素で初期化する．
+	Persistent_array(const vector<S>& v) : n(sz(v)), T(1), his(1) {
+		his[0] = init_rf(v, 0, n);
+	}
+
+	// v[0..n) = 0 で初期化する．
+	Persistent_array(int n_) : n(n_), T(1), his(1) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		vector<S> v(n, 0);
+		his[0] = init_rf(v, 0, n);
+	}
+	Persistent_array() : n(0), T(0) {} // ダミー
+
+	// t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+	int set(int i, S x, int t) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		Assert(0 <= i && i < n);
+		Assert(t < T);
+		his.push_back(set_rf(his[t], i, x));
+		return T++;
+	}
+
+	// t 番目の履歴の v[i] を返す．
+	S get(int i, int t) const {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		Assert(0 <= i && i < n);
+		Assert(t < T);
+		return get_rf(his[t], i);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Persistent_array& pa) {
+		rep(t, pa.T) {
+			os << t << ": ";
+			pa.print_rf(pa.his[t], os);
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【永続 Union-Find】
+/*
+* Persistent_union_find(int n) : O(n)
+*	非連結で大きさ n の Union-Find を構築する．履歴番号は 0 とする．
+*
+* int merge(int a, int b, int t) : O(log n)
+*	t 番目の履歴の頂点 a, b を結合して最新の履歴として記録し，履歴番号を返す．
+*	a, b が元々連結だった場合は何もしないが，履歴としては記録する．
+*
+* bool same(int a, int b, int t) : O(log n)
+*	t 番目の履歴の頂点 a と頂点 b が同じ連結成分に属するかを返す．
+*
+* int leader(int a, int t) : O(log n)
+*	t 番目の履歴の頂点 a の属する連結成分の親を返す．
+*
+* int size(int a, int t) : O(log n)
+*	t 番目の履歴の頂点 a の属する連結成分の大きさを返す．
+*
+* int size(int t) : O(1)
+*	t 番目の履歴の連結成分の個数を返す．
+*
+* vvi groups(int t) : O(n log n)
+*	t 番目の履歴の連結成分のリストを返す．
+* 
+* 利用：【永続配列】
+*/
+struct Persistent_union_find {
+	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
+
+	int n; // 頂点の個数
+	int T; // 履歴の個数
+	vi ms; // 連結成分の個数
+	vi times; // セグ木の何番目の履歴と対応するか
+
+	// parent_or_size[i] : 頂点 i の親または属する集合の大きさ
+	//	頂点 i が根でない場合は親の番号（非負）を，
+	//	根の場合は属する連結成分の大きさの -1 倍（負）を表す．
+	Persistent_array<int> parent_or_size;
+
+	// 非連結で大きさ n の Union-Find を構築する．履歴番号は 0 とする．
+	Persistent_union_find(int n_) : n(n_), T(1), ms(1), times(1) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		vi ini(n, -1);
+		parent_or_size = Persistent_array<int>(ini);
+		ms[0] = n;
+		times[0] = 0;
+	}
+
+	Persistent_union_find() : n(0), T(0) {} // ダミー
+
+	// t 番目の履歴の頂点 a, b を結合して最新の履歴として記録し，履歴番号を返す．
+	int merge(int a, int b, int t) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		Assert(0 <= t && t < T);
+
+		// 頂点 a, b の属する連結成分の根 ra, rb を得る．
+		int ra = leader(a, t);
+		int rb = leader(b, t);
+
+		// 根が同じであれば既に連結であるから何もしない．
+		if (ra == rb) {
+			ms.push_back(ms[t]);
+			times.push_back(times[t]);
+			return T++;
+		}
+
+		// 根が異なる場合，大きい連結成分の根を改めて ra，小さい方を rb とする．
+		int sa = -parent_or_size.get(ra, times[t]);
+		int sb = -parent_or_size.get(rb, times[t]);
+		if (sa < sb) swap(ra, rb);
+
+		// 小さい方の連結成分を ra を根とする連結成分に統合する．
+		int nt2 = parent_or_size.set(ra, -(sa + sb), times[t]);
+		nt2 = parent_or_size.set(rb, ra, nt2);
+		times.push_back(nt2);
+
+		// 連結成分の数を 1 つ減らす．
+		ms.push_back(ms[t] - 1);
+
+		return T++;
+	}
+
+	// t 番目の履歴の頂点 a, b が同じ連結成分に属するかを返す．
+	bool same(int a, int b, int t) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		Assert(0 <= t && t < T);
+
+		// 根が同じなら連結である．
+		return leader(a, t) == leader(b, t);
+	}
+
+	// t 番目の履歴の頂点 a の属する連結成分の根を返す．
+	int leader(int a, int t) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		Assert(0 <= t && t < T);
+
+		// a が根であれば自分自身を返す．
+		int pa = parent_or_size.get(a, times[t]);
+		if (pa < 0) return a;
+
+		// a が根でなければ，a の親 pa の根 ra を求める．
+		int ra = leader(pa, t);
+
+		return ra;
+	}
+
+	// t 番目の履歴の頂点 a の属する連結成分の大きさを返す．
+	int size(int a, int t) {
+		Assert(0 <= t && t < T);
+
+		// a の根を調べ，そこに記録されている大きさの情報を返す．
+		return -parent_or_size.get(leader(a, t), times[t]);
+	}
+
+	// t 番目の履歴の連結成分の個数を返す．
+	int size(int t) {
+		Assert(0 <= t && t < T);
+
+		return ms[t];
+	}
+
+	// t 番目の履歴の連結成分のリストを返す．
+	vvi groups(int t) {
+		Assert(0 <= t && t < T);
+
+		vvi res(ms[t]); vi r_to_i(n, -1); int i = 0;
+		rep(a, n) {
+			int r = leader(a, t);
+			if (r_to_i[r] == -1) r_to_i[r] = i++;
+			res[r_to_i[r]].push_back(a);
+		}
+
+		return res;
+	}
+};
+
+
 int main() {
-//	input_from_file("input.txt");
+	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	
+	int n, q;
+	cin >> n >> q;
+
+	Persistent_union_find uf(n);
+
+	vi i_to_t(q + 1);
+
+	rep(i, q) {
+		int type, k, u, v;
+		cin >> type >> k >> u >> v;
+
+		int t = i_to_t[k + 1];
+
+		if (type == 0) {
+			t = uf.merge(u, v, t);
+			i_to_t[i + 1] = t;
+		}
+		else {
+			cout << uf.same(u, v, t) << endl;
+		}
+	}
 }

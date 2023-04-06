@@ -81,9 +81,9 @@ int tree_diameter(const Graph& g, vi* path = nullptr) {
 }
 
 
-//【コスト付き木の直径】O(n)
+//【重み付き木の直径】O(n)
 /*
-* コスト付き木 g の直径の長さ d を返し，直径の端点間を結ぶパスを path[0..d] に格納する．
+* 重み付き木 g の直径の長さ d を返し，直径の端点間を結ぶパスを path[0..d] に格納する．
 */
 ll tree_diameter(const WGraph& g, vi* path = nullptr) {
 	// verify : https://judge.yosupo.jp/problem/tree_diameter
@@ -380,9 +380,9 @@ vvi distance_from_centroid(const Graph& g, const Centroid_decomposition<Graph>& 
 }
 
 
-//【重心からの距離（コスト付き木）】O(n log n)
+//【重心からの距離（重み付き木）】O(n log n)
 /*
-* コスト付き木 g を重心分解して得られた根付き木 cd について，v の深さ i の先祖から v までの
+* 重み付き木 g を重心分解して得られた根付き木 cd について，v の深さ i の先祖から v までの
 * g における距離（先祖がいなければ -1）を dist[i][v] に格納して dist を返す．
 *
 * 利用：【木の重心分解】
@@ -497,9 +497,9 @@ int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
 }
 
 
-//【コスト付き木上のシュタイナー木】O(n)
+//【重み付き木上のシュタイナー木】O(n)
 /*
-* コスト付き木 g の頂点集合 v を含む最小の木を st に構築し，その合計コストを返す．
+* 重み付き木 g の頂点集合 v を含む最小の木を st に構築し，その合計コストを返す．
 * また st の頂点 i が g のどの頂点と対応するかを id[i] に格納する．
 */
 ll steiner_tree(const WGraph& g, const vi& v, WGraph& st, vi& id) {
@@ -720,12 +720,12 @@ vector<T_hot> height_of_tree(const Graph& g, int r) {
 }
 
 
-//【根付き木の高さ（コスト付き）】O(n)
+//【根付き木の高さ（重み付き）】O(n)
 /*
-* 各 s∈[0..n) について，r を根とするコスト付き木 g の頂点 s の高さを格納したリストを返す．
+* 各 s∈[0..n) について，r を根とする重み付き木 g の頂点 s の高さを格納したリストを返す．
 * s の高さとは，s から部分木 s の葉までの辺のコストの和の最大値のことである．
 *
-* 利用：【貰う木 DP（頂点マージ，コスト付き）】
+* 利用：【貰う木 DP（頂点マージ，重み付き）】
 */
 using T_hoct = ll;
 void merge_hoct(T_hoct& x, const T_hoct& y, int s) { chmax(x, y); }
@@ -739,7 +739,7 @@ vector<T_hoct> height_of_weighted_tree(const WGraph& g, int r) {
 
 //【木の高さ】O(n)
 /*
-* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
+* 与えられた重み付き木 g に対し，各 s∈[0..n) について
 * 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
 *
 * 利用：【全方位木 DP】
@@ -754,12 +754,12 @@ vi height_of_undirected_tree(Graph& g) {
 }
 
 
-//【木の高さ（コスト付き）】O(n)
+//【木の高さ（重み付き）】O(n)
 /*
-* 与えられたコスト付き木 g に対し，各 s∈[0..n) について
+* 与えられた重み付き木 g に対し，各 s∈[0..n) について
 * 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
 *
-* 利用：【全方位木 DP（コスト付き）】
+* 利用：【全方位木 DP（重み付き）】
 */
 using T_hutc = ll;
 T_hutc merge_hutc(T_hutc x, T_hutc y, int s) { return max(x, y); }

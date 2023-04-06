@@ -5,14 +5,14 @@
 
 //【Mo's algorithm】O(n√q α + q log q)
 /*
-* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納し res を返す．
-* res00 は a[0..0) クエリに対する解とする．また区間に a[i] を追加[削除]する場合，
-* 新たな解は insert[erase]（計算量 O(α)）で計算されるとする．
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
+* 制約：両端の要素の追加 & 削除が O(α) で可能
+* 
 *（クエリ平方分割）
 */
 template <class T, class S>
-vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00) {
+vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
 
@@ -23,66 +23,80 @@ vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r, S res00) {
 	// これらが一致するような k を求めると k = √(2q+1) + 1 となる．
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
-	int q = sz(l);
-	int k = (int)(sqrt(q) + EPS);
-	int w = max((sz(a) + k - 1) / k, 1);
+	int n = sz(a), q = sz(l);
+	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
 	vector<S> res(q);
 
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
 	vector<tuple<int, int, int>> lb_sr_j(q);
 	rep(j, q) {
-		int b = l[j] / w;
+		int b = l[j] / width;
 		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
 	}
 	sort(all(lb_sr_j));
 
 	// -------------- ここを実装する（auto の方が速い） ---------------
 
-	// 区間に a[i] を追加する場合の解 sol を更新する．
-	auto insert = [&](int i, S& sol) {
-		sol = sol;
+	// 必要なデータ構造を用意する．
+	vl freq((int)2e5 + 10);
+	S sol = 0;
+
+	// 区間に a[i] を追加し，データ構造を更新する．
+	auto insert = [&](int i) {
+		if (freq[a[i]] == 0) sol++;
+		freq[a[i]]++;
 	};
 
-	// 区間から a[i] を削除する場合の解 sol を更新する．
-	auto erase = [&](int i, S& sol) {
-		sol = sol;
+	// 区間から a[i] を削除し，データ構造を更新する．
+	auto erase = [&](int i) {
+		freq[a[i]]--;
+		if (freq[a[i]] == 0) sol--;
 	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	auto get_sol = [&](int j) {
+		return sol;
+	};
+
 	// --------------------------------------------------------------
 
-	// 初期化
-	int lpt = 0, rpt = 0; S sol = res00;
+	// lpt[rpt] : 半開区間の左[右] 端の位置
+	int lpt = 0, rpt = 0; 
 
-	// クエリを順に処理していく
+	// クエリを順に処理していく．
 	rep(tmp, q) {
-		// 区間を広げる
-		while (lpt > l[j]) { insert(--lpt, sol); }
-		while (rpt < r[j]) { insert(rpt++, sol); }
+		int j = get<2>(lb_sr_j[tmp]);
 
-		// 区間を狭める
-		while (lpt < l[j]) { erase(lpt++, sol); }
-		while (rpt > r[j]) { erase(--rpt, sol); }
+		// 区間を広げる．
+		while (lpt > l[j]) insert(--lpt);
+		while (rpt < r[j]) insert(rpt++);
 
-		res[j] = sol;
+		// 区間を狭める．
+		while (lpt < l[j]) erase(lpt++);
+		while (rpt > r[j]) erase(--rpt);
+
+		// 区間 [l[j]..r[j]) に対する解を得る．
+		res[j] = get_sol(j);
 	}
 
 	return res;
 }
 
 
-//【Mo's algorithm（区間縮小なし）】O((n + q)√q α)
+//【Mo's algorithm（マージ）】O(n√q α + q log q)
 /*
-* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を res[j] に格納し res を返す．
-* res_ep は空区間クエリに対する解とする．また区間の右に a[i] を追加する場合，
-* 新たな解は insert（計算量 O(α)）で計算されるとする．
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
-* 制約：左端を伸ばす操作は非破壊的
+* 制約：右端の要素の追加が O(α) で可能，左右に分かれたデータ構造からの解の計算が O(√n) 程度で可能
+* 注意：データ構造そのもののマージが高速にできるのならセグメント木で十分．
 *
 *（クエリ平方分割）
 */
 template <class T, class S>
-vector<S> mos_algorithm_no_erase(const vector<T>& a, const vi& l, const vi& r, S res_ep) {
-	// verify : https://codeforces.com/contest/620/problem/F
+vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
+	// verify : https://atcoder.jp/contests/pakencamp-2022-day1/tasks/pakencamp_2022_day1_k
 
 	//【方法】
 	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
@@ -91,60 +105,68 @@ vector<S> mos_algorithm_no_erase(const vector<T>& a, const vi& l, const vi& r, S
 	// これらが一致するような k を求めると k = √(2q) となる．
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
-	int q = sz(l);
-	int k = (int)(sqrt(q) + EPS);
-	int width = max((sz(a) + k - 1) / k, 1);
+	int n = sz(a), q = sz(l);
+	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int width = (n + sqrt_q - 1) / sqrt_q;
 	vector<S> res(q);
 
 	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
-	vector<vector<pii>> lb_to_rj(k);
-	vi l_max(k, -1); // ブロック内の左端位置の最大値
+	vector<vector<pii>> lb_to_rj(sqrt_q);
+	vi l_max(sqrt_q, -1); // ブロック内の左端位置の最大値
 	rep(j, q) {
-		lb_to_rj[min(l[j] / width, k - 1)].emplace_back(r[j], j);
-		chmax(l_max[min(l[j] / width, k - 1)], l[j]);
+		int b = l[j] / width;
+		lb_to_rj[b].emplace_back(r[j], j);
+		chmax(l_max[b], l[j]);
 	}
-	rep(b, k) sort(all(lb_to_rj[b]));
+	rep(b, sqrt_q) sort(all(lb_to_rj[b]));
 
 	// -------------- ここを実装する（auto の方が速い） ---------------
 
-	// 区間の右に a[i] を追加する場合の解 sol を更新する．
-	auto insert = [&](int i, S& sol) {
-		sol = sol;
+	// 区間の左[右] 側を管理するデータ構造を用意する．
+	using D = vl;
+	D data_l, data_r;
+
+	// データ構造 data を初期化する．
+	auto init = [&](D& data) {
+		data.clear();
 	};
+
+	// 区間の右に a[i] を追加し，データ構造 data を更新する．
+	auto insert = [&](int i, D& data) {
+		
+	};
+
+	// クエリ j に対し，左[右] 側のデータ構造 data_l[data_r] を参照して解を求める．
+	auto get_sol = [&](int j) {
+
+	};
+
 	// --------------------------------------------------------------
 
-	// 初期化
-	S sol = res_ep;
-
-	// クエリを順に処理していく
-	rep(b, k) {
+	// b : 左から何番目のブロックか
+	rep(b, sqrt_q) {
+		// rpt : 半開区間の右端の位置（ブロック b 内の左端位置の最大値で初期化する）
 		int rpt = l_max[b];
 
+		// 区間の右側に対応するデータ構造を初期化する．
+		init(data_r);
+
 		repe(tmp, lb_to_rj[b]) {
+			// j : クエリ番号
 			int j = tmp.second;
 
-			// 右端がブロック内にある場合の例外処理
-			if (r[j] <= l_max[b]) {
-				S sol2 = res_ep;
+			// 区間の右側に対応するデータ構造を更新する．
+			while (rpt < r[j]) { insert(rpt++, data_r); }
 
-				res[j] = sol2;
+			// 区間の左側に対応するデータ構造を初期化する．
+			init(data_l);
 
-				continue;
-			}
+			// a[l[j]..l_max[j]) の要素を左から順に追加していく．
+			repi(i, l[j], min(l_max[b], r[j]) - 1) insert(i, data_l);
 
-			// 右端を伸ばす（これは記録する）
-			while (rpt < r[j]) { insert(rpt++, sol); }
-
-			// 左端を伸ばす（これは記録しない）
-			S sol2 = sol;
-			repi(i, l[j], l_max[b] - 1) {
-				sol2 = sol2;
-			}
-
-			res[j] = sol2;
+			// a[l[j]..r[j]) に対する解を得る．
+			res[j] = get_sol(j);
 		}
-
-		sol = res_ep;
 	}
 
 	return res;

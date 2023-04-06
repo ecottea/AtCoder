@@ -9,7 +9,7 @@
 
 //【最小全域森】O(|E| log|V|)
 /*
-* コスト付き無向グラフ g の最小全域森を求め，そのコストを返す．
+* 重み付き無向グラフ g の最小全域森を求め，そのコストを返す．
 * 最小全域森を msf に構成し，各最小全域木の代表元を rs に格納する．
 */
 ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
@@ -51,7 +51,7 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 
 //【最小全域木】O(|E| log|V|)
 /*
-* コスト付き無向グラフ g の頂点 r を含む連結成分の最小全域木を rs に格納する．
+* 重み付き無向グラフ g の頂点 r を含む連結成分の最小全域木を rs に格納する．
 * また戻り値として最小コストを返す．
 */
 ll prim(const WGraph& g, int r, WGraph& mst) {
@@ -125,8 +125,8 @@ Graph spanning_forest(const Graph& g, vi* v = nullptr) {
 
 //【最小全域森（圧縮）】O(|V| + |E| log|V|)
 /*
-* コスト付き無向グラフ g とその頂点集合 vs から，vs を頂点集合にもち，
-* 辺 s-t のコストを g における s,t 間の距離と定めたコスト付き無向グラフ g2 を構成する．
+* 重み付き無向グラフ g とその頂点集合 vs から，vs を頂点集合にもち，
+* 辺 s-t のコストを g における s,t 間の距離と定めた重み付き無向グラフ g2 を構成する．
 * g2 の最小全域森を msf に構成し，各最小全域木の代表元を rs に格納し，msf の総コストを返す．
 */
 ll compressed_minimum_spanning_forest(const WGraph& g, const vi& vs, WGraph* msf = nullptr, vi* rs = nullptr) {
@@ -303,7 +303,7 @@ mint count_spanning_forest(const Graph& g) {
 
 //【最小全域森の数え上げ】O(|V|^3)
 /*
-* 自己ループのないコスト付き無向グラフ g の最小全域森のコストと個数を返す．
+* 自己ループのない重み付き無向グラフ g の最小全域森のコストと個数を返す．
 *
 * 利用：【全域森の数え上げ】
 */
@@ -474,7 +474,7 @@ void mst_tree(const WGraph& g, Graph& fst, vi& rs) {
 
 //【有向最小全域木】O(|E| log |V|)
 /*
-* コスト付き有向グラフ g の r を根とする有向最小全域木のコストを返す（なければ -1）
+* 重み付き有向グラフ g の r を根とする有向最小全域木のコストを返す（なければ -1）
 *
 * 利用：【併合可能遅延ヒープ（モノイド作用付き全順序集合）】
 */

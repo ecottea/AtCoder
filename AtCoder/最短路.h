@@ -126,7 +126,7 @@ unordered_map<T, int> dynamic_BFS(T st, const function<vector<T>(T)>& nxt) {
 
 //【01-BFS】O(|V| + |E|)
 /*
-* 辺のコストが 0, 1 の二値に限られるコスト付きグラフ g に対し，
+* 辺のコストが 0, 1 の二値に限られる重み付きグラフ g に対し，
 * st から各頂点への最短距離（到達不能なら INF）を格納したリストを返す．
 */
 vi binary_BFS(const WGraph& g, int st) {
@@ -166,7 +166,7 @@ vi binary_BFS(const WGraph& g, int st) {
 
 //【単一始点最短路】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g に対し
+* 非負の重み付きグラフ g に対し
 * st から各頂点への最短距離（到達不能なら INFL）を格納したリストを返す．
 */
 vl dijkstra(const WGraph& g, int st) {
@@ -254,7 +254,7 @@ unordered_map<T, ll> dynamic_dijkstra(T st, const function<vector<pair<T, ll>>(T
 
 //【ポテンシャル付きダイクストラ法】O(|V| + |E| log|V|)
 /*
-* 負閉路のないコスト付きグラフ g に対し，実行可能ポテンシャル u[0..n) を与え，
+* 負閉路のない重み付きグラフ g に対し，実行可能ポテンシャル u[0..n) を与え，
 * st から各頂点への最短距離を格納したリストを返す．
 *
 * 条件：g[s][t].cost >= u[t] - u[s]
@@ -323,7 +323,7 @@ vl dijkstra_potential(const WGraph& g, const vl& u, int st) {
 
 //【最短路木】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g に対し，始点 st を根とする有向最短路木を返す．
+* 非負の重み付きグラフ g に対し，始点 st を根とする有向最短路木を返す．
 */
 WGraph dijkstra_tree(const WGraph& g, int st) {
 	// verify : https://atcoder.jp/contests/abc252/tasks/abc252_e
@@ -373,7 +373,7 @@ WGraph dijkstra_tree(const WGraph& g, int st) {
 
 //【単一始点最短路（負コスト可）】O(|V| |E|)
 /*
-* コスト付きグラフ g（負のコストも可）に対し，
+* 重み付きグラフ g（負のコストも可）に対し，
 * st から各頂点への最短距離を格納したリストを返す．
 * もし st から到達可能な負のコストをもつ閉路があれば空リストを返す．
 */
@@ -415,7 +415,7 @@ vl bellman_ford(const WGraph& g, int st) {
 
 //【全頂点対最短路（負コスト可）】O(|V|^3)
 /*
-* コスト付きグラフ g（負のコストも可）に対し，
+* 重み付きグラフ g（負のコストも可）に対し，
 * 頂点 i から頂点 j への最短距離を dist[i][j] に格納し dist を返す．
 * もし g が負の閉路をもっていれば空リストを返す．
 */
@@ -647,9 +647,9 @@ int shortest_cycle(const Graph& g, int st, vi* path = nullptr) {
 }
 
 
-//【最短パス（コスト付きグラフ）】O(|V| + |E| log|V|)
+//【最短パス（重み付きグラフ）】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付きグラフ g の始点 st から終点 gl までの最短パスの長さを返す．
+* 非負の重み付きグラフ g の始点 st から終点 gl までの最短パスの長さを返す．
 * 到達不能なら INFL を返す．必要なら path に最短パス上の頂点の列を格納する．
 *
 *（ダイクストラ法）
@@ -710,9 +710,9 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 }
 
 
-//【最短サイクル（コスト付きグラフ）】O(|V| + |E| log|V|)
+//【最短サイクル（重み付きグラフ）】O(|V| + |E| log|V|)
 /*
-* 非負のコスト付き有向グラフ g の頂点 st を通る最短サイクルの長さを返す．
+* 非負の重み付き有向グラフ g の頂点 st を通る最短サイクルの長さを返す．
 * 存在しないなら INFL を返す．必要なら path に最短サイクル上の頂点の列を格納する．
 *
 *（ダイクストラ法）
@@ -837,7 +837,7 @@ int shortest_path(const IGraph& g, int st, int gl, vi& path) {
 
 //【最短パス（負コスト可）】O(|E| |V|)
 /*
-* コスト付きグラフ g（負のコストも可）の始点 st から終点 gl までの最短パスの長さを返す．
+* 重み付きグラフ g（負のコストも可）の始点 st から終点 gl までの最短パスの長さを返す．
 * 到達不能なら INFL，距離に下限がなければ -INFL を返す．
 * 必要なら path に最短パス上の頂点の列を格納する．
 *
@@ -957,9 +957,9 @@ void nearest_neighbor(const Graph& g, const vi& vs, vi& nn, vi& dist) {
 }
 
 
-//【最近傍探索（コスト付きグラフ）】O(|V| + |E| log|V|)
+//【最近傍探索（重み付きグラフ）】O(|V| + |E| log|V|)
 /*
-* コスト付き無向グラフ g とその頂点集合 vs について，
+* 重み付き無向グラフ g とその頂点集合 vs について，
 * 頂点 i と最も近い vs の頂点の 1 つを nn[i] に，
 * i と nn[i] との距離を dist[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
 *
@@ -1000,7 +1000,7 @@ void nearest_neighbor(const WGraph& g, const vi& vs, vi& nn, vl& dist) {
 
 //【k-近傍探索】O(|V| + k |E| log|V|)
 /*
-* コスト付き無向グラフ g とその頂点集合 vs について，
+* 重み付き無向グラフ g とその頂点集合 vs について，
 * 頂点 i と近い方から k 個の vs の頂点を knn[i] に，
 * i と knn[i] との距離を dist[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
 *

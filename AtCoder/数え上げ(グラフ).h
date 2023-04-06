@@ -65,9 +65,9 @@ vm count_shortest_path(const Graph& g, int st, vi* dist = nullptr) {
 }
 
 
-//【最短経路の数え上げ（コスト付きグラフ）】O(|V| + |E| log|V|)
+//【最短経路の数え上げ（重み付きグラフ）】O(|V| + |E| log|V|)
 /*
-* 正のコスト付き有向グラフ g に対し，始点 st から各頂点 i への最短経路数を格納したリストを返す．
+* 正の重み付き有向グラフ g に対し，始点 st から各頂点 i への最短経路数を格納したリストを返す．
 * また必要ならそのときの最短距離（到達不能なら INFL）を dist[i] に格納する．
 */
 vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {

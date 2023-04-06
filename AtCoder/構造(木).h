@@ -158,13 +158,13 @@ Rooted_tree read_rooted_tree(int n, bool one_indexed = true, bool shuffled = fal
 }
 
 
-//【コスト付き根付き木】
+//【重み付き根付き木】
 /*
 * Weighted_rooted_tree() : O(1)
 *	空で初期化する．
 * 
 * Weighted_rooted_tree(WGraph g, int r) : O(n)
-*	コスト付き木 g を r を根とみなしたコスト付き根付き木として受け取る．
+*	重み付き木 g を r を根とみなした重み付き根付き木として受け取る．
 */
 struct Weighted_rooted_tree {
 	struct Node {
@@ -188,7 +188,7 @@ struct Weighted_rooted_tree {
 	int r; // 根
 	vector<Node> v; // 頂点
 
-	// コンストラクタ（初期化なし，コスト付き木と根で初期化）
+	// コンストラクタ（初期化なし，重み付き木と根で初期化）
 	Weighted_rooted_tree() : n(0), r(-1) {}
 	Weighted_rooted_tree(const WGraph& g, int r_) : n(sz(g)), v(n), r(r_) {
 		// 再帰用の関数
@@ -388,9 +388,9 @@ Graph create_random_tree(int n) {
 }
 
 
-//【コスト付き木のランダム生成】O(n^2)
+//【重み付き木のランダム生成】O(n^2)
 /*
-* n 頂点でコストが [c_min..c_max] 内の一様乱数で与えられるランダムなコスト付き木を返す．
+* n 頂点でコストが [c_min..c_max] 内の一様乱数で与えられるランダムな重み付き木を返す．
 */
 WGraph create_random_Wtree(int n, ll c_min, ll c_max) {
 	WGraph g(n);

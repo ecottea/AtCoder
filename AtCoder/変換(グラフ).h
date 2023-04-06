@@ -101,9 +101,9 @@ Graph reverse_graph(const Graph& g) {
 }
 
 
-//【逆グラフ（コスト付き）】O(|V| + |E|)
+//【逆グラフ（重み付き）】O(|V| + |E|)
 /*
-* コスト付き有向グラフ g の辺の向きを逆にしたグラフを返す．
+* 重み付き有向グラフ g の辺の向きを逆にしたグラフを返す．
 */
 WGraph reverse_graph(const WGraph& g) {
 	int n = sz(g);
@@ -317,9 +317,9 @@ Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr)
 * 頂点 V = s[0..n) ∪ t[0..n) をもち，O(n^2) 個の有向辺
 *		s[i] → t[j] : コスト 0  (i <= j)
 *		s[i] → t[j] : コスト c  (i > j)
-* をもつコスト付き有向二部グラフ g を考える．
+* をもつ重み付き有向二部グラフ g を考える．
 *
-* 同じく V を頂点にもつコスト付き有向グラフ g' を，O(n) 個の有向辺
+* 同じく V を頂点にもつ重み付き有向グラフ g' を，O(n) 個の有向辺
 *		s[i] → s[i + 1] : コスト 0 (i < n - 1)
 *		t[i] → t[i + 1] : コスト 0 (i < n - 1)
 *		s[n - 1] → s[0] : コスト c

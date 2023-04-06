@@ -445,7 +445,7 @@ struct Generalized_min_cost_flow {
 
 //【最大流問題】O(maxflow (|V| + |E|))
 /*
-* コスト付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
+* 重み付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */
 ll ford_fullkerson(const WGraph& g, int s, int t) {
 	// 参考：https://algo-logic.info/ford-fullkerson/
