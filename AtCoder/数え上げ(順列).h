@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
-#include "和(数論変換).h"
+#include "数論変換.h"
 // ■■■■■ 順列に関する数え上げ ■■■■■
 
 
@@ -43,10 +43,10 @@ void montmort_number(int n, vm& mon) {
 }
 
 
-//【二重撹乱順列の数（p[i] != i, p[i] != i+1）】
+//【二重撹乱順列の数（p[i] ≠ i, p[i] ≠ i+1）】
 /*
 * 順列 p[0..n) で，任意の i∈[0..n) について
-*		p[i] != i かつ p[i] != i+1 (i < n - 1)
+*		p[i] ≠ i かつ p[i] ≠ i+1 (i < n - 1)
 * を満たすものの個数は
 *		Σk=[0..n] (-1)^k bin(2n-k, k) (n-k)!
 * である．
@@ -62,10 +62,10 @@ void montmort_number(int n, vm& mon) {
 */
 
 
-//【メナージュ数（p[i] != i, p[i] != i+1 mod n）】
+//【メナージュ数（p[i] ≠ i, p[i] ≠ i+1 mod n）】
 /*
 * 順列 p[0..n) で，任意の i∈[0..n) について
-*		p[i] != i かつ p[i] != i+1 (mod n)
+*		p[i] ≠ i かつ p[i] ≠ i+1 (mod n)
 * を満たすものの個数は
 *		Σk=[0..n] (-1)^k 2n/(2n-k) bin(2n-k, k) (n-k)!
 * である．
@@ -460,7 +460,7 @@ void count_adjacent_sequence(const vi& cnt, vm& res, Factorial_mint& fm) {
 }
 
 
-//【順列の数え上げ（同色隣接個数ごと，mod998244353）】O(n (log n)^2)
+//【順列の数え上げ（同色隣接個数ごと，mod 998244353）】O(n (log n)^2)
 /*
 * [0..n) の中で色 i の与えられた数が cnt[i] 個含まれている（n = Σcnt）とき，
 * 同色の隣接が j 箇所あるような [0..n) の順列の個数を res[j] に格納する．

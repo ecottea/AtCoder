@@ -17,6 +17,11 @@ T state_PIE(const vector<T>& c) {
 	// 求める値は以下の式で計算できる：
 	//		Σset⊂[0..n) (-1)^|set| c[set]
 
+	//【備考】
+	// 集合関数 f(set) の上からの累積和
+	//		g(set) := Σsup⊃set f(sup)
+	// を元にして f(φ) を求めているとも解釈できる（g = c）
+
 	int n = msb(sz(c));
 
 	T res = 0;
@@ -36,24 +41,47 @@ T state_PIE(const vector<T>& c) {
 * 
 * 添字集合 set に含まれる添字をもつ集合のみに属する要素の個数を c'[set] とおくと，
 * c' は c に上位集合メビウス変換を施すことで得られる．
+* 
+* 集合関数 f(set) の上からの累積和
+*		g(set) := Σsup⊃set f(sup)
+* を元にして f(set) を求めているとも解釈できる（f = c', g = c）
 */
 
 
-//【状態系包除原理（個数ごと）】O(n)
+//【状態系包除原理（大きさごと）】O(n)
 /*
 * 集合族 S[0..n) について，添字集合が set で表されるような集合族の交わりの大きさ
 * #(∩i∈set S[i]) が c[set] であるとする．
 *
 * もしちょうど k 個の集合の交わりの大きさの和
-*	f(k) := Σ|set|=k c[set]
+*	C(k) := Σ|set|=k c[set]
 * が効率よく求まるなら，どの集合にも属さない要素の個数は
 *	Σset⊂[0..n) (-1)^|set| c[set]
 *	= Σk∈[0..n] Σ|set|=k (-1)^|set| c[set]
 *	= Σk∈[0..n] (-1)^k Σ|set|=k c[set]
-*	= Σk∈[0..n] (-1)^k f(k)
+*	= Σk∈[0..n] (-1)^k C(k)
 * として求められる．
 *
+* 集合関数 f(set) の上からの累積和
+*		g(set) := Σsup⊃set f(sup)
+* について，各 k についての
+*		Σ|set|=k g(set)
+* を元にして f(φ) を求めているとも解釈できる（g = c）
+*
 * verify : https://atcoder.jp/contests/abl/tasks/abl_f
+*/
+
+
+//【状態系包除原理（大きさごと，一括）】
+/*
+* 集合関数 f(set) の上からの累積和を
+*		g(set) := Σsup⊃set f(sup)
+* とする．
+*		F(k) := Σ|set|=k f(set)
+*		G(k) := Σ|set|=k g(set)
+* と定めるとき，
+*		F(k) = Σi∈[k..n] (-1)^(i-k) bin(i,k) G(i)
+* が成り立つ．
 */
 
 
@@ -68,6 +96,15 @@ T state_PIE(const vector<T>& c) {
 */
 mint counting_PIE(const vm& c, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc172/tasks/abc172_e
+
+	//【備考】
+	// 集合関数 f(set) が関数値が引数の大きさのみに依存するという性質
+	//		f(set) = F(|set|)
+	// を持っている場合，その下からの累積和
+	//		g(set) := Σsub⊂set f(sub)
+	// も同じ性質
+	//		g(set) = G(|set|)
+	// をもつ．G を元にして f(φ) を求めているとも解釈できる（G = c）
 
 	int n = sz(c) - 1;
 
@@ -124,8 +161,6 @@ vm counting_PIE_all(const vm& c, const Factorial_mint& fm) {
 * 要素の総数を格納したリストを返す．
 * 
 * 制約：fm は n! まで計算可能であること
-*
-* 利用：【階乗など（法が大きな素数）】
 */
 vm counting_PIE_all_fast(vm c, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
@@ -179,51 +214,6 @@ vm counting_PIE_all_fast(vm c, const Factorial_mint& fm) {
 * であるから先の漸化式を得る．
 * 
 * verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_i
-*/
-
-
-//【メビウス変換・包除原理・除原理の関係？】
-/*
-* 約数からの寄与を取り除きたい場合を例にする．
-* 
-* 元の式：A[n] = Σd|n a[d]
-*	A[1] = a[1]
-*	A[2] = a[1] + a[2]
-*	A[3] = a[1]        + a[3]
-*	A[4] = a[1] + a[2]        + a[4]
-*	A[5] = a[1]                      + a[5]
-*	A[6] = a[1] + a[2] + a[3]               + a[6]
-*	A[7] = a[1]                                    + a[7]
-*	A[8] = a[1] + a[2]        + a[4]                      + a[8]
-*	A[9] = a[1]        + a[3]                                    + a[9]
-*	A[10]= a[1] + a[2]               + a[5]                             + a[10]
-*	A[11]= a[1]                                                                + a[11]
-*	A[12]= a[1] + a[2] + a[3] + a[4]        + a[6]                                    + a[12]
-*
-* A[1..12] から a[1..12] を一括で求めたい → 約数メビウス変換
-*	a[1] =  A[1]
-*	a[2] = -A[1] + A[2]
-*	a[3] = -A[1]        + A[3]
-*	a[4] =       - A[2]        + A[4]
-*	a[5] = -A[1]                      + A[5]
-*	a[6] =  A[1] - A[2] - A[3]               + A[6]
-*	a[7] = -A[1]                                    + A[7]
-*	a[8] =                     - A[4]                      + A[8]
-*	a[9] =              - A[3]                                    + A[9]
-*	a[10]=  A[1] - A[2]               - A[5]                             + A[10]
-*	a[11]= -A[1]                                                                + A[11]
-*	a[12]=         A[2]        - A[4]        - A[6]                                    + A[12]
-*
-* A[1,2,3,4,6,12] から a[6] のみをピンポイントで求めたい → 約数系包除
-*	a[12]=         A[2]        - A[4]        - A[6]                                    + A[12]
-*
-* A[1,2,3,4,6,12] から a[1,2,3,4,6,12] を逐次的に求めたい → 除原理
-*	a[1] =  A[1]
-*	a[2] = -a[1] + A[2]
-*	a[3] = -a[1]        + A[3]
-*	a[4] = -a[1] - a[2]        + A[4]
-*	a[6] = -a[1] - a[2] - a[3]               + A[6]
-*	a[12]= -a[1] - a[2] - a[3] - a[4]        - a[6]                                    + A[12]
 */
 
 

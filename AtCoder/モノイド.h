@@ -94,16 +94,16 @@ S012 e012() { return ~0; }
 
 
 //【GCD 可換モノイド】
-/* verify : https://atcoder.jp/contests/abc125/tasks/abc125_c */
+/* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4 */
 using S015 = ll;
-S015 op015(S015 a, S015 b) { return gcd(a, b); }
+S015 op015(S015 a, S015 b) { return gcd(abs(a), abs(b)); }
 S015 e015() { return 0; }
 #define GCD_monoid S015, op015, e015
 
 
 //【LCM 可換モノイド】
 using S016 = ll;
-S016 op016(S016 a, S016 b) { return a / gcd(a, b) * b; }
+S016 op016(S016 a, S016 b) { return a / gcd(abs(a), abs(b)) * b; }
 S016 e016() { return 1; }
 #define LCM_monoid S016, op016, e016
 
@@ -506,6 +506,80 @@ S030 op030(S030 x, S030 y) {
 S030 e030() { return S030(); }
 #define XorBaseSum_monoid S030, op030, e030
 
+
+//【数字列の値 モノイド】
+/*
+* S ∋ f = {fs, fd} : f に対応する数字列についての以下の値を表す：
+*	fs : 値
+*	fd : 10^(桁数)
+* f op g : f, g に対応する数字列をこの順に繋げた数字列を表す．
+*/
+// verify : https://atcoder.jp/contests/abc298/tasks/abc298_d
+using S032 = pair<mint, mint>;
+S032 op032(S032 f, S032 g) {
+	//【例】
+	// f = "23", g = "45" のとき，
+	//	(fs, fd) = (23, 10^2)
+	//	(gs, gd) = (45, 10^2)
+	// であり，これらを連結した h = "2345" については
+	//	hs = 2345 = 23 * 10^2 + 45 = fs gd + gs
+	//	hd = 10^4 = 10^2 * 10^2 = fd gd
+	// となる．
+
+	auto [fs, fd] = f;
+	auto [gs, gd] = g;
+
+	auto hs = fs * gd + gs;
+	auto hd = fd * gd;
+
+	return { hs, hd };
+}
+S032 e032() { return { 0, 1 }; }
+#define NumStr_monoid S032, op032, e032
+
+
+//【数字部分列の和 モノイド】
+/*
+* S ∋ f = {fs, fd, fc} : f に対応する数字列についての以下の値を表す：
+*	fs : 全ての数字部分列を 10 進数とみなしたときの和
+*	fd : 全ての数字部分列の 10^(桁数) の和
+*	fc : 数字部分列の総数
+* f op g : f, g に対応する数字列をこの順に繋げた数字列を表す．
+*/
+// verify : https://yukicoder.me/problems/no/2265
+using S031 = tuple<mint, mint, mint>;
+S031 op031(S031 f, S031 g) {
+	//【例】
+	// f = "2", g = "34" のとき，
+	//	(fs, fd, fc) = (0 + 2, 1 + 10, 1 + 1)
+	//	(gs, gd, gc) = (0 + 3 + 4 + 34, 1 + 10 + 10 + 100, 1 + 1 + 1 + 1)
+	// であり，これらを連結した h = "234" については
+	//	hs = 0 + 2 + 3 + 4 + 23 + 24 + 34 + 234
+	//	   = 0 + 2 + 3 + 4 + 20 + 3 + 20 + 4 + 34 + 200 + 34
+	//	   = (0 + 2)(1 + 10 + 10 + 100) + (1 + 1)(0 + 3 + 4 + 34)
+	//	   = fs * gd + fc * gs
+	//	hd = 1 + 10 + 10 + 100 + 10 + 100 + 100 + 1000
+	//	   = (1 + 10)(1 + 10 + 10 + 100)
+	//	   = fd * gd
+	//	hc = 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+	//	   = (1 + 1)(1 + 1 + 1 + 1)
+	//	   = fc * gc
+	// となる．
+
+	auto [fs, fd, fc] = f;
+	auto [gs, gd, gc] = g;
+
+	auto hs = fs * gd + fc * gs;
+	auto hd = fd * gd;
+	auto hc = fc * gc;
+
+	return { hs, hd, hc };
+}
+S031 e031() { return { 0, 1, 1 }; }
+#define NumSubseqSum_monoid S031, op031, e031
+
+
+// ======================================================
 
 //【モノイド】
 /*

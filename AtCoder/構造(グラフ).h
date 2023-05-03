@@ -39,6 +39,33 @@ Graph read_Graph(int n, int m = -1, bool undirected = true, bool one_indexed = t
 }
 
 
+//【グラフの出力】O(|V| + |E|)
+/*
+* グラフを【グラフの入力】で受け取る入力と同じ形式で出力する．
+*
+* undirected : 無向グラフか（省略すれば true）
+* one_indexed : 入力が 1-indexed か（省略すれば true）
+*/
+void write_Graph(const Graph& g, bool undirected = true, bool one_indexed = true) {
+	// verify : https://www.codechef.com/problems/B_BRANCH
+
+	int n = sz(g);
+
+	// m : 辺の数
+	int m = 0;
+	rep(s, n) m += sz(g[s]);
+	if (undirected) m /= 2;
+
+	cout << n << " " << m << endl;
+	rep(s, n) repe(t, g[s]) {
+		if (undirected && s > t) continue;
+
+		int u = s + one_indexed, v = t + one_indexed;
+		cout << u << " " << v << " " << endl;
+	}
+}
+
+
 //【重み付きグラフの辺】
 /*
 * to : 行き先の頂点番号

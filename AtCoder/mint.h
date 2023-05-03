@@ -3,8 +3,8 @@
 // ■■■■■ 自作の簡易 mint ■■■■■
 
 
-//【有限体 F_p 上の計算（32 bit）】
-/*
+//【有限体 F_p 上の計算（32 bit）】（遅い）
+#ifndef _MSC_VER
 template <ll MOD> struct static_modint {
 	ll v;
 
@@ -106,10 +106,10 @@ template <ll MOD> struct static_modint {
 	// 値の確認
 	int val() const { return int(v); }
 };
-using mint = static_modint<1000000007>;
-//using mint = static_modint<998244353>;
+//using mint = static_modint<1000000007>;
+using mint = static_modint<998244353>;
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
-*/
+#endif
 
 
 //【有限体 F_p 上の計算（64 bit）】
@@ -210,142 +210,6 @@ struct mll {
 
 	// 値の確認
 	ll val() const { return (ll)safe_mod(v); }
-};
-
-
-//【有理数（mint）】
-/*
-* Frac_mint() : O(1)
-*	0 で初期化する．
-*
-* Frac_mint(T num) : O(1)
-*	num で初期化する．
-*
-* Frac_mint(T num, T dnm) : O(1)
-*	num / dnm で初期化する．
-*
-* a + b, a - b, a * b, a / b : O(1)
-*	加減乗除を行う．一方が mint でも構わない．複合代入演算子も使用可．
-*
-* Frac_mint inv() : O(1)
-*	逆数を返す．
-* 
-* Frac_mint pow(ll n) : O(log n)
-*	自身の n 乗を返す．
-*/
-struct Frac_mint {
-	// verify : https://atcoder.jp/contests/agc060/tasks/agc060_c
-
-	// 分子，分母
-	mint num, dnm;
-
-	// コンストラクタ
-	Frac_mint() : num(0), dnm(1) {}
-	Frac_mint(mint num) : num(num), dnm(1) {}
-	Frac_mint(mint num, mint dnm) : num(num), dnm(dnm) {}
-	Frac_mint(int num) : num(num), dnm(1) {}
-	Frac_mint(int num, int dnm) : num(num), dnm(dnm) {}
-
-	// 代入
-	Frac_mint(const Frac_mint& b) = default;
-	Frac_mint& operator=(const Frac_mint& b) = default;
-
-	// キャスト
-	operator mint() const { return num * dnm.inv(); }
-
-	// 比較
-	bool operator==(const Frac_mint& b) const { return num * b.dnm == b.num * dnm; }
-	bool operator!=(const Frac_mint& b) const { return !(*this == b); }
-
-	// 整数との比較
-	bool operator==(mint b) const { return num == b * dnm; }
-	bool operator!=(mint b) const { return !(*this == b); }
-	bool operator==(int b) const { return num == b * dnm; }
-	bool operator!=(int b) const { return !(*this == b); }
-	friend bool operator==(mint b, const Frac_mint& a) { return a.num == b * a.dnm; }
-	friend bool operator!=(mint b, const Frac_mint& a) { return !(a == b); }
-	friend bool operator==(int b, const Frac_mint& a) { return a.num == b * a.dnm; }
-	friend bool operator!=(int b, const Frac_mint& a) { return !(a == b); }
-
-	// 四則演算
-	Frac_mint& operator+=(const Frac_mint& b) {
-		num = num * b.dnm + b.num * dnm; dnm *= b.dnm;
-		return *this;
-	}
-	Frac_mint& operator-=(const Frac_mint& b) {
-		num = num * b.dnm - b.num * dnm; dnm *= b.dnm;
-		return *this;
-	}
-	Frac_mint& operator*=(const Frac_mint& b) { num *= b.num; dnm *= b.dnm; return *this; }
-	Frac_mint& operator/=(const Frac_mint& b) { num *= b.dnm; dnm *= b.num; return *this; }
-	Frac_mint operator+(const Frac_mint& b) const { Frac_mint a = *this; return a += b; }
-	Frac_mint operator-(const Frac_mint& b) const { Frac_mint a = *this; return a -= b; }
-	Frac_mint operator*(const Frac_mint& b) const { Frac_mint a = *this; return a *= b; }
-	Frac_mint operator/(const Frac_mint& b) const { Frac_mint a = *this; return a /= b; }
-	Frac_mint operator-() const { return Frac_mint(*this) *= Frac_mint(-1); }
-	Frac_mint inv() const { return Frac_mint(dnm, num); }
-
-	// 整数との四則演算
-	Frac_mint& operator+=(mint c) { num += dnm * c; return *this; }
-	Frac_mint& operator-=(mint c) { num -= dnm * c; return *this; }
-	Frac_mint& operator*=(mint c) { num *= c; return *this; }
-	Frac_mint& operator/=(mint c) { dnm *= c; return *this; }
-	Frac_mint operator+(mint c) const { Frac_mint a = *this; return a += c; }
-	Frac_mint operator-(mint c) const { Frac_mint a = *this; return a -= c; }
-	Frac_mint operator*(mint c) const { Frac_mint a = *this; return a *= c; }
-	Frac_mint operator/(mint c) const { Frac_mint a = *this; return a /= c; }
-	friend Frac_mint operator+(mint c, const Frac_mint& a) { return a + c; }
-	friend Frac_mint operator-(mint c, const Frac_mint& a) { return Frac_mint(c) - a; }
-	friend Frac_mint operator*(mint c, const Frac_mint& a) { return a * c; }
-	friend Frac_mint operator/(mint c, const Frac_mint& a) { return Frac_mint(c) / a; }
-	Frac_mint& operator+=(int c) { num += dnm * c; return *this; }
-	Frac_mint& operator-=(int c) { num -= dnm * c; return *this; }
-	Frac_mint& operator*=(int c) { num *= c; return *this; }
-	Frac_mint& operator/=(int c) { dnm *= c; return *this; }
-	Frac_mint operator+(int c) const { Frac_mint a = *this; return a += c; }
-	Frac_mint operator-(int c) const { Frac_mint a = *this; return a -= c; }
-	Frac_mint operator*(int c) const { Frac_mint a = *this; return a *= c; }
-	Frac_mint operator/(int c) const { Frac_mint a = *this; return a /= c; }
-	friend Frac_mint operator+(int c, const Frac_mint& a) { return a + c; }
-	friend Frac_mint operator-(int c, const Frac_mint& a) { return Frac_mint(c) - a; }
-	friend Frac_mint operator*(int c, const Frac_mint& a) { return a * c; }
-	friend Frac_mint operator/(int c, const Frac_mint& a) { return Frac_mint(c) / a; }
-
-	// 累乗
-	Frac_mint pow(ll d) const {
-		// verify : https://atcoder.jp/contests/abc295/tasks/abc295_e
-
-		Frac_mint res(1), pow2 = *this;
-		while (d > 0) {
-			if (d & 1) res *= pow2;
-			pow2 *= pow2;
-			d /= 2;
-		}
-		return res;
-	}
-
-	// 約分を行う．
-	void reduction() {
-		int x = num.val(), y = dnm.val();
-		auto g = gcd(x, y);
-		num = x / g; dnm = y / g;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Frac_mint a) {
-		if ((int)(a.dnm.val()) >= (int)(mint::mod()) / 2) a *= Frac_mint(-1, -1);
-		if ((int)(a.num.val()) < (int)(mint::mod()) / 2) {
-			a.reduction();
-			os << a.num << '/' << a.dnm;
-		}
-		else {
-			a *= -1;
-			a.reduction();
-			os << '-' << a.num << '/' << a.dnm;
-		}
-		return os;
-	}
-#endif
 };
 
 
@@ -450,33 +314,5 @@ struct QF {
 		return res;
 	}
 };
-
-
-//【mint → 有理数】（実験用）
-/*
-* mint の値をそれっぽい有理数に変換する．
-*/
-void mint_to_frac() {
-	unordered_map<int, pii> nd;
-
-	repi(j, 1, 1024) {
-		mint j_inv = mint(j).inv();
-
-		repi(i, 1, 1024) {
-			int v = (i * j_inv).val();
-
-			if (!nd.count(v)) nd[v] = { i, j };
-		}
-
-		repir(i, -1, -1024) {
-			int v = (i * j_inv).val();
-
-			if (!nd.count(v)) nd[v] = { i, j };
-		}
-	}
-
-	dump(nd[748683265]);
-	dump(nd[457528662]);
-}
 
 

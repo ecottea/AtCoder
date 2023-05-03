@@ -6,7 +6,7 @@
 
 //【分割の積スコアの和】O(3^n)
 /*
-* [0..n) の分割 P = 凵_k S_k に対するスコアが Π_k a[S_k] で与えられるとする．
+* [0..n) の分割 π = 凵k S_k に対するスコアが Πk a[S_k] で与えられるとする．
 * set⊂[0..n) の全ての分割のスコアの和を格納したリストを返す．
 *
 * 利用：【下位集合の全探索】
@@ -29,7 +29,7 @@ vm set_partition_mul_score_sum(const vm& a) {
 		// set1 : set から特定の要素 x を取り除いた集合
 		int set1 = (set - 1) & set;
 
-		// set の分割において x を含む部分集合 set\sub を全探索する．
+		// set の分割において x を含む部分集合 set-sub を全探索する．
 		repbs(sub, set1) dp[set] += dp[sub] * a[set - sub];
 	}
 

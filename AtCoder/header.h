@@ -37,6 +37,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define lbpos(a, x) (int)distance((a).begin(), std::lower_bound(all(a), x))
 #define ubpos(a, x) (int)distance((a).begin(), std::upper_bound(all(a), x))
 #define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
+#define YES(b) {cout << ((b) ? "YES\n" : "NO\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -92,8 +93,10 @@ using namespace atcoder;
 using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
-istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
+namespace atcoder {
+	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
+}
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 #endif
 
@@ -176,7 +179,7 @@ AtCoder → プロパティ → 構成プロパティ → C/C++ → 詳細設定 → 指定の警告を無効
 // マルチテストケース 用の雛形
 /* ----------------------------------------------------------------
 
-void solve() {
+void Main() {
 	
 }
 
@@ -190,7 +193,7 @@ int main() {
 
 	while (t--) {
 		dump("------------------------------");
-		solve();
+		Main();
 	}
 }
 
@@ -251,5 +254,48 @@ void bug_find() {
 	exit(0);
 #endif
 }
+
+--------------------------------------------------------------- */
+
+
+// インタラクティブ問題のデバッグ用の雛形
+/* -----------------------------------------------------------------
+
+struct Opponent {
+	bool sub_mode;
+	mt19937_64 mt;
+	uniform_int_distribution<ll> rnd;
+
+	// 必要なデータ構造
+
+	// 初期化
+	Opponent(bool sub_mode = true) : sub_mode(sub_mode) {
+		mt.seed((int)time(NULL));
+		rnd = uniform_int_distribution<ll>(0LL, 1LL << 62);
+
+	}
+
+	// ジャッジプログラムからの入力を受け取る．
+	void in(int& x) {
+		// 提出用
+		if (sub_mode) {
+			cin >> x;
+		}
+		// デバッグ用
+		else {
+			
+		}
+	}
+
+	// ジャッジプログラムに出力を渡す．
+	void out(int x) {
+		cout << x << endl;
+
+		// デバッグ用
+		if (!sub_mode) {
+				
+		}
+	}
+};
 
 --------------------------------------------------------------- */

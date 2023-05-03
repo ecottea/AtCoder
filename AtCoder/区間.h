@@ -3,21 +3,21 @@
 // ■■■■■ 区間 ■■■■■
 
 
-//【実区間の重なり判定】
+//【連続区間の重なり判定】
 /*
-* 実閉区間 [l1, r1] と [l2, r2] が共通部分をもつ ⇔ max(l1, l2) <= min(r1, r2)
+* 連続閉区間 [l1, r1] と [l2, r2] が共通部分をもつ ⇔ max(l1, l2) ≦ min(r1, r2)
 * verify : https://codeforces.com/contest/1680/problem/A
 * 
-* 実半開区間 [l1, r1) と [l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
+* 連続半開区間 [l1, r1) と [l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
 *
-* 実開区間 (l1, r1) と (l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
+* 連続開区間 (l1, r1) と (l2, r2) が共通部分をもつ ⇔ max(l1, l2) < min(r1, r2)
 * verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
 */
 
 
-//【実区間の重なりの長さ】
+//【連続区間の重なりの長さ】
 /*
-* 実閉区間 [l1, r1] と [l2, r2] の共通部分の長さは以下の式で与えられる：
+* 連続閉区間 [l1, r1] と [l2, r2] の共通部分の長さは以下の式で与えられる：
 *	max(min(r1, r2) - max(l1, l2), 0)
 *
 * verify : https://atcoder.jp/contests/abc261/tasks/abc261_a
@@ -26,7 +26,7 @@
 
 //【区間端の交換】
 /*
-* a <= b <= c <= d であるとき以下が成り立つ：
+* a ≦ b ≦ c ≦ d であるとき以下が成り立つ：
 *	|c - a| + |d - b| = |d - a| + |c - b|
 * 
 * verify : https://atcoder.jp/contests/arc120/tasks/arc120_d

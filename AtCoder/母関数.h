@@ -42,7 +42,7 @@
 * 商左シフト	: a[n+1]/(n+1) ⇔ A(z)/z（ただし a[0]=0）
 * 二項累積和	: Σi∈[0..n] bin(n,i) a[i] ⇔ exp(z) A(z)
 * 二項差分	: Σi∈[0..n] (-1)^(n-i) bin(n,i) a[i] ⇔ A(z) / exp(z)
-* 分割累積和	: Σp∈([1..n]の分割) Πset∈p a[|set|] ⇔ exp(A(z))（ただし a[0]=0）
+* 分割累積和	: Σπ∈([1..n]の分割) Πset∈π a[|set|] ⇔ exp(A(z))（ただし a[0]=0）
 *
 * 畳込みの形に二項係数が掛かっていて邪魔になったときに使える．
 * 特にラベル付きの対象の数え上げで有用である．
@@ -61,7 +61,7 @@
 
 //【二項係数の畳込み】
 /*
-* Σk bin(a, c+k) bin(b, d-k) = bin(a+b, c+d)  (k∈[max(-c, d-b)..min(a-c, d)])
+* Σk bin(a, c+k) bin(b, d-k) = bin(a+b, c+d)    (k∈[max(-c, d-b)..min(a-c, d)])
 * Σk bin(a, c+k) bin(b, d+k) = bin(a+b, b+c-d)  (k∈[max(-c, -d)..min(a-c, b-d)])
 * 
 * 証明：上式は両辺とも a+b 個から c+d 個選ぶ場合の数に等しいことから従う．
@@ -121,4 +121,20 @@
 * verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
 */
 
+
+//【2×2 変数行列の累乗】
+/*
+* M = [x, y; z, w] の累乗について，以下の等式が成り立つ：
+*	M^n = Σ_{a+b+c+d=n} C(a,b,c,d) x^a y^b z^c w^d
+*		C(a,b,c,d)[0][0] = Boole[b=c] bin(a+b,a) bin(d+c-1,d)
+*		C(a,b,c,d)[0][1] = Boole[b=c+1] bin(a+b-1,a) bin(d+c,d)
+*		C(a,b,c,d)[1][0] = Boole[b=c-1] bin(a+b,a) bin(d+c-1,d)
+*		C(a,b,c,d)[1][1] = Boole[b=c] bin(a+b-1,a) bin(d+c,d)
+* 
+* 証明：頂点 {0,1}, 辺 0→0, 0→1, 1→0, 1→1 をもつグラフ G を考える．
+*	C(a,b,c,d)[i][j] は各辺を a,b,c,d 回通るような i→j ウォークの個数であり，
+*	各移動辺の間に 0 本以上の停滞辺を挿入する方法を重複組合せで数え上げることで求まる．
+* 
+* verify : https://atcoder.jp/contests/agc051/tasks/agc051_d
+*/
 

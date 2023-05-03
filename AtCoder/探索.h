@@ -38,7 +38,7 @@ T meguru_search(T ok, T ng, const function<bool(T)>& okQ) {
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 */
 template <class T>
-T binary_search(T ok, T ng, const function<bool(T)>& okQ) {
+T binary_search(T ok, T ng, const function<bool(T)>& okQ, double EPS = 1e-12) {
 	// verify : https://atcoder.jp/contests/abc189/tasks/abc189_f
 
 	// 誤差 EPS で境界が決定するまで
@@ -587,7 +587,7 @@ T hill_climbing(T st, const function<vector<T>(T)>& neib, const function<ll(T)>&
 * の答えは，
 *	(判定問題) 昇順で k 番目（1-indexed）の hogehoge な要素は x 以下か
 * を導入すると，
-*	(最適化問題) 先の判定問題の答えを真とする最小の x を求めよ
+*	(最適化問題) 先の判定問題の答えを yes とする最小の x を求めよ
 * と等価となる．さらに (判定問題) は
 *	(判定問題 2) x 以下の hogehoge な要素は k 個以上か
 * と等価であるから，hogehoge な要素を x 以下か否かで 0-1 変数化することができる．

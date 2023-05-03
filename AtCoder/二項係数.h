@@ -6,7 +6,7 @@
 //【階乗など（法が大きな素数）】
 /*
 * Factorial_mint(int n_max) : O(n_max)
-*	n_max! まで計算可能として初期化する．
+*	n_max まで計算可能として初期化する．
 *
 * mint fact(int n) : O(1)
 *	n! を返す．
@@ -27,8 +27,9 @@
 *	多項係数 nC[rs] を返す．（n = Σrs）
 */
 class Factorial_mint {
-	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_max;
+	
+	// 階乗と階乗の逆数の値を保持するテーブル
 	vm fac, fac_inv;
 
 public:
@@ -609,9 +610,30 @@ mint bin_mint(ll n, ll r) {
 }
 
 
+//【二項係数のくくり出し】
+/*
+* bin(n, r) = (n/r) bin(n-1, r-1)
+*/
+
+
+//【Lucas の定理】
+/*
+* p を素数とし，n, r が p 進表記で
+*	n = [n[0], n[1], ..., n[k-1]]_(p)
+*	r = [r[0], r[1], ..., r[k-1]]_(p)
+* と表されるとき，以下の合同式が成り立つ：
+*	bin(n, r) ≡ Πi∈[0..k) bin(n[i], r[i])  (mod p)
+*
+* 特に p = 2 のときは以下の合同式が成り立つ：
+*	bin(n, r) ≡ boole[(n & r) == r]  (mod 2)
+*/
+
+
 //【二項係数（一括，n が固定，r が小さい，法が大きな素数）】O(r)
 /*
 * 各 i∈[0..r] について bin(n, i) を格納したリストを返す．
+* 
+* 制約：r < mint::mod
 */
 vm binomial_fixed_n(ll n, int r) {
 	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
@@ -723,6 +745,109 @@ vm binomial_fixed_r(ll n1, ll n2, int r) {
 
 	// bin(i, r) = iPr / r!
 	rep(i, dn) bin[i] = perm[i] * fac_inv;
+
+	return bin;
+}
+
+
+//【二項係数（一括，n が固定，法が小さな素数）】O((r2 - r1) + p^2 + log n) (?)
+/*
+* 各 i∈[r1..r2) について bin(n, i) mod p を順に格納したリストを返す．
+*
+* 制約：p は素数
+*/
+vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
+	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
+
+	r2--; // 閉区間 [r1..r2] にする．
+	vi bin;
+
+	vvi bin_sml(p, vi(p)); // bin_sml[i][j] : binomial(i, j) mod p
+	bin_sml[0][0] = 1;
+	repi(i, 1, p - 1) {
+		repi(j, 0, i) {
+			if (j > 0) bin_sml[i][j] += bin_sml[i - 1][j - 1];
+			if (j < i) bin_sml[i][j] += bin_sml[i - 1][j];
+			bin_sml[i][j] %= p;
+		}
+	}
+
+	// dn, dr1, dr2 : n, r1, r2 の p 進表示の桁の数（下位から順）
+	vi dn, dr1, dr2; ll n_ = n, r1_ = r1, r2_ = r2;
+	while (n_ > 0) {
+		dn.push_back((int)(n_ % p));
+		dr1.push_back((int)(r1_ % p));
+		dr2.push_back((int)(r2_ % p));
+		n_ /= p;
+		r1_ /= p;
+		r2_ /= p;
+	}
+	int k = sz(dn);
+
+	vvi dp(k + 1);
+	dp[0] = { 1 };
+
+	function<void(int, bool, bool, int)> rfunc = [&](int b, bool lf, bool rf, int mul) {
+		if (b == -1) {
+			bin.push_back(mul);
+			return;
+		}
+
+		if (lf) {
+			// 左右端ともに浮いていないとき
+			if (rf) {
+				if (!dp[b + 1].empty()) {
+					repe(v, dp[b + 1]) {
+						bin.push_back((v * mul) % p);
+					}
+				}
+				else {
+					rep(i, p) {
+						rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+					}
+
+					int m = (int)pow(p, b + 1);
+					dp[b + 1].resize(m);
+					rep(i, p) {
+						rep(j, m / p) {
+							dp[b + 1][i * m / p + j] = (dp[b][j] * bin_sml[dn[b]][i]) % p;
+						}
+					}
+				}
+			}
+			// 右端のみ浮いているとき
+			else {
+				repi(i, 0, dr2[b] - 1) {
+					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+				}
+				rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr2[b]]) % p);
+			}
+		}
+		else {
+			// 左端のみ浮いているとき
+			if (rf) {
+				rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dr1[b]]) % p);
+				repi(i, dr1[b] + 1, p - 1) {
+					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+				}
+			}
+			// 左右端ともに浮いているとき
+			else {
+				if (dr1[b] == dr2[b]) {
+					rfunc(b - 1, false, false, (mul * bin_sml[dn[b]][dr1[b]]) % p);
+				}
+				else {
+					rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dr1[b]]) % p);
+					repi(i, dr1[b] + 1, dr2[b] - 1) {
+						rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
+					}
+					rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr2[b]]) % p);
+				}
+			}
+		}
+	};
+
+	rfunc(k - 1, false, false, 1);
 
 	return bin;
 }
@@ -862,122 +987,6 @@ public:
 };
 
 
-//【二項係数（一括，n が固定，法が小さな素数）】O((r2 - r1) + p^2 + log n) (?)
-/*
-* 各 i∈[r1..r2) について bin(n, i) mod p を順に格納したリストを返す．
-* 
-* 制約：p は素数
-*/
-vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
-	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
-
-	r2--; // 閉区間 [r1..r2] にする．
-	vi bin;
-
-	vvi bin_sml(p, vi(p)); // bin_sml[i][j] : binomial(i, j) mod p
-	bin_sml[0][0] = 1;
-	repi(i, 1, p - 1) {
-		repi(j, 0, i) {
-			if (j > 0) bin_sml[i][j] += bin_sml[i - 1][j - 1];
-			if (j < i) bin_sml[i][j] += bin_sml[i - 1][j];
-			bin_sml[i][j] %= p;
-		}
-	}
-
-	// dn, dr1, dr2 : n, r1, r2 の p 進表示の桁の数（下位から順）
-	vi dn, dr1, dr2; ll n_ = n, r1_ = r1, r2_ = r2;
-	while (n_ > 0) {
-		dn.push_back((int)(n_ % p));
-		dr1.push_back((int)(r1_ % p));
-		dr2.push_back((int)(r2_ % p));
-		n_ /= p;
-		r1_ /= p;
-		r2_ /= p;
-	}
-	int k = sz(dn);
-
-	vvi dp(k + 1);
-	dp[0] = { 1 };
-
-	function<void(int, bool, bool, int)> rfunc = [&](int b, bool lf, bool rf, int mul) {
-		if (b == -1) {
-			bin.push_back(mul);
-			return;
-		}
-
-		if (lf) {
-			// 左右端ともに浮いていないとき
-			if (rf) {
-				if (!dp[b + 1].empty()) {
-					repe(v, dp[b + 1]) {
-						bin.push_back((v * mul) % p);
-					}
-				}
-				else {
-					rep(i, p) {
-						rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
-					}
-
-					int m = (int)pow(p, b + 1);
-					dp[b + 1].resize(m);
-					rep(i, p) {
-						rep(j, m / p) {
-							dp[b + 1][i * m / p + j] = (dp[b][j] * bin_sml[dn[b]][i]) % p;
-						}
-					}
-				}
-			}
-			// 右端のみ浮いているとき
-			else {
-				repi(i, 0, dr2[b] - 1) {
-					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
-				}
-				rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr2[b]]) % p);
-			}
-		}
-		else {
-			// 左端のみ浮いているとき
-			if (rf) {
-				rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dr1[b]]) % p);
-				repi(i, dr1[b] + 1, p - 1) {
-					rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
-				}
-			}
-			// 左右端ともに浮いているとき
-			else {
-				if (dr1[b] == dr2[b]) {
-					rfunc(b - 1, false, false, (mul * bin_sml[dn[b]][dr1[b]]) % p);
-				}
-				else {
-					rfunc(b - 1, false, true, (mul * bin_sml[dn[b]][dr1[b]]) % p);
-					repi(i, dr1[b] + 1, dr2[b] - 1) {
-						rfunc(b - 1, true, true, (mul * bin_sml[dn[b]][i]) % p);
-					}
-					rfunc(b - 1, true, false, (mul * bin_sml[dn[b]][dr2[b]]) % p);
-				}
-			}
-		}
-	};
-
-	rfunc(k - 1, false, false, 1);
-
-	return bin;
-}
-
-
-//【Lucas の定理】
-/*
-* p を素数とし，n, r が p 進表記で
-*	n = [n[0], n[1], ..., n[k-1]]_(p)
-*	r = [r[0], r[1], ..., r[k-1]]_(p)
-* と表されるとき，以下の合同式が成り立つ：
-*	bin(n, r) ≡ Πi=[0..k) bin(n[i], r[i])  (mod p)
-* 
-* 特に p = 2 のときは以下の合同式が成り立つ：
-*	bin(n, r) ≡ boole[(n & r) == r]  (mod 2)
-*/
-
-
 //【二項係数と累積和】
 /*
 * 二項係数は列 1, 0, 0, ... に対して累積和を繰り返しとったものとみなせる．
@@ -991,26 +1000,10 @@ vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
 */
 
 
-//【二項係数のくくり出し】
-/*
-* bin(n, r) = (n/r) bin(n-1, r-1)
-*/
-
-
 //【ホッケースティック恒等式】
 /*
 * パスカルの三角形の斜め方向の累積和は以下の式で求められる：
 *	Σi=[i0..i1) bin(i, r) = bin(i1, r+1) - bin(i0, r+1)
-* 
-* verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
-*/
-
-
-//【二項係数の二次元累積和】
-/*
-* パスカルの三角形における菱形領域の二次元累積和は以下の式で求められる：
-*	Σi∈[i0..i1)Σj∈[j0..j1) bin(i + j, i)
-*	= bin(i1 + j1, i1) - bin(i1 + j0, i1) - bin(i0 + j1, i0) + bin(i0 + j0, i0)
 * 
 * verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
 */
@@ -1034,13 +1027,46 @@ vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
 */
 
 
+//【二項係数の累積和（一括，r が固定）】O(n)
+/*
+* 各 i∈[0..n) について Σj∈[0..r) bin(i, j) を格納したリストを返す．
+*
+* 制約：fm は (n-1)! まで計算可能
+*/
+vm binomial_sum_fixed_r(int n, int r, const Factorial_mint& fm) {
+	// verify : https://www.codechef.com/problems/MEX_SEQ
+
+	vm res(n);
+	if (n == 0 || r <= 0) return res;
+
+	res[0] = 1;
+	repi(i, 1, n - 1) res[i] = res[i - 1] * 2 - fm.bin(i - 1, r - 1);
+
+	return res;
+}
+
+
+//【二項係数の二次元累積和（菱形領域）】
+/*
+* パスカルの三角形における菱形領域の二次元累積和は以下の式で求められる：
+*	Σi∈[i0..i1)Σj∈[j0..j1) bin(i + j, i)
+*	= bin(i1 + j1, i1) - bin(i1 + j0, i1) - bin(i0 + j1, i0) + bin(i0 + j0, i0)
+*
+* verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
+*/
+
+
 //【半整数の階乗】
 /*
 * n ≧ 0 のとき，以下の式が成り立つ：
-*	(n + 1/2)! = ((2n+1)!! / 2^(n+1)) √π = ((2n+1)! / (2^(2n+1) n!)) √π
+*	(n + 1/2)!
+*	= ((2n+1)!! / 2^(n+1)) √π
+*	= ((2n+1)! / (2^(2n+1) n!)) √π
 * 
 * また n ≧ 2 のとき，以下の式が成り立つ：
-*	(1/2 - n)! = ((-2)^(n-1) / (2n-3)!!) √π = ((-1)^(n-1) 2^(2n-3) (n-2)! / (2n-3)!) √π
+*	(1/2 - n)!
+*	= ((-2)^(n-1) / (2n-3)!!) √π
+*	= ((-1)^(n-1) 2^(2n-3) (n-2)! / (2n-3)!) √π
 * 
 * 例外は，(-1/2)! = √π
 * 
@@ -1048,33 +1074,173 @@ vi binomial_fixed_n(ll n, ll r1, ll r2, int p) {
 */
 
 
+//【q-階乗など】
+/*
+* Q_Factorial_mint(int n_max, int q) : O(n_max)
+*	[n_max]_q まで計算可能として初期化する．
+*
+* mint val(int n) : O(1)
+*	q-数 [n]_q を返す．
+*	[n]_q = (1 - q^n) / (1 - q)
+*
+* mint fact(int n) : O(1)
+*	q-階乗 [n]_q ! を返す．
+*	[n]_q ! = (Πi∈[1..n] (1 - q^i)) / (1 - q)^n
+*
+* mint fact_inv(int n) : O(1)
+*	q-階乗の逆数 1/([n]_q !) を返す（n が負なら 0 を返す）
+*
+* mint inv(int n) : O(1)
+*	q-数の逆数 1/[n]_q を返す．
+*
+* mint bin(int n, int r) : O(1)
+*	q-二項係数 nCr_q を返す．
+*
+* mint mul(vi rs) : O(|rs|)
+*	q-多項係数 nC[rs]_q を返す．（n = Σrs）
+*
+* int get_q() : O(1)
+*	q を返す．
+*/
+class Q_Factorial_mint {
+	int n_max, q;
+
+	// q-数，階乗，階乗の逆数の値を保持するテーブル
+	vm q_num, fac, fac_inv;
+
+public:
+	// n! までの階乗とその逆数を前計算しておく．O(n)
+	Q_Factorial_mint(int n, int q) : n_max(n), q(q), q_num(n + 1), fac(n + 1), fac_inv(n + 1) {
+		mint q_pow = 1;
+		repi(i, 1, n) {
+			q_num[i] = q_num[i - 1] + q_pow;
+			q_pow *= q;
+		}
+
+		fac[0] = 1;
+		repi(i, 1, n) fac[i] = fac[i - 1] * q_num[i];
+
+		fac_inv[n] = fac[n].inv();
+		repir(i, n - 1, 0) fac_inv[i] = fac_inv[i + 1] * q_num[i + 1];
+	}
+	Q_Factorial_mint() : n_max(0), q(1) {} // ダミー
+
+	// q-数 [n]_q を返す．
+	mint val(int n) const {
+		Assert(0 <= n && n <= n_max);
+		return q_num[n];
+	}
+
+	// n! を返す．
+	mint fact(int n) const {
+		// verify : https://atcoder.jp/contests/abc278/tasks/abc278_h
+
+		Assert(0 <= n && n <= n_max);
+		return fac[n];
+	}
+
+	// 1/n! を返す（n が負なら 0 を返す）
+	mint fact_inv(int n) const {
+		// verify : https://atcoder.jp/contests/abc278/tasks/abc278_h
+
+		Assert(n <= n_max);
+		if (n < 0) return 0;
+		return fac_inv[n];
+	}
+
+	// 1/n を返す．
+	mint inv(int n) const {
+		Assert(0 < n && n <= n_max);
+		return fac[n - 1] * fac_inv[n];
+	}
+
+	// 順列の数 nPr を返す．
+	mint perm(int n, int r) const {
+		Assert(n <= n_max);
+
+		if (r < 0 || n - r < 0) return 0;
+		return fac[n] * fac_inv[n - r];
+	}
+
+	// 二項係数 nCr を返す．
+	mint bin(int n, int r) const {
+		Assert(n <= n_max);
+		if (r < 0 || n - r < 0) return 0;
+		return fac[n] * fac_inv[r] * fac_inv[n - r];
+	}
+
+	// 多項係数 nC[rs] を返す．
+	mint mul(const vi& rs) const {
+		if (*min_element(all(rs)) < 0) return 0;
+		int n = accumulate(all(rs), 0);
+		Assert(n <= n_max);
+
+		mint res = fac[n];
+		repe(r, rs) res *= fac_inv[r];
+
+		return res;
+	}
+
+	int get_q() const {
+		return q;
+	}
+};
+
+
+//【階乗などの埋め込み】
+/*
+* 階乗とその逆数を埋め込み，任意の n に対し n!, 1/n! を O(WIDTH) で得られるようにする．
+* AtCoder の提出コードは 512KB が上限なので，WIDTH = 4*10^4 あたりが限界．
+*/
+const int WIDTH = (int)1e7; int MOD = mint::mod();
+void embed_factorial() {
+	mint fac = 1;
+	vm res;
+	rep(i, MOD) {
+		if (i % WIDTH == 0) res.emplace_back(fac);
+		if (i < MOD - 1) fac *= i + 1;
+	}
+
+	mint fac_inv = fac.inv();
+	vm res_inv;
+	rep(i, MOD) {
+		if (i % WIDTH == 0) res_inv.emplace_back(fac_inv);
+		fac_inv *= MOD - 1 - i;
+	}
+
+	cout << "vi FACT={";
+	rep(i, sz(res)) cout << res[i] << (i < sz(res) - 1 ? "," : "};\n");
+
+	cout << "vi FACT_INV={";
+	rep(i, sz(res_inv)) cout << res_inv[i] << (i < sz(res_inv) - 1 ? "," : "};\n");
+
+	exit(0);
+
+	/* 埋め込んだテーブルを元に階乗やその逆数の値を計算する．
+	mint fac(ll n) {
+		if (n >= MOD) return 0;
+		ll q = n / WIDTH;
+		mint res = FACT[q];
+		repi(i, q * WIDTH + 1, n) res *= i;
+		return res;
+	}
+
+	mint fac_inv(ll n) {
+		Assert(n < MOD);
+		ll q = (MOD - 1 - n) / WIDTH;
+		mint res = FACT_INV[q];
+		repi(i, q * WIDTH + 1, MOD - 1 - n) res *= MOD - i;
+		return res;
+	}
+	*/
+}
+vi FACT = { };
+vi FACT_INV = { };
+
+
 //【二項係数の畳込み】
 /*
 * 母関数.h へ
 */
-
-
-//【階乗（mod 1000000007）】O(10^7)
-/*
-* n! mod 1000000007 を返す．
-*
-*（埋め込み）
-*/
-mint factorial_1000000007(ll n) {
-	// verify : https://yukicoder.me/problems/no/502
-
-	if (n >= 1000000007) return 0;
-
-	// FACT[i] = (i * 10^7)! mod 1000000007
-	const vi FACT = { 1,682498929,491101308,76479948,723816384,67347853,27368307,625544428,199888908,888050723,927880474,281863274,661224977,623534362,970055531,261384175,195888993,66404266,547665832,109838563,933245637,724691727,368925948,268838846,136026497,112390913,135498044,217544623,419363534,500780548,668123525,128487469,30977140,522049725,309058615,386027524,189239124,148528617,940567523,917084264,429277690,996164327,358655417,568392357,780072518,462639908,275105629,909210595,99199382,703397904,733333339,97830135,608823837,256141983,141827977,696628828,637939935,811575797,848924691,131772368,724464507,272814771,326159309,456152084,903466878,92255682,769795511,373745190,606241871,825871994,957939114,435887178,852304035,663307737,375297772,217598709,624148346,671734977,624500515,748510389,203191898,423951674,629786193,672850561,814362881,823845496,116667533,256473217,627655552,245795606,586445753,172114298,193781724,778983779,83868974,315103615,965785236,492741665,377329025,847549272,698611116 };
-
-	const ll W = (ll)1e7;
-	int q = (int)(n / W);
-
-	mint res = FACT[q];
-	repi(i, q * W + 1, n) res *= i;
-
-	return res;
-}
 
 

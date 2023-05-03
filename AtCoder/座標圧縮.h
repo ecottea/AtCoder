@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "ハッシュ.h"
+#include "木クエリ.h"
 // ■■■■■ 座標圧縮 ■■■■■
 
 
@@ -189,6 +190,70 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, const function<bool(T, 
 
 	return sz(*xs);
 }
+
+
+//【木の座標圧縮】
+/*
+* Auxiliary_tree(Rooted_tree rt) : O(n)
+*	根付き木 rt で初期化する．
+*
+* Graph create(vi vs, vi& id) : O(k (log k + log n))  (k = |vs|)
+*	頂点集合 vs とそれらの LCA からなる座標圧縮された木 g（根は 0）を構築して返す．
+*	vs[i] は g[id[i]] と対応する．
+*
+* 利用：【最小共通祖先】
+*/
+class Auxiliary_tree {
+	// 参考 : https://tjkendev.github.io/procon-library/python/graph/auxiliary_tree.html
+
+	Rooted_tree rt;
+	Lowest_common_ancestor<Rooted_tree> LCA;
+
+public:
+	Auxiliary_tree(const Rooted_tree& rt) : rt(rt), LCA(rt) {
+		// verify : https://atcoder.jp/contests/arc086/tasks/arc086_c
+	}
+
+	// 頂点集合 vs とそれらの LCA からなる座標圧縮された木 g（根は 0）を構築して返す．
+	// vs[i] は g[id[i]] と対応する．
+	Graph create(const vi& vs, vi& id) {
+		// verify : https://atcoder.jp/contests/arc086/tasks/arc086_c
+
+		int k = sz(vs);
+		id.resize(k);
+
+		vector<pii> vis(k);
+		rep(i, k) vis[i] = { vs[i], i };
+
+		// 頂点集合 vs をオイラーツアーの行きがけ順にソートする．
+		sort(all(vis), [&](pii a, pii b) { return LCA.in[a.first] < LCA.in[b.first]; });
+
+		// 行きがけ順で隣り合う 2 頂点の LCA は必要なので頂点集合に追加する．
+		rep(i, k - 1) vis.emplace_back(LCA.lca(vis[i].first, vis[i + 1].first), -1);
+
+		// LCA も含めた頂点集合 vs をオイラーツアーの行きがけ順にソートし重複を除去する．
+		sort(all(vis), [&](pii a, pii b) { return LCA.in[a.first] < LCA.in[b.first]; });
+		auto it = unique(all(vis));
+		vis.erase(it, vis.end());
+		k = sz(vis);
+
+		// 元の頂点と座標圧縮された木の頂点との対応を調べる．
+		rep(i, k) if (vis[i].second != -1) id[vis[i].second] = i;
+
+		Graph g(k); stack<int> stk;
+		rep(si, k) {
+			// v = vs[si] とし，スタックトップが v の先祖になるまで走査済の頂点をポップする．
+			while (!stk.empty() && LCA.out[vis[stk.top()].first] < LCA.in[vis[si].first]) stk.pop();
+
+			// v に先祖が居ればそれは直近の先祖であるから辺で繋ぐ．
+			if (!stk.empty()) g[stk.top()].push_back(si);
+
+			stk.push(si);
+		}
+
+		return g;
+	}
+};
 
 
 //【二分木の座標圧縮】

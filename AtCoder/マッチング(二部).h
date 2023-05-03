@@ -569,7 +569,7 @@ vb tree_maximum_matching_intersection(Graph& g) {
 * f(X) の各頂点の次数も d なので，f(X) に入る辺の本数が d |X| 本以上となるためには
 * f(X) が少なくとも |X| 個の頂点を含んでいなければならず，|X| <= |f(X)| である．
 * 
-* verify : https://atcoder.jp/contests/agc037/tasks/agc037_d
+* verify : https://yukicoder.me/problems/no/2263
 */
 
 

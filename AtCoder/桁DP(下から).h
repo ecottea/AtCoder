@@ -401,6 +401,8 @@ ll maximize_pair_digit_sum(const string& num, int b = 10) {
 * d ‚Ì”š˜a‚Æ num + d ‚Ì”š˜a‚Ì‡Œv‚ÌÅ¬’l‚ğ•Ô‚·D
 */
 ll minimize_pair_digit_sum(string num, int b = 10) {
+	// verify : https://www.codechef.com/problems/MINBITS
+
 	num.insert(num.begin(), '0');
 	int n = sz(num);
 

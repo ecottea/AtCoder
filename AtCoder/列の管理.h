@@ -85,6 +85,117 @@ vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
 }
 
 
+//【Mo's algorithm（Rollback）】O(n√q α + q log q)
+/*
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
+*
+* 制約：両端の要素の追加が O(α) で可能，snapshot と rollback が O(α) 程度で可能
+*
+*（クエリ平方分割）
+*/
+template <class T, class S>
+vector<S> mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r) {
+	// 参考 : https://snuke.hatenablog.com/entry/2016/07/01/000000
+	// verify : https://codeforces.com/gym/100513/problem/A
+
+	//【方法】
+	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
+	// 左端の移動回数は，1 回のクエリで高々 n/k しか移動しないので q n/k 回．
+	// 右端の移動回数は，1 ブロックごとに高々 n しか移動しないので k n / 2 回．
+	// これらが一致するような k を求めると k = √(2q) となる．
+	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
+
+	int n = sz(a), q = sz(l);
+	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int width = (n + sqrt_q - 1) / sqrt_q;
+	vector<S> res(q);
+
+	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
+	vector<vector<pii>> lb_to_rj(sqrt_q);
+	vi l_max(sqrt_q, -1); // ブロック内の左端位置の最大値
+	rep(j, q) {
+		int b = l[j] / width;
+		lb_to_rj[b].emplace_back(r[j], j);
+		chmax(l_max[b], l[j]);
+	}
+	rep(b, sqrt_q) sort(all(lb_to_rj[b]));
+
+	// -------------- ここを実装する（auto の方が速い） ----------------
+
+	// 区間を管理するデータ構造を用意する．
+	Rollback_Union_find data;
+	bool sol = true;
+
+	// データ構造を初期化する．
+	auto init = [&]() {
+		data = Rollback_Union_find((int)2e5 + 10);
+		sol = true;
+	};
+
+	// 区間に a[i] を追加し，データ構造 data を更新する．
+	auto insert = [&](int i) {
+		if (!sol) return;
+
+		auto [u, v] = a[i];
+		data.merge(u, v + n);
+		data.merge(u + n, v);
+		if (data.same(u, v)) sol = false;
+	};
+
+	// 現在のデータ構造の状態を一時記憶しておく．
+	bool sol_tmp;
+	auto snapshot = [&]() {
+		data.snapshot();
+		sol_tmp = sol;
+	};
+
+	// データ構造の状態を一時記憶してあったものに戻す．
+	auto rollback = [&]() {
+		data.rollback();
+		sol = sol_tmp;
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	auto get_sol = [&](int j) {
+		return sol;
+	};
+
+	// --------------------------------------------------------------
+
+	// b : 左から何番目のブロックか
+	rep(b, sqrt_q) {
+		// rpt : 半開区間の右端の位置（ブロック b 内の左端位置の最大値で初期化する）
+		int rpt = l_max[b];
+		if (rpt == -1) continue;
+
+		// データ構造を初期化する．
+		init();
+
+		repe(tmp, lb_to_rj[b]) {
+			// j : クエリ番号
+			int j = tmp.second;
+
+			// 区間の右側を伸ばしデータ構造を更新する．
+			while (rpt < r[j]) insert(rpt++);
+
+			// データ構造のスナップショットを作成する．
+			snapshot();
+
+			// a[l[j]..l_max[j]) の要素を右から順に追加していく．
+			repir(i, min(l_max[b], r[j]) - 1, l[j]) insert(i);
+
+			// a[l[j]..r[j]) に対する解を得る．
+			res[j] = get_sol(j);
+
+			// データ構造の状態をスナップショット作成時まで戻す．
+			rollback();
+		}
+	}
+
+	return res;
+}
+
+
 //【Mo's algorithm（マージ）】O(n√q α + q log q)
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
@@ -156,7 +267,7 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 			int j = tmp.second;
 
 			// 区間の右側に対応するデータ構造を更新する．
-			while (rpt < r[j]) { insert(rpt++, data_r); }
+			while (rpt < r[j]) insert(rpt++, data_r);
 
 			// 区間の左側に対応するデータ構造を初期化する．
 			init(data_l);
@@ -983,7 +1094,7 @@ struct Quadratic_division {
 };
 
 
-//【平方分割（モノイド作用付き集合）】
+//【平方分割（M-集合）】
 /*
 * Quadratic_division<S, F, act, comp, id>(int n) : O(n id)
 *	v[0..n) = id() で初期化する．
@@ -1068,6 +1179,360 @@ struct Quadratic_division_Mset {
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Quadratic_division_Mset qd) {
 		rep(i, qd.n) os << qd.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【永続スタック】
+/*
+* Persistent_stack<T>() : O(1)
+*	型 T の空スタックで初期化する．履歴番号は 0 とする．
+*
+* bool empty(int t = n - 1) : O(1)
+*	t 番目の履歴が空スタックかを返す．
+*
+* int size(int t = n - 1) : O(1)
+*	t 番目の履歴のスタックの大きさを返す．
+*
+* T top(int t = n - 1) : O(1)
+*	t 番目の履歴のスタックの先頭の値を返す（t = 0 のとき値は未定義）
+*
+* int push(T val, int t = n - 1) : O(1)
+*	t 番目の履歴に対し val を先頭に積んだスタックを最新の履歴として記録し，履歴番号を返す．
+*
+* int pop(int t = n - 1) : O(1)
+*	t 番目の履歴に対し先頭要素を積む前のスタックの履歴番号を返す．
+*/
+template <class T>
+class Persistent_stack {
+	// 参考 : https://qiita.com/wotsushi/items/72e7f8cdd674741ffd61
+
+	struct Node {
+		T val = -1; // スタックの先頭の値
+		int size = 0; // スタックの大きさ
+		int prev = -1; // 直前の状態の履歴番号（なければ -1）
+
+		// コンストラクタ
+		Node(T val_, int size_, int prev_) : val(val_), size(size_), prev(prev_) {}
+		Node() {}
+
+#ifdef _MSC_VER
+		// 出力
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "(v:" << v.val << ", s:" << v.size << ", p:" << v.prev << ')';
+			return os;
+		}
+#endif
+	};
+
+	int n; // 履歴の個数
+	vector<Node> stk; // 履歴
+
+public:
+	// 型 T の空スタックで初期化する．
+	Persistent_stack() : n(1), stk(1) {}
+
+	// t 番目の履歴のスタックの大きさを返す．
+	int size(int t) {
+		Assert(0 <= t && t < n);
+		return stk[t].size;
+	}
+	int size() { return size(n - 1); }
+
+	// t 番目の履歴が空スタックかを返す．
+	bool empty(int t) {
+		Assert(0 <= t && t < n);
+		return t == 0;
+	}
+	bool empty() { return empty(n - 1); }
+
+	// t 番目の履歴のスタックの先頭の値を返す（t = 0 のとき値は未定義）
+	T top(int t) {
+		Assert(0 <= t && t < n);
+		return stk[t].val;
+	}
+	T top() { return top(n - 1); }
+
+	// t 番目の履歴に対し val を先頭に積んだスタックを最新の履歴として記録し，履歴番号を返す．
+	int push(T val, int t) {
+		Assert(0 <= t && t < n);
+		stk.push_back(Node(val, stk[t].size + 1, t));
+		return n++;
+	}
+	int push(T val) { return push(val, n - 1); }
+
+	// t 番目の履歴に対し先頭要素を積む前のスタックの履歴番号を返す．
+	int pop(int t) {
+		Assert(0 <= t && t < n);
+		return stk[t].prev;
+	}
+	int pop() { return pop(n - 1); }
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Persistent_stack& ps) {
+		rep(i, ps.n) os << i << ": " << ps.stk[i] << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【永続キュー】
+/*
+* Persistent_queue<T>() : O(1)
+*	型 T の空キューで初期化する．履歴番号は 0 とする．
+*
+* bool empty(int t) : O(1)
+*	t 番目の履歴が空キューかを返す．
+*
+* int size(int t) : O(1)
+*	t 番目の履歴のキューの大きさを返す．
+*
+* T front(int t) : O(log n)（n : キューの大きさ）
+*	t 番目の履歴のキューの先頭の値を返す．
+*
+* T back(int t) : O(1)
+*	t 番目の履歴のキューの末尾の値を返す．
+*
+* int push(T val, int t) : O(log n)（n : キューの大きさ）
+*	t 番目の履歴に対し val を末尾に追加したキューを最新の履歴として記録し，履歴番号を返す．
+*
+* int pop(int t) : O(1)
+*	t 番目の履歴に対し先頭要素を削除したキューを最新の履歴として記録し，履歴番号を返す．
+*/
+template <class T>
+class Persistent_queue {
+	struct Node {
+		T val = -1; // キューの末尾の値
+		vector<Node*> nx; // nx[i] : 2^i 個先のノードへのポインタ（ダブリング用）
+
+		// コンストラクタ（val : 追加する値，p : 直前の末尾ノードへのポインタ）
+		Node(T val_, Node* nx0) : val(val_) {
+			nx.push_back(nx0);
+			int i = 0; Node* p = nx0;
+			while (i < sz(p->nx)) {
+				nx.push_back(p->nx[i++]);
+				p = nx.back();
+			}
+		}
+		Node() {}
+
+		// i 個先のノードへのポインタを返す．（なければ nullptr）
+		Node* next(int i) {
+			if (i == 0) return this;
+
+			// ダブリングで求める．
+			int b = msb(i);
+			if (b >= sz(nx)) return nullptr;
+			return nx[b]->next(i - (1 << b));
+		}
+	};
+
+	int n; // 履歴の個数
+	vector<Node*> his_p; // 履歴（末尾ノードへのポインタ）
+	vi his_len; // 履歴（キューの大きさ）
+
+public:
+	// 型 T の空キューで初期化する．
+	Persistent_queue() : n(1), his_p(1), his_len(1) {
+		his_p[0] = new Node();
+	}
+
+	// t 番目の履歴のキューの大きさを返す．
+	int size(int t) {
+		Assert(0 <= t && t < n);
+		return his_len[t];
+	}
+
+	// t 番目の履歴が空キューかを返す．
+	bool empty(int t) {
+		Assert(0 <= t && t < n);
+		return size(t) == 0;
+	}
+
+	// t 番目の履歴のキューの先頭の値を返す．
+	T front(int t) {
+		Assert(0 <= t && t < n);
+		return his_p[t]->next(his_len[t] - 1)->val;
+	}
+
+	// t 番目の履歴のキューの末尾の値を返す．
+	T back(int t) {
+		Assert(0 <= t && t < n);
+		return his_p[t]->val;
+	}
+
+	// t 番目の履歴に対し val を末尾に追加したキューを最新の履歴として記録し，履歴番号を返す．
+	int push(T val, int t) {
+		Assert(0 <= t && t < n);
+		Node* p = new Node(val, his_p[t]);
+		his_p.push_back(p);
+		his_len.push_back(his_len[t] + 1);
+		return n++;
+	}
+
+	// t 番目の履歴に対し先頭要素を削除したキューを最新の履歴として記録し，履歴番号を返す．
+	int pop(int t) {
+		Assert(0 <= t && t < n);
+		his_p.push_back(his_p[t]);
+		his_len.push_back(his_len[t] - 1);
+		return n++;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Persistent_queue& q) {
+		rep(t, q.n) {
+			vector<T> seq; Node* p = q.his_p[t];
+			rep(i, q.his_len[t]) {
+				seq.push_back(p->val);
+				p = p->nx[0];
+			}
+			reverse(all(seq));
+			os << t << ": " << seq << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【永続配列】
+/*
+* Persistent_array<S>(int n) : O(n)
+*	v[0..n) = 0 で初期化する．履歴番号は 0 とする．
+*
+* Persistent_segtree<S>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．履歴番号は 0 とする．
+*
+* int set(int i, S x, int t) : O(log n)
+*	t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+*
+* S get(int i, int t) : O(log n)
+*	t 番目の履歴の v[i] を返す．
+*/
+template <class S>
+class Persistent_array {
+	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
+
+	static const int M = 20; // 子の数
+
+	struct Node {
+		int l, r;
+		S val; // 葉なら値
+		vi ch; // 子
+
+		Node(int l, int r, S val) : l(l), r(r), val(val) {}
+	};
+
+	// ノードを貯めておくプール
+	vector<Node> pool;
+
+	int n; // 配列の大きさ
+	int T; // 履歴の個数
+	vi his; // 履歴
+
+	// ノードの新規作成
+	int new_node(int l, int r, S val = 0) {
+		pool.emplace_back(l, r, val);
+		return sz(pool) - 1;
+	}
+
+	int init_rf(const vector<S>& v, int l, int r) {
+		if (r - l <= 0) return -1;
+
+		// 葉を作る場合
+		if (r - l == 1) return new_node(l, r, v[l]);
+
+		int id = new_node(l, r);
+		pool[id].ch.resize(M);
+		int w = r - l;
+		rep(k, M) pool[id].ch[k] = init_rf(v, l + w * k / M, l + w * (k + 1) / M);
+
+		return id;
+	}
+
+	int set_rf(int id, int i, S x) {
+		// pool[id] が葉の場合
+		if (pool[id].ch.empty()) return new_node(pool[id].l, pool[id].r, x);
+
+		int nid = new_node(pool[id].l, pool[id].r);
+		pool[nid].ch = pool[id].ch;
+		int w = pool[id].r - pool[id].l;
+		int k = ((i - pool[id].l + 1) * M - 1) / w;
+		pool[nid].ch[k] = set_rf(pool[id].ch[k], i, x);
+
+		return nid;
+	}
+
+	S get_rf(int id, int i) const {
+		const Node& p = pool[id];
+
+		// p が葉の場合
+		if (p.ch.empty()) return p.val;
+
+		int w = p.r - p.l;
+		int k = ((i - p.l + 1) * M - 1) / w;
+		return get_rf(p.ch[k], i);
+	}
+
+	void print_rf(int id, ostream& os) const {
+		if (id == -1) return;
+
+		const Node& p = pool[id];
+
+		if (p.ch.empty()) {
+			os << p.val << " ";
+			return;
+		}
+
+		rep(k, M) print_rf(p.ch[k], os);
+	}
+
+public:
+	// 配列 v[0..n) の要素で初期化する．
+	Persistent_array(const vector<S>& v) : n(sz(v)), T(1), his(1) {
+		pool.reserve(n * 2);
+		his[0] = init_rf(v, 0, n);
+	}
+
+	// v[0..n) = 0 で初期化する．
+	Persistent_array(int n) : n(n), T(1), his(1) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		vector<S> v(n, 0);
+		pool.reserve(n * 2);
+		his[0] = init_rf(v, 0, n);
+	}
+	Persistent_array() : n(0), T(0) {} // ダミー
+
+	// t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+	int set(int i, S x, int t) {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		Assert(0 <= i && i < n);
+		Assert(t < T);
+		his.push_back(set_rf(his[t], i, x));
+		return T++;
+	}
+
+	// t 番目の履歴の v[i] を返す．
+	S get(int i, int t) const {
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017/tasks/code_thanks_festival_2017_h
+
+		Assert(0 <= i && i < n);
+		Assert(t < T);
+		return get_rf(his[t], i);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Persistent_array& pa) {
+		rep(t, pa.T) {
+			os << t << ": ";
+			pa.print_rf(pa.his[t], os);
+			os << endl;
+		}
 		return os;
 	}
 #endif

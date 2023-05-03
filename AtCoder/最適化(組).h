@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "計算.h"
+#include "有理数.h"
 #include "関数.h"
 // ■■■■■ 最適化（組） ■■■■■
 

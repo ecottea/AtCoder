@@ -817,3 +817,24 @@ struct Zobrist_hash_func_mod {
 };
 
 
+//【ハッシュ（unordered 用）】
+/*
+* unordered_set[map] の第二[三] 引数に Hash を渡して使う．
+*/
+struct Hash {
+	// 参考 : https://qiita.com/ganyariya/items/df35d253726269bda436
+	// verify : https://yukicoder.me/problems/no/1648
+
+	// pair<int, ll> の場合の例
+	size_t operator()(const pair<int, ll>& p) const {
+		auto hash1 = hash<int>{}(p.first);
+		auto hash2 = hash<ll>{}(p.second);
+
+		size_t seed = 0;
+		seed ^= hash1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hash2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		return seed;
+	}
+};
+
+

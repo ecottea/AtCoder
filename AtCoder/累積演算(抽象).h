@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "永続データ構造.h"
+#include "セグメント木.h"
 #include "座標圧縮.h"
 // ■■■■■ 累積演算（抽象代数上） ■■■■■
 

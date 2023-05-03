@@ -140,9 +140,15 @@ inline ostream& operator<< (ostream& os, const multimap<T, U, greater<T>>& m) {
 	return os;
 }
 
-template <class T, class U>
-inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) {
-	repe(p, m) os << p << " ";
+//template <class T, class U>
+//inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) {
+//	repe(p, m) os << p << " ";
+//	return os;
+//}
+
+template <class Key, class T, class Hash, class Pred, class Allocater>
+inline ostream& operator<< (ostream& os, const unordered_map<Key, T, Hash, Pred, Allocater>& um) {
+	repe(p, um) os << p << " ";
 	return os;
 }
 
@@ -173,17 +179,19 @@ inline ostream& operator<< (ostream& os, deque<T> q) {
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, priority_queue<T> q) {
-	while (!q.empty()) {
-		os << q.top() << " ";
-		q.pop();
-	}
-	return os;
-}
+//template <class T>
+//inline ostream& operator<< (ostream& os, priority_queue<T> q) {
+//	while (!q.empty()) {
+//		os << q.top() << " ";
+//		q.pop();
+//	}
+//	return os;
+//}
 
-template <class T>
-inline ostream& operator<< (ostream& os, priority_queue<T, vector<T>, greater<T>> q) {
+template <class T, class Container, class Compare>
+inline ostream& operator<< (ostream& os, priority_queue<T, Container, Compare> q) {
+	// éQçl : https://qiita.com/hibit/items/8ca9a58ccd23014f3a54
+
 	while (!q.empty()) {
 		os << q.top() << " ";
 		q.pop();

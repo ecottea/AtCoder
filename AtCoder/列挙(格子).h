@@ -5,7 +5,7 @@
 
 //【ポリオミノの列挙】O(?)
 /*
-* n 以下の k について，k-オミノを列挙する．（n <= 8 くらいが限界かも）
+* n 以下の k について，k-オミノを列挙する．（n ≦ 8 くらいが限界かも）
 *
 * k-オミノ は k 個の点 {x, y} の集合として表す．
 * ただし x, y 各座標の最小値は 0 であるようにする．
@@ -95,9 +95,9 @@ void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
 }
 
 
-//【ドミノ-モノミノのタイリングの列挙】O(?)
+//【ドミノ＆モノミノのタイリングの列挙】O(?)
 /*
-* h * w の盤面にドミノ d 個とモノミノ h w - 2 d 個を敷き詰める方法を boards に列挙する．
+* h×w の盤面にドミノ d 個とモノミノ h w - 2 d 個を敷き詰める方法を boards に列挙する．
 * i 番目に敷き詰められたタイルを番号 i で表す．
 */
 void enumerate_domino_monomino_tiling(int h, int w, int d, vvvi& boards) {
@@ -148,6 +148,73 @@ void enumerate_domino_monomino_tiling(int h, int w, int d, vvvi& boards) {
 	};
 
 	dfs(0, 0, d, h * w - 2 * d, 0);
+}
+
+
+//【T-テトロミノのタイリングの列挙】O(?)
+/*
+* h×w の盤面に T-テトロミノを敷き詰める方法全てを格納したリストを返す．
+* i 番目に敷き詰められたタイルを番号 i で表す．
+*/
+vvvi enumerate_Ttetromino_tiling(int h, int w) {
+	// board[i][j] : 盤の位置 (i, j) に置かれているタイルの番号（タイルがなければ -1）
+	vvi board(h, vi(w, -1));
+	vvvi boards;
+
+	// board[i][j] を返す（盤外なら -2 を返す）
+	auto get = [&](int i, int j) {
+		if (i < 0 || j < 0 || i >= h || j >= w) return -2;
+		return board[i][j];
+	};
+
+	// 敷き詰めに使うピースのリスト
+	// 各ピースは辞書順最小位置を {0, 0} としたマスの集合で表す．
+	vector<vector<pii>> pieces{
+		{ {0, 0}, {0, 1}, {0, 2}, {1, 1} }, // ┬
+		{ {0, 0}, {1, 0}, {1, 1}, {2, 0} }, // ├
+		{ {0, 0}, {1, -1}, {1, 0}, {1, 1} }, // ┴
+		{ {0, 0}, {1, -1}, {1, 0}, {2, 0} }  // ┤
+	};
+
+	// (i, j): 注目位置
+	function<void(int, int, int)> dfs = [&](int i, int j, int id) {
+		// 完成していれば記録
+		if (i == h) {
+			boards.push_back(board);
+			return;
+		}
+
+		// 右まで走査しきったら 1 つ下の行へ
+		if (j == w) {
+			dfs(i + 1, 0, id);
+			return;
+		}
+
+		// すでにタイルが敷かれていたら 1 つ右のマスへ
+		if (get(i, j) >= 0) {
+			dfs(i, j + 1, id);
+			return;
+		}
+
+		// 各ピースを置くことができるかをチェックする．
+		repe(piece, pieces) {
+			bool ok = true;
+			for (auto& [di, dj] : piece) {
+				if (get(i + di, j + dj) != -1) {
+					ok = false;
+					break;
+				}
+			}
+			if (!ok) continue;
+
+			for (auto& [di, dj] : piece) board[i + di][j + dj] = id;
+			dfs(i, j + 1, id + 1);
+			for (auto& [di, dj] : piece) board[i + di][j + dj] = -1;
+		}
+	};
+	dfs(0, 0, 0);
+
+	return boards;
 }
 
 

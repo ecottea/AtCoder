@@ -3,7 +3,7 @@
 #include "合同式.h"
 #include "二項係数.h"
 #include "多項式.h"
-#include "和.h"
+#include "畳込み.h"
 // ■■■■■ 形式的冪級数 ■■■■■
 
 
@@ -198,6 +198,7 @@ struct MFPS {
 		//
 		// この手順を d <= 2^i となる i まで繰り返し，d 次以上の項を削除すればよい．
 
+		Assert(!c.empty());
 		Assert(c[0] != 0);
 
 		MFPS g(c[0].inv());
@@ -1080,7 +1081,7 @@ pair<MFPS, MFPS> reduction(vector<MFPS> num, vector<MFPS> dnm) {
 
 //【多点評価】O(m (log m)^2 + n log n)
 /*
-* n 次多項式 f について，f(x[0..m)) の値をまとめたリストを返す．
+* n 次多項式 f について，f(x[0..m)) の値を並べたリストを返す．
 */
 vm multipoint_evaluation(const MFPS& f, const vm& x) {
 	// 参考 : https://37zigen.com/multipoint-evaluation/
@@ -1105,6 +1106,53 @@ vm multipoint_evaluation(const MFPS& f, const vm& x) {
 	rep(i, m) y[i] = sr[m2 + i][0];
 
 	return y;
+}
+
+
+//【多点評価（等比数列）】O((m + n) log(m + n))
+/*
+* n 次多項式 f について，f(r^[0..m)) の値を並べたリストを返す．
+*/
+vm chirp_Z_transform(const MFPS& f, int m, mint r) {
+	// 参考 : https://37zigen.com/multipoint-evaluation/#Chirp_Z-transform
+	// verify : https://atcoder.jp/contests/abc278/tasks/abc278_h
+
+	//【方法】
+	// f(z) = Σi∈[0..n) a[i] z^i とおく．恒等式
+	//		2ij = (i+j)(i+j-1) - i(i-1) - j(j-1)
+	// を用いると，
+	//		f(r^j)
+	//		= Σi∈[0..n) a[i] (r^j)^i
+	//		= Σi∈[0..n) a[i] r^((i+j)(i+j-1)/2 - i(i-1)/2 - j(j-1)/2)
+	//		= r^(-j(j-1)/2) Σi∈[0..n) a[i] r^(-i(i-1)/2) r^((i+j)(i+j-1)/2)
+	// となる．これはほぼ畳込みの形なので高速に計算できる．
+
+	int n = sz(f);
+
+	vm r_inv_ppow(max(n, m)); mint r_inv = r.inv(), r_inv_pow = 1;
+	r_inv_ppow[0] = 1;
+	rep(i, max(n, m) - 1) {
+		r_inv_ppow[i + 1] = r_inv_ppow[i] * r_inv_pow;
+		r_inv_pow *= r_inv;
+	}
+
+	MFPS r_ppow(0, n + m); mint r_pow = 1;
+	r_ppow[0] = 1;
+	rep(i, n + m - 1) {
+		r_ppow[i + 1] = r_ppow[i] * r_pow;
+		r_pow *= r;
+	}
+
+	MFPS A(0, n);
+	rep(i, n) A[i] = f[i] * r_inv_ppow[i];
+	A = A.rev();
+
+	auto C = A * r_ppow;
+
+	vm res(m);
+	rep(j, m) res[j] = C[n - 1 + j] * r_inv_ppow[j];
+
+	return res;
 }
 
 
@@ -1261,48 +1309,6 @@ bool polynomial_inverse(const MFPS& a, const MFPS& b, MFPS& u) {
 	MFPS v;
 	MFPS g = extended_gcd(a, b, u, v);
 	return g == MFPS(1);
-}
-
-
-//【多項式の離散対数問題】O(mod^(deg(f)/2) deg(f)) // TODO : 逆元が必要ないように作り直す
-/*
-* a(x)^d = b(x) mod f(x) の最小解 d >= 0 を返す．（なければ INF）
-* 
-* 利用：【多項式逆元】
-*
-*（baby-step giant-step）
-*/
-int log(const MFPS& a, MFPS b, const MFPS& f) {
-	int m = (int)pow(mint::mod(), f.deg() / 2);
-
-	// loga[a^i] = i を計算しておく．
-	map<vi, int> loga;
-	MFPS a_pow(1, f.deg());
-	rep(i, m) {
-		vi tmp(sz(a_pow));
-		rep(i, sz(a_pow)) tmp[i] = a_pow[i].val();
-		if (!loga.count(tmp)) {
-			loga[tmp] = i;
-		}
-		a_pow = (a_pow * a).reminder(f);
-	}
-
-	// r = a^(-m)
-	MFPS r;
-	polynomial_inverse(a_pow, f, r);
-
-	// 方程式の両辺に r = a^(-m) を掛けながら解を探していく．
-	rep(i, m) {
-		vi tmp(sz(a_pow));
-		rep(i, sz(a_pow)) tmp[i] = b[i].val();
-		if (loga.count(tmp)) {
-			return m * i + loga[tmp];
-		}
-		b = (b * r).reminder(f);
-	}
-
-	// 見つからなかったら INF を返す．
-	return INF;
 }
 
 

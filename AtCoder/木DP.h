@@ -494,7 +494,7 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 	T e() { return 0; }
 	T leaf(int s) { return 0; }
 	T apply(T x, int p, int s) { return x + 1; }
-	vector<T> solve_by_rerooting(Graph& g, vector<vector<T>>* sub = nullptr) {
+	vector<T> solve_by_rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 		return rerooting<T, merge, e, leaf, apply>(g, sub);
 	}
 	*/
@@ -612,7 +612,7 @@ vector<T> rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
 	T e() { return 0; }
 	T leaf(int s) { return 0; }
 	T apply(T x, int p, int s, ll c) { return x + 1; }
-	vector<T> solve_by_rerooting(WGraph& g, vector<vector<T>>* sub = nullptr) {
+	vector<T> solve_by_rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
 		return rerooting<T, merge, e, leaf, apply>(g, sub);
 	}
 	*/

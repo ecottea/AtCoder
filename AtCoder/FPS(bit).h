@@ -1,19 +1,19 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 形式的冪級数（二元体 F2 上） ■■■■■
+// ■■■■■ 形式的冪級数（二元体 F_2 上） ■■■■■
 
 
-//【形式的冪級数（二元体 F2）】
+//【形式的冪級数（二元体 F_2）】
 /*
 * BFPS<N>() : O(1)
 *	零多項式 f = 0 で初期化する．
 *   次数は N 未満とし，溢れた分は切り捨てられる．
 *
-* BFPS<N>(bool c0) : O(1)
-*	定数多項式 f = c0 で初期化する．
+* BFPS<N>(bool c0, int n = 1) : O(1)
+*	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
 * BFPS<N>(bitset c, int n) : O(n / 64)
-*	f(x) = c[0] + c[1] x + ... + c[n-1] x^(n-1) で初期化する．
+*	f(x) = c[0] + c[1] z + ... + c[n-1] z^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n / 64)
 * f * g : O(n^2 / 64)		f * g_sp : O(n |g|)
@@ -23,7 +23,7 @@
 *	制約 : 商では g(0) = 1
 *
 * BFPS f.inv(int d) : O(n^2 / 64)
-*	1 / f mod x^d を返す．
+*	1 / f mod z^d を返す．
 *	制約 : f(0) = 1
 *
 * BFPS f.quotient(BFPS g) : O(n^2 / 64)
@@ -42,20 +42,23 @@
 *	多項式 f の次数[+1]を返す．
 *
 * BFPS::monomial(int d) : O(d / 64)
-*	単項式 x^d を返す．
+*	単項式 z^d を返す．
+*
+* int popcount() : O(n / 64)
+*	項数を返す．
 *
 * f.resize(int d) : O(1)
-*	mod x^d をとる．
+*	mod z^d をとる．
 *
 * f.resize() : O(n / 64)
 *	不要な高次の項を削る．
 *
 * f >> d, f << d : O(n / 64)
 *	係数列を d だけ右[左]シフトした多項式を返す．
-*  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
+*  （右シフトは z^d の乗算，左シフトは z^d で割った商と等価）
 *
 * BFPS power_mod(BFPS f, ll d, BFPS g) : O(m^2 log d / 64)　（m = deg g）
-*	f(x)^d % g(x) を返す．
+*	f(z)^d % g(z) を返す．
 */
 template <int N>
 struct BFPS {
@@ -66,7 +69,7 @@ struct BFPS {
 
 	// コンストラクタ（零元，定数，係数列で初期化）
 	BFPS() : n(0) {}
-	BFPS(bool c0) : n(1) { c[0] = c0; }
+	BFPS(bool c0, int n = 1) : n(n) { c[0] = c0; }
 	BFPS(const bitset<N>& c_, int n_) : n(n_), c(c_) {}
 
 	// 代入
@@ -199,11 +202,18 @@ struct BFPS {
 	BFPS quotient(const SFPS& g) const { return quotient_remainder(g).first; }
 	BFPS reminder(const SFPS& g) const { return quotient_remainder(g).second; }
 
-	// 単項式
+	// 単項式 z^d を返す．
 	static BFPS monomial(int d) {
 		BFPS mono(0, d + 1);
 		mono[d] = 1;
 		return mono;
+	}
+
+	// 1 になっているビットの数を返す．
+	int popcount() const {
+		// verify : https://atcoder.jp/contests/arc156/tasks/arc156_d
+
+		return (int)c.count();
 	}
 
 	// 不要な高次項の除去（最高次の係数が非 0 になるまで削る）
@@ -212,7 +222,7 @@ struct BFPS {
 		return *this;
 	}
 
-	// 高次項の除去（x^d 以上の項を除去する）
+	// 高次項の除去（z^d 以上の項を除去する）
 	BFPS& resize(int d) {
 		n = d;
 		bitset<N> mask; mask.set(); mask >>= N - d;
@@ -242,7 +252,7 @@ struct BFPS {
 		if (f.n == 0) os << 0;
 		else {
 			rep(i, f.n) {
-				os << f[i] << "x^" << i;
+				os << f[i] << "z^" << i;
 				if (i < f.n - 1) os << " + ";
 			}
 		}
@@ -252,40 +262,9 @@ struct BFPS {
 };
 
 
-//【累乗（スパース）】O((|f| + |g|) deg(g) log k)
-/*
-* f(x)^k mod g(x) を返す．
-*/
-template <int N>
-BFPS<N> pow(const typename BFPS<N>::SFPS& f_sp, ll k, const typename BFPS<N>::SFPS& g_sp) {
-	// verify : https://atcoder.jp/contests/arc147/tasks/arc147_f
-	
-	//【方法】
-	// k = [k_d, ..., k_1, k_0] と二進法で表示されるとき，
-	//		f(x)^k = Πi∈[0..d] (k_i = 1 ? f(x)^(2^i) : 1) mod g(x)
-	// として計算できる．
-	//
-	// フロベニウス写像の性質より |f(x)^(2^i)| = |f| であるから積は O(|f| deg(g)) で行える．
-	// また mod g(x) の計算は O(|g| deg(g)) で行える．
-
-	int n = sz(f_sp); int deg_g = g_sp.back();
-
-	BFPS<N> res(1);
-	typename BFPS<N>::SFPS pow2(f_sp);
-	while (k > 0) {
-		if (k & 1) res = (res * pow2).reminder(g_sp);
-		rep(i, n) pow2[i] = (pow2[i] * 2) % deg_g;
-		sort(all(pow2));
-		k /= 2;
-	}
-
-	return res;
-}
-
-
 //【展開係数】O(n^2 log d / 64)
 /*
-* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
+* [z^d] f(z)/g(z) を返す．
 *
 * 制約 : deg f < deg g, g[0] = 1, 2 deg g < N
 */
@@ -322,6 +301,66 @@ bool bostan_mori(const BFPS<N>& f, const BFPS<N>& g, ll d) {
 }
 
 
+//【展開係数（累乗）】O((deg g + deg h)^2 log d / 64)
+/*
+* [x^d] f(z) g(z)^m / h(z) を返す．
+*
+* 制約 : h[0] = 1, deg f + 2 deg g + 2 deg h < N
+*/
+template <int N>
+bool coefficient(BFPS<N> f, const BFPS<N>& g, const BFPS<N>& h, ll m, ll d) {
+	// verify : https://atcoder.jp/contests/dwacon2018-final-open/tasks/dwacon2018_final_c
+
+	//【方法】
+	// m の第 i ビットを m[i] と書くことにすると，g(z)^m は
+	//		g(z)^m
+	//		= Πi≧0 (g(z)^(2^i))^m[i] （繰り返し二乗法）
+	//		= Πi≧0 g(z^(2^i))^m[i] （フロベニウス写像の性質）
+	// となる．また 1/h(z) は，H(z) = 1 - h(z) とおくと，
+	//		1/h(z)
+	//		= 1/(1-H(z))
+	//		= Σ_i H(z)^i （等比級数の和）
+	//		= Πi≧0 (1 + H(z)^(2^i))
+	//		= Πi≧0 (1 + H(z^(2^i))) （フロベニウス写像の性質）
+	//		= Πi≧0 h(z^(2^i)) （1 = -1 (mod 2)）
+	// となる．
+	// 
+	// まず第 0 ビットについて考える．i=0 の部分の積を偶関数部分と奇関数部分に分けて
+	//		f(z) g(z)^m[0] h(z) = F_e(z^2) + z F_o(z^2)
+	// とおくと，i≧1 のときの z^(2^i) が偶関数であることから，d が偶数のときは
+	//		[x^d] f(z) g(z)^m / h(z)
+	//		= [x^d] F_e(z^2) Πi≧1 g(z^(2^i))^m[i] h(z^(2^i))
+	//		= [x^(d/2)] F_e(z) Πi≧0 g(z^(2^i))^(m/2)[i] h(z^(2^i))
+	// d が奇数のときは
+	//		[x^d] f(z) g(z)^m / h(z)
+	//		= [x^d] z F_o(z^2) Πi≧1 g(z^(2^i))^m[i] h(z^(2^i))
+	//		= [x^(d/2)] F_o(z) Πi≧0 g(z^(2^i))^(m/2)[i] h(z^(2^i))
+	// となる（/2 は切り捨て．）これで m が半分になった元と同じ形に帰着された．
+
+	if (d < 0) return 0;
+
+	while (d > 0) {
+		if (m % 2 == 1) f *= g;
+		f *= h;
+		int n = sz(f);
+
+		if (d % 2 == 0) {
+			rep(i, (n + 1) / 2) f[i] = f[2 * i];
+			f.resize((n + 1) / 2);
+		}
+		else {
+			rep(i, n / 2) f[i] = f[2 * i + 1];
+			f.resize(n / 2);
+		}
+
+		d /= 2;
+		m /= 2;
+	}
+
+	return f[0];
+}
+
+
 //【線形漸化式】O(d log d log n / 64)
 /*
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
@@ -337,6 +376,177 @@ bool linearly_recurrent_sequence(const bitset<N>& a, const bitset<N>& c, int d, 
 	BFPS<N> Dnm = 1 + (C >> 1);
 	BFPS<N> Num = (Dnm * A).resize(d);
 	return bostan_mori(Num, Dnm, n);
+}
+
+
+//【累乗の剰余（スパース）】O((|f| + |g|) deg(g) log k)
+/*
+* f(z)^k mod g(z) を返す．
+* 
+* 制約：deg f + deg g < N
+*/
+template <int N>
+BFPS<N> pow_mod(const typename BFPS<N>::SFPS& f_sp, ll k, const typename BFPS<N>::SFPS& g_sp) {
+	// verify : https://atcoder.jp/contests/arc147/tasks/arc147_f
+
+	//【方法】
+	// k = [k_d, ..., k_1, k_0] と二進法で表示されるとき，
+	//		f(x)^k = Πi∈[0..d] (k_i = 1 ? f(x)^(2^i) : 1) mod g(x)
+	// として計算できる．
+	//
+	// フロベニウス写像の性質より |f(x)^(2^i)| = |f| であるから積は O(|f| deg(g)) で行える．
+	// また mod g(x) の計算は右から配る DP で O(|g| deg(g)) で行える．
+
+	int n = sz(f_sp); int deg_g = g_sp.back();
+
+	BFPS<N> res(1);
+	typename BFPS<N>::SFPS pow2(f_sp);
+	while (k > 0) {
+		if (k & 1) res = (res * pow2).reminder(g_sp);
+		rep(i, n) pow2[i] = (pow2[i] * 2) % deg_g;
+		sort(all(pow2)); // 本当は max を最後に回すだけでいい
+		k /= 2;
+	}
+
+	return res;
+}
+
+
+//【累乗の指数の総 XOR】O((deg g)^2 log m / 64)
+/*
+* f(z) g(z)^m の各項の指数の総 XOR を返す．
+*
+* 制約：deg f deg g < N, 2 deg g < N
+*/
+template <int N>
+ll pow_exponent_XOR(BFPS<N> f, const BFPS<N>& g, ll m) {
+	//【方法】
+	// m の第 i ビットを m[i] と書くことにすると，f(z) g(z)^m は
+	//		f(z) g(z)^m = f(z) Πi≧0 (g(z)^(2^i))^m[i]
+	// と表される．さらに F_2[z] においては 2 乗（フロベニウス写像）は環準同型なので
+	//		f(z) g(z)^m = f(z) Πi≧0 g(z^(2^i))^m[i]
+	// となる．
+	// 
+	// まず第 0 ビットについて考える．Πi≧1 g(z^(2^i))^m[i] の項の指数は全て偶数なので，
+	//		h(z) = f(z) g(z)^m[0]
+	// とおくと，
+	//		(h(z) の奇数次の項数) * (Πi≧1 g(z^(2^i)^m[i]) の項数) mod 2
+	// が求まれば良い．前者については h(z) を計算して素朴に数えれば良い．後者については
+	//		(Πi≧1 g(z^(2^i))^m[i] の項数) mod 2
+	//		= Πi≧1 (g(z^(2^i))^m[i] の項数) mod 2 （項が消えるのは同類項が偶数個のときに限る）
+	//		= Πi≧1 (g(z)^m[i] の項数) mod 2
+	//		= (g(z) の項数)^(popcount(m/2)) mod 2
+	//		= Boole[(g(z) の項数が奇数) または m/2=0] （0 と 1 は 1 以上の累乗で不変）
+	// となる．
+	//
+	// 以降は第 0 ビットのことは考えなくて良いので，
+	//		f(z) ← h(z) の z^(2j) と z^(2j+1) をともに z^j に置き換えたもの（同類項は相殺）
+	//		m ← m/2（切り捨て）
+	// として，f(z) g(z)^m の各項の指数の総 XOR を求める問題に帰着する．
+
+	//【注意】
+	// 随所で mod 2 が効いているので一般化は容易ではない．
+	// 例えば f(z) g(z)^m の項数を求めるだけでも難しい．
+	// これをひな形にしていろいろするつもりだったけどだめそう．
+
+	// B : 結果の msb
+	int B = msb(f.deg() + g.deg() * m);
+
+	int g_pc = g.popcount();
+
+	ll res = 0;
+
+	repi(b, 0, B) {
+		if (m % 2 == 1) f *= g;
+		m /= 2;
+
+		int n = sz(f);
+
+		if ((g_pc % 2 == 1) || m == 0) {
+			int cnt = 0;
+			rep(i, n / 2) cnt += f[2 * i + 1];
+			if (cnt % 2 == 1) res |= 1LL << b;
+		}
+
+		if (n % 2 == 0) {
+			rep(i, n / 2) f[i] = f[2 * i] ^ f[2 * i + 1];
+			f.resize(n / 2);
+		}
+		else {
+			rep(i, n / 2) f[i] = f[2 * i] ^ f[2 * i + 1];
+			f[n / 2] = f[n - 1];
+			f.resize(n / 2 + 1);
+		}
+	}
+
+	return res;
+}
+
+
+//【累乗の項数】O(2^(deg g) (deg g)^2 log m / 64)
+/*
+* f(z) g(z)^m の項数を返す．
+*
+* 制約：deg f ≦ deg g, 2 deg g < N
+*/
+template <int N>
+ll count_pow_terms(const BFPS<N>& f, const BFPS<N>& g, ll m) {
+	// verify : https://projecteuler.net/problem=588
+
+	//【方法】
+	// m の第 i ビットを m[i] と書くことにすると，f(z) g(z)^m は
+	//		f(z) g(z)^m = f(z) Πi≧0 (g(z)^(2^i))^m[i]
+	// と表される．さらに F_2[z] においては 2 乗（フロベニウス写像）は環準同型なので
+	//		f(z) g(z)^m = f(z) Πi≧0 g(z^(2^i))^m[i]
+	// となる．
+	// 
+	// まず第 0 ビットについて考える．i=0 の部分の積を偶関数部分と奇関数部分に分けて
+	//		f(z) g(z)^m[0] = F_e(z^2) + z F_o(z^2)
+	// とおくと，i≧1 のときの z^(2^i) が偶関数であることから，偶数次の項は
+	//		F_e(z^2) Πi≧1 g(z^(2^i))^m[i]
+	// 奇数次の項は
+	//		z F_o(z^2) Πi≧1 g(z^(2^i))^m[i]
+	// で全てであり，それぞれの項数は
+	//		F_e(z) Πi≧0 g(z^(2^i))^(m/2)[i]
+	//		F_o(z) Πi≧0 g(z^(2^i))^(m/2)[i]
+	// と変わらない．
+	//		deg F_e(z), deg F_o(z) ≦ deg g
+	// なので，次数が deg g 以下の bit 多項式全てを状態にもって bitDP すればよい．
+
+	int n = sz(g);
+	f.resize(n);
+
+	vector<BFPS<N>> fs(1LL << n);
+	repb(set, n) fs[set] = BFPS<N>(bitset<N>(set), n);
+
+	vl dp(1LL << n);
+	dp[f.c.to_ulong()] = 1;
+
+	while (m > 0) {
+		vl ndp(1LL << n);
+
+		repb(set, n) {
+			BFPS<N> f(fs[set]);
+			if (m % 2 == 1) f *= g;
+			f.resize(2 * n);
+
+			int nset0 = 0;
+			rep(i, n) nset0 |= (int)f[2 * i] << i;
+			ndp[nset0] += dp[set];
+
+			int nset1 = 0;
+			rep(i, n) nset1 |= (int)f[2 * i + 1] << i;
+			ndp[nset1] += dp[set];
+		}
+		dp = move(ndp);
+
+		m /= 2;
+	}
+
+	ll res = 0;
+	repb(set, n) res += dp[set] * popcount(set);
+
+	return res;
 }
 
 
@@ -379,50 +589,6 @@ bool polynomial_inverse(const BFPS<N>& a, const BFPS<N>& b, BFPS<N>& u) {
 	extended_gcd(a, b, g, u, v);
 
 	return g == BFPS<N>(1);
-}
-
-
-//【多項式の離散対数問題】O(2^(deg(g)/2) deg(g)^2 / 64)
-/*
-* a(x) f(x)^d = b(x) mod g(x) の最小解 d >= 0 を返す．（なければ INFL）
-*
-*（baby-step giant-step）
-*/
-template <int N>
-ll log(const BFPS<N>& f, const BFPS<N>& a, const BFPS<N>& b, const BFPS<N>& g) {
-	// verfy : https://atcoder.jp/contests/utpc2014/tasks/utpc2014_k
-
-	ll m = 1LL << ((g.deg() + 1) / 2);
-
-	// logf[v] : v = b f^j となる m 未満で最大の j
-	unordered_map<unsigned long long, int> logf;
-	BFPS<N> f_pow(1);
-	rep(j, m) {
-		if (sz((a * f_pow + b).reminder(g).resize()) == 0) return j;
-
-		BFPS<N> v = (f_pow * b).reminder(g);
-		logf[v.c.to_ullong()] = j;
-
-		f_pow = (f_pow * f).reminder(g);
-	}
-
-	// a に f_pow = f^m を掛けながら解の候補を探していく．
-	BFPS<N> af = a;
-	repi(i, 1, m) {
-		af = (af * f_pow).reminder(g);
-		if (logf.count(af.c.to_ullong())) {
-			// a f^(i m) = b f^j なる (i, j) が見つかった．
-			ll d = i * m - logf[af.c.to_ullong()];
-
-			// 実際に計算してみて一致するかを見る．
-			if (sz((a * power_mod(f, d, g) + b).reminder(g).resize()) == 0) {
-				return d;
-			}
-			return INFL; // ここで打ち切っていいとは限らないのでは？？
-		}
-	}
-
-	return INFL;
 }
 
 

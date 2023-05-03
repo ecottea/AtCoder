@@ -106,55 +106,51 @@ void run_length_encodeing(const vector<T>& a, vector<T>& c, vi& x) {
 }
 
 
-//【文字の次の位置】O(n k)
+//【文字の次の位置】O(26 n)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s[i..n-1] で最初に文字 c が現れる位置（無いなら n）を nxt[i][c] に格納し nxt を返す．
+* s[i..n) で最初に文字 c が現れる位置（無いなら n）を nxt[i][c] に格納し nxt を返す．
 */
-vvi next_position(const string& s) {
+vvi next_position(const string& s, int k = 26, char a = 'a') {
 	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_e
 
 	int n = sz(s);
-	const int k = 26;
 
 	// nxt[i][c] : s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
 	vvi nxt(n + 1, vi(k, n));
 
 	repir(i, n - 1, 0) {
-		rep(c, k) {
-			nxt[i][c] = nxt[i + 1][c];
-		}
-		nxt[i][s[i] - 'a'] = i;
+		rep(c, k) nxt[i][c] = nxt[i + 1][c];
+		nxt[i][s[i] - a] = i;
 	}
 
 	return nxt;
 }
 
 
-//【文字の前の位置】O(n k)
+//【文字の前の位置】O(26 n)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s[0..i] で最後に文字 c が現れる位置（無いなら -1）を prv[i][c] に格納し prv を返す．
+* s[0..i) で最後に文字 c が現れる位置（無いなら -1）を prv[i][c] に格納し prv を返す．
 */
-vvi prev_position(const string& s) {
+vvi prev_position(const string& s, int k = 26, char a = 'a') {
+	// verify : https://yukicoder.me/problems/no/2281
+
 	int n = sz(s);
-	const int k = 26;
-	
+
 	// prv[i + 1][c] : s[0..i] で最後に文字 c が現れる位置（無いなら -1）
 	vvi prv(n + 1, vi(k, -1));
-	
+
 	rep(i, n) {
-		rep(c, k) {
-			prv[i + 1][c] = prv[i][c];
-		}
-		prv[i + 1][s[i] - 'a'] = i;
+		rep(c, k) prv[i + 1][c] = prv[i][c];
+		prv[i + 1][s[i] - a] = i;
 	}
 
 	return prv;
 }
 
 
-//【文字の最初の位置】O(n + k)
+//【文字の最初の位置】O(n + 26)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
 * s で最初に文字 c が現れる位置（無いなら n）を pos[c] に格納し pos を返す．
@@ -166,15 +162,13 @@ vi first_position(const string& s) {
 	// pos[c] : s で最初に文字 c が現れる位置（無いなら n）
 	vi pos(k, n);
 
-	repir(i, n - 1, 0) {
-		pos[s[i] - 'a'] = i;
-	}
+	repir(i, n - 1, 0) pos[s[i] - 'a'] = i;
 
 	return pos;
 }
 
 
-//【文字の最後の位置】O(n + k)
+//【文字の最後の位置】O(n + 26)
 /*
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
 * s で最後に文字 c が現れる位置（無いなら -1）を pos[c] に格納し pos を返す．
@@ -186,15 +180,13 @@ vi last_position(const string& s) {
 	// pos[c] : s で最初に文字 c が現れる位置（無いなら -1）
 	vi pos(k, -1);
 
-	rep(i, n) {
-		pos[s[i] - 'a'] = i;
-	}
+	rep(i, n) pos[s[i] - 'a'] = i;
 
 	return pos;
 }
 
 
-//【異なる文字の次の位置】O(n k)
+//【異なる文字の次の位置】O(n)
 /*
 * s[0..n) で，j > i かつ s[j] != s[i] なる最小の j（なければ n）を nxt[i] に格納し nxt を返す．
 */

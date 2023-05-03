@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-// ■■■■■ [遅延評価]セグメント木（抽象代数上） ■■■■■
+// ■■■■■ [遅延評価]セグメント木 ■■■■■
 
 
 //【セグメント木（モノイド）】
@@ -19,17 +19,17 @@
 *	v[i] を返す．
 *
 * S prod(int l, int r) : O(log n)
-*	op( v[l..r) ) を返す．空なら e() を返す．
+*	Πv[l..r) を返す．空なら e() を返す．
 *
 * S all_prod() : O(1)
-*	op( v[0..n) ) を返す．
+*	Πv[0..n) を返す．
 *
 * int max_right(int l, function<bool(S)> f) : O(log n)
-*	f( op( v[l..r) ) ) = true となる最大の r を返す．
+*	f( Πv[l..r) ) = true となる最大の r を返す．
 *   制約：f(e()) = true，f は単調
 *
 * int min_left(int r, function<bool(S)> f) : O(log n)
-*	f( op( v[l..r) ) ) = true となる最小の l を返す．
+*	f( Πv[l..r) ) = true となる最小の l を返す．
 *	制約：f(e()) = true，f は単調
 */
 template <class S, S(*op)(S, S), S(*e)()>
@@ -46,36 +46,27 @@ struct Segtree {
 	// v[0] は使用しない．
 	vector<S> v;
 
-	// コンストラクタ（初期化なし）
-	Segtree() : n(0), actual_n(0) {}
-
-	// コンストラクタ（e() で初期化）
+	// v[0..n) = e() で初期化する．
 	Segtree(int n_) : actual_n(n_) {
 		// 要素数以上となる最小の 2 冪を求め，n とする．
-		int pow2 = 1;
-		while (pow2 < n_) {
-			pow2 *= 2;
-		}
-		n = pow2;
+		n = n_ > 0 ? 1 << (msb(n_ - 1) + 1) : 1;
 
 		// 完全二分木を実現する大きさ 2 * n の配列を確保する．
 		v = vector<S>(2 * n, e());
 	}
 
-	// コンストラクタ（配列で初期化）
+	// 配列 v[0..n) の要素で初期化する．
 	Segtree(vector<S>& v_) : Segtree(sz(v_)) {
 		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
 
 		// 全ての葉にデータを設定する．
-		rep(i, sz(v_)) {
-			v[i + n] = v_[i];
-		}
+		rep(i, sz(v_)) v[i + n] = v_[i];
 
 		// 全てのノードに正しい値を設定する．
-		repir(i, n - 1, 1) {
-			v[i] = op(v[i * 2], v[i * 2 + 1]);
-		}
+		repir(i, n - 1, 1) v[i] = op(v[i * 2], v[i * 2 + 1]);
 	}
+
+	Segtree() : n(0), actual_n(0) {} // ダミー
 
 	// v[i] = x とする．
 	void set(int i, S x) {
@@ -87,7 +78,7 @@ struct Segtree {
 		// 葉のデータを更新
 		v[i] = x;
 
-		// 親のデータも更新しておく
+		// 先祖	のデータも更新しておく
 		while (i > 1) {
 			i /= 2;
 			v[i] = op(v[i * 2], v[i * 2 + 1]);
@@ -97,24 +88,20 @@ struct Segtree {
 	// v[i] を返す．
 	S get(int i) const { return v[i + n]; }
 
-	// op( v[l..r) ) を返す．空なら e() を返す．
+	// Πv[l..r) を返す．空なら e() を返す．
 	S prod(int l, int r) const {
 		// verify : https://judge.yosupo.jp/problem/point_set_range_composite
 
 		return prod_rf(l, r, 1, 0, n);
 	}
 
-	// k : 注目ノード，[kl.kr) : ノード v[k] が表す区間
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	S prod_rf(int l, int r, int k, int kl, int kr) const {
 		// 範囲外なら単位元 e() を返す．
-		if (kr <= l || r <= kl) {
-			return e();
-		}
+		if (kr <= l || r <= kl) return e();
 
 		// 完全に範囲内なら葉まで降りず自身の値を返す．
-		if (l <= kl && kr <= r) {
-			return v[k];
-		}
+		if (l <= kl && kr <= r) return v[k];
 
 		// 一部の範囲のみを含むなら子を見に行く．
 		S vl = prod_rf(l, r, k * 2, kl, (kl + kr) / 2);
@@ -122,10 +109,10 @@ struct Segtree {
 		return op(vl, vr);
 	}
 
-	// op( v[0..n) ) を返す．
+	// Πv[0..n) を返す．
 	S all_prod() const { return prod_rf(0, n, 1, 0, n); }
 
-	// f( op( v[l..r) ) ) = true となる最大の r を返す．
+	// f( Πv[l..r) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& f) const {
 		S x = e();
 		return max_right_rf(l, actual_n, x, 1, 0, n, f);
@@ -134,9 +121,7 @@ struct Segtree {
 	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	int max_right_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& f) const {
 		// 範囲外の場合
-		if (kr <= l || r <= kl) {
-			return r;
-		}
+		if (kr <= l || r <= kl) return r;
 
 		// f( op( v[kl, kr) ) ) = true の場合
 		if (f(op(x, v[k]))) {
@@ -145,21 +130,17 @@ struct Segtree {
 		}
 
 		// 自身が葉であればその位置を返す．
-		if (k >= n) {
-			return k - n;
-		}
+		if (k >= n) return k - n;
 
 		// まず左の部分木を見に行き，見つかったならそれを返す．
 		int pos = max_right_rf(l, r, x, k * 2, kl, (kl + kr) / 2, f);
-		if (pos != r) {
-			return pos;
-		}
+		if (pos != r) return pos;
 
 		// 見つからなかったなら右の部分木も見にいき，結果を返す．
 		return max_right_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, f);
 	}
 
-	// f( op( v[l..r) ) ) = true となる最小の l を返す．
+	// f( Πv[l..r) ) = true となる最小の l を返す．
 	int min_left(int r, const function<bool(S)>& f) const {
 		S x = e();
 		return min_left_rf(0, r, x, 1, 0, n, f) + 1;
@@ -168,9 +149,7 @@ struct Segtree {
 	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
 	int min_left_rf(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& f) const {
 		// 範囲外の場合
-		if (kr <= l || r <= kl) {
-			return l - 1;
-		}
+		if (kr <= l || r <= kl) return l - 1;
 
 		// f( op( v[kl, kr) ) ) = true の場合
 		if (f(op(v[k], x))) {
@@ -179,15 +158,11 @@ struct Segtree {
 		}
 
 		// 自身が葉であればその位置を返す．
-		if (k >= n) {
-			return k - n;
-		}
+		if (k >= n) return k - n;
 
 		// まず右の部分木を見に行き，見つかったならそれを返す．
 		int pos = min_left_rf(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, f);
-		if (pos != l - 1) {
-			return pos;
-		}
+		if (pos != l - 1) return pos;
 
 		// 見つからなかったなら左の部分木も見にいき，結果を返す．
 		return min_left_rf(l, r, x, k * 2, kl, (kl + kr) / 2, f);
@@ -195,9 +170,167 @@ struct Segtree {
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Segtree seg) {
-		rep(i, seg.actual_n) {
-			os << seg.get(i) << " ";
+		rep(i, seg.actual_n) os << seg.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【双対セグメント木（M-集合）】
+/*
+* Dual_segtree<S, F, act, comp, id>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．
+*	要素は左モノイド作用付き集合 (S, F, act, comp, id) の元とする．
+*
+* set(int i, S x) : O(log n)
+*	v[i] = x とする．
+*
+* S get(int i) : O(log n)
+*	v[i] を返す．
+*
+* apply(int i, F f) : O(log n)
+*	v[i] = f( v[i] ) とする．
+*
+* apply(int l, int r, F f) : O(log n)
+*	v[l..r) = f( v[l..r) ) とする．
+*/
+template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Dual_segtree {
+	int actual_n; // 実際の要素数
+	int n; // 完全二分木の葉の数（必ず 2 冪）
+
+	// S の要素の格納用配列
+	vector<S> v;
+
+	// F の遅延評価用の完全二分木
+	vector<F> lazy;
+
+	// 遅延させていた評価を行う．：O(1)
+	void eval(int k) {
+		// 遅延させていた評価がなければ何もしない．
+		if (lazy[k] == id()) return;
+
+		// 子が居れば子に伝搬する．
+		if (k < n / 2) {
+			// 左作用を考えているのでこの向きに合成する．
+			lazy[k * 2] = comp(lazy[k], lazy[k * 2]);
+			lazy[k * 2 + 1] = comp(lazy[k], lazy[k * 2 + 1]);
 		}
+		// 葉なら遅延させずに v の要素に作用させてしまえばいい．
+		else {
+			v[k * 2 - n] = act(lazy[k], v[k * 2 - n]);
+			v[k * 2 + 1 - n] = act(lazy[k], v[k * 2 + 1 - n]);
+		}
+
+		// 子への伝搬を終えたので自身は恒等写像になる．
+		lazy[k] = id();
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	void set_sub(int i, S x, int k, int kl, int kr) {
+		// 葉まで降りてきたら値を代入して帰る．
+		if (kr - kl == 1) {
+			v[k - n] = x;
+			return;
+		}
+
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 左右の子を見に行く．
+		int km = (kl + kr) / 2;
+		if (i < km) set_sub(i, x, k * 2, kl, km);
+		else set_sub(i, x, k * 2 + 1, km, kr);
+	}
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	S get_sub(int i, int k, int kl, int kr) {
+		// 葉まで降りてきたら値を返す．
+		if (kr - kl == 1) return v[k - n];
+
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 左右の子を見に行く．
+		int km = (kl + kr) / 2;
+		if (i < km) return get_sub(i, k * 2, kl, km);
+		else return get_sub(i, k * 2 + 1, km, kr);
+	}
+
+	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
+	void apply_sub(int l, int r, F f, int k, int kl, int kr) {
+		// 範囲外なら何もしない．
+		if (kr <= l || r <= kl) return;
+
+		// 完全に範囲内なら自身の値を更新する．
+		if (l <= kl && kr <= r) {
+			if (kr - kl > 1) {
+				// 左作用を考えているのでこの向きに合成する．
+				lazy[k] = comp(f, lazy[k]);
+			}
+			else {
+				v[k - n] = act(f, v[k - n]);
+			}
+			return;
+		}
+
+		// まず自身の評価を行っておく．
+		eval(k);
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		int km = (kl + kr) / 2;
+		apply_sub(l, r, f, k * 2, kl, km);
+		apply_sub(l, r, f, k * 2 + 1, km, kr);
+	}
+
+public:
+	// 配列 v[0..n) の要素で初期化する．
+	Dual_segtree(vector<S>& v_) : actual_n(sz(v_)) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_point_get
+
+		// 要素数以上となる最小の 2 冪を求め，n とする．
+		n = 1 << (msb(actual_n - 1) + 1);
+
+		// 配列の初期化
+		v = v_;
+		v.resize(n);
+		lazy.assign(n, id());
+	}
+	Dual_segtree() : actual_n(0), n(0) {} // ダミー
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		Assert(0 <= i && i < actual_n);
+		set_sub(i, x, 1, 0, n);
+	}
+
+	// v[i] を返す．
+	S get(int i) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_point_get
+
+		Assert(0 <= i && i < actual_n);
+		return get_sub(i, 1, 0, n);
+	}
+
+	// v[l..r) = f( v[l..r) ) とする．
+	void apply(int l, int r, F f) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_point_get
+
+		chmax(l, 0); chmin(r, actual_n);
+		if (l >= r) return;
+		apply_sub(l, r, f, 1, 0, n);
+	}
+
+	// v[i] = f( v[i] ) とする．
+	void apply(int i, F f) {
+		Assert(0 <= i && i < actual_n);
+		apply_sub(i, i + 1, f, 1, 0, n);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Dual_segtree seg) {
+		rep(i, seg.actual_n) os << seg.get(i) << " ";
 		return os;
 	}
 #endif
@@ -1076,8 +1209,546 @@ public:
 
 //【永続セグメント木（モノイド）】
 /*
-* 永続データ構造.h へ
+* Persistent_segtree<S, op, e>(int n) : O(n)
+*	v[0..n) = e() で初期化する．履歴番号は 0 とする．
+*	要素はモノイド (S, op, e) の元とする．
+*
+* Persistent_segtree<S, op, e>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．履歴番号は 0 とする．
+*
+* int set(int i, S x, int t) : O(log n)
+*	t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+*
+* S get(int i, int t) : O(log n)
+*	t 番目の履歴の v[i] を返す．
+*
+* S prod(int l, int r, int t) : O(log n)
+*	t 番目の履歴の Πv[l..r) を返す．
+*
+* S all_prod(int t) : O(1)
+*	t 番目の履歴の Πv[0..n) を返す．
+*
+* int max_right(int l, function<bool(S)> f, int t) : O(log n)
+*	t 番目の履歴について，f(Πv[l..r)) = true となる最大の r を返す．
+*	制約：f(e()) = true，f は単調
+*
+* int min_left(int r, function<bool(S)> f, int t) : O(log n)
+*	t 番目の履歴について，f(Πv[l..r)) = true となる最小の l を返す．
+*	制約：f(e()) = true，f は単調
 */
+template <class S, S(*op)(S, S), S(*e)()>
+class Persistent_segtree {
+	struct Node {
+		int l, r;
+		S val; // Πv[l..r) の値
+		Node* lp, * rp; // 左右の子へのポインタ
+
+		Node(int l_, int r_, S val_ = e(), Node* lp_ = nullptr, Node* rp_ = nullptr)
+			: l(l_), r(r_), val(val_), lp(lp_), rp(rp_) {}
+	};
+
+	int n; // 配列の大きさ
+	int T; // 履歴の個数
+	vector<Node*> his; // 履歴へのポインタ
+
+	Node* init_rf(const vector<S>& v, int l, int r) {
+		// 葉を作る場合
+		if (r - l == 1) {
+			Node* p = new Node(l, r, v[l]);
+			return p;
+		}
+
+		Node* p = new Node(l, r);
+		int m = (l + r) / 2;
+		p->lp = init_rf(v, l, m);
+		p->rp = init_rf(v, m, r);
+		p->val = op(p->lp->val, p->rp->val);
+
+		return p;
+	}
+
+	Node* set_rf(Node* p, int i, S x) {
+		// p が葉の場合
+		if (p->r - p->l == 1) {
+			Node* np = new Node(p->l, p->r, x);
+			return np;
+		}
+
+		Node* np = new Node(p->l, p->r);
+		int m = (p->l + p->r) / 2;
+		if (i < m) {
+			np->lp = set_rf(p->lp, i, x);
+			np->rp = p->rp;
+		}
+		else {
+			np->lp = p->lp;
+			np->rp = set_rf(p->rp, i, x);
+		}
+		np->val = op(np->lp->val, np->rp->val);
+
+		return np;
+	}
+
+	S get_rf(Node* p, int i) const {
+		// p が葉の場合
+		if (p->r - p->l == 1) return p->val;
+
+		int m = (p->l + p->r) / 2;
+		if (i < m) return get_rf(p->lp, i);
+		else  return get_rf(p->rp, i);
+	}
+
+	S prod_rf(Node* p, int l, int r) const {
+		// 範囲外なら単位元 e() を返す．
+		if (p->r <= l || r <= p->l) return e();
+
+		// 完全に範囲内なら葉まで降りず自身の値を返す．
+		if (l <= p->l && p->r <= r) return p->val;
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		S vl = prod_rf(p->lp, l, r);
+		S vr = prod_rf(p->rp, l, r);
+		return op(vl, vr);
+	}
+
+	int max_right_rf(Node* p, int l, S& x, const function<bool(S)>& f) const {
+		// 範囲外の場合
+		if (p->r <= l) return n;
+
+		// f( Πv[p->l..p->r) ) = true の場合
+		if (f(op(x, p->val))) {
+			x = op(x, p->val);
+			return n;
+		}
+
+		// p が葉の場合，これがちょうど条件を満たさなくなる値なのでその位置を返す．
+		if (p->r - p->l == 1) return p->l;
+
+		// 左の部分木から見に行く．境界が見つかったらそれを返す．
+		int pos = max_right_rf(p->lp, l, x, f);
+		if (pos != n) return pos;
+
+		// 見つからなかったら右の部分木も見に行き，結果を返す．
+		return max_right_rf(p->rp, l, x, f);
+	}
+
+	int min_left_rf(Node* p, int r, S& x, const function<bool(S)>& f) const {
+		// 範囲外の場合
+		if (r <= p->l) return -1;
+
+		// f( Πv[p->l..p->r) ) = true の場合
+		if (f(op(p->val, x))) {
+			x = op(p->val, x);
+			return -1;
+		}
+
+		// p が葉の場合，これがちょうど条件を満たさなくなる値なのでその位置を返す．
+		if (p->r - p->l == 1) return p->l;
+
+		// 右の部分木から見に行く．境界が見つかったらそれを返す．
+		int pos = min_left_rf(p->rp, r, x, f);
+		if (pos != -1) return pos;
+
+		// 見つからなかったら左の部分木も見に行き，結果を返す．
+		return min_left_rf(p->lp, r, x, f);
+	}
+
+	void print_rf(Node* p, ostream& os) const {
+		if (p->r - p->l == 1) {
+			os << p->val << " ";
+			return;
+		}
+
+		print_rf(p->lp, os);
+		print_rf(p->rp, os);
+	}
+
+public:
+	// 配列 v[0..n) の要素で初期化する．
+	Persistent_segtree(const vector<S>& v) : n(sz(v)), T(1), his(1) {
+		his[0] = init_rf(v, 0, n);
+	}
+
+	// v[0..n) = e() で初期化する．
+	Persistent_segtree(int n_) : n(n_), T(1), his(1) {
+		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
+
+		vector<S> v(n, e());
+		his[0] = init_rf(v, 0, n);
+	}
+
+	Persistent_segtree() : n(0), T(0) {} // ダミー
+
+	// t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+	int set(int i, S x, int t) {
+		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
+
+		Assert(0 <= i && i < n);
+		Assert(t < T);
+		his.push_back(set_rf(his[t], i, x));
+		return T++;
+	}
+
+	// t 番目の履歴の v[i] を返す．
+	S get(int i, int t) const {
+		Assert(0 <= i && i < n);
+		Assert(t < T);
+		return get_rf(his[t], i);
+	}
+
+	// t 番目の履歴の Πv[l..r) を返す．
+	S prod(int l, int r, int t) const {
+		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
+
+		Assert(0 <= l && r <= n);
+		Assert(t < T);
+		if (l >= r) return e();
+		return prod_rf(his[t], l, r);
+	}
+
+	// t 番目の履歴の Πv[0..n) を返す．
+	S all_prod(int t) const {
+		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
+
+		Assert(t < T);
+		return prod(0, n, t);
+	}
+
+	// t 番目の履歴について，f(Πv[l..r)) = true となる最大の r を返す．
+	int max_right(int l, const function<bool(S)>& f, int t) const {
+		// verify : https://atcoder.jp/contests/practice2/tasks/practice2_j
+
+		S x(e());
+		return max_right_rf(his[t], l, x, f);
+	}
+
+	// t 番目の履歴について，f(Πv[l..r)) = true となる最小の l を返す．
+	int min_left(int r, const function<bool(S)>& f, int t) const {
+		S x(e());
+		return min_left_rf(his[t], r, x, f);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Persistent_segtree& seg) {
+		rep(t, seg.T) {
+			os << t << ": ";
+			seg.print_rf(seg.his[t], os);
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【静的 XOR セグメント木（モノイド）】
+/*
+* Static_XOR_segtree<S, op, e>(vS v) : O(n log n)
+*	配列 v[0..n) の要素で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*	制約：n は 2 冪
+*
+* S prod(int l, int r, int p) : O(log n)
+*	ids = [l..r) XOR p として Πv[ids] を返す．空なら e() を返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Static_XOR_segtree {
+	// 参考 : https://yukicoder.me/problems/no/1891/editorial
+	
+	// N : 完全二分木の葉の数（必ず 2 冪）
+	int N;
+	
+	// N = 2^M
+	int M;
+
+	// 完全二分木を実現する大きさ 2 * N の配列
+	// 根は v[1] で，v[i] の親は v[i / 2]，子は v[2 * i], v[2 * i + 1]．
+	// 0-indexed での i 番目のデータは葉である v[i + N] に入っている．
+	// v[0] は使用しない．
+	vector<vector<S>> v;
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	S prod_rf(int l, int r, int p, int m, int k, int kl, int kr) const {
+		// 範囲外なら単位元 e() を返す．
+		if (kr <= l || r <= kl) return e();
+
+		// 完全に範囲内なら葉まで降りず自身の値を返す．
+		if (l <= kl && kr <= r) {
+			int mask = (1 << (m + 1)) - 1;
+			return v[k][p & mask];
+		}
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		S vl, vr;
+		if (get(p, m)) {
+			// なんかうまいことやる．
+			int b = 1 << m;
+
+			int nl = max(l, kl) + b;
+			int nr = min(r, (kl + kr) / 2) + b;
+			vl = prod_rf(nl, nr, p, m - 1, k * 2 + 1, (kl + kr) / 2, kr);
+
+			nl = max(l, (kl + kr) / 2) - b;
+			nr = min(r, kr) - b;
+			vr = prod_rf(nl, nr, p, m - 1, k * 2, kl, (kl + kr) / 2);
+		}
+		else {
+			vl = prod_rf(l, r, p, m - 1, k * 2, kl, (kl + kr) / 2);
+			vr = prod_rf(l, r, p, m - 1, k * 2 + 1, (kl + kr) / 2, kr);
+		}
+		return op(vl, vr);
+	}
+
+public:
+	// 配列 v[0..n) の要素で初期化する．
+	Static_XOR_segtree(const vector<S>& a) {
+		// verify : https://yukicoder.me/problems/no/1891
+
+		N = sz(a);
+		M = msb(N);
+		v.resize(2 * N);
+
+		// 全ての葉にデータを設定する．
+		rep(i, N) v[i + N] = vector<S>{ a[i] };
+
+		// 全てのノードに正しい値を設定する．
+		repir(i, N - 1, 1) {
+			int m = M - 1 - msb(i);
+			v[i].resize(1LL << (m + 1));
+			repb(j, m) v[i][j] = op(v[i * 2][j], v[i * 2 + 1][j]);
+			repb(j, m) v[i][(1LL << m) + j] = op(v[i * 2 + 1][j], v[i * 2][j]);
+		}
+	}
+
+	Static_XOR_segtree() : N(0), M(0) {} // ダミー
+
+	// ids = [l..r) XOR p として Πv[ids] を返す．空なら e() を返す．
+	S prod(int l, int r, int p) const {
+		// verify : https://yukicoder.me/problems/no/1891
+
+		return prod_rf(l, r, p, M - 1, 1, 0, N);
+	}
+}; 
+
+
+//【XOR セグメント木（モノイド）】
+/*
+* XOR_segtree<S, op, e>(vS v) : O(n log n)
+*	配列 v[0..n) の要素で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*	制約：n は 2 冪
+*
+* set(int i, S x) : O(√n)
+*	v[i] = x とする．
+*
+* S prod(int l, int r, int p) : O(√n)
+*	id = [l..r) XOR p として Πv[id] を返す．空なら e() を返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class XOR_segtree {
+	// 完全二分木の葉の数（必ず 2 冪）
+	int N;
+
+	// N = 2^M, hM = M / 2
+	int M, hM;
+
+	// 完全二分木を実現する大きさ 2 * N の配列
+	// 根は v[1] で，v[i] の親は v[i / 2]，子は v[2 * i], v[2 * i + 1]．
+	// 0-indexed での i 番目のデータは葉である v[i + N] に入っている．
+	// v[0] は使用しない．
+	vector<vector<S>> v;
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	S prod_rf(int l, int r, int p, int m, int k, int kl, int kr) const {
+		// 範囲外なら単位元 e() を返す．
+		if (kr <= l || r <= kl) return e();
+
+		// 完全に範囲内なら葉まで降りず自身の値を返す．
+		if (m < hM && l <= kl && kr <= r) {
+			int mask = (1 << (m + 1)) - 1;
+			return v[k][p & mask];
+		}
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		S vl, vr;
+		if (get(p, m)) {
+			// なんかうまいことやる．
+			int b = 1 << m;
+
+			int nl = max(l, kl) + b;
+			int nr = min(r, (kl + kr) / 2) + b;
+			vl = prod_rf(nl, nr, p, m - 1, k * 2 + 1, (kl + kr) / 2, kr);
+
+			nl = max(l, (kl + kr) / 2) - b;
+			nr = min(r, kr) - b;
+			vr = prod_rf(nl, nr, p, m - 1, k * 2, kl, (kl + kr) / 2);
+		}
+		else {
+			vl = prod_rf(l, r, p, m - 1, k * 2, kl, (kl + kr) / 2);
+			vr = prod_rf(l, r, p, m - 1, k * 2 + 1, (kl + kr) / 2, kr);
+		}
+		return op(vl, vr);
+	}
+
+public:
+	// 配列 v[0..n) の要素で初期化する．
+	XOR_segtree(const vector<S>& a) {
+		// verify : https://yukicoder.me/problems/no/2265
+
+		N = sz(a);
+		M = msb(N);
+		hM = M / 2;
+		v.resize(2 * N);
+
+		// 全ての葉にデータを設定する．
+		rep(i, N) v[i + N] = vector<S>{ a[i] };
+
+		// 深いノードには正しい値を設定する．
+		repir(i, N - 1, 1) {
+			int m = M - 1 - msb(i);
+			if (m >= hM) break;
+
+			v[i].resize(1LL << (m + 1));
+			repb(j, m) v[i][j] = op(v[i * 2][j], v[i * 2 + 1][j]);
+			repb(j, m) v[i][(1LL << m) + j] = op(v[i * 2 + 1][j], v[i * 2][j]);
+		}
+	}
+
+	XOR_segtree() : N(0), M(0), hM(0) {} // ダミー
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		// verify : https://yukicoder.me/problems/no/2265
+
+		// 実際にデータを格納すべき葉の位置へ
+		i += N;
+
+		// 葉のデータを更新
+		v[i][0] = x;
+
+		// 親のデータも更新しておく
+		while (i > 1) {
+			i /= 2;
+			int m = M - 1 - msb(i);
+			if (m >= hM) break;
+
+			repb(j, m) v[i][j] = op(v[i * 2][j], v[i * 2 + 1][j]);
+			repb(j, m) v[i][(1LL << m) + j] = op(v[i * 2 + 1][j], v[i * 2][j]);
+		}
+	}
+
+	// ids = [l..r) XOR p として Πv[ids] を返す．空なら e() を返す．
+	S prod(int l, int r, int p) const {
+		// verify : https://yukicoder.me/problems/no/2265
+
+		return prod_rf(l, r, p, M - 1, 1, 0, N);
+	}
+};
+
+
+//【XOR セグメント木（可換モノイド）】
+/*
+* Commutative_XOR_segtree<S, op, e>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．
+*	要素は可換モノイド (S, op, e) の元とする．
+*	制約：n は 2 冪
+*
+* set(int i, S x) : O(log n)
+*	v[i] = x とする．
+*
+* S sum(int l, int r, int p) : O(log n)
+*	ids = [l..r) XOR p として Σv[ids] を返す．空なら e() を返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Commutative_XOR_segtree {
+	// 参考 : https://yukicoder.me/problems/no/1891/editorial
+
+	// N : 完全二分木の葉の数（必ず 2 冪）
+	int N;
+
+	// N = 2^M
+	int M;
+
+	// 完全二分木を実現する大きさ 2 * N の配列
+	// 根は v[1] で，v[i] の親は v[i / 2]，子は v[2 * i], v[2 * i + 1]．
+	// 0-indexed での i 番目のデータは葉である v[i + N] に入っている．
+	// v[0] は使用しない．
+	vector<S> v;
+
+	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
+	S sum_rf(int l, int r, int p, int m, int k, int kl, int kr) const {
+		// 範囲外なら単位元 e() を返す．
+		if (kr <= l || r <= kl) return e();
+
+		// 完全に範囲内なら葉まで降りず自身の値を返す．
+		if (l <= kl && kr <= r) {
+			int mask = (1 << (m + 1)) - 1;
+			return v[k];
+		}
+
+		// 一部の範囲のみを含むなら子を見に行く．
+		S vl, vr;
+		if (get(p, m)) {
+			// なんかうまいことやる．
+			int b = 1 << m;
+
+			int nl = max(l, kl) + b;
+			int nr = min(r, (kl + kr) / 2) + b;
+			vl = sum_rf(nl, nr, p, m - 1, k * 2 + 1, (kl + kr) / 2, kr);
+
+			nl = max(l, (kl + kr) / 2) - b;
+			nr = min(r, kr) - b;
+			vr = sum_rf(nl, nr, p, m - 1, k * 2, kl, (kl + kr) / 2);
+		}
+		else {
+			vl = sum_rf(l, r, p, m - 1, k * 2, kl, (kl + kr) / 2);
+			vr = sum_rf(l, r, p, m - 1, k * 2 + 1, (kl + kr) / 2, kr);
+		}
+		return op(vl, vr);
+	}
+
+public:
+	// 配列 v[0..n) の要素で初期化する．
+	Commutative_XOR_segtree(const vector<S>& a) {
+		// verify : https://codeforces.com/contest/1401/problem/F
+
+		N = sz(a);
+		M = msb(N);
+		v.resize(2 * N);
+
+		// 全ての葉にデータを設定する．
+		rep(i, N) v[i + N] = a[i];
+
+		// 全てのノードに正しい値を設定する．
+		repir(i, N - 1, 1) v[i] = op(v[i * 2], v[i * 2 + 1]);
+	}
+
+	Commutative_XOR_segtree() : N(0), M(0) {} // ダミー
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		// verify : https://codeforces.com/contest/1401/problem/F
+
+		// 実際にデータを格納すべき葉の位置へ
+		i += N;
+
+		// 葉のデータを更新
+		v[i] = x;
+
+		// 先祖	のデータも更新しておく
+		while (i > 1) {
+			i /= 2;
+			v[i] = op(v[i * 2], v[i * 2 + 1]);
+		}
+	}
+
+	// ids = [l..r) XOR p として Σv[ids] を返す．空なら e() を返す．
+	S sum(int l, int r, int p) const {
+		// verify : https://codeforces.com/contest/1401/problem/F
+
+		return sum_rf(l, r, p, M - 1, 1, 0, N);
+	}
+};
 
 
 //【連想セグメント木（モノイド）】（遅い）

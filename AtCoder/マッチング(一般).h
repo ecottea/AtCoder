@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "和(数論変換).h"
+#include "数論変換.h"
 #include "二項係数.h"
 // ■■■■■ 一般グラフのマッチング ■■■■■
 

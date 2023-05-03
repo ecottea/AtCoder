@@ -208,19 +208,17 @@ vl dijkstra(const WGraph& g, int st) {
 */
 template <class T>
 unordered_map<T, ll> dynamic_dijkstra(T st, const function<vector<pair<T, ll>>(T)>& nxt) {
-	// verify : https://algo-method.com/tasks/993
-	
+	// verify : https://atcoder.jp/contests/abc297/tasks/abc297_e
+
 	unordered_map<T, ll> dist; // st からの最短距離を保持するテーブル
 	dist[st] = 0;
 
 	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
-	multimap<ll, T, greater<ll>> q;
+	priority_queue_rev<pair<ll, T>> q;
 	q.emplace(0, st);
 
 	while (!q.empty()) {
-		dump(*q.begin());
-		auto [dist_s, s] = *q.begin();
-		q.erase(q.begin());
+		auto [dist_s, s] = q.top(); q.pop();
 
 		// すでにより短い距離に更新されていたなら何もしない（忘れると O(|V|^2)）		
 		if (dist[s] < dist_s) continue;

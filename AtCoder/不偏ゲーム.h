@@ -201,17 +201,28 @@ vi selection_nim(const vi& c, int n) {
 		vb bucket(m + 1);
 
 		// 局面 i から遷移可能な局面のニム値を記録する．
-		rep(j, m) {
-			if (i - c[j] >= 0) bucket[nimber[i - c[j]]] = true;
-		}
+		rep(j, m) if (i - c[j] >= 0) bucket[nimber[i - c[j]]] = true;
 
-		// 記録された局面のニム値の get を求める．
+		// 記録された局面のニム値の mex を求める．
 		nimber[i] = 0;
 		while (bucket[nimber[i]]) nimber[i]++;
 	}
 
 	return nimber;
 }
+
+
+//【Octal game】
+/*
+* 山に対して行える操作が以下のように定められるニムを Octal game という：
+*	各 i>1 について，石を i 個とるときに山を なくす/そのまま/分割する の可否を定める
+* 
+* Octal game には Guy-Smith periodicity theorem が知られており，
+* ニム値の列に十分長いパターンが 2 度繰り返し現れたら，それ以降は周期的になる．
+* 
+* 参考 : https://fibonacci-freak.hatenablog.com/entry/2017/09/04/132443
+* verify : https://yukicoder.me/problems/no/2285
+*/
 
 	
 //【DAG 上のコマ移動ゲーム】O((|V| + |E|) log|V|)　

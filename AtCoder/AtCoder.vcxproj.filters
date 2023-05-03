@@ -103,6 +103,9 @@
     <Filter Include="ヘッダー ファイル\集合%28分割%29">
       <UniqueIdentifier>{e49f190c-5288-4bc3-b2c4-62365c2b65d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\代数%28束%29">
+      <UniqueIdentifier>{a6e6e249-1513-4118-82d7-93d3345b17df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -248,10 +251,10 @@
     <ClInclude Include="Union-Find.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
-    <ClInclude Include="セグメント木%28抽象%29.h">
+    <ClInclude Include="セグメント木.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
-    <ClInclude Include="フェニック木%28抽象%29.h">
+    <ClInclude Include="フェニック木.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
     <ClInclude Include="格子.h">
@@ -292,9 +295,6 @@
     </ClInclude>
     <ClInclude Include="一変数最適化.h">
       <Filter>ヘッダー ファイル\最適化</Filter>
-    </ClInclude>
-    <ClInclude Include="包除原理.h">
-      <Filter>ヘッダー ファイル\集合</Filter>
     </ClInclude>
     <ClInclude Include="桁DP%28上から%29.h">
       <Filter>ヘッダー ファイル\数の表示</Filter>
@@ -425,9 +425,6 @@
     <ClInclude Include="max.h">
       <Filter>ヘッダー ファイル\計算</Filter>
     </ClInclude>
-    <ClInclude Include="永続データ構造.h">
-      <Filter>ヘッダー ファイル\データ構造</Filter>
-    </ClInclude>
     <ClInclude Include="デザイン.h">
       <Filter>ヘッダー ファイル\組合せ論</Filter>
     </ClInclude>
@@ -521,22 +518,10 @@
     <ClInclude Include="スコア和(木).h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="和.h">
+    <ClInclude Include="数論変換.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
-    <ClInclude Include="包含,AND,OR.h">
-      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
-    </ClInclude>
-    <ClInclude Include="整除,GCD,LCM.h">
-      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
-    </ClInclude>
-    <ClInclude Include="和%28数論変換%29.h">
-      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
-    </ClInclude>
-    <ClInclude Include="XOR.h">
-      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
-    </ClInclude>
-    <ClInclude Include="大小,min,max.h">
+    <ClInclude Include="アダマール変換.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="関数.h">
@@ -584,7 +569,7 @@
     <ClInclude Include="最適化(列).h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
-    <ClInclude Include="積.h">
+    <ClInclude Include="ディリクレ畳込み.h">
       <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
     </ClInclude>
     <ClInclude Include="畳込み.h">
@@ -598,6 +583,39 @@
     </ClInclude>
     <ClInclude Include="スコア和%28分割%29.h">
       <Filter>ヘッダー ファイル\集合%28分割%29</Filter>
+    </ClInclude>
+    <ClInclude Include="有理数.h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
+    <ClInclude Include="最適化%28部分列%29.h">
+      <Filter>ヘッダー ファイル\列%28部分列%29</Filter>
+    </ClInclude>
+    <ClInclude Include="GCD.h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
+    <ClInclude Include="包除原理.h">
+      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
+    </ClInclude>
+    <ClInclude Include="包含.h">
+      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
+    </ClInclude>
+    <ClInclude Include="整除.h">
+      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
+    </ClInclude>
+    <ClInclude Include="大小.h">
+      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
+    </ClInclude>
+    <ClInclude Include="束.h">
+      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
+    </ClInclude>
+    <ClInclude Include="フーリエ変換.h">
+      <Filter>ヘッダー ファイル\代数%28畳込み%29</Filter>
+    </ClInclude>
+    <ClInclude Include="分割.h">
+      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
+    </ClInclude>
+    <ClInclude Include="線形空間.h">
+      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -38,7 +38,7 @@ vector<T> count_partial_sum(const vi& a, int v) {
 }
 
 
-//【部分和問題（数え上げ，mod998244353）】O(n + v log v)
+//【部分和問題（数え上げ，mod 998244353）】O(n + v log v)
 /*
 * 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 *
@@ -528,6 +528,29 @@ mint count_unlimited_partial_sum(const vi& a, int v) {
 	}
 
 	return dp[n][v];
+}
+
+
+//【部分和問題（個数制限なし，数え上げ）】O(A n log v) （A = Σa）
+/*
+* 非負整数列 a[0..n) の部分和として v を作る方法が何通りあるかを返す．
+* 各 a[i] は [0..∞) 個用いることができる．
+*
+* 利用：【展開係数（分母が二項式の積）】
+*/
+mint count_unlimited_partial_sum(const vi& a, ll v) {
+	// verify : https://yukicoder.me/problems/no/137
+
+	//【方法】
+	// 母関数は
+	//		f(z) = Πi=[0..n) 1/(1 - z^a[i])
+	// であり，分母が二項式の積であることを利用してボスタン-森法で高速に第 v 項を計算できる．
+
+	int n = sz(a);
+	vector<pair<int, mint>> dcs(n);
+	rep(i, n) dcs[i] = { a[i], -1 };
+
+	return bostan_mori(vm{ 1 }, dcs, v);
 }
 
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(木).h"
-#include "フェニック木(抽象).h"
+#include "フェニック木.h"
 // ■■■■■ 木のクエリ処理 ■■■■■
 
 
@@ -80,7 +80,7 @@ struct Lowest_common_ancestor {
 	SEG seg;
 
 	// コンストラクタ（根付き木で初期化）：O(n)
-	Lowest_common_ancestor(TREE& rt_) : rt(rt_) {
+	Lowest_common_ancestor(const TREE& rt_) : rt(rt_) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
 
 		// オイラーツアーを求めておく．
@@ -93,6 +93,7 @@ struct Lowest_common_ancestor {
 		rep(t, 2 * n - 1) depth[t] = { rt[pos[t]].depth, pos[t] };
 		seg = SEG(depth);
 	}
+	Lowest_common_ancestor() {}
 
 	// 頂点 s, t の最小共通祖先を返す．
 	int lca(int s, int t) {

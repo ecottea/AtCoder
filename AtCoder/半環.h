@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "s—ñ.h"
-#include "ƒgƒƒsƒJƒ‹˜a"
+#include "ô‚İ.h"
 // ¡¡¡¡¡ ”¼ŠÂ ¡¡¡¡¡
 
 
@@ -36,22 +36,13 @@ S813 e813() { return S813(size813); }
 
 
 //yFPS ‚Ì ‰ÁZ - æZ ‰ÂŠ·”¼ŠÂz
-int size814 = 10;
+int N814 = 10;
 using S814 = MFPS;
 S814 add814(S814 x, S814 y) { return x + y; }
 S814 o814() { return S814(0); }
-S814 mul814(S814 x, S814 y) { return (x * y).resize(size814); }
+S814 mul814(S814 x, S814 y) { return (x * y).resize(N814); }
 S814 e814() { return S814(1); }
 #define MFPSAdd_mul_semiring S814, add814, o814, mul814, e814
-
-
-//yXOR - AND ‰ÂŠÂ”¼ŠÂz
-using S802 = unsigned int;
-S802 add802(S802 x, S802 y) { return x ^ y; }
-S802 o802() { return 0; }
-S802 mul802(S802 x, S802 y) { return x & y; }
-S802 e802() { return ~0; }
-#define XOR_AND_semiring S802, add802, o802, mul802, e802
 
 
 //ymin - plus ‰ÂŠÂ”¼ŠÂiƒgƒƒsƒJƒ‹”¼ŠÂjz
@@ -207,6 +198,15 @@ S808 e808() { return INFL; }
 #define Max_min_semiring S808, add808, o808, mul808, e808
 
 
+//yXOR - AND ‰ÂŠÂ”¼ŠÂz
+using S802 = unsigned int;
+S802 add802(S802 x, S802 y) { return x ^ y; }
+S802 o802() { return 0; }
+S802 mul802(S802 x, S802 y) { return x & y; }
+S802 e802() { return ~0; }
+#define XOR_AND_semiring S802, add802, o802, mul802, e802
+
+
 //yOR - AND ‰ÂŠÂ”¼ŠÂz
 using S809 = unsigned int;
 S809 add809(S809 x, S809 y) { return x | y; }
@@ -225,7 +225,7 @@ S810 e810() { return 0; }
 #define AND_OR_semiring S810, add810, o810, mul810, e810
 
 
-//ygcd - lcm ‰ÂŠÂ”¼ŠÂz
+//yGCD - LCM ‰ÂŠÂ”¼ŠÂz
 using S811 = ll;
 S811 add811(S811 x, S811 y) { return gcd(x, y); }
 S811 o811() { return 0; }
@@ -234,7 +234,7 @@ S811 e811() { return 1; }
 #define GCD_LCM_semiring S811, add811, o811, mul811, e811
 
 
-//ylcm - gcd ‰ÂŠÂ”¼ŠÂz
+//yLCM - GCD ‰ÂŠÂ”¼ŠÂz
 using S812 = ll;
 S812 add812(S812 x, S812 y) { return x / gcd(x, y) * y; }
 S812 o812() { return 1; }

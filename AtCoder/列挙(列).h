@@ -38,6 +38,8 @@ vector<vector<T>> enumerate_all_sequences(int n, const vector<T>& a) {
 * 数列 a[0..n) で，∀i, a[i] ∈ [0..ub[i]) を満たすもの全てを格納したリストを返す．
 */
 vvi enumerate_all_sequences(const vi& ub) {
+	// verify : https://atcoder.jp/contests/arc104/tasks/arc104_e
+
 	int n = sz(ub);
 	vvi seqs;
 
@@ -97,7 +99,7 @@ vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
 
 //【狭義単調増加列の列挙】O(bin(m, n) n)
 /*
-* 0 <= a[0] < a[1] < ... < a[n-1] < m なる列 a[0..n) を格納したリストを返す．
+* 0 ≦ a[0] < a[1] < ... < a[n-1] < m なる列 a[0..n) を格納したリストを返す．
 */
 vvi enumerate_strongly_increase_sequences(int n, int m) {
 	// verify : https://atcoder.jp/contests/abc263/tasks/abc263_c
@@ -132,7 +134,7 @@ vvi enumerate_strongly_increase_sequences(int n, int m) {
 
 //【広義単調増加列の列挙】O(bin(n+m-1, n) n)
 /*
-* 0 <= a[0] <= a[1] <= ... <= a[n-1] < m なる列 a[0..n) を格納したリストを返す．
+* 0 ≦ a[0] ≦ a[1] ≦ ... ≦ a[n-1] < m なる列 a[0..n) を格納したリストを返す．
 */
 vvi enumerate_weakly_increase_sequences(int n, int m) {
 	vi a(n);
@@ -165,7 +167,7 @@ vvi enumerate_weakly_increase_sequences(int n, int m) {
 
 //【真の倍数列の列挙】O(?)（k = 10^4 くらいまで動く）
 /*
-* a[0] | a[1] | ... | a[m] <= k なる狭義単調列 a を格納したリストを返す．
+* a[0] | a[1] | ... | a[m] ≦ k なる狭義単調列 a を格納したリストを返す．
 */
 vvl enumerate_strongly_multiple_sequences(ll k) {
 	vl a;

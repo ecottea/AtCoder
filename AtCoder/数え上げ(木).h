@@ -319,7 +319,7 @@ vm count_continuous_tree_construction(Graph& g) {
 }
 
 
-//【頂点間距離が k である頂点の組の数え上げ】O(n log n)
+//【パスの数え上げ（長さ指定）】O(n log n)
 /*
 * 木 g の異なる 2 頂点の組で，距離が k であるものの個数を返す．
 *
@@ -405,7 +405,7 @@ ll count_tree_distance(const Graph& g, int k) {
 }
 
 
-//【頂点間距離の分布】O(n (log n)^2)
+//【パスの数え上げ（長さごと）】O(n (log n)^2)
 /*
 * 各 d∈[0..n) について，木 g の異なる 2 点の組で距離が d であるものの個数のリストを返す．
 *

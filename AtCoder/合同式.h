@@ -96,6 +96,7 @@ int find_primitive_root() {
 */
 int log(mint a, mint b) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/baby-step-giant-step.html
+	// verify : https://yukicoder.me/problems/no/981
 
 	//【方法】
 	// m = ceil(√p)，r = a^(-m) とおく．
@@ -213,6 +214,68 @@ int log(mint a, mint x, mint b) {
 	}
 
 	return INF;
+}
+
+
+//【離散対数問題（M-集合）】O(√N)
+/*
+* f^n s = t を満たす N 未満の最小の非負整数 n を返す（存在しなければ INFL）
+* f[s,t] は M-集合 (S, F, act, comp, id) の F[S,S] の元とする．
+* HASH はハッシュ関数 size_t operator()(const S& p) の定義された関数オブジェクトとする．
+*/
+template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)(), class HASH>
+ll discrete_logarithm(const F& f, const S& s, const S& t, ll N) {
+	// 参考 : https://maspypy.com/%e3%83%a2%e3%83%8e%e3%82%a4%e3%83%89%e4%bd%9c%e7%94%a8%e3%81%ab%e9%96%a2%e3%81%99%e3%82%8b%e9%9b%a2%e6%95%a3%e5%af%be%e6%95%b0%e5%95%8f%e9%a1%8c
+	// verify : https://atcoder.jp/contests/utpc2014/tasks/utpc2014_k
+
+	int m = (int)(sqrt(N) + 1e-12) + 1;
+
+	// T : {f^i t | i∈[1..m]}
+	unordered_set<S, HASH> T;
+	S f_t(t);
+	repi(i, 1, m) {
+		// f_t : f^i t
+		f_t = act(f, f_t);
+
+		if (T.count(f_t)) break;
+		T.insert(f_t);
+	}
+
+	// fm : f^m
+	F fm(id()), pow2 = f; int m_tmp(m);
+	while (m_tmp > 0) {
+		if ((m_tmp & 1) != 0) fm = comp(fm, pow2);
+		pow2 = comp(pow2, pow2);
+		m_tmp /= 2;
+	}
+
+	S fm_s_bak(s); int fail_cnt = 0;
+	repi(k, 1, m) {
+		// fm_s : f^(m k) s, fm_s_bak : f^(m (k-1)) s
+		S fm_s = act(fm, fm_s_bak);
+
+		// f^(m k) s ∈ T となったなら，∃i∈[0..m), f^(m (k-1) + i) s = t となることが期待される．
+		if (T.count(fm_s)) {
+			S f_s(fm_s_bak);
+
+			// f^(m (k-1) + i) s = t となっているかを全て調べる．
+			rep(i, m) {
+				// f_s : f^(m (k-1) + i) s
+				if (f_s == t) return (ll)m * (k - 1) + i;
+
+				f_s = act(f, f_s);
+			}
+
+			// t → f t なる有向辺をもった functional graph S を考える．
+			// 先の手続きに失敗したとしても，いま初めて t を含むループに s から合流してきた可能性が残されている．
+			// だがもしもう一度失敗したならば，t がループに含まれていないことを意味するので非存在が確定する．
+			if (++fail_cnt == 2) return INFL;
+		}
+
+		fm_s_bak = fm_s;
+	}
+
+	return INFL;
 }
 
 

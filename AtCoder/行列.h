@@ -189,7 +189,7 @@ pii reduced_row_echelon_form(Matrix<T>& mat) {
 
 //【連立一次方程式】O(m n min(m, n))
 /*
-* m * (n + 1) 拡大係数行列 mat で表される連立一次方程式の解の 1 つを sol に格納する．
+* m×(n+1) 拡大係数行列 mat で表される連立一次方程式の解の 1 つを sol に格納する．
 * 解が存在しないなら false を返す．
 */
 template <class T>
@@ -229,6 +229,62 @@ bool solve_eq(const Matrix<T>& mat, vector<T>* sol = nullptr) {
 
 			T mul = v[i2][j];
 			repi(j2, j, n) v[i2][j2] -= v[i][j2] * mul;
+		}
+	}
+
+	// 解の例の構成（任意定数は全て 0 にする）
+	if (sol != nullptr) {
+		sol->assign(n, T(0));
+		repe(p, pivots) (*sol)[p.second] = v[p.first][n];
+	}
+
+	return true;
+}
+
+
+//【連立一次方程式（下ヘッセンベルグ）】O(n^2)
+/*
+* 下ヘッセンベルグ行列を拡大した n×(n+1) 拡大係数行列 mat で表される連立一次方程式の解の 1 つを sol に格納する．
+* 解が存在しないなら false を返す．
+*/
+template <class T>
+bool solve_eq_Lhessenberg(const Matrix<T>& mat, vector<T>* sol = nullptr) {
+	// verify : https://atcoder.jp/contests/abc249/tasks/abc249_h
+
+	int m = mat.m, n = mat.n - 1; auto v = mat.v;
+
+	// ピボットの位置を記録しておくリスト
+	vector<pii> pivots;
+
+	// 未確定の列を記録しておくリスト
+	list<int> rmd;
+	repi(j, 0, n) rmd.push_back(j);
+
+	rep(i, m) {
+		// i 行目の係数を左から走査し非 0 を見つける．
+		auto it = rmd.begin();
+		for (; it != rmd.end(); it++) if (v[i][*it] != T(0)) break;
+
+		// 全てが 0 なら無視
+		if (it == rmd.end()) continue;
+		int j = *it;
+
+		// 定数項のみが非 0 なら解なし
+		if (j == n) return false;
+		rmd.erase(it);
+		pivots.emplace_back(i, j);
+
+		// v[i][j] が 1 になるよう行全体を v[i][j] で割る．
+		T vij_inv = T(1) / v[i][j];
+		repi(j2, j, n) v[i][j2] *= vij_inv;
+
+		// j 列目に見つかったら他の行の j 列目を全て 0 にする．
+		rep(i2, m) {
+			if (v[i2][j] == T(0) || i2 == i) continue;
+
+			T mul = v[i2][j];
+			repi(j2, j, i + 1) v[i2][j2] -= v[i][j2] * mul; // ここを変えただけ
+			v[i2][n] -= v[i][n] * mul;
 		}
 	}
 

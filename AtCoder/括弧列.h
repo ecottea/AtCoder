@@ -102,8 +102,9 @@ ll maximize_parenthesis_inner_product(const vl& a) {
 
 //【括弧列 → 木】O(n)
 /*
-* 括弧列 s[0..2n) について，ネスト関係を表した有向根付き木を g[0..n] に格納し，その根を返す．
+* 括弧列 s[0..2n) について，ネスト関係を表した有向根付き木を g[0..n] に格納し，その根 0 を返す．
 * i 番目の頂点は対応する括弧の組 s[ls[i]] = '(', s[rs[i]] = ')' に対応し，子ほどネストが深いものとする．
+* ただし ls[0] = -1, rs[0] = 2n とする．
 */
 int parenthesis_tree(const string& s, Graph& g, vi& ls, vi& rs) {
 	// verify : https://atcoder.jp/contests/discovery2016-final/tasks/discovery_2016_final_c

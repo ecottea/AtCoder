@@ -62,6 +62,16 @@ vector<T> naive_dirichlet_invconvolution(const vector<T>& a, const vector<T>& c)
 }
 
 
+//【ディリクレ畳込みと約数ゼータ変換】
+/*
+* 約数ゼータ変換
+*		A[n] = Σd|n a[d]
+* は，
+*		A[n] = Σ_d×j=n a[d] 1
+* と書き直すことにより 1 とのディリクレ畳込みであると解釈できる．
+*/
+
+
 //【ディリクレ級数とディリクレ畳込み】
 /*
 * 数論関数 a[1..n] のディリクレ母関数を A(s) = Σi a[i] / i^s などとおくと，
@@ -354,7 +364,7 @@ void dirichlet_invconvolution_acc(ll n, const vector<T>& al, const vector<T>& Ah
 
 //【ディリクレ畳込みの累積和（乗法的，一括）】
 /*
-* Multiplicative_dirichlet_invconvolution_acc<T>(int p_max) : O(p_max log(log p_max))
+* Multiplicative_dirichlet_convolution_acc<T>(int p_max) : O(p_max log(log p_max))
 *	p_max ≧ nl 以下の素数を持って初期化する．
 *	乗法的数論関数 a[1..n] と数論関数 b[1..n] のディリクレ畳込みを c[1..n] とする．
 *	nl, nh は nh ≦ nl ≦ n ≦ nl nh を満たすとし，al, bl, cl, Ah, Bh, Ch は以下の通りとする：
@@ -368,9 +378,12 @@ void dirichlet_invconvolution_acc(ll n, const vector<T>& al, const vector<T>& Ah
 *	上記 al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
 *
 * 特に nl = (n / log(log n))^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log(log n))^(1/3)) になる．
+	int n_max = (int)1e8;
+	int nl = min((int)pow(n_max / log(log(n_max)), 2. / 3), (int)n);
+	int nh = min((int)n / nl + 1, nl);
 */
 template <class T>
-class Multiplicative_dirichlet_invconvolution_acc {
+class Multiplicative_dirichlet_convolution_acc {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
 
 	int p_max;
@@ -378,7 +391,7 @@ class Multiplicative_dirichlet_invconvolution_acc {
 
 public:
 	// nl 以下の素数を持って初期化する．
-	Multiplicative_dirichlet_invconvolution_acc(int p_max) : p_max(p_max) {
+	Multiplicative_dirichlet_convolution_acc(int p_max) : p_max(p_max) {
 		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
 
 		// is_prime[i] : i が素数か
@@ -482,8 +495,11 @@ public:
 *	上記 al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
 *
 * 特に nl = (n / log(log n))^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log(log n))^(1/3)) になる．
+	int n_max = (int)1e8;
+	int nl = min((int)pow(n_max / log(log(n_max)), 2. / 3), (int)n);
+	int nh = min((int)n / nl + 1, nl);
 */
-class Multiplicative_dirichlet_invconvolution_acc_mint {
+class Multiplicative_dirichlet_convolution_acc_mint {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
 
 	int p_max;
@@ -491,7 +507,7 @@ class Multiplicative_dirichlet_invconvolution_acc_mint {
 
 public:
 	// nl 以下の素数を持って初期化する．
-	Multiplicative_dirichlet_invconvolution_acc_mint(int p_max) : p_max(p_max) {
+	Multiplicative_dirichlet_convolution_acc_mint(int p_max) : p_max(p_max) {
 		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
 
 		// is_prime[i] : i が素数か

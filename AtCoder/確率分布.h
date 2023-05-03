@@ -79,7 +79,7 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 }
 
 
-//【多項分布（パラメータが一様の場合，積の期待値）】
+//【多項分布（パラメータが一様，積の期待値）】
 /*
 * X[0..n) をパラメータ (K, (1/n,...,1/n)) の多項分布に従う確率変数とするとき，
 *		E[ ΠX[0..i) ] = perm(K, i) / n^i
@@ -104,13 +104,124 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 */
 
 
-//【順序統計量の分布（一様分布）】
+//【順序統計量の分布】
 /*
-* X[0..n) が互いに独立な [0..1] 上の一様分布に従う確率変数であるとき，
+* X[0..n) が同一分布（分布関数 F(x)，密度関数 f(x)）に従う互いに独立な連続確率変数であるとき
+* X[0..n) のうち昇順で k 番目（1-indexed）の値 Y(k) の分布関数 F_k(x)，密度関数 f_k(x) は
+*	F_k(x) = Σj∈[k..n] bin(n,j) F(x)^j (1-F(x))^(n-j)
+*	f_k(x) = n bin(n-1,k-1) F(x)^(k-1) (1-F(x))^(n-k) f(x)
+* で与えられる．
+*/
+
+
+//【順序統計量の分布（連続一様分布）】
+/*
+* X[0..n) が [0..1] 上の連続一様分布に従う互いに独立な確率変数であるとき，
 * X[0..n) のうち昇順で k 番目（1-indexed）の値 Y(k) はベータ分布 B(k, n+1-k) に従う．
 * 特に E[Y(k)] = k/(n+1) である．
 * 
 * verify : https://atcoder.jp/contests/abc226/tasks/abc226_h
 */
+
+
+//【順序統計量の分布（離散一様分布）】
+/*
+* Order_statistic_of_disuniform(int n, int m, Factorial_mint fm) : O(n m)
+*	X[1..n] が [1..m] 上の離散一様分布に従う互いに独立な確率変数であるとして初期化する．
+*	制約：fm は n! まで計算可能
+*
+* mint CDF(int k, int j) : O(1)
+*	X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値が j 以下である確率を返す．
+*
+* mint PMF(int k, int j) : O(1)
+*	X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値が j である確率を返す．
+*
+* mint ex(int k) : O(1)
+*	X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値の期待値を返す．
+*/
+class Order_statistic_of_disuniform {
+	int n, m;
+
+	// P[k][j] : X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値が j 以下である確率
+	vvm P;
+
+	// E[k] : X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値の期待値
+	vm E;
+
+public:
+	Order_statistic_of_disuniform(int n, int m, const Factorial_mint& fm) : n(n), m(m) {
+		// verify : https://www.codechef.com/problems/SUMOVERALL
+
+		mint dnm_inv = mint(m).pow(n).inv();
+
+		// P[k][j] : X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値が j 以下である確率
+		P = vvm(n + 2, vm(m + 1));
+		repi(j, 1, m) {
+			mint powj = mint(j).pow(n), j_inv = mint(j).inv();
+			mint powxj = 1;
+
+			repir(k, n, 1) {
+				P[k][j] = P[k + 1][j] + fm.bin(n, k) * powj * powxj * dnm_inv;
+				powj *= j_inv;
+				powxj *= m - j;
+			}
+		}
+
+		// E[k] : X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値の期待値
+		E.resize(n + 1);
+		repi(k, 1, n) repi(j, 1, m) E[k] += j * (P[k][j] - P[k][j - 1]);
+	}
+
+	// X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値が j 以下である確率を返す．
+	mint CDF(int k, int j) const {
+		if (k <= 0) return 1;
+		if (k > n) return 0;
+
+		chmax(j, 0); chmin(j, m);
+
+		return P[k][j];
+	}
+
+	// X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値が j である確率を返す．
+	mint PMF(int k, int j) const {
+		if (k <= 0 || k > n || j <= 0 || j > m) return 0;
+
+		return P[k][j] - P[k][j - 1];
+	}
+
+	// X[1..n] をソートしたときの昇順 k 番目（1-indexed）の値の期待値を返す．
+	mint ex(int k) const {
+		// verify : https://www.codechef.com/problems/SUMOVERALL
+
+		Assert(1 <= k && k <= n);
+
+		return E[k];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Order_statistic_of_disuniform& D) {
+		repi(k, 1, D.n) {
+			os << "k=" << k << ":";
+			repi(j, 1, D.m) {
+				mint x = D.PMF(k, j);
+				string s = to_string(x.val());
+
+				constexpr int v_max = (int)1e5;
+				repi(dnm, 1, v_max) {
+					int num = (x * dnm).val();
+					if (num <= v_max) {
+						s = to_string(num) + "/" + to_string(dnm);
+						break;
+					}
+				}
+
+				os << " " << s;
+			}
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
 
 

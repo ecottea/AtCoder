@@ -1,6 +1,5 @@
 #pragma once
 #include "header.h"
-#include "数論.h"
 // ■■■■■ 約数変換・倍数変換，GCD 畳込み，LCM 畳込み ■■■■■
 
 

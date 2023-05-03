@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "探索.h"
-#include "フェニック木(抽象).h"
+#include "フェニック木.h"
 // ■■■■■ 動的辞書 ■■■■■
 
 

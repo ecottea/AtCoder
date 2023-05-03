@@ -25,7 +25,7 @@ using F101 = mint;
 S101 act101(F101 f, S101 x) { return f * x; }
 F101 comp101(F101 f, F101 g) { return f * g; }
 F101 id101() { return 1; }
-#define Mul_Sum_amonoid S101, op101, e101, F101, act101, comp101, id101
+#define Mul_Sum_mmonoid S101, op101, e101, F101, act101, comp101, id101
 
 
 //ychmin ì—p•t‚« min ƒ‚ƒmƒCƒhz
@@ -37,7 +37,7 @@ using F115 = ll;
 S115 act115(F115 f, S115 x) { return min(f, x); }
 F115 comp115(F115 f, F115 g) { return min(f, g); }
 F115 id115() { return INFL; }
-#define Chmin_Min_amonoid S115, op115, e115, F115, act115, comp115, id115
+#define Chmin_Min_mmonoid S115, op115, e115, F115, act115, comp115, id115
 
 
 //ychmax ì—p•t‚« max ƒ‚ƒmƒCƒhz
@@ -49,7 +49,7 @@ using F116 = ll;
 S116 act116(F116 f, S116 x) { return max(f, x); }
 F116 comp116(F116 f, F116 g) { return max(f, g); }
 F116 id116() { return -INFL; }
-#define Chmax_Max_amonoid S116, op116, e116, F116, act116, comp116, id116
+#define Chmax_Max_mmonoid S116, op116, e116, F116, act116, comp116, id116
 
 
 //y•ÏX ì—p•t‚« ¶•ÏX ƒ‚ƒmƒCƒhz
@@ -60,7 +60,7 @@ using F102 = int;
 F102 id102() { return INF + 1; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S102 act102(F102 f, S102 x) { return f == id102() ? x : f; }
 F102 comp102(F102 f, F102 g) { return f == id102() ? g : f; }
-#define Update_LUpdate_amonoid S102, op102, e102, F102, act102, comp102, id102
+#define Update_LUpdate_mmonoid S102, op102, e102, F102, act102, comp102, id102
 
 
 //y•ÏX ì—p•t‚« max ƒ‚ƒmƒCƒhz
@@ -71,7 +71,7 @@ using F103 = int;
 F103 id103() { return INF + 1; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S103 act103(F103 f, S103 x) { return f == id103() ? x : f; }
 F103 comp103(F103 f, F103 g) { return f == id103() ? g : f; }
-#define Update_Max_amonoid S103, op103, e103, F103, act103, comp103, id103
+#define Update_Max_mmonoid S103, op103, e103, F103, act103, comp103, id103
 
 
 //y•ÏX ì—p•t‚« min ƒ‚ƒmƒCƒhz
@@ -83,7 +83,7 @@ using F104 = int;
 F104 id104() { return INF + 1; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S104 act104(F104 f, S104 x) { return f == id104() ? x : f; }
 F104 comp104(F104 f, F104 g) { return f == id104() ? g : f; }
-#define Update_Min_amonoid S104, op104, e104, F104, act104, comp104, id104
+#define Update_Min_mmonoid S104, op104, e104, F104, act104, comp104, id104
 
 
 //y‰ÁZ ì—p•t‚« max ƒ‚ƒmƒCƒhz
@@ -95,7 +95,7 @@ using F105 = ll;
 S105 act105(F105 f, S105 x) { return f + x; }
 F105 comp105(F105 f, F105 g) { return f + g; }
 F105 id105() { return 0; }
-#define Add_Max_amonoid S105, op105, e105, F105, act105, comp105, id105
+#define Add_Max_mmonoid S105, op105, e105, F105, act105, comp105, id105
 
 
 //y‰ÁZ ì—p•t‚« min ƒ‚ƒmƒCƒhz
@@ -107,7 +107,7 @@ using F106 = ll;
 S106 act106(F106 f, S106 x) { return f + x; }
 F106 comp106(F106 f, F106 g) { return f + g; }
 F106 id106() { return 0; }
-#define Add_Min_amonoid S106, op106, e106, F106, act106, comp106, id106
+#define Add_Min_mmonoid S106, op106, e106, F106, act106, comp106, id106
 
 
 //yƒAƒtƒBƒ“ ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
@@ -148,7 +148,7 @@ F107 comp107(F107 f, F107 g) {
 	return { a * c, a * d + b };
 }
 F107 id107() { return { 1, 0 }; }
-#define Affine_Sum_amonoid S107, op107, e107, F107, act107, comp107, id107
+#define Affine_Sum_mmonoid S107, op107, e107, F107, act107, comp107, id107
 
 
 //y‰ÁZ ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
@@ -182,7 +182,7 @@ F108 comp108(F108 f, F108 g) {
 	return f + g;
 }
 F108 id108() { return 0; }
-#define Add_Sum_amonoid S108, op108, e108, F108, act108, comp108, id108
+#define Add_Sum_mmonoid S108, op108, e108, F108, act108, comp108, id108
 
 
 //y•ÏX ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
@@ -221,7 +221,7 @@ F109 comp109(F109 f, F109 g) {
 	// (0, f; 0, 1).(0, g; 0, 1) = (0, f; 0, 1)
 	return f;
 }
-#define Update_Sum_amonoid S109, op109, e109, F109, act109, comp109, id109
+#define Update_Sum_mmonoid S109, op109, e109, F109, act109, comp109, id109
 
 
 //yAND ì—p•t‚« XOR ƒ‚ƒmƒCƒhz
@@ -232,7 +232,7 @@ using F110 = int;
 S110 act110(F110 f, S110 x) { return f & x; }
 F110 comp110(F110 f, F110 g) { return f & g; }
 F110 id110() { return ~0; }
-#define AND_XOR_amonoid S110, op110, e110, F110, act110, comp110, id110
+#define AND_XOR_mmonoid S110, op110, e110, F110, act110, comp110, id110
 
 
 //yƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“ ì—p•t‚« max ƒ‚ƒmƒCƒhz
@@ -263,7 +263,7 @@ F111 comp111(F111 f, F111 g) {
 	return { a + c, max(a + d, b) };
 }
 F111 id111() { return { 0, -INFL }; }
-#define TropicalAffine_Max_amonoid S111, op111, e111, F111, act111, comp111, id111
+#define TropicalAffine_Max_mmonoid S111, op111, e111, F111, act111, comp111, id111
 
 
 //yƒrƒbƒg—ñã XOR ì—p•t‚« “]“|” ƒ‚ƒmƒCƒhz
@@ -308,29 +308,29 @@ F112 comp112(F112 f, F112 g) {
 	return f ^ g;
 }
 F112 id112() { return false; }
-#define XOR_Inversion_amonoid S112, op112, e112, F112, act112, comp112, id112
+#define XOR_Inversion_mmonoid S112, op112, e112, F112, act112, comp112, id112
 
 
 //yæZ ì—p•t‚« GCD ƒ‚ƒmƒCƒhz
 using S113 = ll;
-S113 op113(S113 x, S113 y) { return gcd(x, y); }
+S113 op113(S113 x, S113 y) { return gcd(abs(x), abs(y)); }
 S113 e113() { return 0; }
 using F113 = ll;
 S113 act113(F113 f, S113 x) { return f * x; }
 F113 comp113(F113 f, F113 g) { return f * g; }
 F113 id113() { return 1; }
-#define Mul_GCD_amonoid S113, op113, e113, F113, act113, comp113, id113
+#define Mul_GCD_mmonoid S113, op113, e113, F113, act113, comp113, id113
 
 
 //yæZ ì—p•t‚« LCM ƒ‚ƒmƒCƒhz
 using S114 = ll;
-S114 op114(S114 x, S114 y) { return x / gcd(x, y) * y; }
+S114 op114(S114 x, S114 y) { return x / gcd(abs(x), abs(y)) * y; }
 S114 e114() { return 1; }
 using F114 = ll;
 S114 act114(F114 f, S114 x) { return f * x; }
 F114 comp114(F114 f, F114 g) { return f * g; }
 F114 id114() { return 1; }
-#define Mul_LCM_amonoid S114, op114, e114, F114, act114, comp114, id114
+#define Mul_LCM_mmonoid S114, op114, e114, F114, act114, comp114, id114
 
 
 //yüŒ`‰ÁZ ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
@@ -371,7 +371,7 @@ F117 comp117(F117 f, F117 g) {
 	return { a + c, b + d };
 }
 F117 id117() { return { 0, 0 }; }
-#define LinearAdd_Sum_amonoid S117, op117, e117, F117, act117, comp117, id117
+#define LinearAdd_Sum_mmonoid S117, op117, e117, F117, act117, comp117, id117
 
 
 //y•ÏX ì—p•t‚« OR ƒ‚ƒmƒCƒhz
@@ -383,7 +383,7 @@ using F118 = ll;
 F118 id118() { return -INFL - 1; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S118 act118(F118 f, S118 x) { return f == id118() ? x : f; }
 F118 comp118(F118 f, F118 g) { return f == id118() ? g : f; }
-#define Update_OR_amonoid S118, op118, e118, F118, act118, comp118, id118
+#define Update_OR_mmonoid S118, op118, e118, F118, act118, comp118, id118
 
 
 //y‰ÁZ ì—p•t‚« Å¬Œ³‚ÌŒÂ” ƒ‚ƒmƒCƒhz
@@ -411,6 +411,6 @@ F119 comp119(F119 f, F119 g) {
 	return f + g;
 }
 F119 id119() { return 0; }
-#define Add_CntMin_amonoid S119, op119, e119, F119, act119, comp119, id119
+#define Add_CntMin_mmonoid S119, op119, e119, F119, act119, comp119, id119
 
 

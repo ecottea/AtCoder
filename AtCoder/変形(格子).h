@@ -58,6 +58,8 @@ vector<vector<T>> transpose(const vector<vector<T>>& a) {
 */
 template <class T>
 vector<vector<T>> rotate90(const vector<vector<T>>& a) {
+	// verify : https://atcoder.jp/contests/abc298/tasks/abc298_b
+
 	int h = sz(a), w = sz(a[0]);
 
 	vector<vector<T>> b(w, vector<T>(h));

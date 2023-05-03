@@ -117,11 +117,11 @@ vector<T> symmetric_difference_convolution(vector<T> a, vector<T> b) {
 * a[0..2^n) を高速アダマール変換して A[0..2^n) にする線形変換の表現行列は，
 * アダマール行列 [1  1] の d 個のクロネッカー積に等しい．
 *               [1 -1]
-* verify : https://atcoder.jp/contests/abc212/tasks/abc212_h
 * 
 * A[0..2^n) を逆高速アダマール変換して a[0..2^n) にする線形変換の表現行列は，
 * アダマール行列を 1/2 倍した [1/2  1/2] の d 個のクロネッカー積に等しい．
 *                           [1/2 -1/2]
+* 
 * verify : https://atcoder.jp/contests/abc212/tasks/abc212_h
 */
 

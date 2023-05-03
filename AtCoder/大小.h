@@ -53,7 +53,7 @@ void geq_mobius(vector<T>& A) {
 }
 
 
-//y“Yš min ‚Å‚Ìô‚İz
+//y“Yš min ‚Å‚Ìô‚İzO(n)
 /*
 * —^‚¦‚ç‚ê‚½ a[0..n), b[0..n) ‚É‘Î‚µ‚Ä
 *       c[k] = ƒ°_(min(i,j) = k) a[i] b[j]
@@ -128,7 +128,7 @@ void leq_mobius(vector<T>& A) {
 }
 
 
-//y“Yš max ‚Å‚Ìô‚İz
+//y“Yš max ‚Å‚Ìô‚İzO(n)
 /*
 * —^‚¦‚ç‚ê‚½ a[0..n), b[0..n) ‚É‘Î‚µ‚Ä
 *       c[k] = ƒ°_(max(i,j) = k) a[i] b[j]
@@ -244,7 +244,7 @@ vector<T> min_convolution_dD(int n, int d, vector<T> a, vector<T> b) {
 }
 
 
-//y“Yš min ‚Å‚Ì‘½ŸŒ³ãˆÊô‚İzO(2^n n)
+//y“Yš min ‚Å‚Ì‘½ŸŒ³ãˆÊô‚İzO(n^d d)
 /*
 * —^‚¦‚ç‚ê‚½ a[0..n)^d, b[0..n)^d ‚É‘Î‚µ‚Ä
 *       c[K] = ƒ°_(min(I,J) † K) a[I] b[J]

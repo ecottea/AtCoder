@@ -579,7 +579,7 @@ struct Monotonous_points {
 //【区分線形凸関数】
 /*
 * Convex_function() : O(1)
-*	定数関数 f(x) = 0 で初期化する．
+*	n=1 本の線分からなる定数関数 f(x) = 0 で初期化する．
 *
 * add_const(ll c) : O(1)
 *	f(x) ← f(x) + c とする．（上に c 平行移動する）

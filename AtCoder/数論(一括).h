@@ -1,8 +1,8 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
-#include "整除,GCD,LCM.h"
-#include "積.h"
+#include "整除.h"
+#include "ディリクレ畳込み.h"
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
 
 
@@ -69,8 +69,8 @@ vl eratosthenes_interval(ll l, ll r) {
 * Factor_integer(int n) : O(n log(log n))
 *	n 以下の自然数を高速に素因数分解する準備を行う．
 *
-* get(int i, map<int, int>& pps) : O(log n)
-*	i の素因数分解結果を pps に格納する．
+* map<int, int> get(int i) : O(log n)
+*	i の素因数分解結果を返す．
 */
 struct Factor_integer {
 	int n;
@@ -89,9 +89,10 @@ struct Factor_integer {
 			for (int i = p; i <= n; i += p) d[i] = p;
 		}
 	}
+	Factor_integer() : n(0) {}
 
 	// i の素因数分解結果を返す．
-	map<int, int> get(int i) {
+	map<int, int> get(int i) const {
 		// verify : https://yukicoder.me/problems/no/2207
 
 		Assert(i <= n);
@@ -270,7 +271,7 @@ void euler_phi_sum(ll n, int nl, int nh, vm& bl, vm& Bh) {
 	// ζ(s-1) は数論関数 c[i] = i に対応するディリクレ級数である．
 
 	if (nl <= 0 || nh <= 0) return;
-	Multiplicative_dirichlet_invconvolution_acc_mint mdia(nl);
+	Multiplicative_dirichlet_convolution_acc_mint mdia(nl);
 
 	vm al(nl + 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1); mint inv2 = mint(2).inv();
 	repi(i, 1, nl) {
@@ -307,7 +308,7 @@ void mertens(ll n, int nl, int nh, vl& bl, vl& Bh) {
 	// 1 は数論関数 c[i] = (i = 1 ? 1 : 0) に対応するディリクレ級数である．
 
 	if (nl <= 0 || nh <= 0) return;
-	Multiplicative_dirichlet_invconvolution_acc<ll> mdia(nl);
+	Multiplicative_dirichlet_convolution_acc<ll> mdia(nl);
 
 	vl al(nl + 1, 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1, 1);
 	cl[1] = 1;
