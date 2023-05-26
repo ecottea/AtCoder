@@ -395,8 +395,8 @@ MFPS tree_getDP_forest_MFPS(Graph g, int r) {
 *   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
 *   これらをマージした部分木について同じく s を根と見たときの答えを返す．
 *
-* T e() :
-*   merge() の単位元を返す．
+* T e(int s) :
+*   頂点 s を根とする部分木における merge() の単位元を返す．
 *
 * T leaf(int s) :
 *   単独のノード s のみからなる部分木について，s を根と見たときの答えを返す．
@@ -405,7 +405,7 @@ MFPS tree_getDP_forest_MFPS(Graph g, int r) {
 *   頂点 s を根とする部分木の暫定の答えが x のとき，
 *   辺 p→s を追加して p を根と見たときの答えを返す．
 */
-template <class T, T(*merge)(T, T, int), T(*e)(), T(*leaf)(int), T(*apply)(T, int, int)>
+template <class T, T(*merge)(T, T, int), T(*e)(int), T(*leaf)(int), T(*apply)(T, int, int)>
 vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
 
@@ -416,7 +416,10 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 	//             s-t 間の辺を切断し，t を根と見たときの答え
 	if (sub == nullptr) sub = new vector<vector<T>>;
 	sub->resize(n);
-	rep(s, n) (*sub)[s] = vector<T>(sz(g[s]), e());
+	rep(s, n) {
+		(*sub)[s] = vector<T>(sz(g[s]));
+		rep(i, sz(g[s])) (*sub)[s][i] = e(g[s][i]);
+	}
 
 	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．
 	//  p : 0 を根としたとき s の親
@@ -448,7 +451,7 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 	//  val : s-p 間の辺を切断し，p を根と見たときの答え
 	function<void(int, int, const T&)> dfs2 = [&](int s, int p, const T& val) {
 		// ds : 根 s から出る各辺について，その辺だけを s に接続したときの答えのリスト
-		vector<T> ds{ p != -1 ? apply(val, s, p) : e() };
+		vector<T> ds{ p != -1 ? apply(val, s, p) : e(s) };
 
 		rep(ti, sz(g[s])) {
 			int t = g[s][ti];
@@ -464,7 +467,7 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 		int k = sz(ds);
 
 		// acc_l[acc_r] : 根 s の左[右] からの辺を順に s に接続したときの答えのリスト
-		vector<T> acc_l(k + 1, e()), acc_r(k + 1, e());
+		vector<T> acc_l(k + 1, e(s)), acc_r(k + 1, e(s));
 
 		rep(i, k) acc_l[i + 1] = merge(acc_l[i], ds[i], s);
 		repir(i, k - 1, 0) acc_r[i] = merge(acc_r[i + 1], ds[i], s);
@@ -484,14 +487,14 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 			i++;
 		}
 	};
-	dfs2(0, -1, e());
+	dfs2(0, -1, e(0)); // 後ろ 1 つの引数はダミー
 
 	return res;
 
 	/* 雛形
 	using T = int;
 	T merge(T x, T y, int s) { return max(x, y); }
-	T e() { return 0; }
+	T e(int s) { return 0; }
 	T leaf(int s) { return 0; }
 	T apply(T x, int p, int s) { return x + 1; }
 	vector<T> solve_by_rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
@@ -512,8 +515,8 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 *   根 s のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
 *   これらをマージした部分木について同じく s を根と見たときの答えを返す．
 *
-* T e() :
-*   merge() の単位元を返す．
+* T e(int s) :
+*   頂点 s を根とする部分木についての merge() の単位元を返す．
 *
 * T leaf(int s) :
 *   単独のノード s のみからなる部分木について，s を根と見たときの答えを返す．
@@ -522,9 +525,9 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 *   頂点 s を根とする部分木の暫定の答えが x のとき，
 *   コストが c の辺 p→s を追加して p を根と見たときの答えを返す．
 */
-template <class T, T(*merge)(T, T, int), T(*e)(), T(*leaf)(int), T(*apply)(T, int, int, ll)>
+template <class T, T(*merge)(T, T, int), T(*e)(int), T(*leaf)(int), T(*apply)(T, int, int, ll)>
 vector<T> rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
-	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
+	// verify : https://judge.yosupo.jp/problem/tree_path_composite_sum
 
 	int n = sz(g);
 	vector<T> res(n);
@@ -533,7 +536,10 @@ vector<T> rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
 	//             s-t 間の辺を切断し，t を根と見たときの答え
 	if (sub == nullptr) sub = new vector<vector<T>>;
 	sub->resize(n);
-	rep(s, n) (*sub)[s] = vector<T>(sz(g[s]), e());
+	rep(s, n) {
+		(*sub)[s] = vector<T>(sz(g[s]));
+		rep(i, sz(g[s])) (*sub)[s][i] = e(g[s][i]);
+	}
 
 	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．
 	//  p : 0 を根としたとき s の親
@@ -566,7 +572,7 @@ vector<T> rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
 	//  val : s-p 間の辺を切断し，p を根と見たときの答え
 	function<void(int, int, ll, const T&)> dfs2 = [&](int s, int p, ll c, const T& val) {
 		// ds : 根 s から出る各辺について，その辺だけを s に接続したときの答えのリスト
-		vector<T> ds{ p != -1 ? apply(val, s, p, c) : e() };
+		vector<T> ds{ p != -1 ? apply(val, s, p, c) : e(s) };
 
 		rep(ti, sz(g[s])) {
 			const auto& t = g[s][ti];
@@ -582,7 +588,7 @@ vector<T> rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
 		int k = sz(ds);
 
 		// acc_l[acc_r] : 根 s の左[右] からの辺を順に s に接続したときの答えのリスト
-		vector<T> acc_l(k + 1, e()), acc_r(k + 1, e());
+		vector<T> acc_l(k + 1, e(s)), acc_r(k + 1, e(s));
 
 		rep(i, k) acc_l[i + 1] = merge(acc_l[i], ds[i], s);
 		repir(i, k - 1, 0) acc_r[i] = merge(acc_r[i + 1], ds[i], s);
@@ -602,14 +608,14 @@ vector<T> rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
 			i++;
 		}
 	};
-	dfs2(0, -1, INFL, e());
+	dfs2(0, -1, INFL, e(0)); // 後ろ 2 つの引数はダミー
 
 	return res;
 
 	/* 雛形
 	using T = int;
 	T merge(T x, T y, int s) { return max(x, y); }
-	T e() { return 0; }
+	T e(int s) { return 0; }
 	T leaf(int s) { return 0; }
 	T apply(T x, int p, int s, ll c) { return x + 1; }
 	vector<T> solve_by_rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {

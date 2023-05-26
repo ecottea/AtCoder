@@ -18,7 +18,7 @@
 */
 
 
-//【最小コスト完全マッチング】O(2^|V| |V|)
+//【最小コスト完全マッチング】O(2^n n)
 /*
 * 重み付きグラフ g の隣接行列 adj を元に，g の最小コスト完全マッチングのコストを返す．
 *
@@ -62,7 +62,7 @@ ll minimum_cost_matching(const vvl& adj) {
 }
 
 
-//【完全マッチングの存在判定】O(|V|^3)
+//【完全マッチングの存在判定】O(n^3)
 /*
 * 単純無向グラフ G に完全マッチングが存在するとき，辺の重みを乱数で定めたタット行列の
 * 行列式は高確率で非 0 になり，存在しなければ必ず 0 になる．
@@ -174,16 +174,19 @@ mint count_different_color_matching(const vector<T>& c) {
 
 //【完全グラフの完全マッチングの列挙】O((2n-1)!! n)
 /*
-* 頂点 [0..2n) をもつ完全グラフの完全マッチング全てのリストを返す．
+* 頂点 v[0..2n) をもつ完全グラフの完全マッチング全てのリストを返す．
 * 完全マッチングは n 個の頂点対のリストとして表す．
 */
-vector<vector<pii>> enumerate_perfect_matching(int n) {
+template <class T>
+vector<vector<pair<T, T>>> enumerate_perfect_matching(const vector<T>& v) {
 	// verify : https://atcoder.jp/contests/abc236/tasks/abc236_d
 
-	vector<vector<pii>> mcs;
+	int n = sz(v) / 2;
 
-	// a[i] : 頂点 i が何番目のマッチングに属しているか（未使用なら -1）
-	vi a(2 * n, -1);
+	vector<vector<pair<T, T>>> mcs;
+
+	// p[i] : 頂点 i が何番目のマッチングに属しているか（未使用なら -1）
+	vi p(2 * n, -1);
 
 	// k : 次に定めるのが何番目のマッチングか
 	int k = 0;
@@ -200,23 +203,23 @@ vector<vector<pii>> enumerate_perfect_matching(int n) {
 		}
 
 		// 頂点 i が使用済だった場合は次の頂点へ進む．
-		if (a[i] != -1) {
+		if (p[i] != -1) {
 			rf(i + 1);
 			return;
 		}
 
 		// 頂点 i を k 番目のマッチングの片方に選ぶ．
-		a[i] = k;
-		mc[k].first = i;
+		p[i] = k;
+		mc[k].first = v[i];
 
 		// j : 頂点 i とマッチさせる頂点
 		repi(j, i + 1, 2 * n - 1) {
 			// 頂点 j が使用済だった場合は選べない．
-			if (a[j] != -1) continue;
+			if (p[j] != -1) continue;
 
 			// 頂点 j を頂点 i とマッチさせる．
-			a[j] = k;
-			mc[k].second = j;
+			p[j] = k;
+			mc[k].second = v[j];
 			k++;
 
 			// 次の頂点に進む．
@@ -224,11 +227,11 @@ vector<vector<pii>> enumerate_perfect_matching(int n) {
 
 			// 頂点 j を未使用に戻しておく．
 			k--;
-			a[j] = -1;
+			p[j] = -1;
 		}
 
 		// 頂点 i を未使用に戻しておく．
-		a[i] = -1;
+		p[i] = -1;
 
 		return;
 	};
@@ -238,7 +241,7 @@ vector<vector<pii>> enumerate_perfect_matching(int n) {
 }
 
 
-//【マッチングの列挙（大きさ毎）】O(√perm(|V|, 2k) k)
+//【マッチングの列挙（大きさ毎）】O(√perm(n, 2k) k)
 /*
 * 無向グラフ g の大きさ k のマッチング全てのリストを返す．
 * マッチングは n 個の頂点対のリストとして表す．

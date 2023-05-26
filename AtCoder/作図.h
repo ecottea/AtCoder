@@ -9,6 +9,8 @@
 * 点 p を点 c を中心に th[rad] だけ回転した点を返す．
 */
 inline Point<double> rotate(const Point<double>& p, const Point<double>& c, double th) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_5_A
+
 	Point<double> q;
 	q.x = cos(th) * (p.x - c.x) - sin(th) * (p.y - c.y) + c.x;
 	q.y = sin(th) * (p.x - c.x) + cos(th) * (p.y - c.y) + c.y;

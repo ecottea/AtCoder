@@ -247,9 +247,18 @@ ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p,
 }
 
 
+//【集合被覆問題】
+/*
+* 与えられた [0..n) の部分集合族 S に対し，[0..n) を被覆するように T⊂S を
+* 選ぶときの |T| の最小値を求める問題を集合被覆問題という．
+* 
+* 集合被覆問題を多項式時間で解くアルゴリズムは見つかっていない．
+*/
+
+
 //【XOR の最大化】
 /*
-* 集合 a[0..n) について max_(set ⊂ a[0..n)) (XOR set) を求めるには，
+* 集合 a[0..n) について MAX_(set⊂[0..n)) (XOR a[set]) を求めるには，
 * 右辺を 11..11 にして【連立一次方程式（優先度付き）】を利用すればよい．
 * 
 * verify : https://atcoder.jp/contests/abc141/tasks/abc141_f

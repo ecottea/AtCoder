@@ -10,7 +10,7 @@
 */
 
 
-//【グラフの入力】O(|V| + |E|)
+//【グラフの入力】O(n + m)
 /*
 * (始点, 終点) の組からなる入力を受け取り，n 頂点 m 辺のグラフを構築して返す．
 *
@@ -39,7 +39,7 @@ Graph read_Graph(int n, int m = -1, bool undirected = true, bool one_indexed = t
 }
 
 
-//【グラフの出力】O(|V| + |E|)
+//【グラフの出力】O(n + m)
 /*
 * グラフを【グラフの入力】で受け取る入力と同じ形式で出力する．
 *
@@ -102,7 +102,7 @@ struct WEdge {
 using WGraph = vector<vector<WEdge>>;
 
 
-//【重み付きグラフの入力】O(|V| + |E|)
+//【重み付きグラフの入力】O(n + m)
 /*
 * (始点, 終点, 重み) の組からなる入力を受け取り，n 頂点 m 辺の重み付きグラフを構築して返す．
 *
@@ -131,7 +131,7 @@ WGraph read_WGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 }
 
 
-//【重み付きグラフの出力】O(|V| + |E|)
+//【重み付きグラフの出力】O(n + m)
 /*
 * 重み付きグラフを【重み付きグラフの入力】で受け取る入力と同じ形式で出力する．
 *
@@ -196,29 +196,33 @@ struct IEdge {
 using IGraph = vector<vector<IEdge>>;
 
 
-//【参照付きグラフの入力】O(|V| + |E|)
+//【参照付きグラフの入力】O(n + m)
 /*
 * (始点, 終点) の組からなる入力を受け取り，n 頂点 m 辺の参照付きグラフを構築して返す．
+* また必要なら j 番目の辺が u→v であることを es[j] = {u, v} として格納する．
 *
 * n : グラフの頂点の数
 * m : グラフの辺の数（省略すれば n-1）
 * undirected : 無向グラフか（省略すれば true）
 * one_indexed : 入力が 1-indexed か（省略すれば true）
 */
-IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed = true) {
+IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed = true, vector<pii>* es = nullptr) {
 	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
 
 	IGraph g(n);
 	if (m == -1) m = n - 1;
+	if (es != nullptr) es->resize(m);
 
-	rep(i, m) {
+	rep(j, m) {
 		int a, b;
 		cin >> a >> b;
 
 		if (one_indexed) { --a; --b; }
 
-		g[a].push_back({ b, i, true });
-		if (undirected) g[b].push_back({ a, i, false });
+		g[a].push_back({ b, j, true });
+		if (undirected) g[b].push_back({ a, j, false });
+
+		if (es != nullptr) (*es)[j] = { a, b };
 	}
 
 	return g;
@@ -269,6 +273,38 @@ vector<pii> create_grid_hamilton_cycle(int h, int w) {
 	}
 
 	return res;
+}
+
+
+//【無向グラフのランダム生成】O(n^2)
+/*
+* n 頂点で，辺の存在確率が p % であるランダムな無向グラフを返す．
+* no_loop : 自己ループを禁止するか（デフォルトでは true）
+*/
+Graph create_random_undirected_Graph(int n, int p, bool no_loop = true) {
+	Graph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	uniform_int_distribution<int> rnd(0, 99);
+
+	rep(s, n) repi(t, s + 1, n - 1) {
+		if (rnd(mt) >= p) continue;
+		g[s].emplace_back(t);
+		g[t].emplace_back(s);
+	}
+	if (!no_loop) {
+		rep(s, n) {
+			if (rnd(mt) >= p) continue;
+			g[s].emplace_back(s);
+		}
+	}
+
+	return g;
 }
 
 

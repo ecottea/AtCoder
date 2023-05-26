@@ -6,6 +6,15 @@
 // ■■■■■ 木の性質の分析 ■■■■■
 
 
+//【木の中心】
+/*
+* 木 g において，最も遠い点までの距離を最小にする頂点を g の中心という．
+* g の中心は g の直径の中点（辺上なら辺の両端点）になる．
+* 
+* verify : https://www.codechef.com/problems/MIN_UGLY
+*/
+
+
 //【木の直径】O(n)
 /*
 * 木 g の直径の長さ d を返し，直径の端点間を結ぶパスを path[0..d] に格納する．
@@ -746,7 +755,7 @@ vector<T_hoct> height_of_weighted_tree(const WGraph& g, int r) {
 */
 using T_hut = int;
 T_hut merge_hut(T_hut x, T_hut y, int s) { return max(x, y); }
-T_hut e_hut() { return 0; }
+T_hut e_hut(int s) { return 0; }
 T_hut leaf_hut(int s) { return 0; }
 T_hut apply_hut(T_hut x, int s, int t) { return x + 1; }
 vi height_of_undirected_tree(Graph& g) {
@@ -763,7 +772,7 @@ vi height_of_undirected_tree(Graph& g) {
 */
 using T_hutc = ll;
 T_hutc merge_hutc(T_hutc x, T_hutc y, int s) { return max(x, y); }
-T_hutc e_hutc() { return 0; }
+T_hutc e_hutc(int s) { return 0; }
 T_hutc leaf_hutc(int s) { return 0; }
 T_hutc apply_hutc(T_hutc x, int p, int s, ll c) { return x + c; }
 vl height_of_undirected_tree(const WGraph& g) {
@@ -782,7 +791,7 @@ vl height_of_undirected_tree(const WGraph& g) {
 */
 using T_ss = int;
 T_ss merge_ss(T_ss x, T_ss y, int s) { return x + y - 1; }
-T_ss e_ss() { return 1; }
+T_ss e_ss(int s) { return 1; }
 T_ss leaf_ss(int s) { return 1; }
 T_ss apply_ss(T_ss x, int p, int s) { return x + 1; }
 vvi subtree_size(Graph& g) {

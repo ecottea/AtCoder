@@ -332,6 +332,7 @@ struct Generalized_min_cost_flow {
 
 	// n 頂点で初期化
 	Generalized_min_cost_flow(int n_) : n(n_), g(n + 2), div(n) {}
+	Generalized_min_cost_flow() : n(0), precost(0) {}
 
 	// 頂点 s に湧き出し量 cap を加算する（cap が負値なら吸い込み）．
 	void add_source(int s, ll cap) {
@@ -443,7 +444,7 @@ struct Generalized_min_cost_flow {
 */
 
 
-//【最大流問題】O(maxflow (|V| + |E|))
+//【最大流問題】O(maxflow (n + m))
 /*
 * 重み付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */
@@ -523,7 +524,7 @@ ll ford_fullkerson(const WGraph& g, int s, int t) {
 * add_edge(int s, int t, ll cap, ll cost) : O(1)
 *	s から t への容量 cap，コスト cost の辺を追加する．
 *
-* pll flow(int ST, int GL, ll f_lim = INFL) : O(maxflow (|V| + |E|) log |V|)
+* pll flow(int ST, int GL, ll f_lim = INFL) : O(maxflow (n + m) log n)
 *	ST から GL まで f_lim まで流せるだけ流したときの {流量, 最小コスト} を返す．
 */
 class Ford_fullkerson {
@@ -583,7 +584,7 @@ public:
 			// GL までのパスを見つけたら終了．
 			if (s == GL) break;
 
-			// すでにより小さいコストに更新されていたなら何もしない（忘れると O(|V|^2)）
+			// すでにより小さいコストに更新されていたなら何もしない（忘れると O(n^2)）
 			if (cost[s] < c) continue;
 
 			repe(e, g[s]) {

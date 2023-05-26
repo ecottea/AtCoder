@@ -149,7 +149,7 @@ ll integer_programming_2var_1con(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr
 	}
 	// 以降は直線 a x + b y = const を右上方向に移動させる場合について考える．
 	else {
-		// a d - b c >= 0 としておく．
+		// a d - b c ≧ 0 としておく．
 		bool swap_flag = false;
 		if (a * d - b * c < 0) {
 			swap(a, b); swap(c, d);
@@ -158,7 +158,7 @@ ll integer_programming_2var_1con(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr
 
 		// O(e/c) の全探索を採用する場合
 		if (e / c < c) {
-			// x の動ける範囲は 0 <= x <= e/c なので，x を決め打ち全探索する．
+			// x の動ける範囲は 0 ≦ x ≦ e/c なので，x を決め打ち全探索する．
 			repi(x, 0, e / c) {
 				ll y = (e - c * x) / d;
 
@@ -167,8 +167,8 @@ ll integer_programming_2var_1con(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr
 		}
 		// O(c) の全探索を採用する場合
 		else {
-			// 最適解 (x0, y0) においては 0 <= y0 < c なので，y を決め打ち全探索する．
-			//（もし y0 >= c だと (x0 + d, y0 - c) の方が目的関数値を大きくする．）
+			// 最適解 (x0, y0) においては 0 ≦ y0 < c なので，y を決め打ち全探索する．
+			//（もし y0 ≧ c だと (x0 + d, y0 - c) の方が目的関数値を大きくする．）
 			repi(y, 0, min(c - 1, e / d)) {
 				ll x = (e - d * y) / c;
 

@@ -6,20 +6,20 @@
 
 //【隣接作用／一点参照クエリ（可換モノイド）】
 /*
-* Neighbor_add_query<S, op, o>(Graph g) : O(|V| + |E|)
+* Neighbor_add_query<S, op, o>(Graph g) : O(n + m)
 *	グラフ g と初期値 o() で初期化する．
 *	要素は可換モノイド (S, op, o) の元とする．
 *
-* Neighbor_add_query<S, op, o>(Graph g, vS v) : O(|V| + |E|)
+* Neighbor_add_query<S, op, o>(Graph g, vS v) : O(n + m)
 *	グラフ g と初期値 v[0..n) で初期化する．
 *
 * add(int i, S x) : O(1)
 *	v[i] += x とする．
 *
-* S get(int i) : O(√|E|)
+* S get(int i) : O(√m)
 *	v[i] を返す．
 *
-* spread(int s, S x) : O(√|E|)
+* spread(int s, S x) : O(√m)
 *	s の隣接頂点 t 全てに対して v[t] += x とする．
 */
 template <class S, S(*op)(S, S), S(*o)()>
@@ -90,23 +90,23 @@ public:
 
 //【隣接作用／一点参照クエリ（アーベル群）】
 /*
-* Neighbor_add_set_query<S, op, o, inv>(Graph g) : O(|V| + |E|)
+* Neighbor_add_set_query<S, op, o, inv>(Graph g) : O(n + m)
 *	グラフ g と初期値 o() で初期化する．
 *	要素はアーベル群 (S, op, o, inv) の元とする．
 *
-* Neighbor_add_set_query<S, op, o, inv>(Graph g, vS v) : O(|V| + |E|)
+* Neighbor_add_set_query<S, op, o, inv>(Graph g, vS v) : O(n + m)
 *	グラフ g と初期値 v[0..n) で初期化する．
 *
 * add(int i, S x) : O(1)
 *	v[i] += x とする．
 *
-* set(int i, S x) : O(√|E|)
+* set(int i, S x) : O(√m)
 *	v[i] = x とする．
 *
-* S get(int i) : O(√|E|)
+* S get(int i) : O(√m)
 *	v[i] を返す．
 *
-* spread(int s, S x) : O(√|E|)
+* spread(int s, S x) : O(√m)
 *	s の隣接頂点 t 全てに対して v[t] += x とする．
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>

@@ -6,14 +6,35 @@
 // ■■■■■ 最適化（集合の分割） ■■■■■
 
 
-//【組の差の和の最小化】
+//【分割の和スコアの最大値】O(3^n)
 /*
-* a[0..2n) を組に分割する．各組のスコアを 2 つの要素の差，
-* 分割のスコアを各組のスコアの総和と定めるとき，スコア最大の分割は次にようにして得られる：
-*	a[0..2n) をソートし，a[0..n) から 1 つ，a[n..2n) から 1 つ要素を選び組にする．
-* 
-* verify : https://atcoder.jp/contests/arc120/tasks/arc120_d
+* [0..n) の分割 π = 凵k S_k に対するスコアが Σk a[S_k] で与えられるとする．
+* 各 set⊂[0..n) について，全ての分割のスコアの最大値を格納したリストを返す．
 */
+template <class T>
+vector<T> set_partition_sum_score_max(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/apc001/tasks/apc001_f
+
+	int N = sz(a);
+
+	vector<T> dp(N);
+	dp[0] = 0;
+
+	// SoS bit DP
+	rep(set, N) {
+		if (set == 0) continue;
+
+		// set1 : set から特定の要素 x を取り除いた集合
+		int set1 = (set - 1) & set;
+
+		// sub ⊂ set1 を全探索する（set - sub が x を含む）
+		for (int sub = set1, tmp = 1; tmp > 0; tmp = sub, sub = (sub - 1) & set1) {
+			chmax(dp[set], dp[sub] + a[set - sub]);
+		}
+	}
+
+	return dp;
+}
 
 
 //【直径最小化クラスタリング】O(3^n k)
@@ -96,6 +117,16 @@ ll maximize_sum_clustering(const vvl& sc) {
 
 	return dp[(1LL << n) - 1];
 }
+
+
+//【組の差の和の最小化】
+/*
+* 互いに異なる要素からなる集合 a[0..2n) を組に分割する．各組のスコアを 2 つの要素の差，
+* 分割のスコアを各組のスコアの総和と定めるとき，スコア最大の分割は次にようにして得られる：
+*	a[0..2n) をソートし，a[0..n) から 1 つ，a[n..2n) から 1 つ要素を選び組にする．
+*
+* verify : https://atcoder.jp/contests/arc120/tasks/arc120_d
+*/
 
 
 //【スコア和最大化 3 彩色】O(n log n)

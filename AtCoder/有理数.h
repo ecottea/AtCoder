@@ -22,7 +22,7 @@
 *	一方が整数でも構わない．複合代入演算子も使用可．
 *
 * reduction() : O(log min(num, dnm))
-*	約分を行う．
+*	自身の約分を行う．
 */
 template <class T = ll>
 struct Frac {
@@ -37,6 +37,7 @@ struct Frac {
 	Frac(T num_, T dnm_) : num(num_), dnm(dnm_) {
 		// verify : https://atcoder.jp/contests/abc244/tasks/abc244_h
 
+		Assert(dnm != 0);
 		if (dnm < 0) { num *= -1; dnm *= -1; }
 	}
 
@@ -97,7 +98,14 @@ struct Frac {
 		return *this;
 	}
 	Frac& operator*=(const Frac& b) { num *= b.num; dnm *= b.dnm; return *this; }
-	Frac& operator/=(const Frac& b) { num *= b.dnm; dnm *= b.num; return *this; }
+	Frac& operator/=(const Frac& b) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_g
+
+		Assert(b.num != 0);
+		num *= b.dnm; dnm *= b.num;
+		if (dnm < 0) { num *= -1; dnm *= -1; }
+		return *this;
+	}
 	Frac operator+(const Frac& b) const { Frac a = *this; return a += b; }
 	Frac operator-(const Frac& b) const { Frac a = *this; return a -= b; }
 	Frac operator*(const Frac& b) const { Frac a = *this; return a *= b; }
@@ -109,6 +117,7 @@ struct Frac {
 	Frac& operator-=(T c) { num -= dnm * c; return *this; }
 	Frac& operator*=(T c) { num *= c; return *this; }
 	Frac& operator/=(T c) {
+		Assert(c != T(0));
 		dnm *= c;
 		if (dnm < 0) { num *= -1; dnm *= -1; }
 		return *this;

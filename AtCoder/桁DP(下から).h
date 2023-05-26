@@ -1,7 +1,7 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
-// ■■■■■ 桁 DP（下の桁から） ■■■■■
+// ■■■■■ 桁 DP（下の桁から，竹 DP） ■■■■■
 
 
 //【下から状態桁 DP，以下フラグ，数え上げ】O(n m b)

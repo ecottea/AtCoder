@@ -6,7 +6,7 @@
  
 //【組の上から桁 DP，未満フラグ，数え上げ】O(max(n1, n2) b^2)
 /*
-* b=10 進数で n1 桁の非負整数 num1 と n2 桁の非負整数 num2 について，
+* b 進数で n1 桁の非負整数 num1 と n2 桁の非負整数 num2 について，
 * d1 ≦ num1, d2 ≦ num2 なる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_pair(string num1, string num2, int b = 10) {
@@ -69,7 +69,7 @@ mint count_pair(string num1, string num2, int b = 10) {
 
 //【組の上から桁 DP，未満フラグ，比較フラグ，数え上げ】O(n b^2)
 /*
-* b=10 進数で n 桁の非負整数 num について，
+* b 進数で n 桁の非負整数 num について，
 * d1 ≦ d2 ≦ num なる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_unordered_pair(string num, int b = 10) {
@@ -120,7 +120,7 @@ mint count_unordered_pair(string num, int b = 10) {
 
 //【組の上から桁 DP，超過フラグ，未満フラグ，比較フラグ，数え上げ】O(max(n1, n2) b^2)
 /*
-* b=10 進数で n1 桁の非負整数 num1 と n2 桁の非負整数 num2 について，
+* b 進数で n1 桁の非負整数 num1 と n2 桁の非負整数 num2 について，
 * num1 ≦ d1 ≦ d2 ≦ num2 なる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_unordered_pair(string num1, string num2, int b = 10) {
@@ -186,7 +186,7 @@ mint count_unordered_pair(string num1, string num2, int b = 10) {
 
 //【組の上から桁 DP，未満フラグ，比較フラグ，積の和】O(n b^2)
 /*
-* b=10 進数で n 桁の数 num について，
+* b 進数で n 桁の数 num について，
 * d1 ≦ d2 ≦ num なる非負整数の組 (d1, d2) を渡る積 d1 d2 の和を返す．
 */
 mint multiple_sum_unordered_pair_downward(const string& num, int b = 10) {
@@ -260,7 +260,7 @@ mint multiple_sum_unordered_pair_downward(const string& num, int b = 10) {
 
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，数え上げ】O(n b^2)
 /*
-* b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) の個数を返す．
+* b 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) の個数を返す．
 */
 mint count_pair_sum(const string& num, int b = 10) {
 	// verify : https://atcoder.jp/contests/abc129/tasks/abc129_e
@@ -307,7 +307,7 @@ mint count_pair_sum(const string& num, int b = 10) {
 
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，比較フラグ，数え上げ】O(n b^2)
 /*
-* b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
+* b 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
 * d1 ≦ d2 を満たすものの個数を返す．
 */
 mint count_unordered_pair_sum(const string& num, int b = 10) {
@@ -357,7 +357,7 @@ mint count_unordered_pair_sum(const string& num, int b = 10) {
 
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，比較フラグ，積の和】O(n b^2)
 /*
-* b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
+* b 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
 * d1 ≦ d2 を満たすもの全てを渡る積 d1 d2 の和を返す．
 */
 mint multiple_sum_unordered_pair_upward(const string& num, int b = 10) {
@@ -431,7 +431,7 @@ mint multiple_sum_unordered_pair_upward(const string& num, int b = 10) {
 
 //【組の下から桁 DP，以下フラグ，桁上げフラグ，比較フラグ，スコア和】O(n b^2)
 /*
-* b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
+* b 進数で n 桁の数 num について，和が num 以下になる非負整数の組 (d1, d2) で
 * d1 ≦ d2 を満たすもの全てにおける繰り上がり回数の総和を返す．
 */
 mint carry_sum_unordered_pair_sum(const string& num, int b = 10) {
@@ -483,7 +483,7 @@ mint carry_sum_unordered_pair_sum(const string& num, int b = 10) {
 
 //【k 個組の下から桁 DP，以下フラグ，桁上げ状態，数え上げ】O(n k b^k)
 /*
-* b=10 進数で n 桁の数 num について，和が num 以下になる非負整数の k 個組 d[0..k) の個数を返す．
+* b 進数で n 桁の数 num について，和が num 以下になる非負整数の k 個組 d[0..k) の個数を返す．
 */
 mint count_tuple_sum(const string& num, int k, int b = 10) {
 	int n = sz(num);

@@ -272,67 +272,70 @@ public:
 *	区間の数を返す．
 *
 * pll get(ll x) : O(log n)
-*	x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
+*	x が含まれる区間 [l..r) を返す（なければ {-1, -1} を返す）
 *
 * pll get_right(ll x) : O(log n)
-*	x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+*	x の 1 つ右にある区間 [l..r) を返す（なければ {-1, -1} を返す）
 *
 * pll get_left(ll x) : O(log n)
-*	x の 1 つ左にある区間 [l, r) を返す（なければ {-1, -1} を返す）
+*	x の 1 つ左にある区間 [l..r) を返す（なければ {-1, -1} を返す）
 *
 * insert(ll l, ll r) : ならし O(log n)
-*	区間 [l, r) を追加する．
+*	区間 [l..r) を追加する．
 *
 * erase(ll l, ll r) : ならし O(log n)
-*	区間 [l, r) を削除する．
+*	区間 [l..r) を削除する．
+*
+* vector<pll> get_all_intervals() : O(n)
+*	全ての区間 [l..r) からなるリストを返す．
 */
 class Interval_set {
 	bool marge;
 
 	// x が含まれる区間を指すイテレータを返す（なければ lr.end() を返す）
 	typename set<pll>::iterator get_iter(ll x) const {
-		auto it = lr.lower_bound({ x, INFL });
-		if (it == lr.begin()) return lr.end();
+		auto it = lrs.lower_bound({ x, INFL });
+		if (it == lrs.begin()) return lrs.end();
 		it--;
 		if (it->first <= x && x < it->second) return it;
-		else return lr.end();
+		else return lrs.end();
 	}
 
 	// x の 1 つ右にある区間を指すイテレータを返す（なければ lr.end() を返す）
 	typename set<pll>::iterator get_right_iter(ll x) const {
-		return lr.lower_bound({ x, INFL });
+		return lrs.lower_bound({ x, INFL });
 	}
 
 	// x の 1 つ左にある区間を指すイテレータを返す（なければ lr.end() を返す）
 	typename set<pll>::iterator get_left_iter(ll x) const {
-		auto it = lr.lower_bound({ x, INFL });
-		if (it == lr.begin()) return lr.end();
+		auto it = lrs.lower_bound({ x, INFL });
+		if (it == lrs.begin()) return lrs.end();
 		it--;
 		if (it->first <= x && x < it->second) {
-			if (it == lr.begin()) return lr.end();
+			if (it == lrs.begin()) return lrs.end();
 			it--;
 		}
 		return it;
 	}
 
-	typename set<pll>::iterator begin() const { return lr.begin(); }
-	typename set<pll>::iterator end() const { return lr.end(); }
+	typename set<pll>::iterator begin() const { return lrs.begin(); }
+	typename set<pll>::iterator end() const { return lrs.end(); }
 
 public:
-	set<pll> lr; // 区間 [l[i], r[i]) の昇順列
+	set<pll> lrs; // 区間 [l[i], r[i]) の昇順列
 
 	// コンストラクタ（空で初期化）
 	Interval_set(bool marge_ = true) : marge(marge_) {}
 
 	// 区間の数を返す．
-	int size() const { return sz(lr); }
+	int size() const { return sz(lrs); }
 
 	// x が含まれる区間 [l, r) を返す（なければ {-1, -1} を返す）
 	pll get(ll x) const {
 		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_d
 
 		auto it = get_iter(x);
-		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+		return it == lrs.end() ? make_pair(-1LL, -1LL) : *it;
 	}
 
 	// x の 1 つ右にある区間 [l, r) を返す（なければ {-1, -1} を返す）
@@ -340,13 +343,13 @@ public:
 		// verify : https://atcoder.jp/contests/code-festival-2015-qualb/tasks/codefestival_2015_qualB_d
 
 		auto it = get_right_iter(x);
-		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+		return it == lrs.end() ? make_pair(-1LL, -1LL) : *it;
 	}
 
 	// x の 1 つ左にある区間 [l, r) を返す（なければ {-1, -1} を返す）
 	pll get_left(ll x) const {
 		auto it = get_left_iter(x);
-		return it == lr.end() ? make_pair(-1LL, -1LL) : *it;
+		return it == lrs.end() ? make_pair(-1LL, -1LL) : *it;
 	}
 
 	// 区間 [l, r) を追加する．
@@ -356,17 +359,17 @@ public:
 		if (l >= r) return;
 
 		auto it_l = get_iter(l - (int)marge);
-		if (it_l == lr.end()) it_l = get_right_iter(l - (int)marge);
+		if (it_l == lrs.end()) it_l = get_right_iter(l - (int)marge);
 
 		auto it_r = get_iter(r - (int)(!marge));
-		if (it_r == lr.end()) it_r = get_left_iter(r - (int)(!marge));
+		if (it_r == lrs.end()) it_r = get_left_iter(r - (int)(!marge));
 
-		if (it_l != lr.end() && it_r != lr.end()) {
+		if (it_l != lrs.end() && it_r != lrs.end()) {
 			chmin(l, it_l->first);
 			chmax(r, it_r->second);
-			lr.erase(it_l, ++it_r);
+			lrs.erase(it_l, ++it_r);
 		}
-		lr.insert({ l, r });
+		lrs.insert({ l, r });
 	}
 
 	// 区間 [l, r) を削除する．
@@ -376,24 +379,32 @@ public:
 		ll l2 = l, r2 = r;
 
 		auto it_l = get_iter(l);
-		if (it_l != lr.end()) l2 = it_l->first;
+		if (it_l != lrs.end()) l2 = it_l->first;
 		else it_l = get_right_iter(l - 1);
 
 		auto it_r = get_iter(r);
-		if (it_r != lr.end()) r2 = it_r->second;
+		if (it_r != lrs.end()) r2 = it_r->second;
 		else it_r = get_left_iter(r);
 
-		if (it_l != lr.end() && it_r != lr.end()) {
-			lr.erase(it_l, ++it_r);
+		if (it_l != lrs.end() && it_r != lrs.end()) {
+			lrs.erase(it_l, ++it_r);
 		}
 
-		if (l2 < l) lr.insert({ l2, l });
-		if (r2 > r) lr.insert({ r, r2 });
+		if (l2 < l) lrs.insert({ l2, l });
+		if (r2 > r) lrs.insert({ r, r2 });
+	}
+
+	// 全ての区間のリストを返す．
+	vector<pll> get_all_intervals() {
+		vector<pll> res;
+		res.reserve(sz(lrs));
+		repe(lr, lrs) res.push_back(lr);
+		return res;
 	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Interval_set& d) {
-		repe(p, d.lr) os << p << " ";
+		repe(p, d.lrs) os << "[" << p.first << "," << p.second << ") ";
 		return os;
 	}
 #endif
@@ -403,7 +414,7 @@ public:
 //【区間からの写像】
 /*
 * Interval_map<S, T>(T nil) : O(1)
-*	S の全ての値に nil を割り当てる．
+*	空で初期化する（nil は使わない値）
 *
 * void set(S l, S r, T v) : ならし O(log n)
 *	区間 [l..r) に値 v を割り当てる．
@@ -413,7 +424,7 @@ public:
 *	その後区間 [l..r) に値 v を割り当てる．
 *
 * T get(S x) : O(log n)
-*	x に割り当てられた値を返す．
+*	x に割り当てられた値を返す（なければ nil を返す）
 */
 template <class S, class T>
 class Interval_map {

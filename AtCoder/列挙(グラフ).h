@@ -4,12 +4,12 @@
 // ■■■■■ グラフ上の列挙問題 ■■■■■
 
 
-//【単純パスの列挙】O(deg(v)^|V|)
+//【単純パスの列挙（始点指定）】O(?)
 /*
 * グラフ g の st を始点とする単純パス全てを格納した二次元リストを返す．
 */
 template <class G>
-vvi back_tracking(const G& g, int st) {
+vvi enumerate_simple_path(const G& g, int st) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_bt
 
 	int n = sz(g);
@@ -46,7 +46,53 @@ vvi back_tracking(const G& g, int st) {
 }
 
 
-//【連結成分の列挙】O(deg(v)^k |V| k)
+//【単純パスの列挙（始点，終点指定）】O(?)
+/*
+* グラフ g の ST から GL への単純パス全てを格納した二次元リストを返す．
+*/
+template <class G>
+vvi enumerate_simple_path(const G& g, int ST, int GL) {
+	// verify : https://mojacoder.app/users/RedSpica/contests/RedSpica-Regular-Selection/tasks/7
+
+	int n = sz(g);
+	vvi paths;
+	vi seq; // 訪れた頂点の列
+
+	// 頂点を訪れたことを記録しておくテーブル．
+	vb seen(n);
+
+	// 再帰用の関数
+	function<void(int)> dfs = [&](int s) {
+		// s を訪れたことを記録
+		seen[s] = true;
+		seq.push_back(s);
+
+		// GL にたどり着いたら単純パスを記録
+		if (s == GL) {
+			paths.push_back(seq);
+		}
+		// まだ GL にたどり着いていないなら先を探索
+		else {
+			repe(t, g[s]) {
+				// 探索済なら何もしない．
+				if (seen[t]) continue;
+
+				// 未探索の頂点を探索しにいく．
+				dfs(t);
+			}
+		}
+
+		// s を訪れた記録を削除
+		seen[s] = false;
+		seq.pop_back();
+	};
+	dfs(ST);
+
+	return paths;
+}
+
+
+//【連結成分の列挙】O(?)
 /*
 * 無向グラフ g の大きさ k の連結成分全てのリストを返す．
 * 連結成分は頂点番号のリストとして表す．
@@ -208,7 +254,7 @@ vvi enumerate_tree(IGraph& g, int r, int k) {
 }
 
 
-//【クリークの列挙】O(2^(1.4√|E|) |V|)
+//【クリークの列挙】O(2^(1.4√m) n)
 /*
 * 無向グラフ g のクリークを成す頂点集合のリストを返す（空グラフを含む）
 * S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．

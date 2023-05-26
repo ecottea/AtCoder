@@ -58,33 +58,16 @@ template <class T> inline istream& operator>>(istream& is, vector<T>& v) { repea
 template <class T> inline vector<T>& operator--(vector<T>& v) { repea(x, v) --x; return v; }
 template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x; return v; }
 
-// 手元環境（Visual Studio）
-#ifdef _MSC_VER
-#include "local.hpp"
-// 提出用（gcc）
-#else
-inline int popcount(int n) { return __builtin_popcount(n); }
-inline int popcount(ll n) { return __builtin_popcountll(n); }
-inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
-inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
-inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
-inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
-#define gcd __gcd
-#define dump(...)
-#define dumpel(v)
-#define dump_list(v)
-#define dump_list2D(v)
-#define input_from_file(f)
-#define output_to_file(f)
-#define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
-#endif
-
 #endif // 折りたたみ用
 
 
 #if __has_include(<atcoder/all>)
 #include <atcoder/all>
 using namespace atcoder;
+
+#ifdef _MSC_VER
+#include "localACL.hpp"
+#endif
 
 //using mint = modint1000000007;
 using mint = modint998244353;
@@ -98,9 +81,29 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
 #endif
 
 
+#ifdef _MSC_VER // 手元環境（Visual Studio）
+#include "local.hpp"
+#else // 提出用（gcc）
+inline int popcount(int n) { return __builtin_popcount(n); }
+inline int popcount(ll n) { return __builtin_popcountll(n); }
+inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
+inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
+inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
+inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
+#define gcd __gcd
+#define dump(...)
+#define dumpel(v)
+#define dump_list(v)
+#define dump_mat(v)
+#define input_from_file(f)
+#define output_to_file(f)
+#define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
+#endif
+
+
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-
+	
 }

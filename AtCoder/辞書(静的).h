@@ -542,17 +542,13 @@ struct Substring_dictionary {
 * —˜—pFy‚ß‚®‚é®“ñ•ª’Tõz
 */
 struct Outer_sum_dictionary {
-	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_e
-
 	int n, m;
 	vl a, b, acc_b;
 
-	Outer_sum_dictionary() : n(0), m(0) {}
-
 	// S = { a[i] + b[j] | i¸[0..n), j¸[0..m) } ‚Å‰Šú‰»‚·‚éD
-	Outer_sum_dictionary(const vl& a_, const vl& b_)
-		: n(sz(a_)), m(sz(b_)), a(a_), b(b_)
-	{
+	Outer_sum_dictionary(const vl& a_, const vl& b_) : n(sz(a_)), m(sz(b_)), a(a_), b(b_) {
+		// verify : https://atcoder.jp/contests/abc149/tasks/abc149_e
+
 		sort(all(a)); sort(all(b));
 
 		acc_b = vl(m + 1);
@@ -560,9 +556,12 @@ struct Outer_sum_dictionary {
 			acc_b[j + 1] = acc_b[j] + b[j];
 		}
 	}
+	Outer_sum_dictionary() : n(0), m(0) {}
 
 	// S ‚Ì v –¢–‚Ì—v‘f‚ÌŒÂ”‚ğ•Ô‚·D
 	ll lower_bound(ll v) {
+		// verify : https://yukicoder.me/problems/no/989
+
 		ll cnt = 0;
 		rep(i, n) cnt += lbpos(b, v - a[i]);
 		return cnt;
@@ -585,6 +584,8 @@ struct Outer_sum_dictionary {
 
 	// S ‚Ì i ”Ô–Ú–¢–‚Ì—v‘f‚Ì˜a‚ğ•Ô‚·D
 	ll sum(ll i) {
+		// verify : https://atcoder.jp/contests/abc149/tasks/abc149_e
+
 		// v : i ”Ô–Ú‚Ì—v‘f 
 		ll v = get(i);
 
@@ -618,8 +619,6 @@ struct Outer_sum_dictionary {
 * —˜—pFy‚ß‚®‚é®“ñ•ª’Tõz
 */
 struct Outer_mul_dictionary {
-	// verify : https://atcoder.jp/contests/arc037/tasks/arc037_c
-
 	// n, m : a, b ‚Ì—v‘f”
 	// np, mp : a, b ‚Ì ³‚Ì—v‘f”
 	// nz, mz : a, b ‚Ì 0 ‚Ì—v‘f”
@@ -630,10 +629,10 @@ struct Outer_mul_dictionary {
 	// an, bn : a, b ‚Ì•‰‚Ì—v‘f‚Ì â‘Î’l ‚ğ¸‡‚ÉŠi”[‚µ‚½ƒŠƒXƒg
 	vl ap, an, bp, bn;
 
-	Outer_mul_dictionary() : n(0), np(0), nz(0), nn(0), m(0), mp(0), mz(0), mn(0) {}
-
 	// S = { a[i] b[j] | i¸[0..n), j¸[0..m) } ‚Å‰Šú‰»‚·‚éD
 	Outer_mul_dictionary(const vl& a, const vl& b) {
+		// verify : https://atcoder.jp/contests/arc037/tasks/arc037_c
+		
 		np = nz = nn = 0;
 		repe(x, a) {
 			if (x > 0) {
@@ -668,9 +667,12 @@ struct Outer_mul_dictionary {
 		sort(all(bp)); sort(all(bn));
 		m = mp + mz + mn;
 	}
+	Outer_mul_dictionary() : n(0), np(0), nz(0), nn(0), m(0), mp(0), mz(0), mn(0) {}
 
 	// S ‚Ì v –¢–‚Ì—v‘f‚ÌŒÂ”‚ğ•Ô‚·D
 	ll lower_bound(ll v) {
+		// verify : https://yukicoder.me/problems/no/989
+
 		ll cnt = 0;
 		if (v > 0) {
 			cnt += (ll)m * n - (ll)np * mp - (ll)nn * mn;
@@ -695,6 +697,8 @@ struct Outer_mul_dictionary {
 
 	// S ‚Ì i ”Ô–Ú‚Ì—v‘f‚ğ•Ô‚·D
 	ll get(ll i) {
+		// verify : https://atcoder.jp/contests/arc037/tasks/arc037_c
+		
 		function<bool(ll)> okQ = [&](ll v) {
 			return lower_bound(v) <= i;
 		};

@@ -160,7 +160,7 @@ vm convolution_verylarge(const vm& a, const vm& b) {
 }
 
 
-//【複数の数列の畳込み（mod 998244353）】O(n (log n)^2)
+//【畳込み（複数，mod 998244353）】O(n (log n)^2)
 /*
 * 数列の集合 a の要素を全て畳込んだ結果（長さは n）を返す．
 */
@@ -302,7 +302,7 @@ public:
 * Semi_online_convolution(vm b) : O(n)
 *	a[0..n) と固定された b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
 *
-* void set(mint b) : ならし O((log n)^2)
+* void set(mint a) : ならし O((log n)^2)
 *	t 回目に呼び出すときは，a=a[t] を与える．
 *
 * mint [](int i) : O(1)

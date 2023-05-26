@@ -7,7 +7,7 @@
 // ■■■■■ 全域木 ■■■■■
 
 
-//【最小全域森】O(|E| log|V|)
+//【最小全域森】O(m log n)
 /*
 * 重み付き無向グラフ g の最小全域森を求め，そのコストを返す．
 * 最小全域森を msf に構成し，各最小全域木の代表元を rs に格納する．
@@ -49,7 +49,7 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 }
 
 
-//【最小全域木】O(|E| log|V|)
+//【最小全域木】O(m log n)
 /*
 * 重み付き無向グラフ g の頂点 r を含む連結成分の最小全域木を rs に格納する．
 * また戻り値として最小コストを返す．
@@ -92,7 +92,7 @@ ll prim(const WGraph& g, int r, WGraph& mst) {
 }
 
 
-//【全域森】O(|V| + |E|)
+//【全域森】O(n + m)
 /*
 * 無向グラフ g の全域森を返す．また各全域木の代表元を v に格納する．
 */
@@ -123,7 +123,7 @@ Graph spanning_forest(const Graph& g, vi* v = nullptr) {
 }
 
 
-//【最小全域森（圧縮）】O(|V| + |E| log|V|)
+//【最小全域森（圧縮）】O(n + m log n)
 /*
 * 重み付き無向グラフ g とその頂点集合 vs から，vs を頂点集合にもち，
 * 辺 s-t のコストを g における s,t 間の距離と定めた重み付き無向グラフ g2 を構成する．
@@ -203,7 +203,75 @@ ll compressed_minimum_spanning_forest(const WGraph& g, const vi& vs, WGraph* msf
 }
 
 
-//【全域木の数え上げ】O(|V|^3)
+//【全域森に必ず使われる辺】
+/*
+* 無向グラフ g の全域森に必ず使われる辺は，g の橋の全てである．
+*/
+
+
+//【最小全域森に必ず使われる辺】O(n + m log n)
+/*
+* 頂点 [0..n) をもち，各 j∈[0..m) についてコスト c[j] の辺 u[j]-v[j] をもつグラフを G とする．
+* G の最小全域森全てに共通する辺の番号を昇順に並べたリストを返す．
+*
+* 利用：【lowlink】
+*/
+vi required_edge_for_MST(int n, const vi& u, const vi& v, const vl& c) {
+	// verify : https://algo-method.com/tasks/1014
+
+	int m = sz(u);
+
+	// 辺をコスト（昇順）ごとに分類する．
+	map<ll, vi> edges;
+	rep(j, m) edges[c[j]].push_back(j);
+
+	vi res;
+
+	// 今までに追加した辺で連結になる頂点を同一視する．
+	dsu d(n);
+
+	for (auto& [c, js] : edges) {
+		// 旧頂点番号から新頂点番号への対応
+		unordered_map<int, int> i_to_i2; int id_i = 0;
+
+		// 新辺番号から旧辺番号への対応
+		vi j2_to_j; int id_j = 0;
+
+		// コスト c の辺のみからなる縮約されたグラフ g2 を作成する．
+		IGraph g2;
+		repe(j, js) {
+			int lu = d.leader(u[j]);
+			int lv = d.leader(v[j]);
+
+			if (!i_to_i2.count(lu)) {
+				i_to_i2[lu] = id_i++;
+				g2.push_back(vector<IEdge>());
+			}
+			if (!i_to_i2.count(lv)) {
+				i_to_i2[lv] = id_i++;
+				g2.push_back(vector<IEdge>());
+			}
+			j2_to_j.push_back(j);
+
+			g2[i_to_i2[lu]].push_back({ i_to_i2[lv], id_j });
+			g2[i_to_i2[lv]].push_back({ i_to_i2[lu], id_j });
+			id_j++;
+		}
+
+		// g2 の橋を列挙する．
+		Lowlink LL(g2);
+		vi bs = LL.get_bridges();
+		repe(j2, bs) res.push_back(j2_to_j[j2]);
+
+		// 頂点の同一視を進める
+		repe(j, js) d.merge(u[j], v[j]);
+	}
+
+	return res;
+}
+
+
+//【全域木の数え上げ】O(n^3)
 /*
 * 自己ループのない無向グラフ g（多重辺は可）の全域木の個数を返す．
 *
@@ -256,7 +324,7 @@ mint matrix_tree_theorem(const Graph& g) {
 */
 
 
-//【全域森の数え上げ】O(|V|^3)
+//【全域森の数え上げ】O(n^3)
 /*
 * 自己ループのない無向グラフ g（多重辺は可）の全域森の個数を返す．
 *
@@ -301,7 +369,7 @@ mint count_spanning_forest(const Graph& g) {
 }
 
 
-//【最小全域森の数え上げ】O(|V|^3)
+//【最小全域森の数え上げ】O(n^3)
 /*
 * 自己ループのない重み付き無向グラフ g の最小全域森のコストと個数を返す．
 *
@@ -314,11 +382,7 @@ pair<ll, mint> count_minimum_spanning_forest(const WGraph& g) {
 
 	// 辺をコスト（昇順）ごとに分類する．
 	map<ll, vector<pii>> edges;
-	rep(s, n) {
-		repe(e, g[s]) {
-			edges[e.cost].push_back({ s, e.to });
-		}
-	}
+	rep(s, n) repe(e, g[s]) edges[e.cost].push_back({ s, e.to });
 
 	ll cost = 0; mint cnt = 1;
 
@@ -336,8 +400,7 @@ pair<ll, mint> count_minimum_spanning_forest(const WGraph& g) {
 		// コスト c の辺のみからなる縮約されたグラフを作成する．
 		Graph g2;
 		repe(st, tmp.second) {
-			int s, t;
-			tie(s, t) = st;
+			auto [s, t] = st;
 
 			int rs = d.leader(s);
 			int rt = d.leader(t);
@@ -359,13 +422,12 @@ pair<ll, mint> count_minimum_spanning_forest(const WGraph& g) {
 
 		// 全域木を数え上げる．
 		//	これがボトルネックになるので，1 つのコストに対応する辺が少なければ
-		//	計算量は O(|V|^3) から真に改善する．
+		//	計算量は O(n^3) から真に改善する．
 		cnt *= count_spanning_forest(g2);
 
 		// 頂点の同一視を進める
 		repe(st, tmp.second) {
-			int s, t;
-			tie(s, t) = st;
+			auto [s, t] = st;
 
 			if (!d.same(s, t)) {
 				cost += c;
@@ -378,7 +440,7 @@ pair<ll, mint> count_minimum_spanning_forest(const WGraph& g) {
 }
 
 
-//【最小全域森の結合森】O(|E| log |V|)
+//【最小全域森の結合森】O(m log n)
 /*
 * クラスカル法で最小全域森を構築する様子を表した根付き森を fst に構築し，
 * その根のリストを rs に格納する．
@@ -472,7 +534,7 @@ void mst_tree(const WGraph& g, Graph& fst, vi& rs) {
 */
 
 
-//【有向最小全域木】O(|E| log |V|)
+//【有向最小全域木】O(m log n)
 /*
 * 重み付き有向グラフ g の r を根とする有向最小全域木のコストを返す（なければ -1）
 *

@@ -3,18 +3,6 @@
 // ■■■■■ 列 ■■■■■
 
 
-//【判定問題 → 数え上げ問題】
-/*
-*	(判定問題) 列 seq[0..n) が条件 P を満たすか判定せよ
-* が，O(1) 個のパラメータ（変域 O(m)）を保持しながらの線形走査で解けるならば，
-* そのパラメータの値を状態にもつ DP を行うことで，
-*	(数え上げ問題) 条件 P を満たす列の総数を求めよ
-* を O(n m) で解くことができる．
-* 
-* verify : https://atcoder.jp/contests/abc237/tasks/abc237_f
-*/
-
-
 //【隣接要素への加算に対する不変量】
 /*
 * 列 a に対して a[i..i+1] += x という操作だけが許される場合，
@@ -22,6 +10,42 @@
 * 
 * verify : https://atcoder.jp/contests/arc135/tasks/arc135_d
 */
+
+
+//【下に凸判定（広義）】O(n)
+/*
+* a[0..n) が広義に下に凸（階差数列が広義単調増加）かを返す．
+*/
+template <class T>
+bool convexQ(const vector<T>& a) {
+	int n = sz(a);
+	T diff = numeric_limits<T>::lowest();
+
+	rep(i, n - 1) {
+		T d = a[i + 1] - a[i];
+		if (d < diff) return false;
+		diff = d;
+	}
+	return true;
+}
+
+
+//【上に凸判定（広義）】O(n)
+/*
+* a[0..n) が広義に上に凸（階差数列が広義単調減少）かを返す．
+*/
+template <class T>
+bool concaveQ(const vector<T>& a) {
+	int n = sz(a);
+	T diff = numeric_limits<T>::max();
+
+	rep(i, n - 1) {
+		T d = a[i + 1] - a[i];
+		if (d > diff) return false;
+		diff = d;
+	}
+	return true;
+}
 
 
 //【ヒストグラムの横切り】
@@ -58,7 +82,7 @@ vector<pli> cut_histogram_horizontal(vl hist) {
 //【非等差数列】
 /*
 * どの p（素数）要素も等差数列をなさないような集合 a[0..n) は以下の方法で構築できる：
-*	a[i] = (i の p-1 進表示を p 進法表示だと解釈しなおしたもの)
+*	a[i] = (i の p-1 進表示を p 進表示だと解釈しなおしたもの)
 * 
 * これは 0 から順に条件を満たす限り昇順に数を追加していくという貪欲な構成でも得られる．
 * 

@@ -348,10 +348,10 @@ void priority_solve_eq(Bit_matrix<N>& mat, bitset<N>& sol) {
 * mat の第 i 行ベクトル（i ∈ bis）が V の基底となるよう bis に格納する．
 * 基底は i が小さいものを優先して構成する．
 *
-*（呼び出すとき find_base<N> としないと gcc でエラーになるので注意．）
+*（呼び出すとき get_base<N> としないと gcc でエラーになるので注意．）
 */
 template <int N>
-void find_base(Bit_matrix<N>& mat, vi& bis) {
+void get_base(Bit_matrix<N>& mat, vi& bis) {
 	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_a
 
 	int m = mat.m, n = mat.n;
@@ -382,6 +382,136 @@ void find_base(Bit_matrix<N>& mat, vi& bis) {
 			if (v[i2][j] && i2 != i) v[i2] ^= v[i];
 		}
 	}
+}
+
+
+//【基底の選択（Span）】
+/*
+* 与えられたビットベクトル v[0..m) に対し，Span(v) の基底を返す．
+*/
+template <class T>
+vector<T> noshi_base(const vector<T>& v) {
+	// verify : https://atcoder.jp/contests/apc001/tasks/apc001_f
+
+	vector<T> res;
+	for (auto x : v) {
+		repe(y, res) chmin(x, x ^ y);
+		if (x) res.push_back(x);
+	}
+	return res;
+}
+
+
+//【最小コスト基底（ビットベクトル，全空間）】O(m n min(m, n) / 64)
+/*
+* n 次元ビットベクトル v[0..m) がコスト c[0..m) をもつとし，
+* F_2^n の最小コスト基底のコストを返す（基底が構築できない場合は INFL を返す．）
+*
+*（呼び出すとき minimum_cost_base<N> としないと gcc でエラーになるので注意．）
+*/
+template <int N>
+ll minimum_cost_base(vector<bitset<N>> v, int n, const vl& c) {
+	// verify : https://atcoder.jp/contests/abc236/tasks/abc236_f
+
+	int m = sz(v);
+
+	// c[i] 昇順に添え字を並べる．
+	vector<pli> ci(m);
+	rep(i, m) ci[i] = { c[i], i };
+	sort(all(ci));
+
+	// id[i] : c の昇順で i 番目の要素が c[id[i]] であることを表す．
+	vi id(m);
+	rep(i, m) id[i] = ci[i].second;
+
+	// ピボットの位置を記録しておくリスト
+	vector<pii> pivots;
+
+	// 未確定の列を記録しておくリスト
+	list<int> rmd;
+	rep(j, n) rmd.push_back(j);
+
+	ll res = 0;
+
+	rep(i, m) {
+		// i 番目のベクトルを走査し 1 を見つける．
+		auto it = rmd.begin();
+		for (; it != rmd.end(); it++) {
+			if (v[id[i]][*it] == 1) break;
+		}
+
+		// 全てが 0 なら無視
+		if (it == rmd.end()) continue;
+
+		int j = *it;
+		rmd.erase(it);
+
+		// コストを加算
+		res += c[id[i]];
+
+		// 第 j 成分で見つかったのなら 第 j 成分が 1 である他のベクトルと XOR をとる．
+		pivots.push_back({ i, j });
+		repi(i2, i + 1, m - 1) {
+			if (v[id[i2]][j]) v[id[i2]] ^= v[id[i]];
+		}
+	}
+
+	return rmd.empty() ? res : INFL;
+}
+
+
+//【最小コスト基底（ビットベクトル，Span）】O(m n min(m, n) / 64)
+/*
+* ビットベクトル v[0..m) がコスト c[0..m) をもつとし，Span(v) の最小コスト基底のコストを返す．
+*
+*（呼び出すとき minimum_cost_base<N> としないと gcc でエラーになるので注意．）
+*/
+template <int N>
+ll minimum_cost_base(vector<bitset<N>> v, const vl& c) {
+	int m = sz(v);
+
+	// c[i] 昇順に添え字を並べる．
+	vector<pli> ci(m);
+	rep(i, m) ci[i] = { c[i], i };
+	sort(all(ci));
+
+	// id[i] : c の昇順で i 番目の要素が c[id[i]] であることを表す．
+	vi id(m);
+	rep(i, m) id[i] = ci[i].second;
+
+	// ピボットの位置を記録しておくリスト
+	vector<pii> pivots;
+
+	// 未確定の列を記録しておくリスト
+	list<int> rmd;
+	rep(j, N) rmd.push_back(j);
+
+	ll res = 0;
+
+	rep(i, m) {
+		// i 番目のベクトルを走査し 1 を見つける．
+		auto it = rmd.begin();
+		for (; it != rmd.end(); it++) {
+			if (v[id[i]][*it] == 1) break;
+		}
+
+		// 全てが 0 なら無視
+		if (it == rmd.end()) continue;
+
+		int j = *it;
+		rmd.erase(it);
+
+		// コストを加算
+		res += c[id[i]];
+
+		// 第 j 成分で見つかったのなら 第 j 成分が 1 である他のベクトルと XOR をとる．
+		pivots.push_back({ i, j });
+		repi(i2, i + 1, m - 1) {
+			if (v[id[i2]][j]) v[id[i2]] ^= v[id[i]];
+		}
+	}
+
+	return res;
 }
 
 

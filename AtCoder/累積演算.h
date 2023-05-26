@@ -824,10 +824,7 @@ struct Sparse_table_2D {
 	T get(int x1, int y1, int x2, int y2) {
 		// verify : https://atcoder.jp/contests/abc233/tasks/abc233_g
 
-		chmax(x1, 0);
-		chmax(y1, 0);
-		chmin(x2, h);
-		chmin(y2, w);
+		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);
 		if (x1 >= x2 || y1 >= y2) return (min_flag ? T(INFL) : T(-INFL));
 
 		int bx = msb(x2 - x1), by = msb(y2 - y1);

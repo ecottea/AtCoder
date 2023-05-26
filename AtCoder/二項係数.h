@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "列の管理.h"
 // ■■■■■ 階乗，二項係数など ■■■■■
 
 
@@ -72,6 +73,8 @@ public:
 
 	// 順列の数 nPr を返す．
 	mint perm(int n, int r) const {
+		// verify : https://atcoder.jp/contests/abc172/tasks/abc172_e
+		
 		Assert(n <= n_max);
 
 		if (r < 0 || n - r < 0) return 0;
@@ -105,8 +108,8 @@ public:
 
 //【階乗など（法が小さな素数）】
 /*
-* Factorial_small_prime_mod<p>() : O(p)
-*	p を法として初期化する．
+* Factorial_small_prime_mod(int p, ll n_max = INFL) : O(min(n_max, p))
+*	素数 p を法として，n_max! まで計算可能として初期化する．
 *
 * int fact(ll n) : O(log n)
 *	n! mod p を返す．
@@ -117,20 +120,24 @@ public:
 * mint mul(vi rs) : O(|rs|)
 *	多項係数 nC[rs] mod p を返す．（n = Σrs）
 */
-template <int p>
 struct Factorial_small_prime_mod {
+	int p;
+
 	// 階乗の値を保持するテーブル
-	using mint_p = static_modint<p>;
+	using mint_p = dynamic_modint<5362894>;
 	vector<mint_p> fac;
 
 	// (p-1)! までの階乗を法を p として前計算しておく．
-	Factorial_small_prime_mod() {
-		// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
+	Factorial_small_prime_mod(int p, ll n_max = INFL) : p(p) {
+		// verify : https://judge.yosupo.jp/problem/binomial_coefficient_prime_mod
 
-		fac = vector<mint_p>(p);
+		mint_p::set_mod(p);
+		int len = (p <= n_max ? p : (int)n_max + 1);
+		fac.resize(len);
 		fac[0] = 1;
-		repi(i, 1, p - 1) fac[i] = fac[i - 1] * i;
+		repi(i, 1, len - 1) fac[i] = fac[i - 1] * i;
 	}
+	Factorial_small_prime_mod() : p(0) {}
 
 	pair<ll, mint_p> factorial_qr(ll n) const {
 		ll pow = 0; mint_p mod = 1;
@@ -161,7 +168,7 @@ struct Factorial_small_prime_mod {
 
 	// 二項係数 nCr mod p を返す．
 	int bin(ll n, ll r) {
-		// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
+		// verify : https://judge.yosupo.jp/problem/binomial_coefficient_prime_mod
 
 		if (r < 0 || n - r < 0) return 0;
 
@@ -172,9 +179,10 @@ struct Factorial_small_prime_mod {
 
 		// pow は加減，mod は乗除して結果を得る．
 		ll pow = fac_n.first - (fac_r.first + fac_nr.first);
-		mint_p mod = fac_n.second / (fac_r.second * fac_nr.second);
+		if (pow > 0) return 0;
 
-		return pow == 0 ? mod.val() : 0;
+		mint_p mod = fac_n.second / (fac_r.second * fac_nr.second);
+		return mod.val();
 	}
 
 	// 多項係数 nC[rs] を返す．
@@ -190,9 +198,10 @@ struct Factorial_small_prime_mod {
 		}
 
 		ll pow = num.first - dnm_pow;
-		mint_p mod = num.second / dnm_mod;
+		if (pow > 0) return 0;
 
-		return pow == 0 ? mod.val() : 0;
+		mint_p mod = num.second / dnm_mod;
+		return mod.val();
 	}
 };
 
@@ -616,7 +625,7 @@ mint bin_mint(ll n, ll r) {
 */
 
 
-//【Lucas の定理】
+//【リュカの定理】
 /*
 * p を素数とし，n, r が p 進表記で
 *	n = [n[0], n[1], ..., n[k-1]]_(p)
@@ -625,7 +634,19 @@ mint bin_mint(ll n, ll r) {
 *	bin(n, r) ≡ Πi∈[0..k) bin(n[i], r[i])  (mod p)
 *
 * 特に p = 2 のときは以下の合同式が成り立つ：
-*	bin(n, r) ≡ boole[(n & r) == r]  (mod 2)
+*	bin(n, r) ≡ Boole[(n & r) == r]  (mod 2)
+*/
+
+
+//【クンマーの定理】
+/*
+* 多項係数 mul(n, rs)（n=Σrs）がもつ素因数 p の個数は，
+* rs 全てを p 進表記で加算したときの繰り上がり回数に等しい．
+* 
+* 正確には，r の p 進表記での数字和を s_p(r) と表すとき，以下の等式が成り立つ：
+*	ord_p mul(n, rs) = (Σi s_p(r[i]) - s_p(n)) / (p-1)
+* 
+* verify : https://projecteuler.net/problem=154
 */
 
 
@@ -1009,15 +1030,6 @@ public:
 */
 
 
-//【階乗冪の和】
-/*
-* 順列の数の累積和は以下の式で求められる：
-*	Σi=[r..n) perm(i, r) = perm(n, r) (n-r) / (r+1)
-* 
-* verify : https://yukicoder.me/problems/no/1886
-*/
-
-
 //【二項係数の線形加重和】
 /*
 * 二項係数と一次式の積の和について，以下の式が成り立つ：
@@ -1184,6 +1196,194 @@ public:
 	int get_q() const {
 		return q;
 	}
+};
+
+
+//【二重階乗（mint 利用）】
+/*
+* Double_factorial(int n) : O(n)
+*	n!! まで計算可能として初期化する．
+*
+* mint [](int i) : O(1)
+*	i!! を返す．
+*/
+class Double_factorial_mint {
+	int n_max;
+	vm dfact;
+
+public:
+	Double_factorial_mint(int n_max) : n_max(n_max) {
+		// verify : https://atcoder.jp/contests/abl/tasks/abl_f
+
+		dfact.assign(n_max + 1, 1);
+		repi(i, 2, n_max) dfact[i] = dfact[i - 2] * i;
+	};
+	Double_factorial_mint() : n_max(0) {};
+
+	// i!! を返す．
+	mint const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/abl/tasks/abl_f
+
+		Assert(i <= n_max);
+		return i <= 0 ? dfact[0] : dfact[i];
+	}
+};
+
+
+//【順列の数（一括，r が固定で小さい）】O(n2 - n1 + r)
+/*
+* 各 n∈[n1..n2) について nPr を格納したリストを返す．
+*
+* 利用：【キュー（モノイド）】
+*/
+mint op_pfr(mint x, mint y) { return x * y; }
+mint e_pfr() { return 1; }
+vm perm_fixed_r(ll n1, ll n2, int r) {
+	// verify : https://atcoder.jp/contests/arc160/tasks/arc160_d
+
+	//【方法】
+	// perm(n1, r) = Π[n1-r+1..n1] であり，n を増やすと区間が右に 1 つずれる．
+	// mint の積はモノイドを成すので，これらは SWAG で効率的に計算できる．
+
+	if (n1 >= n2) return vm();
+	if (r == 0) return vm(n2 - n1, 1);
+
+	Queue_SWAG<mint, op_pfr, e_pfr> SWAG;
+	for (ll i = n1 - r + 1; i < n1; i++) SWAG.push(i);
+
+	vm res(n2 - n1);
+	for (ll n = n1; n < n2; n++) {
+		SWAG.push(n);
+		res[n - n1] = SWAG.prod();
+		SWAG.pop();
+	}
+
+	return res;
+}
+
+
+//【順列の数の和】
+/*
+* 順列の数の累積和は以下の式で求められる：
+*	Σi=[r..n) perm(i, r) = perm(n, r) (n-r) / (r+1)
+*
+* verify : https://yukicoder.me/problems/no/1886
+*/
+
+
+//【累乗（mint 利用）】
+/*
+* Pow_mint(ll B, int n) : O(n)
+*	底を B とし，B^(-n) から B^n まで計算可能として初期化する．
+*	制約 : B は mint の法と互いに素
+*
+* mint [](int i) : O(1)
+*	B^i を返す．
+*/
+class Pow_mint {
+	int n;
+	vm powB, powB_inv;
+
+public:
+	Pow_mint(ll B, int n) : n(n) {
+		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
+
+		// B の累乗を計算する．
+		powB.resize(n + 1);
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = powB[i] * B;
+
+		// B の逆元の累乗を計算する．
+		mint invB = mint(1) / B;
+		powB_inv.resize(n + 1);
+		powB_inv[0] = 1;
+		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB;
+	};
+	Pow_mint() : n(0) {}
+
+	// B^i を返す．
+	mint const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
+
+		Assert(abs(i) <= n);
+
+		return i >= 0 ? powB[i] : powB_inv[-i];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Pow_mint& pw) {
+		os << pw.powB << endl;
+		os << pw.powB_inv << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【累乗】
+/*
+* Pow(ll B, int n, ll M) : O(n)
+*	底を B とし，B^(-n) から B^n (mod M) まで計算可能として初期化する．
+*	制約 : B と M は互いに素
+*
+* ll [](int i) : O(1)
+*	B^i mod M を返す．
+*/
+class Pow {
+	int n;
+	vl powB, powB_inv;
+
+	// a x + b y = g の解 (x, y) を返す．
+	pll extended_gcd(ll a, ll b) {
+		if (b == 0) {
+			Assert(a == 1);
+			return make_pair(1LL, 0LL);
+		}
+
+		ll q = a / b, r = a % b;
+		ll X, Y;
+		tie(X, Y) = extended_gcd(b, r);
+
+		return make_pair(Y, X - q * Y);
+	}
+
+public:
+	Pow(ll B, int n, ll M) : n(n) {
+		// verify : https://codeforces.com/contest/715/problem/C
+
+		B %= M;
+
+		// B の累乗を計算する．
+		powB.resize(n + 1);
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = powB[i] * B % M;
+
+		// 拡張ユークリッドの互除法で B の逆元を計算する．
+		ll invB, tmp;
+		tie(invB, tmp) = extended_gcd(B, M);
+
+		// B の逆元の累乗を計算する．
+		powB_inv.resize(n + 1);
+		powB_inv[0] = 1;
+		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB % M;
+	};
+
+	// B^i を返す．
+	ll const& operator[](int i) const {
+		// verify : https://codeforces.com/contest/715/problem/C
+
+		Assert(abs(i) <= n);
+
+		return i >= 0 ? powB[i] : powB_inv[-i];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Pow& pw) {
+		os << pw.powB << endl;
+		os << pw.powB_inv << endl;
+		return os;
+	}
+#endif
 };
 
 

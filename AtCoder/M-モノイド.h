@@ -53,6 +53,7 @@ F116 id116() { return -INFL; }
 
 
 //【変更 作用付き 左変更 モノイド】
+/* verify : https://yukicoder.me/problems/no/2308 */
 using S102 = int;
 S102 e102() { return INF + 2; } // 使わない値なら何でも OK
 S102 op102(S102 x, S102 y) { return x == e102() ? y : x; }
@@ -123,26 +124,23 @@ using T107 = mint;
 using S107 = pair<T107, T107>; // ベクトル (v, c)
 using F107 = pair<T107, T107>; // 行列 (a, b; 0, 1)
 S107 op107(S107 x, S107 y) {
-	T107 vx, vy, cx, cy;
-	tie(vx, cx) = x; // ベクトル (vx, cx)
-	tie(vy, cy) = y; // ベクトル (vy, cy)
+	auto [vx, cx] = x; // ベクトル (vx, cx)
+	auto [vy, cy] = y; // ベクトル (vy, cy)
 
 	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
 	return { vx + vy, cx + cy };
 }
 S107 e107() { return { 0, 0 }; }
 S107 act107(F107 f, S107 x) {
-	T107 v, c, a, b;
-	tie(v, c) = x; // ベクトル (v, c)
-	tie(a, b) = f; // 行列 (a, b; 0, 1)
+	auto [v, c] = x; // ベクトル (v, c)
+	auto [a, b] = f; // 行列 (a, b; 0, 1)
 
 	// (a, b; 0, 1).(v, c) = (a v + b c, c)
 	return { a * v + b * c, c };
 }
 F107 comp107(F107 f, F107 g) {
-	T107 a, b, c, d;
-	tie(a, b) = f; // 行列 (a, b; 0, 1)
-	tie(c, d) = g; // 行列 (c, d; 0, 1)
+	auto [a, b] = f; // 行列 (a, b; 0, 1)
+	auto [c, d] = g; // 行列 (c, d; 0, 1)
 
 	// (a, b; 0, 1).(c, d; 0, 1) = (a c, a d + b; 0, 1)
 	return { a * c, a * d + b };

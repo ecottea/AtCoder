@@ -549,7 +549,7 @@ int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const v
 
 //【最短バイトニックツアー】O(n^2)
 /*
-* x 座標の互いに異なる n 個の点列 p について，
+* x 座標の互いに異なる n 個の点群 p について，
 *	x 座標最小の点 →(x 座標昇順)→ x 座標最大の点 →(x 座標降順)→ x 座標最小の点
 * の順に点を結ぶ経路の最短長を返す．
 */
@@ -855,7 +855,7 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 		const Point<double> o(0, 0);
 		double th = rnd(mt64);
 		rep(i, n) {
-			Point<double> p(x[i], y[i]);
+			Point<double> p((double)x[i], (double)y[i]);
 			pi[i] = { rotate(p, o, th), i };
 		}
 		sort(all(pi));
@@ -900,7 +900,7 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 					int ji = pi[i].second;
 					if (ji > jr) swap(ji, jr);
 
-					Point<double> e(x[ji] - x[jr], y[ji] - y[jr]);
+					Point<double> e((double)(x[ji] - x[jr]), (double)(y[ji] - y[jr]));
 					if (chmin(res, e.norm())) {
 						if (ps != nullptr) {
 							*ps = { ji, jr };
@@ -1003,6 +1003,8 @@ mint count_manhattan_distance_clique_2D(const vector<T>& x, const vector<T>& y, 
 	mint res = 1; // 空集合を先に数えておく．
 
 	// BB の右下隅（内部）の座標 (i, j) で場合分けしながら二次元尺取法で数え上げていく．
+	// 右下隅に点があるとは限らないので，その候補は点のある行と列の交点 O(n^2) 個になる．
+
 	// (i0, j0) : 左上隅として許せる限界（内部）
 	int i0 = 0;
 	rep(i, h) {
@@ -1013,11 +1015,13 @@ mint count_manhattan_distance_clique_2D(const vector<T>& x, const vector<T>& y, 
 			while (ys[j] - ys[j0] > d) j0++;
 
 			// (i, j) の要素を選ぶ場合
+			// BB の右下隅が (i, j) になることは確定するので，残りは自由に選べる．
 			mint add1 = pow2[cnt[i][j]] - 1;
 			add1 *= pow2[acc.sum(i0, j0, i + 1, j + 1) - cnt[i][j]];
 			res += add1;
 
 			// (i, j) の要素を選ばない場合
+			// BB の右端と下端を確定させるため，それぞれ少なくとも 1 つ点を選ぶ必要がある．
 			mint add0 = pow2[acc.sum(i, j0, i + 1, j)] - 1;
 			add0 *= pow2[acc.sum(i0, j, i, j + 1)] - 1;
 			add0 *= pow2[acc.sum(i0, j0, i, j)];

@@ -197,10 +197,10 @@ void selection_sort(vector<T>& a) {
 
 //【選択ソートの交換回数】
 /*
-* 互いに異なる要素からなる列 a[0..n) に対する最適な順序で行った選択ソートの交換回数は，
-* a を座標圧縮して得られる [0..n) 上の置換をサイクル分解したときの (サイクル長) - 1 の総和に等しい．
+* 順列 p[0..n) に対する最適な順序で行った選択ソートの交換回数は，
+* p をサイクル分解したときの (サイクル長) - 1 の総和に等しい．
 * 
-* verify : https://atcoder.jp/contests/nikkei2019-2-qual/tasks/nikkei2019_2_qual_c
+* verify : https://yukicoder.me/problems/no/2289
 */
 
 
@@ -398,14 +398,10 @@ void counting_sort(vi& a, int k) {
 	vi cnt(k);
 
 	// cnt[j] : 要素 j の出現数
-	rep(i, n) {
-		cnt[a[i]]++;
-	}
+	rep(i, n) cnt[a[i]]++;
 
 	// cnt[j] : j 以下の要素の出現数
-	rep(j, k - 1) {
-		cnt[j + 1] += cnt[j];
-	}
+	rep(j, k - 1) cnt[j + 1] += cnt[j];
 
 	// 安定ソートとなるように降順に正しい位置にはめていく．
 	repir(i, n - 1, 0) {
@@ -414,6 +410,38 @@ void counting_sort(vi& a, int k) {
 	}
 
 	swap(a, res);
+}
+
+
+//【基数ソート（基数 2）】O(n log A)（A = max(a)）
+/*
+* 非負数列 a[0..n) に対して基数 2 の基数ソートを行う．
+*/
+template <class T>
+void radix_sort(vector<T>& a) {
+	// verify : https://atcoder.jp/contests/chokudai_s001/tasks/chokudai_S001_d
+
+	int n = sz(a);
+	int m = msb(*max_element(all(a))) + 1;
+
+	// 第 j ビットについて安定ソートを行う．
+	rep(j, m) {
+		vector<T> na; queue<T> q;
+		na.reserve(n);
+
+		// 第 j ビットが 0 か 1 かで要素を振り分ける．
+		rep(i, n) {
+			if (get(a[i], j)) q.push(a[i]);
+			else na.push_back(a[i]);
+		}
+
+		// 振り分けた要素を 1 つにまとめる．
+		while (!q.empty()) {
+			na.push_back(q.front()); q.pop();
+		}
+
+		a = move(na);
+	}
 }
 
 

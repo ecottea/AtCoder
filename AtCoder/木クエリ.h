@@ -1323,3 +1323,988 @@ vector<S> mos_algorithm_path_vertex(const Graph& g, const vector<T>& a, const vi
 }
 
 
+//【Link-Cut Tree（可換モノイド）】
+/*
+* Link_cut_tree<S, op, o>(int n) : O(n)
+*	値 o() をもった n 頂点で初期化する．
+*	要素は可換モノイド (S, op, o) の元とする．
+* 
+* Link_cut_tree<S, op, o>(vS a) : O(n log n)
+*	値 a[0..n) をもった n 頂点で初期化する．
+* 
+* cut(int i) : ならし O(log n)
+*	頂点 i とその親との間の辺を切断する．
+*	制約：i は根でない．
+* 
+* cut(int s, int t) : ならし O(log n)
+*	辺 s-t を切断する（辺がなければ何もしない）
+* 
+* link(int s, int t) : ならし O(log n)
+*	頂点 s と根 t に対し，親から子への辺 s→t を繋ぐ．
+*	制約：t は根である．
+* 
+* set_root(int rt) : ならし O(log n)
+*	頂点 rt を根にする．
+* 
+* S sum(int i) : ならし O(log n)
+*	根から頂点 i まで（両端含む）の頂点の値の総和を返す．
+* 
+* set(int i, S x) : ならし O(log n)
+*	頂点 i の値を x に変更する．
+* 
+* add(int i, S x) : ならし O(log n)
+*	頂点 i の値に x を加える．
+* 
+* bool connectedQ(int s, int t) : ならし O(log n)
+*	頂点 s, t が連結かを返す．
+*/
+template <class S, S(*op)(S, S), S(*o)()>
+class Link_cut_tree {
+	// 参考 : https://www.slideshare.net/iwiwi/2-12188845
+	// 参考 : https://ei1333.github.io/library/structure/lct/link-cut-tree.hpp.html
+
+	// splay 木（平衡二分探索木）のノード
+	// key は Link-Cut 木のノードの深さとし，左ほど浅く右ほど深いものとする．
+	struct Node {
+		S val; // 頂点の値
+		S acc; // 部分木のノードの総和
+		bool rev; // 部分木が反転されているか
+		Node* p; // 親へのポインタ（heavy path 内部または外部）
+		Node* l, * r; // 左右の子へのポインタ
+
+		Node(S val = o()) : val(val), acc(val), rev(false), p(nullptr), l(nullptr), r(nullptr) {}
+
+		// 自身が根かを返す．
+		bool rootQ() {
+			// 親が設定されていなければもちろん根である．
+			// そうでなくてもそれが heavy path 外部の親であれば自身は根である．
+			return !p || (p->l != this && p->r != this);
+		}
+
+		// 自身の情報を子の情報をもとにして更新する．
+		void pushup() {
+			acc = op(l ? l->acc : o(), op(val, r ? r->acc : o()));
+		}
+
+		void pushdown() {
+			// 反転フラグが立っていたら実際に反転しフラグを折る．
+			if (rev) {
+				rev = false;
+				swap(l, r);
+
+				// 自分の子については反転フラグを flip しておくだけにする．
+				if (l) l->rev = !l->rev;
+				if (r) r->rev = !r->rev;
+			}
+
+			// 自身の情報（acc）を子の情報をもとにして更新する．
+			pushup();
+		}
+
+		// 右回転する．
+		void rotR() {
+			Node* my_p = p, * my_pp = my_p->p;
+
+			// 自分の親と自分の右の子（あれば）を繋ぐ．
+			if (my_p->l = r) r->p = my_p;
+			my_p->pushup();
+
+			// 自身と自分の親の親子関係を逆転させる．
+			r = my_p; my_p->p = this;
+			pushup();
+
+			// 自身と自分の親の親（あれば）を繋ぐ．
+			if (p = my_pp) {
+				if (my_pp->l == my_p) my_pp->l = this;
+				if (my_pp->r == my_p) my_pp->r = this;
+			}
+		}
+
+		// 左回転する．
+		void rotL() {
+			Node* my_p = p, * my_pp = my_p->p;
+
+			// 自分の親と自分の左の子（あれば）を繋ぐ．
+			if (my_p->r = l) l->p = my_p;
+			my_p->pushup();
+
+			// 自身と自分の親の親子関係を逆転させる．
+			l = my_p; my_p->p = this;
+			pushup();
+
+			// 自身と自分の親の親（あれば）を繋ぐ．
+			if (p = my_pp) {
+				if (my_pp->l == my_p) my_pp->l = this;
+				if (my_pp->r == my_p) my_pp->r = this;
+			}
+		}
+
+		// 自身を heavy path 内の根に持ってくる（スプレー操作）
+		void splay() {
+			pushdown();
+
+			// 自身が根でないかぎり操作を続ける．
+			while (!rootQ()) {
+				Node* my_p = p;
+
+				// 自分の親が根である場合
+				if (my_p->rootQ()) {
+					my_p->pushdown();
+					pushdown();
+
+					// 適切な回転操作を行う．
+					if (my_p->l == this) rotR();
+					else rotL();
+				}
+				// 自分の親が根でない場合
+				else {
+					Node* my_pp = my_p->p;
+					my_pp->pushdown();
+					my_p->pushdown();
+					pushdown();
+
+					// 自分の親の親から自分まで同方向に枝が伸びている場合は zig-zig ステップ，
+					// さもなくば zig-zag ステップを実行する．
+					if (my_pp->l == my_p) {
+						// zig-zig ステップ
+						if (my_p->l == this) my_p->rotR(), rotR();
+						// zig-zag ステップ
+						else rotL(), rotR();
+					}
+					else {
+						// zig-zig ステップ
+						if (my_p->r == this) my_p->rotL(), rotL();
+						// zig-zag ステップ
+						else rotR(), rotL();
+					}
+				}
+			}
+		}
+	};
+
+	int n; // 頂点数
+	vector<Node> vs; // 頂点のリスト
+
+	// 木の根から頂点 v までを 1 つの heavy path にし，v を heavy path 内の根とする．
+	void expose(Node* v) {
+		auto v0(v);
+
+		// rt : 作成途中の heavy path の根
+		Node* rt = nullptr;
+
+		while (v) {
+			// v をいまの heavy path 内の根にもってくる．
+			v->splay();
+
+			// v の右の子を切り離し，作成途中の heavy path を繋ぐ．
+			v->r = rt;
+			rt = v;
+			v->pushup();
+
+			// 1 つ上の heavy path に移動する．
+			v = v->p;
+		}
+
+		// v を構築した heavy path 内の根とする．
+		v0->splay();
+	}
+
+	// 頂点 v とその親との間の辺を切断する．
+	void cut(Node* v) {
+		// 木の根から v までの heavy path を繋ぐ．
+		expose(v);
+
+		// v の親は v より 1 つ浅いので v の左の子孫になっている．
+		Node* l = v->l;
+
+		// v とその親の間の辺を切断する．
+		v->l = nullptr;
+		l->p = nullptr;
+
+		v->pushup();
+	}
+
+	// 頂点 v, vp を繋ぎ，v の親を vp とする（v は根であること）
+	void link(Node* v, Node* vp) {
+		// それぞれの木の根から v, vp までの heavy path を繋ぐ．
+		expose(v);
+		expose(vp);
+
+		// vp と v の間の辺を繋ぐ（v の方が深いので v を vp の右の子とする）
+		v->p = vp;
+		vp->r = v;
+
+		vp->pushup();
+	}
+
+	// 頂点 v を木の根にする．
+	void evert(Node* v) {
+		expose(v);
+		v->rev = !v->rev;
+	}
+
+public:
+	// 値 o() をもった n 頂点で初期化する．
+	Link_cut_tree(int n) : n(n), vs(n) { }
+
+	// 値 a[0..n) をもった n 頂点で初期化する．
+	Link_cut_tree(const vector<S>& a) : n(sz(a)), vs(n) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_path_sum
+
+		rep(i, n) vs[i].val = vs[i].acc = a[i];
+	}
+
+	// 頂点 i とその親との間の辺を切断する．
+	void cut(int i) {
+		cut(&vs[i]);
+	}
+
+	// 辺 s-t を切断する（なければ何もしない）
+	void cut(int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_path_sum
+
+		if (s == t) return;
+		expose(&vs[s]), expose(&vs[t]);
+		if (!vs[s].p) return;
+
+		if (vs[t].l == &vs[s]) {
+			Node* l = vs[t].l;
+			vs[t].l = nullptr;
+			l->p = nullptr;
+			vs[t].pushup();
+		}
+		else {
+			expose(&vs[s]);
+			Node* l = vs[s].l;
+			vs[s].l = nullptr;
+			l->p = nullptr;
+			vs[s].pushup();
+		}
+	}
+
+	// 頂点 s と根 t に対し，親から子への辺 s→t を繋ぐ．
+	void link(int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_path_sum
+
+		link(&vs[t], &vs[s]);
+	}
+
+	// 頂点 rt を根にする．
+	void set_root(int rt) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_path_sum
+
+		evert(&vs[rt]);
+	}
+
+	// 根から頂点 i まで（両端含む）の頂点の値の総和を返す．
+	S sum(int i) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_path_sum
+
+		expose(&vs[i]);
+		return vs[i].acc;
+	}
+
+	// 頂点 i の値を x に変更する．
+	void set(int i, S x) {
+		expose(&vs[i]);
+		vs[i].val = x;
+		vs[i].pushup();
+	}
+
+	// 頂点 i の値に x を加える．
+	void add(int i, S x) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_path_sum
+
+		expose(&vs[i]);
+		vs[i].val = op(x, vs[i].val);
+		vs[i].pushup();
+	}
+
+	// 頂点 s, t が連結かを返す．
+	bool connectedQ(int s, int t) {
+		if (s == t) return true;
+		expose(&vs[s]), expose(&vs[t]);
+		return vs[s].p;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Link_cut_tree LCT) {
+		rep(i, LCT.n) {
+			LCT.set_root(i);
+			os << LCT.sum(i) << " ";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【Euler Tour Tree（可換モノイド）】
+/*
+* Euler_tour_tree<S, op, o>(int n) : O(n)
+*	値 o() をもった n 頂点で初期化する．
+*	要素は可換モノイド (S, op, o) の元とする．
+*
+* Euler_tour_tree<S, op, o>(vS a) : O(n log n)
+*	値 a[0..n) をもった n 頂点で初期化する．
+*
+* cut(int i) : ならし O(log n)
+*	頂点 i とその親との間の辺を切断する．
+*
+* cut(int s, int t) : ならし O(log n)
+*	辺 s→t を切断する．
+*	制約：s は根である．
+*
+* link(int s, int t) : ならし O(log n)
+*	根 s, t に対し，親から子への辺 s→t を繋ぐ．
+*	制約：s, t は根である．
+*
+* set_root(int rt) : ならし O(log n)
+*	頂点 rt を根にする．
+*
+* S sum(int i) : ならし O(log n)
+*	部分木 i の頂点の値の総和を返す．
+*
+* set(int i, S x) : ならし O(log n)
+*	頂点 i の値を x に変更する．
+*
+* add(int i, S x) : ならし O(log n)
+*	頂点 i の値に x を加える．
+*
+* bool connectedQ(int s, int t) : ならし O(log n)
+*	頂点 s, t が連結かを返す．
+*/
+template <class S, S(*op)(S, S), S(*o)()>
+class Euler_tour_tree {
+
+	// splay 木（平衡二分探索木）のノード
+	// key はオイラーツアー順とし，左ほど先で右ほど後とする．
+	struct Node {
+		int s, t; // 辺 s→t に対応するノードであることを表す（デバッグ用）
+		S val; // 頂点の値
+		S acc; // 部分木のノードの総和
+		Node* p; // 親へのポインタ
+		Node* l, * r; // 左右の子へのポインタ
+
+		Node(int s, int t, S val = o()) : s(s), t(t), val(val), acc(val), p(nullptr), l(nullptr), r(nullptr) {}
+
+		// 自身の情報を子の情報をもとにして更新する．
+		void pushup() {
+			acc = op(l ? l->acc : o(), op(val, r ? r->acc : o()));
+		}
+
+		// 右回転する．
+		void rotR() {
+			Node* my_p = p, * my_pp = my_p->p;
+
+			// 自分の親と自分の右の子（あれば）を繋ぐ．
+			if (my_p->l = r) r->p = my_p;
+			my_p->pushup();
+
+			// 自身と自分の親の親子関係を逆転させる．
+			r = my_p; my_p->p = this;
+			pushup();
+
+			// 自身と自分の親の親（あれば）を繋ぐ．
+			if (p = my_pp) {
+				if (my_pp->l == my_p) my_pp->l = this;
+				if (my_pp->r == my_p) my_pp->r = this;
+			}
+		}
+
+		// 左回転する．
+		void rotL() {
+			Node* my_p = p, * my_pp = my_p->p;
+
+			// 自分の親と自分の左の子（あれば）を繋ぐ．
+			if (my_p->r = l) l->p = my_p;
+			my_p->pushup();
+
+			// 自身と自分の親の親子関係を逆転させる．
+			l = my_p; my_p->p = this;
+			pushup();
+
+			// 自身と自分の親の親（あれば）を繋ぐ．
+			if (p = my_pp) {
+				if (my_pp->l == my_p) my_pp->l = this;
+				if (my_pp->r == my_p) my_pp->r = this;
+			}
+		}
+
+		// 自身を splay 木内の根に持ってくる（スプレー操作）
+		void splay() {
+			// 自身が根でないかぎり操作を続ける．
+			while (p) {
+				Node* my_p = p;
+
+				// 自分の親が根である場合
+				if (!my_p->p) {
+					// 適切な回転操作を行う．
+					if (my_p->l == this) rotR();
+					else rotL();
+				}
+				// 自分の親が根でない場合
+				else {
+					Node* my_pp = my_p->p;
+
+					// 自分の親の親から自分まで同方向に枝が伸びている場合は zig-zig ステップ，
+					// さもなくば zig-zag ステップを実行する．
+					if (my_pp->l == my_p) {
+						// zig-zig ステップ
+						if (my_p->l == this) my_p->rotR(), rotR();
+						// zig-zag ステップ
+						else rotL(), rotR();
+					}
+					else {
+						// zig-zig ステップ
+						if (my_p->r == this) my_p->rotL(), rotL();
+						// zig-zag ステップ
+						else rotR(), rotL();
+					}
+				}
+			}
+		}
+	};
+
+	int n; // 頂点数
+	vector<unordered_map<int, Node*>> vs; // 辺へのポインタのリスト
+
+	// 辺 s→t へのポインタを返す．
+	Node* get_node(int s, int t) {
+		auto it = vs[s].find(t);
+		if (it == vs[s].end()) return vs[s][t] = new Node(s, t);
+		else return it->second;
+	}
+
+public:
+	// 値 o() をもった n 頂点で初期化する．
+	Euler_tour_tree(int n) : n(n), vs(n) {
+		rep(i, n) vs[i][i] = get_node(i, i);
+	}
+
+	// 値 a[0..n) をもった n 頂点で初期化する．
+	Euler_tour_tree(const vector<S>& a) : n(sz(a)), vs(n) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_subtree_sum
+
+		rep(i, n) {
+			Node* v = get_node(i, i);
+			v->val = v->acc = a[i];
+			vs[i][i] = v;
+		}
+	}
+
+	// 辺 s→t を切断する（s は根であること）
+	void cut(int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_subtree_sum
+
+		if (s == t) return;
+
+		Node* st = get_node(s, t);
+		st->splay();
+		if (st->l) st->l->p = nullptr;
+		if (st->r) st->r->p = nullptr;
+
+		Node* ts = get_node(t, s);
+		ts->splay();
+		if (ts->l) ts->l->p = nullptr;
+		if (ts->r) ts->r->p = nullptr;
+
+		if (st->l && ts->r) {
+			Node* stl_last = st->l;
+			while (stl_last->r) stl_last = stl_last->r;
+			stl_last->splay();
+			stl_last->r = ts->r;
+			ts->r->p = stl_last;
+			stl_last->pushup();
+		}
+
+		delete st; vs[s].erase(t);
+		delete ts; vs[t].erase(s);
+	}
+
+	// 根 s, t に対し，親から子への辺 s→t を繋ぐ．
+	void link(int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_subtree_sum
+
+		Node* ts = get_node(t, s);
+		Node* tt = get_node(t, t);
+		tt->splay();
+		ts->l = tt;
+		tt->p = ts;
+		ts->pushup();
+
+		Node* st = get_node(s, t);
+		tt->splay();
+		tt->l = st;
+		st->p = tt;
+		tt->pushup();
+
+		Node* ss = get_node(s, s);
+		ss->splay();
+		st->splay();
+		st->l = ss;
+		ss->p = st;
+		st->pushup();
+	}
+
+	// 頂点 rt を根にする．
+	void set_root(int rt) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_subtree_sum
+
+		Node* rr = get_node(rt, rt);
+		rr->splay();
+		Node* rr_l = rr->l;
+		if (!rr_l) return;
+		rr_l->p = nullptr;
+		rr->l = nullptr;
+		rr->pushup();
+
+		Node* rr_last = rr;
+		while (rr_last->r) rr_last = rr_last->r;
+		rr_last->splay();
+		rr_last->r = rr_l;
+		rr_l->p = rr_last;
+		rr_last->pushup();
+	}
+
+	// 部分木 i の頂点の値の総和を返す．
+	S sum(int i) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_subtree_sum
+
+		Node* ii = get_node(i, i);
+		ii->splay();
+		return ii->acc;
+	}
+
+	// 頂点 i の値を x に変更する．
+	void set(int i, S x) {
+		Node* ii = get_node(i, i);
+		ii->splay();
+		ii->val = x;
+		ii->pushup();
+	}
+
+	// 頂点 i の値に x を加える．
+	void add(int i, S x) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_vertex_add_subtree_sum
+
+		Node* ii = get_node(i, i);
+		ii->splay();
+		ii->val = op(x, ii->val);
+		ii->pushup();
+	}
+
+	// 頂点 s, t が連結かを返す．
+	bool connectedQ(int s, int t) {
+		if (s == t) return true;
+		Node* ss = get_node(s, s);
+		Node* tt = get_node(t, t);
+		ss->splay();
+		tt->splay();
+		return ss->p;
+	}
+
+	// 辺 i→i を含む木の構造を表示する．
+	void dump_tree(int i) {
+		Node* root = get_node(i, i);
+		while (root->p) root = root->p;
+
+		function<void(Node*)> rf = [&](Node* v) {
+			if (!v) return;
+
+			rf(v->l);
+
+			cerr << "(" << v->s << "→" << v->t << ")" << " : ";
+			cerr << "p=";
+			if (v->p) cerr << "(" << v->p->s << "→" << v->p->t << ")";
+			else cerr << "(null)";
+			cerr << " l=";
+			if (v->l) cerr << "(" << v->l->s << "→" << v->l->t << ")";
+			else cerr << "(null)";
+			cerr << " r=";
+			if (v->r) cerr << "(" << v->r->s << "→" << v->r->t << ")";
+			else cerr << "(null)";
+			cerr << " acc=" << v->acc;
+			cerr << endl;
+
+			rf(v->r);
+		};
+		rf(root);
+		cerr << endl;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Euler_tour_tree ETT) {
+		os << "val:";
+		rep(i, ETT.n) os << " " << ETT.vs[i][i]->val;
+		os << endl;
+		os << "graph:" << endl;
+		rep(i, ETT.n) {
+			os << i << ":";
+			repe(tmp, ETT.vs[i]) os << " " << tmp.first;
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【Euler Tour Tree（M-可換モノイド）】
+/*
+* Euler_tour_tree<S, op, o, F, act, comp, id>(int n) : O(n)
+*	値 o() をもった n 頂点で初期化する．
+*	要素は M-可換モノイド (S, op, o, F, act, comp, id) の元とする．
+*
+* Euler_tour_tree<S, op, o, F, act, comp, id>(vS a) : O(n log n)
+*	値 a[0..n) をもった n 頂点で初期化する．
+*
+* cut(int i) : ならし O(log n)
+*	頂点 i とその親との間の辺を切断する．
+*
+* cut(int s, int t) : ならし O(log n)
+*	辺 s→t を切断する．
+*	制約：s は根である．
+*
+* link(int s, int t) : ならし O(log n)
+*	根 s, t に対し，親から子への辺 s→t を繋ぐ．
+*	制約：s, t は根である．
+*
+* set_root(int rt) : ならし O(log n)
+*	頂点 rt を根にする．
+*
+* S sum(int i) : ならし O(log n)
+*	部分木 i の頂点の値の総和を返す．
+*
+* set(int i, S x) : ならし O(log n)
+*	頂点 i の値を x に変更する．
+*
+* add(int i, S x) : ならし O(log n)
+*	頂点 i の値に x を加える．
+*
+* apply(int i, F f) : ならし O(log n)
+*	部分木 i の頂点の値に f を作用させる．
+*
+* bool connectedQ(int s, int t) : ならし O(log n)
+*	頂点 s, t が連結かを返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Euler_tour_tree {
+
+	// splay 木（平衡二分探索木）のノード
+	// key はオイラーツアー順とし，左ほど先で右ほど後とする．
+	struct Node {
+		int s, t; // 辺 s→t に対応するノードであることを表す（デバッグ用）
+		S val; // 頂点の値
+		S acc; // 部分木のノードの総和
+		F lazy; // 部分木への遅延作用
+		Node* p; // 親へのポインタ
+		Node* l, * r; // 左右の子へのポインタ
+
+		Node(int s, int t, S val = o()) : s(s), t(t), val(val), acc(val), lazy(id()), p(nullptr), l(nullptr), r(nullptr) {}
+
+		// 自身の情報を子の情報をもとにして更新する．
+		void pushup() {
+			acc = op(l ? l->acc : o(), op(val, r ? r->acc : o()));
+		}
+
+		// 自身の遅延評価を適用し，子に遅延評価を設定する．
+		void pushdown() {
+			// 遅延させている作用があれば実際に作用させ遅延作用をなくす．
+			if (lazy != id()) {
+				// 自分の子については作用を遅延させておくだけにする（ただし acc は更新する）
+				if (l) {
+					l->lazy = comp(lazy, l->lazy);
+					l->acc = act(lazy, l->acc);
+				}
+				if (r) {
+					r->lazy = comp(lazy, r->lazy);
+					r->acc = act(lazy, r->acc);
+				}
+
+				val = act(lazy, val);
+				lazy = id();
+			}
+
+			// 自身の情報（acc）を子の情報をもとにして更新する．
+			pushup();
+		}
+
+		// 右回転する．
+		void rotR() {
+			Node* my_p = p, * my_pp = my_p->p;
+
+			// 自分の親と自分の右の子（あれば）を繋ぐ．
+			if (my_p->l = r) r->p = my_p;
+			my_p->pushup();
+
+			// 自身と自分の親の親子関係を逆転させる．
+			r = my_p; my_p->p = this;
+			pushup();
+
+			// 自身と自分の親の親（あれば）を繋ぐ．
+			if (p = my_pp) {
+				if (my_pp->l == my_p) my_pp->l = this;
+				if (my_pp->r == my_p) my_pp->r = this;
+			}
+		}
+
+		// 左回転する．
+		void rotL() {
+			Node* my_p = p, * my_pp = my_p->p;
+
+			// 自分の親と自分の左の子（あれば）を繋ぐ．
+			if (my_p->r = l) l->p = my_p;
+			my_p->pushup();
+
+			// 自身と自分の親の親子関係を逆転させる．
+			l = my_p; my_p->p = this;
+			pushup();
+
+			// 自身と自分の親の親（あれば）を繋ぐ．
+			if (p = my_pp) {
+				if (my_pp->l == my_p) my_pp->l = this;
+				if (my_pp->r == my_p) my_pp->r = this;
+			}
+		}
+
+		// 自身を splay 木内の根に持ってくる（スプレー操作）
+		void splay() {
+			// 根から順に lazy を作用させる．
+			stack<Node*> stk; Node* tmp = this;
+			while (tmp->p) {
+				stk.push(tmp);
+				tmp = tmp->p;
+			}
+			stk.push(tmp);
+
+			while (!stk.empty()) {
+				stk.top()->pushdown();
+				stk.pop();
+			}
+
+			// 自身が根でないかぎり操作を続ける．
+			while (p) {
+				Node* my_p = p;
+
+				// 自分の親が根である場合
+				if (!my_p->p) {
+					// 適切な回転操作を行う．
+					if (my_p->l == this) rotR();
+					else rotL();
+				}
+				// 自分の親が根でない場合
+				else {
+					Node* my_pp = my_p->p;
+
+					// 自分の親の親から自分まで同方向に枝が伸びている場合は zig-zig ステップ，
+					// さもなくば zig-zag ステップを実行する．
+					if (my_pp->l == my_p) {
+						// zig-zig ステップ
+						if (my_p->l == this) my_p->rotR(), rotR();
+						// zig-zag ステップ
+						else rotL(), rotR();
+					}
+					else {
+						// zig-zig ステップ
+						if (my_p->r == this) my_p->rotL(), rotL();
+						// zig-zag ステップ
+						else rotR(), rotL();
+					}
+				}
+			}
+		}
+	};
+
+	int n; // 頂点数
+	vector<unordered_map<int, Node*>> vs; // 辺へのポインタのリスト
+
+	// 辺 s→t へのポインタを返す．
+	Node* get_node(int s, int t) {
+		auto it = vs[s].find(t);
+		if (it == vs[s].end()) return vs[s][t] = new Node(s, t);
+		else return it->second;
+	}
+
+public:
+	// 値 o() をもった n 頂点で初期化する．
+	Euler_tour_tree(int n) : n(n), vs(n) {
+		rep(i, n) vs[i][i] = get_node(i, i);
+	}
+
+	// 値 a[0..n) をもった n 頂点で初期化する．
+	Euler_tour_tree(const vector<S>& a) : n(sz(a)), vs(n) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_subtree_add_subtree_sum
+
+		rep(i, n) {
+			Node* v = get_node(i, i);
+			v->val = v->acc = a[i];
+			vs[i][i] = v;
+		}
+	}
+
+	// 辺 s→t を切断する（s は根であること）
+	void cut(int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_subtree_add_subtree_sum
+
+		if (s == t) return;
+
+		Node* st = get_node(s, t);
+		st->splay();
+		if (st->l) st->l->p = nullptr;
+		if (st->r) st->r->p = nullptr;
+
+		Node* ts = get_node(t, s);
+		ts->splay();
+		if (ts->l) ts->l->p = nullptr;
+		if (ts->r) ts->r->p = nullptr;
+
+		if (st->l && ts->r) {
+			Node* stl_last = st->l;
+			while (stl_last->r) stl_last = stl_last->r;
+			stl_last->splay();
+			stl_last->r = ts->r;
+			ts->r->p = stl_last;
+			stl_last->pushup();
+		}
+
+		delete st; vs[s].erase(t);
+		delete ts; vs[t].erase(s);
+	}
+
+	// 根 s, t に対し，親から子への辺 s→t を繋ぐ．
+	void link(int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_subtree_add_subtree_sum
+
+		Node* ts = get_node(t, s);
+		Node* tt = get_node(t, t);
+		tt->splay();
+		ts->l = tt;
+		tt->p = ts;
+		ts->pushup();
+
+		Node* st = get_node(s, t);
+		tt->splay();
+		tt->l = st;
+		st->p = tt;
+		tt->pushup();
+
+		Node* ss = get_node(s, s);
+		ss->splay();
+		st->splay();
+		st->l = ss;
+		ss->p = st;
+		st->pushup();
+	}
+
+	// 頂点 rt を根にする．
+	void set_root(int rt) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_subtree_add_subtree_sum
+
+		Node* rr = get_node(rt, rt);
+		rr->splay();
+		Node* rr_l = rr->l;
+		if (!rr_l) return;
+		rr_l->p = nullptr;
+		rr->l = nullptr;
+		rr->pushup();
+
+		Node* rr_last = rr;
+		while (rr_last->r) rr_last = rr_last->r;
+		rr_last->splay();
+		rr_last->r = rr_l;
+		rr_l->p = rr_last;
+		rr_last->pushup();
+	}
+
+	// 部分木 i の頂点の値の総和を返す．
+	S sum(int i) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_subtree_add_subtree_sum
+
+		Node* ii = get_node(i, i);
+		ii->splay();
+		return ii->acc;
+	}
+
+	// 頂点 i の値を x に変更する．
+	void set(int i, S x) {
+		Node* ii = get_node(i, i);
+		ii->splay();
+		ii->val = x;
+		ii->pushup();
+	}
+
+	// 頂点 i の値に x を加える．
+	void add(int i, S x) {
+		Node* ii = get_node(i, i);
+		ii->splay();
+		ii->val = op(x, ii->val);
+		ii->pushup();
+	}
+
+	// 部分木 i の頂点の値に f を作用させる．
+	void apply(int i, F f) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_tree_subtree_add_subtree_sum
+
+		Node* ii = get_node(i, i);
+		ii->splay();
+		ii->lazy = f;
+	}
+
+	// 頂点 s, t が連結かを返す．
+	bool connectedQ(int s, int t) {
+		if (s == t) return true;
+		Node* ss = get_node(s, s);
+		Node* tt = get_node(t, t);
+		ss->splay();
+		tt->splay();
+		return ss->p;
+	}
+
+	// 辺 i→i を含む木の構造を表示する．
+	void dump_tree(int i) {
+		Node* root = get_node(i, i);
+		while (root->p) root = root->p;
+
+		function<void(Node*)> rf = [&](Node* v) {
+			if (!v) return;
+
+			rf(v->l);
+
+			cerr << "(" << v->s << "→" << v->t << ")" << " : ";
+			cerr << "p=";
+			if (v->p) cerr << "(" << v->p->s << "→" << v->p->t << ")";
+			else cerr << "(null)";
+			cerr << " l=";
+			if (v->l) cerr << "(" << v->l->s << "→" << v->l->t << ")";
+			else cerr << "(null)";
+			cerr << " r=";
+			if (v->r) cerr << "(" << v->r->s << "→" << v->r->t << ")";
+			else cerr << "(null)";
+			cerr << " acc=" << v->acc;
+			cerr << " lazy=" << v->lazy;
+			cerr << endl;
+
+			rf(v->r);
+		};
+		rf(root);
+		cerr << endl;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Euler_tour_tree ETT) {
+		//		os << "val:";
+		//		rep(i, ETT.n) os << " " << ETT.vs[i][i]->val;
+		//		os << endl;
+		os << "graph:" << endl;
+		rep(i, ETT.n) {
+			os << i << ":";
+			repe(tmp, ETT.vs[i]) os << " " << tmp.first;
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+

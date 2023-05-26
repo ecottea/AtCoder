@@ -5,6 +5,28 @@
 // ■■■■■ 部分和問題 ■■■■■
 
 
+//【部分和問題（判定）】O(n v / 64)
+/*
+* 非負整数列 a[0..n) の部分和として v が作れるかを返す．
+*
+* 制約：N は v + 1 以上の定数．
+*/
+template <size_t N>
+bool find_partial_sum(const vi& a, int v) {
+	int n = sz(a);
+	is.clear();
+
+	// dp_i[j] : a[0..i) の中で和をちょうど j にできるか
+	bitset<N> dp;
+	dp[0] = 1;
+
+	// インライン配る DP
+	rep(i, n) dp[i + 1] = dp[i] | (dp[i] << a[i]);
+
+	return dp[n][v];
+}
+
+
 //【部分和問題（数え上げ）】O(n v)
 /*
 * 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
@@ -18,20 +40,17 @@ vector<T> count_partial_sum(const vi& a, int v) {
 
 	int n = sz(a);
 
-	// dp[i][j] : a[0..i) の中で和がちょうど j という状態をとる場合の数
+	// dp[i][j] : a[0..i) の中で和がちょうど j になる組合せの数
 	vector<vector<T>> dp(n + 1, vector<T>(v + 1));
 	dp[0][0] = 1; // 空和が 0 であることに対応
 
 	// 貰う DP
 	rep(i, n) repi(j, 0, v) {
-		// i 番目の数を選ばない場合
+		// a[i] を選ばない場合
 		dp[i + 1][j] = dp[i][j];
 
-		// i 番目の数が j より大きいと選べない．
-		if (j < a[i]) continue;
-
-		// i 番目の数を選ぶ場合を加算する．
-		dp[i + 1][j] += dp[i][j - a[i]];
+		// a[i] を選ぶ場合
+		if (j - a[i] >= 0) dp[i + 1][j] += dp[i][j - a[i]];
 	}
 
 	return dp[n];
@@ -177,7 +196,7 @@ void enumerate_partial_sum(const vi& a, bitset<m>& res) {
 	res.reset();
 	res[0] = 1;
 
-	// 配る DP
+	// インライン配る DP
 	rep(i, n) res = res | (res << a[i]);
 }
 
@@ -185,22 +204,22 @@ void enumerate_partial_sum(const vi& a, bitset<m>& res) {
 //【部分和問題（ペア，列挙）】O(n m / 64)
 /*
 * 与えられた非負整数列 a[0..n), b[0..n) について，各 i について a[i] と b[i] の
-* いずれか一方を選んで得られる和として j が作れるかを res[j]∈res[0..m) に格納する．
-*
-*（ビット演算で高速化した bool DP）
+* いずれか一方を選んで得られる和として j が作れるかを格納したリストを返す．
 */
-template <size_t m>
-void enumerate_pair_partial_sum(const vi& a, const vi& b, bitset<m>& res) {
+template <size_t N>
+bitset<N> enumerate_pair_partial_sum(const vi& a, const vi& b) {
 	// verify : https://atcoder.jp/contests/arc099/tasks/arc099_c
 
 	int n = sz(a);
 
-	// res_i[j] : a[0..i), b[0..i) の中で和をちょうど j にできるか
-	res.reset();
-	res[0] = 1;
+	// dp_i[j] : a[0..i), b[0..i) の中で和をちょうど j にできるか
+	bitset<N> dp;
+	dp[0] = 1;
 
-	// 配る DP
-	rep(i, n) res = (res << b[i]) | (res << a[i]);
+	// インライン配る DP
+	rep(i, n) dp = (dp << b[i]) | (dp << a[i]);
+
+	return dp;
 }
 
 
@@ -497,37 +516,27 @@ mint count_multiple_partial_sum(const vector<T>& a, int m) {
 
 //【部分和問題（個数制限なし，数え上げ）】O(n v)
 /*
-* 長さ n の正整数の列 a の部分和として v を作る方法が何通りあるかを返す．
+* 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 * 各 a[i] は [0..∞) 個用いることができる．
-*
-*（和を状態にもつ状態 DP）
 */
-mint count_unlimited_partial_sum(const vi& a, int v) {
-	// 参考 : https://qiita.com/suisen_cp/items/794f24d31852b97d58a6
+vm count_unlimited_partial_sum(const vi& a, int v) {
+	// verify : https://projecteuler.net/problem=495
 
 	int n = sz(a);
 
-	// dp[i][j] : a[0..i) の中で和がちょうど j という状態をとる場合の数
-	vvm dp(n + 1, vm(v + 1));
-	dp[0][0] = 1; // 空和が 0 であることに対応
+	// dp_i[j] : a[0..i) の中で部分和が j になる組合せの数
+	vm dp(v + 1);
+	dp[0] = 1; // 空和が 0 であることに対応
 
-	// 貰う DP
-	rep(i, n) {
-		repi(j, 0, v) {
-			// i 番目の数を選ばない場合
-			dp[i + 1][j] = dp[i][j];
+	// インライン配る DP
+	rep(i, n) repi(j, 0, v) {
+		// a[i] を選ばない場合はインライン DP なので何もしなくて良い．
 
-			// i 番目の数が j より大きいと選べない．
-			if (j < a[i]) {
-				continue;
-			}
-
-			// i 番目の数を選ぶ場合
-			dp[i + 1][j] += dp[i + 1][j - a[i]];
-		}
+		// a[i] を選ぶ場合（j のループを昇順にしているので何個でも選べることになる）
+		if (j + a[i] <= v) dp[j + a[i]] += dp[j];
 	}
 
-	return dp[n][v];
+	return dp;
 }
 
 

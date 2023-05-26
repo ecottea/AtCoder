@@ -60,7 +60,7 @@ map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vec
 }
 
 
-//【重み付き DAG 上のコマ移動ゲーム】O(|V| + |E|)　
+//【重み付き DAG 上のコマ移動ゲーム】O(n + m)　
 /*
 * ゲームのルール：
 * 重み付き DAG g のある頂点 v にコマが置かれている．
@@ -105,7 +105,7 @@ void weighted_DAG_game(const WGraph& g, vector<pll>& res) {
 }
 
 
-//【重み付き有向グラフ上のコマ移動ゲーム】O(|V| + |E| log|V|)
+//【重み付き有向グラフ上のコマ移動ゲーム】O(n + m logn)
 /*
 * 重み付き有向グラフ（閉路可）g のある頂点 v にコマが置かれている．
 * 左と右は交互にコマを辺で繋がれた頂点のいずれかへ動かし，

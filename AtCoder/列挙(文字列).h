@@ -32,6 +32,39 @@ vector<string> enumerate_all_strings(int n, const vc& cs) {
 }
 
 
+//【任意文字列の列挙（置換）】O(n |cs|^n)
+/*
+* s[0..n) に含まれる '?' それぞれを cs の要素のいずれかに置き換えて
+* 得られる文字列全てを格納したリストを返す．
+*/
+vector<string> enumerate_all_strings(string s, const string& cs) {
+	int n = sz(s);
+	vector<string> strs;
+
+	function<void(int)> rf = [&](int i) {
+		if (i == n) {
+			strs.push_back(s);
+			return;
+		}
+
+		if (s[i] == '?') {
+			char c0 = s[i];
+			repe(c, cs) {
+				s[i] = c;
+				rf(i + 1);
+			}
+			s[i] = c0;
+		}
+		else {
+			rf(i + 1);
+		}
+	};
+	rf(0);
+
+	return strs;
+}
+
+
 //【括弧列の列挙】O(Catalan(n) n)（n = 15 くらいまで OK）
 /*
 * 長さ 2n の括弧列全てを辞書順に格納したリストを返す．
@@ -70,41 +103,6 @@ vector<string> enumerate_parenthesis_sequences(int n) {
 	rf(n, n);
 
 	return seqs;
-}
-
-
-//【括弧文字列の列挙】O(2^n)
-/*
-* '(', ')', '?' からなる文字列 s[0..n) の '?' をいずれかの括弧に置き換えて
-* 得られる括弧文字列全てを格納したリストを返す．
-*/
-vector<string> enumerate_all_parenthesis_sequences(const string& s) {
-	int n = sz(s);
-	vector<string> strs;
-	string p;
-
-	// l : 長さ
-	function<void(int)> rf = [&](int l) {
-		// 長さが n の場合は記録
-		if (l == n) {
-			strs.push_back(p);
-			return;
-		}
-
-		if (s[l] != ')') {
-			p.push_back('(');
-			rf(l + 1);
-			p.pop_back();
-		}
-		if (s[l] != '(') {
-			p.push_back(')');
-			rf(l + 1);
-			p.pop_back();
-		}
-	};
-	rf(0);
-
-	return strs;
 }
 
 

@@ -144,6 +144,23 @@ void exclusion_principle(ll n, vector<T>& al, vector<T>& ah) {
 }
 
 
+//【除原理（組）】O(r^(3/4))
+/*
+* N の部分多重集合からなる多重集合族 Ω が積と商について閉じているとする．
+*	f(l..r] := #{S∈Ω | l<S≦r かつ GCD(S)=1}
+* とおくと，以下の漸化式が成り立つ：
+*	f(l..r] = #{S∈Ω | l<S≦r} - Σd≧2 f(l/d..r/d]（切り捨て）
+*
+* 証明：余事象を考えると，
+*	f(l..r] = #{S∈Ω | l<S≦r} - Σd≧2 #{S∈Ω | l<S≦r かつ GCD(S)=d}
+* を得る．GCD の性質 GCD(a, b) d = GCD(a d, b d) と Ω の積閉性より，
+*	#{S∈Ω | l<S≦r かつ GCD(S)=d} = #{S∈Ω | l/d<S≦r/d かつ GCD(S)=1}
+* であるから先の漸化式を得る．
+*
+* verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_i
+*/
+
+
 //【一次式の切り捨て和】O(log(n + m + a + b))
 /*
 * Σi∈[0..n) floor((a i + b) / m) を返す．
@@ -249,7 +266,8 @@ T count_mod_of_linear(T n, T m, T a, T b, T l, T r) {
 /*
 * min i∈[0..n) (a i + b) mod m を返す．
 */
-ll min_of_mod_of_linear(ll n, ll m, ll a, ll b) {
+template <class T>
+T min_of_mod_of_linear(T n, T m, T a, T b) {
 	// verify : https://judge.yosupo.jp/problem/min_of_mod_of_linear
 
 	Assert(m > 0);
@@ -257,15 +275,15 @@ ll min_of_mod_of_linear(ll n, ll m, ll a, ll b) {
 
 	a = smod(a, m); b = smod(b, m);
 
-	ll res = b;
+	T res = b;
 
 	while (a > 0) {
 		// 単調増加な部分に分解し，その初項だけを並べた新たな列を考えると，
 		// それもまた min i∈[0..nn) (na i + nb) mod nm の形で表される．
-		ll nm = a;
-		ll nn = (a * (n - 1) + b) / m;
-		ll nb = a * (((m - b) / a) + 1) + b - m;
-		ll na = (a * (((2 * m - b) / a) + 1) + b - 2 * m) - nb;
+		T nm = a;
+		T nn = (a * (n - 1) + b) / m;
+		T nb = a * (((m - b) / a) + 1) + b - m;
+		T na = (a * (((2 * m - b) / a) + 1) + b - 2 * m) - nb;
 
 		n = nn; m = nm; a = smod(na, nm); b = nb % nm;
 
@@ -401,6 +419,18 @@ T ceil_mod(T x, T m, T k) {
 *		a mod m = a - m < a - a/2 = a/2
 *
 * verify : https://codeforces.com/contest/1617/problem/C
+*/
+
+
+//【整除順序集合の最大半鎖】
+/*
+* [1..2n] に整除関係を入れた順序集合における最大半鎖の大きさは n である．
+* 
+*（証明）[n+1..2n] は大きさ n の半鎖なので，大きさが n より大きい半鎖がとれないことを示せば良い．
+* ディルワースの定理より，代わりに大きさ n のパス被覆がとれることを示せば良いが，
+* これは各奇数 k に対して k-2k-4k-8k-... をパスとして選べば実現できる．
+* 
+* verify : https://atcoder.jp/contests/arc141/tasks/arc141_d
 */
 
 

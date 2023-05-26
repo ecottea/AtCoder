@@ -7,9 +7,7 @@
 //y•ªŠ„‚ÌÏƒXƒRƒA‚Ì˜azO(3^n)
 /*
 * [0..n) ‚Ì•ªŠ„ ƒÎ = ™k S_k ‚É‘Î‚·‚éƒXƒRƒA‚ª ƒ®k a[S_k] ‚Å—^‚¦‚ç‚ê‚é‚Æ‚·‚éD
-* set¼[0..n) ‚Ì‘S‚Ä‚Ì•ªŠ„‚ÌƒXƒRƒA‚Ì˜a‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
-*
-* —˜—pFy‰ºˆÊW‡‚Ì‘S’Tõz
+* Še set¼[0..n) ‚É‚Â‚¢‚ÄC‘S‚Ä‚Ì•ªŠ„‚ÌƒXƒRƒA‚Ì˜a‚ğŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 */
 vm set_partition_mul_score_sum(const vm& a) {
 	// verify : https://atcoder.jp/contests/abc236/tasks/abc236_h
@@ -29,8 +27,10 @@ vm set_partition_mul_score_sum(const vm& a) {
 		// set1 : set ‚©‚ç“Á’è‚Ì—v‘f x ‚ğæ‚èœ‚¢‚½W‡
 		int set1 = (set - 1) & set;
 
-		// set ‚Ì•ªŠ„‚É‚¨‚¢‚Ä x ‚ğŠÜ‚Ş•”•ªW‡ set-sub ‚ğ‘S’Tõ‚·‚éD
-		repbs(sub, set1) dp[set] += dp[sub] * a[set - sub];
+		// sub ¼ set1 ‚ğ‘S’Tõ‚·‚éiset - sub ‚ª x ‚ğŠÜ‚Şj
+		for (int sub = set1, tmp = 1; tmp > 0; tmp = sub, sub = (sub - 1) & set1) {
+			dp[set] += dp[sub] * a[set - sub];
+		}
 	}
 
 	return dp;

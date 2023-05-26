@@ -9,7 +9,7 @@
 // ■■■■■ グラフ上の最適化問題 ■■■■■
 
 
-//【最大独立集合問題】O(2^(|V|/2) |V|)
+//【最大独立集合問題】O(2^(n/2) n)
 /*
 * 無向グラフ g の最大独立集合の 1 つを vs に格納し，その大きさを返す．
 * S ⊂ V が独立集合であるとは，S の任意の 2 点を結ぶ辺が E に属さないことをいう．
@@ -148,9 +148,9 @@ int maximum_independent_set(const Graph& g, vi* vs = nullptr) {
 }
 
 
-//【最大クリーク問題】O(2^(|V|/2) |V|)
+//【最大クリーク問題】O(2^(n/2) n)
 /*
-* 無向グラフ g の最大クリークの大きさを返す．
+* 無向グラフ g の最大クリークの 1 つを vs に格納し，その大きさを返す．
 * S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
 *
 * 利用：【補グラフ】,【最大独立集合問題】
@@ -167,7 +167,7 @@ int maximum_clique(const Graph& g, vi* vs = nullptr) {
 }
 
 
-//【彩色数】O(2^|V| |V|)
+//【彩色数】O(2^n n)
 /*
 * 無向グラフ g の彩色数を返す．彩色数とは，独立集合への分割の最小個数である．
 *
@@ -231,7 +231,7 @@ int chromatic_number(const Graph& g) {
 }
 
 
-//【最小クリーク被覆】O(2^|V| |V|)
+//【最小クリーク被覆】O(2^n n)
 /*
 * 無向グラフ g の最小クリーク被覆の大きさを返す．
 * S ⊂ V がクリークであるとは，S の任意の 2 点を結ぶ辺が E に属することをいう．
@@ -250,7 +250,7 @@ int minimum_clique_cover(const Graph& g) {
 }
 
 
-//【巡回セールスマン問題】O(2^|V| |V|^2)
+//【巡回セールスマン問題】O(2^n n^2)
 /*
 * 重み付き有向グラフ g の最小コストハミルトン閉路のコストを返す（存在しなければ -1）
 *
@@ -292,12 +292,11 @@ ll traveling_salesman_problem(const WGraph& g) {
 }
 
 
-//【最小コストハミルトンパス】O(2^|V| |V|^2)
+//【最小コストハミルトンパス】O(2^n n^2)
 /*
-* 重み付き有向グラフ g の最小コストハミルトンパスのコストを返す（存在しなければ -1）
+* 重み付き有向グラフ g の最小コストハミルトンパスのコストを返す（存在しなければ INFL）
 * また頂点 s から出発し set を通るハミルトンパスの最小コストを dp[s][set] に格納する．
-* ただし s !∈ set とする．
-* 
+*
 *（bit DP）
 */
 ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
@@ -306,43 +305,38 @@ ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
 	int n = sz(g);
 
 	// dp[s][set] : 頂点 s から出発し set を通るハミルトンパスの最小コスト
-	//	s !∈ set とする．
 	dp = vvl(n, vl(1LL << n, INFL));
-	vvb seen(n, vb(1LL << n));
-	rep(s, n) {
-		dp[s][0] = 0;
-		seen[s][0] = true;
-	}
 
-	// メモ化再帰用の関数の定義
-	function<ll(int, int)> rf = [&](int s, int set) {
-		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][set]) return dp[s][set];
-		seen[s][set] = true;
+	repb(set, n) rep(s, n) {
+		// s から出発するので s を通らないことはありえない．
+		if (!get(set, s)) continue;
+
+		// set = {s} の場合は不動でいいのでコストは 0 である．
+		if (set == (1 << s)) {
+			dp[s][set] = 0;
+			continue;
+		}
 
 		// s から出ている各辺 e について
 		repe(e, g[s]) {
 			int t = e.to; ll c = e.cost;
 
-			// e の行き先 t が set に含まれていなければ何もしない．
-			if (!(set & (1 << t))) continue;
+			// e の行き先 t が set に含まれていなければ e は通れない．
+			if (!get(set, t)) continue;
 
-			// s → t と進む方がコストが小さければ更新する．
-			chmin(dp[s][set], rf(t, set - (1 << t)) + c);
+			// e を通って s → t と進む方がコストが小さければ更新する．
+			chmin(dp[s][set], c + dp[t][set - (1 << s)]);
 		}
+	}
 
-		return dp[s][set];
-	};
-
-	// メモ化再帰を用いて bit DP を行う．
 	ll res = INFL;
-	rep(s, n) chmin(res, rf(s, (1 << n) - 1 - (1 << s)));
+	rep(s, n) chmin(res, dp[s][(1 << n) - 1]);
 
-	return (res == INFL ? -1 : res);
+	return res;
 }
 
 
-//【中国人郵便配達問題】O(2^|V| |V|)
+//【中国人郵便配達問題】O(2^n n)
 /*
 * 重み付き連結無向グラフの全辺を通る閉路の最小コストを返す．
 *

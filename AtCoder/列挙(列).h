@@ -3,7 +3,7 @@
 // ■■■■■ 列の列挙 ■■■■■
 
 
-//【任意列の列挙】O(m^n n)
+//【任意列の列挙】O(m^n)
 /*
 * 集合 a[0..m) の要素からなる長さ n の列全てを格納したリストを返す．
 */
@@ -33,7 +33,34 @@ vector<vector<T>> enumerate_all_sequences(int n, const vector<T>& a) {
 }
 
 
-//【任意列の列挙（要素ごと上限指定）】O(Πub[0..n) n)
+//【任意列の列挙】O(Π_i |a[i]|)
+/*
+* 各 i∈[0..n) について x[i]∈a[i] を満たす x[0..n) の全てを格納したリストを返す．
+*/
+template <class T>
+vector<vector<T>> enumerate_all_sequences(const vector<vector<T>>& a) {
+	int n = sz(a);
+	vector<vector<T>> seqs;
+	vector<T> seq(n);
+
+	function<void(int)> rf = [&](int i) {
+		if (i == n) {
+			seqs.push_back(seq);
+			return;
+		}
+
+		repe(x, a[i]) {
+			seq[i] = x;
+			rf(i + 1);
+		}
+	};
+	rf(0);
+
+	return seqs;
+}
+
+
+//【任意数列の列挙（要素ごと上限指定）】O(Πub[0..n))
 /*
 * 数列 a[0..n) で，∀i, a[i] ∈ [0..ub[i]) を満たすもの全てを格納したリストを返す．
 */
@@ -65,7 +92,7 @@ vvi enumerate_all_sequences(const vi& ub) {
 }
 
 
-//【任意列の列挙（要素ごと上下限指定）】O(Π(ub[0..n)-lb[0..n)) n)
+//【任意数列の列挙（要素ごと上下限指定）】O(Π(ub[0..n)-lb[0..n)))
 /*
 * 数列 a[0..n) で，∀i, lb[i] <= a[i] < ub[i] を満たすもの全てを格納したリストを返す．
 */
@@ -97,7 +124,7 @@ vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
 }
 
 
-//【狭義単調増加列の列挙】O(bin(m, n) n)
+//【狭義単調増加列の列挙】O(bin(m, n))
 /*
 * 0 ≦ a[0] < a[1] < ... < a[n-1] < m なる列 a[0..n) を格納したリストを返す．
 */
@@ -132,7 +159,7 @@ vvi enumerate_strongly_increase_sequences(int n, int m) {
 }
 
 
-//【広義単調増加列の列挙】O(bin(n+m-1, n) n)
+//【広義単調増加列の列挙】O(bin(n+m-1, n))
 /*
 * 0 ≦ a[0] ≦ a[1] ≦ ... ≦ a[n-1] < m なる列 a[0..n) を格納したリストを返す．
 */
@@ -195,7 +222,7 @@ vvl enumerate_strongly_multiple_sequences(ll k) {
 }
 
 
-//【作業用スタックを利用して得られる列の列挙】O(Catalan(n) n)
+//【作業用スタックを利用して得られる列の列挙】O(Catalan(n))
 /*
 * a[0..n) に対し，先頭から順にスタックに積んでいき，任意のタイミングでスタックから
 * 要素を降ろしてくることで構成できる列を格納したリストを返す．

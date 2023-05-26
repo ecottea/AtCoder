@@ -89,7 +89,7 @@ vvvi set_partitions(int k, int m) {
 /*
 * 自然数 n を k 以下の自然数（広義降順）に分割する方法のリストを返す．
 */
-vvi integer_partitions_val(int n, int k) {
+vvi integer_partitions_val(int n, int k = INF) {
 	// verify : https://atcoder.jp/contests/abc226/tasks/abc226_f
 
 	//【具体例】
@@ -139,7 +139,7 @@ vvi integer_partitions_val(int n, int k) {
 		// これ以上 n の分割に k を使わない場合
 		rf(n, k - 1);
 	};
-	rf(n, k);
+	rf(n, min(k, n));
 
 	return ips;
 }
@@ -149,9 +149,9 @@ vvi integer_partitions_val(int n, int k) {
 /*
 * 自然数 n を d 個以下の自然数（広義降順）に分割する方法のリストを返す．
 */
-vvi integer_partitions_len(int n, int d) {
+vvi integer_partitions_len(int n, int d = INF) {
 	//【具体例】
-	// (n, k) = (6, 3) のとき：
+	// (n, d) = (6, 3) のとき：
 	//	0 : 6
 	//	1 : 5 1
 	//	2 : 4 2
@@ -176,7 +176,7 @@ vvi integer_partitions_len(int n, int d) {
 			return;
 		}
 
-		// 分割に使える数がもうない場か，分割の大きさが d に達した場合
+		// 分割に使える数がもうないか，分割の大きさが d に達した場合
 		if (k == 0 || len == d) return;
 
 		// n が k 以上のときは，n を k と n-k に分割できる．
@@ -232,6 +232,44 @@ vvi integer_partitions_val(int n, const vi& a) {
 		}
 
 		ip.resize(len);
+	};
+	rf(n, 0);
+
+	return ips;
+}
+
+
+//【自然数の順序付き分割の列挙（d 個以下）】O(bin(n+d-1, d-1))
+/*
+* 自然数 n を d 個の非負整数に順序付きで分割する方法のリストを返す．
+*/
+vvi ordered_integer_partitions_len(int n, int d) {
+	//【具体例】
+	// (n, d) = (3, 3) のとき：
+	//	0: 0 0 3
+	//	1: 0 1 2
+	//	2: 0 2 1
+	//	3: 0 3 0
+	//	4: 1 0 2
+	//	5: 1 1 1
+	//	6: 1 2 0
+	//	7: 2 0 1
+	//	8: 2 1 0
+	//	9: 3 0 0
+
+	vvi ips;
+	vi ip(d);
+
+	function<void(int, int)> rf = [&](int s, int i) {
+		if (i == d) {
+			if (s == 0) ips.push_back(ip);
+			return;
+		}
+
+		repi(x, 0, s) {
+			ip[i] = x;
+			rf(s - x, i + 1);
+		}
 	};
 	rf(n, 0);
 

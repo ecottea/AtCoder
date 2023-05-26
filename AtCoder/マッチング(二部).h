@@ -9,26 +9,26 @@
 /*
 * 二部グラフ (S, T) の最大マッチングなどを求める．
 *
-* Bipartite_matching(int n, int m) : O(|V|)
-*	S, T の要素数を n, m で初期化する．
+* Bipartite_matching(int n, int m) : O(n)
+*	S, T の要素数を n, m として初期化する．
 *
 * add_edge(int s, int t) : O(1)
 *	s∈S と t∈T の間に辺を張る．
 *
-* int solve() : O( min(|V|^(2/3) (|V| + |E|), (|V| + |E|)^(3/2)) )
+* int solve() : O( min(n^(2/3) (n + m), (n + m)^(3/2)) )
 *	フローを流し計算を行い，最大マッチングの大きさを返す．
-*	戻り値は「|最小点被覆|」，「|V| - |最小辺被覆|」，「|V| - |最大独立集合|」とも解釈できる．
+*	戻り値は「|最小点被覆|」，「n - |最小辺被覆|」，「n - |最大独立集合|」とも解釈できる．
 *
-* vector<pii> maximum_matching() : O(|E|)
+* vector<pii> maximum_matching() : O(m)
 *	最大マッチングに含まれる辺 {s, t} ∈ S×T のリストを返す．
 *	制約：solve() の後に呼び出すこと．
 *
-* vector<pii> minimum_edge_covering() : O(|V| + |E|)
+* vector<pii> minimum_edge_covering() : O(n + m)
 *	最小辺被覆に含まれる辺 {s, t} ∈ S×T のリストを返す．
 *	es が辺被覆であるとは，任意の頂点がある e∈es の端点として現れることをいう．
 *	制約：孤立点が存在しない．solve() の後に呼び出すこと．
 *
-* vvi minimum_vertex_covering() : O(|V| + |E|)
+* vvi minimum_vertex_covering() : O(n + m)
 *	最小点被覆の例を具体的に求め，S の頂点を vs[0], T の頂点を vs[1] に格納し，vs を返す．
 *	vs が点被覆であるとは，任意の辺がある v∈vs を端点にもつことをいう．
 *	制約：孤立点が存在しない．solve() の後に呼び出すこと．
@@ -139,18 +139,18 @@ struct Bipartite_matching {
 /*
 * 重み付き二部グラフ (S, T) の最小コスト最大マッチングを求める．
 *
-* Minimum_cost_bipartite_matching(int n, int m) : O(|V|)
-*	S, T の要素数を n, m で初期化する．
+* Minimum_cost_bipartite_matching(int n, int m) : O(n)
+*	S, T の要素数を n, m として初期化する．
 *
 * add_edge(int s, int t, ll c) : O(1)
 *	s∈S と t∈T の間にコスト c の辺を張る．
 *
-* pil flow() : O(cost (|V| + |E|) log|V|)
+* pil solve() : O(cost (n + m) log n)
 *	最大マッチングの大きさと，そのうちの最小コストの組を返す．
 *
-* vector<pii> minimul_cost_maximum_matching() : O(|E|)
+* vector<pii> minimul_cost_maximum_matching() : O(m)
 *	最小コスト最大マッチングに含まれる辺 {s, t} ∈ S×T のリストを返す．
-*	制約 : flow() の後に呼び出すこと．
+*	制約 : solve() の後に呼び出すこと．
 *
 *（最小費用流問題）
 */
@@ -161,6 +161,8 @@ struct Minimum_cost_bipartite_matching {
 
 	// |S|, |T| を渡して初期化する．
 	Minimum_cost_bipartite_matching(int n, int m) : n(n), m(m) {
+		// verify : https://atcoder.jp/contests/maximum-cup-2013/tasks/maximum_2013_f
+		
 		g = mcf_graph<int, ll>(n + m + 2);
 
 		// スタートとゴールおよびそれらとの間の辺を先に作っておく．
@@ -178,7 +180,7 @@ struct Minimum_cost_bipartite_matching {
 	}
 
 	// 最大マッチングの大きさと，そのうちの最小コストを返す．
-	pil flow() {
+	pil solve() {
 		// verify : https://atcoder.jp/contests/maximum-cup-2013/tasks/maximum_2013_f
 
 		return g.flow(ST, GL);
@@ -210,12 +212,68 @@ struct Minimum_cost_bipartite_matching {
 
 //【二部グラフの最小コスト辺被覆】
 /*
-* 【二部グラフの最小コスト最大マッチング】用のグラフをベースに，
-* ST からの辺の最小流量を 1，GL への辺の最小流量を 1，容量 INF でコスト 0 の辺 GL → ST を追加
-* としたグラフを構築し，一般化最小費用流問題を解けば良い．
-* 
-* verify : https://atcoder.jp/contests/abc231/tasks/abc231_h
+* 重み付き二部グラフ (S, T) の最小コスト辺被覆を求める．
+*
+* Minimum_cost_edge_cover(int n, int m) : O(n)
+*	S, T の要素数を n, m として初期化する．
+*
+* add_edge(int s, int t, ll c) : O(1)
+*	s∈S と t∈T の間にコスト c の辺を張る．
+*
+* ll solve() : O(cost (n + m) log n)
+*	最小コスト辺被覆のコストを返す．
+*
+* 利用：【一般化最小費用流】
 */
+struct Minimum_cost_edge_cover {
+	int n, m;
+	Generalized_min_cost_flow g;
+	int ST, GL;
+
+	// |S|, |T| を渡して初期化する．
+	Minimum_cost_edge_cover(int n, int m) : n(n), m(m) {
+		// verify : https://atcoder.jp/contests/abc231/tasks/abc231_h
+
+		g = Generalized_min_cost_flow(n + m + 2);
+
+		// スタートとゴールおよびそれらとの間の辺を先に作っておく．
+		ST = n + m;
+		GL = n + m + 1;
+
+		// 最小流量 1 の辺を張ることで，どの頂点も被覆されるようにする．
+		rep(i, n) g.add_cost_edge(ST, i, 1, INFL, 0);
+		rep(i, m) g.add_cost_edge(n + i, GL, 1, INFL, 0);
+
+		// 始点に湧き出し，終点に吸い込みを設定する．
+		g.add_source(ST, n + m);
+		g.add_source(GL, -(n + m));
+
+		// フローを流さず捨てることもできるようにする．
+		g.add_cost_edge(ST, GL, INFL, 0);
+	}
+	Minimum_cost_edge_cover() : n(0), m(0), ST(0), GL(0) {}
+
+	// s∈S と t∈T の間にコスト c の辺を張る． 
+	void add_edge(int s, int t, ll c) {
+		// verify : https://atcoder.jp/contests/abc231/tasks/abc231_h
+
+		g.add_cost_edge(s, n + t, 1, c);
+	}
+
+	// 最小コスト辺被覆のコストを返す．
+	ll solve() {
+		// verify : https://atcoder.jp/contests/abc231/tasks/abc231_h
+
+		return g.flow().second;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Minimum_cost_edge_cover& g) {
+		os << g.g;
+		return os;
+	}
+#endif
+};
 
 
 //【完全二部グラフの最小コスト完全マッチング】O(|S|^3 ?)
@@ -515,7 +573,7 @@ int tree_maximum_matching(const Graph& g) {
 */
 using T_mmi = bool; // 根を必ず使うか
 T_mmi merge_mmi(T_mmi x, T_mmi y, int s) { return x || y; }
-T_mmi e_mmi() { return false; }
+T_mmi e_mmi(int s) { return false; }
 T_mmi leaf_mmi(int s) { return false; }
 T_mmi apply_mmi(T_mmi x, int p, int s) { return !x; }
 vb tree_maximum_matching_intersection(Graph& g) {
@@ -685,7 +743,7 @@ int gokon_matching(const vl& inc_m, const vl& dst_m, const vl& inc_w, const vl& 
 */
 
 
-//【二部グラフの辺彩色】O(|V| |E|)
+//【二部グラフの辺彩色】O(n m)
 /*
 * 二部グラフ (S, T) を |S| = ns, |T| = nt で辺 (u[i], v[i]) ∈ S×T をもつものと定め，(S, T) の辺彩色数を返す．
 * また具体的な辺彩色例における i 番目の辺の色を col[i] に格納する．

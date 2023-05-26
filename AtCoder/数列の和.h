@@ -153,3 +153,13 @@ mint powered_geometric_series(mint r, int d) {
 }
 
 
+//y·‚ª {0, 1} ‚Ì”—ñ‚Ì‘g‚Ì“™‚µ‚¢—v‘f‚Ì”‚¦ã‚°z
+/*
+* ”—ñ a[0..n), b[0..n) ‚ª
+*		Íi¸[0..n) a[i] - b[i] ¸ {0, 1}
+* ‚ğ‚İ‚½‚µ‚Ä‚¢‚é‚Æ‚«Ca ‚Æ b ‚Ìˆê’v‰ÓŠ‚ÌŒÂ”‚ÍŸ‚Ì®‚Å‹‚ß‚ç‚ê‚éF
+*		ƒ°i¸[0..n) Boole[a[i] = b[i]] = n - (ƒ°a - ƒ°b)
+* 
+* verify : https://atcoder.jp/contests/arc123/tasks/arc123_e
+*/
+

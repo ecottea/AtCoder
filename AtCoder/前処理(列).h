@@ -213,7 +213,8 @@ vvi next_greater_positions(const vector<T>& a, int k, bool eq = false) {
 
 //【自身と同じ数の次の位置】O(n)
 /*
-* a[0..n) で，i < j かつ a[i] = a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す． 
+* 与えられた a[0..n) に対し，各 i∈[0..n) について i < j かつ a[i] = a[j] なる
+* 最小の j（なければ n）を格納したリストを返す．
 */
 template <class T>
 vi next_equal(const vector<T>& a) {
@@ -240,7 +241,8 @@ vi next_equal(const vector<T>& a) {
 
 //【自身と同じ数の前の位置】O(n)
 /*
-* a[0..n) で，j < i かつ a[j] = a[i] なる最大の j（なければ -1）を pps[i] に格納し pos を返す．
+* a[0..n) で，各 i∈[0..n) について j < i かつ a[j] = a[i] なる
+* 最大の j（なければ -1）を格納したリストを返す．
 */
 template <class T> 
 vi prev_equal(const vector<T>& a) {

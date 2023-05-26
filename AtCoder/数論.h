@@ -170,7 +170,7 @@ ll euler_phi(ll n) {
 //【カーマイケル関数】O(√n)
 /*
 * カーマイケル関数の値 λ(n) を返す．
-* λ(n) は (Z/nZ)^* の冪数（すべての元の位数の最小公倍数）に等しい．
+* λ(n) は (Z/nZ)* の冪数（すべての元の位数の最小公倍数）に等しい．
 *
 * 利用：【素因数分解】
 */
@@ -245,7 +245,7 @@ int integer_exponent(ll n, ll p) {
 *
 * 制約 : p は素数
 */
-ll legendre(ll n, ll p) {
+ll legendres(ll n, ll p) {
 	// verify : https://algo-method.com/tasks/452
 
 	ll res = 0;

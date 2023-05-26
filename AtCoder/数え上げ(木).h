@@ -278,7 +278,7 @@ vvm count_coprime_path(const Graph& g, int r) {
 */
 using T_st = mint;
 T_st merge_st(T_st x, T_st y, int s) { return x * y; }
-T_st e_st() { return 1; }
+T_st e_st(int s) { return 1; }
 T_st leaf_st(int s) { return 1; }
 T_st apply_st(T_st x, int p, int s) { return x + 1; }
 vm count_subtree(Graph& g) {
@@ -301,7 +301,7 @@ T_cctc merge_cctc(T_cctc x, T_cctc y, int s) {
 	mint cnt = x.first * y.first * fm_cctc.bin(x.second + y.second, x.second);
 	return { cnt, x.second + y.second };
 }
-T_cctc e_cctc() { return { 1, 0 }; }
+T_cctc e_cctc(int s) { return { 1, 0 }; }
 T_cctc leaf_cctc(int s) { return { 1, 0 }; }
 T_cctc apply_cctc(T_cctc x, int p, int s) { return { x.first, x.second + 1 }; }
 vm count_continuous_tree_construction(Graph& g) {

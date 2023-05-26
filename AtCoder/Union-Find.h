@@ -558,7 +558,7 @@ struct Persistent_union_find {
 *	スナップショットを作成する．
 *
 * rollback() : O(T)（T : スナップショットを作成してからの結合回数）
-*	直前に作成したスナップショットの状態まで巻き戻す．
+*	直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
 */
 class Rollback_Union_find {
 	// 参考 : https://snuke.hatenablog.com/entry/2016/07/01/000000
@@ -572,14 +572,12 @@ class Rollback_Union_find {
 	vi parent_or_size;
 
 	// 変更履歴
-	vector<pii> history;
+	stack<pii> history;
 
 public:
 	// 非連結で大きさ n の Union-Find を構築する．
 	Rollback_Union_find(int n) : n(n), m(n), parent_or_size(n, -1) {
 		// verify : https://codeforces.com/gym/100513/problem/A
-
-		history.reserve(2 * n);
 	}
 	Rollback_Union_find() : n(0), m(0) {} // ダミー
 
@@ -598,8 +596,8 @@ public:
 		if (-parent_or_size[ra] < -parent_or_size[rb]) swap(ra, rb);
 
 		// 変更前の情報を記録しておく．
-		history.emplace_back(ra, parent_or_size[ra]);
-		history.emplace_back(rb, parent_or_size[rb]);
+		history.emplace(ra, parent_or_size[ra]);
+		history.emplace(rb, parent_or_size[rb]);
 
 		// 小さい方の連結成分を ra を根とする連結成分に統合する．
 		parent_or_size[ra] += parent_or_size[rb];
@@ -611,18 +609,21 @@ public:
 
 	// スナップショットを作成する．
 	void snapshot() {
-		// verify : https://codeforces.com/gym/100513/problem/A
+		// verify : https://atcoder.jp/contests/abc302/tasks/abc302_h
 
-		history.clear();
+		history.emplace(INF, m);
 	}
 
 	// 直前に作成したスナップショットの状態まで巻き戻す．
 	void rollback() {
-		// verify : https://codeforces.com/gym/100513/problem/A
+		// verify : https://atcoder.jp/contests/abc302/tasks/abc302_h
 
-		m += sz(history) / 2;
-		while (!history.empty()) {
-			auto [i, v] = history.back(); history.pop_back();
+		while (1) {
+			auto [i, v] = history.top(); history.pop();
+			if (i == INF) {
+				m = v;
+				break;
+			}
 			parent_or_size[i] = v;
 		}
 	}

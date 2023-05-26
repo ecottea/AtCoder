@@ -16,9 +16,9 @@
 
 //【上側畳込み】
 /*
-* 与えられた a[0..n], b[0..n] に対して
-*		c[i] = Σj∈[i..n] a[n+i-j] b[j]
-* なる c[0..n] を求めたい場合，convolution(a, b)[n..2n] を取得すればよい．
+* 与えられた a[0..N], b[0..N] に対して
+*		c[i] = Σj∈[i..N] a[N+i-j] b[j]
+* なる c[0..N] を求めたい場合，convolution(a, b)[N..2N] を取得すればよい．
 *
 * verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
 */
@@ -78,7 +78,7 @@ vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 }
 
 
-//【複数の数列の畳込み（素朴）】O(n^2)
+//【畳込み（複数，素朴）】O(n^2)
 /*
 * 数列の集合 a の要素を全て畳込んだ結果（長さは n）を返す．
 */
@@ -153,7 +153,7 @@ vector<T> naive_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
 
 //【max-plus 畳込み（上に凸）】O(n + m)
 /*
-* 上に凸な数列 a[0..n) と b[0..m) を max-plus 代数にて畳み込んだ数列 c[0..n+m-1) を返す．
+* 上に凸な数列 a[0..n), b[0..m) を max-plus 代数にて畳み込んだ上に凸な数列 c[0..n+m-1) を返す．
 * 数列が上に凸であるとは，階差数列が広義単調減少であることをいう．
 */
 template <class T>
@@ -203,6 +203,161 @@ vector<T> concave_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
 
 	return c;
 }
+
+
+//【max-plus 畳込み（片方が上に凸）】O(n log(n + m) + m)
+/*
+*（上に凸とは限らない）数列 a[0..n) と上に凸な数列 b[0..m) を
+* max-plus 代数にて畳み込んだ（上に凸とは限らない）数列 c[0..n+m-1) を返す．
+* 数列が上に凸であるとは，階差数列が広義単調減少であることをいう．
+*/
+template <class T>
+vector<T> semiconcave_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
+	// 参考 : https://noshi91.github.io/Library/algorithm/concave_max_plus_convolution.cpp
+
+	//【方法】
+	// (n+m-1)×n 行列 M を
+	//		M[i][j] = a[j] + b[i-j]
+	// と定めると，これは anti-monotone なので monotone minima で行最小値が求まる．
+
+	//【例（n=4, m=3）】
+	// M は以下の通り．これの各行の行最大値を求めれば良い．
+	//	[ a[0]+b[0]                               ]
+	//	[ a[0]+b[1] a[1]+b[0]                     ]
+	//	[ a[0]+b[2] a[1]+b[1] a[2]+b[0]           ]
+	//	[           a[1]+b[2] a[2]+b[1] a[3]+b[0] ]
+	//	[                     a[2]+b[2] a[3]+b[1] ]
+	//	[                               a[3]+b[2] ]
+
+	//【備考】
+	// 実は M は anti-totally monotone なので，SMAWK Algorithm で O(log n) を落とせる．
+
+	int n = sz(a), m = sz(b);
+
+	// 一方が空数列だった場合は空数列を返す．
+	if (min(n, m) == 0) return vector<T>();
+
+	vector<T> c(n + m - 1);
+
+	// 行 [iL..iR) についての答えを求める（答えが列 [jL..jR) の範囲にあることはわかっている）
+	function<void(int, int, int, int)> rf = [&](int iL, int iR, int jL, int jR) {
+		if (iR - iL <= 0) return;
+
+		// iM : 行 [iL..iR) の真ん中の行の番号
+		int iM = (iL + iR) / 2;
+
+		// jM : 行 iM の中の最大要素のある列の番号
+		int jM = -1; T a_max = numeric_limits<T>::min();
+		repi(j, max(jL, iM - m + 1), min(jR - 1, iM)) {
+			if (chmax(a_max, a[j] + b[iM - j])) jM = j;
+		}
+
+		// 行 iM の行最大値の位置が jM であることがわかったので c[iM] が決定できる．
+		c[iM] = a[jM] + b[iM - jM];
+
+		// 左上と右下の部分を再帰的に調べていく．
+		rf(iL, iM, jL, jM + 1);
+		rf(iM + 1, iR, jM, jR);
+	};
+	rf(0, n + m - 1, 0, n);
+
+	return c;
+}
+
+
+//【max-plus オンライン畳込み（片側固定，上に凸）】
+/*
+* Semi_online_max_plus_convolution<T>(vm b) : O(n)
+*	a[0..n) と固定された上に凸な b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*	制約：b[0..n) は上に凸
+*
+* void set(T a) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t] を与える．
+*
+* T [](int i) : O(1)
+*	c[i] = MAX_j∈[0..i] (a[j] + b[i-j]) を返す．
+*	制約：a[0..i] を指定済でなくてはならない．
+*
+* void update(int i, T c) : O(1)
+*	c[i] を強制的に c に書き換える．
+* 
+* 利用：【max-plus 畳込み（片方が上に凸）】
+*/
+template <class T>
+class Semi_online_max_plus_convolution {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vector<T> as, cs; vector<vector<T>> bss;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Semi_online_max_plus_convolution(const vector<T>& bs)
+		: n(sz(bs)), t(0), as(n), cs(n, numeric_limits<T>::lowest()), bss(msb(n) + 1) {
+		// b[0], b[1] だけは例外的に bss[0] に格納しておく．
+		int len = min(2, n);
+		copy(bs.begin(), bs.begin() + len, back_inserter(bss[0]));
+
+		// b[2..n) を幅 2^i の区間にあらかじめ分割しておく．
+		repi(i, 1, msb(n)) {
+			int y_min = 1 << i;
+			int len = min(1 << i, n - y_min);
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bss[i]));
+		}
+	}
+	Semi_online_max_plus_convolution() : n(0), t(0) {}
+
+	// t 回目に呼び出すときは，a=a[t] を与える．
+	void set(T a) {
+		as[t] = a;
+
+		// b[0], b[1] との和だけは例外処理
+		chmax(cs[t], as[t] + bss[0][0]);
+		if (t + 1 < n) chmax(cs[t + 1], as[t] + bss[0][1]);
+
+		int i_max = lsb(t);
+
+		// 2^i : 正方形の一辺の長さ
+		repi(i, 1, i_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bss[i] を畳み込む．
+			int x_min = t - (1 << i);
+
+			vector<T> as_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+
+			vector<T> cs_sub = semiconcave_max_plus_convolution(as_sub, bss[i]);
+			repi(j, 0, j_max) chmax(cs[t + j], cs_sub[j]);
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	T const& operator[](int i) const {
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// c[i] を強制的に c に変更する．
+	void update(int i, T c) {
+		cs[i] = c;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Semi_online_max_plus_convolution& c) {
+		os << "a: " << c.as << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
 
 
 //【畳込み ⇔ モノイド半環上の積】

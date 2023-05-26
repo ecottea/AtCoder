@@ -411,7 +411,7 @@ public:
 };
 
 
-//【二次元累積和（アーベル群，スパース）】
+//【二次元累積和（スパース，アーベル群）】
 /*
 * Static_rectangle_sum(vl x, vl y, vS v) : O(n log n)
 *	値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
@@ -809,10 +809,10 @@ public:
 //【二次元 Sparse Table（冪等可換モノイド）】
 /*
 * Sparse_table<S, op, o>(vvS a) : O(h w log(h w))
-*	二次元配列 a[0..h)[0..w) で初期化する
+*	二次元配列 a[0..h)[0..w) で初期化する．
 *	要素は冪等可換モノイド <S, op, o> の元とする．
 *
-* S sum(int x1, int y1, int x2, int y2) : O(1)
+* S get(int x1, int y1, int x2, int y2) : O(1)
 *	Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す）
 */
 template <class S, S(*op)(S, S), S(*o)()>
@@ -825,11 +825,12 @@ struct Sparse_table_2D {
 	// acc[bx][by][x][y] : Σa[x..x+2^bx)[y..y+2^by)
 	vector<vector<vector<vector<S>>>> acc;
 
-	// コンストラクタ（初期化なし，二次元配列で初期化）
-	Sparse_table_2D() : h(0), w(0), bh(0), bw(0) {}
+	// 二次元配列 a[0..h)[0..w) で初期化する．
 	Sparse_table_2D(const vector<vector<S>>& a) : h(sz(a)), w(sz(a[0])), bh(msb(h) + 1), bw(msb(w) + 1),
 		acc(bh, vector<vector<vector<S>>>(bw, vector<vector<S>>(h, vector<S>(w, o()))))
 	{
+		// verify : https://codeforces.com/problemset/problem/713/D
+		
 		rep(x, h) rep(y, w) acc[0][0][x][y] = a[x][y];
 
 		repi(bx, 1, bh - 1) {
@@ -854,9 +855,13 @@ struct Sparse_table_2D {
 			}
 		}
 	}
+	Sparse_table_2D() : h(0), w(0), bh(0), bw(0) {}
 
-	// Σa[x1..x2)[y1..y2) を返す．
-	S sum(int x1, int y1, int x2, int y2) {
+	// Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す）
+	S get(int x1, int y1, int x2, int y2) {
+		// verify : https://codeforces.com/problemset/problem/713/D
+		
+		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);
 		if (x1 >= x2 || y1 >= y2) return o();
 
 		int bx = msb(x2 - x1), by = msb(y2 - y1);

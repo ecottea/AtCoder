@@ -689,7 +689,7 @@ public:
 /*
 * Dynamic_segtree<S, op, e>(ll n) : O(1)
 *	a[0..n) = e() で初期化する．
-*	位置の型は ll，要素はモノイド (S, op, e) の元とする．
+*	要素はモノイド (S, op, e) の元とする．
 *
 * set(ll i, S x) : O(log n)
 *	a[i] = x とする．
@@ -742,7 +742,7 @@ class Dynamic_segtree {
 	ll n;
 	Node* root;
 
-	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [il, ir) に対応する）
+	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [il..ir) に対応する）
 	void set(Node*& t, ll il, ll ir, ll pos, S val, int q_type) const {
 		// ノードが存在しなかった場合は新たに作成する．
 		if (!t) {
@@ -869,21 +869,21 @@ public:
 	void set(ll i, S x) {
 		// verify : https://www.spoj.com/problems/ADAAPHID/
 
-		assert(0LL <= i && i < n);
+		Assert(0LL <= i && i < n);
 
 		set(root, 0LL, n, i, x, SET);
 	}
 
 	// a[i] = op(x, a[i]) とする．
 	void apply_left(ll i, S x) {
-		assert(0LL <= i && i < n);
+		Assert(0LL <= i && i < n);
 
 		set(root, 0LL, n, i, x, APL);
 	}
 
 	// a[i] = op(a[i], x) とする．
 	void apply_right(ll i, S x) {
-		assert(0LL <= i && i < n);
+		Assert(0LL <= i && i < n);
 
 		set(root, 0LL, n, i, x, APR);
 	}
@@ -892,7 +892,7 @@ public:
 	S get(ll i) const {
 		// verify : https://www.spoj.com/problems/ADAAPHID/
 
-		assert(0LL <= i && i < n);
+		Assert(0LL <= i && i < n);
 
 		return get(root, 0LL, n, i);
 	}
@@ -1748,6 +1748,226 @@ public:
 
 		return sum_rf(l, r, p, M - 1, 1, 0, N);
 	}
+};
+
+
+//【二次元セグメント木（可換モノイド）】
+/*
+* Segtree_2D<S, op, o>(int h, int w) : O(h w)
+*	v[0..h)[0..w) = o() で初期化する．
+*	要素は可換モノイド (S, op, o) の元とする．
+*
+* Segtree_2D<S, op, o>(vvS v) : O(h w)
+*	二次元配列 v[0..h)[0..w) の要素で初期化する．
+*
+* set(int i, int j, S x) : O(log h log w)
+*	v[i][j] = x とする．
+*
+* S get(int i, int j) : O(1)
+*	v[i][j] を返す．
+*
+* S sum(int x1, int y1, int x2, int y2) : O(log h log w)
+*	Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．
+*
+* S all_sum() : O(1)
+*	Σv[0..h)[0..w) を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)()>
+class Segtree_2D {
+	// 参考 : https://blog.hamayanhamayan.com/entry/2017/12/09/015937
+	// 参考 : https://maspypy.com/segment-tree-%e3%81%ae%e3%81%8a%e5%8b%89%e5%bc%b71
+
+	int h, w;
+	vector<vector<S>> v;
+
+public:
+	// v[0..h)[0..w) = o() で初期化する．
+	Segtree_2D(int h, int w) : h(h), w(w) {
+		v = vector<vector<S>>(2 * h, vector<S>(2 * w, o()));
+	}
+
+	// 二次元配列 v[0..h)[0..w) の要素で初期化する．
+	Segtree_2D(vector<vector<S>>& v_) : Segtree_2D(sz(v_), sz(v_[0])) {
+		rep(i, h) rep(j, w) v[i + h][j + w] = v_[i][j];
+
+		repir(i, 2 * h - 1, 1) repir(j, w - 1, 1) v[i][j] = op(v[i][j * 2], v[i][j * 2 + 1]);
+		repir(i, h - 1, 1) repir(j, 2 * w - 1, 1) v[i][j] = op(v[i * 2][j], v[i * 2 + 1][j]);
+	}
+	Segtree_2D() : h(0), w(0) {}
+
+	// v[i][j] = x とする．
+	void set(int i, int j, S x) {
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+		i += h; j += w;
+
+		v[i][j] = x;
+
+		int j2 = j;
+		while (j2 > 1) {
+			j2 /= 2;
+			v[i][j2] = op(v[i][j2 * 2], v[i][j2 * 2 + 1]);
+		}
+
+		while (i > 1) {
+			i /= 2;
+
+			j2 = j;
+			while (j2 > 1) {
+				j2 /= 2;
+				v[i][j2] = op(v[i * 2][j2], v[i * 2 + 1][j2]);
+			}
+		}
+	}
+
+	// v[i][j] を返す．
+	S get(int i, int j) const {
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+		return v[i + h][j + w];
+	}
+
+	// Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．
+	S sum(int x1, int y1, int x2, int y2) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/1068
+
+		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);
+		if (x1 >= x2 || y1 >= y2) return o();
+
+		x1 += h; y1 += w; x2 += h; y2 += w;
+		S res = o();
+
+		auto add_y = [&](int x, int y1, int y2) {
+			while (y1 < y2) {
+				if (y1 & 1) {
+					res = op(res, v[x][y1]);
+					y1++;
+				}
+				if (y2 & 1) {
+					res = op(res, v[x][y2 - 1]);
+				}
+				y1 /= 2; y2 /= 2;
+			}
+		};
+
+		while (x1 < x2) {
+			if (x1 & 1) {
+				add_y(x1, y1, y2);
+				x1++;
+			}
+			if (x2 & 1) {
+				add_y(x2 - 1, y1, y2);
+			}
+			x1 /= 2; x2 /= 2;
+		}
+
+		return res;
+	}
+
+	// Σv[0..h)[0..y) を返す．
+	S all_sum() const {
+		return v[1][1];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Segtree_2D seg) {
+		rep(i, seg.h) rep(j, seg.w) os << seg.get(i, j) << " \n"[j == seg.w - 1];
+		return os;
+	}
+#endif
+};
+
+
+//【二次元動的セグメント木（可換モノイド）】
+/*
+* Dynamic_segtree_2D<S, op, o>(int h, int w) : O(h)
+*	a[0..h)[0..w) = o() で初期化する．
+*	要素は可換モノイド (S, op, o) の元とする．
+*
+* set(int i, int j, S x) : O(log h log w)
+*	a[i][j] = x とする．
+*
+* apply(int i, int j, S x) : O(log h log w)
+*	a[i][j] += x とする．
+*
+* S get(int i, int j) : O(log h log w)
+*	a[i][j] を返す（なければ o() を返す）
+*
+* S sum(int x1, int y1, int x2, int y2) : O(log h log w)
+*	Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
+*
+* S all_prod() : O(log w)
+*	Σa[0..h)[0..w) を返す．
+*
+* 利用：【動的セグメント木（モノイド）】
+*/
+template <class S, S(*op)(S, S), S(*o)()>
+class Dynamic_segtree_2D {
+	// 参考 : https://blog.hamayanhamayan.com/entry/2017/12/09/015937
+
+	int h; ll w;
+	vector<Dynamic_segtree<S, op, o>> v;
+
+public:
+	// a[0..h)[0..w) = o() で初期化する．
+	Dynamic_segtree_2D(int h, ll w) : h(h), w(w), v(2 * h, Dynamic_segtree<S, op, o>(w)) {
+		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
+	}
+	Dynamic_segtree_2D() : h(0), w(0) {}
+
+	// a[i][j] += x とする．
+	void apply(int i, ll j, S x) {
+		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
+
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+
+		i += h;
+		while (i >= 1) {
+			v[i].apply_left(j, x);
+			i /= 2;
+		}
+	}
+
+	// a[i][j] を返す（なければ o() を返す）
+	S get(int i, ll j) const {
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+
+		return v[i + h].get(j);
+	}
+
+	// Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
+	S sum(int x1, ll y1, int x2, ll y2) const {
+		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
+
+		chmax(x1, 0); chmax(y1, 0LL); chmin(x2, h); chmin(y2, w);
+		if (x1 >= x2 || y1 >= y2) return o();
+
+		x1 += h; x2 += h;
+		S res = o();
+
+		while (x1 < x2) {
+			if (x1 & 1) {
+				res = op(res, v[x1].prod(y1, y2));
+				x1++;
+			}
+			if (x2 & 1) {
+				res = op(res, v[x2 - 1].prod(y1, y2));
+			}
+			x1 /= 2; x2 /= 2;
+		}
+
+		return res;
+	}
+
+	// Σa[0..h)[0..w) を返す．
+	S all_sum() const {
+		return v[1].all_prod();
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Dynamic_segtree_2D seg) {
+		rep(i, seg.h) rep(j, seg.w) os << seg.get(i, j) << " \n"[j == seg.w - 1];
+		return os;
+	}
+#endif
 };
 
 

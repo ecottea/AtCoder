@@ -5,7 +5,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-
 #define Assert assert
 
 
@@ -140,12 +139,6 @@ inline ostream& operator<< (ostream& os, const multimap<T, U, greater<T>>& m) {
 	return os;
 }
 
-//template <class T, class U>
-//inline ostream& operator<< (ostream& os, const unordered_map<T, U>& m) {
-//	repe(p, m) os << p << " ";
-//	return os;
-//}
-
 template <class Key, class T, class Hash, class Pred, class Allocater>
 inline ostream& operator<< (ostream& os, const unordered_map<Key, T, Hash, Pred, Allocater>& um) {
 	repe(p, um) os << p << " ";
@@ -179,15 +172,6 @@ inline ostream& operator<< (ostream& os, deque<T> q) {
 	return os;
 }
 
-//template <class T>
-//inline ostream& operator<< (ostream& os, priority_queue<T> q) {
-//	while (!q.empty()) {
-//		os << q.top() << " ";
-//		q.pop();
-//	}
-//	return os;
-//}
-
 template <class T, class Container, class Compare>
 inline ostream& operator<< (ostream& os, priority_queue<T, Container, Compare> q) {
 	// 参考 : https://qiita.com/hibit/items/8ca9a58ccd23014f3a54
@@ -199,6 +183,7 @@ inline ostream& operator<< (ostream& os, priority_queue<T, Container, Compare> q
 	return os;
 }
 
+// tuple
 // 参考 : https://www.delftstack.com/ja/howto/cpp/cpp-tuple-in-cpp/
 template<class Tuple, size_t N>
 struct TuplePrinter {
@@ -258,7 +243,7 @@ template <class T> void dumpel(T a) {
 	int i = 0; 
 	cerr << "\033[1;32m";
 	repe(x, a) {
-		cerr << i++ << ": " << x << endl;
+		cerr << right << setw(2) << i++ << ": " << x << endl;
 	}
 	cerr << "\033[0m";
 }
@@ -273,7 +258,7 @@ template <class T> void dump_list(vector<T> a) {
 	}
 }
 
-template <class T> void dump_list2D(vector<vector<T>> a) {
+template <class T> void dump_mat(vector<vector<T>> a) {
 	if (mute_dump) return;
 
 	cout << "{";

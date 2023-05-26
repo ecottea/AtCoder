@@ -217,3 +217,48 @@ mint bitstr_OR_sum(const string& s) {
 }
 
 
+//【区間分割のスコア和（任意演算）】O(2^n n)
+/*
+* 列 a[0..n) に対して
+*	a[l..r) のスコア：a[l..r) の総 op1
+*	a[0..n) の区間分割のスコア：各区間スコアの総 op2
+*	a のスコア：2^(n-1) 通りの区間分割のスコアの総 op3
+* と定め，a のスコア返す．
+*/
+template <class T, T(*op1)(T, T), T(*op2)(T, T), T(*op3)(T, T)>
+T interval_partitions_score(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/abc197/tasks/abc197_c
+
+	int n = sz(a);
+
+	T val3(0);
+
+	repb(set, n - 1) {
+		T val2; bool first_call = true;
+
+		// val2 = op3(val3, x) とする（val2 が仮の単位元でも大丈夫）
+		auto apply2 = [&](T x) {
+			if (first_call) val2 = x, first_call = false;
+			else val2 = op2(val2, x);
+		};
+
+		T val1 = a[0];
+
+		rep(i, n - 1) {
+			if (get(set, i)) {
+				apply2(val1);
+				val1 = a[i + 1];
+			}
+			else {
+				val1 = op1(val1, a[i + 1]);
+			}
+		}
+		apply2(val1);
+
+		val3 = (set == 0 ? val2 : op3(val3, val2));
+	}
+
+	return val3;
+}
+
+

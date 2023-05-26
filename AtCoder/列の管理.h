@@ -331,6 +331,12 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 * rotate(int l, int m, int r) : O(log n)
 *	a[l, r) を，a[m] が先頭にくるよう巡回シフトする．
 *
+* Implicit_treap split(int key) : O(log n)
+*	自身から位置 key 以上の要素を切り出し，切り出して出来た木を返す．
+*
+* void merge(Implicit_treap IT) : O(log n)
+*	自身の右側に IT をマージする．
+*
 * vS get_all() : O(n)
 *	全要素のリストを返す．
 */
@@ -338,19 +344,22 @@ template <class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F)
 class Implicit_treap {
 	// 参考 : https://xuzijian629.hatenablog.com/entry/2018/12/08/000452
 
+	inline static bool first_call = true;
+	inline static mt19937 rnd;
+
 	struct Node {
-		S value, acc;
-		F lazy;
-		unsigned int priority;
-		int cnt;
-		bool rev;
-		Node* l, * r;
+		S value; // 頂点の値
+		S acc; // 部分木のノードの総 op
+		F lazy; // 部分木のノードへの遅延作用
+		unsigned int priority; // ランダムに決めた優先度
+		int cnt; // 部分木のノード数
+		bool rev; // 部分木が反転されているか
+		Node* l, * r; // 左右の子へのポインタ
 		Node(S value, unsigned int priority) : value(value), acc(e()), lazy(id()), priority(priority),
 			cnt(1), rev(false), l(nullptr), r(nullptr) {}
 	};
 
 	Node* root;
-	mt19937 rnd;
 
 	// 部分木 t のノード数を返す．
 	int cnt(Node* t) {
@@ -530,13 +539,23 @@ class Implicit_treap {
 
 public:
 	// 空で初期化する．
-	Implicit_treap() : root(nullptr), rnd((int)time(0)) {
+	Implicit_treap() : root(nullptr) {
 		// verify : https://www.spoj.com/problems/IITWPC4D/
+
+		if (Implicit_treap::first_call) {
+			rnd = mt19937((int)time(NULL));
+			Implicit_treap::first_call = false;
+		}
 	}
 
 	// 配列 a[0..n) で初期化する．
-	Implicit_treap(const vector<S>& a) : root(nullptr), rnd((int)time(0)) {
+	Implicit_treap(const vector<S>& a) : root(nullptr) {
 		// verify : https://judge.yosupo.jp/problem/dynamic_sequence_range_affine_range_sum
+
+		if (Implicit_treap::first_call) {
+			rnd = mt19937((int)time(NULL));
+			Implicit_treap::first_call = false;
+		}
 
 		rep(i, sz(a)) insert(i, a[i]);
 	}
@@ -672,7 +691,7 @@ public:
 	void reverse(int l, int r) {
 		// verify : https://judge.yosupo.jp/problem/dynamic_sequence_range_affine_range_sum
 
-		if (l > r) return;
+		if (l >= r) return;
 
 		Node* lt, * mt, * rt;
 
@@ -700,6 +719,25 @@ public:
 		reverse(l + r - m, r);
 	}
 
+	// 自身から位置 key 以上の要素を切り出し，切り出して出来た木を返す．
+	Implicit_treap split(int key) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_sequence_range_affine_range_sum
+
+		Node* l, * r;
+		split(root, key, l, r);
+		root = l;
+		Implicit_treap ret;
+		ret.root = r;
+		return ret;
+	}
+
+	// 自身の右側に IT をマージする．
+	void merge(Implicit_treap& IT) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_sequence_range_affine_range_sum
+
+		merge(root, root, IT.root);
+	}
+
 	// 全要素のリストを返す．
 	vector<S> get_all() {
 		// verify : https://www.spoj.com/problems/TWIST/
@@ -710,8 +748,8 @@ public:
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Implicit_treap it) {
-		os << it.get_all();
+	friend ostream& operator<<(ostream& os, Implicit_treap IT) {
+		os << IT.get_all();
 		return os;
 	}
 #endif

@@ -282,8 +282,8 @@ public:
 * Slope_trick() : O(1)
 *	定数関数 f(x) = 0 で初期化する．
 *
-* ll min(pll* lr) : O(1)
-*	min f(x) を返し，必要ならそれを与える x の範囲 [l, r] を lr に格納する．
+* ll min(ll* l = nullptr, ll* r = nullptr) : O(1)
+*	min f(x) を返し，必要ならそれを与える x の範囲 [l, r) を格納する．
 *
 * add_const(ll x0) : O(1)
 *	f(x) += y0 とする．
@@ -313,23 +313,28 @@ struct Slope_trick {
 	// 参考 : https://maspypy.com/slope-trick-1-%E8%A7%A3%E8%AA%AC%E7%B7%A8
 
 	ll y_min; // 最小値
-	priority_queue<ll> l; // 最小値より左の折れ点の x 座標を降順に取り出せるキュー
-	priority_queue_rev<ll> r; // 最小値より右の折れ点の x 座標を昇順に取り出せるキュー
-	ll add_l; // 最小値より左側の平行移動量
-	ll add_r; // 最小値より右側の平行移動量
+	priority_queue<ll> qL; // 最小値より左の折れ点の x 座標を降順に取り出せるキュー
+	priority_queue_rev<ll> qR; // 最小値より右の折れ点の x 座標を昇順に取り出せるキュー
+	ll addL; // 最小値より左側の平行移動量
+	ll addR; // 最小値より右側の平行移動量
 
 	// f(x) = 0 で初期化する．
-	Slope_trick() : y_min(0), add_l(0), add_r(0) {
-		// 番兵を挿入しておく．
-		l.push(-INFL);
-		r.push(INFL);
-	};
-
-	// min f(x) を返し，必要ならそれを与える x の範囲 [l, r] を lr に格納する．
-	ll min(pll* lr = nullptr) {
+	Slope_trick() : y_min(0), addL(0), addR(0) {
 		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
 
-		if (lr != nullptr) *lr = { l.top() + add_l, r.top() + add_r };
+		// 番兵を挿入しておく．
+		qL.push(-INFL);
+		qR.push(INFL);
+	};
+
+	// min f(x) を返し，必要ならそれを与える x の範囲 [l, r) を格納する．
+	ll min(ll* l = nullptr, ll* r = nullptr) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		if (r != nullptr) {
+			*l = qL.top() + addL;
+			*r = qR.top() + addR + 1;
+		}
 		return y_min;
 	}
 
@@ -344,20 +349,20 @@ struct Slope_trick {
 	void add_right(ll x0) {
 		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
 
-		y_min += max(0LL, (l.top() + add_l) - x0);
-		l.push(x0 - add_l);
-		r.push((l.top() + add_l) - add_r);
-		l.pop();
+		y_min += max(0LL, (qL.top() + addL) - x0);
+		qL.push(x0 - addL);
+		qR.push((qL.top() + addL) - addR);
+		qL.pop();
 	}
 
 	// f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
 	void add_left(ll x0) {
 		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
 
-		y_min += max(0LL, x0 - (r.top() + add_r));
-		r.push(x0 - add_r);
-		l.push((r.top() + add_r) - add_l);
-		r.pop();
+		y_min += max(0LL, x0 - (qR.top() + addR));
+		qR.push(x0 - addR);
+		qL.push((qR.top() + addR) - addL);
+		qR.pop();
 	}
 
 	// f(x) += |x - x0| とする．（＼／ の形を加算する．）
@@ -370,29 +375,64 @@ struct Slope_trick {
 
 	// f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
 	void acc_min_left() {
-		r = priority_queue_rev<ll>();
-		r.push(INFL);
+		qR = priority_queue_rev<ll>();
+		qR.push(INFL);
 	}
 
 	// f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
 	void acc_min_right() {
-		l = priority_queue<ll>();
-		l.push(-INFL);
+		qL = priority_queue<ll>();
+		qL.push(-INFL);
 	}
 
 	// f(x) を x0 だけ右に平行移動する．（f(x) ← f(x - x0)）
 	void shift(ll x0) {
-		add_l += x0;
-		add_r += x0;
+		addL += x0;
+		addR += x0;
 	}
 
 	// f(x) を min f([x-dl, x+dr]) に置き換える．（＼＿＿／ の形にする．）
 	void sliding_window_min(ll dl, ll dr) {
 		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
 
-		add_l -= dl;
-		add_r += dr;
+		addL -= dl;
+		addR += dr;
 	}
+
+	// [l..r] 内の f(x) の折れ点（両端含む）を x 座標昇順に返す．
+	vector<pll> get_points(ll l, ll r) const {
+		auto qL2(qL); auto qR2(qR);
+
+		vector<pll> res; ll a = 0, y = y_min;
+		while (!qL2.empty()) {
+			ll x = qL2.top(); qL2.pop();
+			if (x + addL < l) x = l - addL;
+			if (!res.empty()) y -= (res.back().first - (x + addL)) * a;
+			if (res.empty() || res.back().first != x + addL) res.emplace_back(x + addL, y);
+			if (x + addL == l) break;
+			a--;
+		}
+		reverse(all(res));
+
+		a = 0; y = y_min;
+		while (!qR2.empty()) {
+			ll x = qR2.top(); qR2.pop();
+			if (x + addR > r) x = r - addR;
+			if (!res.empty()) y += ((x + addR) - res.back().first) * a;
+			if (res.empty() || res.back().first != x + addR) res.emplace_back(x + addR, y);
+			if (x + addR == r) break;
+			a++;
+		}
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Slope_trick& st) {
+		os << st.get_points(-100, 100);
+		return os;
+	}
+#endif
 };
 
 

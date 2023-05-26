@@ -471,7 +471,7 @@ void parallel_binary_search(vi& ok, vi& ng, const function<void(const vi&, vb&)>
 }
 
 
-//【幅優先探索（動的）】O(|V| + |E|)（遅い）
+//【幅優先探索（動的）】O(n + m)（遅い）
 /*
 * st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
 */

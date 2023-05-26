@@ -21,8 +21,6 @@
 */
 template <class T>
 struct Periodic_sequence_sum {
-	// verify : https://atcoder.jp/contests/abc179/tasks/abc179_e
-
 	// nc : 非周期部分の長さ，c : 周期部分の長さ
 	int nc, c;
 
@@ -31,6 +29,8 @@ struct Periodic_sequence_sum {
 
 	// a[i+1] = f(a[i]), a[0] = a0 なる数列で初期化する．
 	Periodic_sequence_sum(const function<T(T)>& f, T a0) : nc(0), c(0), nc_acc({ 0 }), c_acc({ 0 }) {
+		// verify : https://atcoder.jp/contests/abc179/tasks/abc179_e
+		
 		T x = a0, y = a0;
 		do {
 			x = f(x);
@@ -57,6 +57,8 @@ struct Periodic_sequence_sum {
 
 	// Σi = [0..n) a[i] を返す．
 	T sum(ll n) {
+		// verify : https://atcoder.jp/contests/abc179/tasks/abc179_e
+		
 		if (n <= nc) return nc_acc[n];
 
 		T res = nc_acc[nc];
@@ -109,6 +111,32 @@ pii floyds_cycle_finding(const function<T(T)>& f, T a0) {
 	} while (x != y);
 
 	return make_pair(nc, c);
+}
+
+
+//【列の周期の候補】O(n)
+/*
+* 与えられた列 a[0..n) に対し，a[n-2t..n-t) = a[n-t..n) を満たす t を
+* 降順に 2 個求め，その GCD を返す（2 個なければ -1）
+*
+* 利用：【ローリングハッシュ（列）】
+*/
+template <class STR>
+int pseudo_cycle(const STR& a) {
+	int n = sz(a);
+	Rolling_hash A(a);
+
+	int res = 0; int k = 2;
+
+	repir(t, n / 2, 1) {
+		if (A.get(n - 2 * t, n - t) == A.get(n - t, n)) {
+			res = gcd(res, t);
+			if (--k == 0) break;
+		}
+	}
+	if (k > 0) res = -1;
+
+	return res;
 }
 
 

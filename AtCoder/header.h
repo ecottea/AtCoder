@@ -26,7 +26,7 @@ const double PI = acos(-1);
 const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi DY = { 0, 1, 0, -1 };
 int INF = 1001001001; ll INFL = 4004004004004004004LL;
-double EPS = 1e-12;
+double EPS = 1e-15;
 
 // 入出力高速化
 struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(18); } } fastIOtmp;
@@ -61,27 +61,6 @@ template <class T> inline istream& operator>>(istream& is, vector<T>& v) { repea
 template <class T> inline vector<T>& operator--(vector<T>& v) { repea(x, v) --x; return v; }
 template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x; return v; }
 
-// 手元環境（Visual Studio）
-#ifdef _MSC_VER
-#include "local.hpp"
-// 提出用（gcc）
-#else
-inline int popcount(int n) { return __builtin_popcount(n); }
-inline int popcount(ll n) { return __builtin_popcountll(n); }
-inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
-inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
-inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
-inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
-#define gcd __gcd
-#define dump(...)
-#define dumpel(v)
-#define dump_list(v)
-#define dump_list2D(v)
-#define input_from_file(f)
-#define output_to_file(f)
-#define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
-#endif
-
 #endif // 折りたたみ用
 
 
@@ -98,6 +77,26 @@ namespace atcoder {
 	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
 }
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
+#endif
+
+
+#ifdef _MSC_VER // 手元環境（Visual Studio）
+#include "local.hpp"
+#else // 提出用（gcc）
+inline int popcount(int n) { return __builtin_popcount(n); }
+inline int popcount(ll n) { return __builtin_popcountll(n); }
+inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
+inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
+inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
+inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
+#define gcd __gcd
+#define dump(...)
+#define dumpel(v)
+#define dump_list(v)
+#define dump_mat(v)
+#define input_from_file(f)
+#define output_to_file(f)
+#define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
 #endif
 
 
@@ -230,12 +229,10 @@ void bug_find() {
 	mute_dump = true;
 
 	rep(hoge, 100) {
-		int n = 100;
+		int n = rnd(mt) % 10 + 1;
 		vi a(n);
-		rep(i, n) {
-			a[i] = rnd(mt) % 100;
-		}
-
+		rep(i, n) a[i] = rnd(mt) % 100;
+		
 		auto res_naive = naive(n, a);
 		auto res_solve = solve(n, a);
 

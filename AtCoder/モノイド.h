@@ -155,7 +155,8 @@ S008 e008() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 * f op g : ‹tŒü‚«‚É‡¬‚µ‚½ˆêŸŠÖ” g o f ‚ğ•Ô‚·D
 */
 // verify : https://judge.yosupo.jp/problem/point_set_range_composite
-using S009 = pair<mint, mint>;
+using T009 = mint;
+using S009 = pair<T009, T009>;
 S009 op009(S009 f, S009 g) {
 	auto [a, b] = g; // g(x) = a x + b;
 	auto [c, d] = f; // f(x) = c x + d;

@@ -153,6 +153,16 @@ struct Mex {
 };
 
 
+//【ニム値の上界】
+/*
+* 局面間の遷移の総数を M とすると，局面のニム値は高々 O(√M) である．
+* 
+*（証明）ニム値 i の局面が現れるには，少なくとも i(i+1)/2 本の遷移が必要である．
+* 
+* verify : https://atcoder.jp/contests/agc043/tasks/agc043_c
+*/
+
+
 //【区間 mex】O(n log n)
 /*
 * 状態 i のニム値 nimber[i] が次式で与えられる場合のニム値を一括計算し nimber を返す．
@@ -225,7 +235,7 @@ vi selection_nim(const vi& c, int n) {
 */
 
 	
-//【DAG 上のコマ移動ゲーム】O((|V| + |E|) log|V|)　
+//【DAG 上のコマ移動ゲーム】O((n + m) log n)　
 /*
 * DAG g のある頂点 v にコマが置かれている．
 * 先手と後手は交互にコマを辺で繋がれた頂点へ動かし，先に移動不可能になった方が負けとする．
@@ -234,6 +244,8 @@ vi selection_nim(const vi& c, int n) {
 * 利用：【最小除外数】
 */
 vi DAG_game(const Graph& g) {
+	// verify : https://atcoder.jp/contests/agc043/tasks/agc043_c
+
 	int n = sz(g);
 		
 	vi nimber(n); vb seen(n);
@@ -258,7 +270,7 @@ vi DAG_game(const Graph& g) {
 }
 
 
-//【有向グラフ上のコマ移動ゲーム】O(|V| + |E|)
+//【有向グラフ上のコマ移動ゲーム】O(n + m)
 /*
 * 有向グラフ（閉路可）g のある頂点 v にコマが置かれている．
 * 先手と後手は交互にコマを辺で繋がれた頂点へ動かし，先に移動不可能になった方が負けとする．
@@ -327,6 +339,16 @@ vi directed_graph_game(const Graph& g) {
 	// 後退解析が終わっても勝敗が決定されていない局面は全て引き分け．
 	return res;
 }
+
+
+//【コマ移動ゲームの後手必勝局面 → 独立集合】
+/*
+* コマ移動ゲームにおいて，後手必勝局面の集合は独立集合を成す．
+* 
+*（証明）後手必勝局面に遷移できる局面は必ず先手必勝になる．
+* 
+* verify : https://atcoder.jp/contests/agc043/tasks/agc043_c
+*/
 
 
 //【木の辺の切断ゲーム】O(n)

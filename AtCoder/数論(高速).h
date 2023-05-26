@@ -21,15 +21,15 @@
 */
 bool miller_rabin(ll n) {
 	// 参考 : https://nyaannyaan.github.io/library/prime/fast-factorize.hpp.html
-	// verify : https://algo-method.com/tasks/513
+	// verify : https://judge.yosupo.jp/problem/primality_test
 
 	//【方法】
-	// p を奇素数とすると，任意の a=[1..p) についてフェルマーの小定理より
-	//		a^(p-1) = 1 (mod p)
+	// p を奇素数とすると，任意の a∈[1..p) についてフェルマーの小定理より
+	//		a^(p-1) ≡ 1 (mod p)
 	// となる．これの平方根を考えていくと，
 	//		p-1 = 2^s d　（d : 奇数）
 	// と表せば，
-	//		a^d = 1 (mod p) or ∃r=[0..s), a^(2^r d) = -1 (mod p)
+	//		a^d ≡ 1 (mod p) or ∃r=[0..s), a^(2^r d) ≡ -1 (mod p)
 	// と書き直せる．
 	// 
 	// この対偶を用いて判定することをランダムに選んだ a で繰り返す．

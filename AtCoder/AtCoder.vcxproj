@@ -44,6 +44,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -149,11 +150,14 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DP.h" />
     <ClInclude Include="GCD.h" />
+    <ClInclude Include="localACL.hpp" />
     <ClInclude Include="フーリエ変換.h" />
     <ClInclude Include="分割.h" />
     <ClInclude Include="包含.h" />
     <ClInclude Include="大小.h" />
+    <ClInclude Include="数え上げ%28格子%29.h" />
     <ClInclude Include="整除.h" />
     <ClInclude Include="最適化%28部分列%29.h" />
     <ClInclude Include="スコア和%28分割%29.h" />
@@ -174,7 +178,7 @@
     <ClInclude Include="マッチング(一般).h" />
     <ClInclude Include="ヤング図形.h" />
     <ClInclude Include="列挙(ビット列).h" />
-    <ClInclude Include="列挙(区間).h" />
+    <ClInclude Include="列挙%28区間分割%29.h" />
     <ClInclude Include="列挙(順列).h" />
     <ClInclude Include="数え上げ(ビット列).h" />
     <ClInclude Include="数え上げ(列).h" />
@@ -236,7 +240,6 @@
     <ClInclude Include="線形空間.h" />
     <ClInclude Include="辞書%28動的%29.h" />
     <ClInclude Include="整除算.h" />
-    <ClInclude Include="包除原理.h" />
     <ClInclude Include="区間DP.h" />
     <ClInclude Include="半環.h" />
     <ClInclude Include="環.h" />

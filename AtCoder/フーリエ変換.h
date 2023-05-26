@@ -335,7 +335,7 @@ public:
 *	a[0..n) と固定された b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
 *	制約 : D は double または long double（誤差には注意！）
 *
-* void set(D b) : ならし O((log n)^2)
+* void set(D a) : ならし O((log n)^2)
 *	t 回目に呼び出すときは，a=a[t] を与える．
 *
 * D [](int i) : O(1)

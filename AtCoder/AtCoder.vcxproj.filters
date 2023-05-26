@@ -470,9 +470,6 @@
     <ClInclude Include="最適化%28順列%29.h">
       <Filter>ヘッダー ファイル\列%28順列%29</Filter>
     </ClInclude>
-    <ClInclude Include="列挙(区間).h">
-      <Filter>ヘッダー ファイル\列%28区間%29</Filter>
-    </ClInclude>
     <ClInclude Include="数え上げ(ビット列).h">
       <Filter>ヘッダー ファイル\列%28ビット列%29</Filter>
     </ClInclude>
@@ -593,9 +590,6 @@
     <ClInclude Include="GCD.h">
       <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
-    <ClInclude Include="包除原理.h">
-      <Filter>ヘッダー ファイル\代数%28束%29</Filter>
-    </ClInclude>
     <ClInclude Include="包含.h">
       <Filter>ヘッダー ファイル\代数%28束%29</Filter>
     </ClInclude>
@@ -616,6 +610,18 @@
     </ClInclude>
     <ClInclude Include="線形空間.h">
       <Filter>ヘッダー ファイル\代数%28束%29</Filter>
+    </ClInclude>
+    <ClInclude Include="列挙%28区間分割%29.h">
+      <Filter>ヘッダー ファイル\列%28区間分割%29</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ%28格子%29.h">
+      <Filter>ヘッダー ファイル\格子</Filter>
+    </ClInclude>
+    <ClInclude Include="DP.h">
+      <Filter>ヘッダー ファイル\典型問題</Filter>
+    </ClInclude>
+    <ClInclude Include="localACL.hpp">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

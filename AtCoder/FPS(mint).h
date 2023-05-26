@@ -1111,21 +1111,28 @@ vm multipoint_evaluation(const MFPS& f, const vm& x) {
 
 //【多点評価（等比数列）】O((m + n) log(m + n))
 /*
-* n 次多項式 f について，f(r^[0..m)) の値を並べたリストを返す．
+* n 次多項式 f について，f(a r^[0..m)) の値を並べたリストを返す．
 */
-vm chirp_Z_transform(const MFPS& f, int m, mint r) {
+vm chirp_Z_transform(const MFPS& f, int m, mint a, mint r) {
 	// 参考 : https://37zigen.com/multipoint-evaluation/#Chirp_Z-transform
-	// verify : https://atcoder.jp/contests/abc278/tasks/abc278_h
+	// verify : https://judge.yosupo.jp/problem/multipoint_evaluation_on_geometric_sequence
 
 	//【方法】
-	// f(z) = Σi∈[0..n) a[i] z^i とおく．恒等式
+	// f(z) = Σi∈[0..n) f[i] z^i とおく．恒等式
 	//		2ij = (i+j)(i+j-1) - i(i-1) - j(j-1)
 	// を用いると，
 	//		f(r^j)
-	//		= Σi∈[0..n) a[i] (r^j)^i
-	//		= Σi∈[0..n) a[i] r^((i+j)(i+j-1)/2 - i(i-1)/2 - j(j-1)/2)
-	//		= r^(-j(j-1)/2) Σi∈[0..n) a[i] r^(-i(i-1)/2) r^((i+j)(i+j-1)/2)
+	//		= Σi∈[0..n) f[i] (a r^j)^i
+	//		= Σi∈[0..n) f[i] a^i r^((i+j)(i+j-1)/2 - i(i-1)/2 - j(j-1)/2)
+	//		= r^(-j(j-1)/2) Σi∈[0..n) f[i] a^i r^(-i(i-1)/2) r^((i+j)(i+j-1)/2)
 	// となる．これはほぼ畳込みの形なので高速に計算できる．
+
+	// 公比が 0 の場合の例外処理
+	if (r == 0) {
+		vm res(m, f[0]);
+		res[0] = f.assign(a);
+		return res;
+	}
 
 	int n = sz(f);
 
@@ -1143,14 +1150,17 @@ vm chirp_Z_transform(const MFPS& f, int m, mint r) {
 		r_pow *= r;
 	}
 
-	MFPS A(0, n);
-	rep(i, n) A[i] = f[i] * r_inv_ppow[i];
-	A = A.rev();
+	MFPS F(0, n); mint a_pow = 1;
+	rep(i, n) {
+		F[i] = f[i] * a_pow * r_inv_ppow[i];
+		a_pow *= a;
+	}
+	F = F.rev();
 
-	auto C = A * r_ppow;
+	auto G = F * r_ppow;
 
 	vm res(m);
-	rep(j, m) res[j] = C[n - 1 + j] * r_inv_ppow[j];
+	rep(j, m) res[j] = G[n - 1 + j] * r_inv_ppow[j];
 
 	return res;
 }

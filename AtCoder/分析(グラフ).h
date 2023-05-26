@@ -5,7 +5,7 @@
 // ■■■■■ グラフの性質の分析 ■■■■■
 
 
-//【連結成分分解】O(|V| + |E|)
+//【連結成分分解】O(n + m)
 /*
 * 無向グラフ g を連結成分分解し，連結成分のリストを返す．
 */
@@ -42,7 +42,7 @@ vvi connected_component(const Graph& g) {
 }
 
 
-//【トポロジカルソート】O(|V| + |E|)
+//【トポロジカルソート】O(n + m)
 /*
 * DAG g をトポロジカルソートした結果の i 番目の頂点を seq[i] に格納し seq を返す．
 * g が DAG でない場合は空リストを返す．
@@ -82,7 +82,7 @@ vi topological_sort(const Graph& g) {
 }
 
 
-//【強連結成分分解】O(|V| + |E|)
+//【強連結成分分解】O(n + m)
 /*
 * 有向グラフ g を強連結成分分解し，強連結成分をトポロジカルソート順に格納したリストを返す．
 */
@@ -157,7 +157,7 @@ vvi strongly_connected_component(const Graph& g) {
 }
 
 
-//【有向グラフの閉路分割】O(|V| + |E|) 
+//【有向グラフの閉路分割】O(n + m) 
 /*
 * 有向グラフ g をいくつかの単純閉路に分割する（失敗したら false を返す）
 *
@@ -236,7 +236,7 @@ bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
 }
 
 
-//【無向グラフの閉路抽出】O(|V| + |E|)
+//【無向グラフの閉路抽出】O(n + m)
 /*
 * 無向グラフ g に単純閉路があれば頂点を順に vs に，辺を順に es に格納し，その長さを返す（無ければ -1）
 * vs[0] から出て vs[1] に入る辺を es[0] とする．
@@ -315,7 +315,7 @@ int cycle_detection(const vector<vector<E>>& g, vi& vs, vector<E>* es = nullptr)
 }
 
 
-//【有向グラフの閉路抽出】O(|V| + |E|)
+//【有向グラフの閉路抽出】O(n + m)
 /*
 * 有向グラフ g の単純閉路を何か 1 つ見つける．
 *
@@ -407,7 +407,7 @@ void directed_cycle_detection(const G& g, vi& cycle) {
 }
 
 
-//【二部グラフ判定】O(|V| + |E|)
+//【二部グラフ判定（連結）】O(n + m)
 /*
 * 連結無向グラフが二部グラフかどうか判定する．
 * 二部グラフならその彩色例を col に格納する（色は 0, 1 で表す）
@@ -448,7 +448,7 @@ bool bipartite_graphQ(const Graph& g, vi& col) {
 }
 
 
-//【二部グラフ判定（非連結）】O(|V| + |E|)
+//【二部グラフ判定（非連結）】O(n + m)
 /*
 * 無向グラフを連結成分分解した結果を連結成分の頂点リストとして cc[i] に格納し，
 * i 番目の連結成分 cc[i] が二部グラフかどうかを b[i] に格納する．
@@ -498,165 +498,203 @@ void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 }
 
 
-//【グラフの関節点と橋】O(|V| + |E|)
+//【lowlink】
 /*
-* 無向グラフ g の関節点のリストを a に，橋のリストを b に格納する．
+* Lowlink(IGraph g) : O(n + m)
+*	参照付き無向グラフ g（多重辺可，自己ループ可）で初期化する．
+*
+* bool articulation_pointQ(int s) : O(1)
+*	頂点 s が関節点かを返す．
 *	関節点：その頂点を取り除くとグラフの連結成分が 1 つ増える頂点
+*
+* vi get_articulation_points() : O(n)
+*	g の関節点の昇順リストを返す．
+*
+* bool bridgeQ(int j) : O(1)
+*	辺 j が橋かを返す．
 *	橋：その辺を取り除くとグラフの連結成分が 1 つ増える辺
 *
-* a[i] : i 番目に見つけた関節点の頂点番号
-* b[i] = {s, e} : i 番目に見つけた橋の始点が s，終点への辺が e
-*/
-template <class E>
-void lowlink(const vector<vector<E>>& g, vi* a = nullptr, vector<pair<int, E>>* b = nullptr) {
-	// 参考 : https://algo-logic.info/articulation-points/
-	// verify(関節点) : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
-	// verify(橋) : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
-
-	int n = sz(g);
-	if (a != nullptr) a->clear();
-	if (b != nullptr) b->clear();
-
-	// e_cnt[s][t] : 頂点 s, t を結ぶ辺の本数
-	vector<unordered_map<int, int>> e_cnt(n);
-	rep(s, n) repe(t, g[s]) e_cnt[s][t]++;
-
-	// in[s] : DFS で頂点 s を何番目に探索したか
-	// low[s] : s から DFS 木を逆走せず後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
-	//			後退辺とは，DFS でなぞられなかった g の辺のことをいう．
-	vi in(n), low(n); vb seen(n);
-
-	int time = 0;
-	int r; // 暫定的な根
-
-	// in, low を定める再帰用の関数
-	function<void(int, int)> dfs = [&](int s, int p) {
-		// s を最初に訪れた
-		in[s] = time++;
-		low[s] = in[s];
-		seen[s] = true;
-
-		bool is_ap = false; // 関節点か
-		int ccnt = 0; // 子の個数
-
-		repe(t, g[s]) {
-			// 親に戻る辺と自己ループは通らない．
-			//	自己ループは連結性に影響を与えないので無視できる
-			if (t == p || t == s) continue;
-
-			// t を既に訪れていた場合
-			if (seen[t]) {
-				// s→t または t→s は後退辺なので in[t] で low[s] を更新する．
-				//	s→t が後退辺のとき：
-				//		t から DFS 木の辺を辿って他の頂点 v に行けたとしても，
-				//		必ず in[t] < in[v] となっているので無視できる．
-				//	t→s が後退辺のとき：
-				//		s→t は DFS 木に対するショートカットとなるので，
-				//		必ず in[s] < in[t] となり更新は起こらないので安心．
-				chmin(low[s], in[t]);
-			}
-			// t をまだ訪れていない場合
-			else {
-				// 再帰的になぞりにいく．
-				dfs(t, s);
-
-				// s→t は DFS 木の辺なので low[t] で low[s] を更新する．
-				chmin(low[s], low[t]);
-
-				// 橋であれば記録する（ただし多重辺は橋にはなりえない）
-				if (in[s] < low[t] && e_cnt[s][t] == 1) {
-					if (b != nullptr) b->push_back({ s, t });
-				}
-
-				// 関節点かどうかの判定用
-				is_ap |= (in[s] <= low[t]);
-				ccnt++;
-			}
-		}
-
-		// 根の場合の例外処理
-		if (s == r) is_ap = (ccnt >= 2);
-
-		// 関節点であれば記録する．
-		if (is_ap) if (a != nullptr) a->push_back(s);
-	};
-
-	// 適当な点を根（始点）として DFS を行う．
-	rep(s, n) {
-		if (seen[s]) continue;
-
-		r = s;
-		dfs(r, -1);
-	}
-}
-
-
-//【二重辺連結成分分解】O(|V| + |E|)
-/*
-* 無向グラフ g を二重辺連結成分分解し，二重辺連結成分の頂点集合のリストを返す．
-* 二重辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
+* vi get_bridges() : O(m)
+*	g の橋の番号の昇順リストを返す．
 *
-* 利用：【グラフの関節点と橋】
+* vvi get_two_edge_connected_components() : O(n + m)
+*	g を二重辺連結成分分解し，二重辺連結成分の頂点集合のリストを返す．
+*	二重辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
+*
+* bool connectedQ(int s, int t) : O(1)
+*	頂点 s, t が連結かを返す．
+*
+* bool separated_by_bridgeQ(int s, int j, int t) : O(1)
+*	頂点 s, t 間に橋 j が存在するかを返す．
 */
-template <class G>
-vvi two_edge_connected_component(const G& g) {
-	// verify : https://judge.yosupo.jp/problem/two_edge_connected_components
+class Lowlink {
+	// 参考 : https://algo-logic.info/articulation-points/
 
-	//【方法】
-	// 橋を全て除去してから連結成分分解すればよい．
+	int n, m;
+	IGraph g;
 
-	int n = sz(g);
+	// in[s] : DFS で頂点 s を初めて探索した時刻（連結成分間の移動には INF 時間かかる）
+	vl in;
 
-	// b : g の橋のリスト
-	vector<pii> b;
-	lowlink(g, nullptr, &b);
+	// low[s] : s から DFS 木を逆走せず後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
+	//	後退辺とは，DFS でなぞられなかった g の辺のことをいう．
+	vl low;
 
-	// 同じ (s, t) 間を結ぶ辺は複数あるかもしれないが，それらは橋になりえないので気にしない．
-	vector<set<int>> bridges(n);
-	repe(e, b) {
-		auto& [s, t] = e;
+	// in_e[j] : DFS で辺 j を行きがけに探索した時刻
+	// out_e[j] : DFS で辺 j を帰りがけに探索した時刻
+	vl in_e, out_e;
 
-		bridges[s].insert(t);
-		bridges[t].insert(s);
-	}
+	// is_ap[s] : 頂点 s が関節点か
+	vb is_ap;
 
-	// g2 : 橋を除去したグラフ
-	G g2(n);
-	rep(s, n) repe(t, g[s]) {
-		auto it = bridges[s].find(t);
-		if (it != bridges[s].end()) bridges[s].erase(it);
-		else g2[s].push_back(t);
-	}
+	// is_bg[j] : 辺 j が橋か
+	vb is_bg;
 
-	// ccs : g2 の連結成分のリスト
-	vvi ccs; vb seen(n);
+public:
+	Lowlink(const IGraph& g) : n(sz(g)), m(0), g(g), in(n, -1), low(n), is_ap(n) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
 
-	function<void(int, int)> dfs = [&](int s, int p) {
-		if (seen[s]) return;
-		seen[s] = true;
-
-		ccs.rbegin()->push_back(s);
-
-		repe(t, g2[s]) {
-			if (t == p) continue;
-
-			dfs(t, s);
+		// e_cnt[s][t] : 頂点 s, t を結ぶ辺の本数
+		vector<unordered_map<int, int>> e_cnt(n);
+		rep(s, n) repe(t, g[s]) {
+			e_cnt[s][t]++;
+			m++;
 		}
-	};
+		m /= 2;
+		in_e.resize(m), out_e.resize(m);
+		is_bg.assign(m, false);
 
-	// 適当な点を始点として DFS を行う．
-	rep(s, n) {
-		if (seen[s]) continue;
+		int rt; // 走査中の連結成分の根
+		ll time = 0; // 現在時刻
 
-		ccs.push_back(vi());
-		dfs(s, -1);
+		// DFS 木をなぞる．
+		function<void(int, int)> dfs = [&](int s, int p) {
+			// s を最初に訪れた
+			in[s] = low[s] = time++;
+
+			int child_cnt = 0; // DFS 木における子の個数
+
+			repe(t, g[s]) {
+				// 親に戻る辺と自己ループは通らない．
+				//	自己ループは連結性に影響を与えないので無視できる
+				if (t == p || t == s) continue;
+
+				// t を既に訪れていた場合
+				if (in[t] != -1) {
+					// s→t または t→s は後退辺なので in[t] で low[s] を更新する．
+					//	s→t が後退辺のとき：
+					//		t から DFS 木の辺を辿って他の頂点 v に行けたとしても，
+					//		必ず in[t] < in[v] となっているので無視できる．
+					//	t→s が後退辺のとき：
+					//		s→t は DFS 木に対するショートカットとなるので，
+					//		必ず in[s] < in[t] となり更新は起こらないので安心．
+					chmin(low[s], in[t]);
+				}
+				// t をまだ訪れていない場合
+				else {
+					// 再帰的になぞりにいく．
+					in_e[t.id] = time++;
+					dfs(t, s);
+					out_e[t.id] = time++;
+
+					// s→t は DFS 木の辺なので low[t] で low[s] を更新する．
+					chmin(low[s], low[t]);
+
+					// s→t を渡ってしまうと DFS 木の s の先祖に帰れないなら s-t は橋である．
+					//（ただし多重辺は橋にはなりえない．）
+					if (in[s] < low[t] && e_cnt[s][t] == 1) is_bg[t.id] = true;
+
+					// t から DFS 木の s の真の先祖に帰れないなら s は関節点である．
+					//（ただし s が根の場合は後で例外処理する．）
+					is_ap[s] = is_ap[s] || (in[s] <= low[t]);
+					child_cnt++;
+				}
+			}
+
+			// s が根の場合，子が 2 つ以上ないと関節点にはなり得ない．
+			if (s == rt) is_ap[s] = (child_cnt >= 2);
+		};
+
+		// 適当な点を始点（根）として DFS を行う．
+		rep(s, n) {
+			if (in[s] != -1) continue;
+
+			time = (time / INF + 1) * INF;
+			rt = s;
+			dfs(s, -1);
+		}
 	}
 
-	return ccs;
-}
+	bool articulation_pointQ(int s) {
+		return is_ap[s];
+	}
+
+	vi get_articulation_points() {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
+
+		vi aps;
+		rep(s, n) if (is_ap[s]) aps.push_back(s);
+		return aps;
+	}
+
+	bool bridgeQ(int j) {
+		return is_bg[j];
+	}
+
+	vi get_bridges() {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
+
+		vi bgs;
+		rep(j, m) if (is_bg[j]) bgs.push_back(j);
+		return bgs;
+	}
+
+	vvi get_two_edge_connected_components() {
+		// verify : https://judge.yosupo.jp/problem/two_edge_connected_components
+
+		// ccs : 連結成分のリスト
+		vvi ccs; vb seen(n);
+
+		function<void(int, int)> dfs = [&](int s, int p) {
+			ccs.back().push_back(s);
+			seen[s] = true;
+
+			repe(t, g[s]) {
+				// 親には戻らない．探索済の頂点には進まない．橋は渡らない．
+				if (t == p || seen[t] || is_bg[t.id]) continue;
+
+				dfs(t, s);
+			}
+		};
+
+		rep(s, n) {
+			if (seen[s]) continue;
+
+			ccs.push_back(vi());
+			dfs(s, -1);
+		}
+
+		return ccs;
+	}
+
+	bool connectedQ(int s, int t) {
+		return in[s] / INF == in[t] / INF;
+	}
+
+	bool separated_by_bridgeQ(int s, int j, int t) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
+
+		if (!connectedQ(s, t)) return false;
+		if (!is_bg[j]) return false;
+
+		bool bs = in_e[j] < in[s] && in[s] < out_e[j];
+		bool bt = in_e[j] < in[t] && in[t] < out_e[j];
+		return bs != bt;
+	}
+};
 
 
-//【二重頂点連結成分分解】O(|V| + |E|)
+//【二重頂点連結成分分解】O(n + m)
 /*
 * 無向グラフ g を二重頂点連結成分分解し，二重頂点連結成分の {始点, 辺} の組の集合のリストを返す．
 * 二重頂点連結成分：任意の 1 頂点を取り除いても連結な部分グラフ

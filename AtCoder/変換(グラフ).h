@@ -62,7 +62,7 @@ Graph wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, T 
 }
 
 
-//【隣接行列 → グラフ】O(|V|^2)
+//【隣接行列 → グラフ】O(n^2)
 /*
 * 隣接行列 e[0..n)[0..n) で辺の有無が表される有向グラフ g を返す．
 */
@@ -85,7 +85,7 @@ Graph construct_graph(const vector<vector<T>>& e, T exist = 1) {
 */
 
 
-//【逆グラフ】O(|V| + |E|)
+//【逆グラフ】O(n + m)
 /*
 * 有向グラフ g の辺の向きを逆にしたグラフを返す．
 */
@@ -101,7 +101,7 @@ Graph reverse_graph(const Graph& g) {
 }
 
 
-//【逆グラフ（重み付き）】O(|V| + |E|)
+//【逆グラフ（重み付き）】O(n + m)
 /*
 * 重み付き有向グラフ g の辺の向きを逆にしたグラフを返す．
 */
@@ -115,7 +115,7 @@ WGraph reverse_graph(const WGraph& g) {
 }
 
 
-//【補グラフ】O(|V|^2)
+//【補グラフ】O(n^2)
 /*
 * 無向グラフ g の補グラフ（単純，自己ループなし）を返す．
 */
@@ -138,7 +138,7 @@ Graph complement_graph(const Graph& g) {
 }
 
 
-//【誘導部分グラフ】O(|V| + |E|)
+//【誘導部分グラフ】O(n + m)
 /*
 * グラフ g について，頂点集合を vs とする誘導部分グラフを返す．
 */
@@ -178,7 +178,7 @@ G induced_subgraph(const G& g, const vi& vs) {
 */
 
 
-//【辺の除去】O(|V| + |E|)
+//【辺の除去】O(n + m)
 /*
 * 有向グラフ g から辺の集合 e_el を除去した有向グラフを返す．
 * 辺 e∈e_el は始点 s と終点 t の順序対 (s, t) で表す．
@@ -208,7 +208,7 @@ G eliminate_edge(const G& g, const vector<pii>& e_el) {
 }
 
 
-//【頂点の縮約】O(|V| + |E|)
+//【頂点の縮約】O(n + m)
 /*
 * グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
 * 自己ループや多重辺が生じた場合は除去され，結果は単純グラフとなる．
@@ -237,7 +237,7 @@ Graph vertex_contraction(const Graph& g, const vvi& p) {
 }
 
 
-//【頂点の縮約と強連結成分】
+//【強連結成分の縮約 → DAG】
 /*
 * 有向グラフ g の強連結成分を成す頂点集合を縮約すると DAG が得られる．
 * 
@@ -245,7 +245,7 @@ Graph vertex_contraction(const Graph& g, const vvi& p) {
 */
 
 
-//【頂点の縮約と二重辺連結成分】
+//【二重辺連結成分の縮約 → 森】
 /*
 * 無向グラフ g の二重辺連結成分を成す頂点集合を縮約すると森が得られる．
 * 
@@ -253,7 +253,7 @@ Graph vertex_contraction(const Graph& g, const vvi& p) {
 */
 
 
-//【辺の縮約】O(|V| + |E|)
+//【辺の縮約】O(n + m)
 /*
 * グラフ g とその辺の集合 es について，es に含まれる辺を全て縮約したグラフ gc を返す．
 * また gc の頂点 i に対応する g の頂点の集合を vs[i] に格納する．
@@ -290,7 +290,7 @@ Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr)
 }
 
 
-//【辺の縮約と橋】
+//【橋以外の縮約 → 森】
 /*
 * 無向グラフ g の橋以外の辺全てを縮約すると森が得られる．
 * 

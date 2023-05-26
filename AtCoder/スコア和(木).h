@@ -78,7 +78,7 @@ vl distance_sum_subtree(const Graph& g, int r) {
 */
 using T_ds = pll; // (ª‚©‚ç‚Ì‹——£‚Ì˜a, ’¸“_‚Ì”)
 T_ds merge_ds(T_ds x, T_ds y, int s) { return { x.first + y.first, x.second + y.second - 1 }; }
-T_ds e_ds() { return { 0, 1 }; }
+T_ds e_ds(int s) { return { 0, 1 }; }
 T_ds leaf_ds(int s) { return { 0, 1 }; }
 T_ds apply_ds(T_ds x, int s, int t) { return { x.first + x.second, x.second + 1 }; }
 vl distance_sum(Graph& g) {
