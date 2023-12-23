@@ -24,3 +24,13 @@ inline ostream& operator<< (ostream& os, lazy_segtree<S, op, e, F, act, comp, id
 	}
 	return os;
 }
+
+inline ostream& operator<< (ostream& os, dsu d) {
+	for (const auto& g : d.groups()) {
+		for (const auto& v : g) {
+			os << v << " ";
+		}
+		os << "/ ";
+	}
+	return os;
+}

@@ -341,8 +341,6 @@ mint dummy_path_lemma(int h, int w, const vi& x, const vi& y) {
 * (0, 0) から (h, w) までの最短格子路のうち，常に -l < y-x < r を満たすものの個数を返す．
 *
 * 制約：fm は (h + w)! まで計算可能であること
-*
-* 利用：【階乗など（法が大きな素数）】
 */
 mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/agc013/tasks/agc013_d
@@ -375,16 +373,14 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 * (0, 0) から (x, y) まで n 回の移動で到達する格子路の数を返す．
 *
 * 制約：fm は n! まで計算可能
-*
-* 利用：【階乗など（法が大きな素数）】
 */
 mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
 
 	//【方法】
-	// x, y >= 0 とする．ローラン多項式の言葉に直すと，求める場合の数は
+	// x, y ≧ 0 とする．ローラン多項式の言葉に直すと，求める場合の数は
 	//		[s^x t^y] (s + 1/s + t + 1/t)^n
-	// である．以下明らかに 0 と分かる場合は無視する．
+	// である．以下明らかに 0 とわかる場合は無視する．
 	//
 	// 指数の底は因数分解できて，以下のように書き直せる：
 	//		[s^x t^y] ( (s + t)^n (1 + 1/st)^n )
@@ -411,12 +407,12 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 
 	//【別の方法】
 	// 45°回転すれば，移動可能な箇所が x, y について独立（長方形状）になり，
-	// 座標ごとに独立に問題をといて積をとるだけでよくなる．
+	// 座標ごとに独立に問題を解いて積をとるだけでよくなる．
 
 	x = abs(x); y = abs(y);
 
 	// 明らかに 0 通りの場合
-	if (x + y > n || (n - x - y) % 2 == 1) return 0;
+	if (x + y > n || (n - x - y) % 2) return 0;
 
 	return fm.bin(n, (n - x - y) / 2) * fm.bin(n, (n - x + y) / 2);
 }
@@ -424,26 +420,26 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 
 //【迷路】O(h w)
 /*
-* 壁が wall で表された h * w の迷路 c について，スタート s = (sx, sy) から
-* 各マス c[i][j] への最短経路長を dist[i][j] に格納する．（到達不能なら -1）
+* 壁が wall で表された h×w の迷路 c について，スタート (sx, sy) から
+* 各マス c[i][j] への最短経路長（到達不能なら INF）を返す．
 *
 *（格子上の幅優先探索）
 */
-void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
-	// verify : https://algo-method.com/tasks/424
+template <class T>
+vvi solve_maze(const vector<vector<T>>& c, int sx, int sy, const T wall = '#') {
+	// verify : https://atcoder.jp/contests/abc317/tasks/abc317_e
 
 	int h = sz(c), w = sz(c[0]);
 
-	dist = vvi(h, vi(w, -1));
-	dist[s.first][s.second] = 0;
+	vvi dist(h, vi(w, INF));
+	dist[sx][sy] = 0;
 
 	// q : 未探索のマスを記録しておくキュー
 	queue<pii> q;
-	q.push(s);
+	q.push({ sx, sy });
 
 	while (!q.empty()) {
-		int x, y;
-		tie(x, y) = q.front(); q.pop();
+		auto [x, y] = q.front(); q.pop();
 
 		// マス (x, y) の 4 近傍を調べる．
 		rep(k, 4) {
@@ -452,10 +448,10 @@ void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
 			int ny = y + DY[k];
 
 			// 範囲外または壁マスなら何もしない．
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) continue;
+			if (!inQ(nx, ny, 0, 0, h, w) || c[nx][ny] == wall) continue;
 
 			// 既に最短経路長が確定済みなら何もしない．
-			if (dist[nx][ny] != -1) continue;
+			if (dist[nx][ny] != INF) continue;
 
 			// 最短経路長の確定
 			dist[nx][ny] = dist[x][y] + 1;
@@ -463,12 +459,14 @@ void solve_maze(const vvc& c, const pii& s, vvi& dist, const char wall = '#') {
 			q.push({ nx, ny });
 		}
 	}
+
+	return dist;
 }
 
 
 //【迷路（複数始点）】O(h w)
 /*
-* 壁が wall で表された h * w の迷路 c について，スタートの集合 s[i] = (sx, sy) から
+* 壁が wall で表された h×w の迷路 c について，スタートの集合 s[i] = (sx, sy) から
 * 各マス c[i][j] への最短経路長の最小値を dist[i][j] に格納する．（到達不能なら -1）
 *
 *（格子上の幅優先探索）
@@ -511,6 +509,43 @@ void solve_maze(const vvc& c, const vector<pii>& s, vvi& dist, const char wall =
 			q.push({ nx, ny });
 		}
 	}
+}
+
+
+//【格子上ハミルトンサイクルの構築】
+/*
+* h×w 格子上の 4 近傍ハミルトンサイクルをなす点列を構築し返す（なければ空リスト）
+*/
+vector<pii> create_grid_hamilton_cycle(int h, int w) {
+	// verify : https://atcoder.jp/contests/arc118/tasks/arc118_d
+
+	// 幅が 1 の場合は蛇腹が構築できない．
+	if (h == 1 || w == 1) return vector<pii>();;
+
+	// h, w ともに奇数だと頂点数が奇数個になるが，
+	// グリッドグラフは二部グラフなのでハミルトンサイクルは存在し得ない．
+	if (h % 2 == 1 && w % 2 == 1) return vector<pii>();
+
+	vector<pii> res{ {0, 0} };
+
+	// h が偶数のときは，横方向に往復する蛇腹状に構築できる．
+	if (h % 2 == 0) {
+		rep(i, h) {
+			if (i % 2 == 0)	repi(j, 1, w - 1) res.emplace_back(i, j);
+			else repir(j, w - 1, 1) res.emplace_back(i, j);
+		}
+		repir(i, h - 1, 1) res.emplace_back(i, 0);
+	}
+	// w が偶数のときは，縦方向に往復する蛇腹状に構築できる．
+	else {
+		rep(j, w) {
+			if (j % 2 == 0)	repi(i, 1, h - 1) res.emplace_back(i, j);
+			else repir(i, h - 1, 1) res.emplace_back(i, j);
+		}
+		repir(j, w - 1, 1) res.emplace_back(0, j);
+	}
+
+	return res;
 }
 
 

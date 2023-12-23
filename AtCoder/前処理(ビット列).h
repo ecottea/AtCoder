@@ -33,6 +33,22 @@
 */
 
 
+//【1 の位置】O(n)
+/*
+* ビット列 s[0..n) について，'1' の位置のリストを返す．
+*/
+vi position1(const string& s, char one = '1') {
+	// verify : https://atcoder.jp/contests/arc166/tasks/arc166_a
+
+	vi pos;
+
+	int n = sz(s);
+	rep(i, n) if (s[i] == one) pos.push_back(i);
+
+	return pos;
+}
+
+
 //【1 の連の長さ】O(n)
 /*
 * ビット列 s[0..n) について，'0' で区切られた '1' の連の長さを順に並べた列を返す．
@@ -58,7 +74,7 @@ vi length1(const string& s, char one = '1') {
 }
 
 
-//【2 連の変換の swap への帰着】
+//【2 連の反転の swap への帰着】
 /*
 * ビット列 a に対する
 *		[00] → [11], [11] → [00]

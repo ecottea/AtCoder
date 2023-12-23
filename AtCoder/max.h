@@ -31,15 +31,43 @@
 */
 
 
+//【min-max 包除】
+/*
+* a[0..n) の max[min] は，その部分集合の min[max] を用いて次のように表される：
+* 	max a[0..n) = Σ_set⊂[0..n),set≠φ (-1)^(|set|-1) min a[set]
+* 	min a[0..n) = Σ_set⊂[0..n),set≠φ (-1)^(|set|-1) max a[set]
+*
+* 2 数の場合：
+*	max(a,b) = min(a) + min(b) - min(a,b)
+*	min(a,b) = max(a) + max(b) - max(a,b)
+*
+* 3 数の場合：
+*	max(a,b,c) = min(a) + min(b) + min(c) - min(a,b) - min(a,c) - min(b,c) + min(a,b,c)
+*	min(a,b,c) = max(a) + max(b) + max(c) - max(a,b) - max(a,c) - max(b,c) + max(a,b,c)
+* 
+*（証明）第一式の成立を示す．
+* max a[0..n) = a[i] とすると，任意の set⊂[0..n), set≠φ, i!∈set について，
+*	min a[set] = min a[set∪{i}]
+* である．両辺の集合の要素数の偶奇は異なるので，これらからの寄与は全て打ち消される．
+* 
+* 参考：https://rogi52.hatenablog.jp/entry/2023/12/03/183717
+*/
+
+
 //【和 → max, min】
 /*
-* 2 数の和について以下の等式が成り立つ：
-*	x + y = max(x, y) + min(x, y)
+* a[0..n) の和は，その部分集合の min や max を用いて次のように表される：
+*	Σa[0..n) = max a[0..n) + Σ_set⊂[0..n),|set|≧2 (-1)^|set| min a[set]
+*	Σa[0..n) = min a[0..n) + Σ_set⊂[0..n),|set|≧2 (-1)^|set| max a[set]
+*
+* 2 数の場合：
+*	a+b = max(a,b) + min(a,b)
 * 
-* 3 数の和について以下の等式が成り立つ：
-*	x + y + z
-*	= max(x, y, z) - min(x, y, z) + min(x, y) + min(y, z) + min(z, x)
-*	= min(x, y, z) - max(x, y, z) + max(x, y) + max(y, z) + max(z, x)
+* 3 数の場合：
+*	a+b+c = max(a,b,c) + min(a,b) + min(a,c) + min(b,c) - min(a,b,c)
+*	a+b+c = min(a,b,c) + max(a,b) + max(a,c) + max(b,c) - max(a,b,c)
+* 
+*（証明）【min-max 包除】で Σ_|set|=1 の部分のみを左辺に移項すればよい．
 */
 
 

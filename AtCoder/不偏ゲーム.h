@@ -12,7 +12,7 @@
 */
 template <class T>
 map<T, int> calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt) {
-	map<T, int> nim;
+	map<T, int> nim; // これをグローバル変数にすれば再利用可能
 
 	function<int(const T&)> calc_nimber = [&](const T& p) {
 		if (nim.count(p)) return nim[p];
@@ -45,119 +45,112 @@ map<T, int> calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt) {
 }
 
 
-//【最小除外数】
+//【ニム値の多重集合】
 /*
-* Mex() : O(1)
-*	空で初期化する．
+* Mex_multiset(int n) : O(n)
+*	ニム値 [0..n) を記録可能な多重集合を空で初期化する．
 *
-* insert(int v) : O(log n)
-*	ニム値 v をもつ局面を 1 つ追加する．
+* Mex_multiset(int n, vi a) : O(n + |a|)
+*	ニム値 [0..n) を記録可能な多重集合を a で初期化する（a[i] ≧ n な要素は無視する）
 *
-* erase(int v) : O(log n)
-*	ニム値 v をもつ局面を 1 つ削除する．
+* ll count(int v) : O(1)
+*	ニム値 v の局面数を返す．
 *
-* int get() : O(log n)
-*	現在記録されている局面のニム値の mex を返す．
+* insert(int v, ll k = 1) : O(log n)
+*	ニム値 v の局面を k 個追加する（v ≧ n なら無視する）
+*
+* erase(int v, ll k = 1) : O(log n)
+*	ニム値 v の局面を k 個まで削除する（v ≧ n なら無視する）
+*
+* int mex() : O(log n)
+*	記録されている局面の mex を返す．
+*	制約 : 結果は n 以下
 */
-struct Mex {
-	// lrs : 連続したニム値をもつ閉区間 [l, r] の集合
-	set<pii> lrs;
+ll opms(ll x, ll y) { return min(x, y); }
+ll ems() { return INFL; }
+struct Mex_multiset {
+	int n;
 
-	// cnt[v] : ニム値 v をもつ局面の数
-	unordered_map<int, int> cnt;
+	// cnt[v] : ニム値 v の局面数
+	using SEG = segtree<ll, opms, ems>;
+	SEG cnt;
 
-	// コンストラクタ（空で初期化）
-	Mex() {}
+	// ニム値 [0..n) を記録可能な多重集合を空で初期化する．
+	Mex_multiset(int n) : n(n), cnt(n) {}
 
-	// ニム値 v をもつ局面を 1 つ追加する．
-	void insert(int v) {
-		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+	// ニム値 [0..n) を記録可能な多重集合を a で初期化する．
+	Mex_multiset(int n, const vi& a) : n(n) {
+		// verify : https://atcoder.jp/contests/abc330/tasks/abc330_e
 
-		// ニム値 v の局面数を 1 増やす．
-		cnt[v]++;
+		vl ini(n);
+		repe(x, a) if (x < n) ini[x]++;
 
-		// 既にニム値 v の局面があったならば区間に変更はない．
-		if (cnt[v] > 1) return;
+		cnt = SEG(ini);
+	}
+	Mex_multiset() : n(0) {}
 
-		// v がその左右の区間と結合するかを調べる．
-		bool ljoin = false, rjoin = false;
-		auto it = lrs.upper_bound({ v, v });
-		if (it != lrs.begin() && prev(it)->second == v - 1) ljoin = true;
-		if (it != lrs.end() && it->first == v + 1) rjoin = true;
-
-		// 区間の結合の仕方に応じて区間を削除，追加する．
-		if (ljoin) {
-			if (rjoin) {
-				pii lr = { prev(it)->first, it->second };
-				it = lrs.erase(it);
-				lrs.erase(prev(it));
-				lrs.insert(lr);
-			}
-			else {
-				pii lr = { prev(it)->first, v };
-				lrs.erase(prev(it));
-				lrs.insert(lr);
-			}
-		}
-		else {
-			if (rjoin) {
-				pii lr = { v, it->second };
-				lrs.erase(it);
-				lrs.insert(lr);
-			}
-			else {
-				lrs.insert({ v, v });
-			}
-		}
+	// ニム値 v の局面数を返す．
+	ll count(int v) {
+		Assert(v >= 0);
+		if (v >= n) return 0;
+		return cnt.get(v);
 	}
 
-	// ニム値 v をもつ局面を 1 つ削除する．
-	void erase(int v) {
-		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+	// ニム値 v の局面を k 個追加する（v ≧ n なら無視する）
+	void insert(int v, ll k = 1) {
+		// verify : https://atcoder.jp/contests/abc330/tasks/abc330_e
 
-		// ニム値 v をもつ局面がなければ何もしない．
-		if (cnt[v] == 0) return;
-
-		// ニム値 v の局面数を 1 減らす．
-		cnt[v]--;
-
-		// まだニム値 v の局面があるならば区間に変更はない．
-		if (cnt[v] >= 1) return;
-
-		// v でその左右の区間が分断されるかに応じて区間を削除，追加する．
-		auto it = prev(lrs.upper_bound({ v, INF }));
-		int l, r;
-		tie(l, r) = *it;
-		lrs.erase(it);
-		if (l < v) lrs.insert({ l, v - 1 });
-		if (r > v) lrs.insert({ v + 1, r });
+		Assert(v >= 0);
+		if (v >= n) return;
+		cnt.set(v, cnt.get(v) + k);
 	}
 
-	// 現在記録されている局面のニム値の最小除外数を返す．
-	int get() {
-		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+	// ニム値 v の局面を k 個まで削除する（v ≧ n なら無視する）
+	void erase(int v, ll k = 1) {
+		// verify : https://atcoder.jp/contests/abc330/tasks/abc330_e
 
-		if (lrs.empty() || lrs.begin()->first > 0) return 0;
-		return lrs.begin()->second + 1;
+		Assert(v >= 0);
+		if (v >= n) return;
+		cnt.set(v, max(cnt.get(v) - k, 0LL));
+	}
+
+	// 記録されている局面の mex を返す．
+	int mex() {
+		// verify : https://atcoder.jp/contests/abc330/tasks/abc330_e
+
+		auto f = [&](ll x) { return x > 0; };
+		return cnt.max_right(0, f);
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Mex nm) {
-		vi res;
-		repe(p, nm.cnt) rep(hoge, p.second) res.push_back(p.first);
-		sort(all(res));
-		repe(v, res) os << v << " ";
+	friend ostream& operator<<(ostream& os, const Mex_multiset& MS) {
+		rep(v, MS.n) rep(hoge, MS.cnt.get(v)) os << v << " ";
 		return os;
 	}
 #endif
 };
 
 
+//【最小除外数】O(n log n)
+/*
+* mex a[0..n) を返す．
+*/
+int mex(vi a) {
+	uniq(a);
+	a.push_back(INF);
+
+	rep(i, sz(a)) if (i != a[i]) return i;
+
+	return -1;
+}
+
+
 //【ニム値の上界】
 /*
 * 局面間の遷移の総数を M とすると，局面のニム値は高々 O(√M) である．
 * 
-*（証明）ニム値 i の局面が現れるには，少なくとも i(i+1)/2 本の遷移が必要である．
+*（証明）ニム値 i の局面が現れるには，ニム値 [0..i) の局面が必要である．
+* 帰納的に考えて，少なくとも i(i+1)/2 本の局面間の遷移が必要である．
 * 
 * verify : https://atcoder.jp/contests/agc043/tasks/agc043_c
 */
@@ -194,12 +187,12 @@ vi range_mex(const vi& c) {
 }
 
 
-//【個数制限付きニム】O(n m)
+//【減算ニム】O(n m)
 /*
 * 山から取り除ける石の個数が c[0..m) に限られるルールのニムについて，
 * 各 i∈[0..n] 個の石からなる山のニム値を格納したリストを返す．
 */
-vi selection_nim(const vi& c, int n) {
+vi subtraction_nim(const vi& c, int n) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_k
 
 	int m = sz(c);
@@ -220,6 +213,36 @@ vi selection_nim(const vi& c, int n) {
 
 	return nimber;
 }
+
+
+//【k 以下減算ニム】
+/*
+* 山から取り除ける石の個数が k 以下に限られるルールのニムについて，
+* i 個の石からなる山のニム値は i mod (k+1) である．
+* 
+* verify : https://atcoder.jp/contests/arc168/tasks/arc168_b
+*/
+
+
+//【約数減算ニム】
+/*
+* 山から取り除ける石の個数が n の約数に限られるルールのニムについて，
+* n の約数でない最小の正整数を k とすると，i 個の石からなる山のニム値は i mod k である．
+* 
+* verify : https://codeforces.com/contest/1844/problem/D
+*/
+
+
+//【累乗減算ニム】
+/*
+* 山から取り除ける石の個数が k の累乗に限られるルールのニムについて，
+* i 個の石からなる山のニム値は，k が奇数のときは明らかに i % 2 で，k が偶数のときは
+*	i % 2  (i mod (k+1) < k)
+*	2      (i mod (k+1) = k)
+* である．
+* 
+* verify : https://atcoder.jp/contests/nikkei2019-ex/tasks/nikkei2019ex_h
+*/
 
 
 //【Octal game】
@@ -360,85 +383,106 @@ vi directed_graph_game(const Graph& g) {
 */
 // verify : https://atcoder.jp/contests/agc017/tasks/agc017_d
 void merge_gct(int& x, const int& y, int s) { x ^= y; }
-int e_gct() { return 0; }
 int leaf_gct(int s) { return 0; }
 int apply_gct(const int& x, int s, int t) { return x + 1; }
 vi tree_cut_game(const Graph& g, int r) {
-	return tree_getDP_vmerge<int, merge_gct, e_gct, leaf_gct, apply_gct>(g, r);
+	return tree_getDP_vmerge<int, merge_gct, leaf_gct, apply_gct>(g, r);
 }
 
 
 //【ニム積】
 /*
-* Nim_product() : O(64^2 * log(64)^2)
+* Nim_product() : O(65536)
 *	初期化を行う．
 *
-* ull prod(ull x, ull y) : O(64^2)
+* ull prod(ull x, ull y) : O(216)
 *	x と y のニム積を返す．
 *
-* ull pow(ull x, ull n) : O(64^2 log n)
+* ull pow(ull x, ull n) : O(216 log n)
 *	n 個の x のニム積を返す．
 *
-* ull inv(ull x) : O(64^3)
+* ull inv(ull x) : O(216 * 64)
 *	x のニム積逆元を返す．
 */
 class Nim_product {
+	// 参考 : https://kyopro-friends.hatenablog.com/entry/2020/04/07/195850
 	// 参考 :『ON NUMBERS AND GAMES』(John H. Conway)  (pp.52-53)
 
-	using ull = unsigned long long;
-
-	// p[i][j] : 2^i と 2^j のニム積
+	// p[i][j] : i と j のニム積
 	vector<vector<ull>> p;
 
+	// a と　b のニム積を返す（ただし a, b < 2^16）
+	ull prod16(ull a, ull b) {
+		constexpr ull mask = (1ULL << 8) - 1;
+		ull ah = a >> 8, al = a & mask;
+		ull bh = b >> 8, bl = b & mask;
+
+		ull val = (p[ah][bh] ^ p[al][bh] ^ p[ah][bl]) << 8;
+		val ^= p[p[ah][bh]][1LL << 7];
+		val ^= p[al][bl];
+		return val;
+	}
+
+	// a と　b のニム積を返す（ただし a, b < 2^32）
+	ull prod32(ull a, ull b) {
+		constexpr ull mask = (1ULL << 16) - 1;
+		ull ah = a >> 16, al = a & mask;
+		ull bh = b >> 16, bl = b & mask;
+
+		ull val = (prod16(ah, bh) ^ prod16(al, bh) ^ prod16(ah, bl)) << 16;
+		val ^= prod16(prod16(ah, bh), 1ULL << 15);
+		val ^= prod16(al, bl);
+		return val;
+	}
+
+	// a と　b のニム積を返す（ただし a, b < 2^64）
+	ull prod64(ull a, ull b) {
+		constexpr ull mask = (1ULL << 32) - 1;
+		ull ah = a >> 32, al = a & mask;
+		ull bh = b >> 32, bl = b & mask;
+
+		ull val = (prod32(ah, bh) ^ prod32(al, bh) ^ prod32(ah, bl)) << 32;
+		val ^= prod32(prod32(ah, bh), 1ULL << 31);
+		val ^= prod32(al, bl);
+		return val;
+	}
+
 public:
-	Nim_product() : p(64, vector<ull>(64)) {
+	Nim_product() : p(256, vector<ull>(256)) {
 		// verify : https://judge.yosupo.jp/problem/nim_product_64
 
-		rep(i, 64) p[0][i] = p[i][0] = 1ULL << i;
+		p[1][1] = 1;
 
-		repi(i, 1, 63) repi(j, 1, 63) {
-			repir(b, 5, 0) {
-				if ((i & (1 << b)) && (j & (1 << b))) {
-					int i2 = i - (1 << b);
-					int j2 = j - (1 << b);
-					ull p2 = p[i2][j2];
+		// [0..256) と [0..256) とのニム積を前計算する．
+		int pow2 = 2;
+		rep(k, 3) {
+			int K = 1 << k;
+			repi(a, pow2, pow2 * pow2 - 1) rep(b, pow2 * pow2) {
+				int ah = a >> K, al = a & (pow2 - 1);
+				int bh = b >> K, bl = b & (pow2 - 1);
 
-					p[i][j] = p2 << (1LL << b);
-					rep(k, 1LL << b) if (p2 & (1ULL << k)) p[i][j] ^= p[(1LL << b) - 1][k];
-					break;
-				}
-				else if (i & (1 << b)) {
-					int i2 = i - (1 << b);
-					ull p2 = p[i2][j];
-
-					p[i][j] = p2 << (1LL << b);
-					break;
-				}
-				else if (j & (1 << b)) {
-					int j2 = j - (1 << b);
-					ull p2 = p[i][j2];
-
-					p[i][j] = p2 << (1LL << b);
-					break;
-				}
+				ull val = (p[ah][bh] ^ p[al][bh] ^ p[ah][bl]) << K;
+				val ^= p[p[ah][bh]][1LL << (K - 1)];
+				val ^= p[al][bl];
+				p[a][b] = val;
 			}
+			rep(a, pow2) repi(b, pow2, pow2 * pow2 - 1) p[a][b] = p[b][a];
+
+			pow2 *= pow2;
 		}
 	}
 
+	// x と　y のニム積を返す．
 	ull prod(ull x, ull y) {
 		// verify : https://judge.yosupo.jp/problem/nim_product_64
 
-		ull res = 0;
-		rep(i, 64) {
-			if (!(x & (1ULL << i))) continue;
-			rep(j, 64) {
-				if (!(y & (1ULL << j))) continue;
-				res ^= p[i][j];
-			}
-		}
-		return res;
+		if (x < (1ULL << 8) && y < (1ULL << 8)) return p[x][y];
+		else if (x < (1ULL << 16) && y < (1ULL << 16)) return prod16(x, y);
+		else if (x < (1ULL << 32) && y < (1ULL << 32)) return prod32(x, y);
+		else return prod64(x, y);
 	}
 
+	// n 個の x のニム積を返す．
 	ull pow(ull x, ull n) {
 		ull res = 1, pow2 = x;
 		while (n > 0) {
@@ -449,6 +493,7 @@ public:
 		return res;
 	}
 
+	// x のニム積逆元を返す．
 	ull inv(ull x) {
 		Assert(x > 0);
 
@@ -460,6 +505,114 @@ public:
 		if (x < (1ULL << 32)) return pow(x, (1ULL << 32) - 2);
 		return pow(x, ~0ULL - 1);
 	}
+};
+
+
+//【最小除外数（旧）】
+/*
+* Mex() : O(1)
+*	空で初期化する．
+*
+* insert(int v) : O(log n)
+*	ニム値 v をもつ局面を 1 つ追加する．
+*
+* erase(int v) : O(log n)
+*	ニム値 v をもつ局面を 1 つ削除する．
+*
+* int get() : O(log n)
+*	現在記録されている局面のニム値の mex を返す．
+*/
+struct Mex {
+	// lrs : 連続したニム値をもつ閉区間 [l, r] の集合
+	set<pii> lrs;
+
+	// cnt[v] : ニム値 v をもつ局面の数
+	unordered_map<int, int> cnt;
+
+	// コンストラクタ（空で初期化）
+	Mex() {}
+
+	// ニム値 v をもつ局面を 1 つ追加する．
+	void insert(int v) {
+		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+
+		// ニム値 v の局面数を 1 増やす．
+		cnt[v]++;
+
+		// 既にニム値 v の局面があったならば区間に変更はない．
+		if (cnt[v] > 1) return;
+
+		// v がその左右の区間と結合するかを調べる．
+		bool ljoin = false, rjoin = false;
+		auto it = lrs.upper_bound({ v, v });
+		if (it != lrs.begin() && prev(it)->second == v - 1) ljoin = true;
+		if (it != lrs.end() && it->first == v + 1) rjoin = true;
+
+		// 区間の結合の仕方に応じて区間を削除，追加する．
+		if (ljoin) {
+			if (rjoin) {
+				pii lr = { prev(it)->first, it->second };
+				it = lrs.erase(it);
+				lrs.erase(prev(it));
+				lrs.insert(lr);
+			}
+			else {
+				pii lr = { prev(it)->first, v };
+				lrs.erase(prev(it));
+				lrs.insert(lr);
+			}
+		}
+		else {
+			if (rjoin) {
+				pii lr = { v, it->second };
+				lrs.erase(it);
+				lrs.insert(lr);
+			}
+			else {
+				lrs.insert({ v, v });
+			}
+		}
+	}
+
+	// ニム値 v をもつ局面を 1 つ削除する．
+	void erase(int v) {
+		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+
+		// ニム値 v をもつ局面がなければ何もしない．
+		if (cnt[v] == 0) return;
+
+		// ニム値 v の局面数を 1 減らす．
+		cnt[v]--;
+
+		// まだニム値 v の局面があるならば区間に変更はない．
+		if (cnt[v] >= 1) return;
+
+		// v でその左右の区間が分断されるかに応じて区間を削除，追加する．
+		auto it = prev(lrs.upper_bound({ v, INF }));
+		int l, r;
+		tie(l, r) = *it;
+		lrs.erase(it);
+		if (l < v) lrs.insert({ l, v - 1 });
+		if (r > v) lrs.insert({ v + 1, r });
+	}
+
+	// 現在記録されている局面のニム値の最小除外数を返す．
+	int get() {
+		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
+
+		if (lrs.empty() || lrs.begin()->first > 0) return 0;
+		return lrs.begin()->second + 1;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Mex nm) {
+		vi res;
+		repe(p, nm.cnt) rep(hoge, p.second) res.push_back(p.first);
+		sort(all(res));
+		repe(v, res) os << v << " ";
+		return os;
+	}
+#endif
 };
 
 

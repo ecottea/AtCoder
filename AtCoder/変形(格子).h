@@ -9,6 +9,8 @@
 */
 template <class T>
 vector<vector<T>> flip_y(const vector<vector<T>>& a) {
+	// verify : https://mojacoder.app/users/kusirakusira/contests/GBC/tasks/4
+
 	int h = sz(a), w = sz(a[0]);
 
 	vector<vector<T>> b(h, vector<T>(w));
@@ -58,7 +60,7 @@ vector<vector<T>> transpose(const vector<vector<T>>& a) {
 */
 template <class T>
 vector<vector<T>> rotate90(const vector<vector<T>>& a) {
-	// verify : https://atcoder.jp/contests/abc298/tasks/abc298_b
+	// verify : https://atcoder.jp/contests/abc218/tasks/abc218_c
 
 	int h = sz(a), w = sz(a[0]);
 
@@ -98,6 +100,37 @@ vector<vector<T>> rotate270(const vector<vector<T>>& a) {
 	rep(i, h) rep(j, w) b[j][h - 1 - i] = a[i][j];
 
 	return b;
+}
+
+
+//【トリミング】O(h w)
+/*
+* a[0..h)[0..w) を bg 以外を全て含む最小矩形でトリミングした結果を返す．
+*/
+template <class T>
+vector<vector<T>> trim(const vector<vector<T>>& a, T bg = '.') {
+	// verify : https://atcoder.jp/contests/abc218/tasks/abc218_c
+
+	int h = sz(a), w = sz(a[0]);
+
+	// a[l..r)[u..d) : バウンディングボックス
+	int l = INF, r = -INF, u = INF, d = -INF;
+	rep(i, h) rep(j, w) {
+		if (a[i][j] == bg) continue;
+
+		chmin(l, i);
+		chmax(r, i);
+		chmin(u, j);
+		chmax(d, j);
+	}
+
+	// 全て bg だった場合の例外処理
+	if (l == INF) return vector<vector<T>>();
+
+	vector<vector<T>> res(r - l + 1, vector<T>(d - u + 1));
+	repi(i, l, r) repi(j, u, d) res[i - l][j - u] = a[i][j];
+
+	return res;
 }
 
 

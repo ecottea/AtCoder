@@ -1,8 +1,66 @@
 #pragma once
 #include "header.h"
-#include "整除,GCD,LCM.h"
+#include "整除.h"
 #include "二項係数.h"
+#include "アダマール変換.h"
+#include "畳込み.h"
 // ■■■■■ 組（スコア和） ■■■■■
+
+
+//【組の積の総和（オンライン）】
+/*
+* Pair_multiple_sum<T>() : O(1)
+*	空で初期化する．
+*
+* insert(T x) : O(1)
+*	x を追加する．
+*
+* erase(T x) : O(1)
+*	x を削除する．
+*
+* T get() : O(1) or O(log mod)
+*	組の積の総和を返す．
+*/
+template <class T>
+class Pair_multiple_sum {
+	T sum, sqsum;
+
+public:
+	// 空で初期化する．
+	Pair_multiple_sum() : sum(0), sqsum(0) {
+		// verify : https://yukicoder.me/problems/no/2336
+	}
+
+	// x を追加する．
+	void insert(T x) {
+		// verify : https://yukicoder.me/problems/no/2336
+
+		sum += x;
+		sqsum += x * x;
+	}
+
+	// x を削除する．
+	void erase(T x) {
+		// verify : https://yukicoder.me/problems/no/2336
+
+		sum -= x;
+		sqsum -= x * x;
+	}
+
+	// 組の積の総和を返す．
+	T get() {
+		// verify : https://yukicoder.me/problems/no/2336
+
+		return (sum * sum - sqsum) / 2;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Pair_multiple_sum& PMS) {
+		os << "sum:" << PMS.sum << " ,sqsum:" << PMS.sqsum;
+		return os;
+	}
+#endif
+};
 
 
 //【組の差の総和】O(n log n)
@@ -10,7 +68,7 @@
 * Σi<j |a[j] - a[i]| の値を返す．
 */
 template <class T>
-mint difference_sum(vector<T> a) {
+mint pair_difference_sum(vector<T> a) {
 	// verify : https://atcoder.jp/contests/abc058/tasks/arc071_b
 
 	int n = sz(a);
@@ -27,12 +85,12 @@ mint difference_sum(vector<T> a) {
 }
 
 
-//【組の XOR の総和】O((n + m) log max(a, b))
+//【組の XOR の総和】O((n + m) log A)（A = max(a[i], b[j])）
 /*
-* Σi∈[0..n) Σj∈[0..m) a[i] XOR b[j] の値を返す．
+* Σi∈[0..n) Σj∈[0..m) (a[i] XOR b[j]) の値を返す．
 */
 template <class T>
-T xor_sum(const vl& a, const vl& b) {
+T pair_xor_sum(const vl& a, const vl& b) {
 	// verify : https://atcoder.jp/contests/abc147/tasks/abc147_d
 
 	int n = sz(a), m = sz(b);
@@ -55,11 +113,58 @@ T xor_sum(const vl& a, const vl& b) {
 }
 
 
-//【組の和の総 XOR】O(n log m log(max(a, b)))
+//【組の XOR の総和】O(n + m + A log A)（A = max(a[i], b[j])）
+/*
+* Σi∈[0..n) Σj∈[0..m) (a[i] XOR b[j]) の値を返す．
+*
+* 利用：【XOR 畳込み】
+*/
+template <class T>
+T pair_xor_sum(const vi& a, const vi& b) {
+	// verify : https://www.codechef.com/problems/PALIXOR
+
+	//【方法】
+	// a, b の度数分布をそれぞれ u, v とすると，
+	//		Σi∈[0..n) Σj∈[0..m) (a[i] XOR b[j])
+	//		= Σx Σy u[x] v[y] (x XOR y)  （XOR 加重和の形）
+	//		= Σz Σ(x XOR y = z) u[x] v[y] z
+	//		= Σz z Σ(x XOR y = z) u[x] v[y]
+	// と書き直せるので，XOR 畳込みを用いて高速化できる．
+
+	int n = sz(a), m = sz(b);
+
+	int A = 1;
+	rep(i, n) chmax(A, 1 << (msb(a[i]) + 1));
+	rep(j, m) chmax(A, 1 << (msb(b[j]) + 1));
+
+	vector<T> cnt_a(A), cnt_b(A);
+	rep(i, n) cnt_a[a[i]]++;
+	rep(j, m) cnt_b[b[j]]++;
+
+	auto cnt = xor_convolution(cnt_a, cnt_b);
+
+	T res = 0;
+	rep(set, A) res += cnt[set] * set;
+
+	return res;
+}
+
+
+//【組の XOR の総和の一般化】
+/*
+*【組の XOR の総和】で用いた手法と同様にして，
+*	Σi∈[0..n) Σj∈[0..m) F(a[i]) G(b[j]) H(a[i] XOR b[j])
+* の形や，XOR 加重和
+*	Σx Σy u[x] v[y] (x XOR y)
+* の形を XOR 畳込みを用いて高速に計算できる．
+*/
+
+
+//【組の和の総 XOR】O(n log m log A)（A = max(a[i], b[j])）
 /*
 * XOR_i∈[0..n) XOR_j∈[0..m) (a[i] + b[j]) の値を返す．
 */
-int sum_xor(const vi& a, const vi& b) {
+int pair_sum_xor(const vi& a, const vi& b) {
 	// verify : https://atcoder.jp/contests/abc091/tasks/arc092_b
 
 	//【方法】
@@ -105,105 +210,165 @@ int sum_xor(const vi& a, const vi& b) {
 }
 
 
-//【組の剰余の総和】O(n + A log A)（A = max(a)）
+//【組の GCD の総和】O(n + A log(log A))（A = max(a[i], b[j])）
 /*
-* 正整数列 a[0..n) について，Σi∈[0..n) Σj∈[0..n) a[i] mod a[j] の値を返す．
-*/
-ll mod_sum(const vi& a) {
-	// verify : https://yukicoder.me/problems/no/1233
-
-	int n = sz(a);
-	int a_max = *max_element(all(a));
-	ll a_sum = accumulate(all(a), 0LL);
-
-	vi cnt(a_max + 1);
-	rep(i, n) cnt[a[i]]++;
-	dump(cnt);
-
-	vl acc(a_max + 2);
-	rep(i, a_max + 1) acc[i + 1] = acc[i] + cnt[i];
-	dump(acc);
-
-	ll res = a_sum * n;
-	repi(i, 1, a_max) {
-		for (int l = i; l <= a_max; l += i) {
-			int r = min(l + i, a_max + 1);
-			res -= cnt[i] * (acc[r] - acc[l]) * l;
-		}
-		dump(i, res);
-	}
-
-	return res;
-}
-
-
-//【組の GCD の総和】O(n + K log(log K))（K = max(a[i], b[j])）
-/*
-* Σi∈[0..n) Σj∈[0..m) gcd(a[i], b[j]) の値を返す．
+* Σi∈[0..n) Σj∈[0..m) GCD(a[i], b[j]) の値を返す．
 *
 * 利用：【約数倍数変換】
 */
-mint gcd_sum(const vi& a, const vi& b) {
+template <class T>
+T pair_gcd_sum(const vi& a, const vi& b) {
 	//【方法】
-	// a[i] に含まれる x の個数を a_cnt[x] などとおき，a, b の最大値を K とおくと，
-	//		Σi=[0.n) Σj=[0..m) GCD(a[i], b[j])
-	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] GCD(x, y)
-	//		= Σk=[1..K] ΣΣGCD(x,y)=k a_cnt[x] b_cnt[y] k
-	// となる．この
-	//		ΣΣGCD(x,y)=k a_cnt[x] b_cnt[y]
-	// は GCD 畳込みであるから高速に求まる．
-	//
-	// これは GCD 加重和を高速に計算する方法にもなる．
+	// a, b の度数分布をそれぞれ u, v とすると，
+	//		Σi∈[0..n) Σj∈[0..m) f(GCD(a[i], b[j]))
+	//		= Σx Σy u[x] v[y] f(GCD(x, y))  （GCD 加重和の形）
+	//		= Σg Σ(GCD(x, y) = g) u[x] v[y] f(g)
+	//		= Σg f(g) Σ(GCD(x, y) = g) u[x] v[y]
+	// と書き直せるので，GCD 畳込みを用いて高速化できる．
 
 	int n = sz(a), m = sz(b);
 
-	int K = max(*max_element(all(a)), *max_element(all(b)));
-	vm a_cnt(K + 1), b_cnt(K + 1);
-	rep(i, n) a_cnt[a[i]]++;
-	rep(j, m) b_cnt[b[j]]++;
+	int A = max(*max_element(all(a)), *max_element(all(b)));
+	vector<T> cnt_a(A + 1), cnt_b(A + 1);
+	rep(i, n) cnt_a[a[i]]++;
+	rep(j, m) cnt_b[b[j]]++;
 
-	Div_mul_transform<mint> g(K);
-	auto c = g.gcd_convolution(a_cnt, b_cnt);
+	Div_mul_transform<T> g(A);
+	auto cnt = g.gcd_convolution(cnt_a, cnt_b);
 
-	mint res = 0;
-	repi(k, 1, K) res += c[k] * k;
+	T res = 0;
+	repi(g, 1, A) res += cnt[g] * g;
 
 	return res;
 }
 
 
-//【組の LCM の総和】O(n + m + K log(log K))（K = max(a[i], b[j])）
+//【組の GCD の総和の一般化】
+/*
+*【組の GCD の総和】で用いた手法と同様にして，
+*	Σi∈[0..n) Σj∈[0..m) F(a[i]) G(b[j]) H(GCD(a[i], b[j]))
+* の形や，GCD 加重和
+*	Σx Σy u[x] v[y] GCD(x, y)
+* の形を GCD 畳込みを用いて高速に計算できる．
+*/
+
+
+//【組の LCM の総和】O(n + m + A log(log A))（A = max(a[i], b[j])）
 /*
 * Σi∈[0..n) Σj∈[0..m) LCM(a[i], b[j]) の値を返す．
 *
 * 利用：【約数倍数変換】,【階乗など（法が大きな素数）】
 */
-mint lcm_sum(const vi& a, const vi& b) {
+mint pair_lcm_sum(const vi& a, const vi& b) {
 	//【方法】
-	// a[i] に含まれる x の個数を a_cnt[x] などとおき，a, b の最大値を K とおくと，
-	//		Σi=[0.n) Σj=[0..m) LCM(a[i], b[j])
-	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] LCM(x, y)
-	//		= Σx=[1..K] Σy=[1..K] a_cnt[x] b_cnt[y] x y / gcd(x, y)
-	//		= Σk=[1..K] ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y]) / k
-	// となる．この
-	//		ΣΣgcd(x,y)=k (x a_cnt[x]) (y b_cnt[y])
-	// は gcd 畳込みであるから高速に求まる．
-	//
-	// これは LCM 加重和を高速に計算する方法にもなる．
+	// a, b の度数分布をそれぞれ u, v とすると，
+	//		Σi∈[0..n) Σj∈[0..m) LCM(a[i], b[j])
+	//		= Σx Σy u[x] v[y] LCM(x, y)  （LCM 加重和の形）
+	//		= Σx Σy u[x] v[y] x y / GCD(x, y)
+	//		= Σg Σ(GCD(x, y) = g) u[x] v[y] x y / g
+	//		= Σg (1/g) Σ(GCD(x, y) = g) (x u[x]) (y v[y])
+	// と書き直せるので，GCD 畳込みを用いて高速化できる．
+
+	//【注意】
+	// LCM 畳込みは値域が広くなりすぎるので適切ではない．
 
 	int n = sz(a), m = sz(b);
 
-	int K = max(*max_element(all(a)), *max_element(all(b)));
-	vm a_cnt(K + 1), b_cnt(K + 1);
+	int A = max(*max_element(all(a)), *max_element(all(b)));
+	vm a_cnt(A + 1), b_cnt(A + 1);
 	rep(i, n) a_cnt[a[i]] += a[i];
 	rep(j, m) b_cnt[b[j]] += b[j];
 
-	Div_mul_transform<mint> g(K);
+	Div_mul_transform<mint> g(A);
 	auto c = g.gcd_convolution(a_cnt, b_cnt);
 
-	Factorial_mint fm(K);
+	Factorial_mint fm(A);
 	mint res = 0;
-	repi(k, 1, K) res += c[k] * fm.inv(k);
+	repi(k, 1, A) res += c[k] * fm.inv(k);
+
+	return res;
+}
+
+
+//【組の整数商の総和】O(n + m + A log A)（A = max(a[i])）
+/*
+* Σi∈[0..n) Σj∈[0..m) floor(a[i] / b[j]) の値を返す．
+*
+* 制約：b[j] ≧ 1
+*
+* 利用：【整数商畳込み】
+*/
+template <class T>
+T pair_floordiv_sum(const vi& a, const vi& b) {
+	//【方法】
+	// a, b の度数分布をそれぞれ u, v とすると，
+	//		Σi∈[0..n) Σj∈[0..m) floor(a[i] / b[j])
+	//		= Σx Σy u[x] v[y] floor(x / y)  （floor_div 加重和の形）
+	//		= Σq Σ(floor(x / y) = q) u[x] v[y] q
+	//		= Σq q Σ(floor(x / y) = q) u[x] v[y]
+	// と書き直せるので，整数商畳込みを用いて高速化できる．
+
+	int n = sz(a), m = sz(b);
+
+	int A = *max_element(all(a));
+	vector<T> cnt_a(A + 1), cnt_b(A + 1);
+	rep(i, n) cnt_a[a[i]]++;
+	rep(j, m) if (b[j] <= A) cnt_b[b[j]]++; // q=0 確定な要素は無視
+
+	auto cnt = floordiv_convolution(cnt_a, cnt_b);
+
+	T res = 0;
+	repi(q, 1, A) res += cnt[q] * q; // q=0 は無視
+
+	return res;
+}
+
+
+//【組の整数商の総和の一般化】
+/*
+*【組の整数商の総和】で用いた手法と同様にして，
+*	Σi∈[0..n) Σj∈[0..m) F(a[i]) G(b[j]) H(floor(a[i] / b[j]))
+* の形や，floor_div 加重和
+*	Σx Σy u[x] v[y] floor(x / y)
+* の形を整数商畳込みを用いて高速に計算できる．
+*/
+
+
+//【組の剰余の総和】O(n + m + A log A)（A = max(a[i])）
+/*
+* Σi∈[0..n) Σj∈[0..m) (a[i] mod b[j]) の値を返す．
+*
+* 制約：b[j] ≧ 1
+*
+* 利用：【整数商畳込み】
+*/
+template <class T>
+T pair_mod_sum(const vi& a, const vi& b) {
+	// verify : https://yukicoder.me/problems/no/1233
+
+	//【方法】
+	// a, b の度数分布をそれぞれ u, v とすると，
+	//		Σi∈[0..n) Σj∈[0..m) (a[i] mod b[j])
+	//		= Σx Σy u[x] v[y] (x mod y)  （mod 加重和の形）
+	//		= Σx Σy u[x] v[y] (x - floor(x / y) y)
+	//		= Σx Σy u[x] v[y] x - Σx Σy u[x] v[y] floor(x / y) y
+	//		= (Σx x u[x])(Σy v[y]) - Σq Σ(floor(x / y) = q) u[x] v[y] q y
+	//		= Σa[0..n) m - Σq q Σ(floor(x / y) = q) u[x] (y v[y])
+	// と書き直せるので，整数商畳込みを用いて高速化できる．
+
+	int n = sz(a), m = sz(b);
+
+	int A = *max_element(all(a));
+	vector<T> u(A + 1), v(A + 1);
+	rep(i, n) u[a[i]]++;
+	rep(j, m) if (b[j] <= A) v[b[j]]++; // q=0 確定な要素は無視
+
+	vector<T> yv(A + 1);
+	repi(y, 0, A) yv[y] = y * v[y];
+	auto w = floordiv_convolution(u, yv);
+
+	T res = accumulate(all(a), T(0)) * m;
+	repi(q, 1, A) res -= w[q] * q; // q=0 は無視
 
 	return res;
 }

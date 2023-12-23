@@ -3,7 +3,7 @@
 // ■■■■■ 形式的冪級数（二元体 F_2 上） ■■■■■
 
 
-//【形式的冪級数（二元体 F_2）】
+//【形式的冪級数（F_2）】
 /*
 * BFPS<N>() : O(1)
 *	零多項式 f = 0 で初期化する．
@@ -56,9 +56,6 @@
 * f >> d, f << d : O(n / 64)
 *	係数列を d だけ右[左]シフトした多項式を返す．
 *  （右シフトは z^d の乗算，左シフトは z^d で割った商と等価）
-*
-* BFPS power_mod(BFPS f, ll d, BFPS g) : O(m^2 log d / 64)　（m = deg g）
-*	f(z)^d % g(z) を返す．
 */
 template <int N>
 struct BFPS {
@@ -70,7 +67,7 @@ struct BFPS {
 	// コンストラクタ（零元，定数，係数列で初期化）
 	BFPS() : n(0) {}
 	BFPS(bool c0, int n = 1) : n(n) { c[0] = c0; }
-	BFPS(const bitset<N>& c_, int n_) : n(n_), c(c_) {}
+	BFPS(const bitset<N>& c, int n) : n(n), c(c) {}
 
 	// 代入
 	BFPS(const BFPS& f) = default;
@@ -148,7 +145,7 @@ struct BFPS {
 	}
 	BFPS quotient(const BFPS& g) const {
 		// verify : https://atcoder.jp/contests/arc084/tasks/arc084_d
-	
+
 		return quotient_remainder(g).first;
 	}
 	BFPS reminder(const BFPS& g) const { return quotient_remainder(g).second; }
@@ -235,17 +232,6 @@ struct BFPS {
 	BFPS& operator<<=(int d) { n = max(n - d, 0); c >>= d; return *this; }
 	BFPS operator>>(int d) const { return BFPS(*this) >>= d; }
 	BFPS operator<<(int d) const { return BFPS(*this) <<= d; }
-
-	// 累乗の剰余
-	friend BFPS power_mod(const BFPS& f, ll d, const BFPS& g) {
-		BFPS res(1), pow2(f);
-		while (d > 0) {
-			if (d & 1) res = (res * pow2).reminder(g);
-			pow2 = (pow2 * pow2).reminder(g);
-			d /= 2;
-		}
-		return res;
-	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const BFPS& f) {
@@ -376,6 +362,24 @@ bool linearly_recurrent_sequence(const bitset<N>& a, const bitset<N>& c, int d, 
 	BFPS<N> Dnm = 1 + (C >> 1);
 	BFPS<N> Num = (Dnm * A).resize(d);
 	return bostan_mori(Num, Dnm, n);
+}
+
+
+//【累乗の剰余】O(m^2 log d / 64)　（m = deg g）
+/*
+* f(z)^d mod g(z) を返す．
+*/
+template <int N>
+BFPS<N> power_mod(const BFPS<N>& f, ll d, const BFPS<N>& g) {
+	// verify : https://atcoder.jp/contests/wtf19/tasks/wtf19_c1
+
+	BFPS<N> res(1), pow2(f);
+	while (d > 0) {
+		if (d & 1) res = (res * pow2).reminder(g);
+		pow2 = (pow2 * pow2).reminder(g);
+		d /= 2;
+	}
+	return res;
 }
 
 
@@ -585,8 +589,10 @@ BFPS<N> extended_gcd(const BFPS<N> a, BFPS<N> b, BFPS<N>& u, BFPS<N>& v) {
 */
 template <int N>
 bool polynomial_inverse(const BFPS<N>& a, const BFPS<N>& b, BFPS<N>& u) {
-	BFPS<N> g, v;
-	extended_gcd(a, b, g, u, v);
+	// verify : https://atcoder.jp/contests/wtf19/tasks/wtf19_c1
+
+	BFPS<N> v;
+	auto g = extended_gcd(a, b, u, v);
 
 	return g == BFPS<N>(1);
 }

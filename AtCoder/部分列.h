@@ -16,6 +16,8 @@ bool subsequenceQ(const STR& s, const STR& t) {
 
 	int n = sz(s), m = sz(t);
 
+	if (m == 0) return true;
+
 	int j = 0;
 	rep(i, n) {
 		if (s[i] == t[j]) j++;

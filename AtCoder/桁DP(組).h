@@ -53,11 +53,8 @@ mint count_pair(string num1, string num2, int b = 10) {
 			}
 		}
 
-		//dump(i + 1);
-		//repb(f, 2) {
-		//	dumps("(smaller2, smaller1) ="); dump(bitset<2>(f));
-		//	dump(dp[i + 1][f]);
-		//}
+		//dump("----", i + 1, "----");
+		//repb(f, 2) dump("(smaller2, smaller1) =", bitset<2>(f), ":", dp[i + 1][f]);
 	}
 
 	mint res = 0;
@@ -481,7 +478,7 @@ mint carry_sum_unordered_pair_sum(const string& num, int b = 10) {
 }
 
 
-//【k 個組の下から桁 DP，以下フラグ，桁上げ状態，数え上げ】O(n k b^k)
+//【列の下から桁 DP，以下フラグ，桁上げ状態，数え上げ】O(n k b^k)
 /*
 * b 進数で n 桁の数 num について，和が num 以下になる非負整数の k 個組 d[0..k) の個数を返す．
 */
@@ -536,7 +533,7 @@ mint count_tuple_sum(const string& num, int k, int b = 10) {
 }
 
 
-//【k 個組の下から桁 DP，桁上げ状態，数え上げ（mod 998244353）】O(n k log k)
+//【列の下から桁 DP，桁上げ状態，数え上げ（mod 998244353）】O(n k log k)
 /*
 * 2 進数で n 桁の数 S, X について，総和が S，総 XOR が X になる非負整数の k 個組 d[0..k) の個数を返す．
 *

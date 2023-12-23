@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "ビット全探索.h"
+#include "bit全探索.h"
 // ■■■■■ スコア和（集合の分割） ■■■■■
 
 

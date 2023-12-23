@@ -2,7 +2,7 @@
 #include "header.h"
 #include "二項係数.h"
 #include "数論.h"
-#include "整除,GCD,LCM.h"
+#include "整除.h"
 #include "列挙(分割).h"
 // ■■■■■ 群論 ■■■■■
 
@@ -12,8 +12,6 @@
 * 自然数の分割 p[0..k)（広義単調減少）で表される型をもつ置換の個数を返す．
 *
 * 制約 : fm は (Σp[0..k))! まで計算可能であること．
-*
-* 利用：【階乗など（法が大きな素数）】
 */
 mint count_permutation_type(const vi& p, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc226/tasks/abc226_f
@@ -58,7 +56,7 @@ mint count_permutation_type(const vi& p, const Factorial_mint& fm) {
 *
 * 制約 : fm は n! まで計算可能であること．
 *
-* 利用：【自然数の分割の列挙（値が k 以下）】,【置換の数え上げ（型指定）】,【階乗など（法が大きな素数）】
+* 利用：【自然数の分割の列挙（値が k 以下）】,【置換の数え上げ（型指定）】
 */
 vector<pair<int, mint>> permutation_order_distribution(int n, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc226/tasks/abc226_f
@@ -119,6 +117,9 @@ vector<pll> order_distribution(ll n) {
 *
 * G = D_n のとき
 * verify : https://yukicoder.me/problems/no/1728
+* 
+* G = V_4 = Z/2Z × Z/2Z のとき
+* verify : https://yukicoder.me/problems/no/2383
 */
 
 
@@ -137,16 +138,28 @@ vector<pll> order_distribution(ll n) {
 *
 * 無向グラフ G を，[0..n) を頂点とし互換 e∈E に対応する辺をもつよう定める．
 * G の k 個の連結成分それぞれの頂点集合を A[0..k) とおくと，
-*		H ~= S_(A[0]) * S_(A[1]) * ... * S_(A[k-1])
+*		H = S_(A[0]) * S_(A[1]) * ... * S_(A[k-1])
 * となる．
 *
 * verify : https://atcoder.jp/contests/arc107/tasks/arc107_c
 */
 
 
-//【置換を巡回置換の積で表す】
+//【置換 → 巡回置換の積】
 /*
 * 順列.h の【置換のサイクル分解】を利用すればよい．
+*/
+
+
+//【置換 → 隣接互換の積】
+/*
+* ソート.h の【バブルソート】を改変すればよい．
+*/
+
+
+//【巡回置換 → 隣接互換の積】
+/*
+* (12...n) = (12)(23)...(n-1 n) を用いれば良い．
 */
 
 
@@ -165,16 +178,22 @@ vector<pll> order_distribution(ll n) {
 */
 
 
+//【巡回群の自己同型群】
+/*
+* Aut(Z/nZ) = (Z/nZ)*
+*/
+
+
 //【既約剰余類群の構造】
 /*
-* C(m) = Z/mZ とおく．C(m) の単元群 U(C(m)) の構造は次のように決定できる：
+* C(m) = Z/mZ とおく．C(m) の単元群 C(m)* の構造は次のように決定できる：
 * 
-* m = p1^d1 p2^d2 ... pn^dn と素因数分解されるとすると，中国式剰余定理より
-*	U(C(m)) = U(C(p1^d1)) *  U(C(p2^d2)) * ... * U(C(pn^dn))
+* m = p1^d1 p2^d2 ... pn^dn と素因数分解されるとすると，中国剰余定理より
+*	C(m)* = C(p1^d1)* × C(p2^d2)* × ... × C(pn^dn)*
 * となる．それぞれの直積因子は，『代数学 2』p.226 命題 4.7.15 より
-*	U(C(2)) = {0}, U(C(4)) = C(2)
-*	U(C(2^d)) = C(2^(d-2)) × C(2)  (d >= 3)
-*	U(C(p^d)) = C(p^(d-1) (p-1))  (p : 奇素数)
+*	C(2)* = {0}, U(C(4)) = C(2)
+*	C(2^d)* = C(2^(d-2)) × C(2)  (d ≧ 3)
+*	C(p^d)* = C(p^(d-1) (p-1))  (p : 奇素数)
 * となる．
 * 
 * verify : https://yukicoder.me/problems/no/1881

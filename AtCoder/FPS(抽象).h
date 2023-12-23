@@ -157,11 +157,13 @@ struct FPS {
 
 	// 除算
 	FPS inv(int d) const {
+		// verify : https://atcoder.jp/contests/abc327/tasks/abc327_g
+
 		Assert(c[0] == e());
 
 		FPS g(e());
 		for (int k = 1; k < d; k *= 2) {
-			g = ((e() + e()) - *this * g) * g;
+			g = (add(e(), e()) - *this * g) * g;
 			g.resize(2 * k);
 		}
 
@@ -197,9 +199,7 @@ struct FPS {
 		repir(i, n - 1, 0) {
 			// 上位項に係数倍して配っていく．
 			for (auto it = it0; it != g.end(); it++) {
-				int j; S gj;
-				tie(j, gj) = *it;
-
+				auto [j, gj] = *it;
 				if (i + j >= n) break;
 
 				c[i + j] = add(c[i + j], mul(c[i], gj));
@@ -226,9 +226,7 @@ struct FPS {
 		rep(i, n) {
 			// 上位項に係数倍して配っていく．
 			for (auto it = it0; it != g.end(); it++) {
-				int j; S gj;
-				tie(j, gj) = *it;
-
+				auto [j, gj] = *it;
 				if (i + j >= n) break;
 
 				c[i + j] = add(c[i + j], mi(mul(c[i], gj)));
@@ -291,7 +289,7 @@ struct FPS {
 	friend FPS power_mod(const FPS& f, ll d, const FPS& g) {
 		FPS res(e()), pow2(f);
 		while (d > 0) {
-			if (d & 1LL) res = (res * pow2).reminder(g);
+			if (d & 1) res = (res * pow2).reminder(g);
 			pow2 = (pow2 * pow2).reminder(g);
 			d /= 2;
 		}
@@ -352,28 +350,17 @@ S bostan_mori(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul,
 
 	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
 	FPS<S, add, o, mi, mul, e> f2, g2(g);
-	rep(i, g2.n) {
-		if (i % 2) g2[i] = mi(g2[i]);
-	}
+	rep(i, g2.n) if (i % 2) g2[i] = mi(g2[i]);
 	f2 = f * g2;
 	g2 *= g;
 
 	// f3(x) = E(x) or O(x), g3(x) = e(x) を求める．
 	FPS<S, add, o, mi, mul, e> f3, g3;
-	if (d % 2 == 0) {
-		for (int i = 0; 2 * i < f2.n; i++) {
-			f3.c.push_back(f2[2 * i]);
-		}
-	}
-	else {
-		for (int i = 0; 2 * i + 1 < f2.n; i++) {
-			f3.c.push_back(f2[2 * i + 1]);
-		}
-	}
+	if (d % 2 == 0) for (int i = 0; 2 * i < f2.n; i++) f3.c.push_back(f2[2 * i]);
+	else for (int i = 0; 2 * i + 1 < f2.n; i++) f3.c.push_back(f2[2 * i + 1]);
+	
 	f3.n = sz(f3.c);
-	rep(i, g.n) {
-		g3.c.push_back(g2[2 * i]);
-	}
+	rep(i, g.n) g3.c.push_back(g2[2 * i]);
 	g3.n = sz(g3.c);
 
 	// d を半分にして再帰を回す．
@@ -415,7 +402,7 @@ S linearly_recurrent_sequence(const vector<S>& a, const vector<S>& c, ll n) {
 *	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
 * SemiFPS<S, add, o, mul, e>(c) : O(n)
-*	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
+*	f(z) = c[0] + c[1] z + ... + c[n - 1] z^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
 * c * f, f * c : O(n)	f * g : O(n^2)		f * g_sp : O(n k)（k : g の項数）
@@ -423,7 +410,7 @@ S linearly_recurrent_sequence(const vector<S>& a, const vector<S>& c, ll n) {
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *
 * f.acc(SFPS g_sp) : O(n k)
-*	Σi=[0..∞) g(x)^i を掛ける．
+*	Σi=[0..∞) g(z)^i を掛ける．
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *	制約：g(0) == o()
 *
@@ -431,23 +418,23 @@ S linearly_recurrent_sequence(const vector<S>& a, const vector<S>& c, ll n) {
 *	多項式 f の次数[+1]を返す．
 *
 * SemiFPS::monomial(int d) : O(d)
-*	単項式 x^d を返す．
+*	単項式 z^d を返す．
 *
 * S f.assign(S c) : O(n)
-*	多項式 f の不定元 x に c を代入した値を返す．
+*	多項式 f の不定元 z に c を代入した値を返す．
 *
 * f.resize(int d) : O(d)
-*	mod x^d をとる．
+*	mod z^d をとる．
 *
 * f.resize() : O(n)
 *	不要な高次の項を削る．
 *
 * f >> d, f << d : O(n)
 *	係数列を d だけ右[左]シフトした多項式を返す．
-*  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
+*  （右シフトは z^d の乗算，左シフトは z^d で割った商と等価）
 *
 * SemiFPS power_mod(SemiFPS f, ll p, int d) : O(d^2 log d)
-*	f(x)^p % x^d を返す．
+*	f(z)^p % z^d を返す．
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
 struct SemiFPS {
@@ -468,8 +455,8 @@ struct SemiFPS {
 	SemiFPS& operator=(const S& c0) { n = 1; c = { c0 }; return *this; }
 
 	// アクセス
-	S const& operator[](int i) const { return c[i]; }
-	S& operator[](int i) { return c[i]; }
+	inline S const& operator[](int i) const { return c[i]; }
+	inline S& operator[](int i) { return c[i]; }
 
 	// 次数
 	int deg() const { return n - 1; }
@@ -503,6 +490,8 @@ struct SemiFPS {
 
 	// 積
 	SemiFPS& operator*=(const SemiFPS& g) {
+		// verify : https://atcoder.jp/contests/abc310/tasks/abc310_h
+
 		int m = g.deg();
 		if (m == -1) return *this = SemiFPS();
 		resize(n + m);
@@ -512,7 +501,6 @@ struct SemiFPS {
 			// 上位項に係数倍して配っていく．
 			repi(j, 1, m) {
 				if (i + j >= n) break;
-
 				c[i + j] = add(c[i + j], mul(c[i], g[j]));
 			}
 
@@ -527,7 +515,7 @@ struct SemiFPS {
 	// スパース積
 	SemiFPS& operator*=(const SFPS& g) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B
-		 
+
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
 		S g0 = o();
@@ -540,16 +528,13 @@ struct SemiFPS {
 		repir(i, n - 1, 0) {
 			// 上位項に係数倍して配っていく．
 			for (auto it = it0; it != g.end(); it++) {
-				int j; S gj;
-				tie(j, gj) = *it;
-
+				auto [j, gj] = *it;
 				if (i + j >= n) break;
-
 				c[i + j] = add(c[i + j], mul(c[i], gj));
 			}
 
 			// 定数項は最後に配るか消去しないといけない．
-			c[i] = mul(c[i], g0);
+			c[i] = mul(c[i], g[0]);
 		}
 
 		return *this;
@@ -559,7 +544,7 @@ struct SemiFPS {
 	// スパース商
 	SemiFPS& acc(const SFPS& g) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_C
-		 
+
 		// g の定数項だけ例外処理
 		auto it0 = g.begin();
 		Assert(it0->first != 0);
@@ -568,11 +553,8 @@ struct SemiFPS {
 		rep(i, n) {
 			// 上位項に係数倍して配っていく．
 			for (auto it = it0; it != g.end(); it++) {
-				int j; S gj;
-				tie(j, gj) = *it;
-
+				auto [j, gj] = *it;
 				if (i + j >= n) break;
-
 				c[i + j] = add(c[i + j], mul(c[i], gj));
 			}
 		}
@@ -602,6 +584,8 @@ struct SemiFPS {
 
 	// 高次項の除去 or 0 埋め
 	SemiFPS& resize(int d) {
+		// verify : https://atcoder.jp/contests/abc310/tasks/abc310_h
+
 		// x^d 以上の項を除去する．
 		n = d;
 		c.resize(d, o());
@@ -610,7 +594,7 @@ struct SemiFPS {
 
 	// 不定元への代入
 	S assign(const S& x) const {
-		S val;
+		S val(o());
 		repir(i, n - 1, 0) val = add(mul(val, x), c[i]);
 		return val;
 	}
@@ -622,6 +606,8 @@ struct SemiFPS {
 		return *this;
 	}
 	SemiFPS& operator<<=(int d) {
+		// verify : https://atcoder.jp/contests/abc310/tasks/abc310_h
+
 		n -= d;
 		if (n <= 0) { c.clear(); n = 0; }
 		else c.erase(c.begin(), c.begin() + d);
@@ -634,7 +620,7 @@ struct SemiFPS {
 	friend SemiFPS power_mod(const SemiFPS& f, ll p, int d) {
 		SemiFPS res(e()), pow2(f);
 		while (p > 0) {
-			if (p & 1LL) res = (res * pow2).resize(d);
+			if (p & 1) res = (res * pow2).resize(d);
 			pow2 = (pow2 * pow2).resize(d);
 			p /= 2;
 		}

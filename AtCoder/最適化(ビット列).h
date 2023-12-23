@@ -78,12 +78,12 @@ ll minimize_01distance_sum(const string& s, mint* cnt = nullptr, char one = '1')
 
 //【隣接互換での 1 の連続】O(n log n)（n = popcount(s)）
 /*
-* ビット列 s に対して隣接ビットの交換を k 回以下行えるとき，
+* ビット列 s[0..n) に対して隣接ビットの交換を k 回以下行えるとき，
 * 連続させることのできる '1' の最大個数を返す．
 *
 * 利用：【めぐる式二分探索】
 */
-int maximize_1sequence_length(const string& s, ll k, char one = '1') {
+int maximize_run_length(const string& s, ll k, char one = '1') {
 	// verify : https://atcoder.jp/contests/abc229/tasks/abc229_g
 
 	//【方法】

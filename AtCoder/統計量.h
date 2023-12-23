@@ -89,7 +89,7 @@ template <class T> tuple<T, T, T> doubled_quartile(vector<T> a) {
 */
 
 
-//【モーメントの一括計算（mod998244353）】O(n (log n)^2 + m log m)
+//【モーメントの一括計算（mod 998244353）】O(n (log n)^2 + m log m)
 /*
 * 台集合 [0..n) の上の確率質量関数 P(X=x) = p[x] をもつ確率変数 X について，
 * 各 k∈[0..m) に対し X の k 次モーメント E[X^k] を mom[k] に格納する．

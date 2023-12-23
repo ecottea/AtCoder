@@ -4,7 +4,7 @@
 // ¡¡¡¡¡ ŒQ ¡¡¡¡¡
 
 
-//yŒQz
+//yŒQ‚Ì’è‹`z
 /*
 * ŒQ (S, op, e, inv) ‚ğ•\‚·D
 *
@@ -16,16 +16,16 @@
 */
 
 
-//y‰ÁZ ƒA[ƒxƒ‹ŒQz
+//y‘˜a ƒA[ƒxƒ‹ŒQz
 /* verify : https://atcoder.jp/contests/aising2019/tasks/aising2019_d */
 using S601 = ll;
 S601 op601(S601 a, S601 b) { return a + b; }
 S601 e601() { return 0; }
 S601 inv601(S601 a) { return -a; }
-#define Add_group S601, op601, e601, inv601
+#define Sum_group S601, op601, e601, inv601
 
 
-//yæZ ƒA[ƒxƒ‹ŒQz
+//y‘Ï ƒA[ƒxƒ‹ŒQz
 using S602 = mint;
 S602 op602(S602 a, S602 b) { return a * b; }
 S602 e602() { return 1; }
@@ -133,6 +133,7 @@ S605 inv605(S605 x) {
 * S ¹ f[0..n) : ’uŠ· i ¨ f[i] ‚ğ•\‚·D
 * f op g : ‡¬’uŠ· f o g ‚ğ•Ô‚·D
 */
+// verify : https://yukicoder.me/problems/no/2384
 using S606 = vi;
 S606 op606(S606 a, S606 b) {
 	if (sz(a) == 0) return b;
@@ -185,6 +186,8 @@ S607 inv607(S607 a) {
 }
 #define PermutationInvComposite_group S607, op607, e607, inv607
 
+
+// ======================================================
 
 //yŒQz
 /*

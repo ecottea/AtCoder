@@ -8,7 +8,7 @@
 // ■■■■■ 期待値 ■■■■■
 
 
-//【期待値 → 上側確率の和】
+//【しっぽ確率定理】
 /*
 * X が [0..∞) を台とする確率変数のとき，
 *		E[X] = Σk∈[0..∞) P(X > k)
@@ -33,7 +33,8 @@
 *	e[i] = Σp[0..i)
 * が成り立つ．
 * 
-* 証明：e[i] は，マス [0..i) の中で止まったものの数と言い換えられるので，期待値の線形性から従う．
+* 証明：e[i] はマス [0..i) の中で止まったものの数と言い換えられる．
+* 0-1 確率変数では期待値と 1 になる確率は一致するので，期待値の線形性から従う．
 * 
 * verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
 */
@@ -43,8 +44,6 @@
 /*
 * a[0..m) の目が順に p[0..m) の確率で出る m 面サイコロを用いてすごろくを行う．
 * 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
-*
-*（期待値 DP）
 */
 template <class T>
 vector<T> sugoroku(const vi& a, const vector<T>& p, int n) {
@@ -255,7 +254,10 @@ vm sugoroku_oc(vm p, int n) {
 * [1..m] の目が各 1/m の確率で出る m 面サイコロを用いてすごろくを行う．
 * 各 i∈[0..n] に対し，i マス以上進むのにかかるターン数の期待値を e[i] に格納し e を返す．
 */
-vd sugoroku(int m, int n) {
+template <class T>
+vector<T> sugoroku(int m, int n) {
+	// verify : https://mojacoder.app/users/YSatUT/problems/can_you_stop_exactly
+
 	//【方法】
 	// 出る目で場合分けを行って dp[i] を貰う DP で計算する．
 	// 
@@ -271,10 +273,10 @@ vd sugoroku(int m, int n) {
 	// となる．これは累積和を用いて高速化可能である．
 
 	// dp[i] : i マス以上進むのにかかるターン数の期待値
-	vd dp(n + 1);
+	vector<T> dp(n + 1);
 
 	// acc[i] : Σdp[0..i)
-	vd acc(n + 2);
+	vector<T> acc(n + 2);
 
 	// 貰う DP
 	repi(i, 1, n) {
@@ -288,7 +290,7 @@ vd sugoroku(int m, int n) {
 
 //【すごろく（振り出しに戻る付き）】O(n + k log k)
 /*
-* 1 から m の目が等確率で出る m 面サイコロを用いてすごろくを行う．
+* [1..m] の目が各 1/m の確率で出る m 面サイコロを用いてすごろくを行う．
 * ただしマス a[0..k) に止まるとマス 0 まで戻される．
 * マス 0 からスタートしてマス n に辿り着くまでの回数の期待値を返す．
 * ゴール不可能なら (double)INFL を返す．
@@ -365,7 +367,8 @@ double sugoroku_back_poly(int m, int n, vi a) {
 *
 * 利用：【二分探索（実数）】
 */
-long double sugoroku_back_bs(int m, int n, vi a) {
+template <class T = long double>
+T sugoroku_back_bs(int m, int n, vi a) {
 	// verify : https://atcoder.jp/contests/abc189/tasks/abc189_f
 
 	//【方法】
@@ -389,16 +392,16 @@ long double sugoroku_back_bs(int m, int n, vi a) {
 		else len = 1;
 
 		// 振り出しに戻すマスが m 個連続したらゴール不可能
-		if (len == m) return (long double)INFL;
+		if (len == m) return (T)INFL;
 	}
 
 	// e[0] = e0 と決め打って計算した答えが e0 以下かを返す．
-	function<bool(long double)> okQ = [&](long double e0) {
+	function<boolT)> okQ = [&](T e0) {
 		// マス i からマス n に辿り着くまでの回数の期待値を e[i] とおく．
 		// dp[i] : Σe[i..n)
-		vector<long double> dp(n + 1);
+		vector<T> dp(n + 1);
 
-		int pt = k - 1; long double e = 1;
+		int pt = k - 1; T e = 1;
 		repir(i, n - 1, 0) {
 			// 振り出しに戻すマスの場合
 			if (pt >= 0 && i == a[pt]) {
@@ -407,8 +410,8 @@ long double sugoroku_back_bs(int m, int n, vi a) {
 			}
 			// 通常のマスの場合
 			else {
-				long double sub = (1 + i + m) <= n ? dp[i + 1 + m] : 0.;
-				e = 1. + (dp[i + 1] - sub) * (1. / m);
+				T sub = (1 + i + m) <= n ? dp[i + 1 + m] : T(0);
+				e = T(1) + (dp[i + 1] - sub) * (T(1) / m);
 			}
 
 			dp[i] = dp[i + 1] + e;
@@ -417,7 +420,7 @@ long double sugoroku_back_bs(int m, int n, vi a) {
 		return e <= e0;
 	};
 
-	return binary_search((long double)INFL, (long double)0, okQ);
+	return binary_search((T)INFL, (T)0, okQ);
 }
 
 
@@ -575,6 +578,119 @@ double blurred_shooting(const vi& x) {
 }
 
 
+//【ランダムウォーク】
+/*
+* Random_walk<T>(int n) : O(1)
+*	n 頂点 0 辺のグラフで初期化する．
+*
+* add_edge(int s, int t, T prob) : O(1)
+*	有向辺 s→t を，選択確率 prob で追加する．
+*	制約：任意の s について Σs→t p[s][t] = 1
+*
+* vT arrive_probability_to(int GL) : O(n^3)
+*	各頂点から出発し GL に到着する確率のリストを返す．
+*	制約：GL から GL 以外へ移動可能
+*
+* vT expected_turn_to(int GL) : O(n^3)
+*	各頂点から出発し GL に初めて到着するまでのターン数の期待値のリストを返す．
+*	制約：どの頂点からも GL に到達可能
+*
+* vT stationary_distribution() : O(n^3)
+*	定常分布を返す．
+*	制約：どの頂点からどの頂点へも移動可能
+*
+* 利用：【行列】，【線形方程式】
+*/
+template <class T>
+class Random_walk {
+	int n;
+
+	// 推移確率行列（p[i][j] : i から j に移動する確率）
+	vector<vector<T>> p;
+
+public:
+	// n 頂点 0 辺のグラフで初期化する．
+	Random_walk(int n) : n(n), p(n, vector<T>(n)) {
+		// verify : https://yukicoder.me/problems/no/813
+	}
+	Random_walk() : n(0) {}
+
+	// 有向辺 s→t を，選択確率 prob で追加する．
+	void add_edge(int s, int t, T prob) {
+		// verify : https://yukicoder.me/problems/no/813
+
+		p[s][t] += prob;
+	}
+
+	// 各頂点から出発し GL に到着する確率のリストを返す．
+	vector<T> arrive_probability_to(int GL) {
+		// verify : https://yukicoder.me/problems/no/813
+
+		//【方法】
+		// s から GL に到着する確率を x[s] とすると，線形方程式
+		//		x[s] = Σs→t p[s][t] x[t] (s ≠ GL)
+		//		x[GL] = 1
+		// を得る．これを整理すると
+		//		(1 - p[s][s])x[s] - Σs→t,t≠s p[s][t] x[t] = 0
+		//		x[GL] = 1
+		// となる．
+
+		Matrix<T> mat(n); vector<T> vec(n);
+		rep(i, n) rep(j, n) if (i != GL) mat[i][j] -= p[i][j];
+		vec[GL] = 1;
+
+		return gauss_jordan_elimination(mat, vec);
+	}
+
+	// 各頂点から出発し GL に初めて到着するまでのターン数の期待値のリストを返す．
+	vector<T> expected_turn_to(int GL) {
+		//【方法】
+		// s→GL にかかるターン数の期待値を e[s] とすると，線形方程式
+		//		e[s] = 1 + Σs→t p[s][t] e[t] (s ≠ GL)
+		//		e[GL] = 0
+		// を得る．これを整理すると
+		//		(1 - p[s][s])e[s] - Σs→t,t≠s p[s][t] e[t] = 1
+		//		e[GL] = 0
+		// となる．
+
+		Matrix<T> mat(n); vector<T> vec(n, 1);
+		rep(i, n) rep(j, n) if (i != GL) mat[i][j] -= p[i][j];
+		vec[GL] = 0;
+
+		return gauss_jordan_elimination(mat, vec);
+	}
+
+	// 定常分布を返す．
+	vector<T> stationary_distribution() {
+		//【方法】
+		// 定常分布を π[0..n) とすると，線形方程式
+		//		π[t] = Σs→t p[s][t] π[s]
+		//		Σπ[0..n) = 1
+		// を得る．これを整理すると
+		//		(1 - p[t][t])π[t] - Σs→t,t≠s p[s][t] π[s] = 0
+		//		Σπ[0..n) = 1
+		// となる．
+
+		Matrix<T> mat(n); vector<T> vec(n);
+		rep(i, n - 1) rep(j, n) mat[i][j] -= p[j][i];
+		rep(j, n) mat[n - 1][j] = 1;
+		vec[n - 1] = 1;
+
+		return gauss_jordan_elimination(mat, vec);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Random_walk& rw) {
+		rep(i, rw.n) {
+			rep(j, rw.n) os << rw.p[i][j] << " ";
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
 //【重み付きランダムウォーク】
 /*
 * Random_walk_weighted<T>(int n) : O(1)
@@ -587,52 +703,54 @@ double blurred_shooting(const vi& x) {
 *	各頂点から出発し t に初めて到着するまでの経路の重みの和の期待値のリストを返す．
 *	制約：どの頂点からも t に到達可能
 *
-* 利用：【行列】，【連立一次方程式】
+* 利用：【行列】，【線形方程式】
 */
 template <class T>
-class Random_walk_weighted {
+class Weighted_random_walk {
 	int n;
 	Matrix<T> mat;
+	vector<T> vec;
 
 public:
 	// n 頂点 0 辺のグラフで初期化する．
-	Random_walk_weighted(int n) : n(n), mat(n, n + 1) {
+	Weighted_random_walk(int n) : n(n), mat(n, n), vec(n) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2171
 
 		rep(i, n) mat[i][i] = 1;
 	}
+	Weighted_random_walk() : n(0)
 
-	// 有向辺 s→t を，重み w，選択確率 p で追加する．
-	void add_edge(int s, int t, T w, T p) {
+		// 有向辺 s→t を，重み w，選択確率 p で追加する．
+		void add_edge(int s, int t, T w, T p) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2171
 
 		mat[s][t] -= p;
-		mat[s][n] += w * p;
+		vec[s] += w * p;
 	}
 
 	// 各頂点から出発し t に初めて到着するまでの経路の重みの和の期待値のリストを返す．
 	vector<T> solve(int t) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2171
 
-		Matrix<T> mat2(mat);
-		repi(j, 0, n) mat2[t][j] = (T)(t == j);
-		
-		vector<T> sol;
-		solve_eq(mat2, &sol);
+		Matrix<T> mat2(mat); vector<T> vec2(vec);
+		rep(j, n) mat2[t][j] = (T)(t == j);
+		vec2[t] = 0;
+
+		vector<T> sol = gauss_jordan_elimination(mat2, vec2);
 
 		return sol;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Random_walk_weighted& rw) {
+	friend ostream& operator<<(ostream& os, const Weighted_random_walk& rw) {
 		rep(i, rw.n) {
-			rep(j, rw.n + 1) os << rw.mat[i][j] << " ";
-			os << endl;
+			rep(j, rw.n) os << rw.mat[i][j] << " ";
+			os << " " << rw.vec[i] << endl;
 		}
 		return os;
 	}
 #endif
-};
+}; 
 
 
 //【DAG 上のランダムウォーク】

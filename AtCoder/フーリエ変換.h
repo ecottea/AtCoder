@@ -20,7 +20,7 @@
 * vD convolution(vD a, vD b) : O((n + m) log(n + m))
 *	実数列 a[0..n) と b[0..m) の畳込みを返す．
 *
-* vi convolution(vi a, vi b, int mod = 1e9+7) : O(3 (n + m) log(n + m))
+* vi convolution(vi a, vi b, int mod = 1e9+7) : O(3 (n + m) log(n + m))（遅い）
 *	整数列 a[0..n) と b[0..m) の mod を法とした畳込みを返す．
 *
 * vD cyclic_convolution(vD a, vD b) : O(n log n)

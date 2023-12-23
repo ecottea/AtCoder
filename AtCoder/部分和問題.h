@@ -9,21 +9,22 @@
 /*
 * 非負整数列 a[0..n) の部分和として v が作れるかを返す．
 *
-* 制約：N は v + 1 以上の定数．
+* 制約：N ≧ v + 1
 */
 template <size_t N>
 bool find_partial_sum(const vi& a, int v) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_r
+
 	int n = sz(a);
-	is.clear();
 
 	// dp_i[j] : a[0..i) の中で和をちょうど j にできるか
 	bitset<N> dp;
-	dp[0] = 1;
+	dp[0] = 1; // 空和は 0
 
 	// インライン配る DP
-	rep(i, n) dp[i + 1] = dp[i] | (dp[i] << a[i]);
+	rep(i, n) dp |= dp << a[i];
 
-	return dp[n][v];
+	return dp[v];
 }
 
 
@@ -61,22 +62,24 @@ vector<T> count_partial_sum(const vi& a, int v) {
 /*
 * 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 *
-* 利用：【形式的冪級数】,【指数関数】,【階乗など（法が大きな素数）】
+* 制約：fm は 2(v+1)! まで計算可能
+* 
+* 利用：【形式的冪級数】,【指数関数】
 */
-vm count_partial_sum_fps(const vi& a, int v) {
+vm count_partial_sum_fps(const vi& a, int v, const Factorial_mint& fm) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
 	// verify : https://judge.yosupo.jp/problem/sharp_p_subset_sum
 
 	//【方法】
 	// 母関数は
-	//		f(z) = Πi=[0..n) (1 + z^a[i])
+	//		f(z) = Πi∈[0..n) (1 + z^a[i])
 	// であるが，これは
 	//		f(z) = exp(Σi=[0..n) log(1 + z^a[i]))
-	// と書き直せる．対数関数のマクローリン展開の式より
-	//		log(1 + z^a[i]) = Σk=[1..∞) (-1)^(k-1) 1/k z^(k * a[i])
+	// と書き直せる．対数関数のマクローリン展開の式
+	//		log(1 + z) = Σk∈[1..∞) (-1)^(k-1) 1/k z^k
+	// より
+	//		log(1 + z^a[i]) = Σk∈[1..∞) (-1)^(k-1) 1/k z^(k a[i])
 	// であり，これはスパースなので高速に和が計算できる．
-
-	Factorial_mint fm(2 * (v + 1));
 
 	// cnt[v] : a[0..n) の中に v が何個含まれるか
 	unordered_map<int, int> cnt;
@@ -88,53 +91,43 @@ vm count_partial_sum_fps(const vi& a, int v) {
 			f[k * p.first] += p.second * (k & 1 ? 1 : -1) * fm.inv(k);
 		}
 	}
-	f = exp(f, v + 1, fm);
+	f = exp_fps(f, v + 1, fm);
 
 	return f.c;
 }
 
 
-//【部分和問題（復元）】O(n v)
+//【部分和問題（復元）】O(n v / 64)
 /*
-* 非負整数列 a[0..n) について，Σi∈S a[i] = v なる辞書順最小の添字集合 S を is に格納する．
+* 非負整数列 a[0..n) について，Σi∈S a[i] = v なる添字集合 S を is に格納する．
 * S が存在しなければ false を返す．
 *
-*（和を状態にもつ状態 DP）
+* 制約：N は v + 1 以上の定数．
 */
-bool construction_partial_sum(const vi& a, int v, vi& is) {
+template <size_t N>
+bool construction_partial_sum_fast(const vi& a, int v, vi& is) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_cq
+
+	if (v < 0) return false;
+
 	int n = sz(a);
 	is.clear();
 
-	// dp[i][j] : a[0..i) の中で和がちょうど j になる組合せがあるか
-	vvb dp(n + 1, vb(v + 1));
-	dp[0][0] = true; // 空和が 0 であることに対応
+	// dp[i][j] : a[0..i) の中で和をちょうど j にできるか
+	vector<bitset<N>> dp(n + 1);
+	dp[0][0] = 1;
 
-	// sel[i][j] : dp[i][j] = true のとき，a[i-1] を選んだか（DP 復元用）
-	vvb sel(n + 1, vb(v + 1));
-
-	// 貰う DP
-	rep(i, n) {
-		repi(j, 0, v) {
-			// a[i] を選ばない場合から考える．
-			dp[i + 1][j] = dp[i][j];
-			if (dp[i + 1][j]) sel[i + 1][j] = false;
-
-			// それでダメなら次に a[i] を選ぶ場合を考える（i 番目の数が j 以下なら選べる）
-			if (!dp[i + 1][j] && j >= a[i]) {
-				dp[i + 1][j] = dp[i][j - a[i]];
-				if (dp[i + 1][j]) sel[i + 1][j] = true;
-			}
-		}
-	}
+	// 配る DP
+	rep(i, n) dp[i + 1] = dp[i] | (dp[i] << a[i]);
 
 	// 和が v になる部分集合が存在しない場合
 	if (!dp[n][v]) return false;
 
 	// DP 復元
-	repir(i, n, 1) {
-		if (sel[i][v]) {
-			is.push_back(i - 1);
-			v -= a[i - 1];
+	repir(i, n - 1, 0) {
+		if (v - a[i] >= 0 && dp[i][v - a[i]]) {
+			is.push_back(i);
+			v -= a[i];
 		}
 	}
 	reverse(all(is));
@@ -246,9 +239,7 @@ int minimize_partial_sum(const vi& a, int v) {
 			dp[i + 1][j] = dp[i][j];
 
 			// i 番目の数が j より大きいと選べない．
-			if (j < a[i]) {
-				continue;
-			}
+			if (j < a[i]) continue;
 
 			// i 番目の数を選ぶ場合
 			chmin(dp[i + 1][j], dp[i][j - a[i]] + 1);
@@ -256,6 +247,37 @@ int minimize_partial_sum(const vi& a, int v) {
 	}
 
 	return dp[n][v];
+}
+
+
+//【部分和問題（個数最小化，無限個）】O(n v)
+/*
+* 長さ n の非負整数の列 a の部分和として v を作るために必要な要素の最小個数を返す．
+* a の部分和として v が作れないなら INF を返す．
+*
+*（和を状態にもつインライン状態 DP）
+*/
+int minimize_unlimited_partial_sum(const vi& a, int v) {
+	// verify : https://yukicoder.me/problems/no/247
+
+	int n = sz(a);
+
+	// dp_i[j] : a[0..i) の中で和がちょうど j を実現できる最小個数
+	vi dp(v + 1, INF);
+	dp[0] = 0; // 空和が 0 であることに対応
+
+	// 貰う DP
+	rep(i, n) {
+		repi(j, 0, v) {
+			// i 番目の数が j より大きいと選べない．
+			if (j < a[i]) continue;
+
+			// i 番目の数を選ぶ場合
+			chmin(dp[j], dp[j - a[i]] + 1);
+		}
+	}
+
+	return dp[v];
 }
 
 
@@ -304,7 +326,8 @@ ll count_partial_sum(const vl& a, ll v) {
 */
 template <class T>
 bool partial_sum(const vector<T>& a, T v) {
-	// 参考：https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
+	// 参考 : https://qiita.com/keymoon/items/6cf46473b5421bfe1d48
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_cm
 
 	int n = sz(a);
 
@@ -359,7 +382,7 @@ bool partial_sum(const vector<T>& a, T v) {
 		else sum2 -= a[n1 + change_index];
 
 		// 前半のリストに v - sum2 があれば，合わせて部分和が v となる．
-		if (sum1s.count(v - sum2)) 	return true;
+		if (sum1s.count(v - sum2)) return true;
 	}
 
 	// ここまで回ってきたなら部分和が v にならない．
@@ -514,9 +537,9 @@ mint count_multiple_partial_sum(const vector<T>& a, int m) {
 }
 
 
-//【部分和問題（個数制限なし，数え上げ）】O(n v)
+//【部分和問題（無限個，数え上げ）】O(n v)
 /*
-* 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
+* 正整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 * 各 a[i] は [0..∞) 個用いることができる．
 */
 vm count_unlimited_partial_sum(const vi& a, int v) {
@@ -529,20 +552,64 @@ vm count_unlimited_partial_sum(const vi& a, int v) {
 	dp[0] = 1; // 空和が 0 であることに対応
 
 	// インライン配る DP
-	rep(i, n) repi(j, 0, v) {
-		// a[i] を選ばない場合はインライン DP なので何もしなくて良い．
+	rep(i, n) {
+		Assert(a[i] > 0);
 
-		// a[i] を選ぶ場合（j のループを昇順にしているので何個でも選べることになる）
-		if (j + a[i] <= v) dp[j + a[i]] += dp[j];
+		repi(j, 0, v) {
+			// a[i] を選ばない場合はインライン DP なので何もしなくて良い．
+
+			// a[i] を選ぶ場合（j のループを昇順にしているので何個でも選べることになる）
+			if (j + a[i] <= v) dp[j + a[i]] += dp[j];
+		}
 	}
 
 	return dp;
 }
 
 
-//【部分和問題（個数制限なし，数え上げ）】O(A n log v) （A = Σa）
+//【部分和問題（無限個，数え上げ，mod 998244353）】O(n + v log v)
 /*
-* 非負整数列 a[0..n) の部分和として v を作る方法が何通りあるかを返す．
+* 正整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
+* 各 a[i] は [0..∞) 個用いることができる．
+*
+* 制約：fm は 2(v+1)! まで計算可能
+*
+* 利用：【形式的冪級数】,【指数関数】
+*/
+vm count_unlimited_partial_sum_fps(const vi& a, int v, const Factorial_mint& fm) {
+	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
+
+	//【方法】
+	// 母関数は
+	//		f(z) = Πi∈[0..n) 1/(1 - z^a[i])
+	// であるが，これは
+	//		f(z) = exp(Σi=[0..n) -log(1 - z^a[i]))
+	// と書き直せる．対数関数のマクローリン展開の式より
+	//		-log(1 - z^a[i]) = Σk∈[1..∞) 1/k z^(k a[i])
+	// であり，これはスパースなので高速に和が計算できる．
+
+	// cnt[v] : a[0..n) の中に v が何個含まれるか
+	unordered_map<int, int> cnt;
+	repe(x, a) {
+		Assert(x > 0);
+		cnt[x]++;
+	}
+
+	MFPS f(0, v + 1);
+	repe(p, cnt) {
+		for (int k = 1; k * p.first <= v; k++) {
+			f[k * p.first] += p.second * fm.inv(k);
+		}
+	}
+	f = exp_fps(f, v + 1, fm);
+
+	return f.c;
+}
+
+
+//【部分和問題（無限個，数え上げ）】O(A n log v) （A = Σa）
+/*
+* 正整数列 a[0..n) の部分和として v を作る方法が何通りあるかを返す．
 * 各 a[i] は [0..∞) 個用いることができる．
 *
 * 利用：【展開係数（分母が二項式の積）】
@@ -557,13 +624,16 @@ mint count_unlimited_partial_sum(const vi& a, ll v) {
 
 	int n = sz(a);
 	vector<pair<int, mint>> dcs(n);
-	rep(i, n) dcs[i] = { a[i], -1 };
+	rep(i, n) {
+		Assert(a[i] > 0);
+		dcs[i] = { a[i], -1 };
+	}
 
 	return bostan_mori(vm{ 1 }, dcs, v);
 }
 
 
-//【部分和問題（個数制限なし，個数最小化）】O(n v)
+//【部分和問題（無限個，個数最小化）】O(n v)
 /*
 * 長さ n の正整数列 a の部分和として v を作るために必要な最小要素数を返す．
 * 各 a[i] は [0..∞) 個用いることができる．
@@ -599,54 +669,52 @@ int minimize_unlimited_partial_sum(const vi& a, int v) {
 }
 
 
-//【部分和問題（個数制限付き，存在判定）】O(n v)
+//【部分和問題（個数制限，存在判定）】O(n v)
 /*
 * 長さ n の正整数列 a の部分和として各 j∈[0..v] を作れるかを格納したリストを返す．
 * 各 a[i] は [0..m[i]] 個用いることができる．
 */
 vb limited_partial_sum(const vi& a, const vi& m, int v) {
 	// 参考 : https://algo-method.com/tasks/313/editorial
+	// verify : https://atcoder.jp/contests/abc286/tasks/abc286_d
 
 	int n = sz(a);
 	vb able(v + 1);
 
-	// dp[i][j] : a[0..i) の中で和をちょうど j にするときの a[i-1] の個数の最小値
-	vvi dp(n + 1, vi(v + 1, INF));
-	dp[0][0] = 0; // 空和が 0 であることに対応
+	// dp_i[j] : a[0..i) の中で和をちょうど j にするときの a[i-1] の個数の最小値
+	vi dp(v + 1, INF);
+	dp[0] = 0; // 空和が 0 であることに対応
 
 	// 貰う DP
 	rep(i, n) {
+		// m[i] = 0 なら何もしない
+		if (m[i] == 0) continue;
+
+		vi ndp(v + 1, INF);
+
 		repi(j, 0, v) {
 			// i 番目の数を選ばない場合
-			if (dp[i][j] != INF)
-				chmin(dp[i + 1][j], 0);
-			else
-				chmin(dp[i + 1][j], INF);
+			if (dp[j] != INF) chmin(ndp[j], 0);
 
-			// i 番目の数を選べる場合
 			if (j >= a[i]) {
 				// i 番目の数を新たに選ぶ場合
-				if (dp[i][j - a[i]] != INF)
-					chmin(dp[i + 1][j], 1);
-				else
-					chmin(dp[i + 1][j], INF);
+				if (dp[j - a[i]] != INF) chmin(ndp[j], 1);
 
 				// i 番目の数を追加で選ぶ場合
-				if (dp[i + 1][j - a[i]] < m[i])
-					chmin(dp[i + 1][j], dp[i + 1][j - a[i]] + 1);
-				else
-					chmin(dp[i + 1][j], INF);
+				if (ndp[j - a[i]] < m[i]) chmin(ndp[j], ndp[j - a[i]] + 1);
 			}
 		}
+
+		dp = move(ndp);
 	}
 
-	repi(j, 0, v) able[j] = (dp[n][j] != INF);
+	repi(j, 0, v) able[j] = (dp[j] != INF);
 
 	return able;
 }
 
 
-//【部分和問題（個数制限付き，数え上げ）】O(n v)
+//【部分和問題（個数制限，数え上げ）】O(n v)
 /*
 * 長さ n の正整数列 a の部分和として v を作る方法が何通りあるかを返す．
 * 各 a[i] は [0..m[i]] 個用いることができる．
@@ -655,6 +723,7 @@ vb limited_partial_sum(const vi& a, const vi& m, int v) {
 */
 mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 	// 参考 : https://betrue12.hateblo.jp/entry/2020/10/05/124052
+	// verify : https://atcoder.jp/contests/abc286/tasks/abc286_d
 
 	int n = sz(a);
 
@@ -767,7 +836,7 @@ int minimize_signed_partial_sum(const vi& a, vi& cnt) {
 }
 
 
-//【部分和問題（負値可，個数制限付き，数え上げ）】O(n Σm[i]|a[i]|)
+//【部分和問題（負値可，個数制限，数え上げ）】O(n Σm[i]|a[i]|)
 /*
 * 長さ n の整数列 a の部分和として v を作る方法が何通りあるかを返す．
 * 各 a[i] は [0..m[i]] 個用いることができる．
@@ -856,7 +925,7 @@ mint count_limited_signed_partial_sum(vi& a, const vi& m, int v) {
 }
 
 
-//【部分和問題（負値可，個数制限付き，個数最小化）】O(A√A + n)（A = Σm[i]|a[i]|）
+//【部分和問題（負値可，個数制限，個数最小化）】O(A√A + n)（A = Σm[i]|a[i]|）
 /*
 * 長さ n の整数列 a の部分和として v を作るのに必要な要素数の最小値を cnt[v - MIN] に格納し，MIN を返す．
 * 各 a[i] は [0..m[i]] 個用いることができる．

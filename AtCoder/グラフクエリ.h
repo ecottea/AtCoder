@@ -4,13 +4,13 @@
 // ■■■■■ グラフのクエリ処理 ■■■■■
 
 
-//【隣接作用／一点参照クエリ（可換モノイド）】
+//【隣接頂点クエリ（可換モノイド）】
 /*
-* Neighbor_add_query<S, op, o>(Graph g) : O(n + m)
-*	グラフ g と初期値 o() で初期化する．
+* Neighbor_vertex_query<S, op, o>(Graph g) : O(n + m)
+*	グラフ g と初期値 v[0..n) = o() で初期化する．
 *	要素は可換モノイド (S, op, o) の元とする．
 *
-* Neighbor_add_query<S, op, o>(Graph g, vS v) : O(n + m)
+* Neighbor_vertex_query<S, op, o>(Graph g, vS v) : O(n + m)
 *	グラフ g と初期値 v[0..n) で初期化する．
 *
 * add(int i, S x) : O(1)
@@ -19,163 +19,200 @@
 * S get(int i) : O(√m)
 *	v[i] を返す．
 *
-* spread(int s, S x) : O(√m)
-*	s の隣接頂点 t 全てに対して v[t] += x とする．
+* neighbor_add(int s, S x) : O(√m)
+*	辺 s→t をもつ全ての頂点 t に対して v[t] += x とする．
+*
+* vS get_all() : O(n + m)
+*	v[0..n) を返す．
 */
 template <class S, S(*op)(S, S), S(*o)()>
-class Neighbor_add_query {
+class Neighbor_vertex_query {
 	using vS = vector<S>;
 
 	int n; // 頂点数
-	Graph g; // グラフ
 
-	int th; // 頂点の次数が大きいかどうかの閾値
-	Graph gl; // 隣接する次数が大きい頂点だけを記録したグラフ
+	int th; // 頂点の出次数が大きいかどうかの閾値
+	Graph gl;     // 出次数が th 未満の頂点から出る辺のみからなるグラフ
+	Graph gh_rev; // 出次数が th 以上の頂点から出る辺のみからなるグラフの逆グラフ
 
 	vS v; // 各頂点の値
 	vS lazy; // 各頂点から撒く値
 
 public:
-	// グラフ g と単位元 o() で初期化
-	Neighbor_add_query(const Graph& g_) : n(sz(g_)), g(g_), gl(n), v(n, o()), lazy(n, o()) {
+	// グラフ g と初期値 v[0..n) = o() で初期化する．
+	Neighbor_vertex_query(const Graph& g) : n(sz(g)), gl(n), gh_rev(n), v(n, o()), lazy(n, o()) {
 		// m : g の辺の数
 		int m = 0;
 		rep(s, n) m += sz(g[s]);
 
-		// 頂点の次数が大きいか小さいかの閾値 th を決定
+		// 頂点の出次数が大きいかどうかの閾値 th を決定
 		th = (int)(sqrt(m) + 0.001);
 
-		// 隣接する大きい頂点だけを記録したグラフ gl を作成
-		rep(s, n) repe(t, g[s]) if (sz(g[t]) > th) gl[s].push_back(t);
+		// 出次数が th 未満か以上かで g の辺を分割する．
+		rep(s, n) repe(t, g[s]) {
+			if (sz(g[s]) < th) gl[s].push_back(t);
+			else gh_rev[t].push_back(s);
+		}
 	}
 
-	// グラフ g と配列 a[0..n) で初期化
-	Neighbor_add_query(const Graph& g, const vector<S>& v_) : Neighbor_add_query(g) { v = v_; }
-	Neighbor_add_query() {}
+	// グラフ g と初期値 v[0..n) で初期化する．
+	Neighbor_vertex_query(const Graph& g, const vS& v_) : Neighbor_vertex_query(g) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ce
+
+		v = v_;
+	}
+	Neighbor_vertex_query() {}
 
 	// v[i] += x とする．
 	void add(int i, S x) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ce
+		
 		v[i] = op(v[i], x);
 	}
 
 	// v[i] を返す．
-	S get(int i) {
-		// i の次数が大きい場合は v[i] に正しい値が入っている．
-		if (sz(g[i]) > th) return v[i];
+	S get(int i) const {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ce
+		
+		// 自身に記録されている値
+		S res = v[i];
 
-		// i の次数が小さい場合は周りから撒かれた値の和を計算する．
-		S res = o();
-		repe(j, g[i]) res = op(lazy[j], res);
+		// 辺 s→i をもち出次数の大きい頂点 s から撒かれた値を加算する．
+		repe(s, gh_rev[i]) res = op(res, lazy[s]);
 
-		return op(v[i], res);
+		return res;
 	}
 
-	// s の隣接頂点 t 全てに対して v[t] += x とする．
-	void spread(int s, S x) {
-		// 隣接する次数が大きい頂点の値の更新
-		repe(t, gl[s]) v[t] = op(x, v[t]);
+	// 辺 s→t をもつ全ての頂点 t に対して v[t] += x とする．
+	void neighbor_add(int s, S x) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ce
+		
+		// s の出次数が大きい場合
+		if (gl[s].empty()) {
+			// 隣接頂点に数を撒いたことを記録する．
+			lazy[s] = op(lazy[s], x);
+		}
+		// s の出次数が小さい場合
+		else {
+			// 実際に隣接頂点に値を加算する．
+			repe(t, gl[s]) v[t] = op(v[t], x);
+		}
+	}
 
-		// 隣接頂点に数を撒いたことを記録
-		lazy[s] = op(x, lazy[s]);
+	// v[0..n) を返す．
+	vS get_all() const {
+		auto res(v);
+		rep(t, n) repe(s, gh_rev[t]) res[t] = op(res[t], lazy[s]);
+		return res;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Neighbor_add_query npq) {
-		rep(i, npq.n) os << npq.get(i) << " ";
+	friend ostream& operator<<(ostream& os, Neighbor_vertex_query NAQ) {
+		os << NAQ.get_all();
 		return os;
 	}
 #endif
 };
 
 
-//【隣接作用／一点参照クエリ（アーベル群）】
+//【隣接更新クエリ】
 /*
-* Neighbor_add_set_query<S, op, o, inv>(Graph g) : O(n + m)
-*	グラフ g と初期値 o() で初期化する．
-*	要素はアーベル群 (S, op, o, inv) の元とする．
-*
-* Neighbor_add_set_query<S, op, o, inv>(Graph g, vS v) : O(n + m)
-*	グラフ g と初期値 v[0..n) で初期化する．
-*
-* add(int i, S x) : O(1)
-*	v[i] += x とする．
-*
-* set(int i, S x) : O(√m)
-*	v[i] = x とする．
+* t 回目のクエリのとき {t, val} として【隣接加算クエリ】で max モノイドを使えば良い．
+* 
+* verify : https://atcoder.jp/contests/typical90/tasks/typical90_ce
+*/
+
+
+//【隣接頂点クエリ（可換 M-集合）】
+/*
+* Neighbor_vertex_query<S, F, act, comp, id>(Graph g, vS v) : O(n + m)
+*	グラフ g と初期値 v[0..n) = o() で初期化する．
+*	要素は可換モノイド作用付き集合 (S, F, act, comp, id) の元とする．
 *
 * S get(int i) : O(√m)
 *	v[i] を返す．
 *
-* spread(int s, S x) : O(√m)
-*	s の隣接頂点 t 全てに対して v[t] += x とする．
+* apply(int i, F f) : O(1)
+*	v[i] = f( v[i] ) とする．
+*
+* neighbor_apply(int s, F f) : O(√m)
+*	辺 s→t をもつ全ての頂点 t に対して v[i] = f( v[i] ) とする．
+*
+* vS get_all() : O(n + m)
+*	v[0..n) を返す．
 */
-template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
-class Neighbor_add_set_query {
+template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Neighbor_vertex_query {
 	using vS = vector<S>;
+	using vF = vector<F>;
 
 	int n; // 頂点数
-	Graph g; // グラフ
 
-	int th; // 頂点の次数が大きいかどうかの閾値
-	Graph gl; // 隣接する次数が大きい頂点だけを記録したグラフ
+	int th; // 頂点の出次数が大きいかどうかの閾値
+	Graph gl;     // 出次数が th 未満の頂点から出る辺のみからなるグラフ
+	Graph gh_rev; // 出次数が th 以上の頂点から出る辺のみからなるグラフの逆グラフ
 
 	vS v; // 各頂点の値
-	vS lazy; // 各頂点から撒く値
-
-	// i に隣接する頂点から撒かれた値の総和を返す．（i の次数が大きければ o() を返す．）
-	S gather(int i) {
-		if (sz(g[i]) > th) return o();
-
-		S res = o();
-		repe(j, g[i]) res = op(lazy[j], res);
-		return res;
-	}
+	vF lazy; // 各頂点から撒く作用
 
 public:
-	// グラフ g と単位元 o() で初期化
-	Neighbor_add_set_query(const Graph& g_) : n(sz(g_)), g(g_), gl(n), v(n, o()), lazy(n, o()) {
+	// グラフ g と初期値 v[0..n) で初期化する．
+	Neighbor_vertex_query(const Graph& g, const vS& v) : n(sz(g)), gl(n), gh_rev(n), v(v), lazy(n, id()) {
 		// m : g の辺の数
 		int m = 0;
 		rep(s, n) m += sz(g[s]);
 
-		// 頂点の次数が大きいか小さいかの閾値 th を決定
+		// 頂点の出次数が大きいかどうかの閾値 th を決定
 		th = (int)(sqrt(m) + 0.001);
 
-		// 隣接する大きい頂点だけを記録したグラフ gl を作成
-		rep(s, n) repe(t, g[s]) if (sz(g[t]) > th) gl[s].push_back(t);
+		// 出次数が th 未満か以上かで g の辺を分割する．
+		rep(s, n) repe(t, g[s]) {
+			if (sz(g[s]) < th) gl[s].push_back(t);
+			else gh_rev[t].push_back(s);
+		}
 	}
+	Neighbor_vertex_query() {}
 
-	// グラフ g と配列 a[0..n) で初期化
-	Neighbor_add_set_query(const Graph& g, const vector<S>& v_) : Neighbor_add_set_query(g) { v = v_; }
-	Neighbor_add_set_query() {}
-
-	// v[i] += x とする．
-	void add(int i, S x) {
-		v[i] = op(v[i], x);
-	}
-
-	// v[i] = x とする．
-	void set(int i, S x) {
-		v[i] = op(x, inv(gather(i)));
+	// v[i] = f( v[i] ) とする．
+	void apply(int i, F f) {
+		v[i] = act(f, v[i]);
 	}
 
 	// v[i] を返す．
-	S get(int i) {
-		return op(v[i], gather(i));
+	S get(int i) const {
+		// 自身に記録されている値
+		S res = v[i];
+
+		// 辺 s→i をもち出次数の大きい頂点 s からの作用を施す．
+		repe(s, gh_rev[i]) res = act(lazy[s], res);
+
+		return res;
 	}
 
-	// s の隣接頂点 t 全てに対して v[t] += x とする．
-	void spread(int s, S x) {
-		// 隣接する次数が大きい頂点の値の更新
-		repe(t, gl[s]) v[t] = op(x, v[t]);
+	// 辺 s→t をもつ全ての頂点 t に対して v[i] = f( v[i] ) とする．
+	void neighbor_apply(int s, F f) {
+		// s の出次数が大きい場合
+		if (gl[s].empty()) {
+			// 隣接頂点に数を撒いたことを記録する．
+			lazy[s] = comp(f, lazy[s]);
+		}
+		// s の出次数が小さい場合
+		else {
+			// 実際に隣接頂点に値を加算する．
+			repe(t, gl[s]) v[t] = act(f, v[t]);
+		}
+	}
 
-		// 隣接頂点に数を撒いたことを記録
-		lazy[s] = op(x, lazy[s]);
+	// v[0..n) を返す．
+	vS get_all() const {
+		auto res(v);
+		rep(t, n) repe(s, gh_rev[t]) res[t] = act(lazy[s], res[t]);
+		return res;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Neighbor_add_set_query npq) {
-		rep(i, npq.n) os << npq.get(i) << " ";
+	friend ostream& operator<<(ostream& os, Neighbor_vertex_query NAQ) {
+		os << NAQ.get_all();
 		return os;
 	}
 #endif

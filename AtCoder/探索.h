@@ -8,10 +8,10 @@
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
-template <class T>
-T meguru_search(T ok, T ng, const function<bool(T)>& okQ) {
+template <class T, class FUNC>
+T meguru_search(T ok, T ng, const FUNC& okQ) {
 	// 参考 : https://twitter.com/meguru_comp/status/697008509376835584
-	// verify : https://atcoder.jp/contests/abc023/tasks/abc023_d
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
 
 	// 境界が決定するまで
 	while (abs(ok - ng) > 1) {
@@ -25,8 +25,7 @@ T meguru_search(T ok, T ng, const function<bool(T)>& okQ) {
 	return ok;
 
 	/* okQ の定義の雛形
-	using T = ll;
-	function<bool(T)> okQ = [&](T x) {
+	auto okQ = [&](ll x) {
 		return true || false;
 	};
 	*/
@@ -37,30 +36,28 @@ T meguru_search(T ok, T ng, const function<bool(T)>& okQ) {
 /*
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 */
-template <class T>
-T binary_search(T ok, T ng, const function<bool(T)>& okQ, double EPS = 1e-12) {
-	// verify : https://atcoder.jp/contests/abc189/tasks/abc189_f
+template <class T, class FUNC>
+T bin_search(T ok, T ng, const FUNC& okQ, double EPS = 1e-12) {
+	// 参考 : https://rsk0315.hatenablog.com/entry/2020/04/29/155009
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ck
 
-	// 誤差 EPS で境界が決定するまで
-	while (true) {
+	int L = max((int)log2(abs(ok - ng) / EPS), 1);
+
+	rep(hoge, L) {
 		// 区間の中間
-		T mid = (ok + ng) / 2;
-		//double mid = sqrt(ok * ng); // 相対誤差を小さくする場合
+		T mid = (ok + ng) * 0.5;
 
-		// 絶対誤差か相対誤差が EPS 以下なら終了する．
-		T err = abs(ok - ng);
-		if (err <= EPS || err <= abs(mid) * EPS) {
-			break;
-		}
+		// 相対誤差を小さくしたい場合はこちらを使う．
+		//T mid = sqrt(ok * ng);
 
 		// 中間が OK かどうかに応じて区間を縮小する．
 		if (okQ(mid)) ok = mid;
 		else ng = mid;
 	}
-	return (ok + ng) / 2;
+	return (ok + ng) * 0.5;
 
 	/* okQ の定義の雛形
-	function<bool(double)> okQ = [&](double x) {
+	auto okQ = [&](double x) {
 		return true || false;
 	};
 	*/
@@ -69,11 +66,13 @@ T binary_search(T ok, T ng, const function<bool(T)>& okQ, double EPS = 1e-12) {
 
 //【三分探索（上に凸）】O(log(r - l))
 /*
-* 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l, r) における最大値を与える x を返す．
+* 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
 */
-template <class T>
-ll ternary_search_uc(ll l, ll r, const function<T(ll)>& f) {
+template <class FUNC>
+ll ternary_search_uc(ll l, ll r, const FUNC& f) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_f
+
+	Assert(r - l >= 2);
 
 	while (r - l > 2) {
 		ll s = l + r;
@@ -86,7 +85,7 @@ ll ternary_search_uc(ll l, ll r, const function<T(ll)>& f) {
 	return l + 1;
 
 	/* f の定義の雛形
-	function<ll(ll)> f = [&](ll x) {
+	auto f = [&](ll x) {
 		return x;
 	};
 	*/
@@ -95,10 +94,10 @@ ll ternary_search_uc(ll l, ll r, const function<T(ll)>& f) {
 
 //【三分探索（下に凸）】O(log(r - l))
 /*
-* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
+* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
 */
-template <class T>
-ll ternary_search_lc(ll l, ll r, const function<T(ll)>& f) {
+template <class FUNC>
+ll ternary_search_lc(ll l, ll r, const FUNC& f) {
 	// verify : https://atcoder.jp/contests/abc279/tasks/abc279_d
 
 	while (r - l > 2) {
@@ -112,7 +111,7 @@ ll ternary_search_lc(ll l, ll r, const function<T(ll)>& f) {
 	return l + 1;
 
 	/* f の定義の雛形
-	function<ll(ll)> f = [&](ll x) {
+	auto f = [&](ll x) {
 		return x;
 	};
 	*/
@@ -121,15 +120,15 @@ ll ternary_search_lc(ll l, ll r, const function<T(ll)>& f) {
 
 //【ランダム三分探索（下に凸）】O(log(r - l))
 /*
-* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
-* そうでなくても運が良ければ正しい x を返す．
+* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
+* 下に凸でなくても運が良ければ正しい x を返す．
 */
-template <class T>
-ll random_ternary_search_lc(ll l, ll r, const function<T(ll)>& f) {
+template <class FUNC>
+ll random_ternary_search_lc(ll l, ll r, const FUNC& f) {
 	static bool first_call = true;
 
-	mt19937 mt;
-	uniform_int_distribution<ll> rnd;
+	static mt19937 mt;
+	static uniform_int_distribution<ll> rnd;
 	if (first_call) {
 		first_call = false;
 		mt.seed((int)time(NULL));
@@ -142,13 +141,13 @@ ll random_ternary_search_lc(ll l, ll r, const function<T(ll)>& f) {
 		if (m1 == m2) continue;
 		if (m1 > m2) swap(m1, m2);
 
-		if (f(m1) > f(m2)) l = m1;
+		if (f(m1) > f(m2)) l = m1; // 上に凸に対応したかったらここの不等号を逆にする．
 		else r = m2;
 	}
 	return l + 1;
 
 	/* f の定義の雛形
-	function<ll(ll)> f = [&](ll x) {
+	auto f = [&](ll x) {
 		return x;
 	};
 	*/
@@ -178,7 +177,7 @@ struct Fibonacci_search {
 	}
 
 	ll search(ll left, ll right, const function<ll(ll)>& f_, bool up = true) const {
-		function<ll(ll)> f = [&](ll x) {
+		auto f = [&](ll x) {
 			// 符号変化の条件を満たすよう範囲外の値を定めておく．
 			ll val;
 			if (x <= left) {
@@ -195,7 +194,7 @@ struct Fibonacci_search {
 			return val;
 		};
 
-		// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点を得る．
+		// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点を得る．
 		int i = n;
 		ll l = left;
 		ll r = l + fib[i];
@@ -244,16 +243,17 @@ struct Fibonacci_search {
 };
 
 
-//【黄金分割探索（実数，上に凸）】O(log((right - left) / EPS))
+//【黄金分割探索（実数，上に凸）】O(log((r - l) / EPS))
 /*
-* 全域で狭義に上に凸な関数 f(x) の開区間 (left, right) における最大値を与える x を返す．
+* 全域で狭義に上に凸な関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
 */
-double golden_search_uc(double left, double right, const function<double(double)>& f) {
-	const double phi = (1 + sqrt(5)) / 2;
+template <class FUNC>
+double golden_search_uc(double l, double r, const FUNC& f, double EPS = 1e-12) {
+	constexpr double phi = 1.61803398875; // 黄金数
 
-	// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点
-	double l = left;
-	double r = right;
+	int L = max((int)(log((r - l) / EPS) / log(phi)), 1);
+
+	// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点
 	double m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
 	double m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
 
@@ -262,7 +262,7 @@ double golden_search_uc(double left, double right, const function<double(double)
 	double v2 = f(m2);
 
 	// 絶対誤差か相対誤差が EPS 以下になるまで
-	while (r - l > EPS && r - l > EPS * (r + l) / 2) {
+	rep(hoge, L) {
 		// 左の内分点での値の方が大きければ，次の区間は左側をとる．
 		if (v1 > v2) {
 			// 右の内分点を新たに右端とする．
@@ -295,25 +295,26 @@ double golden_search_uc(double left, double right, const function<double(double)
 	return (v1 > v2) ? m1 : m2;
 
 	/* f の定義の雛形
-	function<double(double)> f = [&](double x) {
+	auto f = [&](double x) {
 		return x;
 	};
 	*/
 }
 
 
-//【黄金分割探索（実数，下に凸）】O(log((right - left) / EPS))
+//【黄金分割探索（実数，下に凸）】O(log((r - l) / EPS))
 /*
-* 全域で狭義に下に凸な関数 f(x) の開区間 (left, right) における最小値を与える x を返す．
+* 全域で狭義に下に凸な関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
 */
-double golden_search_lc(double left, double right, const function<double(double)>& f) {
+template <class FUNC>
+double golden_search_lc(double l, double r, const FUNC& f, double EPS = 1e-12) {
 	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_b
-	
-	const double phi = (1 + sqrt(5)) / 2;
 
-	// l, m1, m2, r の順で区間を φ: 1 :φ に内分する点
-	double l = left;
-	double r = right;
+	constexpr double phi = 1.61803398875; // 黄金数
+
+	int L = max((int)(log((r - l) / EPS) / log(phi)), 1);
+
+	// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点
 	double m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
 	double m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
 
@@ -322,7 +323,7 @@ double golden_search_lc(double left, double right, const function<double(double)
 	double v2 = f(m2);
 
 	// 絶対誤差か相対誤差が EPS 以下になるまで
-	while (r - l > EPS && r - l > EPS * (r + l) / 2) {
+	rep(hoge, L) {
 		// 左の内分点での値の方が小さければ，次の区間は左側をとる．
 		if (v1 < v2) {
 			// 右の内分点を新たに右端とする．
@@ -355,7 +356,7 @@ double golden_search_lc(double left, double right, const function<double(double)
 	return (v1 < v2) ? m1 : m2;
 
 	/* f の定義の雛形
-	function<double(double)> f = [&](double x) {
+	auto f = [&](double x) {
 		return x;
 	};
 	*/
@@ -367,12 +368,18 @@ double golden_search_lc(double left, double right, const function<double(double)
 * 全域で狭義に下に凸な関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
 * 下に凸じゃなくても運が良ければ正しい x を返す．
 */
-double random_ternary_search_lc(double l, double r, const function<double(double)>& f) {
+template <class FUNC>
+double random_ternary_search_lc(double l, double r, const FUNC& f, double EPS = 1e-12) {
 	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_f
 
-	mt19937 mt;
-	mt.seed((int)time(NULL));
-	uniform_real_distribution<> rnd(0, 1);
+	static bool first_call = true;
+
+	static mt19937 mt;
+	static uniform_real_distribution<> rnd(0, 1);
+	if (first_call) {
+		mt.seed((int)time(NULL));
+		first_call = false;
+	}
 
 	double m1 = l, m2 = r;
 
@@ -396,7 +403,7 @@ double random_ternary_search_lc(double l, double r, const function<double(double
 	return (f(m1) < f(m2)) ? m1 : m2;
 
 	/* f の定義の雛形
-	function<double(double)> f = [&](double x) {
+	auto f = [&](double x) {
 		return x;
 	};
 	*/
@@ -474,10 +481,13 @@ void parallel_binary_search(vi& ok, vi& ng, const function<void(const vi&, vb&)>
 //【幅優先探索（動的）】O(n + m)（遅い）
 /*
 * st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
+* 探索は lim ms だけ続ける．
 */
 template <class T>
-set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt) {
+set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt, int lim = (int)1e9) {
 	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_c
+
+	auto start = chrono::system_clock::now();
 
 	set<T> vs; // st から到達可能な頂点のリスト
 	vs.insert(st);
@@ -499,6 +509,59 @@ set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt) {
 			// 未探索の頂点として t を追加する．
 			que.push(t);
 		}
+
+		auto now = chrono::system_clock::now();
+		auto msec = chrono::duration_cast<chrono::milliseconds>(now - start).count();
+		if (msec >= lim) break;
+	}
+
+	return vs;
+
+	/* nxt の定義の雛形
+	using T = ll;
+	function<vector<T>(T)> nxt = [&](T s) {
+		vector<T> res;
+
+		return res;
+	};
+	*/
+}
+
+
+//【幅優先探索（動的，ハッシュ）】O(n + m)（遅い）
+/*
+* st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
+* HASH はハッシュ関数 size_t operator()(const T& p) の定義された関数オブジェクトとする．
+* 探索は lim ms だけ続ける．
+*/
+template <class T, class HASH>
+unordered_set<T, HASH> get_reachable_set_hashed(T st, const function<vector<T>(T)>& nxt, int lim = (int)1e9) {
+	auto start = chrono::system_clock::now();
+
+	unordered_set<T, HASH> vs; // st から到達可能な頂点のリスト
+	vs.insert(st);
+
+	queue<T> que; // 次に探索する頂点を入れておくキュー
+	que.push(st);
+
+	while (!que.empty()) {
+		// 未探索の頂点 s を得る．
+		auto s = que.front(); que.pop();
+
+		repe(t, nxt(s)) {
+			// t が発見済みの頂点なら何もしない．
+			if (vs.count(t)) continue;
+
+			// t に到達したことを記録する．
+			vs.insert(t);
+
+			// 未探索の頂点として t を追加する．
+			que.push(t);
+		}
+
+		auto now = chrono::system_clock::now();
+		auto msec = chrono::duration_cast<chrono::milliseconds>(now - start).count();
+		if (msec >= lim) break;
 	}
 
 	return vs;
@@ -596,21 +659,22 @@ T hill_climbing(T st, const function<vector<T>(T)>& neib, const function<ll(T)>&
 */
 
 
-//【濃度の最大化】O(n log(1/EPS))
+//【濃度の最大化】O(n log((max(p) - min(p)) / EPS))
 /*
 * 質量 a[0..n) で濃度が p[0..n) の液体を k 個混ぜ合わせたときの最大濃度を返す．
 *
 * 利用：【二分探索（実数）】
 */
-double maximize_concentration(const vd& a, const vd& p, int k) {
-	//verify : https://atcoder.jp/contests/abc034/tasks/abc034_d
+template <class D>
+D maximize_concentration(const vector<D>& a, const vector<D>& p, int k, double EPS = 1e-12) {
+	// verify : https://atcoder.jp/contests/abc034/tasks/abc034_d
 
 	//【方法】
 	// 目標とする濃度 c を決め打ちして二分探索すると，それが達成できるということは
-	//		(Σi a[i] p[i]) / (Σi a[i]) >= c
-	//		⇔ (Σi a[i] p[i]) >= c (Σi a[i])
-	//		⇔ (Σi a[i] p[i]) - (Σi c a[i]) >= 0
-	//		⇔ Σi a[i] (p[i] - c) >= 0
+	//		(Σi a[i] p[i]) / (Σi a[i]) ≧ c
+	//		⇔ (Σi a[i] p[i]) ≧ c (Σi a[i])
+	//		⇔ (Σi a[i] p[i]) - (Σi c a[i]) ≧ 0
+	//		⇔ Σi a[i] (p[i] - c) ≧ 0
 	// と同値変形できる．
 	// 
 	// したがって，左辺の値を最大化し，0 以上となるかを考えれば良い．
@@ -619,24 +683,25 @@ double maximize_concentration(const vd& a, const vd& p, int k) {
 	int n = sz(a);
 
 	// 濃度 c が達成できるか
-	function<bool(double)> okQ = [&](double c) {
+	function<bool(D)> okQ = [&](D c) {
 		// d[i] : i 番目の液体の溶質の量と濃度 c だったときとの差
-		vd d(n);
-
+		vector<D> d(n);
 		rep(i, n) d[i] = a[i] * (p[i] - c);
 
 		// 溶質の量が濃度 c に比べて多い順に並べる．
-		sort(all(d), greater<double>());
+		sort(all(d), greater<D>());
 
 		// 貪欲に k 個の液体を選ぶ．
-		double sum = accumulate(d.begin(), d.begin() + k, 0.);
+		D sum = accumulate(d.begin(), d.begin() + k, D(0));
 
 		// 溶質が足りているなら濃度 c を達成可能．
 		return sum >= 0;
 	};
 
 	// 達成可能か不可能かの境目となる濃度を得る．
-	double res = binary_search(0., 100., okQ);
+	D p_min = *min_element(all(p));
+	D p_max = *max_element(all(p));
+	D res = bin_search(p_min, p_max, okQ, EPS);
 
 	return res;
 }
@@ -649,6 +714,8 @@ double maximize_concentration(const vd& a, const vd& p, int k) {
 * 利用：【めぐる式二分探索】
 */
 ll all_different_select(vl c, ll k) {
+	// verify : https://atcoder.jp/contests/abc227/tasks/abc227_d
+
 	int n = sz(c);
 
 	// 枚数昇順にソートする．

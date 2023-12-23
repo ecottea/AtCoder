@@ -5,6 +5,162 @@
 // ■■■■■ 木のクエリ処理 ■■■■■
 
 
+//【オイラーツアー】
+/*
+* Euler_tour(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g で初期化する．
+*
+* int lca(int s, int t) : O(log n)
+*	頂点 s, t の最小共通祖先を返す．
+*
+* int dist(int s, int t) : O(log n)
+*	頂点 s, t 間の距離を返す．
+*
+* int jump(int s, int t, int i) : O(log n)
+*	頂点 s から t までのパスの i 番目（0-indexed）の頂点を返す（なければ -1）
+*
+* sort_by_DFS_order(vi& vs) : O(log |vs|)
+*	頂点集合 vs を DFS 昇順にソートする．
+*
+* int get_in(int s) : O(1)
+*	rt からの DFS で最初に頂点 s を訪れた時刻（根なら 0）を返す．
+*
+* int get_out(int s) : O(1)
+*	rt からの DFS で最後に頂点 s から離れた時刻（根なら 2n-1）を返す．
+*
+* int get_pos(int t) : O(1)
+*	rt からの DFS で時刻 t（∈[0..2n-1)）に居た頂点の番号を返す．
+*
+* int get_dep(int s) : O(1)
+*	頂点 s の深さを返す．
+*/
+pii op_ET(pii a, pii b) { return min(a, b); }
+pii e_ET() { return { INF, -1 }; }
+template <class G>
+class Euler_tour {
+	int n;
+
+	// in[s]  : rt からの DFS で最初に頂点 s を訪れた時刻（根なら 0）
+	// out[s] : rt からの DFS で最後に頂点 s から離れた時刻（根なら 2n-1）
+	// pos[t] : rt からの DFS で時刻 t に居た頂点の番号（長さ 2n-1）
+	// dep[s] : 頂点 s の深さ
+	vi in, out, pos, dep;
+
+	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
+	using SEG = segtree<pii, op_ET, e_ET>;
+	SEG seg;
+
+	void dfs(const G& g, int rt) {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int p) {
+			// s を最初に訪れた
+			in[s] = time;
+			pos[time] = s;
+			time++;
+
+			repe(t, g[s]) {
+				if (t == p) continue;
+
+				dep[t] = dep[s] + 1;
+				rf(t, s);
+				pos[time] = s;
+				time++;
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+
+		// 根から順に探索する．
+		rf(rt, -1);
+	}
+
+public:
+	// rt を根とする根付き木 g で初期化する．
+	Euler_tour(const G& g, int rt) : n(sz(g)), in(n), out(n), pos(2 * n - 1), dep(n) {
+		// verify : https://judge.yosupo.jp/problem/lca
+
+		dfs(g, rt);
+
+		vector<pii> ini(2 * n - 1);
+		rep(t, 2 * n - 1) ini[t] = { dep[pos[t]], pos[t] };
+		seg = SEG(ini);
+	}
+	Euler_tour() {}
+
+	// 頂点 s, t の最小共通祖先を返す．
+	int lca(int s, int t) const {
+		// verify : https://judge.yosupo.jp/problem/lca
+
+		// 初めて s または t に訪れたとき
+		int l = min(in[s], in[t]);
+
+		// 最後に s または t から離れたとき
+		int r = max(out[s], out[t]);
+
+		// その途中で訪れたことのある最も浅い頂点が最小共通祖先
+		return seg.prod(l, r).second;
+	}
+
+	// 頂点 s, t 間の距離を返す．
+	int dist(int s, int t) const {
+		// verify : https://yukicoder.me/problems/no/2337
+
+		int p = lca(s, t);
+
+		// 根からの距離（深さ）の和を求め，ダブっている分を引く．
+		return dep[s] + dep[t] - 2 * dep[p];
+	}
+
+	// 頂点 s から t までのパスの i 番目（0-indexed）の頂点を返す（なければ -1）
+	int jump(int s, int t, int i) const {
+		// verify : https://judge.yosupo.jp/problem/jump_on_tree
+
+		int p = lca(s, t);
+		int ds = dep[s], dt = dep[t], dp = dep[p];
+		int dist = ds + dt - 2 * dp;
+
+		int res;
+
+		if (i < 0 || i > dist) res = -1;
+		else if (i <= ds - dp) {
+			int j = seg.max_right(out[s] - 1, [&](pii tmp) { return tmp.first > ds - i; });
+			res = pos[j];
+		}
+		else {
+			int j = seg.min_left(in[t] + 1, [&](pii tmp) { return tmp.first >= dt - (dist - i); });
+			res = pos[j];
+		}
+
+		return res;
+	}
+
+	// 頂点集合 vs を DFS 昇順にソートする．
+	void sort_by_DFS_order(vi& vs) {
+		// verify : https://yukicoder.me/problems/no/2588
+
+		sort(all(vs), [&](int s, int t) { return in[s] < in[t]; });
+	}
+
+	inline int get_in(int s) const {
+		return in[s];
+	}
+
+	inline int get_out(int s) const {
+		return out[s];
+	}
+
+	inline int get_pos(int t) const {
+		return pos[t];
+	}
+
+	inline int get_dep(int s) const {
+		return dep[s];
+	}
+};
+
+
 //【根付き木のオイラーツアー】O(n)
 /*
 * n 頂点の根付き木 rt のオイラーツアーを求める．
@@ -44,215 +200,780 @@ void euler_tour(const TREE& rt, vi& in, vi& out, vi& pos) {
 }
 
 
-//【最小共通祖先】
+//【[1点,1辺]加算／[部分木]総和クエリ（アーベル群）】
 /*
-* 与えられた根付き木について，頂点対の最小共通祖先を求める．
+* Subtree_sum_query<S, op, o, inv>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と値 o() で初期化する．
+*	要素はアーベル群 (S, op, o, inv) の元とする．
 *
-* Lowest_common_ancestor<TREE>(rt) : O(n)
-*	根付き木 rt で初期化する．
+* add_vertex(int s, S val) : O(log n)
+*	頂点 s に val を加算する．
 *
-* int lca(int s, int t) : O(log n)
-*	頂点 s, t の最小共通祖先を返す．
+* add_edge(int s, S val) : O(log n)
+*	頂点 s を親とする辺に val を加算する（どの辺でも結果は変わらない）
 *
-* ll dist(int s, int t) : O(log n)
-*	頂点 s, t の距離を返す．
+* S sum_subtree(int s) : O(log n)
+*	部分木 s の頂点と辺の値の総和を返す．
 *
-* int jump(int s, int t, int i) : O(log n)
-*	頂点 s から t までのパスの i 番目（0-indexed）の頂点を返す（なければ -1）
-*
-* 利用：【根付き木のオイラーツアー】
+* 利用：【フェニック木（アーベル群）】
 */
-pli op_LCA(pli a, pli b) { return min(a, b); }
-pli e_LCA() { return { INFL, -1 }; }
-template <class TREE>
-struct Lowest_common_ancestor {
-	TREE rt;
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+class Subtree_sum_query {
+	int n;
 
-	// オイラーツアーの結果の記録用
-	//	in[v] : v に最初に入った時刻
-	//	out[v] : v から最後に出た時刻
-	//	pos[t] : 時刻 t に居た頂点の番号
-	vi in, out, pos;
+	// in[s]  : 根からの DFS で s に最初に入った時刻
+	// out[s] : 根からの DFS で s から最後に出た時刻
+	vi in, out;
 
-	// 深さに関する区間最小クエリを処理するためのセグメント木
-	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
-	using SEG = segtree<pli, op_LCA, e_LCA>;
+	// ft[t] : 時刻 t に居た頂点の値
+	Fenwick_tree<S, op, o, inv> ft;
+
+	// ユニークオイラーツアー
+	void euler_tour(const Graph& g, int rt) {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int p) {
+			// s を最初に訪れた
+			in[s] = time;
+			time++;
+
+			repe(t, g[s]) {
+				if (t == p) continue;
+
+				rf(t, s);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+
+		// 根から順に探索する．
+		rf(rt, -1);
+	}
+
+public:
+	// rt を根とする根付き木 g と値 o() で初期化する．
+	Subtree_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), ft(n) {
+		// verify : https://www.codechef.com/problems/TREEDEST
+
+		euler_tour(g, rt);
+	}
+
+	// 頂点 s に val を加算する．
+	void add_vertex(int s, S val) {
+		// verify : https://www.codechef.com/problems/TREEDEST
+
+		ft.add(in[s], val);
+	}
+
+	// 頂点 s を親とする辺のいずれかに val を加算する．
+	void add_edge(int s, S val) {
+		// 部分木については
+		//		s を親とする辺を含む ⇔ s を含む
+		// なので，代わりに頂点 s に val を加算する．
+		add_vertex(s, val);
+	}
+
+	// 部分木 s の全ての頂点と辺の値の総和を返す．
+	S sum_subtree(int s) {
+		// verify : https://www.codechef.com/problems/TREEDEST
+
+		return ft.sum(in[s], out[s]);
+	}
+};
+
+
+//【[1点,1辺]加算／[根からのパス]総和クエリ（アーベル群）】
+/*
+* Path_sum_query<S, op, o, inv>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と値 o() で初期化する．
+*	要素はアーベル群 (S, op, o, inv) の元とする．
+*
+* add_vertex(int s, S val) : O(log n)
+*	頂点 s に val を加算する．
+*
+* add_edge(int s, S val) : O(log n)
+*	頂点 s を子とする辺に val を加算する．
+*
+* S sum_root_path(int s) : O(log n)
+*	根 rt から頂点 s まで（両端含む）の頂点と辺の値の総和を返す．
+*
+* S get(int s) : O(log n)
+*	頂点 s の値を返す．
+*
+* 利用：【フェニック木（アーベル群）】
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+class Path_sum_query {
+	// 参考：https://perogram.hateblo.jp/entry/2020/10/01/034136
+
+	int n;
+
+	// in[s]  : 根からの DFS で s に最初に入った時刻
+	// out[s] : 根からの DFS で s から最後に出た時刻
+	// p[s]   : s の親（根なら -1）
+	vi in, out, p;
+
+	// ft[t] : 時刻 t に居た頂点の値
+	Fenwick_tree<S, op, o, inv> ft;
+
+	// ユニークオイラーツアー
+	void euler_tour(const Graph& g, int rt) {
+		int time = 0;
+
+		function<void(int)> rf = [&](int s) {
+			// s を最初に訪れた
+			in[s] = time;
+			time++;
+
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+
+				rf(t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+
+		// 根から順に探索する．
+		p[rt] = -1;
+		rf(rt);
+	}
+
+public:
+	// rt を根とする根付き木 g と値 o() で初期化する．
+	Path_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), p(n), ft(n) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+
+		euler_tour(g, rt);
+	}
+
+	// 頂点 s に val を加算する．
+	void add_vertex(int s, S val) {
+		// いもす法のように，部分木 s にいる間だけ val が累積和に寄与するようにする．
+		ft.add(in[s], val);
+		ft.add(out[s], -val);
+	}
+
+	// 頂点 s を子とする辺に val を加算する．
+	void add_edge(int s, S val) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+
+		// 根からのパスについては
+		//		s を子とする辺を通る ⇔ s を通る
+		// なので，代わりに頂点 s に val を加算する．
+		add_vertex(s, val);
+	}
+
+	// 根 r から s までの頂点と辺の値の総和を返す．
+	S sum_root_path(int s) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+
+		return ft.sum(0, in[s] + 1);
+	}
+
+	// 頂点 s の値を返す．
+	S get(int s) const {
+		S res = sum_root_path(s);
+		if (p[s] != -1) res = op(res, inv(sum_root_path(p[s])));
+		return res;
+	}
+
+	// 頂点 s の親を返す（なければ -1）
+	int get_parent(int s) const {
+		return p[s];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Path_sum_query Q) {
+		rep(s, Q.n) os << Q.get(s) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【[部分木]頂点作用／[部分木]頂点総和クエリ（M-可換モノイド）】
+/*
+* Subtree_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と値 o() で初期化する．
+*	要素は M-可換モノイド (S, op, o, F, act, comp, id) の元とする．
+*
+* Subtree_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt, vS v) : O(n)
+*	rt を根とする根付き木 g と値 v[0..n) で初期化する．
+*
+* apply(int s, F f) : O(log n)
+*	頂点 s の値に f を作用させる．
+*
+* apply_subtree(int s, F f) : O(log n)
+*	部分木 s の全ての頂点の値に f を作用させる．
+*
+* S get(int s) : O(log n)
+*	頂点 s の値を返す．
+*
+* S sum_subtree(int s) : O(log n)
+*	部分木 s の全ての頂点の値の総和を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Subtree_apply_sum_query {
+	int n;
+
+	// in[s]  : 根からの DFS で s に最初に入った時刻
+	// out[s] : 根からの DFS で s から最後に出た時刻
+	vi in, out;
+
+	// seg[t] : 時刻 t に居た頂点の値
+	using SEG = lazy_segtree<S, op, o, F, act, comp, id>;
 	SEG seg;
 
-	// コンストラクタ（根付き木で初期化）：O(n)
-	Lowest_common_ancestor(const TREE& rt_) : rt(rt_) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
+	// ユニークオイラーツアー
+	void euler_tour(const Graph& g, int rt) {
+		int time = 0;
 
-		// オイラーツアーを求めておく．
-		euler_tour(rt, in, out, pos);
+		function<void(int, int)> rf = [&](int s, int p) {
+			// s を最初に訪れた
+			in[s] = time;
+			time++;
 
-		// 深さに関する区間最小クエリを処理するためのセグメント木を用意する．
-		// 深さだけでなく頂点の番号も返したいのでそれらを対にしてもつ．
-		int n = sz(rt.v);
-		vector<pli> depth(2 * n - 1);
-		rep(t, 2 * n - 1) depth[t] = { rt[pos[t]].depth, pos[t] };
-		seg = SEG(depth);
-	}
-	Lowest_common_ancestor() {}
+			repe(t, g[s]) {
+				if (t == p) continue;
 
-	// 頂点 s, t の最小共通祖先を返す．
-	int lca(int s, int t) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_C
+				rf(t, s);
+			}
 
-		// 初めて s または t に訪れたとき
-		int left = min(in[s], in[t]);
+			// s から最後に離れる
+			out[s] = time;
+		};
 
-		// 最後に s または t から離れたとき
-		int right = max(out[s], out[t]);
-
-		// その途中で訪れたことのある最も浅い頂点が最小共通祖先
-		return seg.prod(left, right).second;
+		// 根から順に探索する．
+		rf(rt, -1);
 	}
 
-	// 頂点 s, t の距離を返す．
-	ll dist(int s, int t) {
-		int r = lca(s, t);
-
-		// 根からの距離の和を求め，ダブっている分を引く．
-		return rt[s].dist + rt[t].dist - 2 * rt[r].dist;
+public:
+	// rt を根とする根付き木 g と値 o() で初期化する．
+	Subtree_apply_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), seg(n) {
+		euler_tour(g, rt);
 	}
 
-	// 頂点 s から t までのパスの i 番目（0-indexed）の頂点を返す（なければ -1）
-	int jump(int s, int t, int i) {
-		// verify : https://judge.yosupo.jp/problem/jump_on_tree
+	// rt を根とする根付き木 g と値 v[0..n) で初期化する．
+	Subtree_apply_sum_query(const Graph& g, int rt, const vector<S>& v) : n(sz(g)), in(n), out(n) {
+		// verify : https://www.codechef.com/problems/CHEFDIVISION
 
-		int r = lca(s, t);
-		int ds = rt[s].depth, dt = rt[t].depth, dr = rt[r].depth;
-		int dist = ds + dt - 2 * dr;
+		euler_tour(g, rt);
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = v[s];
+		seg = SEG(ini);
+	}
+	Subtree_apply_sum_query() : n(0) {}
 
-		int res;
+	// 頂点 s の値に f を作用させる．
+	void apply(int s, F f) {
+		seg.apply(in[s], f);
+	}
 
-		if (i > dist) res = -1;
-		else if (i <= ds - dr) {
-			int j = seg.max_right(out[s] - 1, [&](pli tmp) { return tmp.first > ds - i; });
-			res = pos[j];
+	// 部分木 s の全ての頂点の値に f を作用させる．
+	void apply_subtree(int s, F f) {
+		// verify : https://www.codechef.com/problems/CHEFDIVISION
+
+		seg.apply(in[s], out[s], f);
+	}
+
+	// 頂点 s の値を返す．
+	S get(int s) {
+		// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
+
+		return seg.get(in[s]);
+	}
+
+	// 部分木 s の全ての頂点の値の総和を返す．
+	S sum_subtree(int s) {
+		// verify : https://www.codechef.com/problems/CHEFDIVISION
+
+		return seg.prod(in[s], out[s]);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Subtree_apply_sum_query Q) {
+		rep(i, Q.n) os << Q.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【[2隣接]頂点作用／[2隣接]頂点総和クエリ（M-可換モノイド）】
+/*
+* Tree_neighbor_vertex_query<S, op, o, F, act, comp, id>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と頂点の初期値 v[0..n) = o() で初期化する．
+*	要素は M-可換モノイド (S, op, o, F, act, comp, id) の元とする．
+*
+* Tree_neighbor_vertex_query<S, op, o, F, act, comp, id>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と頂点の初期値 v[0..n) = a[0..n) で初期化する．
+*
+* set(int s, S x) : O(log n)
+*	v[s] = x とする．
+*
+* S get(int s) : O(log n)
+*	v[s] を返す．
+*
+* S child_sum(int s) : O(log n)
+*	頂点 s の子の値の総和を返す．
+*
+* S neighbor_sum(int s) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値の総和を返す．
+*
+* S neighbor2_sum(int s) : O(log n)
+*	頂点 s からの距離が 2 以下である頂点の値の総和を返す．
+*
+* S all_sum() : O(1)
+*	全頂点の値の総和を返す．
+*
+* apply(int s, F f) : O(log n)
+*	v[s] に f を作用させる．
+*
+* child_apply(int s, F f) : O(log n)
+*	頂点 s の子の値に f を作用させる．
+*
+* neighbor_apply(int s, F f) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+*
+* neighbor2_apply(int s, F f) : O(log n)
+*	頂点 s からの距離が 2 以下である頂点の値に f を作用させる．
+*
+* sort_by_BFS_order(vi& vs) : O(log |vs|)
+*	頂点集合 vs を BFS 昇順にソートする．
+*/
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Tree_neighbor_vertex_query {
+	// n : 頂点数
+	int n;
+
+	// rt : 根
+	int rt;
+
+	// in[s] : 根からの BFS で頂点 s をなぞった時刻（根なら 0）
+	vi in;
+
+	// in_min[s] : 頂点 s の子 t の in[t] の最小値（葉なら n）
+	// in_max[s] : 頂点 s の子 t の in[t] の最大値（葉なら -1）
+	vi in_min, in_max;
+
+	// in_min2[s] : 頂点 s の子 t の in_min[t] の最小値（葉なら n）
+	// in_max2[s] : 頂点 s の子 t の in_max[t] の最大値（葉なら -1）
+	vi in_min2, in_max2;
+
+	// p[s] : 頂点 s の親
+	vi p;
+
+	// v[s] : 頂点 s の値
+	lazy_segtree<S, op, o, F, act, comp, id> v;
+
+	void bfs_euler_tour(const Graph& g, int rt) {
+		// rt から BFS し in[s], p[s] を定める．
+		queue<int> q; q.push(rt);
+		in[rt] = 0;
+
+		int now = 1;
+		while (!q.empty()) {
+			auto s = q.front(); q.pop();
+
+			repe(t, g[s]) {
+				if (in[t] != -1) continue;
+
+				in[t] = now++;
+				p[t] = s;
+				q.push(t);
+			}
 		}
-		else {
-			int j = seg.min_left(in[t] + 1, [&](pli tmp) { return tmp.first >= dt - (dist - i); });
-			res = pos[j];
+
+		// in_min[s], in_max[s] を定める．
+		rep(s, n) repe(t, g[s]) {
+			if (p[s] == t) continue;
+
+			chmin(in_min[s], in[t]);
+			chmax(in_max[s], in[t]);
 		}
+
+		// in_min2[s], in_max2[s] を定める．
+		rep(s, n) repe(t, g[s]) {
+			if (p[s] == t) continue;
+
+			chmin(in_min2[s], in_min[t]);
+			chmax(in_max2[s], in_max[t]);
+		}
+	}
+
+public:
+	// rt を根とする根付き木 g と頂点の初期値 o() で初期化する．
+	Tree_neighbor_vertex_query(const Graph& g, int rt)
+		: n(sz(g)), rt(rt), in(n, -1), in_min(n, n), in_max(n, -1), in_min2(n, n), in_max2(n, -1), p(n, -1), v(n)
+	{
+		bfs_euler_tour(g, rt);
+	}
+
+	// rt を根とする根付き木 g と頂点の初期値 a[0..n) で初期化する．
+	Tree_neighbor_vertex_query(const Graph& g, int rt, const vector<S>& a)
+		: n(sz(g)), rt(rt), in(n, -1), in_min(n, n), in_max(n, -1), in_min2(n, n), in_max2(n, -1), p(n, -1)
+	{
+		// verify : https://yukicoder.me/problems/no/899
+
+		bfs_euler_tour(g, rt);
+
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = lazy_segtree<S, op, o, F, act, comp, id>(ini);
+	}
+	Tree_neighbor_vertex_query() : n(0), rt(-1) {}
+
+	// v[s] = x とする．
+	void set(int s, S x) {
+		Assert(0 <= s && s < n);
+
+		v.set(in[s], x);
+	}
+
+	// v[s] を返す．
+	S get(int s) {
+		// verify : https://atcoder.jp/contests/arc148/tasks/arc148_c
+
+		Assert(0 <= s && s < n);
+
+		return v.get(in[s]);
+	}
+
+	// 頂点 s の子の値の総和を返す．
+	S child_sum(int s) {
+		Assert(0 <= s && s < n);
+
+		// s が葉の場合は o() を返す．
+		if (in_max[s] == -1) return o();
+
+		return v.prod(in_min[s], in_max[s] + 1);
+	}
+
+	// 頂点 s からの距離が 1 以下である頂点の値の総和を返す．
+	S neighbor_sum(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = v.get(in[s]);
+		if (p[s] != -1) res = op(res, v.get(in[p[s]]));
+		res = op(res, child_sum(s));
 
 		return res;
 	}
+
+	// 頂点 s からの距離が 2 以下である頂点の値の総和を返す．
+	S neighbor2_sum(int s) {
+		// verify : https://yukicoder.me/problems/no/899
+
+		Assert(0 <= s && s < n);
+
+		// 根方向に距離 [0..2] 進んだ頂点からの寄与
+		S res = (p[s] != -1 ? neighbor_sum(p[s]) : v.get(in[s]));
+
+		// 葉方向に距離 1 進んだ頂点からの寄与
+		res = op(res, child_sum(s));
+
+		// 葉方向に距離 2 進んだ頂点からの寄与
+		if (in_max2[s] != -1) res = op(res, v.prod(in_min2[s], in_max2[s] + 1));
+
+		return res;
+	}
+
+	// 全頂点の値の総和を返す．
+	S all_sum() {
+		// verify : https://atcoder.jp/contests/arc148/tasks/arc148_c
+
+		return v.all_prod();
+	}
+
+	// v[s] に f を作用させる．
+	void apply(int s, F f) {
+		// verify : https://atcoder.jp/contests/arc148/tasks/arc148_c
+
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+	}
+
+	// 頂点 s の子の値に f を作用させる．
+	void child_apply(int s, F f) {
+		Assert(0 <= s && s < n);
+
+		// s が葉の場合は何もしない．
+		if (in_max[s] == -1) return;
+
+		v.apply(in_min[s], in_max[s] + 1, f);
+	}
+
+	// 頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+	void neighbor_apply(int s, F f) {
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+		if (p[s] != -1) v.apply(in[p[s]], f);
+		child_apply(s, f);
+	}
+
+	// 頂点 s からの距離が 2 以下である頂点の値に f を作用させる．
+	void neighbor2_apply(int s, F f) {
+		// verify : https://yukicoder.me/problems/no/899
+
+		Assert(0 <= s && s < n);
+
+		// 根方向に距離 [0..2] 進んだ頂点への作用
+		if (p[s] != -1) neighbor_apply(p[s], f);
+		else v.apply(in[s], f);
+
+		// 葉方向に距離 1 進んだ頂点への作用
+		child_apply(s, f);
+
+		// 葉方向に距離 2 進んだ頂点への作用
+		if (in_max2[s] != -1) v.apply(in_min2[s], in_max2[s] + 1, f);
+	}
+
+	// 全頂点の値に f を作用させる．
+	void all_apply(F f) {
+		// verify : https://atcoder.jp/contests/arc148/tasks/arc148_c
+
+		v.apply(0, n, f);
+	}
+
+	// 頂点集合 vs を BFS 昇順にソートする．
+	void sort_by_BFS_order(vi& vs) {
+		// verify : https://atcoder.jp/contests/arc148/tasks/arc148_c
+
+		sort(all(vs), [&](int s, int t) {return in[s] < in[t]; });
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Tree_neighbor_vertex_query TNVQ) {
+		os << TNVQ.v;
+		return os;
+	}
+#endif
 };
 
 
-//【頂点加算（根からのパス，部分木）／一括総和】
+//【[隣接,部分木]頂点作用／[隣接,部分木]頂点総和クエリ（M-可換モノイド）】
 /*
-* Imos_tree(Tree rt) : O(n)
-*	根付き木 rt を 0 で初期化する．
+* Tree_neighbor_subtree_vertex_query<S, op, o, F, act, comp, id>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = o() で初期化する．
+*	要素は M-可換モノイド (S, op, o, F, act, comp, id) の元とする．
 *
-* add_anc(int v, T val) : O(1)
-*	頂点 v とその先祖（根から v へのパス）に val を加算する準備を行う．
+* Tree_neighbor_subtree_vertex_query<S, op, o, F, act, comp, id>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
 *
-* add_dsc(int v, T val) : O(1)
-*	頂点 v とその子孫（部分木 v）に val を加算する準備を行う．
+* set(int s, S x) : O(log n)
+*	v[s] = x とする．
 *
-* sum() : O(n)
-*	実際の加算を行う．
+* S get(int s) : O(log n)
+*	v[s] を返す．
 *
-* T get(int v) : O(1)
-*	加算後の頂点 v の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
+* S child_sum(int s) : O(log n)
+*	頂点 s の子の値の総和を返す．
 *
-*（いもす法）
+* S neighbor_sum(int s) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値の総和を返す．
+*
+* S all_sum() : O(1)
+*	全頂点の値の総和を返す．
+*
+* apply(int s, F f) : O(log n)
+*	v[s] に f を作用させる．
+*
+* child_apply(int s, F f) : O(log n)
+*	頂点 s の子の値に f を作用させる．
+*
+* neighbor_apply(int s, F f) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+*
+* sort_by_BFS_like_DFS_order(vi& vs) : O(log |vs|)
+*	頂点集合 vs を BFS 風 DFS 昇順にソートする．
 */
-template <class T>
-struct Imos_tree {
-	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Tree_neighbor_subtree_vertex_query {
+	// n : 頂点数
+	int n;
 
-	Rooted_tree rt;
-	vector<T> v_anc, v_dsc;
+	// rt : 根
+	int rt;
 
-	// 根付き木 rt を 0 で初期化する．
-	Imos_tree(const Rooted_tree& rt_) : rt(rt_), v_anc(rt_.n), v_dsc(rt_.n) {}
+	// in[s] : 根からの BFS 風 DFS で頂点 s をなぞった時刻（根なら 0）
+	vi in;
 
-	// 頂点 v とその先祖に val を加算する準備を行う．
-	void add_anc(int v, T val) {
-		v_anc[v] += val;
+	// in_min[s] : 頂点 s の子 t の in[t] の最小値（葉なら -1）
+	// in_max[s] : 頂点 s の子 t の in[t] の最大値（葉なら -1）
+	// in_max_all[s] : 頂点 s の子孫 t の in[t] の最大値（葉なら -1）
+	vi in_min, in_max, in_max_all;
+
+	// p[s] : 頂点 s の親
+	vi p;
+
+	// v[s] : 頂点 s の値
+	lazy_segtree<S, op, o, F, act, comp, id> v;
+
+	void bfs_like_dfs_euler_tour(const Graph& g, int rt) {
+		// rt から BFS 風 DFS する．
+		int time = 0;
+		in[rt] = time++;
+
+		function<void(int)> dfs = [&](int s) {
+			// まず BFS のように s の子をなぞる．
+			in_min[s] = time;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				in[t] = time++;
+			}
+
+			// s が葉の場合は何もしない．
+			if (time == in_min[s]) {
+				in_min[s] = -1;
+				return;
+			}
+			in_max[s] = time - 1;
+
+			// その後で DFS する．
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				dfs(t);
+			}
+			in_max_all[s] = time - 1;
+		};
+		dfs(rt);
 	}
 
-	// 頂点 v とその子孫に val を加算する準備を行う．
-	void add_dsc(int v, T val) {
-		v_dsc[v] += val;
+public:
+	// rt を根とする根付き木 g と頂点の初期値 o() で初期化する．
+	Tree_neighbor_subtree_vertex_query(const Graph& g, int rt)
+		: n(sz(g)), rt(rt), in(n, -1), in_min(n, n), in_max(n, -1), in_max_all(n, -1), p(n, -1), v(n)
+	{
+		bfs_like_dfs_euler_tour(g, rt);
 	}
 
-	// 再帰用の関数
-	T sum_sub(int s, T val) {
-		v_dsc[s] += val;
-		repe(t, rt.v[s].child) v_anc[s] += sum_sub(t, v_dsc[s]);
-		return v_anc[s];
-	};
+	// rt を根とする根付き木 g と頂点の初期値 a[0..n) で初期化する．
+	Tree_neighbor_subtree_vertex_query(const Graph& g, int rt, const vector<S>& a)
+		: n(sz(g)), rt(rt), in(n, -1), in_min(n, n), in_max(n, -1), in_max_all(n, -1), p(n, -1)
+	{
+		// verify : https://yukicoder.me/problems/no/2340
 
-	// 実際の加算を行う．
-	void sum() {
-		sum_sub(rt.r, 0);
+		bfs_like_dfs_euler_tour(g, rt);
+
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = lazy_segtree<S, op, o, F, act, comp, id>(ini);
+	}
+	Tree_neighbor_subtree_vertex_query() : n(0), rt(-1) {}
+
+	// v[s] = x とする．
+	void set(int s, S x) {
+		Assert(0 <= s && s < n);
+
+		v.set(in[s], x);
 	}
 
-	// 加算後の頂点 v の値を得る．
-	T get(int v) {
-		return v_dsc[v] + v_anc[v];
-	}
-};
+	// v[s] を返す．
+	S get(int s) {
+		// verify : https://yukicoder.me/problems/no/2340
 
+		Assert(0 <= s && s < n);
 
-//【一辺加算／根からのパス総和クエリ】
-/*
-* Path_sum_query(rt) : O(n)
-*	根付き木 rt と辺の重みの初期値 0 で初期化する．
-*
-* add(v, val) : O(log n)
-*	頂点 v を子とする辺に val を加算する．
-*
-* sum(v) : O(log n)
-*	根 r から v までの辺の値の和を返す．
-*
-* 利用：【根付き木のオイラーツアー】
-*/
-template <class T>
-struct Path_sum_query {
-	// 参考：https://perogram.hateblo.jp/entry/2020/10/01/034136
-	
-	// オイラーツアーの結果の記録用
-	// in[v] : v に最初に入った時刻
-	// out[v] : v から最後に出た時刻
-	vi in, out;
-
-	// オイラーツアーに対する区間和クエリを処理するためのフェニック木
-	// ft[t] : 時刻 t-1 から時刻 t に変わることで増加する値
-	fenwick_tree<T> ft;
-
-	// コンストラクタ（木と根で初期化）
-	Path_sum_query(const Rooted_tree& rt) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
-
-		// オイラーツアーを求めておく．
-		vi pos;
-		euler_tour(rt, in, out, pos);
-
-		ft = fenwick_tree<T>(2 * sz(rt));
+		return v.get(in[s]);
 	}
 
-	// 頂点 v を子とする辺に val を加算する．
-	void add(int v, T val) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+	// 頂点 s の子の値の総和を返す．
+	S child_sum(int s) {
+		Assert(0 <= s && s < n);
 
-		// いもす法のように，v の部分木にいる間だけ val が累積和に寄与するようにする．
-		ft.add(in[v], val);
-		ft.add(out[v], -val);
+		// s が葉の場合は o() を返す．
+		if (in_max[s] == -1) return o();
+
+		return v.prod(in_min[s], in_max[s] + 1);
 	}
 
-	// 根 r から v までの辺の値の和を返す．
-	T sum(int v) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
-		
-		return ft.sum(0, in[v] + 1);
+	// 頂点 s からの距離が 1 以下である頂点の値の総和を返す．
+	S neighbor_sum(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = v.get(in[s]);
+		if (p[s] != -1) res = op(res, v.get(in[p[s]]));
+		res = op(res, child_sum(s));
+
+		return res;
 	}
+
+	// 部分木 s の値の総和を返す．
+	S subtree_sum(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = v.get(in[s]);
+		if (in_min[s] != -1) res = op(res, v.prod(in_min[s], in_max_all[s] + 1));
+
+		return res;
+	}
+
+	// 全頂点の値の総和を返す．
+	S all_sum() {
+		return v.all_prod();
+	}
+
+	// v[s] に f を作用させる．
+	void apply(int s, F f) {
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+	}
+
+	// 頂点 s の子の値に f を作用させる．
+	void child_apply(int s, F f) {
+		Assert(0 <= s && s < n);
+
+		// s が葉の場合は何もしない．
+		if (in_max[s] == -1) return;
+
+		v.apply(in_min[s], in_max[s] + 1, f);
+	}
+
+	// 頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+	void neighbor_apply(int s, F f) {
+		// verify : https://yukicoder.me/problems/no/2340
+
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+		if (p[s] != -1) v.apply(in[p[s]], f);
+		child_apply(s, f);
+	}
+
+	// 部分木 s の値に f を作用させる．
+	void subtree_apply(int s, F f) {
+		// verify : https://yukicoder.me/problems/no/2340
+
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+		if (in_min[s] != -1) v.apply(in_min[s], in_max_all[s] + 1, f);
+	}
+
+	// 全頂点の値に f を作用させる．
+	void all_apply(F f) {
+		v.apply(0, n, f);
+	}
+
+	// 頂点集合 vs を BFS 風 DFS 昇順にソートする．
+	void sort_by_BFS_like_DFS_order(vi& vs) {
+		sort(all(vs), [&](int s, int t) {return in[s] < in[t]; });
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Tree_neighbor_subtree_vertex_query TNSVQ) {
+		os << TNSVQ.v;
+		return os;
+	}
+#endif
 };
 
 
@@ -280,8 +1001,9 @@ void heavy_light_decomposition(const TREE& rt, vi& in, vi& out, vi& pos, vi& top
 	// p : s を含む連結成分の最も浅い頂点
 	function<void(int, int)> rf = [&](int s, int p) {
 		in[s] = time;
-		pos[time++] = s;
+		pos[time] = s;
 		top[s] = p;
+		time++;
 
 		// 重さ最大の頂点を得る．
 		int w_max = -INF, v_max = -1;
@@ -306,638 +1028,1631 @@ void heavy_light_decomposition(const TREE& rt, vi& in, vi& out, vi& pos, vi& top
 }
 
 
-//【頂点加算（パス，部分木）／一括総和】
+//【[部分木,パス]頂点加算／[部分木,パス]頂点総和（Z-加群）】
 /*
-* Imos_tree_arbitrary_path<T>(Tree rt) : O(n)
-*	根付き木 rt と初期値 0 で初期化する．
+* Vertex_add_sum_query<S, op, o, inv, mul>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = o() で初期化する．
+*	要素は Z-加群 (S, op, o, inv, mul) の元とする．
 *
-* add(int v, T val) : O(1)
-*	頂点 v に val を加算する準備を行う．
+* Vertex_add_sum_query<S, op, o, inv, mul>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
 *
-* add_subtree(int v, T val) : O(1)
-*	頂点 v の部分木の頂点に val を加算する準備を行う．
+* set(int s, S x) : O(log n)
+*	v[s] = x とする．
 *
-* add(int v1, int v2, T val) : O(log n)
-*	頂点 v1 から v2 までの頂点（両端含む）に val を加算する準備を行う．
+* S get(int s) : O(log n)
+*	v[s] を返す．
 *
-* sum() : O(n)
-*	実際の加算を行う．
+* S sum_subtree(int s) : O(log n)
+*	部分木 s の頂点の値の総和を返す．
 *
-* T [](int v) : O(1)
-*	加算後の頂点 v の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
+* S sum_path(int s, int t) : O((log n)^2)
+*	パス s→t 上の頂点（両端含む）の値の総和を返す．
 *
-*（いもす法）
+* add(int s, S x) : O(log n)
+*	v[s] += x とする．
 *
-* 利用：【根付き木の HL 分解】
+* add_subtree(int v, S x) : O(log n)
+*	部分木 s の頂点の値に x を加算する．
+*
+* add_path(int s, int t, S x) : O((log n)^2)
+*	パス s→t 上の頂点（両端含む）の値に x を加算する．
+*
+* 利用：【区間加算フェニック木（Z-加群）】
 */
-template <class T>
-struct Imos_tree_arbitrary_path {
-	// 根付き木
-	Rooted_tree rt;
-	int n;
-
-	// HL 分解の結果の記録用
-	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
-	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
-	vi in, out, pos, top;
-
-	// imos[i] : in[v] = i であるような頂点の値
-	vector<T> imos;
-
-	// コンストラクタ（根付き木で初期化）
-	Imos_tree_arbitrary_path(Rooted_tree& rt) : rt(rt), n(rt.n), imos(n + 1) {
-		// verify : https://codeforces.com/contest/914/problem/E
-
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
-	}
-
-	// 頂点 v に val を加算する準備を行う．
-	void add(int v, ll val) {
-		// verify : https://codeforces.com/contest/914/problem/E
-
-		imos[in[v]] += val;
-		imos[in[v] + 1] -= val;
-	}
-
-	// 頂点 v の部分木の頂点に val を加算する準備を行う．
-	void add_subtree(int v, ll val) {
-		imos[in[v]] += val;
-		imos[out[v]] -= val;
-	}
-
-	// 頂点 v1 から v2 までの頂点（両端含む）に val を加算する準備を行う．
-	void add(int v1, int v2, ll val) {
-		// verify : https://codeforces.com/contest/914/problem/E
-
-		// v1 と v2 が異なる連結成分に属している限りループを回す．
-		while (top[v1] != top[v2]) {
-			// v1 の方が浅い連結成分に属しているとする．
-			if (in[top[v1]] > in[top[v2]]) swap(v1, v2);
-
-			// v2 を含む連結成分は pos で並んで配置されているので，
-			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
-			imos[in[top[v2]]] += val;
-			imos[in[v2] + 1] -= val;
-
-			// 一つ浅い連結成分に移動する．
-			v2 = rt[top[v2]].parent;
-		}
-
-		// ここまできたら v1 と v2 は同じ連結成分に属するので，
-		// その間の頂点のみに対して val を加算する．
-		if (in[v1] > in[v2]) swap(v1, v2);
-		imos[in[v1]] += val;
-		imos[in[v2] + 1] -= val;
-	}
-
-	// 実際の加算を行う．
-	void sum() {
-		// verify : https://codeforces.com/contest/914/problem/E
-
-		rep(i, n) imos[i + 1] += imos[i];
-	}
-
-	// 頂点 v の値を返す．
-	ll get(int v) {
-		// verify : https://codeforces.com/contest/914/problem/E
-
-		return imos[in[v]];
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Imos_tree_arbitrary_path& q) {
-		os << q.imos;
-		return os;
-	}
-#endif
-};
-
-
-//【辺加算（パス，部分木）／総和（パス，部分木）クエリ】
-/*
-* Tree_edge_add_sum_query<WRtree>(WRtree rt) : O(n)
-*	重み付き根付き木 rt で初期化する．
-*
-* Tree_edge_add_sum_query<RTree>(RTree rt, vl c) : O(n)
-*	根付き木 rt と初期値 c で初期化する．
-*
-* set(int v, ll val) : O(log n)
-*	頂点 v への v の親からの辺の値を val にする．
-*
-* ll get(int v) : O(log n)
-*	頂点 v への v の親からの辺の値を返す．
-*
-* add_subtree(int v, ll val) : O(log n)
-*	頂点 v の部分木の辺に val を加算する．
-*
-* add(int v1, int v2, ll val) : O((log n)^2)
-*	頂点 v1 から v2 までの辺に val を加算する．
-*
-* ll sum_subtree(int v) : O(log n)
-*	頂点 v の部分木の辺の値の和を返す．
-*
-* ll sum(int v1, int v2) : O((log n)^2)
-*	頂点 v1 から v2 までの辺の値の和を返す．
-*
-* 利用：【根付き木の HL 分解】,【区間加算フェニック木（Z-加群）】
-*/
-ll op_teasq(ll x, ll y) { return x + y; }
-ll o_teasq() { return 0; }
-ll inv_teasq(ll x) { return -x; }
-ll mul_teasq(ll a, ll x) { return a * x; }
-template <class TREE>
-struct Tree_edge_add_sum_query {
-	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
-	
-	// 根付き木
-	TREE rt;
-
-	// HL 分解の結果の記録用
-	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
-	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
-	vi in, out, pos, top;
-
-	// 列 pos に対する区間加算／区間総和クエリを処理する．
-	// rasq[i] : i 番目になぞる頂点に入る辺の値（rasq[0] は使わない）
-	using RASQ = Fenwick_tree_range_add<ll, op_teasq, o_teasq, inv_teasq, mul_teasq>;
-	RASQ rasq;
-
-	// コンストラクタ（重み付き根付き木で初期化）
-	Tree_edge_add_sum_query(TREE& rt_) : rt(rt_) {
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
-
-		vl val(rt.n);
-		rep(s, rt.n) repe(e, rt[s].child) val[in[e.to]] += e.cost;
-
-		rasq = RASQ(val);
-	}
-
-	// コンストラクタ（根付き木と初期コストで初期化）
-	Tree_edge_add_sum_query(TREE& rt_, ll c) : rt(rt_) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
-
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
-
-		vl val(rt.n);
-		rep(s, rt.n) repe(t, rt[s].child) val[in[t]] += c;
-
-		rasq = RASQ(val);
-	}
-
-	// 頂点 v への v の親からの辺の値を val にする．
-	void set(int v, ll val) { rasq.set(in[v], val); }
-
-	// 頂点 v への v の親からの辺の値を返す．
-	ll get(int v) { return rasq.get(in[v]); }
-
-	// 頂点 v の部分木の辺に val を加算する．
-	void add_subtree(int v, ll val) { rasq.add(in[v] + 1, out[v], val); }
-
-	// 頂点 v1 から v2 までの辺に val を加算する．
-	void add(int v1, int v2, ll val) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
-
-		// v1 と v2 が異なる連結成分に属している限りループを回す．
-		while (top[v1] != top[v2]) {
-			// v1 の方が浅い連結成分に属しているとする．
-			if (in[top[v1]] > in[top[v2]]) swap(v1, v2);
-
-			// v2 を含む連結成分は pos で並んで配置されているので，
-			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
-			rasq.add(in[top[v2]], in[v2] + 1, val);
-
-			// 一つ浅い連結成分に移動する．
-			v2 = rt[top[v2]].parent;
-		}
-
-		// ここまできたら v1 と v2 は同じ連結成分に属するので，
-		// その間の辺のみに対して val を加算する．
-		if (in[v1] > in[v2]) swap(v1, v2);
-		rasq.add(in[v1] + 1, in[v2] + 1, val);
-	}
-
-	// 頂点 v の部分木の辺の値の和を返す．
-	ll sum_subtree(int v) { return rasq.sum(in[v] + 1, out[v]); }
-
-	// 頂点 v1 から v2 までの辺の値の和を返す．
-	ll sum(int v1, int v2) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
-
-		ll res = 0;
-
-		// v1 と v2 が異なる連結成分に属している限りループを回す．
-		while (top[v1] != top[v2]) {
-			// v1 の方が浅い連結成分に属しているとする．
-			if (in[top[v1]] > in[top[v2]]) swap(v1, v2);
-
-			// v2 を含む連結成分は pos で並んで配置されているので，
-			// 最も浅い頂点 top[v2] から v2 までの範囲の和を求める．
-			res += rasq.sum(in[top[v2]], in[v2] + 1);
-
-			// 一つ浅い連結成分に移動する．
-			v2 = rt[top[v2]].parent;
-		}
-
-		// ここまできたら v1 と v2 は同じ連結成分に属するので，
-		// その間の辺のみの和を res に加算する．
-		if (in[v1] > in[v2]) swap(v1, v2);
-		res += rasq.sum(in[v1] + 1, in[v2] + 1);
-
-		return res;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Tree_edge_add_sum_query q) {
-		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
-			<< q.top << endl << q.rasq << endl;
-		return os;
-	}
-#endif
-};
-
-
-//【頂点加算（パス，部分木）／総和（パス，部分木）クエリ】
-/*
-* Tree_vertex_add_sum_query(rt) : O(n)
-*	根付き木 rt と初期値 0 で初期化する．
-*
-* Tree_vertex_add_sum_query(rt, a) : O(n)
-*	根付き木 rt と初期値 a で初期化する．
-*
-* set(v, val) : O(log n)
-*	頂点 v の値を val にする．
-*
-* add(v, val) : O(log n)
-*	頂点 v に val を加算する．
-*
-* get(v) : O(log n)
-*	頂点 v の値を返す．
-*
-* add_subtree(v, val) : O(log n)
-*	頂点 v の部分木の頂点に val を加算する．
-*
-* add(v1, v2, val) : O((log n)^2)
-*	頂点 v1 から v2 までの頂点（両端含む）に val を加算する．
-*
-* sum_subtree(v) : O(log n)
-*	頂点 v の部分木の頂点の値の和を返す．
-*
-* sum(v1, v2) : O((log n)^2)
-*	頂点 v1 から v2 までの頂点（両端含む）の値の和を返す．
-*
-* 利用：【根付き木の HL 分解】,【区間加算フェニック木（Z-加群）】
-*/
-ll op_tvasq(ll x, ll y) { return x + y; }
-ll o_tvasq() { return 0; }
-ll inv_tvasq(ll x) { return -x; }
-ll mul_tvasq(ll a, ll x) { return a * x; }
-struct Tree_vertex_add_sum_query {
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S), S(*mul)(ll, S)>
+class Vertex_add_sum_query {
 	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
-	// 根付き木
-	Rooted_tree rt;
 	int n;
 
-	// HL 分解の結果の記録用
-	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
-	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
-	vi in, out, pos, top;
+	// in[s]  : 根からの DFS で頂点 s に最初に入った時刻
+	// out[s] : 根からの DFS で頂点 s から最後に出た時刻
+	// top[s] : 頂点 s を含む heavy path の最も浅い頂点
+	// wgt[s] : 頂点 s の重さ（部分木 s のもつ辺の数）
+	// p[s] : 頂点 s の親
+	vi in, out, top, wgt, p;
 
-	// 列 pos に対する区間加算／区間総和クエリを処理する．
-	// rasq[i] : i 番目になぞる頂点の値
-	using RASQ = Fenwick_tree_range_add<ll, op_tvasq, o_tvasq, inv_tvasq, mul_tvasq>;
-	RASQ rasq;
+	// v[i] :  時刻 t に居た頂点の値
+	using RASQ = Fenwick_tree_range_add<S, op, o, inv, mul>;
+	RASQ v;
 
-	// コンストラクタ（根付き木で初期化）
-	Tree_vertex_add_sum_query(Rooted_tree& rt_) : rt(rt_), n(rt.n) {
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
+	// 各頂点の重さと親を求めるための DFS を行う．
+	void dfs1(const Graph& g, int rt) {
+		function<void(int)> rf = [&](int s) {
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				rf(t);
+				wgt[s] += wgt[t] + 1;
+			}
+			};
+		p[rt] = -1;
+		rf(rt);
+	};
 
-		rasq = RASQ(n);
+	// 最も重い子を優先して DFS を行う．
+	void dfs2(const Graph& g, int rt) {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int tp) {
+			in[s] = time;
+			top[s] = tp;
+			time++;
+
+			// 重さ最大の頂点を得る．
+			int w_max = -INF, t_max = -1;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				if (chmax(w_max, wgt[t])) t_max = t;
+			}
+
+			// 重さ最大の頂点を優先的になぞる．
+			if (t_max != -1) rf(t_max, tp);
+
+			// 残りの頂点をなぞる．
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				rf(t, t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+		rf(rt, rt);
 	}
 
-	// コンストラクタ（根付き木と初期値で初期化）
-	Tree_vertex_add_sum_query(Rooted_tree& rt_, vl& a) : rt(rt_), n(rt.n) {
+public:
+	// rt を根とする根付き木 g と頂点値 v[0..n) = o で初期化する．
+	Vertex_add_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n), v(n) {
+		dfs1(g, rt);
+		dfs2(g, rt);
+	}
+
+	// rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
+	Vertex_add_sum_query(const Graph& g, int rt, const vector<S>& a) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n) {
 		// verify : https://judge.yosupo.jp/problem/vertex_add_path_sum
 
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
+		dfs1(g, rt);
+		dfs2(g, rt);
 
-		vl val(n);
-		rep(s, n) val[in[s]] = a[s];
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = RASQ(ini);
+	}
+	Vertex_add_sum_query() : n(0) {}
 
-		rasq = RASQ(val);
+	// v[s] = x とする．
+	void set(int s, S x) {
+		v.set(in[s], x);
 	}
 
-	// 頂点 v の値を val にする．
-	void set(int v, ll val) { rasq.set(in[v], val); }
-
-	// 頂点 v に val を加算する．
-	void add(int v, ll val) {
-		// verify : https://judge.yosupo.jp/problem/vertex_add_path_sum
-
-		rasq.add(in[v], val);
+	// v[s] を返す．
+	S get(int s) const {
+		return v.get(in[s]);
 	}
 
-	// 頂点 v の値を返す．
-	ll get(int v) { return rasq.get(in[v]); }
-
-	// 頂点 v の部分木の頂点に val を加算する．
-	void add_subtree(int v, ll val) { rasq.add(in[v], out[v], val); }
-
-	// 頂点 v1 から v2 までの頂点（両端含む）に val を加算する．
-	void add(int v1, int v2, ll val) {
-		// v1 と v2 が異なる連結成分に属している限りループを回す．
-		while (top[v1] != top[v2]) {
-			// v1 の方が浅い連結成分に属しているとする．
-			if (in[top[v1]] > in[top[v2]]) swap(v1, v2);
-
-			// v2 を含む連結成分は pos で並んで配置されているので，
-			// 最も浅い頂点 top[v2] から v2 までの範囲に val を加算する．
-			rasq.add(in[top[v2]], in[v2] + 1, val);
-
-			// 一つ浅い連結成分に移動する．
-			v2 = rt[top[v2]].parent;
-		}
-
-		// ここまできたら v1 と v2 は同じ連結成分に属するので，
-		// その間の頂点のみに対して val を加算する．
-		if (in[v1] > in[v2]) swap(v1, v2);
-		rasq.add(in[v1], in[v2] + 1, val);
-	}
-
-	// 頂点 v の部分木の頂点の値の和を返す．
-	ll sum_subtree(int v) {
+	// 部分木 s の頂点の値の総和を返す．
+	S sum_subtree(int s) const {
 		// verify : https://judge.yosupo.jp/problem/vertex_add_subtree_sum
 
-		return rasq.sum(in[v], out[v]);
+		return v.sum(in[s], out[s]);
 	}
 
-	// 頂点 v1 から v2 までの頂点（両端含む）の値の和を返す．
-	ll sum(int v1, int v2) {
+	// パス s→t 上の頂点（両端含む）の値の総和を返す．
+	S sum_path(int s, int t) const {
 		// verify : https://judge.yosupo.jp/problem/vertex_add_path_sum
 
-		ll res = 0;
+		S res = o();
 
-		// v1 と v2 が異なる連結成分に属している限りループを回す．
-		while (top[v1] != top[v2]) {
-			// v1 の方が浅い連結成分に属しているとする．
-			if (in[top[v1]] > in[top[v2]]) swap(v1, v2);
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
 
-			// v2 を含む連結成分は pos で並んで配置されているので，
-			// 最も浅い頂点 top[v2] から v2 までの範囲の和を求める．
-			res += rasq.sum(in[top[v2]], in[v2] + 1);
+			// t を含む連結成分は v で並んで配置されているので，
+			// 最も浅い頂点 top[t] から t までの範囲の和を求める．
+			res = op(res, v.sum(in[top[t]], in[t] + 1));
 
 			// 一つ浅い連結成分に移動する．
-			v2 = rt[top[v2]].parent;
+			t = p[top[t]];
 		}
 
-		// ここまできたら v1 と v2 は同じ連結成分に属するので，
+		// ここまできたら s と t は同じ連結成分に属するので，
 		// その間の頂点のみの和を res に加算する．
-		if (in[v1] > in[v2]) swap(v1, v2);
-		res += rasq.sum(in[v1], in[v2] + 1);
+		if (in[s] > in[t]) swap(s, t);
+		res = op(res, v.sum(in[s], in[t] + 1));
 
 		return res;
 	}
 
+	// v[s] += x とする．
+	void add(int s, S x) {
+		// verify : https://judge.yosupo.jp/problem/vertex_add_path_sum
+
+		v.add(in[s], x);
+	}
+
+	// 部分木 s の頂点の値に x を加算する．
+	void add_subtree(int s, S x) {
+		v.add(in[s], out[s], x);
+	}
+
+	// パス s→t 上の頂点（両端含む）の値に x を加算する．
+	void add_path(int s, int t, S x) {
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// t を含む連結成分は v で並んで配置されているので，
+			// 最も浅い頂点 top[t] から t までの範囲に x を加算する．
+			v.add(in[top[t]], in[t] + 1, x);
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ連結成分に属するので，
+		// その間の頂点のみに対して x を加算する．
+		if (in[s] > in[t]) swap(s, t);
+		v.add(in[s], in[t] + 1, x);
+	}
+
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Tree_vertex_add_sum_query& q) {
-		os << q.rasq;
+	friend ostream& operator<<(ostream& os, Vertex_add_sum_query& q) {
+		rep(s, q.n) os << q.get(s) << " ";
 		return os;
 	}
 #endif
 };
 
 
-//【子への一括加算／総和クエリ】
+//【[部分木,パス]辺加算／[部分木,パス]辺総和（Z-加群）】
 /*
-* BFS 順に頂点番号を振り直した上でセグメント木などを用いればよい．
+* Edge_add_sum_query<S, op, o, inv, mul>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と辺値 v[0..n) = o() で初期化する．
+*	要素は Z-加群 (S, op, o, inv, mul) の元とする．
+*
+* Edge_add_sum_query<S, op, o, inv, mul>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と辺値 v[0..n) = a[0..n) で初期化する．
+*	辺値 v[s] は頂点 s に入る辺の値を表す（v[rt] は無視）
+*
+* set(int s, S x) : O(log n)
+*	頂点 s に入る辺の値を x にする．
+*
+* S get(int s) : O(log n)
+*	頂点 s に入る辺の値を返す．
+*
+* S sum_subtree(int s) : O(log n)
+*	部分木 s の辺の値の総和を返す．
+*
+* S sum_path(int s, int t) : O((log n)^2)
+*	パス s→t 上の辺の値の総和を返す．
+*
+* add(int s, S x) : O(log n)
+*	頂点 s に入る辺の値に x を加算する．
+*
+* add_subtree(int v, S x) : O(log n)
+*	部分木 s の辺の値に x を加算する．
+*
+* add_path(int s, int t, S x) : O((log n)^2)
+*	パス s→t 上の辺の値に x を加算する．
+*
+* int get_parent(int s) : O(1)
+*	s の親を返す．
 * 
-* verify : https://atcoder.jp/contests/arc148/tasks/arc148_c
+* 利用：【区間加算フェニック木（Z-加群）】
 */
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S), S(*mul)(ll, S)>
+class Edge_add_sum_query {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
 
-
-//【木の頂点上のセグメント木】
-/*
-* Segtree_on_tree_vertex<S, op, e>(Rtree rt) : O(n)
-*	根付き木 rt と初期値 e() で初期化する．
-*
-* Segtree_on_tree_vertex<S, op, e>(Rtree rt, vS a) : O(n)
-*	根付き木 rt と初期値 a で初期化する．
-*
-* set(v, c) : O(log n)
-*	val[v] = c とする．
-*
-* get(v) : O(log n)
-*	val[v] を返す．
-*
-* prod(v1, v2) : O((log n)^2)
-*	op(v1 から v2 までの順に並べた頂点の値) を返す．（両端含む）
-*
-* prod_subtree(v) : O(log n)
-*	op(行きがけ順に並べた v の部分木の頂点の値) を返す．
-*
-* 利用：【根付き木の HL 分解】
-*/
-template <class S, S(*op)(S, S), S(*e)()>
-struct Segtree_on_tree_vertex {
-	// verify : https://judge.yosupo.jp/problem/vertex_set_path_composite
-
-	// 根付き木
-	Rooted_tree rt;
 	int n;
 
-	// HL 分解の結果の記録用
-	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
-	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
-	vi in, out, pos, top;
+	// in[s]  : 根からの DFS で頂点 s に最初に入った時刻
+	// out[s] : 根からの DFS で頂点 s から最後に出た時刻
+	// top[s] : 頂点 s を含む heavy path の最も浅い頂点
+	// wgt[s] : 頂点 s の重さ（部分木 s のもつ辺の数）
+	// p[s] : 頂点 s の親
+	vi in, out, top, wgt, p;
 
-	// 列 pos に対するクエリを処理する．
-	// rasq[i] : i 番目になぞる頂点の値
-	using SEG = segtree<S, op, e>;
-	SEG seg, seg_rev;
+	// v[i] :  時刻 t に居た頂点に入る辺の値
+	using RASQ = Fenwick_tree_range_add<S, op, o, inv, mul>;
+	RASQ v;
 
-	// コンストラクタ（根付き木で初期化）
-	Segtree_on_tree_vertex(Rooted_tree& rt_) : rt(rt_), n(rt.n) {
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
-
-		seg = seg_rev = SEG(n);
-	}
-
-	// コンストラクタ（根付き木と初期値で初期化）
-	Segtree_on_tree_vertex(Rooted_tree& rt_, vector<S>& a) : rt(rt_), n(rt.n) {
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
-
-		vector<S> val(n);
-		rep(s, n) val[in[s]] = a[s];
-
-		seg = SEG(val);
-		reverse(all(val));
-		seg_rev = SEG(val);
-	}
-
-	// val[v] = c とする．
-	void set(int v, S c) {
-		seg.set(in[v], c);
-		seg_rev.set((n - 1) - in[v], c);
-	}
-
-	// val[v] を返す．
-	S get(int v) { return seg.get(in[v]); }
-
-	// op(val[v1], ..., val[v2]) を返す．
-	S prod(int v1, int v2) {
-		S res = e(), res_rev = e();
-
-		// v1 と v2 が異なる連結成分に属している限りループを回す．
-		while (top[v1] != top[v2]) {
-			if (in[top[v1]] < in[top[v2]]) {
-				res = op(seg.prod(in[top[v2]], in[v2] + 1), res);
-				v2 = rt[top[v2]].parent;
+	// 各頂点の重さと親を求めるための DFS を行う．
+	void dfs1(const Graph& g, int rt) {
+		function<void(int)> rf = [&](int s) {
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				rf(t);
+				wgt[s] += wgt[t] + 1;
 			}
-			else {
-				res_rev = op(res_rev,
-					seg_rev.prod((n - 1) - in[v1], (n - 1) - in[top[v1]] + 1));
-				v1 = rt[top[v1]].parent;
+			};
+		p[rt] = -1;
+		rf(rt);
+	};
+
+	// 最も重い子を優先して DFS を行う．
+	void dfs2(const Graph& g, int rt) {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int tp) {
+			in[s] = time;
+			top[s] = tp;
+			time++;
+
+			// 重さ最大の頂点を得る．
+			int w_max = -INF, t_max = -1;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				if (chmax(w_max, wgt[t])) t_max = t;
 			}
-		}
 
-		// ここまできたら v1 と v2 は同じ連結成分に属する．
-		if (in[v1] <= in[v2]) {
-			res = op(seg.prod(in[v1], in[v2] + 1), res);
-		}
-		else {
-			res_rev = op(res_rev, seg_rev.prod((n - 1) - in[v1], (n - 1) - in[v2] + 1));
-		}
+			// 重さ最大の頂点を優先的になぞる．
+			if (t_max != -1) rf(t_max, tp);
 
-		return op(res_rev, res);
+			// 残りの頂点をなぞる．
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				rf(t, t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+			};
+		rf(rt, rt);
 	}
 
-	// op(行きがけ順にならべた v の部分木の頂点) を返す．
-	S prod_subtree(int v) { return seg.prod(in[v], out[v]); }
+public:
+	// rt を根とする根付き木 g と辺値 v[0..n) = o() で初期化する．
+	Edge_add_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n), v(n) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
+
+		dfs1(g, rt);
+		dfs2(g, rt);
+
+		// 重み付きグラフの場合
+		//vector<S> ini(n);
+		//rep(s, n) repe(t, g[s]) if (t != p[s]) ini[in[t.to]] = t.cost;
+		//v = RASQ(ini);
+	}
+
+	// rt を根とする根付き木 g と辺値 v[0..n) = a[0..n) で初期化する．
+	Edge_add_sum_query(const Graph& g, int rt, const vector<S>& a) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n) {
+		dfs1(g, rt);
+		dfs2(g, rt);
+
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = RASQ(ini);
+	}
+	Edge_add_sum_query() : n(0) {}
+
+	// 頂点 s に入る辺の値を x にする．
+	void set(int s, S x) {
+		v.set(in[s], x);
+	}
+
+	// 頂点 s に入る辺の値を返す．
+	S get(int s) const {
+		return v.get(in[s]);
+	}
+
+	// 部分木 s の辺の値の総和を返す．
+	S sum_subtree(int s) const {
+		return v.sum(in[s] + 1, out[s]);
+	}
+
+	// パス s→t 上の辺の値の総和を返す．
+	S sum_path(int s, int t) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
+
+		S res = o();
+
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// t を含む連結成分は v で並んで配置されているので，
+			// 最も浅い頂点 top[t] から t までの範囲の和を求める．
+			res = op(res, v.sum(in[top[t]], in[t] + 1));
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ連結成分に属するので，
+		// その間の辺のみの和を res に加算する．
+		if (in[s] > in[t]) swap(s, t);
+		res = op(res, v.sum(in[s] + 1, in[t] + 1));
+
+		return res;
+	}
+
+	// 頂点 s に入る辺に x を加算する．
+	void add(int s, S x) {
+		v.add(in[s], x);
+	}
+
+	// 部分木 s の辺の値に x を加算する．
+	void add_subtree(int s, S x) {
+		v.add(in[s] + 1, out[s], x);
+	}
+
+	// パス s→t 上の辺の値に x を加算する．
+	void add_path(int s, int t, S x) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
+
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// t を含む連結成分は v で並んで配置されているので，
+			// 最も浅い頂点 top[t] から t までの範囲に x を加算する．
+			v.add(in[top[t]], in[t] + 1, x);
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ連結成分に属するので，
+		// その間の辺のみに対して x を加算する．
+		if (in[s] > in[t]) swap(s, t);
+		v.add(in[s] + 1, in[t] + 1, x);
+	}
+
+	// s の親を返す．
+	int get_parent(int s) const {
+		Assert(0 <= s && s < n);
+		return p[s];
+	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Segtree_on_tree_vertex& q) {
-		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
-			<< q.top << endl << q.seg << endl << q.seg_rev << endl;
+	friend ostream& operator<<(ostream& os, Edge_add_sum_query& q) {
+		rep(s, q.n) os << q.get(s) << " ";
 		return os;
 	}
 #endif
 };
 
 
-//【木の辺上のセグメント木】
+//【[1点]頂点作用／[部分木,パス]頂点総積（モノイド）】
 /*
-* Segtree_on_tree_edge<S, op, e>(WRtree rt) : O(n)
-*	重み付き根付き木 rt で初期化する．
-*	制約：S = ll
+* Vertex_prod_query<S, op, e>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = e() で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
 *
-* set(int v, S c) : O(log n)
-*	val[p→v] = c とする（p→v は頂点 v への v の親からの辺）
+* Vertex_prod_query<S, op, e>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
 *
-* S get(int v) : O(log n)
-*	val[p→v] を返す．
+* set(int s, S x) : O(log n)
+*	v[s] = x とする．
 *
-* S prod(int v1, int v2) : O((log n)^2)
-*	op(v1 から v2 までの順に並べた辺の値) を返す．
+* S get(int s) : O(log n)
+*	v[s] を返す．
 *
-* S prod_subtree(int v) : O(log n)
-*	op(行きがけ順に並べた v の部分木の辺の値) を返す．
+* S prod_path(int s, int t) : O((log n)^2)
+*	op(s→t の順に並べた頂点の値) を返す．（両端含む）
 *
-* 利用：【根付き木の HL 分解】
+* S prod_subtree(int s) : O(log n)
+*	op(行きがけ順に並べた部分木 s の頂点の値) を返す．
 */
 template <class S, S(*op)(S, S), S(*e)()>
-struct Segtree_on_tree_edge {
-	// 根付き木
-	Weighted_rooted_tree rt;
+class Vertex_prod_query {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
+
 	int n;
 
-	// HL 分解の結果の記録用
-	// in[s] : 最重頂点優先で頂点 s を何番目になぞるか（根なら 0）
-	// out[s] : 最重頂点優先で頂点 s から出て次になぞる頂点が何番目か（根なら n）
-	// pos[i] : 最重頂点優先で i 番目になぞる頂点（長さ n）
-	// top[s] : 頂点 s を含む連結成分の最も浅い頂点
-	vi in, out, pos, top;
+	// in[s]  : 根からの DFS で頂点 s に最初に入った時刻
+	// out[s] : 根からの DFS で頂点 s から最後に出た時刻
+	// top[s] : 頂点 s を含む heavy path の最も浅い頂点
+	// wgt[s] : 頂点 s の重さ（部分木 s のもつ辺の数）
+	// p[s] : 頂点 s の親
+	vi in, out, top, wgt, p;
 
-	// 列 pos に対するクエリを処理する．
-	// rasq[i] : i 番目になぞる頂点の値
+	// v[i] :  時刻 t に居た頂点の値
+	using SEG = segtree<S, op, e>;
+	SEG v, vR;
+
+	// 各頂点の重さと親を求めるための DFS を行う．
+	void dfs1(const Graph& g, int rt) {
+		function<void(int)> rf = [&](int s) {
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				rf(t);
+				wgt[s] += wgt[t] + 1;
+			}
+			};
+		p[rt] = -1;
+		rf(rt);
+	};
+
+	// 最も重い子を優先して DFS を行う．
+	void dfs2(const Graph& g, int rt) {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int tp) {
+			in[s] = time;
+			top[s] = tp;
+			time++;
+
+			// 重さ最大の頂点を得る．
+			int w_max = -INF, t_max = -1;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				if (chmax(w_max, wgt[t])) t_max = t;
+			}
+
+			// 重さ最大の頂点を優先的になぞる．
+			if (t_max != -1) rf(t_max, tp);
+
+			// 残りの頂点をなぞる．
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				rf(t, t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+			};
+		rf(rt, rt);
+	}
+
+public:
+	// rt を根とする根付き木 g と頂点値 v[0..n) = e() で初期化する．
+	Vertex_prod_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n), v(n), vR(n) {
+		dfs1(g, rt);
+		dfs2(g, rt);
+	}
+
+	// rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
+	Vertex_prod_query(const Graph& g, int rt, const vector<S>& a) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n) {
+		// verify : https://judge.yosupo.jp/problem/vertex_set_path_composite
+
+		dfs1(g, rt);
+		dfs2(g, rt);
+
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = SEG(ini);
+
+		reverse(all(ini));
+		vR = SEG(ini);
+	}
+	Vertex_prod_query() : n(0) {}
+
+	// 頂点 s の値を x にする．
+	void set(int s, S x) {
+		// verify : https://judge.yosupo.jp/problem/vertex_set_path_composite
+
+		v.set(in[s], x);
+		vR.set((n - 1) - in[s], x);
+	}
+
+	// 頂点 s の値を返す．
+	S get(int s) const {
+		return v.get(in[s]);
+	}
+
+	// op(行きがけ順に並べた v の部分木の頂点の値) を返す．
+	S prod_subtree(int s) const {
+		return v.prod(in[s], out[s]);
+	}
+
+	// 頂点 s から t までの頂点（両端含む）の値の積を返す．
+	S prod_path(int s, int t) const {
+		// verify : https://judge.yosupo.jp/problem/vertex_set_path_composite
+
+		S res = e(), resR = e();
+
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			if (in[top[s]] < in[top[t]]) {
+				res = op(v.prod(in[top[t]], in[t] + 1), res);
+				t = p[top[t]];
+			}
+			else {
+				resR = op(resR, vR.prod((n - 1) - in[s], (n - 1) - in[top[s]] + 1));
+				s = p[top[s]];
+			}
+		}
+
+		// ここまできたら s と t は同じ連結成分に属する．
+		if (in[s] <= in[t]) {
+			res = op(v.prod(in[s], in[t] + 1), res);
+		}
+		else {
+			resR = op(resR, vR.prod((n - 1) - in[s], (n - 1) - in[t] + 1));
+		}
+
+		return op(resR, res);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Vertex_prod_query& q) {
+		rep(s, q.n) os << q.get(s) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【[1辺]辺作用／[部分木,パス]辺総積（モノイド）】
+/*
+* Edge_prod_query<S, op, e>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と辺値 v[0..n) = e() で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*
+* Edge_prod_query<S, op, e>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と辺値 v[0..n) = a[0..n) で初期化する．
+*	辺値 v[s] は頂点 s に入る辺の値を表す（v[rt] は無視）
+*
+* set(int s, S x) : O(log n)
+*	頂点 s に入る辺の値を x にする．
+*
+* S get(int s) : O(log n)
+*	頂点 s に入る辺の値を返す．
+*
+* S prod_path(int s, int t) : O((log n)^2)
+*	op(s→t の順に並べた辺の値) を返す．
+*
+* S prod_subtree(int s) : O(log n)
+*	op(行きがけ順に並べた部分木 s の頂辺の値) を返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Edge_prod_query {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
+
+	int n;
+
+	// in[s]  : 根からの DFS で頂点 s に最初に入った時刻
+	// out[s] : 根からの DFS で頂点 s から最後に出た時刻
+	// top[s] : 頂点 s を含む heavy path の最も浅い頂点
+	// wgt[s] : 頂点 s の重さ（部分木 s のもつ辺の数）
+	// p[s] : 頂点 s の親
+	vi in, out, top, wgt, p;
+
+	// v[i] :  時刻 t に居た頂点の値
 	using SEG = Segtree<S, op, e>;
+	SEG v, vR;
+
+	// 各頂点の重さと親を求めるための DFS を行う．
+	void dfs1(const Graph& g, int rt) {
+		function<void(int)> rf = [&](int s) {
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				rf(t);
+				wgt[s] += wgt[t] + 1;
+			}
+			};
+		p[rt] = -1;
+		rf(rt);
+	};
+
+	// 最も重い子を優先して DFS を行う．
+	void dfs2(const Graph& g, int rt) {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int tp) {
+			in[s] = time;
+			top[s] = tp;
+			time++;
+
+			// 重さ最大の頂点を得る．
+			int w_max = -INF, t_max = -1;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				if (chmax(w_max, wgt[t])) t_max = t;
+			}
+
+			// 重さ最大の頂点を優先的になぞる．
+			if (t_max != -1) rf(t_max, tp);
+
+			// 残りの頂点をなぞる．
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				rf(t, t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+			};
+		rf(rt, rt);
+	}
+
+public:
+	// rt を根とする根付き木 g と辺値 v[0..n) = e() で初期化する．
+	Edge_prod_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n), v(n), vR(n) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+
+		dfs1(g, rt);
+		dfs2(g, rt);
+
+		// 重み付きグラフの場合
+		//vector<S> ini(n);
+		//rep(s, n) repe(t, g[s]) if (t != p[s]) ini[in[t.to]] = t.cost;
+		//v = SEG(ini);
+		//reverse(all(ini));
+		//vR = SEG(ini);
+	}
+
+	// rt を根とする根付き木 g と辺値 v[0..n) = a[0..n) で初期化する．
+	Edge_prod_query(const Graph& g, int rt, const vector<S>& a) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n) {
+		dfs1(g, rt);
+		dfs2(g, rt);
+
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = SEG(ini);
+
+		reverse(all(ini));
+		vR = SEG(ini);
+	}
+	Edge_prod_query() : n(0) {}
+
+	// 頂点 s に入る辺の値を x にする．
+	void set(int s, S x) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+
+		v.set(in[s], x);
+		vR.set((n - 1) - in[s], x);
+	}
+
+	// 頂点 s に入る辺の値を返す．
+	S get(int s) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+
+		return v.get(in[s]);
+	}
+
+	// op(行きがけ順に並べた v の部分木の辺の値) を返す．
+	S prod_subtree(int s) const {
+		return v.prod(in[s], out[s]);
+	}
+
+	// 頂点 s から t までの辺の値の積を返す．
+	S prod_path(int s, int t) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+
+		S res = e(), resR = e();
+
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			if (in[top[s]] < in[top[t]]) {
+				res = op(v.prod(in[top[t]], in[t] + 1), res);
+				t = p[top[t]];
+			}
+			else {
+				resR = op(resR, vR.prod((n - 1) - in[s], (n - 1) - in[top[s]] + 1));
+				s = p[top[s]];
+			}
+		}
+
+		// ここまできたら s と t は同じ連結成分に属する．
+		if (in[s] <= in[t]) {
+			res = op(v.prod(in[s] + 1, in[t] + 1), res);
+		}
+		else {
+			resR = op(resR, vR.prod((n - 1) - in[s], (n - 1) - in[t]));
+		}
+
+		return op(resR, res);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Edge_prod_query& q) {
+		rep(s, q.n) os << q.get(s) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【[部分木,パス]辺作用／[部分木,パス]辺総和（M-可換モノイド）】
+/*
+* Edge_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と辺値 v[0..n) = o() で初期化する．
+*	要素は M-可換モノイド (S, op, o, F, act, comp, id) の元とする．
+*
+* Edge_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と辺値 v[0..n) = a[0..n) で初期化する．
+*	辺値 v[s] は頂点 s に入る辺の値を表す（v[rt] は無視）
+*
+* set(int s, S x) : O(log n)
+*	頂点 s に入る辺の値を x にする．
+*
+* S get(int s) : O(log n)
+*	頂点 s に入る辺の値を返す．
+*
+* S sum_subtree(int s) : O(log n)
+*	部分木 s の辺の値の総和を返す．
+*
+* S sum_path(int s, int t) : O((log n)^2)
+*	パス s→t 上の辺の値の総和を返す．
+*
+* apply(int s, F f) : O(log n)
+*	頂点 s に入る辺の値に f を作用させる．
+*
+* apply_subtree(int v, F f) : O(log n)
+*	部分木 s の辺の値に f を作用させる．
+*
+* apply_path(int s, int t, F f) : O((log n)^2)
+*	パス s→t 上の辺の値に f を作用させる．
+*/
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Edge_apply_sum_query {
+	// 参考：https://qiita.com/Pro_ktmr/items/4e1e051ea0561772afa3
+
+	int n;
+
+	// in[s]  : 根からの DFS で頂点 s に最初に入った時刻
+	// out[s] : 根からの DFS で頂点 s から最後に出た時刻
+	// top[s] : 頂点 s を含む heavy path の最も浅い頂点
+	// wgt[s] : 頂点 s の重さ（部分木 s のもつ辺の数）
+	// p[s] : 頂点 s の親
+	vi in, out, top, wgt, p;
+
+	// v[i] :  時刻 t に居た頂点に入る辺の値
+	using SEG = lazy_segtree<S, op, o, F, act, comp, id>;
+	SEG v;
+
+	// 各頂点の重さと親を求めるための DFS を行う．
+	void dfs1(const Graph& g, int rt) {
+		function<void(int)> rf = [&](int s) {
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				rf(t);
+				wgt[s] += wgt[t] + 1;
+			}
+			};
+		p[rt] = -1;
+		rf(rt);
+	};
+
+	// 最も重い子を優先して DFS を行う．
+	void dfs2(const Graph& g, int rt) {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int tp) {
+			in[s] = time;
+			top[s] = tp;
+			time++;
+
+			// 重さ最大の頂点を得る．
+			int w_max = -INF, t_max = -1;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				if (chmax(w_max, wgt[t])) t_max = t;
+			}
+
+			// 重さ最大の頂点を優先的になぞる．
+			if (t_max != -1) rf(t_max, tp);
+
+			// 残りの頂点をなぞる．
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				rf(t, t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+			};
+		rf(rt, rt);
+	}
+
+public:
+	// rt を根とする根付き木 g と辺値 v[0..n) = o() で初期化する．
+	Edge_apply_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n), v(n) {
+		dfs1(g, rt);
+		dfs2(g, rt);
+
+		// 重み付きグラフの場合
+		//vector<S> ini(n);
+		//rep(s, n) repe(t, g[s]) if (t != p[s]) ini[in[t.to]] = t.cost;
+		//v = SEG(ini);
+	}
+
+	// rt を根とする根付き木 g と辺値 v[0..n) = a[0..n) で初期化する．
+	Edge_apply_sum_query(const Graph& g, int rt, const vector<S>& a) : n(sz(g)), in(n), out(n), top(n), wgt(n), p(n) {
+		dfs1(g, rt);
+		dfs2(g, rt);
+
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = SEG(ini);
+	}
+	Edge_apply_sum_query() : n(0) {}
+
+	// 頂点 s に入る辺の値を x にする．
+	void set(int s, S x) {
+		v.set(in[s], x);
+	}
+
+	// 頂点 s に入る辺の値を返す．
+	S get(int s) {
+		return v.get(in[s]);
+	}
+
+	// 部分木 s の辺の値の総和を返す．
+	S sum_subtree(int s) {
+		return v.prod(in[s] + 1, out[s]);
+	}
+
+	// パス s→t 上の辺の値の総和を返す．
+	S sum_path(int s, int t) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
+
+		S res = o();
+
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// t を含む連結成分は v で並んで配置されているので，
+			// 最も浅い頂点 top[t] から t までの範囲の和を求める．
+			res = op(res, v.prod(in[top[t]], in[t] + 1));
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ連結成分に属するので，
+		// その間の辺のみの和を res に加算する．
+		if (in[s] > in[t]) swap(s, t);
+		res = op(res, v.prod(in[s] + 1, in[t] + 1));
+
+		return res;
+	}
+
+	// 頂点 s に入る辺に f を作用させる．
+	void apply(int s, F f) {
+		v.apply(in[s], f);
+	}
+
+	// 部分木 s の辺の値に f を作用させる．
+	void apply_subtree(int s, F f) {
+		v.apply(in[s] + 1, out[s], f);
+	}
+
+	// パス s→t 上の辺の値に f を作用させる．
+	void apply_path(int s, int t, F f) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_E
+
+		// s と t が異なる連結成分に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// t を含む連結成分は v で並んで配置されている．
+			v.apply(in[top[t]], in[t] + 1, f);
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ連結成分に属する．
+		if (in[s] > in[t]) swap(s, t);
+		v.apply(in[s] + 1, in[t] + 1, f);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Edge_apply_sum_query& q) {
+		rep(s, q.n) os << q.get(s) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【[隣接,部分木,パス]頂点作用／[隣接,部分木,パス]頂点総和（M-可換モノイド）】
+/*
+* Verious_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = o で初期化する．
+*	要素は M-可換モノイド (S, op, o, F, act, comp, id) の元とする．
+*
+* Verious_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
+*
+* set(int s, S x) : O(log n)
+*	v[s] = x とする．
+*
+* S get(int s) : O(log n)
+*	v[s] を返す．
+*
+* S sum_child(int s) : O(log n)
+*	頂点 s の子の値の総和を返す．
+*
+* S sum_neighbor(int s) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値の総和を返す．
+*
+* S sum_subtree(int s) : O(log n)
+*	部分木 s の頂点の値の総和を返す．
+* 
+* S sum_path(int s, int t) : O((log n)^2)
+*	パス s→t 上の頂点（両端含む）の総和を返す．
+*
+* S sum_all() : O(1)
+*	全頂点の値の総和を返す．
+*
+* apply(int s, F f) : O(log n)
+*	v[s] に f を作用させる．
+*
+* apply_child(int s, F f) : O(log n)
+*	頂点 s の子の値に f を作用させる．
+*
+* apply_neighbor(int s, F f) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+*
+* apply_subtree(int s, F f) : O(log n)
+*	部分木 s の頂点の値に f を作用させる．
+* 
+* apply_path(int s, int t, F f) : O((log n)^2)
+*	パス s→t 上の頂点（両端含む）の値に f を作用させる．
+*
+* apply_all(F f) : O(log n)
+*	全頂点の値に f を作用させる．
+*/
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Vertex_Verious_apply_sum_query {
+	int n;
+
+	// in[s]  : 根からの DFS で頂点 s に最初に入った時刻
+	// out[s] : 根からの DFS で頂点 s から最後に出た時刻
+	// top[s] : 頂点 s を含む heavy path の最も浅い頂点
+	// wgt[s] : 頂点 s の重さ（部分木 s のもつ辺の数）
+	// p[s] : 頂点 s の親
+	// hch_in[s] : 頂点 s の heavy child の in
+	// lch_inl[s] : 頂点 s の light childs の in の最小値
+	// lch_inr[s] : 頂点 s の light childs の in の最大値 - 1
+	vi in, out, top, wgt, p, hch_in, lch_inl, lch_inr;
+
+	// seg[t] : 時刻 t に居た頂点の値
+	using SEG = lazy_segtree<S, op, o, F, act, comp, id>;
+	SEG v;
+
+	// 各頂点の重さと親を求めるための DFS を行う．
+	void dfs1(const Graph& g, int rt) {
+		function<void(int)> rf = [&](int s) {
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				rf(t);
+				wgt[s] += wgt[t] + 1;
+			}
+		};
+		p[rt] = -1;
+		rf(rt);
+	};
+
+	// 最も重い子とその子孫 → 子 → 子孫 の優先順位で DFS を行う．
+	void dfs2(const Graph& g, int rt) {
+		int time = 1;
+		function<void(int, int)> rf = [&](int s, int tp) {
+			top[s] = tp;
+
+			// 重さ最大の頂点を得る．
+			int w_max = -INF, t_max = -1;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				if (chmax(w_max, wgt[t])) t_max = t;
+			}
+
+			// s が葉の場合は何もしない．
+			if (t_max == -1) {
+				hch_in[s] = -1;
+				lch_inl[s] = time;
+				lch_inr[s] = time;
+				out[s] = time;
+				return;
+			}
+
+			// 重さ最大の頂点だけ先に DFS する．
+			in[t_max] = time;
+			hch_in[s] = time;
+			time++;
+			rf(t_max, tp);
+
+			// その他の子を BFS する．
+			lch_inl[s] = time;
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				in[t] = time;
+				time++;
+			}
+			lch_inr[s] = time;
+
+			// 残りの子孫を DFS する．
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				rf(t, t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+		rf(rt, rt);
+	}
+
+public:
+	// rt を根とする根付き木 g と値 o で初期化する．
+	Verious_apply_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), top(n),
+		wgt(n), p(n), hch_in(n), lch_inl(n), lch_inr(n), v(n)
+	{
+		dfs1(g, rt);
+		dfs2(g, rt);
+	}
+
+	// rt を根とする根付き木 g と値 a[0..n) で初期化する．
+	Verious_apply_sum_query(const Graph& g, int rt, const vector<S>& a) : n(sz(g)), in(n), out(n), top(n),
+		wgt(n), p(n), hch_in(n), lch_inl(n), lch_inr(n)
+	{
+		// verify : https://yukicoder.me/problems/no/2341
+
+		dfs1(g, rt);
+		dfs2(g, rt);
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		v = SEG(ini);
+	}
+	Verious_apply_sum_query() : n(0) {}
+
+	// v[s] = x とする．
+	void set(int s, S x) {
+		Assert(0 <= s && s < n);
+
+		v.set(in[s], x);
+	}
+
+	// v[s] を返す．
+	S get(int s) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n);
+
+		return v.get(in[s]);
+	}
+
+	// 頂点 s の子の値の総和を返す．
+	S sum_child(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = o();
+		if (hch_in[s] != -1) res = v.get(hch_in[s]);
+		res = op(res, v.prod(lch_inl[s], lch_inr[s]));
+
+		return res;
+	}
+
+	// 頂点 s からの距離が 1 以下である頂点の値の総和を返す．
+	S sum_neighbor(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = v.get(in[s]);
+		if (p[s] != -1) res = op(res, v.get(in[p[s]]));
+		res = op(res, sum_child(s));
+
+		return res;
+	}
+
+	// 部分木 s の値の総和を返す．
+	S sum_subtree(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = v.get(in[s]);
+		if (hch_in[s] != -1) res = op(res, v.prod(hch_in[s], out[s]));
+
+		return res;
+	}
+
+	// パス s→t 上の頂点（両端含む）の総和を返す．
+	S sum_path(int s, int t) {
+		Assert(0 <= s && s < n && 0 <= t && t < n);
+
+		S res = o();
+
+		// s と t が異なる heavy path に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// heavy path の最も浅い頂点 top[t] から t までの範囲の和を加算する．
+			res = op(res, v.get(in[top[t]]));
+			if (t != top[t] && hch_in[top[t]] != -1) res = op(res, v.prod(hch_in[top[t]], in[t] + 1));
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ heavy path に属するのでその間の頂点の和を加算する．
+		if (in[s] > in[t]) swap(s, t);
+		if (top[s] == s) {
+			res = op(res, v.get(in[s]));
+			if (s != t && hch_in[s] != -1) res = op(res, v.prod(hch_in[s], in[t] + 1));
+		}
+		else {
+			res = op(res, v.prod(in[s], in[t] + 1));
+		}
+
+		return res;
+	}
+
+	// 全頂点の値の総和を返す．
+	S sum_all() {
+		return v.all_prod();
+	}
+
+	// v[s] に f を作用させる．
+	void apply(int s, F f) {
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+	}
+
+	// 頂点 s の子の値に f を作用させる．
+	void apply_child(int s, F f) {
+		Assert(0 <= s && s < n);
+
+		if (hch_in[s] != -1) v.apply(hch_in[s], f);
+		v.apply(lch_inl[s], lch_inr[s], f);
+	}
+
+	// 頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+	void apply_neighbor(int s, F f) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+		if (p[s] != -1) v.apply(in[p[s]], f);
+		apply_child(s, f);
+	}
+
+	// 部分木 s の値に f を作用させる．
+	void apply_subtree(int s, F f) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n);
+
+		v.apply(in[s], f);
+		if (hch_in[s] != -1) v.apply(hch_in[s], out[s], f);
+	}
+
+	// パス s→t 上の頂点（両端含む）の値に f を作用させる．
+	void apply_path(int s, int t, F f) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n && 0 <= t && t < n);
+
+		// s と t が異なる heavy path に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// heavy path の最も浅い頂点 top[t] から t までに f を作用させる．
+			v.apply(in[top[t]], f);
+			if (t != top[t] && hch_in[top[t]] != -1) v.apply(hch_in[top[t]], in[t] + 1, f);
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ heavy path に属するのでその間の頂点に f を作用させる．
+		if (in[s] > in[t]) swap(s, t);
+		if (top[s] == s) {
+			v.apply(in[s], f);
+			if (s != t && hch_in[s] != -1) v.apply(hch_in[s], in[t] + 1, f);
+		}
+		else {
+			v.apply(in[s], in[t] + 1, f);
+		}
+	}
+
+	// 全頂点の値に f を作用させる．
+	void apply_all(F f) {
+		v.apply(0, n, f);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Verious_apply_sum_query Q) {
+		rep(i, Q.n) os << Q.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【[隣接,部分木,パス]頂点作用／[隣接,部分木,パス]頂点総積（M-モノイド）】
+/*
+* Verious_apply_sum_query<S, op, e, F, act, comp, id>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = e で初期化する．
+*	要素は M-モノイド (S, op, e, F, act, comp, id) の元とする．
+*
+* Verious_apply_sum_query<S, op, e, F, act, comp, id>(Graph g, int rt, vS a) : O(n)
+*	rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
+*
+* set(int s, S x) : O(log n)
+*	v[s] = x とする．
+*
+* S get(int s) : O(log n)
+*	v[s] を返す．
+*
+* S prod_child(int s) : O(log n)
+*	頂点 s の子の値の総積を返す．
+*
+* S prod_neighbor(int s) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値の総積を返す．
+*
+* S prod_subtree(int s) : O(log n)
+*	部分木 s の頂点の値の総積を返す．
+*
+* S prod_path(int s, int t) : O((log n)^2)
+*	パス s→t 上の頂点（両端含む）のこの順での総積を返す．
+*
+* S prod_all() : O(1)
+*	全頂点の値の総積を返す．
+*
+* apply(int s, F f) : O(log n)
+*	v[s] に f を作用させる．
+*
+* apply_child(int s, F f) : O(log n)
+*	頂点 s の子の値に f を作用させる．
+*
+* apply_neighbor(int s, F f) : O(log n)
+*	頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+*
+* apply_subtree(int s, F f) : O(log n)
+*	部分木 s の頂点の値に f を作用させる．
+*
+* apply_path(int s, int t, F f) : O((log n)^2)
+*	パス s→t 上の頂点（両端含む）の値に f を作用させる．
+*
+* apply_all(F f) : O(log n)
+*	全頂点の値に f を作用させる．
+*/
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Vertex_Verious_apply_prod_query {
+	int n;
+
+	// in[s]  : 根からの DFS で頂点 s に最初に入った時刻
+	// out[s] : 根からの DFS で頂点 s から最後に出た時刻
+	// top[s] : 頂点 s を含む heavy path の最も浅い頂点
+	// wgt[s] : 頂点 s の重さ（部分木 s のもつ辺の数）
+	// p[s] : 頂点 s の親
+	// hch_in[s] : 頂点 s の heavy child の in
+	// lch_inl[s] : 頂点 s の light childs の in の最小値
+	// lch_inr[s] : 頂点 s の light childs の in の最大値 - 1
+	vi in, out, top, wgt, p, hch_in, lch_inl, lch_inr;
+
+	// seg[t] : 時刻 t に居た頂点の値
+	using SEG = lazy_segtree<S, op, e, F, act, comp, id>;
 	SEG seg, seg_rev;
 
-	// コンストラクタ（重み付き根付き木で初期化）
-	Segtree_on_tree_edge(Weighted_rooted_tree& rt_) : rt(rt_), n(rt.n) {
-		// verify : https://codeforces.com/contest/609/problem/E
+	// 各頂点の重さと親を求めるための DFS を行う．
+	void dfs1(const Graph& g, int rt) {
+		function<void(int)> rf = [&](int s) {
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				p[t] = s;
+				rf(t);
+				wgt[s] += wgt[t] + 1;
+			}
+		};
+		p[rt] = -1;
+		rf(rt);
+	};
 
-		// rt を HL 分解する．
-		heavy_light_decomposition(rt, in, out, pos, top);
+	// 最も重い子とその子孫 → 子 → 子孫 の優先順位で DFS を行う．
+	void dfs2(const Graph& g, int rt) {
+		int time = 1;
+		function<void(int, int)> rf = [&](int s, int tp) {
+			top[s] = tp;
 
-		vector<S> val(rt.n, e());
-		rep(s, rt.n) repe(edge, rt[s].child) val[in[edge.to]] = edge.cost;
+			// 重さ最大の頂点を得る．
+			int w_max = -INF, t_max = -1;
+			repe(t, g[s]) {
+				if (t == p[s]) continue;
+				if (chmax(w_max, wgt[t])) t_max = t;
+			}
 
-		seg = SEG(val);
-		reverse(all(val));
-		seg_rev = SEG(val);
+			// s が葉の場合は何もしない．
+			if (t_max == -1) {
+				hch_in[s] = -1;
+				lch_inl[s] = time;
+				lch_inr[s] = time;
+				out[s] = time;
+				return;
+			}
+
+			// 重さ最大の頂点だけ先に DFS する．
+			in[t_max] = time;
+			hch_in[s] = time;
+			time++;
+			rf(t_max, tp);
+
+			// その他の子を BFS する．
+			lch_inl[s] = time;
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				in[t] = time;
+				time++;
+			}
+			lch_inr[s] = time;
+
+			// 残りの子孫を DFS する．
+			repe(t, g[s]) {
+				if (t == p[s] || t == t_max) continue;
+				rf(t, t);
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+		rf(rt, rt);
 	}
 
-	// val[p→v] = c とする．
-	void set(int v, S c) {
-		seg.set(in[v], c);
-		seg_rev.set((n - 1) - in[v], c);
+public:
+	// rt を根とする根付き木 g と値 o で初期化する．
+	Verious_apply_prod_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), top(n),
+		wgt(n), p(n), hch_in(n), lch_inl(n), lch_inr(n), seg(n), seg_rev(n)
+	{
+		dfs1(g, rt);
+		dfs2(g, rt);
 	}
 
-	// val[p→v] を返す．
-	S get(int v) { return seg.get(in[v]); }
+	// rt を根とする根付き木 g と値 a[0..n) で初期化する．
+	Verious_apply_prod_query(const Graph& g, int rt, const vector<S>& a) : n(sz(g)), in(n), out(n), top(n),
+		wgt(n), p(n), hch_in(n), lch_inl(n), lch_inr(n)
+	{
+		// verify : https://yukicoder.me/problems/no/2341
 
-	// op([v1→...→v2] を返す．
-	S prod(int v1, int v2) {
-		// verify : https://codeforces.com/contest/609/problem/E
+		dfs1(g, rt);
+		dfs2(g, rt);
+		vector<S> ini(n);
+		rep(s, n) ini[in[s]] = a[s];
+		seg = SEG(ini);
+		reverse(all(ini));
+		seg_rev = SEG(ini);
+	}
+	Verious_apply_prod_query() : n(0) {}
+
+	// v[s] = x とする．
+	void set(int s, S x) {
+		Assert(0 <= s && s < n);
+
+		seg.set(in[s], x);
+		seg_rev.set((n - 1) - in[s], x);
+	}
+
+	// v[s] を返す．
+	S get(int s) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n);
+
+		return seg.get(in[s]);
+	}
+
+	// 頂点 s の子の値の総積を返す．
+	S prod_child(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = e();
+		if (hch_in[s] != -1) res = seg.get(hch_in[s]);
+		res = op(res, seg.prod(lch_inl[s], lch_inr[s]));
+
+		return res;
+	}
+
+	// 頂点 s からの距離が 1 以下である頂点の値の総積を返す．
+	S prod_neighbor(int s) {
+		Assert(0 <= s && s < n);
+
+		S res = seg.get(in[s]);
+		if (p[s] != -1) res = op(res, seg.get(in[p[s]]));
+		res = op(res, prod_child(s));
+
+		return res;
+	}
+
+	// 部分木 s の値の総積を返す．
+	S prod_subtree(int s) {
+		// verify : https://judge.yosupo.jp/problem/vertex_add_subtree_sum
+
+		Assert(0 <= s && s < n);
+
+		S res = seg.get(in[s]);
+		if (hch_in[s] != -1) res = op(res, seg.prod(hch_in[s], out[s]));
+
+		return res;
+	}
+
+	// パス s→t 上の頂点（両端含む）のこの順での総積を返す．
+	S prod_path(int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/vertex_set_path_composite
+
+		Assert(0 <= s && s < n && 0 <= t && t < n);
 
 		S res = e(), res_rev = e();
 
-		// v1 と v2 が異なる連結成分に属している限りループを回す．
-		while (top[v1] != top[v2]) {
-			if (in[top[v1]] < in[top[v2]]) {
-				res = op(seg.prod(in[top[v2]], in[v2] + 1), res);
-				v2 = rt[top[v2]].parent;
+		// s と t が異なる heavy path に属している限りループを回す．
+		while (top[s] != top[t]) {
+			if (in[top[s]] < in[top[t]]) {
+				// heavy path の最も浅い頂点 top[t] から t までの範囲の積を乗算する．
+				if (t != top[t] && hch_in[top[t]] != -1) {
+					res = op(seg.prod(hch_in[top[t]], in[t] + 1), res);
+				}
+				res = op(seg.get(in[top[t]]), res);
+				t = p[top[t]];
 			}
 			else {
-				res_rev = op(res_rev, seg_rev.prod((n - 1) - in[v1], (n - 1) - in[top[v1]] + 1));
-				v1 = rt[top[v1]].parent;
+				// heavy path の最も浅い頂点 top[s] から s までの範囲の積を乗算する．
+				if (s != top[s] && hch_in[top[s]] != -1) {
+					res_rev = op(res_rev, seg_rev.prod((n - 1) - in[s], (n - 1) - hch_in[top[s]] + 1));
+				}
+				res_rev = op(res_rev, seg_rev.get((n - 1) - in[top[s]]));
+				s = p[top[s]];
 			}
 		}
 
-		// ここまできたら v1 と v2 は同じ連結成分に属する．
-		if (in[v1] <= in[v2]) {
-			res = op(seg.prod(in[v1] + 1, in[v2] + 1), res);
+		// ここまできたら s と t は同じ heavy path に属するのでその間の頂点の積を乗算する．
+		if (in[s] <= in[t]) {
+			if (top[s] == s) {
+				if (s != t && hch_in[s] != -1) {
+					res = op(seg.prod(hch_in[s], in[t] + 1), res);
+				}
+				res = op(seg.get(in[s]), res);
+			}
+			else {
+				res = op(seg.prod(in[s], in[t] + 1), res);
+			}
 		}
 		else {
-			res_rev = op(res_rev, seg_rev.prod((n - 1) - in[v1], (n - 1) - in[v2]));
+			if (top[t] == t) {
+				if (hch_in[t] != -1) {
+					res_rev = op(res_rev, seg_rev.prod((n - 1) - in[s], (n - 1) - hch_in[t] + 1));
+				}
+				res_rev = op(res_rev, seg_rev.get((n - 1) - in[t]));
+			}
+			else {
+				res_rev = op(res_rev, seg_rev.prod((n - 1) - in[s], (n - 1) - in[t] + 1));
+			}
 		}
 
 		return op(res_rev, res);
 	}
 
-	// op(行きがけ順にならべた v の部分木の辺) を返す．
-	S prod_subtree(int v) { return seg.prod(in[v] + 1, out[v]); }
+	// 全頂点の値の総積を返す．
+	S prod_all() {
+		return seg.all_prod();
+	}
+
+	// v[s] に f を作用させる．
+	void apply(int s, F f) {
+		// verify : https://judge.yosupo.jp/problem/vertex_add_subtree_sum
+
+		Assert(0 <= s && s < n);
+
+		seg.apply(in[s], f);
+		seg_rev.apply((n - 1) - in[s], f);
+	}
+
+	// 頂点 s の子の値に f を作用させる．
+	void apply_child(int s, F f) {
+		Assert(0 <= s && s < n);
+
+		if (hch_in[s] != -1) {
+			seg.apply(hch_in[s], f);
+			seg_rev.apply((n - 1) - hch_in[s], f);
+		}
+		seg.apply(lch_inl[s], lch_inr[s], f);
+		seg_rev.apply(n - lch_inr[s], n - lch_inl[s], f);
+	}
+
+	// 頂点 s からの距離が 1 以下である頂点の値に f を作用させる．
+	void apply_neighbor(int s, F f) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n);
+
+		seg.apply(in[s], f);
+		seg_rev.apply((n - 1) - in[s], f);
+		if (p[s] != -1) {
+			seg.apply(in[p[s]], f);
+			seg_rev.apply((n - 1) - in[p[s]], f);
+		}
+		apply_child(s, f);
+	}
+
+	// 部分木 s の値に f を作用させる．
+	void apply_subtree(int s, F f) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n);
+
+		seg.apply(in[s], f);
+		seg_rev.apply((n - 1) - in[s], f);
+		if (hch_in[s] != -1) {
+			seg.apply(hch_in[s], out[s], f);
+			seg_rev.apply(n - out[s], n - hch_in[s], f);
+		}
+	}
+
+	// パス s→t 上の頂点（両端含む）の値に f を作用させる．
+	void apply_path(int s, int t, F f) {
+		// verify : https://yukicoder.me/problems/no/2341
+
+		Assert(0 <= s && s < n && 0 <= t && t < n);
+
+		// s と t が異なる heavy path に属している限りループを回す．
+		while (top[s] != top[t]) {
+			// s の方が浅い連結成分に属しているとする．
+			if (in[top[s]] > in[top[t]]) swap(s, t);
+
+			// heavy path の最も浅い頂点 top[t] から t までに f を作用させる．
+			seg.apply(in[top[t]], f);
+			seg_rev.apply((n - 1) - in[top[t]], f);
+			if (t != top[t] && hch_in[top[t]] != -1) {
+				seg.apply(hch_in[top[t]], in[t] + 1, f);
+				seg_rev.apply((n - 1) - in[t], (n - 1) - hch_in[top[t]] + 1, f);
+			}
+
+			// 一つ浅い連結成分に移動する．
+			t = p[top[t]];
+		}
+
+		// ここまできたら s と t は同じ heavy path に属するのでその間の頂点に f を作用させる．
+		if (in[s] > in[t]) swap(s, t);
+		if (top[s] == s) {
+			seg.apply(in[s], f);
+			seg_rev.apply((n - 1) - in[s], f);
+			if (s != t && hch_in[s] != -1) {
+				seg.apply(hch_in[s], in[t] + 1, f);
+				seg_rev.apply((n - 1) - in[t], (n - 1) - hch_in[s] + 1, f);
+			}
+		}
+		else {
+			seg.apply(in[s], in[t] + 1, f);
+			seg_rev.apply((n - 1) - in[t], (n - 1) - in[s] + 1, f);
+		}
+	}
+
+	// 全頂点の値に f を作用させる．
+	void apply_all(F f) {
+		seg.apply(0, n, f);
+	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Segtree_on_tree_edge& q) {
-		os << q.rt << q.in << endl << q.out << endl << q.pos << endl
-			<< q.top << endl << q.seg << endl << q.seg_rev << endl;
+	friend ostream& operator<<(ostream& os, Verious_apply_prod_query G) {
+		rep(i, G.n) os << G.get(i) << " ";
 		return os;
 	}
 #endif
@@ -985,8 +2700,6 @@ void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
 * 制約：任意箇所の頂点の追加[削除] が O(α) で可能
 * 
 * 利用：【根付き木のユニークオイラーツアー】
-*
-*（クエリ平方分割）
 */
 template <class T, class S>
 vector<S> mos_algorithm_subtree(const Rooted_tree& rt, const vector<T>& c, const vi& st) {
@@ -1064,8 +2777,6 @@ vector<S> mos_algorithm_subtree(const Rooted_tree& rt, const vector<T>& c, const
 * u[j] と v[j] を結ぶパスクエリに対する解を順に格納したリストを返す．
 *
 * 制約：任意箇所の辺の追加[削除] が O(α) で可能
-*
-*（クエリ平方分割）
 */
 template <class S>
 vector<S> mos_algorithm_path_edge(const WGraph& g, const vi& u, const vi& v) {
@@ -1178,8 +2889,6 @@ vector<S> mos_algorithm_path_edge(const WGraph& g, const vi& u, const vi& v) {
 * u[j] と v[j] を結ぶパスクエリに対する解を順に格納したリストを返す．
 *
 * 制約：任意箇所の頂点の追加[削除] が O(α) で可能
-*
-*（クエリ平方分割）
 */
 pli op_moLCA(pli a, pli b) { return min(a, b); }
 pli e_moLCA() { return { INFL, -1 }; }

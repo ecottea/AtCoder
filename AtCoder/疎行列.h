@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "fps(mint).h"
 // ■■■■■ 疎行列 ■■■■■
 
 
@@ -25,21 +26,25 @@
 */
 template <class T>
 struct SMatrix {
-	// verify : https://atcoder.jp/contests/abc228/tasks/abc228_g
-
 	int n; // 行列のサイズ（n 行）
 	vector<vector<pair<int, T>>> v; // 行列の成分
 
-	// コンストラクタ（初期化なし，n 行の零行列）
+	// n 行の零行列で初期化する．
+	SMatrix(int n) : n(n), v(n) {
+		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_g
+	}
 	SMatrix() : n(0) {}
-	SMatrix(int n_) : n(n_), v(n) {}
 
 	// 代入
 	SMatrix(const SMatrix& old) = default;
 	SMatrix& operator=(const SMatrix& other) = default;
 
 	// 要素の設定
-	void set(int i, int j, T val) { v[i].emplace_back(j, val); }
+	void set(int i, int j, T val) {
+		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_g
+		
+		v[i].emplace_back(j, val); 
+	}
 
 	// スカラー倍
 	SMatrix& operator*=(const T& sc) {
@@ -51,6 +56,8 @@ struct SMatrix {
 
 	// 行列ベクトル積
 	vector<T> operator*(const vector<T>& vec) const {
+		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_g
+		
 		vector<T> res(n);
 		rep(i, n) repe(p, v[i]) res[i] += p.second * vec[p.first];
 		return res;
@@ -79,5 +86,85 @@ struct SMatrix {
 * 疎行列同士の積は疎行列とは限らない．
 * 例えば，[1, 1, ..., 1]^T * [1, 1, ..., 1] で全て 1 の行列になる．
 */
+
+
+//【最小多項式】O(n^2 + n K) （K : A の非 0 要素数）
+/*
+* n 次正方行列 A[0..n)[0..n) の最小多項式を返す．
+* 最小多項式とは，f(A) = O を満たす次数最小なモニック多項式である．
+*
+* 利用：【線形漸化式の発見】
+*/
+MFPS minimal_polynomial(const SMatrix<mint>& A) {
+	// 参考 : https://yukicoder.me/wiki/black_box_linear_algebra
+
+	int n = A.n;
+
+	mt19937 mt;
+	mt.seed((int)time(NULL));
+	uniform_int_distribution<int> rnd(0, mint::mod() - 1);
+
+	vm u(n), v(n);
+	rep(i, n) {
+		u[i] = rnd(mt);
+		v[i] = rnd(mt);
+	}
+
+	vm s(2 * n);
+	rep(i, 2 * n) {
+		rep(j, n) s[i] += u[j] * v[j];
+		v = A * v;
+	}
+
+	vm c = berlekamp_massey(s);
+
+	MFPS f(c);
+	f = (1 - (f >> 1)).rev();
+
+	return f;
+}
+
+
+//【行列式】O(n^2 + n K) （K : A の非 0 要素数）
+/*
+* n 次正方行列 A[0..n)[0..n) の行列式を返す．
+*
+* 利用：【線形漸化式の発見】
+*/
+mint determinant(const SMatrix<mint>& A) {
+	// 参考 : https://yukicoder.me/wiki/black_box_linear_algebra
+	// verify : https://judge.yosupo.jp/problem/sparse_matrix_det
+
+	int n = A.n;
+
+	mt19937 mt;
+	mt.seed((int)time(NULL));
+	uniform_int_distribution<int> rnd(1, mint::mod() - 1);
+
+	vm u(n), v(n), D(n);
+	rep(i, n) {
+		u[i] = rnd(mt);
+		v[i] = rnd(mt);
+		D[i] = rnd(mt);
+	}
+
+	vm s(2 * n);
+	rep(i, 2 * n) {
+		rep(j, n) s[i] += u[j] * v[j];
+		v = A * v;
+		rep(j, n) v[j] *= D[j];
+	}
+
+	vm c = berlekamp_massey(s);
+
+	if (sz(c) != n) return 0;
+
+	mint res = (n & 1 ? 1 : -1) * c[n - 1];
+	mint detD = 1;
+	rep(i, n) detD *= D[i];
+	res /= detD;
+
+	return res;
+}
 
 

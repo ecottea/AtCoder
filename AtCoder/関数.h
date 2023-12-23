@@ -1,6 +1,214 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 関数 ■■■■■
+// ■■■■■ 関数，写像 ■■■■■
+
+
+//【写像の合成】
+/*
+* Map_composite(vi f, ll M) : O(n log M)
+*	[0..n) 上の写像 f : i → f[i] で初期化する．f^M まで計算可能とする．
+*
+* int apply(int x, ll m) : O(log m)
+*	f^m(x) を返す．
+*
+* ll max_right(int x, function<bool(int)>& okQ) : O(log M)
+*	okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
+*
+*（ダブリング）
+*/
+class Map_composite {
+	int n, K;
+
+	// nxt[k][i] : f^(2^k)[i]
+	vvi nxt;
+
+public:
+	// [0..n) 上の写像 i → f[i] で初期化する．f^M まで計算可能とする．
+	Map_composite(const vi& f, ll M) : n(sz(f)), K(msb(max(M, 1LL)) + 1), nxt(K, vi(n)) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
+
+		// f^(2^0)[i] = f[i]
+		rep(i, n) nxt[0][i] = f[i];
+
+		// f^(2^(k+1))[i] = f^(2^k)[ f^(2^k)[i] ]
+		rep(k, K - 1) rep(i, n) nxt[k + 1][i] = nxt[k][nxt[k][i]];
+	}
+	Map_composite() : n(0), K(0) {}
+
+	// f^m(x) を返す．
+	int apply(int x, ll m) const {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
+
+		Assert(0 <= x && x < n);
+
+		int k = 0;
+		while (m > 0) {
+			if (m & 1) x = nxt[k][x];
+			m /= 2;
+			k++;
+		}
+		return x;
+	}
+
+	// okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
+	ll max_right(int x, const function<bool(int)>& okQ) const {
+		// verify : https://atcoder.jp/contests/arc060/tasks/arc060_c
+
+		Assert(0 <= x && x < n);
+		if (!okQ(x)) return -1;
+
+		ll m = 0;
+		repir(k, K - 1, 0) {
+			m <<= 1;
+			if (okQ(nxt[k][x])) {
+				m++;
+				x = nxt[k][x];
+			}
+		}
+		return m;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Map_composite& mc) {
+		rep(k, mc.K) {
+			os << (1LL << k) << ":" << endl;
+			rep(i, mc.n) os << mc.nxt[k][i] << " "; os << endl;
+		}
+		return os;
+	}
+#endif
+
+	/* okQ の定義の雛形
+	auto okQ = [&](int i) {
+		return true || false;
+	};
+	*/
+};
+
+
+//【写像の累積和】
+/*
+* Map_accumulate<T>(vi f, vT a, ll M) : O(n log M)
+*	[0..n) 上の写像 f : i → f[i] と数列 a[0..n) で初期化する．f^M まで計算可能とする．
+*
+* int apply(int x, ll m) : O(log m)
+*	f^m(x) を返す．
+*
+* T accumulate(T x, ll r) : O(log r)
+*	Σm∈[0..r) a[ f^m(x) ] を返す．
+*
+* ll max_right(int x, function<bool(int)>& okQ) : O(log M)
+*	okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
+*
+*（ダブリング）
+*/
+template <class T>
+class Map_accumulate {
+	int n, K;
+
+	// dp[i][j] : f^(2^i)[j]
+	vvi dp;
+
+	// dp_acc[i][j] : Σm∈[0..2^i) a[f^m[j]]
+	using vT = vector<T>; using vvT = vector<vT>;
+	vvT dp_acc;
+
+public:
+	// [0..n) 上の写像 i → f[i] と数列 a[0..n) で初期化する．
+	Map_accumulate(const vi& f, const vT& a, ll M)
+		: n(sz(f)), K(msb(max(M, 1LL)) + 1), dp(K, vi(n)), dp_acc(K, vT(n))
+	{
+		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
+
+		// f^(2^0)[j] = f[j]
+		rep(i, n) dp[0][i] = f[i];
+
+		// Σk=[0..2^0) a[f^k[j]] = a[j]
+		rep(i, n) dp_acc[0][i] = a[i];
+
+		rep(k, K - 1) {
+			rep(i, n) {
+				// 例：
+				// f^8[j] = f^4[ f^4[j] ]
+				dp[k + 1][i] = dp[k][dp[k][i]];
+
+				// 例：
+				// a[f^0[j]] + a[f^1[j]] + a[f^2[j]] + a[f^3[j]]
+				//	+ a[f^4[j]] + a[f^5[j]] + a[f^6[j]] + a[f^7[j]]
+				// = a[f^0[j]] + a[f^1[j]] + a[f^2[j]] + a[f^3[j]]
+				//	+ a[f^0[ f^4[j] ]] + a[f^1[ f^4[j] ]] + a[f^2[ f^4[j] ]] + a[f^3[ f^4[j] ]]
+				dp_acc[k + 1][i] = dp_acc[k][i] + dp_acc[k][dp[k][i]];
+			}
+		}
+	}
+
+	// f^m(x) を返す．
+	int apply(int x, ll m) const {
+		Assert(0 <= x && x < n);
+
+		int k = 0;
+		while (m > 0) {
+			if (m & 1) x = dp[k][x];
+			m /= 2;
+			k++;
+		}
+		return x;
+	}
+
+	// Σm=[0..r) a[ f^m(x) ] を返す．
+	T accumulate(T x, ll r) const {
+		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
+
+		Assert(0 <= x && x < n);
+
+		int k = 0; ll val = T(0);
+		while (r > 0) {
+			if (r & 1) {
+				val += dp_acc[k][x];
+				x = dp[k][x];
+			}
+			r /= 2;
+			k++;
+		}
+
+		return val;
+	}
+
+	// okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
+	ll max_right(int x, const function<bool(int)>& okQ) const {
+		// verify : https://atcoder.jp/contests/acl1/tasks/acl1_d
+
+		Assert(0 <= x && x < n);
+		if (!okQ(x)) return -1;
+
+		ll m = 0;
+		repir(k, K - 1, 0) {
+			m <<= 1;
+			if (okQ(dp[k][x])) {
+				m++;
+				x = dp[k][x];
+			}
+		}
+		return m;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Map_accumulate& ma) {
+		rep(i, ma.K) {
+			os << (1LL << i) << ":" << endl;
+			rep(j, ma.n) os << ma.dp[i][j] << " "; os << endl;
+			rep(j, ma.n) os << ma.dp_acc[i][j] << " "; os << endl;
+		}
+		return os;
+	}
+#endif
+
+	/* okQ の定義の雛形
+	auto okQ = [&](int i) {
+		return true || false;
+	};
+	*/
+};
 
 
 //【Convex-Hull Trick（挿入単調，クエリ単調）】（オーバーフロー注意）
@@ -88,7 +296,7 @@ public:
 template <class T = ll>
 class Convex_hull_trick {
 	// 参考 : https://satanic0258.hatenablog.com/entry/2016/08/16/181331
-	
+
 	// 1 本の直線を表す構造体
 	struct Line {
 		// 直線の式が y = a x + b であることを表す．
@@ -128,22 +336,6 @@ class Convex_hull_trick {
 			// 直線と直線の比較
 			return a > rhs.a;
 		}
-
-#ifdef _MSC_VER
-		friend ostream& operator<<(ostream& os, const Line& l) {
-			os << "y=";
-
-			if (l.a == T(1)) os << "x";
-			else if (l.a == T(0));
-			else if (l.a == T(-1)) os << "-x";
-			else os << l.a << "x";
-
-			if (l.a == T(0) || l.b < T(0)) os << l.b;
-			else if (l.b > T(0)) os << "+" << l.b;
-
-			return os;
-		}
-#endif
 	};
 
 	set<Line> lines; // 直線を傾き狭義降順に記録した集合
@@ -269,6 +461,207 @@ public:
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Convex_hull_trick& cht) {
 		for (auto it = cht.lines.begin(); it != cht.lines.end(); it++) {
+			auto a = it->a;
+			auto b = it->b;
+
+			if (!cht.min_flag) {
+				a *= T(-1);
+				b *= T(-1);
+			}
+
+			os << "y=";
+
+			if (a == T(1)) os << "x";
+			else if (a == T(0));
+			else if (a == T(-1)) os << "-x";
+			else os << a << "x";
+
+			if (a == T(0) || b < T(0)) os << b;
+			else if (b > T(0)) os << "+" << b;
+
+			os << (next(it) != cht.lines.end() ? "," : "");
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【Convex-Hull Trick（整数）】
+/*
+* Convex_hull_trick<T>(bool min_flag = true) : O(1)
+*	空で初期化する．min_flag = true[false] なら最小値[最大値] クエリに対応する．
+*	制約：T は整数型
+*
+* insert(T a, T b) : ならし O(log n)
+*	直線 y = a x + b を追加する．
+*
+* T get(T x) : O(log n)
+*	a x + b の最小値[最大値] を返す．
+*	制約：直線集合は空でない
+*/
+template <class T = ll>
+class Convex_hull_trick_integer {
+	// 参考 : https://noshi91.hatenablog.com/entry/2021/03/23/200810
+
+	// 1 本の直線を表す構造体
+	struct Line {
+		// 直線の式が y = a x + b であることを表す．
+		T a, b;
+
+		// 直線であるか（さもなくば最小値クエリ）
+		bool is_line;
+
+		// 次の直線へのポインタを返す関数 (クエリとの比較で)
+		mutable function<const Line* ()> getSuc;
+
+		Line(T a_, T b_, bool is_line = true) : a(a_), b(b_), is_line(is_line) {}
+
+		bool operator<(const Line& rhs) const {
+			// set は lower_bound のように任意の比較関数を引数にとることはできないので，
+			// 比較演算子内で取得クエリか否かで場合分けすることにより無理やり二分探索を実現する．
+			//（set を使わず自前で平衡二分探索木を書くなら，左右の子を参照して下っていくだけでいい）
+
+			// 直線と最小値クエリの比較
+			if (!rhs.is_line) {
+				const Line* suc = getSuc();
+				if (suc == nullptr) return false;
+
+				const T& x = rhs.a;
+				return (suc->a - a) * x + (suc->b - b) < T(0);
+			}
+
+			// 最小値クエリと直線の比較
+			if (!is_line) {
+				const Line* suc = rhs.getSuc();
+				if (suc == nullptr) return true;
+
+				const T& x = a;
+				return (suc->a - rhs.a) * x + (suc->b - rhs.b) > T(0);
+			}
+
+			// 直線と直線の比較
+			return a > rhs.a;
+		}
+
+#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const Line& l) {
+			os << "y=";
+
+			if (l.a == T(1)) os << "x";
+			else if (l.a == T(0));
+			else if (l.a == T(-1)) os << "-x";
+			else os << l.a << "x";
+
+			if (l.a == T(0) || l.b < T(0)) os << l.b;
+			else if (l.b > T(0)) os << "+" << l.b;
+
+			return os;
+		}
+#endif
+	};
+
+	set<Line> lines; // 直線を傾き狭義降順に記録した集合
+
+	// 最小値クエリに対応する場合は true，最大値クエリに対応する場合は false
+	bool min_flag;
+
+public:
+	// 空で初期化する．
+	Convex_hull_trick_integer(bool min_flag = true) : min_flag(min_flag) {
+		// verify : https://judge.yosupo.jp/problem/line_add_get_min
+	}
+
+	// 直線 l : y = a x + b を追加する．
+	void insert(T a, T b) {
+		// verify : https://judge.yosupo.jp/problem/line_add_get_min
+
+		// 最大値クエリに対応する場合は -1 倍して上下反転し，最小値クエリとして扱う．
+		if (!min_flag) {
+			a = -a;
+			b = -b;
+		}
+
+		// nit : l の次に傾きが小さい直線（無いなら lines.end()）
+		auto nit = lines.lower_bound({ a, b });
+
+		// pit : l の次に傾きが大きい直線（無いなら lines.end()）
+		auto pit = (nit != lines.begin() ? prev(nit) : lines.end());
+
+		// pit と l の傾きが等しい場合
+		if (pit != lines.end() && pit->a == a) {
+			// pit の方が低い位置にあるなら l は不要
+			if (pit->b <= b) return;
+
+			// l の方が低い位置にあるなら pit は不要
+			lines.erase(pit);
+		}
+		// l と nit の傾きが等しい場合
+		else if (nit != lines.end() && a == nit->a) {
+			// nit の方が低い位置にあるなら l は不要
+			if (nit->b <= b) return;
+
+			// l の方が低い位置にあるなら nit は不要
+			lines.erase(nit);
+		}
+		// pit, l, nit の傾きが全て異なる場合
+		else if (pit != lines.end() && nit != lines.end()) {
+			// l が不要な直線なら追加せず終わる．
+			if ((b - pit->b) / (pit->a - a) >= (nit->b - b) / (a - nit->a)) return;
+		}
+
+		// 直線 l を追加する．
+		auto it = lines.insert({ a, b }).first;
+		it->getSuc = [=] { return (next(it) == lines.end() ? nullptr : &*next(it)); };
+
+		// l より傾きが大きい直線のうち，l のせいで不必要になったものを削除する．
+		if (it != lines.begin()) {
+			auto pit = prev(it);
+			while (pit != lines.begin()) {
+				// pit : l の次に傾きが大きい直線
+				// ppit : l の次の次に傾きが大きい直線
+				auto ppit = prev(pit);
+
+				// pit が必要な直線なら削除せず終わる．
+				if ((pit->b - ppit->b) / (ppit->a - pit->a) < (b - pit->b) / (pit->a - a)) break;
+
+				// さもなくば pit は不必要な直線なので削除する．
+				pit = prev(lines.erase(pit));
+			}
+		}
+
+		// l より傾きが小さい直線のうち，l のせいで不必要になったものを削除する．
+		if (next(it) != lines.end()) {
+			auto nit = next(it);
+			while (next(nit) != lines.end()) {
+				// nit : l の次に傾きが小さい直線
+				// nnit : l の次の次に傾きが小さい直線
+				auto nnit = next(nit);
+
+				// nit が必要な直線なら削除せず終わる．
+				if ((nit->b - b) / (a - nit->a) < (nnit->b - nit->b) / (nit->a - nnit->a)) break;
+
+				// さもなくば nit は不必要な直線なので削除する．
+				nit = lines.erase(nit);
+			}
+		}
+	}
+
+	// a x + b の最小値[最大値] を返す．
+	T get(T x) {
+		// verify : https://judge.yosupo.jp/problem/line_add_get_min
+
+		Assert(!lines.empty());
+
+		auto it = lines.lower_bound(Line{ x, x, false });
+
+		if (min_flag) return it->a * x + it->b;
+		else return -(it->a * x + it->b); // 最大値クエリの場合は -1 倍していたので元に戻す．
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Convex_hull_trick_integer& cht) {
+		for (auto it = cht.lines.begin(); it != cht.lines.end(); it++) {
 			os << *it << (next(it) != cht.lines.end() ? "," : "");
 		}
 		return os;
@@ -308,6 +701,9 @@ public:
 *
 * sliding_window_min(ll dl, ll dr) : O(1)
 *	f(x) を min f([x-dl, x+dr]) に置き換える．（＼＿＿／ の形にする．）
+* 
+* vector<pll> get_points(ll l, ll r) : O(n)
+*	[l..r] 内の f(x) の折れ点（両端含む）を x 座標昇順に格納したリストを返す．
 */
 struct Slope_trick {
 	// 参考 : https://maspypy.com/slope-trick-1-%E8%A7%A3%E8%AA%AC%E7%B7%A8
@@ -401,6 +797,8 @@ struct Slope_trick {
 
 	// [l..r] 内の f(x) の折れ点（両端含む）を x 座標昇順に返す．
 	vector<pll> get_points(ll l, ll r) const {
+		// verify : https://www.codechef.com/problems/UNRCOST
+
 		auto qL2(qL); auto qR2(qR);
 
 		vector<pll> res; ll a = 0, y = y_min;
@@ -443,6 +841,7 @@ struct Slope_trick {
 *
 * void insert(T x, T y) : ならし O(log n)
 *	点 (x, y) を挿入し，それにより単調性に違反する点は全て削除する．
+*	x 座標や y 座標がちょうど等しい点も消してしまうので注意！
 *
 * bool find_LL(T x, T y, bool strict = true) : O(log n)
 *	x' < x かつ y' < y なる点 (x', y') が存在するかを返す（strict=false なら等号も許す）
@@ -457,16 +856,19 @@ struct Slope_trick {
 *	x' > x かつ y' > y なる点 (x', y') が存在するかを返す（strict=false なら等号も許す）
 *
 * pTT lower_bound(T x) : O(log n)
-*	x' >= x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+*	x' ≧ x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
 *
 * pTT upper_bound(T x) : O(log n)
 *	x' > x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
 *
 * pTT lower_bound_rev(T x) : O(log n)
-*	x' <= x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+*	x' ≦ x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
 *
 * pTT upper_bound_rev(T x) : O(log n)
 *	x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+*
+* pTT get_all_points() : O(n)
+*	全ての点を x 座標昇順に並べたリストを返す．
 */
 template <class T>
 struct Monotonous_points {
@@ -605,6 +1007,14 @@ struct Monotonous_points {
 		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
 
 		return *prev(x_to_y.lower_bound(x));
+	}
+
+	// 全ての点を x 座標昇順に並べたリストを返す．
+	vector<pair<T, T>> get_all_points() {
+		vector<pair<T, T>> res;
+		res.reserve(sz(x_to_y));
+		repe(tmp, x_to_y) res.push_back(tmp);
+		return res;
 	}
 
 #ifdef _MSC_VER
@@ -1086,6 +1496,7 @@ public:
 * Li_Chao_tree_1cross_function<P, T>(int n, function<T(P p, int x)> f, P p) : O(n)
 *	関数 y = f(p; x) (x∈[0..n)) のみで初期化する．
 *	関数はパラメータ p で表し，x における値は f(p, x) で与えられる．
+*	注意：座圧する場合ははみ出しに注意．余分な座標を持って 2 倍に延長しておくと良い．
 *
 * add_function(P p) : O(log n)
 *	関数 y = f(p; x) (x∈[0..n)) を追加する．

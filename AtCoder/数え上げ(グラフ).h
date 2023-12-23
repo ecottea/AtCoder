@@ -4,6 +4,7 @@
 #include "二項係数.h"
 #include "列挙(分割).h"
 #include "群論.h"
+#include "bit全探索.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
 
@@ -73,6 +74,10 @@ vm count_shortest_path(const Graph& g, int st, vi* dist = nullptr) {
 vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {
 	// verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
 
+	//【注意】
+	// 重み 0 の辺のみでできた閉路があると，そこを通る最短経路数は無限個になる．
+	// 閉路さえなければ重み 0 の辺があっても大丈夫？
+
 	int n = sz(g);
 
 	// cnt[i] : st から i までの最短経路の総数
@@ -119,8 +124,6 @@ vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {
 /*
 * 与えられた無向グラフ g に対し，各頂点集合 set⊂[0..n) について，
 * set の部分集合のうち g の独立集合を成すものの個数を格納したリストを返す．
-*
-*（bit DP）
 */
 vm count_independent_set(const Graph& g) {
 	// verify : https://judge.yosupo.jp/problem/chromatic_number
@@ -153,70 +156,84 @@ vm count_independent_set(const Graph& g) {
 }
 
 
-//【単純パスの数え上げ】O(2^n n^2)
+//【単純パス，単純サイクルの数え上げ】O(2^n n (n+m))
 /*
-* 有向グラフ g について単純パス s → t の個数を cnt[s][t] に格納し cnt を返す．
+* 有向グラフ g について，set を通る単純パス s→t の個数を cnt[s][t][set] に格納し，cnt を返す．
+* また cflag = true なら set を通る単純サイクル s→s の個数も cnt[s][s][set] に格納する．
 *
 *（bit DP）
 */
-vvl count_simple_path(const Graph& g) {
+vvvm count_simple_path_and_cycle(const Graph& g, bool cflag = true) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_house
+
 	int n = sz(g);
 
-	// dp[s][t][set] : 単純パス s → t で途中 set を通るものの個数
-	//		s !∈ set, t ∈ set とする．
-	vvvl dp(n, vvl(n, vl(1LL << n)));
-	vvvb seen(n, vvb(n, vb(1LL << n)));
-	rep(s, n) {
-		dp[s][s][0] = 1;
-		seen[s][s][0] = true;
-	}
+	// dp[s][t][set] : set を通る s→t 単純パスの個数
+	vvvm dp(n, vvm(n, vm(1LL << n)));
 
-	// 単純パス s → t で途中 set を通るものの個数を返す．
-	function<ll(int, int, int)> rf = [&](int s, int t, int set) {
-		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][t][set]) return dp[s][t][set];
-		seen[s][t][set] = true;
+	// 貰う DP で単純パスを数え上げる．
+	repb(set, n) rep(s, n) rep(t, n) {
+		// s→t パスなので s, t を通らないことはありえない．
+		if (!get(set, s) || !get(set, t)) continue;
 
-		// s から行ける各頂点 v について
+		// set = {s} = {t} の場合は不動の 1 通りのみである．
+		if (s == t && set == (1 << s)) {
+			dp[s][t][set] = 1;
+			continue;
+		}
+
+		// 各辺 s-v について
 		repe(v, g[s]) {
-			// v が set に含まれていなければ何もしない．
-			if (!(set & (1 << v))) continue;
+			// v が set に含まれていなければ s→v は通れない．
+			if (!get(set, v)) continue;
 
-			// s → v と進む単純パスの個数を加算する．
-			dp[s][t][set] += rf(v, t, set - (1 << v));
+			// s→v と進む単純パスを加算する．
+			dp[s][t][set] += dp[v][t][set - (1 << s)];
 		}
-
-		return dp[s][t][set];
-	};
-
-	// 結果の格納
-	vvl cnt(n, vl(n));
-	rep(s, n) rep(t, n) {
-		repb(set, n) {
-			if ((set & (1 << s)) || !(set & (1 << t))) continue;
-			cnt[s][t] += rf(s, t, set);
-		}
-
-		// 不動の場合もカウントする．
-		if (s == t) cnt[s][t]++;
 	}
 
-	return cnt;
+	// 単純サイクルを数え上げる．
+	if (cflag) {
+		mint inv2 = mint(2).inv();
+		repb(set, n) rep(s, n) {
+			// s→s サイクルなので s を通らないことはありえない．
+			if (!get(set, s)) continue;
+
+			// set には少なくとも 3 点含まれていなければならない．
+			if (popcount(set) < 3) continue;
+
+			// 各辺 s-v について
+			repe(v, g[s]) {
+				// v が set に含まれていなければ s→v は通れない．
+				if (!get(set, v)) continue;
+
+				// s→v と進む単純パスを加算する（s は終点でもあるので set から除かない）
+				dp[s][s][set] += dp[v][s][set];
+			}
+
+			// 2 通りの向きを数えてしまっているので 2 で割る．
+			dp[s][s][set] *= inv2;
+		}
+	}
+
+	return dp;
 }
 
 
 //【トポロジカルソートの数え上げ】O(2^n m)
 /*
 * 有向グラフ g をトポロジカルソートする方法が何通りあるかを返す．
-*
-*（bit DP）
 */
 ll count_topological_sort(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc041/tasks/abc041_d
 
+	//【方法】
+	// トポロジカルソートされた列の後ろから順にどの頂点を割り当てるかを決めていく．
+	// 割り当て済の頂点の集合を覚えておく bit DP を用いる．
+
 	int n = sz(g);
 
-	// dp[set] : 位置降順で [0..|set|) 番目の頂点までが set に対応する場合の数
+	// dp[set] : トポロジカルソートされた列の後ろから |set| 個の頂点が set である場合の数
 	vl dp(1LL << n);
 	dp[0] = 1;
 
@@ -226,8 +243,8 @@ ll count_topological_sort(const Graph& g) {
 			// s が既に割り当て済の頂点なら何もしない．
 			if (set & (1 << s)) continue;
 
-			// 位置降順に頂点を対応させていっているので，
-			// s → t なる頂点 t は既に選ばれていなければならない．
+			// トポロジカルソートされた列の後ろ順に頂点を対応させていっているので，
+			// s→t なる全ての頂点 t は既に選ばれていなければならない．
 			bool choosable = true;
 			repe(t, g[s]) {
 				if (!(set & (1 << t))) {
@@ -236,9 +253,62 @@ ll count_topological_sort(const Graph& g) {
 				}
 			}
 
-			if (choosable) {
-				dp[set + (1 << s)] += dp[set];
-			}
+			if (choosable) dp[set + (1 << s)] += dp[set];
+		}
+	}
+
+	return dp[(1 << n) - 1];
+}
+
+
+//【DAG の数え上げ】O(3^n)
+/*
+* 無向グラフ g の各辺に向きを付けて DAG にする方法が何通りあるかを返す．
+*
+* 利用：【下位集合の全探索】
+*/
+mint count_DAG(const Graph& g) {
+	//【方法】
+	// dp[set] を 誘導部分グラフ g[set] を DAG にする方法の数と定める．
+	// g[set] の入次数 0 の頂点集合 sub⊂set を決め打つ（sub が G の独立集合であることが必要）
+	// sub に接続する辺の向きは全て決まり，あとは g[set-sub] を DAG にすれば良い．
+	// ただし set={s}, {t} の中には set={s,t} とした場合が含まれるなどするので，
+	// (-1)^(|set|+1) を係数として乗じて包除しながら計算していく必要がある．
+
+	int n = sz(g);
+
+	// is_ind[set] : set が g の独立集合か
+	vb is_ind(1LL << n);
+	is_ind[0] = true;
+
+	repb(set, n) {
+		if (set == 0) continue;
+
+		// s : set に属する番号最大の頂点
+		int s = msb(set);
+
+		// set - s が独立集合でなければ明らかに set も独立集合でない．
+		if (!is_ind[set - (1 << s)]) continue;
+
+		// s に隣接するどの頂点 t も set に属していないなら set は独立集合．
+		bool ok = true;
+		repe(t, g[s]) if (get(set, t)) {
+			ok = false;
+			break;
+		}
+		is_ind[set] = ok;
+	}
+
+	// dp[set] : 誘導部分グラフ g[set] を DAG にする方法の数
+	vm dp(1LL << n);
+	dp[0] = 1;
+
+	// SoS-bit DP
+	repb(set, n) {
+		repbs(sub, set) {
+			if (sub == 0 || !is_ind[sub]) continue;
+
+			dp[set] += dp[set - sub] * (popcount(sub) & 1 ? 1 : -1);
 		}
 	}
 
@@ -251,16 +321,16 @@ ll count_topological_sort(const Graph& g) {
 * 与えられた無向グラフ g に対し，各頂点集合 set⊂[0..n) について，
 * set を頂点集合とする部分グラフの個数を格納したリストを返す．
 *
-* 利用：【下位集合，添字 or での畳込み】
+* 利用：【下位ゼータ変換】
 */
 vm count_subgraph(const Graph& g) {
 	// 参考：https://drken1215.hatenablog.com/entry/2021/08/12/132500
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_g
 
 	//【方法】
-	// 明らかに
-	//		cnt[set] = 2^(g の辺のうち両端点とも set に属するものの個数)
-	// であるから，
+	// 頂点集合 set に対する答えは明らかに
+	//		2^(g の辺のうち両端点とも set に属するものの個数)
+	// であるから，指数部分
 	//		g[set] := g の辺のうち両端点とも set に属するものの個数
 	// が求まれば良い．
 	//
@@ -345,6 +415,76 @@ vm count_connected_subgraph(const Graph& g) {
 
 	return cnt;
 }
+
+
+//【k-彩色の数え上げ】O(2^n n^3)
+/*
+* 各 k∈[0..n] について，無向グラフ g を k 色で彩色する方法の数を格納したリストを返す．
+*/
+template <class T>
+vector<T> count_chromatic(const Graph& g) {
+	int N = sz(g);
+
+	if (N == 0) return vector<T>{ 1 };
+
+	// is_ind[set] : set が独立集合か
+	vi is_ind(1LL << N, 1);
+
+	// 辺の両端からなる 2 点集合 {s, t} は独立集合ではない．
+	rep(s, N) repe(t, g[s]) {
+		int set = (1 << s) + (1 << t);
+		is_ind[set] = 0;
+	}
+
+	// 独立集合でない集合を部分集合にもつ集合は独立集合ではない．
+	repb(set, N) rep(i, N) {
+		if (set & (1 << i)) {
+			int sub = set - (1 << i);
+			is_ind[set] = is_ind[set] & is_ind[sub];
+		}
+	}
+
+	// is_ind にランク（集合の要素数）の情報を付加して f とする．
+	vector<vector<T>> f(1LL << N, vector<T>(N + 1));
+	repb(set, N) {
+		int r = popcount(set);
+		f[set][r] = is_ind[set];
+	}
+
+	// f のランク付き下位ゼータ変換
+	rep(i, N) repb(set, N) repi(r, 0, N) {
+		if (!(set & (1 << i))) f[set + (1 << i)][r] += f[set][r];
+	}
+
+	// f_pow : f^k
+	vector<vector<T>> f_pow(1LL << N, vector<T>(N + 1));
+	repb(set, N) f_pow[set][0] = 1;
+
+	vector<T> cnt(N + 1);
+	repi(k, 1, N) {
+		// 各点積 h = f^(k-1) * f（ただしランクが N より大きい項は無視する）
+		vector<vector<T>> h(1LL << N, vector<T>(N + 1));
+		repb(set, N) repi(r, 0, N) repi(rf, 0, r) h[set][r] += f_pow[set][rf] * f[set][r - rf];
+		f_pow = move(h);
+
+		// f_pow のランク付き下位メビウス変換（最大元のランク N の項のみ）
+		repb(set, N) cnt[k] += ((N - popcount(set)) & 1 ? -1 : 1) * f_pow[set][N];
+	}
+
+	return cnt;
+}
+
+
+//【k-彩色の数え上げ（辺が少）】
+/*
+* 無向グラフ G=(V,E) の k-彩色の数を P(G, k) と表すとき，∀e∈E について，
+*	P(G, k) = P(G-e, k) - P(G/e, k)
+* が成り立つ（G-e は G から辺 e を取り除いたグラフ，G/e は G の辺 e を縮約したグラフ）
+*
+* また G が n 頂点の木であれば，P(G, k) = k (k-1)^(n-1) である．
+*
+* verify : https://atcoder.jp/contests/abc294/tasks/abc294_h
+*/
 
 
 //【ラベルなし単純グラフの数え上げ】O(n の分割数)（n=50 くらいまで動く）
@@ -599,18 +739,6 @@ vvvm count_undirected_cycle_decomposition(int n, int m, const Factorial_mint& fm
 
 	return res;
 }
-
-
-//【k-彩色の数え上げ】
-/*
-* 無向グラフ G=(V,E) の k-彩色の数を P(G, k) と表すとき，∀e∈E について，
-*	P(G, k) = P(G-e, k) - P(G/e, k)
-* が成り立つ（G-e は G から辺 e を取り除いたグラフ，G/e は G の辺 e を縮約したグラフ）
-*
-* また G が n 頂点の木であれば，P(G, k) = k (k-1)^(n-1) である．
-*
-* verify : https://atcoder.jp/contests/abc294/tasks/abc294_h
-*/
 
 
 //【全域木に関する数え上げ】

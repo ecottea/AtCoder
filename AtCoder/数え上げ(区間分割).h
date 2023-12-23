@@ -3,7 +3,7 @@
 // ¡¡¡¡¡ ”‚¦ã‚°i‹æŠÔ•ªŠ„j ¡¡¡¡¡
 
 
-//y‹æŠÔ˜a‚ğ‚Æ‚é‘€ì‚Å“¾‚ç‚ê‚é—ñ‚Ì”‚¦ã‚°z
+//y‹æŠÔ˜a‚ğ‚Æ‚é‘€ì‚Å“¾‚ç‚ê‚é—ñ‚Ì”‚¦ã‚°zO(n)
 /*
 * a[0..n) ‚ğ‹æŠÔ B_1, ..., B_k ‚É•ªŠ„‚µC‚»‚ê‚¼‚ê‚Ì‘˜a‚ğ‚Æ‚é‚±‚Æ‚Å’·‚³ k ‚Ì—ñ‚ğ“¾‚éD
 * ‚±‚Ì‘€ì‚Å“¾‚ç‚ê‚é—ñ‚ª‰½’Ê‚è‚ ‚é‚©‚ğ•Ô‚·D
@@ -26,7 +26,7 @@ mint count_interval_partition_sum(const vector<T>& a) {
 	s[0] = a[0];
 	repi(i, 1, n - 2) s[i] = s[i - 1] + a[i];
 
-	return count_subsequences(s);
+	return count_unique_subsequences_Lpri_getDP(s);
 }
 
 

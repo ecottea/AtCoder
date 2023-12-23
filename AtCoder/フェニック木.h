@@ -6,8 +6,7 @@
 //【フェニック木（アーベル群）】
 /*
 * Fenwick_tree<S, op, o, inv>(int n) : O(n)
-*	要素数 n かつ初期値 o() で初期化する．
-*	要素はアーベル群 (S, op, o, inv) の元とする．
+*	a[0..n) = o() で初期化する．要素はアーベル群 (S, op, o, inv) の元とする．
 *
 * Fenwick_tree<S, op, o, inv>(vS a) : O(n)
 *	配列 a[0..n) で初期化する．
@@ -19,70 +18,26 @@
 *	a[i] を返す．
 *
 * S sum(int l, int r) : O(log n)
-*	op( a[l..r) ) を返す．空なら o() を返す．
+*	Σa[l..r) を返す．空なら o() を返す．
 *
 * add(int i, S x) : O(log n)
-*	a[i] = op(a[i], x) とする．
+*	a[i] += x とする．
 *
 * int max_right(function<bool(S)>& f) : O(log n)
-*	f( op( a[0..r) ) ) = true となる最大の r を返す．
-*   f : S → bool で f( o() ) = true かつ単調とする．
+*	f( Σa[0..r) ) = true となる最大の r を返す．
+*   制約：f( o() ) = true，f は単調
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
-struct Fenwick_tree {
+class Fenwick_tree {
 	// 参考：https://algo-logic.info/binary-indexed-tree/
 
 	// ノードの個数（要素数 + 1）
 	int n;
 
-	// v[i] : op( [*..i] ) の値（i ： 1-indexed，v[0] は使わない）
+	// v[i] : Σa[*..i] の値（i:1-indexed，v[0] は不使用）
 	vector<S> v;
 
-	// 要素数 n かつ初期値 o() で初期化
-	Fenwick_tree(int n_) : n(n_ + 1), v(n, o()) {}
-
-	// 配列 a で初期化
-	Fenwick_tree(const vector<S>& v_) : n(sz(v_) + 1), v(n) {
-		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
-
-		// 配列の値を仮登録する．
-		rep(i, n - 1) v[i + 1] = v_[i];
-
-		// 正しい値になるよう根に向かって累積 op() をとっていく．
-		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
-			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
-				v[i] = op(v[i], v[i - pow2]);
-			}
-		}
-	}
-	Fenwick_tree() : n(0) {}
-
-	// v[i] = x とする．（i : 0-indexed）
-	void set(int i, S x) {
-		// 差分を求める．
-		S d = op(x, inv(get(i)));
-
-		add(i, d);
-	}
-
-	// v[i] を返す．（i : 0-indexed）
-	S get(int i) const {
-		return sum(i, i + 1);
-	}
-
-	// op( v[l..r) ) を返す．空なら o() を返す．（l, r : 0-indexed）
-	S sum(int l, int r) const {
-		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
-
-		if (l >= r) return o();
-
-		// 0-indexed での半開区間 [l, r) は，
-		// 1-indexed での閉区間 [l + 1, r] に対応する．
-		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
-		return op(sum_sub(r), inv(sum_sub(l)));
-	}
-
-	// op( v[1..r] ) を返す．空なら o() を返す．（r : 1-indexed）
+	// Σa[1..r] を返す．空なら o() を返す．（r:1-indexed）
 	S sum_sub(int r) const {
 		S res = o();
 
@@ -96,7 +51,52 @@ struct Fenwick_tree {
 		return res;
 	}
 
-	// v[i] = op(v[i], x) とする．（i : 0-indexed）
+public:
+	// a[0..n) = o() で初期化する．
+	Fenwick_tree(int n_) : n(n_ + 1), v(n, o()) {}
+
+	// 配列 a[0..n) で初期化する．
+	Fenwick_tree(const vector<S>& a) : n(sz(a) + 1), v(n) {
+		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
+		// 配列の値を仮登録する．
+		rep(i, n - 1) v[i + 1] = a[i];
+
+		// 正しい値になるよう根に向かって累積 op() をとっていく．
+		for (int pow2 = 1; 2 * pow2 < n; pow2 *= 2) {
+			for (int i = 2 * pow2; i < n; i += 2 * pow2) {
+				v[i] = op(v[i], v[i - pow2]);
+			}
+		}
+	}
+	Fenwick_tree() : n(0) {}
+
+	// a[i] = x とする．（i : 0-indexed）
+	void set(int i, S x) {
+		// 差分を求める．
+		S d = op(x, inv(get(i)));
+
+		add(i, d);
+	}
+
+	// a[i] を返す．（i : 0-indexed）
+	S get(int i) const {
+		return sum(i, i + 1);
+	}
+
+	// Σa[l..r) を返す．空なら o() を返す．（l, r : 0-indexed）
+	S sum(int l, int r) const {
+		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
+		if (l >= r) return o();
+
+		// 0-indexed での半開区間 [l, r) は，
+		// 1-indexed での閉区間 [l + 1, r] に対応する．
+		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
+		return op(sum_sub(r), inv(sum_sub(l)));
+	}
+
+	// a[i] += x とする．（i : 0-indexed）
 	void add(int i, S x) {
 		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
 
@@ -112,7 +112,7 @@ struct Fenwick_tree {
 		}
 	}
 
-	// f( op( v[0, r) ) ) = true となる最大の r を返す．（r : 0-indexed）
+	// f( Σa[0..r) ) = true となる最大の r を返す．（r : 0-indexed）
 	int max_right(const function<bool(S)>& f) const {
 		// verify : https://www.spoj.com/problems/ALLIN1/
 
@@ -1215,7 +1215,7 @@ struct Dynamic_fenwick_tree_2D {
 * sum(l, r) : O(log n)
 *	半開区間 [l, r) の要素の総和を返す．
 */
-/*
+#ifndef _MSC_VER
 template <class T>
 struct fenwick_tree {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_6_A
@@ -1253,5 +1253,6 @@ struct fenwick_tree {
 	}
 #endif
 };
-*/
+#endif
+
 

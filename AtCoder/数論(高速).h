@@ -33,7 +33,7 @@ bool miller_rabin(ll n) {
 	// と書き直せる．
 	// 
 	// この対偶を用いて判定することをランダムに選んだ a で繰り返す．
-	// n の範囲を限定するなら擬素数を生じない a を固定的に選べる．
+	// n < 2^64 に範囲を限定するなら擬素数を生じない a を固定的に選べる．
 
 	const vl as = { 2, 325, 9375, 28178, 450775, 9780504, 1795265022 };
 
@@ -71,9 +71,10 @@ bool miller_rabin(ll n) {
 *
 * 利用：【有限体 F_p 上の計算（64 bit）】
 */
-ll pollard_rho(ll n) {
+template <class T = ll>
+T pollard_rho(T n) {
 	// 参考 : https://qiita.com/Kiri8128/items/eca965fe86ea5f4cbb98
-	// verify : https://algo-method.com/tasks/553
+	// verify : https://judge.yosupo.jp/problem/factorize
 
 	//【方法】
 	// 適当な定数 c をとり関数 f : Z/nZ → Z/nZ を
@@ -101,7 +102,7 @@ ll pollard_rho(ll n) {
 		auto f = [&](mll x) { return x * x + c; };
 
 		mll x, y = 2, y_bak;
-		ll g = 1;
+		T g = 1;
 		int r = 1;
 
 		// g = 1 である間は巡回未検出
@@ -125,7 +126,7 @@ ll pollard_rho(ll n) {
 					// 巡回は検出できるので問題ない．）
 					mul *= x - y;
 				}
-				g = gcd(mul.val(), n);
+				g = (T)gcd(mul.val(), (ll)n);
 
 				// g != 1 なら巡回を検出できたので次の処理へ
 				if (g != 1) goto LOOP_END;
@@ -141,7 +142,7 @@ ll pollard_rho(ll n) {
 			g = 1;
 			while (g == 1) {
 				y_bak = f(y_bak);
-				g = gcd((x - y_bak).val(), n);
+				g = (T)gcd((x - y_bak).val(), (ll)n);
 			}
 		}
 
@@ -164,18 +165,19 @@ ll pollard_rho(ll n) {
 *
 * 利用：【素数判定】,【約数検出】
 */
-map<ll, int> factor_integer(ll n) {
-	// verify : https://algo-method.com/tasks/553
+template <class T = ll>
+map<T, int> factor_integer(T n) {
+	// verify : https://judge.yosupo.jp/problem/factorize
 
-	map<ll, int> pps;
-	if (n == 1) return map<ll, int>();
+	map<T, int> pps;
+	if (n == 1) return map<T, int>();
 
 	// 検出した約数を記録しておくキュー
-	queue<ll> divs;
+	queue<T> divs;
 	divs.push(n);
 
 	while (!divs.empty()) {
-		ll d = divs.front();
+		T d = divs.front();
 		divs.pop();
 
 		// 約数が素数なら素因数発見
@@ -184,8 +186,8 @@ map<ll, int> factor_integer(ll n) {
 		}
 		// 約数が合成数なら新たな約数を 2 つ発見する
 		else {
-			ll d1 = pollard_rho(d);
-			ll d2 = d / d1;
+			T d1 = pollard_rho<T>(d);
+			T d2 = d / d1;
 			divs.push(d1);
 			divs.push(d2);
 		}
@@ -286,7 +288,7 @@ ll divisors_sum(ll n) {
 /*
 * 素数の法 p における原始根を何か 1 つ返す．
 *
-* 利用：【約数列挙】
+* 利用：【素因数分解】
 */
 ll find_primitive_root(ll p) {
 	// verify : https://judge.yosupo.jp/problem/primitive_root
@@ -296,23 +298,25 @@ ll find_primitive_root(ll p) {
 	mt19937_64 mt((int)time(NULL));
 	uniform_int_distribution<ll> rnd(1, p - 1);
 
-	// p - 1 の約数 divs を得る．
-	vl divs = divisors(p - 1);
-
-	// p - 1 自身だけ削除する．
-	divs.pop_back();
+	// p-1 の素因数を得る．
+	auto pps = factor_integer(p - 1);
+	mll::set_mod(p);
 
 	while (true) {
+		// r : 原始根の候補をランダムに選ぶ
 		ll r = rnd(mt);
 
-		// p - 1 の真の約数が全て r の位数でないなら原始根
-		repe(d, divs) {
-			mll::set_mod(p);
-			if (mll(r).pow(d) == 1) goto NEXT_LOOP;
+		// p-1 の任意の素因数 q について r^((p-1)/q) が 1 でないことが
+		// r が原始根であるための必要十分条件となる．
+		bool ok = true;
+		for (auto [q, e] : pps) {
+			if (mll(r).pow((p - 1) / q) == 1) {
+				ok = false;
+				break;
+			}
 		}
-		return r;
 
-	NEXT_LOOP:;
+		if (ok) return r;
 	}
 	return -1LL;
 }
@@ -366,7 +370,7 @@ ll prime_pi(ll n) {
 
 	if (n <= 1) return 0;
 
-	int m = (int)(sqrt(n) + EPS);
+	int m = (int)(sqrt(n) + 0.001);
 
 	// S(v, p) : [2..v] 内の p 以下の素数で篩い終えた後残っている数の個数
 	//	dp_p[0][v] : S(v, p)
@@ -453,7 +457,7 @@ mint prime_sum(ll n) {
 
 	if (n <= 1) return 0;
 
-	int m = (int)(sqrt(n) + EPS);
+	int m = (int)(sqrt(n) + 0.001);
 
 	// S(v, p) : [2..v] 内の p 以下の素数で篩い終えた後残っている数の和
 	//	dp0_p[v] : S(v, p)
@@ -522,7 +526,7 @@ mint euler_phi_sum(ll n) {
 
 	if (n <= 1) return max(n, 0LL);
 
-	int m = (int)(sqrt(n) + EPS);
+	int m = (int)(sqrt(n) + 0.001);
 
 	// 1 と素数の昇順リスト
 	vl ps{ 1 };
@@ -628,7 +632,7 @@ mint divisor_count_sum(ll n) {
 
 	if (n <= 1) return max(n, 0LL);
 
-	int m = (int)(sqrt(n) + EPS);
+	int m = (int)(sqrt(n) + 0.001);
 
 	// inv[i] : i の逆数
 	vm inv(msb(n) + 2);

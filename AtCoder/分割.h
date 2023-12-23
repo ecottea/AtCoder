@@ -21,12 +21,12 @@
 /*
 * 各要素が互いに異なる列 x[0..N) に関する対象の数え上げは，[0..N) 上の分割関数 f を
 *	f(π) = 条件 (x[0..N) の要素が互いに異なる) を
-*		   条件 (i,j が同じブロックに属する ⇔ x[i]=x[j]) に変更したときの対象の個数
+*		   条件 (i,j が π の同じブロックに属する ⇔ x[i]=x[j]) に変更したときの対象の個数
 * と定めたときの f(0) を求めることに相当する（0 は分割の最小元）
 * 
 * f を上位ゼータ変換した分割関数を g とすると，g は
 *	g(π) = 条件 (x[0..N) の要素が互いに異なる) を
-*		   条件 (i,j が同じブロックに属する ⇒ x[i]=x[j]) に変更したときの対象の個数
+*		   条件 (i,j が π の同じブロックに属する ⇒ x[i]=x[j]) に変更したときの対象の個数
 * と解釈できる．g(π) であればブロックごとに独立に考えやすくなる．
 *
 * verify : https://atcoder.jp/contests/abc236/tasks/abc236_h
@@ -457,7 +457,7 @@ T partition_supermobius_block_bottom(const vector<T>& b) {
 *		a(0) = Σπ:[0..N)の分割 (-1)^(N-|π|) ΠT:πのブロック (|T|-1)! b[T]
 * で表される．
 *
-* 制約：fm は 2(N+1)! まで計算可能
+* 制約：fm は (N+1)! まで計算可能
 *
 * 利用：【形式的冪級数】，【指数関数】
 */
@@ -479,7 +479,7 @@ mint partition_supermobius_block_bottom(const vm& b, const Factorial_mint& fm) {
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] += g[set];
 
 	vector<MFPS> f(1LL << N);
-	repb(set, N) f[set] = exp(g[set], N + 1, fm);
+	repb(set, N) f[set] = exp_fps(g[set], N + 1, fm);
 
 	// メビウス変換（下位集合）
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] -= f[set];
@@ -630,7 +630,7 @@ mint partition_supermobius_block_size_bottom(const vm& b, const Factorial_mint& 
 	MFPS g(0, N + 1);
 	repi(i, 1, N) g[i] = (i % 2 ? 1 : -1) * b[i] * fm.inv(i);
 
-	MFPS f = exp(g, N + 1, fm);
+	MFPS f = exp_fps(g, N + 1, fm);
 
 	vm a(N + 1);
 	repi(i, 0, N) a[i] = f[i] * fm.fact(i);
@@ -895,6 +895,8 @@ map<vvi, T> partition_submobius(int N, const map<vvi, T>& b) {
 * 制約：a[0] = 0, fm は (2(N+1))! まで計算可能
 *
 * 利用：【形式的冪級数】，【指数関数】
+* 
+*（集合冪級数の exp）
 */
 vm partition_subzeta_block(const vm& a, const Factorial_mint& fm) {
 	// 参考 : https://atcoder.jp/contests/abc236/editorial/3910
@@ -914,7 +916,7 @@ vm partition_subzeta_block(const vm& a, const Factorial_mint& fm) {
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] += f[set];
 
 	vector<MFPS> g(1LL << N);
-	repb(set, N) g[set] = exp(f[set], N + 1, fm);
+	repb(set, N) g[set] = exp_fps(f[set], N + 1, fm);
 
 	// メビウス変換（下位集合）
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] -= g[set];
@@ -943,8 +945,12 @@ vm partition_subzeta_block(const vm& a, const Factorial_mint& fm) {
 * 制約：b[0] = 1, fm は (2(N+1))! まで計算可能
 *
 * 利用：【形式的冪級数】，【対数関数】
+* 
+*（集合冪級数の log）
 */
 vm partition_submobius_block(const vm& b, const Factorial_mint& fm) {
+	// verify : https://atcoder.jp/contests/abc321/tasks/abc321_g
+
 	//【方法】
 	// 集合関数同士の非交和畳込みを * で表すと，
 	//		b = (1/1!)a + (1/2!)a*a + (1/3!)a*a*a + ... =: exp(a) 
@@ -960,7 +966,7 @@ vm partition_submobius_block(const vm& b, const Factorial_mint& fm) {
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] += g[set];
 
 	vector<MFPS> f(1LL << N);
-	repb(set, N) f[set] = log(g[set], N + 1, fm);
+	repb(set, N) f[set] = log_fps(g[set], N + 1, fm);
 
 	// メビウス変換（下位集合）
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] -= f[set];
@@ -1004,7 +1010,7 @@ vm partition_subzeta_block_size(const vm& a, const Factorial_mint& fm) {
 	MFPS f(0, N + 1);
 	repi(i, 0, N) f[i] = a[i] * fm.fact_inv(i);
 
-	MFPS g = exp(f, N + 1, fm);
+	MFPS g = exp_fps(f, N + 1, fm);
 
 	vm b(N + 1);
 	repi(i, 0, N) b[i] = g[i] * fm.fact(i);
@@ -1045,7 +1051,7 @@ vm partition_submobius_block_size(const vm& b, const Factorial_mint& fm) {
 	MFPS g(0, N + 1);
 	repi(i, 0, N) g[i] = b[i] * fm.fact_inv(i);
 
-	MFPS f = log(g, N + 1, fm);
+	MFPS f = log_fps(g, N + 1, fm);
 
 	vm a(N + 1);
 	repi(i, 0, N) a[i] = f[i] * fm.fact(i);

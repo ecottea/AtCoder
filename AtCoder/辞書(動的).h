@@ -24,7 +24,7 @@
 *
 * T max_element(T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，最大要素を返す．
-*	戻り値には mask との XOR はかかっていないので注意！！！
+*	戻り値には mask との XOR はかかっていないので注意！
 *
 * T min_element(T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，最小要素を返す．
@@ -265,6 +265,664 @@ public:
 
 //【区間の集合】
 /*
+* Interval_set<T>(T L = -INFL, T R = INFL) : O(1)
+*	定義域を [L..R) とし空で初期化する．
+*
+* int size() : O(1)
+*	区間の数を返す．
+*
+* pTT get(T x) : O(log n)
+*	x が含まれる区間 [l..r) を返す（なければ {-1, -1} を返す）
+*
+* pTT get_right(T x) : O(log n)
+*	x < l なる最左区間 [l..r) を返す（なければ {R+1, R+1} を返す）
+*
+* pTT get_left(T x) : O(log n)
+*	r ≦ x なる最右区間 [l..r) を返す（なければ {L-1, L-1} を返す）
+*
+* insert(T l, T r) : ならし O(log n)
+*	区間 [l..r) を追加する．区間は自動的に結合される．
+*
+* erase(T l, T r) : ならし O(log n)
+*	区間 [l..r) を削除する．空の区間は自動的に削除される．
+*
+* vector<pTT> get_all_intervals() : O(n)
+*	全ての区間 [l..r) からなるリストを返す．
+*/
+template <class T>
+class Interval_set {
+	// L, R : 定義域が [L..R) であることを表す．
+	T L, R;
+
+	// l_to_r[l] : l を左端にもつ半開区間 [l..r) の右端 r
+	map<T, T> l_to_r;
+
+public:
+	// 定義域を [L..R) とし空で初期化する．
+	Interval_set(T L = -(T)INFL, T R = (T)INFL) : L(L), R(R) {
+		// verify : https://yukicoder.me/problems/no/2292
+
+		l_to_r[L - 1] = L - 1;
+		l_to_r[R + 1] = R + 1; // 番兵
+	}
+
+	// 区間の数を返す．
+	int size() const {
+		return sz(l_to_r);
+	}
+
+	// x が含まれる区間 [l..r) を返す（なければ {-1, -1} を返す）
+	pair<T, T> get(T x) const {
+		// verify : https://yukicoder.me/problems/no/2292
+
+		Assert(L <= x && x < R);
+
+		auto it = prev(l_to_r.upper_bound(x));
+
+		return it->second <= x ? make_pair(T(-1), T(-1)) : pair<T, T>(*it);
+	}
+
+	// x < l なる最左区間 [l..r) を返す（なければ {R+1, R+1} を返す）
+	pair<T, T> get_right(T x) const {
+		// verify : https://atcoder.jp/contests/code-festival-2015-qualb/tasks/codefestival_2015_qualB_d
+
+		Assert(L <= x && x < R);
+
+		auto it = l_to_r.upper_bound(x);
+
+		return *it;
+	}
+
+	// r ≦ x なる最右区間 [l..r) を返す（なければ {L-1, L-1} を返す）
+	pair<T, T> get_left(T x) const {
+		Assert(L <= x && x < R);
+
+		auto it = prev(l_to_r.lower_bound(x));
+
+		return it->second <= x ? *it : *prev(it);
+	}
+
+	// 区間 [l..r) を追加する．
+	void insert(T l, T r) {
+		// verify : https://yukicoder.me/problems/no/2292
+
+		chmax(l, L); chmin(r, R);
+		if (l >= r) return;
+
+		auto it = l_to_r.lower_bound(l);
+
+		// [l..r) の左側と繋がる区間がある場合
+		auto pit = prev(it);
+		if (l <= pit->second) {
+			//if (l < pit->second) { // 隣り合う区間を結合したくない場合はこっち
+			l = pit->first;
+			it = pit;
+		}
+
+		while (true) {
+			if (r < it->first) break;
+			//if (r <= it->first) break; // 隣り合う区間を結合したくない場合はこっち
+
+			// [l..r) の右側と繋がる区間がある場合
+			if (r <= it->second) {
+				r = it->second;
+				l_to_r.erase(it);
+				break;
+			}
+
+			it = l_to_r.erase(it);
+		}
+
+		l_to_r[l] = r;
+	}
+
+	// 区間 [l..r) を削除する．
+	void erase(T l, T r) {
+		// verify : https://yukicoder.me/problems/no/2292
+
+		chmax(l, L); chmin(r, R);
+		if (l >= r) return;
+
+		auto it = l_to_r.lower_bound(l);
+
+		// [l..r) の左側で削られる区間がある場合
+		auto pit = prev(it);
+		if (l < pit->second) {
+			// [l..r) を真に含む区間がある場合
+			if (r < pit->second) l_to_r[r] = pit->second;
+
+			pit->second = l;
+		}
+
+		while (true) {
+			if (r <= it->first) break;
+
+			// [l..r) の右側で削られる区間がある場合
+			if (r < it->second) {
+				T nr = it->second;
+				l_to_r.erase(it);
+				l_to_r[r] = nr;
+				break;
+			}
+
+			it = l_to_r.erase(it);
+		}
+	}
+
+	// 全ての区間 [l..r) からなるリストを返す．
+	vector<pair<T, T>> get_all_intervals() {
+		// verify : https://atcoder.jp/contests/abc254/tasks/abc254_g
+		
+		vector<pair<T, T>> res;
+		res.reserve(sz(l_to_r) - 2);
+		repe(lr, l_to_r) {
+			if (lr.first == L - 1 || lr.first == R + 1) continue;
+			res.push_back(lr);
+		}
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Interval_set& IS) {
+		repe(p, IS.l_to_r) {
+			if (p.first == IS.L - 1 || p.first == IS.R + 1) continue;
+			os << "[" << p.first << "," << p.second << ") ";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【区間からの写像】
+/*
+* Interval_map<S, T>(S L, S R, T v0) : O(1)
+*	定義域を [L..R) とし，a[L..R) = v0 で初期化する．
+*
+* void set(S l, S r, T v) : ならし O(log n)
+*	a[l..r) = v とする．
+*
+* T get(S i) : O(log n)
+*	a[i] を返す．
+*
+* vector<tuple<S, S, T>> get(S l, S r) : O(n)
+*	a[l..r) を連長圧縮した結果を {左端, 右端, 値} のリストとして返す．
+*	注意：これを呼んだ直後に set(l, r, v) を呼ぶなら計算量はならし O(log n)
+*/
+template <class S, class T>
+class Interval_map {
+	// L, R : 定義域が [L..R) であることを表す．
+	S L, R;
+
+	// l_to_v[l] : 区間 [l..r) に割り当てられた値（r は次の区間の l）
+	map<S, T> l_to_v;
+
+public:
+	// 定義域を [L..R) とし，a[L..R) = v0 で初期化する．
+	Interval_map(S L, S R, T v0) : L(L), R(R) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac
+
+		l_to_v[L] = v0;
+		l_to_v[R] = v0; // 番兵
+	}
+
+	// 区間 [l..r) に値 v を割り当てる．
+	void set(S l, S r, T v) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac
+
+		chmax(l, L); chmin(r, R);
+		if (l >= r) return;
+
+		auto it = l_to_v.upper_bound(l);
+		T vr = prev(it)->second;
+		while (it != l_to_v.end()) {
+			if (it->first > r) break;
+
+			vr = it->second;
+			it = l_to_v.erase(it);
+		}
+
+		l_to_v[l] = v;
+		l_to_v[r] = vr;
+	}
+
+	// a[i] を返す．
+	T get(S i) {
+		// verify : https://codeforces.com/contest/1638/problem/E
+
+		Assert(L <= i && i < R);
+		return prev(l_to_v.upper_bound(i))->second;
+	}
+
+	// a[l..r) を連長圧縮した結果を {左端, 右端, 値} のリストとして返す．
+	vector<tuple<S, S, T>> get(S l, S r) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac
+
+		chmax(l, L); chmin(r, R);
+		if (l >= r) return vector<tuple<S, S, T>>();
+
+		vector<tuple<S, S, T>> res;
+		auto nit = l_to_v.upper_bound(l), it = prev(nit);
+		T i = it->first;
+		while (i < r) {
+			T ni = nit->first;
+			res.emplace_back(max(i, l), min(ni, r), it->second);
+			i = ni;
+			it = nit++;
+		}
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Interval_map& IM) {
+		auto it = IM.l_to_v.begin();
+		while (it->first < IM.R) {
+			os << "[" << it->first << "," << next(it)->first << "):" << it->second << " ";
+			it++;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【トライ木（集合）】
+/*
+* Trie_tree_set() : O(1)
+*   空で初期化する．
+*
+* int size() : O(1)
+*   登録されている文字列の個数を返す．
+*
+* insert(string s) : O(|s|)
+*   文字列 s を登録する．
+*
+* bool find(string s) : O(|s|)
+*   文字列 s が登録されているかを返す．
+*
+* bool find_prefix(string s) : O(|s|)
+*   文字列 s を接頭辞にもつ文字列が登録されているかを返す．
+*/
+struct Trie_tree_set {
+	// 参考 : https://algo-logic.info/trie-tree/
+
+	static constexpr int K = 26; // 文字数
+	static constexpr char A = 'a'; // 最初の文字
+
+	struct Node {
+		char c; // 頂点に対応する文字
+		bool end; // この頂点で終わる文字列があるか
+		int cnt; // この頂点で終わる文字列を接頭辞にもつ文字列が何個あるか
+		array<Node*, K> childs; // 子へのポインタ（K 分木）
+
+		Node(char c, bool end, int cnt) : c(c), end(end), cnt(cnt), childs({ nullptr }) {}
+	};
+
+	Node* root; // 根へのポインタ
+
+	bool find_sub(const string& str, bool prefix_flag) const {
+		Node* p = root;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// 登録済みの文字だった場合
+			if (p->childs[c - A]) {
+				// そのノードへ移動
+				p = p->childs[c - A];
+			}
+			// 未登録の文字だった場合
+			else {
+				return false;
+			}
+		}
+
+		return p->end || prefix_flag;
+	}
+
+	// 空で初期化する．
+	Trie_tree_set() {
+		// verify : https://codeforces.com/contest/1629/problem/D
+
+		root = new Node('^', false, 0);
+	}
+
+	// 登録されている文字列の個数を返す．
+	int size() const {
+		return root->cnt;
+	}
+
+	// 文字列 s を登録する．
+	void insert(const string& str) {
+		// verify : https://codeforces.com/contest/1629/problem/D
+
+		Node* p = root;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// str はノード p を含む文字列なので個数に加算する．
+			p->cnt++;
+
+			// 未登録の文字だった場合は新たなノードを追加する．
+			if (!p->childs[c - A]) p->childs[c - A] = new Node(c, false, 0);
+
+			// 次のノードへ移動
+			p = p->childs[c - A];
+		}
+
+		p->cnt++;
+		p->end = true;
+	}
+
+	// 文字列 s が登録されているかを返す．
+	bool find(const string& str) const {
+		// verify : https://codeforces.com/contest/1629/problem/D
+
+		return find_sub(str, false);
+	}
+
+	// 文字列 s を接頭辞にもつ文字列が登録されているかを返す．
+	bool find_prefix(const string& str) const {
+		// verify : https://codeforces.com/contest/1629/problem/D
+
+		return find_sub(str, true);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Trie_tree_set& Trie) {
+		string s;
+
+		function<void(Node*)> dfs = [&](Node* p) {
+			s.push_back(p->c);
+			if (p->end) {
+				os << s << endl;
+			}
+			rep(k, K) {
+				if (!p->childs[k]) continue;
+				dfs(p->childs[k]);
+			}
+			s.pop_back();
+		};
+		dfs(Trie.root);
+
+		return os;
+	}
+#endif
+};
+
+
+//【トライ木（写像）】
+/*
+* Trie_tree_map<T>(T nil = lowest()) : O(1)
+*   空で初期化する．
+*
+* int size() : O(1)
+*   登録されている文字列の個数を返す．
+*
+* set(string s, T x) : O(|s|)
+*   文字列 s に値 x を割り当てる．
+*
+* T get(string s) : O(|s|)
+*   文字列 s に割り当てられている値を返す（無ければ nil）
+*
+* int get_all(string s, vi& len, vT& val) : O(|s|)
+*	文字列 s の接頭辞である登録済文字列の長さを len，値を val にそれぞれ格納する．
+*	またリストの長さを返す．
+*
+* int count_prefix(string s) : O(|s|)
+*   文字列 s を接頭辞にもつ文字列が何個登録されているかを返す．
+*/
+template <class T>
+struct Trie_tree_map {
+	// 参考 : https://algo-logic.info/trie-tree/
+
+	static constexpr int K = 26; // 文字数
+	static constexpr char A = 'a'; // 最初の文字
+
+	struct Node {
+		char c; // 頂点に対応する文字
+		T val; // この頂点で終わる文字列に対応する値
+		int cnt; // この頂点で終わる文字列を接頭辞にもつ文字列が何個あるか
+		array<Node*, K> childs; // 子へのポインタ（K 分木）
+
+		Node(char c, T val, int cnt) : c(c), val(val), cnt(cnt), childs({ nullptr }) {}
+	};
+
+	Node* root; // 根へのポインタ
+	T nil; // 無効値
+
+	Node* get_node(const string& str) const {
+		Node* p = root;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// 登録済みの文字だった場合
+			if (p->childs[c - A]) {
+				// そのノードへ移動
+				p = p->childs[c - A];
+			}
+			// 未登録の文字だった場合
+			else {
+				return nullptr;
+			}
+		}
+
+		return p;
+	}
+
+	// 空で初期化する．
+	Trie_tree_map(T nil = numeric_limits<T>::lowest()) : nil(nil) {
+		root = new Node('^', nil, 0);
+	}
+
+	// 登録されている文字列の個数を返す．
+	int size() const {
+		return root->cnt;
+	}
+
+	// 文字列 s に値 x を割り当てる．
+	void set(const string& str, T x) {
+		Node* p = root;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			// str はノード p を含む文字列なので個数に加算する．
+			p->cnt++;
+
+			// 未登録の文字だった場合は新たなノードを追加する．
+			if (!p->childs[c - A]) p->childs[c - A] = new Node(c, nil, 0);
+
+			// 次のノードへ移動
+			p = p->childs[c - A];
+		}
+
+		p->val = x;
+		p->cnt++;
+	}
+
+	// 文字列 s に割り当てられている値を返す（無ければ nil）
+	T get(const string& str) const {
+		Node* p = get_node(str);
+
+		return p ? p->val : nil;
+	}
+
+	int get_all(const string& str, vi& len, vector<T>& val) const {
+		// verify : https://atcoder.jp/contests/agc047/tasks/agc047_b
+
+		len.clear(); val.clear();
+		int l = 0;
+
+		Node* p = root;
+
+		// str の文字 c を先頭から順に見ていく
+		repe(c, str) {
+			if (p->val != nil) {
+				len.push_back(l);
+				val.push_back(p->val);
+			}
+
+			// 登録済みの文字だった場合
+			if (p->childs[c - A]) {
+				// そのノードへ移動
+				p = p->childs[c - A];
+				l++;
+			}
+			// 未登録の文字だった場合
+			else {
+				return sz(len);
+			}
+		}
+
+		if (p->val != nil) {
+			len.push_back(l);
+			val.push_back(p->val);
+		}
+		return sz(len);
+	}
+
+
+	// 文字列 s を接頭辞にもつ文字列が何個登録されているかを返す．
+	int count_prefix(const string& str) const {
+		Node* p = get_node(str);
+
+		return p ? p->cnt : 0;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Trie_tree_map& Trie) {
+		string s;
+
+		function<void(Node*)> dfs = [&](Node* p) {
+			s.push_back(p->c);
+			if (p->val != Trie.nil) {
+				os << s << " : " << p->val << endl;
+			}
+			rep(k, K) {
+				if (!p->childs[k]) continue;
+				dfs(p->childs[k]);
+			}
+			s.pop_back();
+		};
+		dfs(Trie.root);
+
+		return os;
+	}
+#endif
+};
+
+
+//【多重集合】
+/*
+* Multi_set<T>(int n) : O(n)
+*	[0..n) を記録可能な辞書を空で初期化する．
+*
+* Multi_set<T>(int n, vi a) : O(n)
+*	[0..n) を記録可能な辞書を多重集合 a で初期化する．
+*
+* T size() : O(log n)
+*	要素の総数を返す．
+*
+* T count(int v) : O(log n)
+*	要素 v の個数を返す．
+*
+* T count(int l, int r) : O(log n)
+*	値 [l..r) をもつ要素の個数を返す．
+*
+* insert(int v, T k = 1) : O(log n)
+*	要素 v を k 個挿入する．
+*
+* erase(int v, T k = 1) : O(log n)
+*	要素 v を k 個削除する．個数は負数にもなる．
+*
+* int get(T i) : O(log n)
+*	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
+*
+* T lower_bound(int v) : O(log n)
+*	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
+*
+* 利用：【フェニック木（アーベル群）】
+*/
+template <class T> T opdd(T x, T y) { return x + y; }
+template <class T> T edd() { return 0; }
+template <class T> T invdd(T x) { return -x; }
+template <class T>
+struct Multi_set {
+	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_c
+
+	int n;
+
+	// ft[v] : 要素 v の個数
+	using RSQ = Fenwick_tree<T, opdd<T>, edd<T>, invdd<T>>;
+	RSQ ft;
+
+
+	// [0..n) を記録可能な辞書を空で初期化する．
+	Multi_set(int n_) : n(n_), ft(n) {}
+
+	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
+	Multi_set(int n_, const vi& a) : n(n_) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		vector<T> cnt(n);
+		repe(v, a) cnt[v]++;
+		ft = RSQ(cnt);
+	}
+	Multi_set() : n(0) {}
+
+	// 要素の総数を返す．
+	T size() { return ft.sum(0, n); }
+
+	// 要素 v の個数を返す．
+	T count(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		return ft.get(v);
+	}
+
+	// 値 [l..r) をもつ要素の個数を返す．
+	T count(int l, int r) { return ft.sum(l, r); }
+
+	// 要素 v を k 個挿入する．
+	void insert(int v, T k = 1) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		ft.add(v, k);
+	}
+
+	// 要素 v を k 個削除する．
+	void erase(int v, T k = 1) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		ft.add(v, -k);
+	}
+
+	// 昇順で i 番目の要素を返す．
+	int get(T i) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		auto f = [&](T x) { return x <= i; };
+		return ft.max_right(f);
+	}
+
+	// v が昇順で何番目の要素かを返す．
+	T lower_bound(int v) {
+		// verify : https://judge.yosupo.jp/problem/predecessor_problem
+
+		return ft.sum(0, v);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Multi_set& dd) {
+		rep(v, dd.n) rep(hoge, dd.ft.get(v)) os << v << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【区間の集合（旧）】
+/*
 * Interval_set(bool marge = true) : O(1)
 *	空で初期化する．ちょうど接する区間を併合するかを marge に渡す．
 *
@@ -289,7 +947,7 @@ public:
 * vector<pll> get_all_intervals() : O(n)
 *	全ての区間 [l..r) からなるリストを返す．
 */
-class Interval_set {
+class Interval_set_old {
 	bool marge;
 
 	// x が含まれる区間を指すイテレータを返す（なければ lr.end() を返す）
@@ -325,7 +983,7 @@ public:
 	set<pll> lrs; // 区間 [l[i], r[i]) の昇順列
 
 	// コンストラクタ（空で初期化）
-	Interval_set(bool marge_ = true) : marge(marge_) {}
+	Interval_set_old(bool marge_ = true) : marge(marge_) {}
 
 	// 区間の数を返す．
 	int size() const { return sz(lrs); }
@@ -403,523 +1061,8 @@ public:
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Interval_set& d) {
+	friend ostream& operator<<(ostream& os, const Interval_set_old& d) {
 		repe(p, d.lrs) os << "[" << p.first << "," << p.second << ") ";
-		return os;
-	}
-#endif
-};
-
-
-//【区間からの写像】
-/*
-* Interval_map<S, T>(T nil) : O(1)
-*	空で初期化する（nil は使わない値）
-*
-* void set(S l, S r, T v) : ならし O(log n)
-*	区間 [l..r) に値 v を割り当てる．
-*
-* void set(S l, S r, T v, vS* ls, vS* rs, vT* vs) : ならし O(log n)
-*	区間 [l..r) に含まれる区間の左端[右端, 値] を ls[rs, vs] に格納する．
-*	その後区間 [l..r) に値 v を割り当てる．
-*
-* T get(S x) : O(log n)
-*	x に割り当てられた値を返す（なければ nil を返す）
-*/
-template <class S, class T>
-class Interval_map {
-	map<pair<S, S>, T> lr_to_v; // 区間 [l[i], r[i]) → v[i]
-	T nil;
-
-	// x が含まれる区間を指すイテレータを返す（なければ lr_to_v.end() を返す）
-	typename map<pair<S, S>, T>::iterator get_iter(S x) {
-		auto it = lr_to_v.lower_bound({ x, numeric_limits<S>::max() });
-		if (it == lr_to_v.begin()) return lr_to_v.end();
-		it--;
-		if (it->first.first <= x && x < it->first.second) return it;
-		else return lr_to_v.end();
-	}
-
-	// x の 1 つ右にある区間を指すイテレータを返す（なければ lr_to_v.end() を返す）
-	typename map<pair<S, S>, T>::iterator get_right_iter(S x) {
-		return lr_to_v.lower_bound({ x, numeric_limits<S>::max() });
-	}
-
-	// x の 1 つ左にある区間を指すイテレータを返す（なければ lr_to_v.end() を返す）
-	typename map<pair<S, S>, T>::iterator get_left_iter(S x) {
-		auto it = lr_to_v.lower_bound({ x, numeric_limits<S>::max() });
-		if (it == lr_to_v.begin()) return lr_to_v.end();
-		it--;
-		if (it->first.first <= x && x < it->first.second) {
-			if (it == lr_to_v.begin()) return lr_to_v.end();
-			it--;
-		}
-		return it;
-	}
-
-public:
-	// 全ての値に nil を割り当てる．
-	Interval_map(T nil_) : nil(nil_) {}
-
-	// x に割り当てられた値を返す．
-	T get(S x) {
-		// verify : https://codeforces.com/contest/1638/problem/E
-
-		auto it = get_iter(x);
-		return it == lr_to_v.end() ? nil : it->second;
-	}
-
-	// 区間 [l..r) に値 v を割り当てる．
-	// また [l..r) に含まれていた区間の情報を ls, rs, vs に格納する．
-	void set(S l, S r, T v, vector<S>* ls = nullptr, vector<S>* rs = nullptr, vector<T>* vs = nullptr) {
-		// verify : https://atcoder.jp/contests/abc255/tasks/abc255_h
-
-		// 左端 l がぶつかる区間を調べる．
-		bool n_l_flag = false; S nl_l, nr_l; T nv_l;
-		auto it_l = get_iter(l);
-		if (it_l != lr_to_v.end()) {
-			n_l_flag = true;
-			nl_l = it_l->first.first;
-			nr_l = it_l->first.second;
-			nv_l = it_l->second;
-		}
-		else {
-			it_l = get_right_iter(l);
-		}
-
-		// 右端 r がぶつかる区間を調べる．
-		bool n_r_flag = false; S nl_r, nr_r; T nv_r;
-		auto it_r = get_iter(r - 1);
-		if (it_r != lr_to_v.end()) {
-			n_r_flag = true;
-			nl_r = it_r->first.first;
-			nr_r = it_r->first.second;
-			nv_r = it_r->second;
-		}
-		else {
-			it_r = get_left_iter(r - 1);
-		}
-
-		if (ls != nullptr) {
-			ls->clear(); rs->clear(); vs->clear();
-		}
-
-		if (ls != nullptr && n_l_flag) {
-			if (n_r_flag && it_l == it_r) {
-				ls->push_back(l); rs->push_back(r); vs->push_back(nv_l);
-			}
-			else {
-				ls->push_back(l); rs->push_back(nr_l); vs->push_back(nv_l);
-			}
-		}
-
-		if (it_l != lr_to_v.end() && it_r != lr_to_v.end()) {
-			if (ls != nullptr) {
-				for (auto it = it_l; it != next(it_r); it++) {
-					if (n_l_flag && it == it_l) continue;
-					if (n_r_flag && it == it_r) continue;
-
-					ls->push_back(it->first.first);
-					rs->push_back(it->first.second);
-					vs->push_back(it->second);
-				}
-			}
-			lr_to_v.erase(it_l, next(it_r));
-		}
-
-		if (ls != nullptr && n_r_flag) {
-			if (!(n_l_flag && it_l == it_r)) {
-				ls->push_back(nl_r); rs->push_back(r); vs->push_back(nv_r);
-			}
-		}
-
-		lr_to_v[{l, r}] = v;
-		if (n_l_flag) lr_to_v[{nl_l, l}] = nv_l;
-		if (n_r_flag) lr_to_v[{r, nr_r}] = nv_r;
-	}
-
-	typename map<pair<S, S>, T>::iterator begin() { return lr_to_v.begin(); }
-	typename map<pair<S, S>, T>::iterator end() { return lr_to_v.end(); }
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Interval_map& d) {
-		repe(p, d.lr_to_v) os << p << " ";
-		return os;
-	}
-#endif
-};
-
-
-//【トライ木（集合）】
-/*
-* Trie_tree_set() : O(1)
-*   空で初期化する．
-*
-* insert(string s) : O(|s|)
-*   文字列 s を登録する．
-*
-* bool find(string s) : O(|s|)
-*   文字列 s が登録されているかを返す．
-*
-* bool find_prefix(string s) : O(|s|)
-*   文字列 s を接頭辞にもつ文字列が登録されているかを返す．
-*
-* int count() : O(1)
-*   登録されている文字列の個数を返す．
-*/
-struct Trie_tree_set {
-	// 参考 : https://algo-logic.info/trie-tree/
-	
-	static const int K = 26; // 文字数
-
-	int n;		// g のノード数
-	Graph g;	// トライ木
-	vc chars;	// chars[i] : 頂点 g[i] に対応する文字
-	vb end;		// end[i] : g[i] で終わる文字列があるか
-	vi cnt;		// cnt[i] : g[i] を含む文字列の個数
-
-	bool find_sub(const string& str, bool prefix_flag) const {
-		int v = 0;
-
-		// str の文字 c を先頭から順に見ていく
-		repe(c, str) {
-			// 登録済みの文字だった場合
-			if (g[v][c - 'a'] != -1) {
-				// そのノードへ移動
-				v = g[v][c - 'a'];
-			}
-			// 未登録の文字だった場合
-			else {
-				return false;
-			}
-		}
-
-		return end[v] || prefix_flag;
-	}
-
-	Trie_tree_set() : n(1), g(1, vi(K, -1)), chars(1), end(1), cnt(1) {}
-
-	void insert(const string& str) {
-		int v = 0;
-
-		// str の文字 c を先頭から順に見ていく
-		repe(c, str) {
-			// str は頂点 v を含む文字列なので個数に加算する．
-			cnt[v]++;
-
-			// 登録済みの文字だった場合
-			if (g[v][c - 'a'] != -1) {
-				// そのノードへ移動
-				v = g[v][c - 'a'];
-			}
-			// 未登録の文字だった場合
-			else {
-				// 新たにノード n を追加
-				g.push_back(vi(K, -1));
-				chars.push_back(c);
-				end.push_back(false);
-				cnt.push_back(0);
-
-				// 新たなノードへのパスを追加
-				g[v][c - 'a'] = n;
-
-				// 新たなノードへ移動
-				v = n++;
-			}
-		}
-
-		cnt[v]++;
-		end[v] = true;
-	}
-
-	bool find(const string& str) const {
-		// verify : https://codeforces.com/contest/1629/problem/D
-
-		return find_sub(str, false);
-	}
-
-	bool find_prefix(const string& str) const {
-		// verify : https://codeforces.com/contest/1629/problem/D
-
-		return find_sub(str, true);
-	}
-
-	int count() const { return cnt[0]; }
-};
-
-
-//【トライ木（写像）】
-/*
-* Trie_tree_set(T nil = lowest()) : O(1)
-*   空で初期化する．nil は T の値域に属さない値とする．
-*
-* set(string s, T v) : O(|s|)
-*   s に値 v を割り当てる．
-*
-* T get(string s) : O(|s|)
-*   s に割り当てられている値を返す（無ければ nil）
-*
-* void get_prefix(string s, vi& len, vT& val) : O(|s|)
-*	s の接頭辞である i 番目の登録済文字列の長さ[値]を len[i][ val[i] ] に格納する．
-*
-* int count() : O(1)
-*   登録されている文字列の個数を返す．
-*
-* int count_prefix(string s) : O(|s|)
-*   s を接頭辞にもつ文字列が何個登録されているかを返す．
-*/
-template <class T>
-class Trie_tree_map {
-	// 参考 : https://algo-logic.info/trie-tree/
-
-	const int K = 26; // 文字数
-	const char A = 'a'; // 開始文字
-
-	int n;			// g のノード数
-	Graph g;		// トライ木（K 分木）
-	vc chars;		// chars[i] : 頂点 g[i] に対応する文字
-	vi cnt;			// cnt[i] : g[i] を含む文字列の個数
-	vector<T> vals;	// vals[i] : g[i] で終わる文字列に対応する値（無ければ nil）
-	T nil;
-
-public:
-	Trie_tree_map() : n(1), g(1, vi(K, -1)), chars(1), cnt(1), vals(1), nil(numeric_limits<T>::lowest()) {}
-	Trie_tree_map(T nil_) : n(1), g(1, vi(K, -1)), chars(1), cnt(1), vals(1), nil(nil_) {}
-
-	void set(const string& str, T val) {
-		// verify : https://judge.yosupo.jp/problem/associative_array
-
-		int v = 0;
-
-		// str の文字 c を先頭から順に見ていく
-		repe(c, str) {
-			// str は頂点 v を含む文字列なので個数に加算する．
-			cnt[v]++;
-
-			// 登録済みの文字だった場合
-			if (g[v][c - A] != -1) {
-				// そのノードへ移動
-				v = g[v][c - A];
-			}
-			// 未登録の文字だった場合
-			else {
-				// 新たにノード n を追加
-				g.push_back(vi(K, -1));
-				chars.push_back(c);
-				cnt.push_back(0);
-				vals.push_back(nil);
-
-				// 新たなノードへのパスを追加
-				g[v][c - A] = n;
-
-				// 新たなノードへ移動
-				v = n++;
-			}
-		}
-
-		vals[v] = val;
-	}
-
-	T get(const string& str) const {
-		// verify : https://judge.yosupo.jp/problem/associative_array
-
-		int v = 0;
-
-		// str の文字 c を先頭から順に見ていく
-		repe(c, str) {
-			// 登録済みの文字だった場合
-			if (g[v][c - A] != -1) {
-				// そのノードへ移動
-				v = g[v][c - A];
-			}
-			// 未登録の文字だった場合
-			else {
-				return nil;
-			}
-		}
-
-		return vals[v];
-	}
-
-	// s の接頭辞である i 番目の登録済文字列の長さ[値] を len[i][ val[i] ] に格納する．
-	void get_prefix(const string& str, vi& len, vector<T>& val) {
-		// verify : https://atcoder.jp/contests/agc047/tasks/agc047_b
-
-		int v = 0, l = 0;
-		len.clear(); val.clear();
-
-		// str の文字 c を先頭から順に見ていく
-		repe(c, str) {
-			if (vals[v] != nil) {
-				len.push_back(l);
-				val.push_back(vals[v]);
-			}
-
-			// 登録済みの文字だった場合
-			if (g[v][c - A] != -1) {
-				// そのノードへ移動
-				v = g[v][c - A];
-				l++;
-			}
-			// 未登録の文字だった場合
-			else {
-				return;
-			}
-		}
-
-		if (vals[v] != nil) {
-			len.push_back(l);
-			val.push_back(vals[v]);
-		}
-	}
-
-	int count() const { return cnt[0]; }
-
-	int count_prefix(const string& str) const {
-		int v = 0;
-
-		// str の文字 c を先頭から順に見ていく
-		repe(c, str) {
-			// 登録済みの文字だった場合
-			if (g[v][c - A] != -1) {
-				// そのノードへ移動
-				v = g[v][c - A];
-			}
-			// 未登録の文字だった場合
-			else {
-				return 0;
-			}
-		}
-
-		return cnt[v];
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Trie_tree_map& trie) {
-		string s;
-
-		function<void(int)> dfs = [&](int v) {
-			s.push_back(trie.chars[v]);
-			if (trie.vals[v] != trie.nil) {
-				os << s << "->" << trie.vals[v] << endl;
-			}
-			rep(c, trie.K) {
-				if (trie.g[v][c] == -1) continue;
-				dfs(trie.g[v][c]);
-			}
-			s.pop_back();
-		};
-		dfs(0);
-
-		return os;
-	}
-#endif
-};
-
-
-//【多重集合】
-/*
-* Multi_set(int n) : O(n)
-*	[0..n) を記録可能な辞書を空で初期化する．
-*
-* Multi_set(int n, vi a) : O(n)
-*	[0..n) を記録可能な辞書を多重集合 a で初期化する．
-*
-* ll size() : O(log n)
-*	要素の総数を返す．
-*
-* ll count(int v) : O(log n)
-*	要素 v の個数を返す．
-*
-* ll count(int l, int r) : O(log n)
-*	値 [l..r) をもつ要素の個数を返す．
-*
-* insert(int v, ll k = 1) : O(log n)
-*	要素 v を k 個挿入する．
-*
-* erase(int v, ll k = 1) : O(log n)
-*	要素 v を k 個削除する．個数は負数にもなる．
-*
-* int get(ll i) : O(log n)
-*	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
-*
-* ll lower_bound(int v) : O(log n)
-*	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
-*
-* 利用：【フェニック木（アーベル群）】
-*/
-ll opdd(ll x, ll y) { return x + y; }
-ll edd() { return 0; }
-ll invdd(ll x) { return -x; }
-struct Multi_set {
-	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_c
-
-	int n;
-
-	// ft[v] : 要素 v の個数
-	using RSQ = Fenwick_tree<ll, opdd, edd, invdd>;
-	RSQ ft;
-
-	// コンストラクタ（何もしない）
-	Multi_set() : n(0) {}
-
-	// [0..n) を記録可能な辞書を空で初期化する．
-	Multi_set(int n_) : n(n_), ft(n) {}
-
-	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
-	Multi_set(int n_, const vi& a) : n(n_) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
-		vl cnt(n);
-		repe(v, a) cnt[v]++;
-		ft = RSQ(cnt);
-	}
-
-	// 要素の総数を返す．
-	ll size() { return ft.sum(0, n); }
-
-	// 要素 v の個数を返す．
-	ll count(int v) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
-		return ft.get(v);
-	}
-
-	// 値 [l..r) をもつ要素の個数を返す．
-	ll count(int l, int r) { return ft.sum(l, r); }
-
-	// 要素 v を k 個挿入する．
-	void insert(int v, ll k = 1) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
-		ft.add(v, k);
-	}
-
-	// 要素 v を k 個削除する．
-	void erase(int v, ll k = 1) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
-		ft.add(v, -k);
-	}
-
-	// 昇順で i 番目の要素を返す．
-	int get(ll i) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
-		auto f = [&](ll x) { return x <= i; };
-		return ft.max_right(f);
-	}
-
-	// v が昇順で何番目の要素かを返す．
-	ll lower_bound(int v) {
-		// verify : https://judge.yosupo.jp/problem/predecessor_problem
-
-		return ft.sum(0, v);
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Multi_set& dd) {
-		rep(v, dd.n) rep(hoge, dd.ft.get(v)) os << v << " ";
 		return os;
 	}
 #endif

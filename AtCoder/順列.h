@@ -13,7 +13,7 @@
 */
 template <class T>
 ll inversion_number(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/arc075/tasks/arc075_c
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ef
 
 	int n = sz(a);
 
@@ -159,7 +159,7 @@ ll swap_distance(const vector<T>& a, const vector<T>& b) {
 //【置換のサイクル分解】O(n)
 /*
 * [0..n) の置換 p を巡回置換の積に分解して cycles に格納し cycles を返す．
-* p は任意の i を p[i] に動かすような置換を表す．
+* p は各 i∈[0..n) を p[i] に動かすような置換を表す．
 */
 vvi permutation_decomposition(const vi& p) {
 	// verify : https://atcoder.jp/contests/abc175/tasks/abc175_d

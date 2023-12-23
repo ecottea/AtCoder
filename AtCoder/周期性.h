@@ -111,6 +111,13 @@ pii floyds_cycle_finding(const function<T(T)>& f, T a0) {
 	} while (x != y);
 
 	return make_pair(nc, c);
+
+	/* f ‚Ì’è‹`‚Ì—Œ`
+	using T = int;
+	function<T(T)> f = [&](T x) {
+		return 0;
+	};
+	*/
 }
 
 

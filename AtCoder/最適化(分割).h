@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "ビット全探索.h"
+#include "bit全探索.h"
 #include "ヒープ.h"
 #include "構造(木).h"
 // ■■■■■ 最適化（集合の分割） ■■■■■
@@ -119,7 +119,7 @@ ll maximize_sum_clustering(const vvl& sc) {
 }
 
 
-//【組の差の和の最小化】
+//【組の差の和の最大化】
 /*
 * 互いに異なる要素からなる集合 a[0..2n) を組に分割する．各組のスコアを 2 つの要素の差，
 * 分割のスコアを各組のスコアの総和と定めるとき，スコア最大の分割は次にようにして得られる：

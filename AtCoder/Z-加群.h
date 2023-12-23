@@ -3,7 +3,7 @@
 // Å°Å°Å°Å°Å° Z-â¡åQ Å°Å°Å°Å°Å°
 
 
-//ÅyZ-â¡åQÅz
+//ÅyZ-â¡åQÇÃíËã`Åz
 /*
 * Z-â¡åQ (S, op, o, inv, mul) Çï\Ç∑ÅD
 *
@@ -33,10 +33,11 @@ S302 mul302(ll a, S302 x) { return x.pow(a); }
 
 
 //ÅyXOR Z-â¡åQÅz
+/* verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_h */
 using S303 = ll;
 S303 op303(S303 x, S303 y) { return x ^ y; }
 S303 o303() { return 0; }
 S303 inv303(S303 x) { return x; }
-S303 mul303(ll a, S303 x) { return a % 2 ? x : 0; }
+S303 mul303(ll a, S303 x) { return a & 1 ? x : 0; }
 #define XOR_Zmodule S303, op303, o303, inv303, mul303
 

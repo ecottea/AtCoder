@@ -3,7 +3,7 @@
 // ¡¡¡¡¡ •sŠ®‘Sƒ‚ƒmƒCƒhì—p•t‚«ƒ‚ƒmƒCƒh ¡¡¡¡¡
 
 
-//y•sŠ®‘Sƒ‚ƒmƒCƒh¶ì—p•t‚«ƒ‚ƒmƒCƒhz
+//y•sŠ®‘Sƒ‚ƒmƒCƒh¶ì—p•t‚«ƒ‚ƒmƒCƒh‚Ì’è‹`z
 /*
 * •sŠ®‘Sƒ‚ƒmƒCƒh¶ì—p•t‚«ƒ‚ƒmƒCƒh (S, op, e, F, act, comp, id, fail) ‚ğ•\‚·D
 *
@@ -184,7 +184,7 @@ FA03 idA03() { return FA03{ ~0, 0 }; }
 
 //ymin,max,add •sŠ®‘Sì—p•t‚« min,max,sum ƒ‚ƒmƒCƒhz
 /*
-* S ¹ x = {l, u, l2, u2, s, cl, cu} :
+* S ¹ x = {l, u, l2, u2, s, c, cl, cu} :
 *	l : Œ³‚Ì min
 *	u : Œ³‚Ì max
 *	l2 : Œ³‚Ì 2nd min (>min)

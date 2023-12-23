@@ -4,9 +4,19 @@
 // ■■■■■ 桁 DP（上の桁から） ■■■■■
 
 
+//【上から桁 DP の状態の内訳】
+/*
+* 上から smaller フラグを持って桁 DP を行うとき，smaller = false となる状態をとるのは，
+* 最上位からここまでの全ての桁が等しいものに限る．
+* これを利用して他の状態を減らすことができる場合がある．
+* 
+* verify : https://atcoder.jp/contests/abc194/tasks/abc194_f
+*/
+
+
 //【上から桁 DP，未満フラグ，数え上げ】O(n b)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数の個数を返す．
+* b 進数で n 桁の数 num 以下の非負の整数の個数を返す．
 */
 mint count_digit(const string& num, int b = 10) {
 	int n = sz(num);
@@ -26,7 +36,7 @@ mint count_digit(const string& num, int b = 10) {
 			int smaller = (f >> 0) & 1;
 
 			// d_max : d[i] のとれる値の最大値
-			int d_max = (f ? b - 1 : x);
+			int d_max = (smaller ? b - 1 : x);
 
 			// d : d[i]
 			repi(d, 0, d_max) {
@@ -43,7 +53,7 @@ mint count_digit(const string& num, int b = 10) {
 	}
 
 	mint res = 0;
-	repb(f, 1) res += dp[0][f];
+	repb(f, 1) res += dp[n][f];
 
 	return res;
 }
@@ -51,7 +61,7 @@ mint count_digit(const string& num, int b = 10) {
 
 //【上から状態桁 DP，未満フラグ，数え上げ】O(n b m)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの個数を返す．
+* b 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum(const string& num, int m, int b = 10) {
 	// 参考 : https://ferin-tech.hatenablog.com/entry/2019/11/10/%E6%A1%81DP%E3%81%AE%E5%AE%9F%E8%A3%85
@@ -92,7 +102,7 @@ mint count_digit_sum(const string& num, int m, int b = 10) {
 	}
 
 	mint res = 0;
-	repb(f, 1) res += dp[0][f][0];
+	repb(f, 1) res += dp[n][f][0];
 
 	return res;
 }
@@ -100,7 +110,7 @@ mint count_digit_sum(const string& num, int m, int b = 10) {
 
 //【上から状態桁 DP，超過フラグ，数え上げ】O(n b m)
 /*
-* b=10 進数で n 桁の数 num 以上の n 桁の整数で，数字和が m の倍数であるものの個数を返す．
+* b 進数で n 桁の数 num 以上の n 桁の整数で，数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_s
@@ -140,7 +150,7 @@ mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 	}
 
 	mint res = 0;
-	repb(f, 1) res += dp[0][f][0];
+	repb(f, 1) res += dp[n][f][0];
 
 	return res;
 }
@@ -148,7 +158,7 @@ mint count_digit_sum_greater(const string& num, int m, int b = 10) {
 
 //【上から状態桁 DP，未満フラグ，前 0 フラグ，数え上げ】O(n b m)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
+* b 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
 * 数字和が m の倍数であるものの個数を返す．
 */
 mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
@@ -202,7 +212,7 @@ mint count_digit_sum_avoid0(const string& num, int m, int b = 10) {
 
 //【上から桁 DP，未満フラグ，和】O(n b)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数の和を返す．
+* b 進数で n 桁の数 num 以下の非負の整数の和を返す．
 */
 mint sum_digit_downward(const string& num, int b = 10) {
 	int n = sz(num);
@@ -247,7 +257,7 @@ mint sum_digit_downward(const string& num, int b = 10) {
 
 //【上から桁 DP，未満フラグ，累乗和】O(n m^2 b)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数の m 乗和を返す．
+* b 進数で n 桁の数 num 以下の非負の整数の m 乗和を返す．
 *
 * 利用：【階乗など（法が大きな素数）】
 */
@@ -304,7 +314,7 @@ mint power_sum_digit_downward(const string& num, int m, int b = 10) {
 
 //【上から状態桁 DP，未満フラグ，スコア和】O(n b m)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの和を返す．
+* b 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの和を返す．
 */
 mint sum_digit_sum(const string& num, int m, int b = 10) {
 	int n = sz(num);
@@ -349,7 +359,7 @@ mint sum_digit_sum(const string& num, int m, int b = 10) {
 
 //【上から状態桁 DP，未満フラグ，前 0 フラグ，スコア和】O(n b m)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
+* b 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
 * 数字和が m の倍数であるものの和を返す．
 */
 mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
@@ -408,7 +418,7 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 
 //【上から桁 DP，未満フラグ，桁上げフラグ，スコア最大化】O(n b)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
+* b 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
 * d の数字和と num - d の数字和の合計の最大値を返す．
 */
 ll maximize_pair_digit_sum(const string& num, int b = 10) {
@@ -461,7 +471,7 @@ ll maximize_pair_digit_sum(const string& num, int b = 10) {
 
 //【上から桁 DP，未満フラグ，桁上げフラグ，コスト最小化】O(n b)
 /*
-* b=10 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
+* b 進数で n 桁の数 num 以下の非負の整数 d 全てについて，
 * d の数字和と num + d の数字和の合計の最小値を返す．
 */
 ll minimize_pair_digit_sum(string num, int b = 10) {
@@ -582,86 +592,90 @@ ll minimize_digit_sums(const vl& a, int D = 18, int B = 10) {
 }
 
 
-//【桁の数字の分布】O(n b)
+//【桁の数字の分布】O(n B)
 /*
-* b=10 進数で n 桁の数 num 以下の正の整数すべてについて，
-* 桁の数字に現れる数字 t の個数を格納したリストを返す．
-*
-*（桁 DP，未満フラグ，前 0 フラグ）
+* B 進数で n 桁の数 num 以下の正の整数すべてについて，
+* 桁の数字に現れる数字 d の個数を cnt[d] に格納し cnt を返す．
 */
-vm digits_distribution(const string& num, int b = 10) {
-	// verify : https://yukicoder.me/problems/no/1953
+template <class T = ll>
+vector<T> digits_distribution(const string& num, int B = 10) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_dj
 
 	int n = sz(num);
-	vm cnt(b);
 
-	// dp[i][sml][lz][t] : 以下の条件を満たす数の桁の数字に含まれる t の個数
-	//                     ただし t = b のときは条件を満たす数の個数を表すものとする．
-	//	i   : 上からの桁 d[0..i) まで決まっている．
-	//	sml : d[0..i) だけで num より小さいことが確定していれば 1，さもなくば 0
-	//	lz  : d[0..i) 全てが 0 ならば 1，さもなくば 0
-	vector<vvvm> dp(n + 1, vvvm(2, vvm(2, vm(b + 1))));
-	dp[0][0][1][b] = 1;
+	using vT = vector<T>;
+	using vvT = vector<vT>;
+	using vvvT = vector<vvT>;
+
+	// dp[i][f][t] : 以下の条件を満たす数に含まれる数字 t の個数（cnt は数の個数）：
+	//	i : 上からの桁 d[0..i) まで決まっている．
+	//	f : d[0..i) < num[0..i) なら 1，さもなくば 0（未満フラグ）
+	//      d[0..i) の全てが '0' なら 2，さもなくば 0（前 0 フラグ）
+	//      f はこれら 2 つのフラグの OR をとったもの
+	vvvT dp(n + 1, vvT(1LL << 2, vT(B)));
+	vvT cnt(n + 1, vT(1LL << 2));
+	cnt[0][0 | 2] = 1;
 
 	// 上の桁から順に配る DP
 	rep(i, n) {
-		// x : num の上から i 桁目の数（0-indexed）
+		// x : num の上から i 桁目の数
 		int x = num[i] - '0';
 
-		// smaller = true, leading zero = true の場合
-		dp[i + 1][1][1][b] += dp[i][1][1][b];
-		repi(t, 1, b - 1) {
-			dp[i + 1][1][0][t] += dp[i][1][1][b];
-			dp[i + 1][1][0][b] += dp[i][1][1][b];
+		//--- case1: smaller = true, leading zero = true ---
+		// d[i] = 0 にする場合
+		cnt[i + 1][1 | 2] += cnt[i][1 | 2];
+
+		// d[i] ∈ [1..B) にする場合
+		repi(t, 1, B - 1) {
+			dp[i + 1][1 | 0][t] += cnt[i][1 | 2];
+			cnt[i + 1][1 | 0] += cnt[i][1 | 2];
 		}
 
-		// smaller = true, leading zero = false の場合
-		rep(t, b) {
-			dp[i + 1][1][0][t] += dp[i][1][0][t] * b;
-			dp[i + 1][1][0][t] += dp[i][1][0][b];
-			dp[i + 1][1][0][b] += dp[i][1][0][b];
+		//--- case2: smaller = true, leading zero = false ---
+		// d[i] ∈ [0..B) にする場合
+		rep(t, B) {
+			dp[i + 1][1 | 0][t] += dp[i][1 | 0][t] * B;
+			dp[i + 1][1 | 0][t] += cnt[i][1 | 0];
+			cnt[i + 1][1 | 0] += cnt[i][1 | 0];
 		}
 
-		// smaller = false, leading zero = true の場合
-		dp[i + 1][1][1][b] += dp[i][0][1][b];
+		//--- case3: smaller = false, leading zero = true ---
+		// d[i] = 0 にする場合
+		if (x > 0) cnt[i + 1][1 | 2] += cnt[i][0 | 2];
+		else cnt[i + 1][0 | 2] += cnt[i][0 | 2];
+
+		// d[i] ∈ [1..num[i]) にする場合
 		repi(t, 1, x - 1) {
-			dp[i + 1][1][0][t] += dp[i][0][1][b];
-			dp[i + 1][1][0][b] += dp[i][0][1][b];
+			dp[i + 1][1 | 0][t] += cnt[i][0 | 2];
+			cnt[i + 1][1 | 0] += cnt[i][0 | 2];
 		}
-		dp[i + 1][0][0][x] += dp[i][0][1][b];
-		dp[i + 1][0][0][b] += dp[i][0][1][b];
 
-		// smaller = false, leading zero = false の場合
-		rep(t, b) {
-			dp[i + 1][1][0][t] += dp[i][0][0][t] * x;
+		// d[i] = num[i] にする場合
+		dp[i + 1][0 | 0][x] += cnt[i][0 | 2];
+		cnt[i + 1][0 | 0] += cnt[i][0 | 2];
+
+		//--- case4: smaller = false, leading zero = false
+		rep(t, B) {
+			// d[i] ∈ [0..num[i]) にする場合
+			dp[i + 1][1 | 0][t] += dp[i][0 | 0][t] * x;
 			if (t < x) {
-				dp[i + 1][1][0][t] += dp[i][0][0][b];
-				dp[i + 1][1][0][b] += dp[i][0][0][b];
+				dp[i + 1][1 | 0][t] += cnt[i][0 | 0];
+				cnt[i + 1][1 | 0] += cnt[i][0 | 0];
 			}
 
-			dp[i + 1][0][0][t] += dp[i][0][0][t];
+			// d[i] = num[i] にする場合
+			dp[i + 1][0 | 0][t] += dp[i][0 | 0][t];
 			if (t == x) {
-				dp[i + 1][0][0][t] += dp[i][0][0][b];
-				dp[i + 1][0][0][b] += dp[i][0][0][b];
+				dp[i + 1][0 | 0][x] += cnt[i][0 | 0];
+				cnt[i + 1][0 | 0] += cnt[i][0 | 0];
 			}
 		}
-
-		//dump(i + 1);
-		//dump("smaller && leading zero:");
-		//dump(dp[i + 1][1][1]);
-		//dump("smaller && !leading zero:");
-		//dump(dp[i + 1][1][0]);
-		//dump("!smaller && leading zero:");
-		//dump(dp[i + 1][0][1]);
-		//dump("!smaller && !leading zero:");
-		//dump(dp[i + 1][0][0]);
 	}
 
-	rep(t, b) {
-		cnt[t] = dp[n][0][0][t] + dp[n][1][0][t];
-	}
+	vT res(B);
+	rep(t, B) res[t] = dp[n][0 | 0][t] + dp[n][1 | 0][t];
 
-	return cnt;
+	return res;
 }
 
 

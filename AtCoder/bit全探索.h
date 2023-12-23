@@ -24,21 +24,31 @@
 //【部分集合の全探索（大きさ固定）】O(nCr)
 /*
 * 大きさ n の全体集合 Ω のうち，大きさ r の部分集合 set⊂Ω を昇順に全探索する．
+* 
+* 制約：r > 0
 */
 // verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/8/ITP2/all/ITP2_11_D
 #define repbc(set, n, r) for(int set = (1 << int(r)) - 1, lb, nx; set < (1 << int(n)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
 
 
-//【ビット全探索の高速化】
+//【要素の全探索】O(|set|)
+/*
+* i ∈ set なる i を昇順に全探索する．
+*/
+// verify : https://atcoder.jp/contests/abc180/tasks/abc180_e
+#define repis(i, set) for(int i = lsb(set), bset##A = set; i >= 0; bset##A -= 1 << i, i = lsb(bset##A)) 
+
+
+//【差分更新でビット全探索から O(n) を消す】
 /*
 * repb(set, n) rep(i, n) で O(2^n n) かかるビット全探索は，
-* 再帰関数を用いて書く，グレイコードを使うなどして O(2^n) に高速化できる．
+* 再帰関数を用いて書く，グレイコードを使うなどして差分更新すれば O(2^n) に高速化できる．
 * 
 * verify : https://yukicoder.me/problems/no/3105
 */
 
 
-//【bitDP の遷移を細分化】
+//【bit DP の遷移を細分化】
 /*
 * bitDP を「集合 → 集合」の遷移をする DP と解釈すれば，
 * 遷移を細かくして「要素 → 要素」の遷移を考えることで計算量を落とせる場合がある．

@@ -12,16 +12,16 @@
 */
 
 
-//【要素和の和（要素数ごと）】O(n)
+//【部分集合の和の和（要素数ごと）】O(n)
 /*
 * 与えられた a[0..n) について，各 k=[0..n] についての
 *		Σ|set|=k Σi∈set a[i]
-* の値を res[k] に格納する．
+* の値を格納したリストを返す．
 *
 * 利用：【階乗など（法が大きな素数）】
 */
 template <class T>
-void total_sum(const vector<T>& a, vm& res) {
+vm subset_sum_sum(const vector<T>& a) {
 	//【方法】
 	// a[i] が res[k] に何回寄与するかを考えると，
 	// i を含む大きさ k の部分集合の個数 bin(n-1, k-1) 回と分かる．
@@ -38,7 +38,7 @@ void total_sum(const vector<T>& a, vm& res) {
 	// を得る．
 
 	int n = sz(a);
-	res.resize(n + 1);
+	vm res(n + 1);
 
 	if (n == 0) return;
 
@@ -46,26 +46,28 @@ void total_sum(const vector<T>& a, vm& res) {
 	mint a_sum = accumulate(all(a), mint(0));
 
 	repi(k, 0, n) res[k] = a_sum * fm.bin(n - 1, k - 1);
+
+	return res;
 }
 
 
-//【要素積の和（要素数ごと，mod 998244353）】O(n (log n)^2)
+//【部分集合の積の和（要素数ごと，mod 998244353）】O(n (log n)^2)
 /*
 * 与えられた a[0..n) について，各 k=[0..n] について
 *		Σ|set|=k Πi∈set a[i]
-* の値を res[k] に格納する．
+* の値を格納したリストを返す．
 *
 * 利用：【形式的冪級数】,【一次式の積の展開（基本対称式）】
 */
 template <class T>
-void multiple_sum(const vector<T>& a, vm& res) {
+vm subset_product_sum(const vector<T>& a) {
 	//【方法】
 	// 一次式の積
 	//		g(x) = Πi=[0..n) (1 + a[i] x)
 	// を計算したときの x^k の係数として求めることができる．
 
 	int n = sz(a);
-	res.resize(n + 1);
+	vm resn + 1);
 
 	if (n == 0) {
 		res[0] = 1;
@@ -84,6 +86,8 @@ void multiple_sum(const vector<T>& a, vm& res) {
 	MFPS g = c * expand(x);
 
 	repi(k, 0, n) res[k] = g[k];
+
+	return res;
 }
 
 

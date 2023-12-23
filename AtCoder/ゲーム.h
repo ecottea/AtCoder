@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "有理数.h"
 // ■■■■■ ゲーム ■■■■■
 
 
@@ -60,6 +61,187 @@ map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vec
 }
 
 
+//【局面の勝敗（引き分けあり）】O(?)（遅いので実験用）
+/*
+* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗を {{手番, 局面}, 勝敗} で表したリストを返す．
+* nxt(t, p, nps) を呼ぶと，t=1:先手番[t=0:後手番] での局面 p から遷移可能な局面のリストを nps に格納する．
+* ただし nps が空の場合は，先手勝ちなら 1，後手勝ちなら 0，引き分けなら -1 を返すようにする．
+*/
+template <class T>
+map<pair<int, T>, int> decide_WLD(const T& p_ini, function<int(int, const T&, vector<T>&)>& nxt) {
+	// verify : https://www.codechef.com/problems/DISPDOM
+
+	map<pair<int, T>, int> res;
+
+	// t=1:先手番[t=0:後手番] で局面 p であるときの勝敗を返す．
+	function<int(int, const T&)> dfs = [&](int t, const T& p) {
+		// 既に勝敗が確定済ならその結果を返す．
+		if (res.count({ t, p })) return res[{t, p}];
+
+		// 局面 p から遷移可能な局面の集合 nps を得る．
+		vector<T> nps;
+		int wl = nxt(t, p, nps);
+
+		// p から遷移可能な局面が無い場合は決着．
+		if (nps.empty()) {
+			res[{t, p}] = wl;
+			return wl;
+		}
+
+		// 遷移先に自分勝ちの局面が 1 つでもあれば自分勝ち
+		bool drawable = false;
+		repe(np, nps) {
+			int ret = dfs(1 - t, np);
+			if (ret == t) return res[{t, p}] = t;
+			if (ret == -1) drawable = true;
+		}
+
+		// そうでなく，遷移先に引き分けの局面が 1 つでもあれば引き分け
+		if (drawable) return res[{t, p}] = -1;
+
+		// そうでなければ相手勝ち
+		return res[{t, p}] = 1 - t;
+	};
+
+	dfs(1, p_ini);
+
+	return res;
+
+	/* nxt の定義の雛形
+	using T = tuple<ll, ll, vl>;
+	function<int(int, const T&, vector<T>&)> nxt = [&](int t, const T& p, vector<T>& nps) {
+		ll l, r; vl a;
+		tie(l, r, a) = p;
+
+		return 0;
+	};
+	*/
+}
+
+
+//【局面のスコア】O(?)（遅いので実験用）
+/*
+* 先手番での初期局面 p_ini から遷移可能な局面とその最終スコアを {{手番, 局面}, スコア} で表したリストを返す．
+* ただし先手はスコアの最大化を目指し，後手はスコアの最小化を目指すものとする．
+* nxt(t, p, nps) を呼ぶと，t=True:先手番[t=False:後手番] での局面 p から遷移可能な局面のリストを nps に格納する．
+* ただし nps が空の場合はスコアを返す．
+*/
+template <class T>
+map<pair<bool, T>, ll> decide_final_score(const T& p_ini, function<ll(bool, const T&, vector<T>&)>& nxt) {
+	map<pair<bool, T>, ll> res;
+
+	// t=True:先手番[t=False:後手番] で局面 p であるときの勝敗を返す．
+	function<ll(bool, const T&)> dfs = [&](bool t, const T& p) {
+		// 既に最終スコアが確定済ならその結果を返す．
+		if (res.count({ t, p })) return res[{t, p}];
+
+		// 局面 p から遷移可能な局面の集合 nps を得る．
+		vector<T> nps;
+		ll sc = nxt(t, p, nps);
+
+		// p から遷移可能な局面が無い場合は決着．
+		if (nps.empty()) return res[{t, p}] = sc;
+
+		// 先手番の場合
+		if (t) {
+			// 遷移先の中のスコアの最大値を現局面のスコアとする．
+			sc = -INFL;
+			repe(np, nps) chmax(sc, dfs(!t, np));
+		}
+		// 後手番の場合
+		else {
+			// 遷移先の中のスコアの最小値を現局面のスコアとする．
+			sc = INFL;
+			repe(np, nps) chmin(sc, dfs(!t, np));
+		}
+
+		return res[{t, p}] = sc;
+	};
+
+	dfs(true, p_ini);
+
+	return res;
+
+	/* nxt の定義の雛形
+	using T = tuple<ll, vi>;
+	function<ll(bool, const T&, vector<T>&)> nxt = [&](bool t, const T& p, vector<T>& nps) {
+		auto [sc, a] = p;
+
+		return 0LL;
+	};
+	*/
+}
+
+
+//【局面のゲーム値（数）】O(?)（遅いので実験用）
+/*
+* 局面 p のゲーム値（分母分子の型が T の二進有理数）を返す．
+* nxt(p, lnps, rnps) を呼ぶと，局面 p から左[右] の手番で遷移可能な局面のリストを lnps[rnps] に格納する．
+*
+* 制約：p からはゲーム値が数でない局面に遷移しない．
+*/
+template <class P, class T = ll>
+Frac<T> calc_advantage(const P& p, function<void(const P&, vector<P>&, vector<P>&)>& nxt) {
+	// verify : https://atcoder.jp/contests/abc229/tasks/abc229_h
+
+	map<P, Frac<T>> dp;
+
+	// 局面 p のゲーム値を返す．
+	function<Frac<T>(const P&)> dfs = [&](const P& p) {
+		// ゲーム値が確定済ならその結果を返す．
+		if (dp.count(p)) return dp[p];
+
+		// 局面 p から遷移可能な局面の集合 lnps, rnps を得る．
+		vector<P> lnps, rnps;
+		nxt(p, lnps, rnps);
+
+		// 左右それぞれの最も優位な選択肢のみを残す．
+		Frac<T> l_max(-(T)INF), r_min((T)INF);
+		repe(np, lnps) chmax(l_max, dfs(np));
+		repe(np, rnps) chmin(r_min, dfs(np));
+
+		// ゲーム値が数でない局面に遷移してはならない．
+		Assert(l_max < r_min);
+
+		// {負 | 正} = 0
+		if (l_max < T(0) && T(0) < r_min) return dp[p] = Frac<T>(T(0));
+
+		// {負1 | 負2} = -{正2 | 正1}
+		T sign = 1;
+		if (l_max < T(0)) {
+			l_max *= T(-1);
+			r_min *= T(-1);
+			swap(l_max, r_min);
+			sign = -1;
+		}
+
+		// {正1 | 正2} のゲーム値は，開区間内の誕生日が最小の数
+		together(l_max, r_min);
+		int B = msb(r_min.dnm);
+		repir(b, B, 0) {
+			T num = ((l_max.num >> b) + 1) << b;
+			if (num < r_min.num) {
+				Frac<T> res(sign * num, r_min.dnm);
+				res.reduction();
+				return dp[p] = res;
+			}
+		}
+
+		Frac<T> res(sign * (l_max.num + r_min.num), 2 * r_min.dnm);
+		return dp[p] = res;
+		};
+
+	return dfs(p);
+
+	/* nxt の定義の雛形
+	using P = vi;
+	function<void(const P&, vector<P>&, vector<P>&)> nxt = [&](const P& p, vector<P>& lnps, vector<P>& rnps) {
+
+	};
+	*/
+}
+
+
 //【重み付き DAG 上のコマ移動ゲーム】O(n + m)　
 /*
 * ゲームのルール：
@@ -105,11 +287,13 @@ void weighted_DAG_game(const WGraph& g, vector<pll>& res) {
 }
 
 
-//【重み付き有向グラフ上のコマ移動ゲーム】O(n + m logn)
+//【重み付き有向グラフ上のコマ移動ゲーム】O(n + m log n)
 /*
+* ゲームのルール：
 * 重み付き有向グラフ（閉路可）g のある頂点 v にコマが置かれている．
 * 左と右は交互にコマを辺で繋がれた頂点のいずれかへ動かし，
 * 通った辺の重みの総和を左は最小化，右は最大化する（終了せず +∞ になることも認める．）
+* 
 * コマが v にある状態から，左[右] が先手だった場合の最終スコアを sc_l[sc_r] に格納する．
 *
 *（後退解析）
@@ -180,6 +364,32 @@ void weighted_directed_graph_game(const WGraph& g, vl& sc_l, vl& sc_h) {
 		sc_h[i] = sc[2 * i + 1];
 	}
 }
+
+
+//【無向グラフ上のコマ移動ゲーム（始点任意）】
+/*
+* ゲームのルール：
+* 無向グラフ g が与えられる．まず先手がコマを好きな頂点に配置する．
+* その後は後手から始めてコマを未訪問の頂点に移動させていき，移動不可能になった方を負けとする．
+* 
+* このゲームの勝利条件は以下の通り：
+*	後手必勝 ⇔ g に完全マッチングが存在する．
+* 
+* 参考 : https://37zigen.com/game-on-graph/
+*/
+
+
+//【無向グラフ上のコマ移動ゲーム（始点固定）】
+/*
+* ゲームのルール：
+* 無向グラフ g の頂点 v にコマが置かれている．
+* 先手から始めてコマを未訪問の頂点に移動させていき，移動不可能になった方を負けとする．
+*
+* このゲームの勝利条件は以下の通り：
+*	後手必勝 ⇔ v を含まない g の最大マッチングが存在する．
+*
+* verify : https://yukicoder.me/problems/no/2476
+*/
 
 
 //【カードめくり】O(n^2 log n)

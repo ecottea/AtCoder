@@ -4,12 +4,12 @@
 // ■■■■■ 数え上げ（格子） ■■■■■
 
 
-//【互いの効きに入らないキング配置の数え上げ】O(h w 1.6^w + 2^w)
+//【互いの効きに入らないキング配置の数え上げ】O(1.618^w h w + 2^w)
 /*
 * c[0..h)[0..w) 上に互いの効きに入らないようにキングを配置する方法が何通りあるかを返す．
 * ただし c[i][j] = ng であるようなマス (i, j) にはキングを配置できない．
 *
-*（格子上スライド bitDP）
+*（格子上スライド bit DP）
 */
 template <class T>
 mint nonattacking_king_placement(vector<vector<T>>& c, T ng = '#') {
@@ -112,90 +112,4 @@ mint count_points_in_BB(int n, int h, int w, Factorial_mint& fm) {
 	return res;
 }
 
-
-//【トロミノのタイリングの数え上げ】O(h 4^w)
-/*
-* h×w の盤面に トロミノを敷き詰める方法が何通りあるかを返す．
-*/
-ll count_Tromino_tiling(int h, int w) {
-	// マスの数が 3 の倍数でなければ明らかに不可能．
-	if (h * w % 3 != 0) return 0;
-
-	// 盤は縦長だとする．
-	if (h < w) swap(h, w);
-
-	// 敷き詰めに使うピースのリスト
-	// 各ピースは辞書順最小位置を {0, 0} としたマスの集合で表す．
-	vector<vector<pii>> pieces{
-		{ {0, 0}, {0, 1}, {0, 2} },
-		{ {0, 0}, {0, 1}, {1, 0} },
-		{ {0, 0}, {0, 1}, {1, 1} },
-		{ {0, 0}, {1, -1}, {1, 0} },
-		{ {0, 0}, {1, 0}, {1, 1} },
-		{ {0, 0}, {1, 0}, {2, 0} }
-	};
-
-	// mat[set] : 盤の上 2 行分の敷き詰めが set のとき，そこから遷移できる次の 2 行分のパターンのリスト
-	vvl mat(1LL << (2 * w));
-
-	// set : 盤の上 2 行分の敷き詰めパターン
-	repb(set, 2 * w) {
-		// board[i][j] : 上 3 行の盤の位置 (i, j) にタイルが置かれているか
-		vvb board(3, vb(w));
-		rep(x, 2) rep(y, w) if (get(set, x * w + y)) board[x][y] = 1;
-
-		// board[i][j] を返す（盤外なら true を返す）
-		auto get_board = [&](int i, int j) {
-			if (j < 0 || j >= w) return true;
-			return (bool)board[i][j];
-		};
-
-		// (0, j): 注目位置
-		function<void(int)> dfs = [&](int j) {
-			// 1 行目が埋まったら次の 2 行の形状を記録
-			if (j == w) {
-				int nset = 0;
-				rep(y, w) if (board[1][y]) nset |= 1 << y;
-				rep(y, w) if (board[2][y]) nset |= 1 << (w + y);
-				mat[set].push_back(nset);
-				return;
-			}
-
-			// すでにタイルが敷かれていたら 1 つ右のマスへ
-			if (get_board(0, j)) {
-				dfs(j + 1);
-				return;
-			}
-
-			// 各ピースを置くことができるかをチェックする．
-			repe(piece, pieces) {
-				bool ok = true;
-				for (auto& [di, dj] : piece) {
-					if (get_board(0 + di, j + dj)) {
-						ok = false;
-						break;
-					}
-				}
-				if (!ok) continue;
-
-				for (auto& [di, dj] : piece) board[0 + di][j + dj] = true;
-				dfs(j + 1);
-				for (auto& [di, dj] : piece) board[0 + di][j + dj] = false;
-			}
-		};
-		dfs(0);
-	}
-
-	// dp_i[set] : i 行目までみて，盤の上 2 行のパターンが set である敷き詰め方の数
-	vl dp(1LL << (2 * w));
-	dp[0] = 1;
-
-	rep(hoge, h) {
-		vl ndp(1LL << (2 * w));
-		repb(set, 2 * w) repe(nset, mat[set]) ndp[nset] += dp[set];
-		dp = move(ndp);
-	}
-
-	return dp[0];
-}
 

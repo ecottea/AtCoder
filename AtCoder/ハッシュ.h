@@ -1,317 +1,501 @@
 #pragma once
 #include "header.h"
-#include "FPS(bit).h"
+#include "探索.h"
+#include "不偏ゲーム.h"
 // ■■■■■ ハッシュ ■■■■■
 
 
 //【ローリングハッシュ（列）】
 /*
-* 列 s[0..n) の部分文字列 s[l, r) のハッシュ値を計算する．
+* Rolling_hash<STR>(STR s, bool reversible = false) : O(n)
+*	列 s[0..n) で初期化する．reversible = true にすると逆順のハッシュも計算可能になる．
+*	制約：STR は string，vector<T> など．ll 範囲の負数は扱えない．
 *
-* Rolling_hash(STR s) : O(n)
-*	列 s[0..n) で初期化する．
-*	STR は string，vector<T> など．
+* ull get(int l, int r) : O(1)
+*	部分文字列 s[l..r) のハッシュ値を返す（空なら 0）
 *
-* ll get(int l, int r) : O(1)
-*	部分文字列 s[l, r) のハッシュ値を返す（空なら 0）
+* ull get_rev(int l, int r) : O(1)
+*	部分文字列 s[l..r) を反転した文字列のハッシュ値を返す（空なら 0）
 *
-* ll get_rev(int l, int r) : O(1)
-*	部分文字列 s[l, r) を反転した文字列のハッシュ値を返す（空なら 0）
-*
-* ll join(ll hs, ll ht, int ls) : O(1)
-*	ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
+* ull join(ull hs, ull ht, int len) : O(1)
+*	ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
 */
-template <class STR, int MOD, int BASE, int SHIFT> struct Rolling_hash_sub {
-	using mint = static_modint<MOD>;
-	using vm = vector<mint>;
+template <class STR>
+class Rolling_hash {
+	// 参考 : https://qiita.com/keymoon/items/11fac5627672a6d6a9f6
+
+	//【方法】
+	// 2^61 - 1 は十分大きい素数であるからローリングハッシュの法として適切である．
+	// a, b < 2^61 - 1 とし，積 a b mod (2^61 - 1) を高速に計算できればよい．
+	// 
+	// まず a, b を上位と下位に分解し
+	//		a = 2^31 ah + al, b = 2^31 bh + bl  (ah, bh < 2^30, al, bl < 2^31)
+	// とする．これらの積をとると，
+	//		a b
+	//		= (2^31 ah + al)(2^31 bh + bl)
+	//		= 2^62 ah bh + 2^31 (ah bl + bh al) + al bl
+	// となる．2^61 ≡ 1 (mod 2^61 - 1) に注意してそれぞれの項を mod 2^61 - 1 で整理する．
+	//
+	// 第 1 項については，
+	//		2^62 ah bh
+	//		= 2 ah bh
+	//		≦ 2 (2^30-1) (2^30-1)
+	// となる．
+	//
+	// 第 2 項については，c := ah bl + bh al < 2^62 を上位と下位に分解し
+	//		c = 2^30 ch + cl  (ch < 2^32, cl < 2^30)
+	// とすると，
+	//		2^31 c
+	//		= 2^31 (2^30 ch + cl)
+	//		= ch + 2^31 cl
+	//		≦ (2^32-1) + 2^31 (2^30-1)
+	// となる．
+	//
+	// 第 3 項については，
+	//		al bl
+	//		≦ (2^31-1) (2^31-1)
+	// となる．
+	// 
+	// これらの和は
+	//		2 ah bh + ch + 2^31 cl + al bl
+	//		≦ 2 (2^30-1) (2^30-1) + (2^32-1) + 2^31 (2^30-1) + (2^31-1) (2^31-1)
+	//		= 9223372030412324866 < 9223372036854775808 = 2^63 << 2^64
+	// となるのでオーバーフローの心配はない．
+
+	using ull = ull;
+	static constexpr ull MASK30 = (1ULL << 30) - 1;
+	static constexpr ull MASK31 = (1ULL << 31) - 1;
+	static constexpr ull MOD = (1ULL << 61) - 1; // 法（素数）
+
+	// a mod (2^61 - 1) を返す．
+	inline ull get_mod(ull a) const {
+		ull ah = a >> 61, al = a & MOD;
+		ull res = ah + al;
+		if (res >= MOD) res -= MOD;
+		return res;
+	}
+
+	// x ≡ a b mod (2^61 - 1) なる x < 2^63 を返す（ただし a, b < 2^61）
+	inline ull mul(ull a, ull b) const {
+		ull ah = a >> 31, al = a & MASK31;
+		ull bh = b >> 31, bl = b & MASK31;
+
+		ull c = ah * bl + bh * al;
+		ull ch = c >> 30, cl = c & MASK30;
+
+		ull term1 = 2 * ah * bh;
+		ull term2 = ch + (cl << 31);
+		ull term3 = al * bl;
+
+		return term1 + term2 + term3; // < 2^63
+	}
+
+	static constexpr ull BASE = 1234567891011; // 適当な基数
+	static constexpr ull SHIFT = 4295090752; // 適当なシフト
 
 	// 列の長さ
 	int n;
 
-	// powB[i] : B^i, powB_inv[i] : B^(-i)
-	vm powB, powB_inv;
+	// powB[i] : BASE^i
+	vector<ull> powB;
 
-	// v[i] : s[0, i) のハッシュ値
-	vm v, v_rev;
-
-	// コンストラクタ（列 s で初期化）
-	Rolling_hash_sub(const STR& s) : n(sz(s)), powB(n + 1), powB_inv(n + 1), v(n + 1), v_rev(n + 1) {
-		// ハッシュ値計算用の B の累乗
-		powB[0] = 1;
-		rep(i, n) powB[i + 1] = powB[i] * BASE;
-
-		// ハッシュ値計算用の B の逆元の累乗
-		mint invB = mint(BASE).inv();
-		powB_inv[0] = 1;
-		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB;
-
-		// s[0, i) のハッシュ値 v[i] の計算
-		rep(i, n) {
-			v[i + 1] = v[i] + (s[i] + SHIFT) * powB[i];
-			v_rev[i + 1] = v_rev[i] + (s[n - 1 - i] + SHIFT) * powB[i];
-		}
-	}
-
-	// 代入
-	Rolling_hash_sub(const Rolling_hash_sub& rh) = default;
-	Rolling_hash_sub& operator=(const Rolling_hash_sub& rh) = default;
-
-	// s[l, r) のハッシュ値の取得
-	int get(int l, int r) {
-		// ハッシュ値は Σi=[0..r-l) (s[l+i] + S) * B^i (mod MOD)
-		return ((v[r] - v[l]) * powB_inv[l]).val();
-	}
-
-	// s[l, r) を反転した文字列のハッシュ値の取得
-	int get_rev(int l, int r) {
-		// s[l, r) を反転した文字列は s_rev[n-r, n-l) に等しい．
-		return ((v_rev[n - l] - v_rev[n - r]) * powB_inv[n - r]).val();
-	}
-
-	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
-	int join(int hs, int ht, int ls) {
-		return (hs + ht * powB[ls]).val();
-	}
-};
-template <class STR>
-class Rolling_hash {
-	int n; // 列の長さ
-
-	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
-	Rolling_hash_sub<STR, 1999987657, 123456, 789> rh1;
-	Rolling_hash_sub<STR, 1999901261, 987654, 321> rh2;
+	// v[i] : s[0..i) のハッシュ値 Σj∈[0..i) (s[j]+SHIFT) BASE^(i-1-j)
+	// v_rev[i] : s[n-i..n) を反転した文字列のハッシュ値
+	vector<ull> v, v_rev;
 
 public:
-	// コンストラクタ（文字列 s で初期化）
-	Rolling_hash(const STR& s) : n(sz(s)), rh1(s), rh2(s) {
-		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
+	// 列 s[0..n) で初期化する．
+	Rolling_hash(const STR& s, bool reversible = false) : n(sz(s)), powB(n + 1), v(n + 1) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ec
+
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = get_mod(mul(powB[i], BASE));
+
+		rep(i, n) v[i + 1] = get_mod(mul(v[i], BASE) + (ull)s[i] + SHIFT);
+
+		if (reversible) {
+			v_rev.resize(n + 1);
+			rep(i, n) v_rev[i + 1] = get_mod(mul(v_rev[i], BASE) + (ull)s[n - 1 - i] + SHIFT);
+		}
 	}
 	Rolling_hash() : n(0) {}
 
-	// 代入
-	Rolling_hash(const Rolling_hash& rh) = default;
-	Rolling_hash& operator=(const Rolling_hash& rh) = default;
-
-	// 列の長さの取得
-	int size() { return n; }
-
-	// s[l, r) のハッシュ値の取得
-	ll get(int l, int r) {
-		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
+	// s[l..r) のハッシュ値の取得
+	ull get(int l, int r) const {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ec
 
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
-		return (ll(rh1.get(l, r)) << 32) + ll(rh2.get(l, r));
+		return get_mod(v[r] + 4 * MOD - mul(v[l], powB[r - l]));
 	}
 
-	// s[l, r) を逆順にした文字列のハッシュ値の取得
-	ll get_rev(int l, int r) {
+	// s[l..r) を反転した文字列のハッシュ値の取得
+	ull get_rev(int l, int r) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ec
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+		Assert(!v_rev.empty());
+
+		// s[l, r) を反転した文字列は s_rev[n-r, n-l) に等しい．
+		return get_mod(v_rev[n - l] + 4 * MOD - mul(v_rev[n - r], powB[r - l]));
+	}
+
+	// ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
+	ull join(ull hs, ull ht, int len) const {
 		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
+
+		Assert(len <= n);
+		return get_mod(ht + mul(hs, powB[len]));
+	}
+};
+
+
+//【辞書順比較（ローリングハッシュ）】O(log(r-l))
+/*
+* ハッシュ rh1, rh2 をもつ文字列 s1, s2 について，s1[l1..r1) < s2[l2..r2) かを返す．
+*
+* 利用：【ローリングハッシュ（列）】，【めぐる式二分探索】
+*/
+template <class STR>
+bool comp(const STR& s1, const Rolling_hash<STR>& rh1, int l1, int r1,
+	const STR& s2, const Rolling_hash<STR>& rh2, int l2, int r2)
+{
+	// verify : https://judge.yosupo.jp/problem/suffixarray
+
+	chmax(l1, 0); chmin(r1, sz(s1)); chmax(l2, 0); chmin(r2, sz(s2));
+	if (l1 >= r1 || l2 >= r2) return 0;
+
+	// 0 文字目（あれば）を見るだけで決まる場合も多いはず．
+	if (r2 - l2 == 0) return false;
+	if (r1 - l1 == 0) return true;
+	if (s1[l1] < s2[l2]) return true;
+	if (s1[l1] > s2[l2]) return false;
+
+	// 1 文字目（あれば）を見るだけで決まる場合も多いはず．
+	if (r2 - l2 == 1) return false;
+	if (r1 - l1 == 1) return true;
+	if (s1[l1 + 1] < s2[l2 + 1]) return true;
+	if (s1[l1 + 1] > s2[l2 + 1]) return false;
+
+	// 接頭辞が len 文字一致しているか
+	function<bool(int)> okQ = [&](int len) {
+		auto hash1 = rh1.get(l1, l1 + len);
+		auto hash2 = rh2.get(l2, l2 + len);
+		return hash1 == hash2;
+	};
+	int len = meguru_search(2, min(r1 - l1, r2 - l2) + 1, okQ);
+
+	// len 文字目（あれば）を見て比較する．
+	if (r2 - l2 == len) return false;
+	if (r1 - l1 == len) return true;
+	return s1[l1 + len] < s2[l2 + len];
+}
+
+
+//【動的ローリングハッシュ（列）】
+/*
+* Rolling_hash<STR>(STR s) : O(n)
+*	列 s[0..n) で初期化する．
+*	制約：STR は string，vector<T> など．ll 範囲の負数は扱えない．
+*
+* ull get(int l, int r) : O(log n)
+*	部分文字列 s[l..r) のハッシュ値を返す（空なら 0）
+*
+* void set(int i, ull x) : O(log n)
+*	s[i] = x とする．
+*
+* 利用：【フェニック木（アーベル群）】
+*/
+ull opdrh(ull x, ull y) {
+	ull a = x + y, ah = a >> 61, al = a & ((1ULL << 61) - 1), res = ah + al;
+	if (res >= ((1ULL << 61) - 1)) res -= ((1ULL << 61) - 1);
+	return res;
+}
+ull odrh() { return 0ULL; }
+ull invdrh(ull a) { return ((1ULL << 61) - 1) ^ a; }
+template <class STR>
+class Dynamic_rolling_hash {
+	// 参考 : https://qiita.com/keymoon/items/11fac5627672a6d6a9f6
+
+	static constexpr ull MASK30 = (1ULL << 30) - 1;
+	static constexpr ull MASK31 = (1ULL << 31) - 1;
+	static constexpr ull MOD = (1ULL << 61) - 1; // 法（素数）
+
+	// a mod (2^61 - 1) を返す．
+	inline ull get_mod(ull a) const {
+		ull ah = a >> 61, al = a & MOD;
+		ull res = ah + al;
+		if (res >= MOD) res -= MOD;
+		return res;
+	}
+
+	// x ≡ a b mod (2^61 - 1) なる x < 2^63 を返す（ただし a, b < 2^61）
+	inline ull mul(ull a, ull b) const {
+		ull ah = a >> 31, al = a & MASK31;
+		ull bh = b >> 31, bl = b & MASK31;
+
+		ull c = ah * bl + bh * al;
+		ull ch = c >> 30, cl = c & MASK30;
+
+		ull term1 = 2 * ah * bh;
+		ull term2 = ch + (cl << 31);
+		ull term3 = al * bl;
+
+		return term1 + term2 + term3; // < 2^63
+	}
+
+	static constexpr ull BASE = 1234567891011; // 適当な基数
+	static constexpr ull BASE_INV = 212042116942762790ULL;
+	static constexpr ull SHIFT = 4295090752; // 適当なシフト
+
+	// 列の長さ
+	int n;
+
+	// powB[i] : BASE^i
+	vector<ull> powB, powB_inv;
+
+	// v[i] : (s[i] + SHIFT) BASE^(-i)
+	Fenwick_tree<ull, opdrh, odrh, invdrh> v;
+
+public:
+	// 列 s[0..n) で初期化する．
+	Dynamic_rolling_hash(const STR& s) : n(sz(s)), powB(n + 1), powB_inv(n + 1) {
+		// verify : https://atcoder.jp/contests/abc331/tasks/abc331_f
+
+		powB[0] = powB_inv[0] = 1;
+		rep(i, n) {
+			powB[i + 1] = get_mod(mul(powB[i], BASE));
+			powB_inv[i + 1] = get_mod(mul(powB_inv[i], BASE_INV));
+		}
+
+		vector<ull> ini(n);
+		rep(i, n) ini[i] = get_mod(mul((ull)s[i] + SHIFT, powB_inv[i]));
+		v = Fenwick_tree<ull, opdrh, odrh, invdrh>(ini);
+	}
+	Dynamic_rolling_hash() : n(0) {}
+
+	// s[l..r) のハッシュ値の取得
+	ull get(int l, int r) const {
+		// verify : https://atcoder.jp/contests/abc331/tasks/abc331_f
 
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
-		return (ll(rh1.get_rev(l, r)) << 32) + ll(rh2.get_rev(l, r));
+		return get_mod(mul(v.sum(l, r), powB[r - 1]));
 	}
 
-	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
-	ll join(ll hs, ll ht, int ls) {
-		// verify : https://atcoder.jp/contests/abc284/tasks/abc284_f
+	// s[i] = x とする．
+	void set(int i, ull x) {
+		// verify : https://atcoder.jp/contests/abc331/tasks/abc331_f
 
-		int hs1 = (int)(hs >> 32), hs2 = (int)(hs % (1LL << 32));
-		int ht1 = (int)(ht >> 32), ht2 = (int)(ht % (1LL << 32));
-		return (ll(rh1.join(hs1, ht1, ls)) << 32) + ll(rh2.join(hs2, ht2, ls));
+		Assert(0 <= i && i < n);
+
+		v.set(i, get_mod(mul(x + SHIFT, powB_inv[i])));
 	}
 };
 
 
 //【二次元ローリングハッシュ（格子）】
 /*
-* 二次元配列 a の部分長方形領域 [x1, x2) * [y1, y2) のハッシュ値を計算する．
+* Rolling_hash_2D(vvT a) : O(h w)
+*	二次元配列 a[0..h)[0..w) で初期化する．
 *
-* Rolling_hash_2D(vvT a) : O(|w| |h|)
-*	二次元配列 a で初期化する．
-*
-* ll get(int x1, int y1, int x2, int y2) : O(1)
-*	部分長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
+* ull get(int x1, int y1, int x2, int y2) : O(1)
+*	部分長方形領域 [x1..x2)×[y1..y2) のハッシュ値を返す．
 */
-template <class T, int MOD, int BASE_X, int BASE_Y, int SHIFT> struct Rolling_hash_2D_sub {
-	using mint = static_modint<MOD>;
-	using vm = vector<mint>;
-	using vvm = vector<vm>;
-
-	mint BX = BASE_X; // 適当な基数
-	mint invBX = BX.inv(); // 基数の逆数
-	mint BY = BASE_Y;
-	mint invBY = BY.inv();
-	mint S = SHIFT; // 適当なシフト
-
-	// 二次元配列とその大きさ
-	vector<vector<T>> a; int h, w;
-
-	// v[i][j] : 長方形領域 [0, i) * [0, j) のハッシュ値
-	vvm v;
-
-	// ハッシュ値計算用の B の累乗，B の逆数の累乗
-	vm pow_BX, pow_BY, pow_invBX, pow_invBY;
-
-	// コンストラクタ（文字列 s で初期化）
-	Rolling_hash_2D_sub() : h(0), w(0) {}
-	Rolling_hash_2D_sub(vector<vector<T>>& a_) :
-		a(a_), h(sz(a)), w(sz(a[0])), v(h + 1, vm(w + 1)),
-		pow_BX(h + 1), pow_BY(w + 1), pow_invBX(h + 1), pow_invBY(w + 1) {
-
-		// ハッシュ値計算用の B の累乗の前計算
-		pow_BX[0] = pow_BY[0] = pow_invBX[0] = pow_invBY[0] = 1;
-		rep(i, h) {
-			pow_BX[i + 1] = pow_BX[i] * BX;
-			pow_invBX[i + 1] = pow_invBX[i] * invBX;
-		}
-		rep(j, w) {
-			pow_BY[j + 1] = pow_BY[j] * BY;
-			pow_invBY[j + 1] = pow_invBY[j] * invBY;
-		}
-
-		// 長方形領域 [0, i) * [0, j) のハッシュ値の計算
-		rep(i, h) {
-			rep(j, w) {
-				v[i + 1][j + 1] = v[i + 1][j] + v[i][j + 1] - v[i][j]
-					+ (a[i][j] + S) * pow_BX[i] * pow_BY[j];
-			}
-		}
-	}
-
-	// 代入
-	Rolling_hash_2D_sub(const Rolling_hash_2D_sub& rh) = default;
-	Rolling_hash_2D_sub& operator=(const Rolling_hash_2D_sub& rh) = default;
-
-	// 長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
-	int get(int x1, int y1, int x2, int y2) {
-		// ハッシュ値は次の式により計算する：
-		// Σi=[0..x2-x1] j=[0..y2-y1] (a[x1+i][y1+j] + SHIFT) * BASE_X^i * BASE_Y^j (mod MOD)
-		mint v_sum = v[x2][y2] - v[x1][y2] - v[x2][y1] + v[x1][y1];
-		return (v_sum * pow_invBX[x1] * pow_invBY[y1]).val();
-	}
-};
 template <class T>
-struct Rolling_hash_2D {
-	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
-	Rolling_hash_2D_sub<T, 1000000007, 100007, 26627, 17> rh1;
-	Rolling_hash_2D_sub<T, 998244353, 99991, 54401, 91> rh2;
+class Rolling_hash_2D {
+	static constexpr ull MASK30 = (1ULL << 30) - 1;
+	static constexpr ull MASK31 = (1ULL << 31) - 1;
+	static constexpr ull MOD = (1ULL << 61) - 1; // 法（素数）
 
-	// コンストラクタ（二次元配列 a で初期化）
-	Rolling_hash_2D() {}
-	Rolling_hash_2D(vector<vector<T>>& a) : rh1(a), rh2(a) {}
+	// a mod (2^61 - 1) を返す．
+	inline ull get_mod(ull a) const {
+		ull ah = a >> 61, al = a & MOD;
+		ull res = ah + al;
+		if (res >= MOD) res -= MOD;
+		return res;
+	}
 
-	// 代入
-	Rolling_hash_2D(const Rolling_hash_2D& rh) = default;
-	Rolling_hash_2D& operator=(const Rolling_hash_2D& rh) = default;
+	// x ≡ a b mod (2^61 - 1) なる x < 2^63 を返す（ただし a, b < 2^61）
+	inline ull mul(ull a, ull b) const {
+		ull ah = a >> 31, al = a & MASK31;
+		ull bh = b >> 31, bl = b & MASK31;
 
-	// 長方形領域 [x1, x2) * [y1, y2) のハッシュ値を返す．
-	ll get(int x1, int y1, int x2, int y2) {
+		ull c = ah * bl + bh * al;
+		ull ch = c >> 30, cl = c & MASK30;
+
+		ull term1 = 2 * ah * bh;
+		ull term2 = ch + (cl << 31);
+		ull term3 = al * bl;
+
+		return term1 + term2 + term3; // < 2^63
+	}
+
+	static constexpr ull BX = 1234567891011, BY = 3141592653589; // 適当な基数
+	static constexpr ull S = 4295090752; // 適当なシフト
+
+	// 格子の縦と横の長さ
+	int h, w;
+
+	// powBX[i] : BX^i, powBY[i] : BY^i
+	vector<ull> powBX, powBY;
+
+	// v[i][j] : a[0..i)[0..j) のハッシュ値
+	//	v[i][j] = Σx∈[0..i) Σy∈[0..j) (a[i][j] + S) BX^(i-1-x) BY^(j-1-y)
+	vector<vector<ull>> v;
+
+public:
+	// 二次元配列 a[0..h)[0..w) で初期化する．
+	Rolling_hash_2D(const vector<vector<T>>& a) : h(sz(a)), w(sz(a[0])),
+		powBX(h + 1), powBY(w + 1), v(h + 1, vector<ull>(w + 1))
+	{
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_C
-		
-		return (ll(rh1.get(x1, y1, x2, y2)) << 32) + ll(rh2.get(x1, y1, x2, y2));
+
+		powBX[0] = 1;
+		rep(i, h) powBX[i + 1] = get_mod(mul(powBX[i], BX));
+
+		powBY[0] = 1;
+		rep(j, w) powBY[j + 1] = get_mod(mul(powBY[j], BY));
+
+		rep(i, h) rep(j, w) v[i + 1][j + 1] = get_mod(mul(v[i][j + 1], BX) + (ull)a[i][j] + S);
+		rep(i, h) rep(j, w) v[i + 1][j + 1] = get_mod(mul(v[i + 1][j], BY) + v[i + 1][j + 1]);
+	}
+	Rolling_hash_2D() : h(0), w(0) {}
+
+	// 部分長方形領域 [x1..x2)×[y1..y2) のハッシュ値を返す．
+	ull get(int x1, int y1, int x2, int y2) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_C
+
+		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);
+		if (x1 >= x2 || y1 >= y2) return 0;
+
+		// 右下を基点とするとここが重くなる．左上基点にして inv をもつべき？
+		ull res = v[x2][y2];
+		res += 4 * MOD - mul(v[x1][y2], powBX[x2 - x1]);
+		res = get_mod(res);
+		res += 4 * MOD - mul(v[x2][y1], powBY[y2 - y1]);
+		res += mul(get_mod(mul(v[x1][y1], powBX[x2 - x1])), powBY[y2 - y1]);
+		res = get_mod(res);
+
+		return res;
 	}
 };
 
 
 //【ローリングハッシュ（数値文字列，加減可能）】
 /*
-* 数値文字列 s の連続部分列 s[l, r) が表す数値のハッシュ値を計算する．
-* ハッシュ値のまま加減算を行うことができる．
+* Number_rolling_hash(string s, bool reversible = false) : O(n)
+*	数値文字列 s[0..n) で初期化する．reversible = true にすると逆順のハッシュも計算可能になる．
 *
-* Number_rolling_hash(string s) : O(n)
-*	列 s[0..n) で初期化する．
+* ull get(int l, int r) : O(1)
+*	部分数値文字列 s[l..r) のハッシュ値を返す（空なら 0）
 *
-* ll get(int l, int r) : O(1)
-*	連続部分列 s[l, r) が表す数値のハッシュ値を返す．
+* ull get_rev(int l, int r) : O(1)
+*	部分数値文字列 s[l..r) を反転した数値文字列のハッシュ値を返す（空なら 0）
 *
-* ll add(ll hA, ll hB) : O(1)
+* ull join(ull hs, ull ht, int len) : O(1)
+*	ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
+*
+* ull add(ull hA, ull hB) : O(1)
 *	ハッシュ値 hA, hB が表す数値の和のハッシュを返す．
 *
-* ll sub(ll hA, ll hB) : O(1)
+* ull sub(ull hA, ull hB) : O(1)
 *	ハッシュ値 hA, hB が表す数値の差（hA 側 - hB 側）のハッシュを返す．
 */
-template <int MOD> struct Number_rolling_hash_sub {
-	// 列とその長さ
-	string s; int n;
+class Number_rolling_hash {
+	static constexpr ull MASK30 = (1ULL << 30) - 1;
+	static constexpr ull MASK31 = (1ULL << 31) - 1;
+	static constexpr ull MOD = (1ULL << 61) - 1; // 法（素数）
 
-	// v[i] : s[0, i) のハッシュ値
-	vl v;
+	// a mod (2^61 - 1) を返す．
+	inline ull get_mod(ull a) const {
+		ull ah = a >> 61, al = a & MOD;
+		ull res = ah + al;
+		if (res >= MOD) res -= MOD;
+		return res;
+	}
+
+	// x ≡ a b mod (2^61 - 1) なる x < 2^63 を返す（ただし a, b < 2^61）
+	inline ull mul(ull a, ull b) const {
+		ull ah = a >> 31, al = a & MASK31;
+		ull bh = b >> 31, bl = b & MASK31;
+
+		ull c = ah * bl + bh * al;
+		ull ch = c >> 30, cl = c & MASK30;
+
+		ull term1 = 2 * ah * bh;
+		ull term2 = ch + (cl << 31);
+		ull term3 = al * bl;
+
+		return term1 + term2 + term3; // < 2^63
+	}
+
+	// 列の長さ
+	int n;
 
 	// pow10[i] : 10^i
-	vl pow10;
+	vector<ull> pow10;
 
-	// コンストラクタ（列 s で初期化）
-	Number_rolling_hash_sub(const string& s_) : s(s_), n(sz(s)), v(n + 1), pow10(n + 1) {
-		// ハッシュ値計算用の 10 の累乗
-		pow10[0] = 1;
-		rep(i, n) pow10[i + 1] = (pow10[i] * 10) % MOD;
+	// v[i] : s[0..i) のハッシュ値 Σj∈[0..i) s[j] 10^(i-1-j)
+	// v_rev[i] : s[n-i..n) を反転した文字列のハッシュ値
+	vector<ull> v, v_rev;
 
-		// 10^(-1) の計算
-		ll inv10 = 1, pow2 = 10, d = MOD - 2;
-		while (d > 0) {
-			if (d & 1) inv10 = (inv10 * pow2) % MOD;
-			pow2 = (pow2 * pow2) % MOD;
-			d /= 2;
-		}
-
-		// s[0, i) のハッシュ値の計算
-		ll pow_inv10 = 1;
-		rep(i, n) {
-			v[i + 1] = (v[i] + (s[i] - '0') * pow_inv10) % MOD;
-			pow_inv10 = (pow_inv10 * inv10) % MOD;
-		}
-	}
-
-	// s[l, r) のハッシュ値の取得
-	int get(int l, int r) {
-		// ハッシュ値は Σi=[0..r-l] s[l+i] * 10^(r-l-i) (mod MOD)
-		return (int)smod((v[r] - v[l]) * pow10[r], MOD);
-	}
-};
-struct Number_rolling_hash {
-	static const int MOD1 = 1000000007;
-	static const int MOD2 = 998244353;
-
-	// 衝突の可能性を減らすため，二つのハッシュ値を統合する．
-	Number_rolling_hash_sub<MOD1> rh1;
-	Number_rolling_hash_sub<MOD2> rh2;
-
-	// コンストラクタ（文字列 s で初期化）
-	Number_rolling_hash(const string& s) : rh1(s), rh2(s) {}
-
-	// 連続部分列 s[l, r) が表す数値のハッシュ値を返す．
-	ll get(int l, int r) {
+public:
+	// 数値文字列 s[0..n) で初期化する．
+	Number_rolling_hash(const string& s, bool reversible = false) : n(sz(s)), pow10(n + 1), v(n + 1) {
 		// verify : https://codeforces.com/contest/898/problem/F
-		
-		return ((ll)rh1.get(l, r) << 32) + rh2.get(l, r);
+
+		pow10[0] = 1;
+		rep(i, n) pow10[i + 1] = get_mod(mul(pow10[i], 10ULL));
+
+		rep(i, n) v[i + 1] = get_mod(mul(v[i], 10ULL) + (ull)(s[i] - '0'));
+
+		if (reversible) {
+			v_rev.resize(n + 1);
+			rep(i, n) v_rev[i + 1] = get_mod(mul(v_rev[i], 10ULL) + (ull)(s[n - 1 - i] - '0'));
+		}
+	}
+	Number_rolling_hash() : n(0) {}
+
+	// s[l..r) のハッシュ値の取得
+	ull get(int l, int r) const {
+		// verify : https://codeforces.com/contest/898/problem/F
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		return get_mod(v[r] + 4 * MOD - mul(v[l], pow10[r - l]));
+	}
+
+	// s[l..r) を反転した文字列のハッシュ値の取得
+	ull get_rev(int l, int r) {
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+		Assert(!v_rev.empty());
+
+		// s[l, r) を反転した文字列は s_rev[n-r, n-l) に等しい．
+		return get_mod(v_rev[n - l] + 4 * MOD - mul(v_rev[n - r], pow10[r - l]));
+	}
+
+	// ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
+	ull join(ull hs, ull ht, int len) const {
+		Assert(len <= n);
+		return get_mod(ht + mul(hs, pow10[len]));
 	}
 
 	// ハッシュ値 hA, hB が表す数値の和のハッシュを返す．
-	ll add(ll hA, ll hB) {
+	ull add(ull hA, ull hB) {
 		// verify : https://codeforces.com/contest/898/problem/F
-		
-		ll hA1 = hA >> 32, hA2 = hA % (1LL << 32);
-		ll hB1 = hB >> 32, hB2 = hB % (1LL << 32);
 
-		ll h1 = (hA1 + hB1) % MOD1;
-		ll h2 = (hA2 + hB2) % MOD2;
-
-		return (h1 << 32) + h2;
+		return get_mod(hA + hB);
 	}
 
 	// ハッシュ値 hA, hB が表す数値の差のハッシュを返す．
-	ll sub(ll hA, ll hB) {
-		ll hA1 = hA >> 32, hA2 = hA % (1LL << 32);
-		ll hB1 = hB >> 32, hB2 = hB % (1LL << 32);
-
-		ll h1 = smod(hA1 - hB1, MOD1);
-		ll h2 = smod(hA2 - hB2, MOD2);
-
-		return (h1 << 32) + h2;
+	ull sub(ull hA, ull hB) {
+		return get_mod(hA + MOD - hB);
 	}
 };
 
@@ -321,89 +505,77 @@ struct Number_rolling_hash {
 * 列 s[0..n) の連続部分列 s[l, r) のハッシュ値を計算する．
 * ハッシュ値のまま列同士の XOR を計算することができる．
 *
-* Rolling_hash_XOR(STR s) : O(64 n)
+* Rolling_hash_XOR<STR>(STR s) : O(65536 + 216 n)
 *	列 s[0..n) で初期化する．
 *	STR は string，vector<T> など．
 *
-* ll get(int l, int r) : O(1)
-*	連続部分列 s[l, r) のハッシュ値を返す（空なら 0）
+* ull get(int l, int r) : O(1)
+*	部分文字列 s[l..r) のハッシュ値を返す（空なら 0）
 *
-* ll join(ll hs, ll ht, int ls) : O(1)
-*	ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
+* ull join(ull hs, ull ht, int len) : O(1)
+*	ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
 *
-* ll xor_sum(ll hs, ll ht, int l) : O(1)
-*	ハッシュ値 hs[ht] をもつ s[0..l)[ t[0..l) ] について s XOR t のハッシュ値を返す．
+* ull xor_sum(ull hs, ull ht, int len) : O(1)
+*	ハッシュ値 hs[ht] をもつ s[0..len)[ t[0..len) ] について s XOR t のハッシュ値を返す．
 *
-* 利用：【形式的冪級数（二元体 F2）】
+* 利用：【ニム積】
 */
 template <class STR>
 struct Rolling_hash_XOR {
 	//【方法】
 	// 通常のローリングハッシュでは mod p での (和, 積)-半環上で計算するが，
-	// それに代えて体 GF(2^63) ~= F_2[X] / (X^63 + X + 1) 上で計算を行えばいい．
+	// それに代えて (ニム和, ニム積)-半環上で計算を行えばいい（ニム和 = XOR）
+
+	using vul = vector<ull>;
+
+	static constexpr ull BASE = 1410923993237113318; // 適当な基数
+	static constexpr ull SHIFT = 1504164860675582848; // 適当なシフト
 
 	// 列の長さ
 	int n;
 
-	BFPS<128> MOD{ bitset<128>(9223372036854775811), 64 }; // X^63 + X + 1
-	BFPS<128> B{ bitset<128>(8214269207820942862), 64 }; // ランダム
-	BFPS<128> invB{ bitset<128>(7314534990125951741), 64 }; // B の逆元
-	BFPS<128> S{ bitset<128>(5272143306228089744), 64 }; // ランダム
+	Nim_product NP;
 
-	// powB[i] : B^i, powB_inv[i] : B^(-i)
-	vector<BFPS<128>> powB, powB_inv;
+	// powB[i] : BASE^i
+	vul powB;
 
-	// v[i] : s[0, i) のハッシュ値
+	// v[i] : s[0..i) のハッシュ値
 	// v0[i] : 0 が i 個並んだ列のハッシュ値
-	vector<BFPS<128>> v, v0;
+	vul v, v0;
 
-	// コンストラクタ（列 s で初期化）
-	Rolling_hash_XOR() : n(0) {}
-	Rolling_hash_XOR(const STR& s) : n(sz(s)), powB(n + 1), powB_inv(n + 1), v(n + 1), v0(n + 1) {
+	// 列 s[0..n) で初期化する．
+	Rolling_hash_XOR(const STR& s) : n(sz(s)), NP(), powB(n + 1), v(n + 1), v0(n + 1) {
 		// verify : https://atcoder.jp/contests/abc274/tasks/abc274_h
 
-		// ハッシュ値計算用の B の累乗
 		powB[0] = 1;
-		rep(i, n) powB[i + 1] = (powB[i] * B).reminder(MOD);
+		rep(i, n) powB[i + 1] = NP.prod(powB[i], BASE);
 
-		// ハッシュ値計算用の B の逆元の累乗
-		powB_inv[0] = 1;
-		rep(i, n) powB_inv[i + 1] = (powB_inv[i] * invB).reminder(MOD);
-
-		// s[0, i) のハッシュ値 v[i] の計算
-		rep(i, n) {
-			BFPS<128> fs(bitset<128>(s[i]), 64);
-			v[i + 1] = (v[i] + (fs + S) * powB[i]).reminder(MOD);
-		}
-
-		// 0 が i 個並んだ列のハッシュ値 v0[i] の計算
-		rep(i, n) v0[i + 1] = (v0[i] + S * powB[i]).reminder(MOD);
+		rep(i, n) v[i + 1] = NP.prod(v[i], BASE) ^ (ull)s[i] ^ SHIFT;
+		rep(i, n) v0[i + 1] = NP.prod(v0[i], BASE) ^ SHIFT;
 	}
+	Rolling_hash_XOR() : n(0) {}
 
-	// 代入
-	Rolling_hash_XOR(const Rolling_hash_XOR& rh) = default;
-	Rolling_hash_XOR& operator=(const Rolling_hash_XOR& rh) = default;
-
-	// s[l, r) のハッシュ値の取得
-	ll get(int l, int r) {
+	// s[l..r) のハッシュ値を返す．
+	ull get(int l, int r) {
 		// verify : https://atcoder.jp/contests/abc274/tasks/abc274_h
 
-		// ハッシュ値は Σi=[0..r-l) (s[l+i] + S) * B^i
-		return (ll)(((v[r] + v[l]) * powB_inv[l]).reminder(MOD).c.to_ullong());
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
+
+		return v[r] ^ NP.prod(v[l], powB[r - l]);
 	}
 
-	// ハッシュ値 hs をもつ s[0..ls) とハッシュ値 ht をもつ t を連結した s+t のハッシュ値を返す．
-	ll join(ll hs, ll ht, int ls) {
-		BFPS<128> fs(bitset<128>(hs), 64);
-		BFPS<128> ft(bitset<128>(ht), 64);
-		return (ll)((fs + ft * powB[ls]).reminder(MOD).c.to_ullong());
+	// ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
+	ull join(ull hs, ull ht, int len) {
+		Assert(len <= n);
+		return ht ^ NP.prod(hs, powB[len]);
 	}
 
-	// ハッシュ値 hs[ht] をもつ s[0..l)[ t[0..l) ] について s XOR t のハッシュ値を返す．
-	ll xor_sum(ll hs, ll ht, int l) {
+	// ハッシュ値 hs[ht] をもつ s[0..len)[ t[0..len) ] について s XOR t のハッシュ値を返す．
+	ull xor_sum(ull hs, ull ht, int len) {
 		// verify : https://atcoder.jp/contests/abc274/tasks/abc274_h
 
-		return hs ^ ht ^ (ll)v0[l].c.to_ullong();
+		return hs ^ ht ^ v0[len];
 	}
 };
 

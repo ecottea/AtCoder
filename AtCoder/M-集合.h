@@ -6,7 +6,7 @@
 // ■■■■■ モノイド作用付き集合 ■■■■■
 
 
-//【モノイド作用付き集合】
+//【モノイド作用付き集合の定義】
 /*
 * モノイド作用付き集合 (S, F, act, comp, id) を表す．
 *
@@ -66,14 +66,46 @@ FB10 idB10() { return -INFL; }
 #define Chmax_Integer_mset SB10, FB10, actB10, compB10, idB10
 
 
-//【行列乗算 左作用付き ベクトル 集合】
+//【2×2行列乗算 左作用付き 2次元ベクトル 集合】
 /* verify : https://yukicoder.me/problems/no/1648 */
-int NB01 = 10;
-using SB01 = vm;
-using FB01 = Matrix<mint>;
+using TB12 = mint;
+using SB12 = pair<TB12, TB12>; // ベクトル (x; y)
+using FB12 = tuple<TB12, TB12, TB12, TB12>; // 行列 (a, b; c, d)
+SB12 actB12(FB12 f, SB12 p) {
+	auto [a, b, c, d] = f;
+	auto [x, y] = p;
+
+	// [a b] [x]   [a x + b y]
+	// [c d].[y] = [c x + d y]
+	return { a * x + b * y, c * x + d * y };
+}
+FB12 compB12(FB12 f, FB12 g) {
+	auto [fa, fb, fc, fd] = f;
+	auto [ga, gb, gc, gd] = g;
+
+	// [fa fb] [ga gb]   [fa ga + fb gc  fa gb + fb gd]
+	// [fc fd].[gc gd] = [fc ga + fd gc  fc gb + fd gd]
+	TB12 a = fa * ga + fb * gc, b = fa * gb + fb * gd;
+	TB12 c = fc * ga + fd * gc, d = fc * gb + fd * gd;
+	return { a, b, c, d };
+}
+FB12 idB12() {
+	// [1 0]
+	// [0 1]
+	return { 1, 0, 0, 1 };
+}
+#define Matrix2LMul_Vector2_mset SB12, FB12, actB12, compB12, idB12
+
+
+//【行列乗算 左作用付き ベクトル 集合】
+/* verify : https://yukicoder.me/problems/no/1000 */
+constexpr int NB01 = 3;
+using TB01 = ll;
+using SB01 = array<TB01, NB01>;
+using FB01 = Fixed_matrix<TB01, NB01>;
 SB01 actB01(FB01 f, SB01 x) { return f * x; }
 FB01 compB01(FB01 f, FB01 g) { return f * g; }
-FB01 idB01() { return Matrix<mint>(NB01); }
+FB01 idB01() { return Fixed_matrix<TB01, NB01>(true); }
 #define MatrixLMul_Vector_mset SB01, FB01, actB01, compB01, idB01
 
 
@@ -101,7 +133,7 @@ FB05 idB05() { return Bit_matrix<NB05>(NB05); }
 //【コンパニオン行列乗算 右作用付き ベクトル 集合】
 /*
 * S ∋ x : ベクトル
-* F ∋ f : m * n 行列
+* F ∋ f : m×n 行列
 *	m = 0 のとき，単位行列を表す．
 *	m = 1 のとき，f を 1 行目にもつコンパニオン行列を表す．
 *	m >= 2 のとき，f そのものを表す．
@@ -144,6 +176,18 @@ FB03 idB03() { return Matrix<mint>(); }
 #define CompanionMatrixRMul_Vector_mset SB03, FB03, actB03, compB03, idB03
 
 
+//【行列乗算 左作用付き 行列 集合】
+/* verify : https://yukicoder.me/problems/no/950 */
+constexpr int NB14 = 2;
+using TB14 = mint;
+using SB14 = Fixed_matrix<TB14, NB14>;
+using FB14 = SB14;
+SB14 actB14(FB14 f, SB14 x) { return f * x; }
+FB14 compB14(FB14 f, FB14 g) { return f * g; }
+FB14 idB14() { return Fixed_matrix<TB14, NB14>(1); }
+#define MatrixLMul_Matrix_mset SB14, FB14, actB14, compB14, idB14
+
+
 //【剰余環上 ビット多項式乗算 作用付き ビット多項式 集合】
 /* verify : https://atcoder.jp/contests/utpc2014/tasks/utpc2014_k */
 constexpr int NB06 = 80;
@@ -170,7 +214,7 @@ using FB07 = pair<TB07, TB07>; // 行列 (a, b; 0, 1)
 SB07 actB07(FB07 f, SB07 x) {
 	auto [a, b] = f; // 行列 (a, b; 0, 1)
 
-	// (a, b; 0, 1),(x; 1) = (a x + b; 1)
+	// (a, b; 0, 1).(x; 1) = (a x + b; 1)
 	return a * x + b;
 }
 FB07 compB07(FB07 f, FB07 g) {
@@ -182,5 +226,59 @@ FB07 compB07(FB07 f, FB07 g) {
 }
 FB07 idB07() { return { 1, 0 }; }
 #define LAffine_Integer_mset SB07, FB07, actB07, compB07, idB07
+
+
+//【整除算 左作用付き 整数 集合】
+/*
+* S ∋ x : 値が x であることを表す．
+* F ∋ f = {a, b} : 関数 f(x) = floor((x + a) / b) を表す．
+* f act x : f(x) を返す．
+* f comp g : 合成関数 f o g を返す．
+*/
+using TB13 = ll;
+using SB13 = TB13;
+using FB13 = pair<TB13, TB13>; // {a, b} : x → floor((x + a) / b)
+SB13 actB13(FB13 f, SB13 x) {
+	auto [a, b] = f;
+
+	return (a + x) / b;
+}
+FB13 compB13(FB13 f, FB13 g) {
+	auto [c, d] = f;
+	auto [a, b] = g;
+
+	// ((x + a) / b + c) / d
+	// = (x + a + b c) / b / d
+	// = (x + (a + b c) / (b d)
+	return { a + b * c, b * d }; // オーバーフロー注意
+}
+FB13 idB13() { return { 0, 1 }; }
+#define Div_Integer_mset SB13, FB13, actB13, compB13, idB13
+
+
+//【S_3 作用付き {0,1,2} 集合】
+/* verify : https://atcoder.jp/contests/agc044/tasks/agc044_c */
+using SB15 = int; // {0, 1, 2}
+typedef enum { S0, S012, S021, S12, S02, S01 } FB15; // S_3
+constexpr int ACTB15[6][3] = {
+	{0, 1, 2},
+	{1, 2, 0},
+	{2, 0, 1},
+	{0, 2, 1},
+	{2, 1, 0},
+	{1, 0, 2}
+};
+constexpr FB15 COMPB15[6][6] = {
+	{ S0, S012, S021, S12, S02, S01 },
+	{ S012, S021, S0, S01, S12, S02 },
+	{ S021, S0, S012, S02, S01, S12 },
+	{ S12, S02, S01, S0, S012, S021 },
+	{ S02, S01, S12, S021, S0, S012 },
+	{ S01, S12, S02, S012, S021, S0 }
+};
+SB15 actB15(FB15 f, SB15 x) { return ACTB15[f][x]; }
+FB15 compB15(FB15 f, FB15 g) { return COMPB15[f][g]; }
+FB15 idB15() { return S0; }
+#define S3_012_mset SB15, FB15, actB15, compB15, idB15
 
 

@@ -3,58 +3,6 @@
 // ■■■■■ ナップサック問題 ■■■■■
 
 
-//【0-1 ナップサック問題（重さが小）と max-plus 半環】
-/*
-* 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，max-plus 半環上で
-*		f(z) := Π_i (0 z^0 + v[i] z^w[i])
-* と定めれば，重さ W での価値の最大値は
-*		[z^W] f(z)
-* で求められる．
-*
-* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B
-*/
-
-
-//【ナップサック問題（重さが小）と max-plus 半環】
-/*
-* 重さが w[i] で価値が v[i] の品物が無数にあるとき，max-plus 半環上で
-*		f(z) := Π_i 1 / (0 z^0 - v[i] z^w[i])
-* と定めれば，重さ W での価値の最大値は
-*		[z^W] f(z)
-* で求められる．
-*
-* f(z) の計算には負元が必要に見えるが，実際は累積和で計算できるので問題ない．
-*
-* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_C
-*/
-
-
-//【個数制限付きナップサック問題（重さが小）と max-plus 半環】
-/*
-* 重さが w[i] で価値が v[i] の品物が m[i] 個あるとき，max-plus 半環上で
-*		f(z) := Π_i (0 z^0 + v[i] z^w[i] + ... + (v[i] z^w[i])^m[i])
-* と定めれば，重さ W での価値の最大値は
-*		[z^W] f(z)
-* で求められる．
-*
-* f(z) を等比数列の和の公式を用いて
-*		f(z) = Π_i (0 z^0 - (v[i] z^w[i])^(m[i]+1)) / (0 z^0 - v[i] z^w[i])
-* と直したくなるが，これの計算には負元が必要になるので使えない．
-*/
-
-
-//【0-1 ナップサック問題（価値が小）と min-plus 半環】
-/*
-* 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，min-plus 半環上で
-*		f(z) := Π_i (0 z^0 + w[i] z^v[i])
-* と定めれば，価値 V での重さの最小値は
-*		[z^V] f(z)
-* で求められる．
-*
-* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_F
-*/
-
-
 //【0-1 ナップサック問題（重さが小，貰う DP）】O(n w_max)
 /*
 * 価値 v[i] と重さ w[i] の定まった n 個の品物から，
@@ -166,8 +114,7 @@ ll knapsack01_problem_exponential_weight(const vl& v, const vl& w, ll w_max, vb*
 	// v_acc[i] : Σv[i..n)
 	vl w_acc(n + 1), v_acc(n + 1);
 	repir(i, n - 1, 0) {
-		ll w, v; int id;
-		tie(w, v, id) = item[i];
+		auto [w, v, id] = item[i];
 
 		w_acc[i] += w_acc[i + 1] + w;
 		v_acc[i] += v_acc[i + 1] + v;
@@ -188,12 +135,10 @@ ll knapsack01_problem_exponential_weight(const vl& v, const vl& w, ll w_max, vb*
 
 	// 配る DP
 	rep(i, n) {
-		ll w, v; int id;
-		tie(w, v, id) = item[i];
+		auto [w, v, id] = item[i];
 
 		repe(tmp, dp[i]) {
-			ll j, v_max;
-			tie(j, v_max) = tmp;
+			auto [j, v_max] = tmp;
 
 			// 品物 i を選ばない場合
 			if (j + w_acc[i + 1] <= w_max) {
@@ -227,8 +172,7 @@ ll knapsack01_problem_exponential_weight(const vl& v, const vl& w, ll w_max, vb*
 
 		ll j = j_res;
 		repir(i, i_res, 1) {
-			ll w, v; int id;
-			tie(w, v, id) = item[i - 1];
+			auto [w, v, id] = item[i - 1];
 
 			// i 番目の品物を選んだ場合と選ばなかった場合で価値の差があれば選んだ証拠．
 			if (dp[i][j] != dp[i - 1][j]) j -= w;
@@ -329,12 +273,10 @@ ll knapsack01_problem_exponential_value(const vl& v, const vl& w, ll w_max, vb* 
 
 	// 配る DP
 	rep(i, n) {
-		ll v, w; int id;
-		tie(v, w, id) = item[i];
+		auto [v, w, id] = item[i];
 
 		repe(tmp, dp[i]) {
-			ll j, w_min;
-			tie(j, w_min) = tmp;
+			auto [j, w_min] = tmp;
 
 			// 品物 i を選ばない場合
 			// 品物 [i+1..n) を総取りしても v_lb 未満の価値にしかならないなら枝刈りする．
@@ -368,8 +310,7 @@ ll knapsack01_problem_exponential_value(const vl& v, const vl& w, ll w_max, vb* 
 		repir(i, n, 1) {
 			// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
 			if (dp[i][j] != dp[i - 1][j]) {
-				ll v, w; int id;
-				tie(v, w, id) = item[i - 1];
+				auto [v, w, id] = item[i - 1];
 
 				(*sel)[id] = true;
 				j -= v;
@@ -412,9 +353,7 @@ ll knapsack01_problem(const vl& v, const vl& w, ll w_max) {
 		}
 
 		// 重さが上限以下ならばリストに追加
-		if (w1 <= w_max) {
-			chmax(w1_to_v1[w1], v1);
-		}
+		if (w1 <= w_max) chmax(w1_to_v1[w1], v1);
 	}
 
 	// リストを再利用し，その重さ以下での最大価値に更新しておく．
@@ -478,9 +417,7 @@ ll knapsack01_problem_minimize_weight(const vi& v, const vl& w, int V, vb& sel) 
 			dp[i][j] = dp[i - 1][j];
 
 			// i 番目の品物の価値が j を超えていれば選べない．
-			if (j - v[i - 1] < 0) {
-				continue;
-			}
+			if (j - v[i - 1] < 0) continue;
 
 			// i 番目の品物を選ぶ方が重さを小さくできるなら更新する．
 			dp[i][j] = min(dp[i][j], dp[i - 1][j - v[i - 1]] + w[i - 1]);
@@ -491,9 +428,7 @@ ll knapsack01_problem_minimize_weight(const vi& v, const vl& w, int V, vb& sel) 
 	ll W = dp[N][V];
 
 	// 不可能なら終了．
-	if (W == INFL) {
-		return -1;
-	}
+	if (W == INFL) return -1;
 
 	// DP 復元を行う．
 	sel = vb(N);
@@ -533,9 +468,7 @@ ll knapsack_problem(const vl& v, const vi& w, int w_max, vi* sel = nullptr) {
 			dp[i][j] = dp[i - 1][j];
 
 			// i 番目の品物の重さが j を超えていれば選べない．
-			if (j - w[i - 1] < 0) {
-				continue;
-			}
+			if (j - w[i - 1] < 0) continue;
 
 			// i 番目の品物を選ぶ方が価値を高められるなら更新する．
 			dp[i][j] = max(dp[i][j], dp[i - 1][j - w[i - 1]] + v[i - 1]);
@@ -566,7 +499,7 @@ ll knapsack_problem(const vl& v, const vi& w, int w_max, vi* sel = nullptr) {
 }
 
 
-//【ナップサック問題（価値の和が小）】O(N Σv[i])
+//【ナップサック問題（価値の和が小）】O(N V)（V : 価値の最大値）
 /*
 * 価値 v[i] と重さ w[i] の定まった N 個の品物から，重さ W 以下で
 * 価値が最大になるよう品物を選んだときの価値を返す．
@@ -595,9 +528,7 @@ ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 	vector<vector<ll>> dp(N + 1, vector<ll>(V + 1, INFL));
 
 	// 価値 0 を実現できる最小重さは 0 である．
-	repi(i, 0, N) {
-		dp[i][0] = 0;
-	}
+	repi(i, 0, N) dp[i][0] = 0;
 
 	// DP でナップサック問題を解く．
 	repi(i, 1, N) {
@@ -606,9 +537,7 @@ ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 			dp[i][j] = dp[i - 1][j];
 
 			// i 番目の品物の価値が j を超えていれば選べない．
-			if (j - v[i - 1] < 0) {
-				continue;
-			}
+			if (j - v[i - 1] < 0) continue;
 
 			// i 番目の品物を選ぶ方が重さを小さくできるなら更新する．
 			dp[i][j] = min(dp[i][j], dp[i - 1][j - v[i - 1]] + w[i - 1]);
@@ -618,9 +547,7 @@ ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 
 	// 重さ W 以下で実現できた中での最大の合計価値を得る．
 	int j = V;
-	while (j >= 0 && dp[N][j] > W) {
-		j--;
-	}
+	while (j >= 0 && dp[N][j] > W) j--;
 	V = j;
 
 	// DP 復元を行う．
@@ -659,9 +586,7 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
 	vvl dp(N + 1, vl(V + 1, INFL));
 
 	// 価値 0 を実現できる最小重さは 0 である．
-	repi(i, 0, N) {
-		dp[i][0] = 0;
-	}
+	repi(i, 0, N) dp[i][0] = 0;
 
 	// DP で重さ最小化ナップサック問題を解く．
 	repi(i, 1, N) {
@@ -670,9 +595,7 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
 			dp[i][j] = dp[i - 1][j];
 
 			// i 番目の品物の価値が j を超えていれば選べない．
-			if (j - v[i - 1] < 0) {
-				continue;
-			}
+			if (j - v[i - 1] < 0) continue;
 
 			// i 番目の品物を選ぶ方が重さを小さくできるなら更新する．
 			dp[i][j] = min(dp[i][j], dp[i - 1][j - v[i - 1]] + w[i - 1]);
@@ -726,9 +649,7 @@ ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
 	rep(i, V) {
 		rep(j, N) {
 			// j 番目の品物の価値が高すぎれば選べない．
-			if (i + v[j] > V) {
-				continue;
-			}
+			if (i + v[j] > V) continue;
 
 			// j 番目の品物を選ぶ方が個数を少なくできるなら更新する．
 			chmin(dp[i + v[j]], dp[i] + w[j]);
@@ -858,11 +779,7 @@ ll knapsack_problem_limited(const vl& v, const vi& w, const vl& m, int W, vi& se
 
 	// 個数の情報を復元する．
 	sel = vi(N);
-	rep(i, sz(v2)) {
-		if (chosen2[i]) {
-			sel[kind[i]] += w2[i] / w[kind[i]];
-		}
-	}
+	rep(i, sz(v2)) if (chosen2[i]) sel[kind[i]] += w2[i] / w[kind[i]];
 
 	return res;
 }
@@ -997,11 +914,7 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll W, vi& sel
 
 	// 個数の情報を復元する．
 	sel = vi(N);
-	rep(i, sz(v2)) {
-		if (chosen2[i]) {
-			sel[kind[i]] += v2[i] / v[kind[i]];
-		}
-	}
+	rep(i, sz(v2)) if (chosen2[i]) sel[kind[i]] += v2[i] / v[kind[i]];
 
 	return res;
 }
@@ -1012,6 +925,8 @@ ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll W, vi& sel
 * 価値 v[i]，重さ w[i]，最大個数 m[i] の定まった n 個の品物から，
 * 重さ w_max 以下で価値が最大になるよう品物を選んだときの価値を返す．
 * また品物 i を何個選んだかを sel[i] に格納する．
+* 
+*（スライド最小値）
 */
 ll knapsack_problem_limited(const vi& v, const vl& w, const vl& m, ll w_max, vl* sel = nullptr) {
 	// 参考 : https://tjkendev.github.io/procon-library/python/dp/knapsack2.html
@@ -1331,9 +1246,7 @@ ll knapsack01_problem(const vl& v, const vi& w, const vi& c, int w_max, int c_ma
 
 	const int m = *max_element(all(c)) + 1;
 	vector<vector<pli>> vws(m);
-	rep(i, n) {
-		vws[c[i]].push_back({ v[i], w[i] });
-	}
+	rep(i, n) vws[c[i]].push_back({ v[i], w[i] });
 
 	// dp_i[j][k] : 品物 [0..i) の中で重さ j 以下かつ k 色以下で実現できる最大価値
 	vvl dp(w_max + 1, vl(c_max + 1));
@@ -1347,28 +1260,85 @@ ll knapsack01_problem(const vl& v, const vi& w, const vi& c, int w_max, int c_ma
 		// 色 c の品物それぞれについて
 		repe(vw, vws[c]) {
 			// 注目している品物の価値 v と重さ w を得る．
-			ll v; int w;
-			tie(v, w) = vw;
+			auto [v, w] = vw;
 
 			repir(j, w_max, 0) {
 				repi(k, 0, c_max) {
 					// 注目している品物を選ぶ場合
-					if (w <= j) {
-						chmax(ndp[j][k], ndp[j - w][k] + v);
-					}
+					if (w <= j) chmax(ndp[j][k], ndp[j - w][k] + v);
 				}
 			}
 		}
 
 		// 色 c の品物を 1 つでも選ぶなら色数は 1 増える．
-		repi(j, 1, w_max) {
-			repi(k, 1, c_max) {
-				chmax(dp[j][k], ndp[j][k - 1]);
-			}
-		}
+		repi(j, 1, w_max) repi(k, 1, c_max) chmax(dp[j][k], ndp[j][k - 1]);
 	}
 
 	return dp[w_max][c_max];
 }
+
+
+//【0-1 ナップサック問題（重さが小）と max-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，max-plus 半環上で
+*		f(z) := Π_i (0 z^0 + v[i] z^w[i])
+* と定めれば，重さ W での価値の最大値は
+*		[z^W] f(z)
+* で求められる．
+*
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_B
+*/
+
+
+//【ナップサック問題（重さが小）と max-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が無数にあるとき，max-plus 半環上で
+*		f(z) := Π_i 1 / (0 z^0 - v[i] z^w[i])
+* と定めれば，重さ W での価値の最大値は
+*		[z^W] f(z)
+* で求められる．
+*
+* f(z) の計算には負元が必要に見えるが，実際は累積和で計算できるので問題ない．
+*
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_C
+*/
+
+
+//【個数制限付きナップサック問題（重さが小）と max-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が m[i] 個あるとき，max-plus 半環上で
+*		f(z) := Π_i (0 z^0 + v[i] z^w[i] + ... + (v[i] z^w[i])^m[i])
+* と定めれば，重さ W での価値の最大値は
+*		[z^W] f(z)
+* で求められる．
+*
+* f(z) を等比数列の和の公式を用いて
+*		f(z) = Π_i (0 z^0 - (v[i] z^w[i])^(m[i]+1)) / (0 z^0 - v[i] z^w[i])
+* と直したくなるが，これの計算には負元が必要になるので使えない．
+*/
+
+
+//【0-1 ナップサック問題（価値が小）と min-plus 半環】
+/*
+* 重さが w[i] で価値が v[i] の品物が各 1 個ずつあるとき，min-plus 半環上で
+*		f(z) := Π_i (0 z^0 + w[i] z^v[i])
+* と定めれば，価値 V での重さの最小値は
+*		[z^V] f(z)
+* で求められる．
+*
+* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_1_F
+*/
+
+
+//【0-1 ナップサック問題の LP 定式化】
+/*
+* 重さが w[i] で価値が v[i] の品物が各 1 個ずつあり，重さ W 以内で価値を最大化する問題は
+*	maximize	Σi v[i] x[i]
+*	subject to	Σi w[i] x[i] ≦ W
+*				x[i] ∈ {0, 1}
+* なる 0-1 計画問題として定式化できる．
+* 
+* verify : https://atcoder.jp/contests/abc032/tasks/abc032_d
+*/
 
 

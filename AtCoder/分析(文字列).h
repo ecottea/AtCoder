@@ -102,12 +102,15 @@ vi knuth_morris_pratt(const STR& s, const STR& w) {
 //【最長共通部分文字列】O(n + m)
 /*
 * 2 つの文字列 s[0..n), t[0..m) の最長共通部分文字列の長さを返す．
+* またそれぞれの開始位置を ls, lt に格納する．
 */
 template <class STR>
-int longest_common_substring(const STR& s, const STR& t) {
-	// verify : https://atcoder.jp/contests/arc151/tasks/arc151_e
+int longest_common_substring(const STR& s, const STR& t, int* ls = nullptr, int* lt = nullptr) {
+	// verify : https://judge.yosupo.jp/problem/longest_common_substring
 
 	int n = sz(s), m = sz(t);
+
+	if (ls != nullptr) *ls = *lt = 0;
 
 	STR st(s);
 	st.push_back('$');
@@ -120,7 +123,16 @@ int longest_common_substring(const STR& s, const STR& t) {
 	rep(i, n + m) {
 		if ((sa[i] < n) == (sa[i + 1] < n)) continue;
 
-		chmax(res, lcp[i]);
+		if (chmax(res, lcp[i]) && ls != nullptr) {
+			if (sa[i] < n) {
+				*ls = sa[i];
+				*lt = sa[i + 1] - n - 1;
+			}
+			else {
+				*ls = sa[i + 1];
+				*lt = sa[i] - n - 1;
+			}
+		}
 	}
 
 	return res;
@@ -173,6 +185,7 @@ vi cycle_length(const STR& s) {
 template <class STR>
 vi manacher(const STR& s) {
 	// 参考 : https://snuke.hatenablog.com/entry/2014/12/02/235837
+	// verify : https://judge.yosupo.jp/problem/enumerate_palindromes
 
 	//【方法】
 	// s[i] を中心とする最長回文の半径 j = r[i] が愚直に求まったとする．
@@ -336,22 +349,27 @@ vi z_algorithm_suffix(STR s) {
 
 //【ワイルドカード付き文字列検索】O((n + m) log(n + m))
 /*
-* 任意文字とマッチする文字 '?' および英小文字からなる文字列 s[0..n), p[0..m) について，
+* 任意文字とマッチする文字 Q および英小文字からなる文字列 s[0..n), p[0..m) について，
 * s[i..i+m) = p[0..m) となる i を昇順に格納したリストを返す．
+* 
+* 制約：m ≦ 1.48×10^6
 */
-vi wildcard_matching(const string& s, const string& p) {
+vi wildcard_matching(const string& s, const string& p, char Q = '?') {
 	// 参考 : https://ei1333.hateblo.jp/entry/2021/01/02/000716
-	// verify : https://atcoder.jp/contests/panasonic2020/tasks/panasonic2020_e
+	// verify : https://atcoder.jp/contests/abc307/tasks/abc307_h
 
 	//【方法】
 	// 文字列 s[0..n) を元に数列 sa[0..n), sb[0..n) を
-	//		sa[i] = 0, sb[i] = 0  (s[i] = '?' のとき)
-	//		sa[i] = s[i] - 'a' + 1, sb[i] = 1  (s[i] != '?' のとき)
+	//		sa[i] = 0,              sb[i] = 0  (s[i]  = Q のとき)
+	//		sa[i] = s[i] - 'a' + 1, sb[i] = 1  (s[i] != Q のとき)
 	// と定め，p[0..m) についても同様に pa, pb を定める．
 	//
 	// このとき文字列の一致は
-	//		s[i..i+m) = p[0..m) ⇔ Σk∈[0..m) sb[i+k] pb[k] (sa[i+k] - pa[k])^2 = 0
-	// と言い換えられる．
+	//		s[i..i+m) = p[0..m)
+	//		⇔ Σk∈[0..m) sb[i+k] pb[k] (sa[i+k] - pa[k])^2 = 0
+	// と言い換えられる．左辺の値は大きくとも
+	//		m * 1 * 1 * (26 - 0)^2 = m * 998255452 / 1.48×10^6
+	// なので，m ≦ 1.48×10^6 であれば mint で計算しても問題ない．
 	//
 	// Σ の中身は
 	//		sb[i+k] pb[k] (sa[i+k] - pa[k])^2
@@ -370,8 +388,8 @@ vi wildcard_matching(const string& s, const string& p) {
 
 	vm sb(n), sab(n), saab(n);
 	rep(i, n) {
-		mint a = (s[i] == '?' ? 0 : s[i] - 'a' + 1);
-		mint b = (s[i] == '?' ? 0 : 1);
+		mint a = (s[i] == Q ? 0 : s[i] - 'a' + 1);
+		mint b = (s[i] == Q ? 0 : 1);
 
 		sb[i] = b;
 		sab[i] = a * b;
@@ -380,8 +398,8 @@ vi wildcard_matching(const string& s, const string& p) {
 
 	vm pb(m), pab(m), paab(m);
 	rep(j, m) {
-		mint a = (p[m - 1 - j] == '?' ? 0 : p[m - 1 - j] - 'a' + 1);
-		mint b = (p[m - 1 - j] == '?' ? 0 : 1);
+		mint a = (p[m - 1 - j] == Q ? 0 : p[m - 1 - j] - 'a' + 1);
+		mint b = (p[m - 1 - j] == Q ? 0 : 1);
 
 		pb[j] = b;
 		pab[j] = a * b;
@@ -676,4 +694,33 @@ public:
 	}
 };
 
+
+//【Suffix Array と LCP Array】
+/*
+* ACL の sa = suffix_array(s), lcp = lcp_array(s, sa) を使えば良い．
+* 
+* 使用例：
+* s[0..11) = "mississippi"
+*  sa[0]: "i"
+* lcp[0]: 1-
+*  sa[1]: "ippi"
+* lcp[1]: 1-
+*  sa[2]: "issippi"
+* lcp[2]: 4----
+*  sa[3]: "ississippi"
+* lcp[3]: 0
+*  sa[4]: "mississippi"
+* lcp[4]: 0
+*  sa[5]: "pi"
+* lcp[5]: 1-
+*  sa[6]: "ppi"
+* lcp[6]: 0
+*  sa[7]: "sippi"
+* lcp[7]: 2--
+*  sa[8]: "sissippi"
+* lcp[8]: 1-
+*  sa[9]: "ssippi"
+* lcp[9]: 3---
+* sa[10]: "ssissippi"
+*/
 

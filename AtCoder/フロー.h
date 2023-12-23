@@ -449,8 +449,8 @@ struct Generalized_min_cost_flow {
 * 重み付き有向グラフ g の始点 s から終点 t までの最大フローの大きさを返す．
 */
 ll ford_fullkerson(const WGraph& g, int s, int t) {
-	// 参考：https://algo-logic.info/ford-fullkerson/
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_6_A
+	// 参考 : https://algo-logic.info/ford-fullkerson/
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bp
 
 	int n = sz(g);
 

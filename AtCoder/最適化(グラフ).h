@@ -3,7 +3,7 @@
 #include "構造(グラフ).h"
 #include "変換(グラフ).h"
 #include "最短路.h"
-#include "ビット全探索.h"
+#include "bit全探索.h"
 #include "数え上げ(グラフ).h"
 #include "マッチング(一般).h"
 // ■■■■■ グラフ上の最適化問題 ■■■■■
@@ -190,7 +190,7 @@ int chromatic_number(const Graph& g) {
 	//		(P3): k 個の独立集合で被覆する方法は何通りか
 	// を考え，この答えが 0 か否かを見ることにする．そこで
 	//		g[set] : set を k 個の独立集合で被覆する方法の数
-	// とおく．（これは彩色多項式ではないので注意．）
+	// とおく．（分割 → 被覆としたのでこれは k-彩色の場合の数ではないことに注意．）
 	//
 	// g の下位集合でのゼータ変換を
 	//		f[set] = Σ_(sub ⊂ set) g[sub]
@@ -204,7 +204,7 @@ int chromatic_number(const Graph& g) {
 	//	k について昇順に
 	//		各 set ⊂ V について set の独立集合の数を求める．
 	//		→ f[set] = (set の独立集合の数)^k を求める．
-	//		→ f[set] に包除原理を適用し g[V] を求める．
+	//		→ f[set] に下位集合メビウス変換(最大元) を行い g[V] を求める．
 	//	を行い，始めて g[V] != 0 となった k を返せば良い．
 
 	int n = sz(g);
@@ -252,50 +252,81 @@ int minimum_clique_cover(const Graph& g) {
 
 //【巡回セールスマン問題】O(2^n n^2)
 /*
-* 重み付き有向グラフ g の最小コストハミルトン閉路のコストを返す（存在しなければ -1）
+* 重み付き有向グラフ g の最小コストハミルトン閉路のコストを返す（存在しなければ INFL）
 *
 *（bit DP）
 */
 ll traveling_salesman_problem(const WGraph& g) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_2_A
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_cv
 
 	int n = sz(g);
 
-	// dp[i][set] : 頂点 i から set を通り頂点 n - 1 までのハミルトンパスの最小コスト
-	//	i !∈ set だが，n - 1 ∈ set なので注意．
-	vvl dp(n, vl(1LL << n, INFL)); vvb seen(n, vb(1LL << n));
-	dp[n - 1][0] = 0; seen[n - 1][0] = true;
+	// dp[s][set] : 頂点 s から n-1 までの set を通る単純パスの最小コスト
+	vvl dp(n, vl(1LL << n, INFL));
+	dp[n - 1][1LL << (n - 1)] = 0;
 
-	// メモ化再帰用の関数の定義
-	function<ll(int, int)> rf = [&](int s, int set) {
-		// もし確定済ならば DP テーブルの値をそのまま返す．
-		if (seen[s][set]) return dp[s][set];
-		seen[s][set] = true;
+	// 貰う DP
+	repb(set, n) rep(s, n) {
+		// s から出発するので s を通らないことはありえない．
+		if (!get(set, s)) continue;
 
 		// s から出ている各辺 e について
 		repe(e, g[s]) {
 			int t = e.to; ll c = e.cost;
 
-			// e の行き先 t が set に含まれていなければ何もしない．
-			if (!(set & (1 << t))) continue;
+			// e の行き先 t が set に含まれていなければ e は通れない．
+			if (!get(set, t)) continue;
 
-			// s → t と進む方がコストが小さければ更新する．
-			chmin(dp[s][set], rf(t, set - (1 << t)) + c);
+			// e を通って s → t と進む方がコストが小さければ更新する．
+			chmin(dp[s][set], c + dp[t][set - (1 << s)]);
 		}
+	}
 
-		return dp[s][set];
-	};
+	ll res = INFL;
 
-	// メモ化再帰を用いて bit DP を行う．
-	auto res = rf(n - 1, (1 << n) - 1);
-	return (res == INFL ? -1 : res);
+	// ハミルトン路 t→n-1 に辺 n-1→t を追加してハミルトン閉路を作る．
+	repe(t, g[n - 1]) chmin(res, dp[t][(1LL << n) - 1] + t.cost);
+
+	return res;
+}
+
+
+//【巡回セールスマン問題（隣接行列）】O(2^n n^2)
+/*
+* 重み付き隣接行列 c[0..n)[0..n) が表す有向グラフの最小コストハミルトン閉路のコストを返す（存在しなければ INFL）
+*
+*（bit DP）
+*/
+ll traveling_salesman_problem(const vvl& c) {
+	// verify : https://atcoder.jp/contests/abc180/tasks/abc180_e
+
+	int n = sz(c);
+
+	// dp[s][set] : 頂点 s から n-1 までの set を通る単純パスの最小コスト
+	vvl dp(n, vl(1LL << n, INFL));
+	dp[n - 1][1LL << (n - 1)] = 0;
+
+	// 貰う DP
+	repb(set, n) {
+		// s, t ∈ set なる辺 s→t をチェックする．
+		repis(s, set) repis(t, set - (1 << s)) {
+			chmin(dp[s][set], c[s][t] + dp[t][set - (1 << s)]);
+		}
+	}
+
+	ll res = INFL;
+
+	// ハミルトン路 t→n-1 に辺 n-1→t を追加してハミルトン閉路を作る．
+	rep(t, n) chmin(res, dp[t][(1 << n) - 1] + c[n - 1][t]);
+
+	return res;
 }
 
 
 //【最小コストハミルトンパス】O(2^n n^2)
 /*
 * 重み付き有向グラフ g の最小コストハミルトンパスのコストを返す（存在しなければ INFL）
-* また頂点 s から出発し set を通るハミルトンパスの最小コストを dp[s][set] に格納する．
+* また頂点 s から出発する g[set] のハミルトンパスの最小コストを dp[s][set] に格納する．
 *
 *（bit DP）
 */
@@ -304,7 +335,7 @@ ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
 
 	int n = sz(g);
 
-	// dp[s][set] : 頂点 s から出発し set を通るハミルトンパスの最小コスト
+	// dp[s][set] : 頂点 s から出発し set を通る単純パスの最小コスト
 	dp = vvl(n, vl(1LL << n, INFL));
 
 	repb(set, n) rep(s, n) {
@@ -336,11 +367,53 @@ ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
 }
 
 
+//【最小コスト単純パス】O(2^n n^3)
+/*
+* 与えられた重み付き有向グラフ g に対し，頂点 s から出発し set を通り頂点 t にたどり着く
+* 単純パスの最小コストを dp[s][t][set] に格納し dp を返す．
+*
+*（bit DP）
+*/
+vvvl shortest_simple_path(const WGraph& g) {
+	// verify : https://mojacoder.app/users/milkcoffee/contests/mr-contest-002/tasks/3
+
+	int n = sz(g);
+
+	// dp[s][t][set] : set を通る s→t 単純パスの最小コスト
+	vvvl dp(n, vvl(n, vl(1LL << n, INFL)));
+
+	// 貰う DP
+	repb(set, n) rep(s, n) rep(t, n) {
+		// s→t パスなので s, t を通らないことはありえない．
+		if (!get(set, s) || !get(set, t)) continue;
+
+		// set = {s} = {t} の場合は不動でいいのでコストは 0 である．
+		if (s == t && set == (1 << s)) {
+			dp[s][t][set] = 0;
+			continue;
+		}
+
+		// s から出ている各辺 e について
+		repe(e, g[s]) {
+			int v = e.to; ll c = e.cost;
+
+			// e の行き先 v が set に含まれていなければ e は通れない．
+			if (!get(set, v)) continue;
+
+			// v を通って s → t と進む方がコストが小さければ更新する．
+			chmin(dp[s][t][set], c + dp[v][t][set - (1 << s)]);
+		}
+	}
+
+	return dp;
+}
+
+
 //【中国人郵便配達問題】O(2^n n)
 /*
 * 重み付き連結無向グラフの全辺を通る閉路の最小コストを返す．
 *
-* 利用：【最小コスト完全マッチング】
+* 利用：【全頂点対最短路】,【最小コスト完全マッチング】
 */
 ll chinese_postman_problem(const WGraph& g) {
 	// 参考：https://perogram.hateblo.jp/entry/2020/09/30/101602
@@ -351,35 +424,24 @@ ll chinese_postman_problem(const WGraph& g) {
 	// 全頂点対の最短経路長を求めておく．
 	vvl cost = warshall_floyd(g);
 
-	// 次数が奇数の頂点を求める．
-	vi vodd;
-	rep(i, n) {
-		if (sz(g[i]) % 2 == 1) {
-			vodd.push_back(i);
-		}
-	}
-	int nodd = sz(vodd);
+	// 次数が奇数の頂点を求める（握手補題により必ず偶数個）
+	vi v_odd;
+	rep(i, n) if (sz(g[i]) & 1) v_odd.push_back(i);
+	int n_odd = sz(v_odd);
 
-	// 次数が奇数の頂点だけを集めた重み付きグラフの隣接行列を作る．
+	// 次数が奇数の頂点だけを集めた重み付き完全グラフ g2 を作る．
 	// 辺のコストは元のグラフ g での最短経路長とする．
-	vvl adj(nodd, vl(nodd, INFL));
-	rep(i, nodd) {
-		rep(j, nodd) {
-			adj[i][j] = cost[vodd[i]][vodd[j]];
-		}
-	}
+	WGraph g2(n_odd);
+	rep(i, n_odd) rep(j, n_odd) g2[i].push_back({ j, cost[v_odd[i]][v_odd[j]] });
 
 	// g の全ての辺のコストの総和を求める．
 	ll res = 0;
-	rep(s, n) {
-		repe(e, g[s]) {
-			res += e.cost;
-		}
-	}
+	rep(s, n) repe(e, g[s]) res += e.cost;
 	res /= 2;
 
 	// オイラー閉路を作るために必要な最小のコスト分を加算する．
-	res += minimum_cost_matching(adj);
+	vl cost_odd = minimum_cost_matching(g2);
+	res += cost_odd.back();
 
 	return res;
 }

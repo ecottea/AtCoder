@@ -56,14 +56,79 @@ mint geometric_series(mint r, ll n) {
 	mint res(0), pow2 = r, sumpow2 = 1;
 	while (n > 0) {
 		if (n & 1LL) res = res * pow2 + sumpow2;
-		sumpow2 += sumpow2 * pow2;
-		pow2 *= pow2;
+		sumpow2 = sumpow2 * pow2 + sumpow2;
+		pow2 = pow2 * pow2;
 		n /= 2;
 	}
 	return res;
 }
 mint geometric_series(mint r, ll i0, ll i1) {
 	return geometric_series(r, i1) - geometric_series(r, i0);
+}
+
+
+//【等比数列の和（半環）】O(log n)
+/*
+* 半環 (S, add, o, mul, e) の元 r について Σi∈[0..n) r^i を返す．
+*/
+template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
+S geometric_series(S r, ll n) {
+	// verify : https://csacademy.com/contest/iati-shumen-2017-day-1/task/superstition/statement/
+
+	// pow2 = r^(2^i), sumpow2 = 1 + r + ... + r^((2^i) - 1)
+	S res(o()), pow2 = r, sumpow2(e());
+
+	while (n > 0) {
+		if (n & 1LL) res = add(mul(res, pow2), sumpow2);
+		sumpow2 = add(sumpow2, mul(sumpow2, pow2));
+		pow2 = mul(pow2, pow2);
+		n /= 2;
+	}
+
+	return res;
+}
+
+
+//【等比数列の和（M-可換モノイド）】O(log n)
+/*
+* M-可換モノイド (S, op, o, F, act, comp, id) の元 f∈F, x∈S について Σi∈[0..n) f^i x を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+S geometric_series(F f, S x, ll n) {
+	// verify : https://atcoder.jp/contests/abc310/tasks/abc310_g
+
+	//【方法】
+	// 小さい冪から順に計算していく．
+	//	a[0] = f^1,	b[0] = f^0 x
+	//	a[1] = f^2,	b[1] = (f^0 x) + f^1 (f^0 x)
+	//				     = f^0 x + f^1 x
+	//	a[2] = f^4,	b[2] = (f^0 x + f^1 x) + f^2 (f^0 x + f^1 x)
+	//				     = f^0 x + f^1 x + f^2 x + f^3 x
+	// 
+	// これらを組み合わせると
+	//	f^0 x + f^1 x + f^2 x + f^3 x + f^4 x + f^5 x + f^6 x
+	//	= f^0 x + f^1 (f^0 x + f^1 x + f^2 x + f^3 x + f^4 x + f^5 x)
+	//	= b[0] + a[0] (f^0 x + f^1 x + f^2 x + f^3 x + f^4 x + f^5 x)
+	//	= b[0] + a[0] ((f^0 x + f^1 x) + f^2 (f^0 x + f^1 x + f^2 x + f^3 x))
+	//	= b[0] + a[0] (b[1] + a[1] (f^0 x + f^1 x + f^2 x + f^3 x))
+	//	= b[0] + a[0] (b[1] + a[1] b[2])
+	// のように計算できる．
+	// 
+	// 実際は a の累積積を持ちながら並行して計算していける．
+
+	S res(o()); F a(f), a_acc(id()); S b(x);
+
+	while (n > 0) {
+		if (n & 1) {
+			res = op(res, act(a_acc, b));
+			a_acc = comp(a_acc, a);
+		}
+		b = op(b, act(a, b));
+		a = comp(a, a);
+		n /= 2;
+	}
+
+	return res;
 }
 
 

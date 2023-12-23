@@ -15,14 +15,10 @@ int ord_p(const mint& a) {
 	const int p = mint::mod();
 
 	// p - 1 の約数が位数の候補となる．
-	vl divs = divisors(p - 1);
+	vi divs = divisors(p - 1);
 
 	// p - 1 の約数を昇順に調べていく．
-	repe(d, divs) {
-		if (a.pow(d) == 1) {
-			return (int)d;
-		}
-	}
+	repe(d, divs) if (a.pow(d) == 1) return d;
 
 	return -1;
 }
@@ -46,12 +42,8 @@ int ord(const mint& a) {
 	vl divs = divisors(lambda);
 
 	// λ(m) の約数を昇順に調べていく．
-	repe(d, divs) {
-		if (a.pow(d) == 1) {
-			return (int)d;
-		}
-	}
-
+	repe(d, divs) if (a.pow(d) == 1) return (int)d;
+	
 	return -1;
 }
 
@@ -59,51 +51,60 @@ int ord(const mint& a) {
 //【原始根】O(√p)
 /*
 * 素数の法 p における最小の原始根を返す．
-* 
-* 利用：【約数列挙】
 */
 int find_primitive_root() {
-	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_c
+	// verify : https://yukicoder.me/problems/no/1409
 
 	const int p = mint::mod();
 	if (p == 2) return 1;
 
-	// p - 1 の約数 divs を得る．
-	vl divs = divisors(p - 1);
+	// qs : p-1 の素因数のリスト
+	int n = p - 1; vi qs;
+	repi(q, 2, (int)sqrt(p - 1) + 1) {
+		if (n % q == 0) {
+			qs.push_back(q);
+			while (n % q == 0) n /= q;
+		}
+	}
+	if (n != 1) qs.push_back(n);
 
-	// p - 1 自身だけ削除する．
-	divs.pop_back();
-
+	// r : 原始根の候補を昇順に調べる．
 	repi(r, 2, p - 1) {
-		// p - 1 の真の約数が全て r の位数でないなら原始根
-		repe(d, divs) if (mint(r).pow(d) == 1) goto NEXT_LOOP;
+		bool ok = true;
 
-		return r;
-	NEXT_LOOP:;
+		// p-1 の任意の素因数 q について r^((p-1)/q) が 1 でないことが
+		// r が原始根であるための必要十分条件となる．
+		repe(q, qs) if (mint(r).pow((p - 1) / q) == 1) {
+			ok = false;
+			break;
+		}
+
+		if (ok) return r;
 	}
 
 	return -1;
 }
 
 
-//【離散対数問題（法が素数）】O(√p)
+//【離散対数問題（法が素数）】O(√min(p, x_max))
 /*
-* a^x ≡ b (mod p) の最小解 x >= 0 を返す．（なければ INF）
+* a^x ≡ b (mod p) の最小解 x ≧ 0 を返す．（なければ INF）
+* もし x ≦ x_max であることが分かっているならそれを指定できる．
 *
 * 制約 : p = mint::mod() は素数
 *
 *（baby-step giant-step）
 */
-int log(mint a, mint b) {
+int log_mint(mint a, mint b, int x_max = INF) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/baby-step-giant-step.html
-	// verify : https://yukicoder.me/problems/no/981
+	// verify : https://judge.yosupo.jp/problem/kth_root_mod
 
 	//【方法】
 	// m = ceil(√p)，r = a^(-m) とおく．
 	// 
 	// まず x∈[0..m) について a^x を計算した集合 S を得る．（計算量 O(m)）
 	// S の中に b に一致するものがあればそれでよい．
-	// なかった場合は x >= m であることが確定する．
+	// なかった場合は x ≧ m であることが確定する．
 	// 
 	// 次に解くべき方程式
 	//		a^x = b
@@ -112,13 +113,14 @@ int log(mint a, mint b) {
 	// とする．
 	// もし S の中に b r に一致するものがあれば，そこから x-m が分かり，
 	// その結果に m を加えたものが求める x の値である．
-	// なかった場合は x >= 2 m であることが確定する．
+	// なかった場合は x ≧ 2 m であることが確定する．
 	//
 	// この調子で S の中に b, b r, b r^2, ... があるかどうかを調べていく．
 	// a^(mod - 1) = 1 なので，同様のステップは高々 m 回で終了する．
 	// 各回の S へのアクセスが O(1) で行えるなら，全体計算量は O(m) である．
 
-	int m = (int)(ceil(sqrt(mint::mod())) + 1);
+	chmin(x_max, mint::mod());
+	int m = (int)(ceil(sqrt(x_max)) + 1);
 
 	// a = 0 の場合の例外処理
 	if (a == 0) {
@@ -128,14 +130,17 @@ int log(mint a, mint b) {
 
 	// loga[a^i] = i を計算しておく．
 	unordered_map<int, int> loga;
-	mint a_pow = a.pow(m), a_inv = a.inv();
-	repir(i, m - 1, 0) {
-		a_pow *= a_inv;
-		loga[a_pow.val()] = i;
+
+	mint a_pow = 1;
+	rep(j, m) {
+		if (a_pow == b) return j;
+
+		if (!loga.count(a_pow.val())) loga[a_pow.val()] = j;
+		a_pow *= a;
 	}
 
 	// r = a^(-m)
-	mint r = a_inv.pow(m);
+	mint r = a.inv().pow(m);
 
 	// 方程式の両辺に r = a^(-m) を掛けながら解を探していく．
 	rep(i, m) {
@@ -152,18 +157,18 @@ int log(mint a, mint b) {
 
 //【離散対数問題】O(√m log m)
 /*
-* a x^d ≡ b (mod m) の最小解 d >= 0 を返す（なければ INF）
+* a x^d ≡ b (mod m) の最小解 d ≧ 0 を返す（なければ INF）
 * ここで m = mint::mod() である．また 0^0 = 1 とする．
 *
 *（baby-step giant-step）
 */
-int log(mint a, mint x, mint b) {
+int log_mint(mint a, mint x, mint b) {
 	// verify : https://judge.yosupo.jp/problem/discrete_logarithm_mod
 
 	//【方法】
 	// まず i∈[0..√m) について素朴に a x^i を計算し，b に一致するかを見る：O(√m)
 	// 同時に i∈[0..√m) について b x^i を計算した集合 S を得ておく．
-	// もし a x^i = b なる i があれば d=i でよく，なければ d >= √m であることが確定する．
+	// もし a x^i = b なる i があれば d=i でよく，なければ d ≧ √m であることが確定する．
 	// 
 	// 次に a x^√m の値を計算し，b x^i がそれと等しくなる i∈[0..√m) を探す：O(1)
 	// もし
@@ -172,7 +177,7 @@ int log(mint a, mint x, mint b) {
 	//		a x^(√m - i) = b (mod m)
 	// であるための必要条件なので，d = √m - i が解の候補となる．
 	// 解かどうかは実際に計算してみればわかる：O(log m)
-	// 解が見つからなければ d >= 2√m であることが確定する．
+	// 解が見つからなければ d ≧ 2√m であることが確定する．
 	// 
 	// この調子で a x^2√m, a x^3√m, ... の値を計算し，b x^i がそれと等しくなる i を探す．
 	// x^(φ(m) + 1) = x なので，同様のステップは √m 回行えば十分である：O(√m)
@@ -214,68 +219,6 @@ int log(mint a, mint x, mint b) {
 	}
 
 	return INF;
-}
-
-
-//【離散対数問題（M-集合）】O(√N)
-/*
-* f^n s = t を満たす N 未満の最小の非負整数 n を返す（存在しなければ INFL）
-* f[s,t] は M-集合 (S, F, act, comp, id) の F[S,S] の元とする．
-* HASH はハッシュ関数 size_t operator()(const S& p) の定義された関数オブジェクトとする．
-*/
-template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)(), class HASH>
-ll discrete_logarithm(const F& f, const S& s, const S& t, ll N) {
-	// 参考 : https://maspypy.com/%e3%83%a2%e3%83%8e%e3%82%a4%e3%83%89%e4%bd%9c%e7%94%a8%e3%81%ab%e9%96%a2%e3%81%99%e3%82%8b%e9%9b%a2%e6%95%a3%e5%af%be%e6%95%b0%e5%95%8f%e9%a1%8c
-	// verify : https://atcoder.jp/contests/utpc2014/tasks/utpc2014_k
-
-	int m = (int)(sqrt(N) + 1e-12) + 1;
-
-	// T : {f^i t | i∈[1..m]}
-	unordered_set<S, HASH> T;
-	S f_t(t);
-	repi(i, 1, m) {
-		// f_t : f^i t
-		f_t = act(f, f_t);
-
-		if (T.count(f_t)) break;
-		T.insert(f_t);
-	}
-
-	// fm : f^m
-	F fm(id()), pow2 = f; int m_tmp(m);
-	while (m_tmp > 0) {
-		if ((m_tmp & 1) != 0) fm = comp(fm, pow2);
-		pow2 = comp(pow2, pow2);
-		m_tmp /= 2;
-	}
-
-	S fm_s_bak(s); int fail_cnt = 0;
-	repi(k, 1, m) {
-		// fm_s : f^(m k) s, fm_s_bak : f^(m (k-1)) s
-		S fm_s = act(fm, fm_s_bak);
-
-		// f^(m k) s ∈ T となったなら，∃i∈[0..m), f^(m (k-1) + i) s = t となることが期待される．
-		if (T.count(fm_s)) {
-			S f_s(fm_s_bak);
-
-			// f^(m (k-1) + i) s = t となっているかを全て調べる．
-			rep(i, m) {
-				// f_s : f^(m (k-1) + i) s
-				if (f_s == t) return (ll)m * (k - 1) + i;
-
-				f_s = act(f, f_s);
-			}
-
-			// t → f t なる有向辺をもった functional graph S を考える．
-			// 先の手続きに失敗したとしても，いま初めて t を含むループに s から合流してきた可能性が残されている．
-			// だがもしもう一度失敗したならば，t がループに含まれていないことを意味するので非存在が確定する．
-			if (++fail_cnt == 2) return INFL;
-		}
-
-		fm_s_bak = fm_s;
-	}
-
-	return INFL;
 }
 
 
@@ -462,6 +405,87 @@ int tonelli_shanks(const mint& a) {
 	}
 
 	return res.val();
+}
+
+
+//【累乗根】O(min(p, k)^(1/4))
+/*
+* x^k ≡ a (mod p) の解 x の 1 つを返す．（なければ -1）
+*
+* 制約 : p = mint::mod() は素数
+*
+* 利用：【素因数分解】,【離散対数問題（法が素数）】
+*/
+int power_root(int k, const mint& a) {
+	// 参考 : https://nyaannyaan.github.io/library/modulo/mod-kth-root.hpp
+	// verify : https://judge.yosupo.jp/problem/kth_root_mod
+
+	// ∀x∈[0..p), x^0 ≡ 1 (mod p)
+	if (k == 0) return a == 1 ? 0 : -1;
+
+	// ∀k∈[1..∞), 0^k ≡ 0 (mod p)
+	if (a == 0) return 0;
+
+	int p = mint::mod();
+
+	// ∀k∈[1..∞), a^k ≡ a (mod 2)
+	if (p == 2) return a.val();
+
+	int g = gcd(k, p - 1);
+
+	// a が k 乗非剰余の場合
+	if (a.pow((p - 1) / g) != 1) return -1;
+
+	auto pps = factor_integer(g);
+
+	int k2 = (int)inv_mod(k / g, (p - 1) / g);
+
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<ll> rnd(2, p - 1);
+
+	// x^g ≡ c (mod p)
+	mint c = a.pow(k2);
+
+	// q^e | gcd(k, p-1)
+	for (auto [q, e] : pps) {
+		// p-1 = s q^t
+		int s = p - 1, t = 0;
+		while (s % q == 0) {
+			s /= q;
+			t++;
+		}
+
+		// v : v^(s q^(t-1)) が真の 1 の q 乗根になる値
+		mint v;
+		while (true) {
+			v = rnd(mt);
+			if (v.pow((p - 1) / q) != 1) break;
+		}
+
+		int qe = (int)pow(q, e);
+		int u = qe - (int)inv_mod(s, qe);
+
+		// z^(q^e) ≡ c (mod p) の解を反復法で求める．
+		mint z = c.pow(((ll)s * u + 1) / qe);
+
+		int qi = (int)pow(q, t - 1 - e);
+		repir(i, t - 1 - e, 0) {
+			// z2 : z2^(q^(e+i)) が真の 1 の q 乗根になる値
+			mint z2 = v.pow(s * pow(q, t - 1 - e - i));
+
+			// L : (c^(-1) (z z2^L)^(q^e))^(q^i) ≡ 1 (mod p) になる最小の非負整数
+			int L = log_mint(z2.pow(qe * qi), (c * z.pow((p - 2LL) * qe)).pow(qi), q);
+
+			// (c^(-1) z^(q^e))^(q^i) ≡ 1 (mod p) を満たすよう z を更新する．
+			z *= z2.pow(L);
+
+			qi /= q;
+		}
+
+		c = z;
+	}
+
+	return c.val();
 }
 
 

@@ -13,7 +13,7 @@
 * one_indexed : 入力が 1-indexed で与えられるなら true
 */
 Graph read_tree(int n, bool undirected = true, bool one_indexed = true) {
-	// verify : https://atcoder.jp/contests/arc028/tasks/arc028_3
+	// verify : https://judge.yosupo.jp/problem/vertex_add_subtree_sum
 
 	Graph g(n);
 	repi(i, 1, n - 1) {
@@ -356,7 +356,7 @@ Binary_Tree read_binary_tree(int n, bool one_indexed = true, int nval = -1) {
 }
 
 
-//【木のランダム生成】O(n^2)
+//【木のランダム生成】O(?)
 /*
 * n 頂点のランダムな木を返す．
 */
@@ -369,14 +369,11 @@ Graph create_random_tree(int n) {
 		first_call = false;
 	}
 
-	vector<pii> es;
-	rep(i, n) repi(j, i + 1, n - 1) es.emplace_back(i, j);
-	shuffle(all(es), mt);
+	uniform_int_distribution<int> rnd(0, n - 1);
 
 	dsu d(n);
-	repe(e, es) {
-		int u, v;
-		tie(u, v) = e;
+	while (d.size(0) < n) {
+		int u = rnd(mt), v = rnd(mt);
 		if (d.same(u, v)) continue;
 
 		g[u].emplace_back(v);
@@ -388,7 +385,7 @@ Graph create_random_tree(int n) {
 }
 
 
-//【重み付き木のランダム生成】O(n^2)
+//【重み付き木のランダム生成】O(?)
 /*
 * n 頂点でコストが [c_min..c_max] 内の一様乱数で与えられるランダムな重み付き木を返す．
 */
@@ -417,6 +414,44 @@ WGraph create_random_Wtree(int n, ll c_min, ll c_max) {
 		g[u].emplace_back(v, c);
 		g[v].emplace_back(u, c);
 		d.merge(u, v);
+	}
+
+	return g;
+}
+
+
+//【根付き木のランダム生成】O(n)
+/*
+* 自身より小さい頂点を親とする n 頂点のランダムな有向根付き木を返す．（根は 0）
+* child_limit には子の個数の最大値を与える．
+*/
+Graph create_random_rooted_tree(int n, int child_limit = INF) {
+	// verify : https://atcoder.jp/contests/abc329/tasks/abc329_g
+
+	Graph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	uniform_int_distribution<int> rnd(0, 1 << 30);
+
+	vi ps{ 0 };
+
+	repi(i, 1, n - 1) {
+		int j = rnd(mt) % sz(ps);
+		int p = ps[j];
+
+		g[p].push_back(i);
+
+		if (sz(g[p]) == child_limit) {
+			swap(ps[j], ps.back());
+			ps.pop_back();
+		}
+
+		ps.push_back(i);
 	}
 
 	return g;

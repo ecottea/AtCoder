@@ -3,6 +3,8 @@
 #include "関数.h"
 #include "畳込み.h"
 #include "数論変換.h"
+#include "monotone.h"
+#include "FPS(mint).h"
 // ■■■■■ 典型的な DP ■■■■■
 
 
@@ -18,7 +20,83 @@
 */
 
 
-//【畳込み遷移（mod 998244353）】O(n (log n)^2)
+// 【畳込み遷移（mod 998244353）】O(n log n)
+/*
+* DP の初項と漸化式が，dp0, c[0..n) を用いて
+*	dp[0] = dp0
+*	dp[i+1] = Σj∈[0..i] c[i-j] dp[j] （i≧0）
+* で与えられるときの dp[0..n] を返す．
+*
+* 利用：【形式的冪級数】
+*/
+vm convolution_DP_div(mint dp0, const vm& c) {
+	//【方法】
+	// dp[0..n], c[0..n) の母関数をそれぞれ
+	//		f(z) = Σi∈[0..∞) dp[i] z^i
+	//		g(z) = Σi∈[0..∞) c[i] z^i
+	// とおく．
+	//		(f(z) - dp[0]) / z
+	//		= Σi∈[1..∞) dp[i] z^(i-1)
+	//		= Σi∈[0..∞) dp[i+1] z^i
+	// となることと，漸化式の右辺が畳込みの形であることに注意すると，関数方程式
+	//		(f(z) - dp[0]) / z = f(z) g(z)
+	// を得る．これを f(z) について解くと，
+	//		f(z) - dp[0] = z f(z) g(z)
+	//		(1 - z g(z)) f(z) = dp[0]
+	//		f(z) = dp[0] / (1 - z g(z))
+	// を得る．
+
+	int n = sz(c);
+
+	MFPS g(c);
+	MFPS f = MFPS(dp0, n + 1) / (1 - (g >> 1));
+	f.resize(n + 1);
+
+	return f.c;
+}
+
+
+//【畳込み遷移（mod 998244353，1/n 倍）】O(n log n)
+/*
+* DP の初項と漸化式が，dp0, c[0..n) を用いて
+*	dp[0] = dp0
+*	dp[i+1] = 1/(i+1) Σj∈[0..i] c[i-j] dp[j] （i≧0）
+* で与えられるときの dp[0..n] を返す．
+*
+* 制約：fm は n! まで計算可能
+*
+* 利用：【形式的冪級数】,【不定積分】,【指数関数】
+*/
+vm convolution_DP_exp(mint dp0, const vm& c, const Factorial_mint& fm) {
+	//【方法】
+	// dp[0..n], c[0..n) の母関数をそれぞれ
+	//		f(z) = Σi∈[0..∞) dp[i] z^i
+	//		g(z) = Σi∈[0..∞) c[i] z^i
+	// とおく．
+	//		f'(z)
+	//		= Σi∈[1..∞) i dp[i] z^(i-1)
+	//		= Σi∈[0..∞) (i+1) dp[i+1] z^i
+	// となることと，漸化式の右辺が畳込みの形であることに注意すると，微分方程式
+	//		f'(z) = f(z) g(z)
+	// を得る．これを f(z) について解くと，
+	//		df/dz = g(z) f
+	//		∫ 1/f df = ∫ g(z) dz
+	//		log f = ∫ g(z) dz
+	//		f(z) = exp( ∫ g(z) dz )
+	// を得る．
+
+	int n = sz(c);
+
+	MFPS g(c);
+	MFPS f = exp_fps(integral_fps(g, fm), n + 1, fm);
+	f.resize(n + 1);
+	f *= dp0;
+
+	return f.c;
+}
+
+
+//【畳込み遷移（mod 998244353，任意関数）】O(n (log n)^2)
 /*
 * DP の初項と漸化式が，dp0, c[0..n), {f_i} を用いて
 *	dp[0] = dp0
@@ -90,50 +168,8 @@ vl linear_min_DP(int n, ll dp0, const function<ll(int j, const vl& dp)>& a,
 * DP の初項と漸化式が，dp0, (n+1) 次狭義上三角 Monge 行列 c を用いて
 *	dp[0] = dp0
 *	dp[i] = MIN_j∈[0..i) (dp[j] + c(j,i)) （i≧1）
-* で与えられるときの dp[0..n] を返す．
+* で与えられるときの dp[0..n] を求めるには【Monge コスト完全 DAG 最短路】が使える．
 */
-vl min_plus_monde_DP(int n, ll dp0, const function<ll(int i, int j)>& c) {
-	// 参考 : https://noshi91.hatenablog.com/entry/2023/02/18/005856
-	// verify : https://yukicoder.me/problems/no/705
-
-	//【方法】
-	// (n+1)×(n+1) 行列 M を
-	//		M[i][j] = dp[j] + c(j,i)
-	// と定めると，M は狭義下三角な Monge 行列となるので，M の行最小値をオンラインで
-	// （第 i 行の行最小値を求めてから第 i 列にアクセス）求められれば良い．
-
-	// dp[i] : 第 i 行の最小値，j_min[j] : その位置
-	vl dp(n + 1, INFL); vi j_min(n + 1, 0);
-	dp[0] = dp0;
-
-	// M[i][j] を用いて第 i 行の（暫定）最小値 dp[i] を更新する．
-	auto update = [&](int i, int j) {
-		if (chmin(dp[i], dp[j] + c(j, i))) j_min[i] = j;
-	};
-
-	// dp(iL..iR] を計算する．
-	// 呼び出す際は dp(0..iL] と M[iR][0..iL] の（暫定）行最小値が計算済みであること．
-	function<void(int, int)> solve = [&](int iL, int iR) {
-		if (iR - iL <= 1) return;
-		int iM = (iL + iR) / 2;
-
-		// 計算済：dp(0..iL], min M[iR][0..iL]
-		repi(j, j_min[iL], j_min[iR]) update(iM, j); // まだ j_min[iR]≦iL なので大丈夫
-
-		// 計算済：dp(0..iL], min M[iM][0..iR], min M[iR][0..iL]
-		solve(iL, iM);
-
-		// 計算済：dp(0..iM], min M[iR][0..iL]
-		repi(j, iL + 1, iM) update(iR, j);
-
-		// 計算済：dp(0..iM], min M[iR][0..iM]
-		solve(iM, iR);
-	};
-	update(n, 0);
-	solve(0, n);
-
-	return dp;
-}
 
 
 //【max-plus anti-Monge 遷移】O(n log n)
@@ -143,13 +179,20 @@ vl min_plus_monde_DP(int n, ll dp0, const function<ll(int i, int j)>& c) {
 *	dp[i] = MAX_j∈[0..i) (dp[j] + c(j,i)) （i≧1）
 * で与えられるときの dp[0..n] を返す．
 *
-* 利用：【min-plus Monge 遷移】
+* 利用：【Monge コスト完全 DAG 最短路】
 */
-vl max_plus_antimonde_DP(int n, ll dp0, const function<ll(int j, int i)>& c) {
+template <class T, class FUNC>
+vl max_plus_antimonde_DP(int n, T dp0, const FUNC& c) {
 	auto c_neg = [&](int j, int i) { return -c(j, i); };
-	auto dp = min_plus_monde_DP(n, -dp0, c_neg);
-	repi(i, 0, n) dp[i] *= -1;
+	auto dp = lowest_cost_path_monge_DAG<ll>(n, c_neg);
+	repi(i, 0, n) dp[i] = -dp[i] + dp0;
 	return dp;
+
+	/* c の定義の雛形
+	auto c = [&](int s, int t) {
+		return t - s;
+	};
+	*/
 }
 
 

@@ -12,8 +12,10 @@
 * の双対問題（変数は y）はそれぞれ
 *	minimize	b^T y			maximize	b^T y
 *	subject to	A^T y ≧ c		subject to	A^T y ≦ c
-* であり，目的関数の最適値は等しい．
+* であり，目的関数の最適値は等しい（強双対性）
 * 
+* x に整数制約が付く場合，強双対性の成立のためには A に完全単模性が要求される．
+*
 * 双対をとると変数の数と制約条件の数が入れ替わるので，
 * 変数は多いが制約条件は少ないようなときに双対をとると問題が簡単になることがある．
 */
@@ -64,7 +66,10 @@
 * であり，目的関数の最適値は等しい．
 * 
 * 解ける問題に邪魔な制約が付いているとき，制約を目的関数に移すことができる．
-* λ がスカラーなら D x - k の符号で二分探索を行える．
+* 目的関数は λ について下に凸なので，λ がスカラーなら三分探索を用いることができる．
+* あるいは λ で微分したとし，D x - k の符号で二分探索を行うこともできる．
+* 
+* 非線形計画問題の場合は強双対性（ラグランジュ双対問題の解 = 主問題の解）が成り立つとは限らない．
 */
 
 
@@ -119,7 +124,7 @@
 *
 *（平方分割）
 */
-ll integer_programming_2var_1con(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
+ll integer_programming(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
 	// verify : https://atcoder.jp/contests/arc139/tasks/arc139_b
 
 	Assert(c > 0 && d > 0 && e >= 0);

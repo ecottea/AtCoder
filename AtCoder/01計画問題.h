@@ -5,43 +5,40 @@
 // ■■■■■ 0-1 計画問題 ■■■■■
 
 
-//【二次 0-1 計画問題（燃やす埋める問題）】
+//【二次 0-1 計画問題】
 /*
 * Binary_programming_BB(int n) : O(1)
-*	n 変数 X[0..n) で初期化する．
+*	n 個の論理変数 X[0..n) で初期化する．
+*
+* add_cost(ll c) : O(1)
+*	固定コスト c がかかるようにする（c < 0 なら利益と解釈する）
 *
 * add_cost0(int i, ll c) : O(1)
-*	X[i] = 0 のとき非負コスト c がかかるようにする．
+*	X[i] = 0 のときコスト c がかかるようにする（c < 0 なら利益と解釈する）
 *
 * add_cost1(int i, ll c) : O(1)
-*	X[i] = 1 のとき非負コスト c がかかるようにする．
-*
-* add_profit0(int i, ll p) : O(1)
-*	X[i] = 0 のとき非負利益 p が得られるようにする．
-*
-* add_profit1(int i, ll p) : O(1)
-*	X[i] = 1 のとき非負利益 p が得られるようにする．
+*	X[i] = 1 のときコスト c がかかるようにする（c < 0 なら利益と解釈する）
 *
 * add_cost01(int i, int j, ll c) : O(1)
 *	X[i] = 0 かつ X[j] = 1 のとき非負コスト c がかかるようにする．
 *
 * add_profit00(int i, int j, ll p) : O(1)
-*	X[i] = 0 かつ X[j] = 0 のとき非負利益 p が得られるようにする．
+*	X[i] = 0 かつ X[j] = 0 のとき非負利益 p を得られるようにする．
 *
 * add_profit11(int i, int j, ll p) : O(1)
-*	X[i] = 1 かつ X[j] = 1 のとき非負利益 p が得られるようにする．
+*	X[i] = 1 かつ X[j] = 1 のとき非負利益 p を得られるようにする．
 *
 * ll solve() : O(n^2 m)（m : 条件の数）
-*	得られる最大利益を返す．
+*	適切に X[0..n) を定めた場合の最小コストを返す．
 */
 struct Binary_programming_BB {
-	// 参考 : https://yosupo.hatenablog.com/entry/2015/03/31/134336
+	// 参考 : https://kanpurin.hatenablog.com/entry/moyasu-umeru
 
-	// n : 01-変数の数
+	// n : 論理変数の数
 	int n;
-	
-	// profit : 前借りしている非負利益
-	ll profit = 0;
+
+	// pre_cost : 前払いしているコスト
+	ll pre_cost = 0;
 
 	// cost0[i] : X[i] = 0 のときにかかる非負コスト
 	// cost1[i] : X[i] = 1 のときにかかる非負コスト
@@ -51,86 +48,99 @@ struct Binary_programming_BB {
 	vvl cost01;
 
 	// n 変数で初期化
-	Binary_programming_BB(int n_) : n(n_), cost0(n), cost1(n), cost01(n, vl(n)) {}
+	Binary_programming_BB(int n_) : n(n_), cost0(n), cost1(n), cost01(n, vl(n)) {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+	}
 
-	// X[i] = 0 のとき非負コスト c がかかるようにする．
+	// 固定コスト c がかかるようにする（c < 0 なら利益と解釈する）
+	void add_cost(ll c) {
+		// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem003
+
+		pre_cost += c;
+	}
+
+	// X[i] = 0 のときコスト c がかかるようにする（c < 0 なら利益と解釈する）
 	void add_cost0(int i, ll c) {
-		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+		// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem003
 
-		Assert(c >= 0);
+		Assert(0 <= i && i < n);
 
-		cost0[i] += c;
+		// コスト |c| がかかる場合
+		if (c >= 0) {
+			cost0[i] += c;
+		}
+		// 利益 |c| が得られる場合
+		else {
+			// 利益 |c| を前借りしておき，X[i] = 1 のときコスト |c| がかかると言い換えればよい．
+			pre_cost += c;
+			cost1[i] -= c;
+		}
 	}
 
-	// X[i] = 1 のとき非負コスト c がかかるようにする．
+	// X[i] = 1 のときコスト c がかかるようにする（c < 0 なら利益と解釈する）
 	void add_cost1(int i, ll c) {
-		// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
-
-		Assert(c >= 0);
-
-		cost1[i] += c;
-	}
-
-	// X[i] = 0 のとき非負利益 p が得られるようにする．
-	void add_profit0(int i, ll p) {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
 
-		Assert(p >= 0);
+		Assert(0 <= i && i < n);
 
-		// 利益 p を前借りしておき，X[i] = 1 のときコスト p がかかると言い換えればよい．
-		profit += p;
-		cost1[i] += p;
-	}
-
-	// X[i] = 1 のとき非負利益 p が得られるようにする．
-	void add_profit1(int i, ll p) {
-		// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
-
-		Assert(p >= 0);
-
-		// 利益 p を前借りしておき，X[i] = 0 のときコスト p がかかると言い換えればよい．
-		profit += p;
-		cost0[i] += p;
+		// コスト |c| がかかる場合
+		if (c >= 0) {
+			cost1[i] += c;
+		}
+		// 利益 |c| が得られる場合
+		else {
+			// 利益 |c| を前借りしておき，X[i] = 0 のときコスト |c| がかかると言い換えればよい．
+			pre_cost += c;
+			cost0[i] -= c;
+		}
 	}
 
 	// X[i] = 0 かつ X[j] = 1 のとき非負コスト c がかかるようにする．
 	void add_cost01(int i, int j, ll c) {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
 
+		Assert(0 <= i && i < n);
+		Assert(0 <= j && j < n);
 		Assert(c >= 0);
 
 		cost01[i][j] += c;
 	}
 
-	// X[i] = 0 かつ X[j] = 0 のとき非負利益 p が得られるようにする．
+	// X[i] = 0 かつ X[j] = 0 のとき非負利益 p を得られるようにする．
 	void add_profit00(int i, int j, ll p) {
+		// verify : https://yukicoder.me/problems/9212
+
+		Assert(0 <= i && i < n);
+		Assert(0 <= j && j < n);
 		Assert(p >= 0);
 
 		// 利益 p を前借りしておき，
 		//		X[i] = 1 のときコスト p がかかる
 		//		X[i] = 0 かつ X[j] = 1 のときコスト p がかかる
 		// と言い換えればよい．
-		profit += p;
+		pre_cost -= p;
 		cost1[i] += p;
 		cost01[i][j] += p;
 	}
 
-	// X[i] = 1 かつ X[j] = 1 のとき非負利益 p が得られるようにする．
+	// X[i] = 1 かつ X[j] = 1 のとき非負利益 p を得られるようにする．
 	void add_profit11(int i, int j, ll p) {
-		// verify : https://atcoder.jp/contests/abc225/tasks/abc225_g
+		// verify : https://yukicoder.me/problems/9212
 
+		Assert(0 <= i && i < n);
+		Assert(0 <= j && j < n);
 		Assert(p >= 0);
 
 		// 利益 p を前借りしておき，
 		//		X[j] = 0 のときコスト p がかかる
 		//		X[i] = 0 かつ X[j] = 1 のときコスト p がかかる
 		// と言い換えればよい．
-		profit += p;
+		pre_cost -= p;
 		cost0[j] += p;
 		cost01[i][j] += p;
 	}
 
-	// 最大利益を返す．
+	// 適切に X[0..n) を定めた場合の最小コストを返す．
 	ll solve() {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
 
@@ -138,7 +148,7 @@ struct Binary_programming_BB {
 		// g の残余ネットワークで ST から到達可能な頂点は 0，それ以外は 1 にする．
 		int ST = n, GL = n + 1;
 		mf_graph<ll> g(n + 2);
-		
+
 		rep(i, n) {
 			// X[i] = 0 にコスト c0， X[i] = 1 にコスト c1 がかかるとき
 			//	c = min(c0, c1) として確定でコスト c がかかるとし，
@@ -146,7 +156,7 @@ struct Binary_programming_BB {
 			//		c0 < c1 なら X[i] = 1 にコスト c1 - c がかかる
 			// としてよい．
 			ll c = min(cost0[i], cost1[i]);
-			profit -= c;
+			pre_cost += c;
 
 			if (cost0[i] > cost1[i]) {
 				// X[i] = 0 にコスト c0 - c がかかるとき
@@ -168,20 +178,41 @@ struct Binary_programming_BB {
 			if (cost01[i][j] > 0) g.add_edge(i, j, cost01[i][j]);
 		}
 
-		return profit - g.flow(ST, GL);
+		return pre_cost + g.flow(ST, GL);
 	}
 };
 
 
-//【三次の利益】
+//【高次の利益】
 /*
-* X[i] = 0 かつ X[j] = 0 かつ X[k] = 0 のとき非負利益 p が得られることは，
+* X[i] = 0[1] かつ X[j] = 0[1] かつ X[k] = 0[1] のとき非負利益 p が得られることは，
 * 利益 p を前借りした上で変数 Y を追加し，
-*	Y = 1 のときコスト p
-*	Y = 0 かつ X[i] = 1 のときコスト ∞
-*	Y = 0 かつ X[j] = 1 のときコスト ∞
-*	Y = 0 かつ X[k] = 1 のときコスト ∞
+*	Y = 1[0] のときコスト p
+*	Y = 0[1] かつ X[i] = 1[0] のときコスト ∞
+*	Y = 0[1] かつ X[j] = 1[0] のときコスト ∞
+*	Y = 0[1] かつ X[k] = 1[0] のときコスト ∞
 * とすることで二次の項のみで表現できる．
+* 
+* verify : https://atcoder.jp/contests/abc326/tasks/abc326_g
+*/
+
+
+//【二部グラフでの add_cost11】
+/*
+* 二部グラフ (S, T) の頂点 s∈S, t∈T に対して add_cost11(s, t, c) をしたい場合，
+* S 側の 0-1 の役割を反転させることができれば add_cost01(s, t, c) で代用できる．
+* 
+* verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem002
+*/
+
+
+//【多値変数】
+/*
+* X[i] ∈ [0..K) の場合，新たに論理変数を Y[i][k] = Boole[X[i] ≦ k] と定めれば，
+* cost11(s, t) に Monge 性があれば上位要素メビウス変換を用いて【二次 0-1 計画問題】に帰着できる．
+* 
+* 参考 : https://noshi91.hatenablog.com/entry/2021/06/29/044225
+* verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem003
 */
 
 
@@ -247,175 +278,6 @@ ll project_selection_problem(const vl& x, const vl& y, const vector<pii>& p,
 }
 
 
-//【集合被覆問題】
-/*
-* 与えられた [0..n) の部分集合族 S に対し，[0..n) を被覆するように T⊂S を
-* 選ぶときの |T| の最小値を求める問題を集合被覆問題という．
-* 
-* 集合被覆問題を多項式時間で解くアルゴリズムは見つかっていない．
-*/
-
-
-//【XOR の最大化】
-/*
-* 集合 a[0..n) について MAX_(set⊂[0..n)) (XOR a[set]) を求めるには，
-* 右辺を 11..11 にして【連立一次方程式（優先度付き）】を利用すればよい．
-* 
-* verify : https://atcoder.jp/contests/abc141/tasks/abc141_f
-*/
-
-
-//【フローへの帰着】
-/*
-* x[0..n) が論理変数のとき，x[i] と !x[i] のちょうど一方が真である．
-* これを ST → X[i], X[i] → x[i], X[i] → !x[i] というコスト 1 の 3 辺に対応させる．
-* その他の条件もグラフで表されれば，「フローが n 流れる ⇔ 充足可能」となる．
-* 
-* verify : https://atcoder.jp/contests/abc241/tasks/abc241_g
-*/
-
-
-//【2-SAT】
-/*
-* Two_sat(int n) : O(n)
-*	n 変数で初期化する．
-*
-* void add_clause(int i, bool bi, int j, bool bj) : O(1)
-*	条件 (x[i] = bi) OR (x[j] = bj) を追加する．
-*
-* void add_imply(int i, bool bi, int j, bool bj) : O(1)
-*	条件 (x[i] = bi) ⇒ (x[j] = bj) を追加する．
-*
-* void add_literal(int i, bool bi) : O(1)
-*	条件 x[i] = bi を追加する．
-*
-* bool satisfiable() : O(n + m)（m は制約の数）
-*	全ての条件を AND したものが充足可能かを返す．
-*
-* vb answer() : O(n)
-*	真理値解を返す．satisfiable() の後に呼び出すこと．
-*
-* 利用：【強連結成分分解】
-*/
-class Two_sat {
-	// 参考：https://tjkendev.github.io/procon-library/python/graph/2-sat.html
-
-	int n; // 変数の数
-	int FALSE, TRUE;
-	Graph g; // 頂点は g[2*i] : !x[i], g[2*i+1] : x[i], g[2*n] : false, g[2*n+1] : true に対応
-	vvi scc; // g の強連結成分分解結果
-	vb sol; // 真理値解
-
-public:
-	// n 変数で初期化する．
-	Two_sat(int n_) : n(n_), FALSE(2 * n), TRUE(FALSE + 1), g(TRUE + 1), sol(n) {
-		// verify : https://judge.yosupo.jp/problem/two_sat
-
-		rep(i, 2 * n) g[FALSE].push_back(i), g[i].push_back(TRUE);
-		g[FALSE].push_back(TRUE);
-	}
-
-	// 条件 (x[i] = bi) OR (x[j] = bj) を追加する．
-	void add_clause(int i, bool bi, int j, bool bj) {
-		// verify : https://judge.yosupo.jp/problem/two_sat
-
-		// a OR b を (!a ⇒ b AND !b ⇒ a) と考え辺を張る．
-		// 頂点を倍化したので条件式も倍化している．
-		g[2 * i + (int)(!bi)].push_back(2 * j + (int)(bj));
-		g[2 * j + (int)(!bj)].push_back(2 * i + (int)(bi));
-	}
-
-	// 条件 (x[i] = bi) ⇒ (x[j] = bj) を追加する．
-	void add_imply(int i, bool bi, int j, bool bj) {
-		// verify : https://atcoder.jp/contests/abc277/tasks/abc277_h
-
-		// a ⇒ b とその対偶 !b ⇒ !a と合わせて辺を張る．
-		// 頂点を倍化したので条件式も倍化している．
-		g[2 * i + (int)(bi)].push_back(2 * j + (int)(bj));
-		g[2 * j + (int)(!bi)].push_back(2 * i + (int)(!bj));
-	}
-
-	// 条件 x[i] = bi を追加する．
-	void add_literal(int i, bool bi) {
-		// verify : https://atcoder.jp/contests/abc277/tasks/abc277_h
-
-		// a を !a ⇒ FALSE AND TRUE ⇒ a と考え辺を張る．
-		// 頂点を倍化したので条件式も倍化している．
-		g[2 * i + (int)(!bi)].push_back(FALSE);
-		g[TRUE].push_back(2 * i + (int)(bi));
-	}
-
-	// 全ての条件を AND したものが充足可能かを返す．
-	bool satisfiable() {
-		// verify : https://judge.yosupo.jp/problem/two_sat
-
-		// g を強連結成分分解する．
-		scc = strongly_connected_component(g);
-
-		// 変数 → 何番目の強連結成分に属するか
-		vi x_to_c(n + 1, -1);
-
-		rep(i, sz(scc)) repe(v, scc[i]) {
-			int x = v / 2; bool b = (bool)(v % 2);
-
-			// x ⇒ !x と !x ⇒ x が共にあれば充足不可能
-			if (x_to_c[x] == i) return false;
-
-			// x ⇒ !x がありそうなら x = false，!x ⇒ x がありそうなら x = true とする．
-			if (x_to_c[x] == -1) {
-				if (x < n) sol[x] = !b;
-				x_to_c[x] = i;
-			}
-		}
-
-		return true;
-	}
-
-	// 真理値解を返す．
-	vb answer() {
-		// verify : https://judge.yosupo.jp/problem/two_sat
-
-		return sol;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Two_sat ts) {
-		rep(s, ts.n) {
-			os << "!" << s << " => ";
-			repe(t, ts.g[2 * s]) {
-				int x = t / 2; bool b = (bool)(t % 2);
-				if (x < ts.n) os << (b ? "" : "!") << x << " ";
-				else os << (b ? "T" : "F") << " ";
-			}
-			os << endl;
-
-			os << " " << s << " => ";
-			repe(t, ts.g[2 * s + 1]) {
-				int x = t / 2; bool b = (bool)(t % 2);
-				if (x < ts.n) os << (b ? "" : "!") << x << " ";
-				else os << (b ? "T" : "F") << " ";
-			}
-			os << endl;
-		}
-		os << "T => ";
-		repe(t, ts.g[2 * ts.n + 1]) {
-			int x = t / 2; bool b = (bool)(t % 2);
-			if (x < ts.n) os << (b ? "" : "!") << x << " ";
-			else os << (b ? "T" : "F") << " ";
-		}
-		os << endl;
-		return os;
-	}
-#endif
-};
-
-
-//【2-SAT の解の数え上げ】
-/*
-* 2-SAT の解の数え上げを多項式時間で行えるアルゴリズムは見つかっていない．
-*/
-
-
 //【割り当て問題】O(n^3 k log(n))
 /*
 * a[0..n)[0..n) の各行各列から k 個以下要素を選択したときの和の最大値を返す．
@@ -461,6 +323,59 @@ ll allocation_problem(const vvl& a, int k, vvb* sel = nullptr) {
 	}
 
 	return -cost;
+}
+
+
+//【集合被覆問題】O(2^n m / 64)
+/*
+* 与えられた [0..m) の部分集合族 s[0..n) について，
+* s[set] が [0..m) を被覆するような |set| の最小値を返す（不可能なら INF）
+*
+* 制約：m ≦ M
+*
+*（bit 全探索）
+*/
+template <int M>
+int set_covering_problem(const vector<bitset<M>>& s, int m) {
+	int n = sz(s);
+
+	bitset<M> base;
+	rep(j, m) base[j] = 1;
+
+	int res = INF;
+
+	repb(set, n) {
+		bitset<M> b;
+		rep(i, n) if (get(set, i)) b |= s[i];
+
+		if (b == base) chmin(res, popcount(set));
+	}
+
+	return res;
+}
+
+
+//【集合被覆問題】O(2^m n / 64)
+/*
+* 与えられた [0..m) の部分集合族 s[0..n) について，
+* s[set] が [0..m) を被覆するような |set| の最小値を返す（不可能なら INF）
+*
+*（インライン bit DP）
+*/
+int set_covering_problem(const vi& s, int m) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_w
+
+	int n = sz(s);
+
+	vi dp(1LL << m, INF);
+	dp[0] = 0;
+
+	// インライン配る bit DP
+	rep(i, n) repir(set, (1 << m) - 1, 0) {
+		chmin(dp[set | s[i]], dp[set] + 1);
+	}
+
+	return dp[(1 << m) - 1];
 }
 
 

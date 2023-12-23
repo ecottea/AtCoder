@@ -5,32 +5,58 @@
 
 //【ヤング図形】
 /*
-* 広義単調減少な正整数列 a[0..n) で，左から順に箱が a[0..n) 個並んだヤング図形を表す．
+* 広義単調減少な正整数列 a[0..h) で，上から順に箱が a[0..h) 個並んだヤング図形を表す．
 */
 
 
 //【ヤング図形の転置】O(n)
 /*
-* ヤング図形 a[0..n) を転置したヤング図形を返す．
+* ヤング図形 a[0..h) を転置したヤング図形を返す．
 */
 vi transpose_yd(const vi& a) {
-	// verify : https://yukicoder.me/problems/no/2149
+	// verify : https://yukicoder.me/problems/no/2092
 
 	if (a.empty()) return vi();
 
-	int n = sz(a);
+	int h = sz(a), w = a[0];
 
-	vi at(a[0]);
-	rep(i, n) at[a[i] - 1]++;
-	repir(i, a[0] - 2, 0) at[i] += at[i + 1];
+	vi aT(w);
+	rep(i, h) aT[a[i] - 1]++;
+	repir(i, w - 2, 0) aT[i] += aT[i + 1];
 
-	return at;
+	return aT;
+}
+
+
+//【ヤング図形の転置（長方形分割）】O(n)
+/*
+* ヤング図形 a[0..h) を転置したヤング図形を長方形に分割したリスト rect を返す．
+* rect[i] = {h1, h2, w} は上から i 番目の長方形が [h1..h2)×[0..w) であることを表す．
+*/
+template <class T>
+vector<tuple<T, T, int>> transpose_yd_rect(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/abc216/tasks/abc216_e
+
+	int h = sz(a);
+	if (h == 0) return vector<tuple<T, T, int>>();
+
+	vector<tuple<T, T, int>> res;
+	res.reserve(h);
+
+	res.emplace_back(0, a[h - 1], h);
+	repir(i, h - 1, 1) {
+		if (a[i] == a[i - 1]) continue;
+
+		res.emplace_back(a[i], a[i - 1], i);
+	}
+
+	return res;
 }
 
 
 //【ヤング図形のドミノ分割】O(n)
 /*
-* ヤング図形 a[0..n) を左上を 0 とする 0, 1 の市松模様に彩色する．
+* ヤング図形 a[0..h) を左上を 0 とする 0, 1 の市松模様に彩色する．
 * a をドミノに分割し，各 k∈[0,1] に対し，右上が k であるようなドミノだけを抽出して作った
 * 新たなヤング図形を b[k] に格納して b[0..1] を返す（分割不可能なら空配列を返す）
 */
@@ -61,6 +87,13 @@ vvi domino_division_yd(const vi& a) {
 }
 
 
+//【標準タブロー】
+/*
+* N の分割を表すヤング図形 λ に対し，各行および各列について単調増加になるように
+* [0..N) を 1 回ずつ書き込んだものを標準タブローという．
+*/
+
+
 //【標準タブローの数え上げ】O(Σa)
 /*
 * ヤング図形 a に対応する標準タブローの個数を返す．
@@ -71,6 +104,12 @@ vvi domino_division_yd(const vi& a) {
 mint hook_length_formula(const vi& a) {
 	// 参考 : https://zenn.dev/koboshi/articles/306304c0381c1e
 	// verify : https://yukicoder.me/problems/no/2149
+
+	//【方法】
+	// ヤング図形 a のあるマス (i, j) について，そのマスの右または下にあるマス（自身を含む）
+	// の個数をマス (i, j) のフック長といい h(i, j) で表す．
+	// a に対応する標準タブローの個数は，以下の式で与えられる：
+	//		n! / (Π_(i,j) h(i, j))
 
 	int n = sz(a);
 
@@ -91,9 +130,9 @@ mint hook_length_formula(const vi& a) {
 }
 
 
-//【ヤング図形の列挙（包含指定）】
+//【ヤング図形の列挙（包含指定）】O(?)
 /*
-* ヤング図形 a[0..n) に包含されるヤング図形を格納したリストを返す（空のヤング図形も含む）
+* ヤング図形 a[0..h) に包含されるヤング図形を格納したリストを返す（空のヤング図形も含む）
 */
 vvi enumerate_young_diagrams(const vi& a) {
 	int n = sz(a);
@@ -126,9 +165,9 @@ vvi enumerate_young_diagrams(const vi& a) {
 }
 
 
-//【ヤング図形の数え上げ（包含指定）】O(Σa)
+//【ヤング図形の数え上げ（包含指定）】O(N)
 /*
-* ヤング図形 a[0..n) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
+* 大きさ N のヤング図形 a[0..h) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
 */
 mint count_young_diagrams(const vi& a) {
 	int n = sz(a);
@@ -150,9 +189,9 @@ mint count_young_diagrams(const vi& a) {
 }
 
 
-//【ヤング図形の数え上げ（包含指定）】O(n^2)
+//【ヤング図形の数え上げ（包含指定）】O(h^2)
 /*
-* ヤング図形 a[0..n) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
+* ヤング図形 a[0..h) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
 *
 * 利用：【二項係数（一括，n が固定，r が小さい，法が大きな素数）】
 */
@@ -200,4 +239,21 @@ mint count_young_diagrams_ll(vector<T> a) {
 	return c[n - 1];
 }
 
+
+//【ロビンソン・シェンステッド対応】
+/*
+* [0..N) の順列 p[0..N) に対し，以下の規則で同じ形の標準タブローの組 (P, Q) を対応させる：
+*	i について昇順に，P の 0 行目に p[i] を挿入していく．
+*	挿入位置が右端だったら終了し，さもなくば p[i] の右の要素を削除し下の行に再帰的に挿入する．
+*	Q は P と同じ形で，P で i 番目に追加された箱の位置の要素を i とする．
+* 
+* 上記の対応は [0..N) の順列と大きさ N の同じ形の標準タブローの組との間の全単射を与え，
+*	[0..N) の順列 p[0..N)	：	大きさ N の標準タブローの組 (P, Q)
+*	p の最長増加部分列の長さ	：	P, Q の 1 行目の箱の個数
+*	p の最長減少部分列の長さ	：	P, Q の 1 列目の箱の個数
+* なる対応をもつ．
+* 
+* 参考 : https://zenn.dev/koboshi/articles/306304c0381c1e
+* verify : https://yukicoder.me/problems/no/2048
+*/
 

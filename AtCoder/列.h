@@ -24,6 +24,7 @@ bool convexQ(const vector<T>& a) {
 	rep(i, n - 1) {
 		T d = a[i + 1] - a[i];
 		if (d < diff) return false;
+		// if (d <= diff) return false; // 狭義凸ならこっち
 		diff = d;
 	}
 	return true;
@@ -42,6 +43,7 @@ bool concaveQ(const vector<T>& a) {
 	rep(i, n - 1) {
 		T d = a[i + 1] - a[i];
 		if (d > diff) return false;
+		// if (d >= diff) return false; // 狭義凸ならこっち
 		diff = d;
 	}
 	return true;
@@ -87,6 +89,17 @@ vector<pli> cut_histogram_horizontal(vl hist) {
 * これは 0 から順に条件を満たす限り昇順に数を追加していくという貪欲な構成でも得られる．
 * 
 * verify : https://atcoder.jp/contests/monamieHB2021/tasks/monamieHB2021_b
+*/
+
+
+//【全要素の一致】
+/*
+* a[0..n) の全要素が等しい ⇔ n Σ( a[0..n)^2 ) = ( Σa[0..n) )^2
+* 
+*（証明）a[0..n) の全要素が等しいとき，そのときに限り a[0..n) の分散は 0 である．
+* 分散 = 2 乗の平均 - 平均の 2 乗 であり，両辺 n^2 倍して移項することで所望の等式を得る．
+* 
+* verify : https://atcoder.jp/contests/abc315/tasks/abc315_d
 */
 
 

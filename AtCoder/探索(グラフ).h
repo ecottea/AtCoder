@@ -173,15 +173,15 @@ void topological_bfs(const Graph& g, const vi& st, vi& time) {
 
 //【深さ優先探索】O(n + m)
 /*
-* グラフ g に対し始点を st として深さ優先探索を行い，通った頂点を順に seq に格納する．
+* グラフ g に対し始点を st として DFS を行い，通った頂点を順に格納した長さ 2n-1 のリストを返す．
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
 template <class G>
-void depth_first_search(G& g, int st, vi& seq) {
+vi depth_first_search(G& g, int st) {
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_d
 
 	int n = sz(g);
-	seq.clear();
+	vi seq;
 
 	// seen[s] : 頂点 s を探索済か
 	vb seen(n);
@@ -212,21 +212,22 @@ void depth_first_search(G& g, int st, vi& seq) {
 
 	// st を始点として DFS を行う．
 	dfs(st, -1);
+
+	return seq;
 }
 
 
 //【バックトラッキング】O(?)
 /*
-* グラフ g に対し始点を st としてバックトラッキングを行い，
-* i 番目に見つけた単純パスを頂点の列として path[i] に格納する．
+* グラフ g に対し始点を st としてバックトラッキングを行い，全ての単純パスを格納したリストを返す．
 */
 template <class G>
-void back_tracking(G& g, int st, vvi& path) {
+vvi back_tracking(const G& g, int st) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_bt
 
 	int n = sz(g);
-	path.clear();
-	vi seq; // 訪れた頂点の列
+	vi path; // 訪れた頂点の列
+	vvi paths;
 
 	// 頂点を訪れたことを記録しておくテーブル．
 	vb seen(n);
@@ -235,10 +236,10 @@ void back_tracking(G& g, int st, vvi& path) {
 	function<void(int)> dfs = [&](int s) {
 		// s を訪れたことを記録
 		seen[s] = true;
-		seq.push_back(s);
+		path.push_back(s);
 
 		// 単純パスを記録
-		path.push_back(seq);
+		paths.push_back(path);
 
 		repe(t, g[s]) {
 			// 探索済なら何もしない．
@@ -250,11 +251,12 @@ void back_tracking(G& g, int st, vvi& path) {
 
 		// s を訪れた記録を削除
 		seen[s] = false;
-		seq.pop_back();
+		path.pop_back();
 	};
 
 	// st を始点として再帰関数を呼び出す．
 	dfs(st);
-}
 
+	return paths;
+}
 

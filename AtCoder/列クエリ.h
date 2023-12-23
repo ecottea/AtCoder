@@ -40,24 +40,25 @@ vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
 	// -------------- ここを実装する（auto の方が速い） ---------------
 
 	// 必要なデータ構造を用意する．
-	vl freq((int)2e5 + 10);
-	S sol = 0;
+	int m = *max_element(all(a)) + 1;
+	vi freq(m);
+	S kind = 0;
 
 	// 区間に a[i] を追加し，データ構造を更新する．
 	auto insert = [&](int i) {
-		if (freq[a[i]] == 0) sol++;
+		if (freq[a[i]] == 0) kind++;
 		freq[a[i]]++;
 	};
 
 	// 区間から a[i] を削除し，データ構造を更新する．
 	auto erase = [&](int i) {
 		freq[a[i]]--;
-		if (freq[a[i]] == 0) sol--;
+		if (freq[a[i]] == 0) kind--;
 	};
 
 	// クエリ j に対し，データ構造を参照して解を求める．
 	auto get_sol = [&](int j) {
-		return sol;
+		return kind;
 	};
 
 	// --------------------------------------------------------------
@@ -85,7 +86,102 @@ vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
 }
 
 
-//【Mo's algorithm（Rollback）】O(n√q α + q log q)
+//【Mo's algorithm（非対称）】O(n√q α + q log q)
+/*
+* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
+*
+* 制約：両端の要素の追加 & 削除が O(α) で可能
+*
+*（クエリ平方分割）
+*/
+template <class T, class S>
+vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r) {
+	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
+	// verify : https://judge.yosupo.jp/problem/static_range_inversions_query
+
+	//【方法】
+	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
+	// 左端の移動回数は，1 回のクエリで高々 n/k しか移動しないので q n/k + n 回．
+	// 右端の移動回数は，1 ブロックごとに高々 n しか移動しないので k n / 2 回．
+	// これらが一致するような k を求めると k = √(2q+1) + 1 となる．
+	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
+
+	int n = sz(a), q = sz(l);
+	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
+	vector<S> res(q);
+
+	// クエリを左端の位置するブロックについて昇順に，
+	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
+	vector<tuple<int, int, int>> lb_sr_j(q);
+	rep(j, q) {
+		int b = l[j] / width;
+		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
+	}
+	sort(all(lb_sr_j));
+
+	// -------------- ここを実装する（auto の方が速い） ---------------
+
+	// 必要なデータ構造を用意する．
+	int m = *max_element(all(a)) + 1;
+	fenwick_tree<int> ft(m);
+	ll inv = 0;
+
+	// 区間の右に a[i] を追加し，データ構造を更新する．
+	auto insert_right = [&](int i) {
+		inv += ft.sum(a[i] + 1, m);
+		ft.add(a[i], 1);
+	};
+
+	// 区間の左に a[i] を追加し，データ構造を更新する．
+	auto insert_left = [&](int i) {
+		inv += ft.sum(0, a[i]);
+		ft.add(a[i], 1);
+	};
+
+	// 区間の右から a[i] を削除し，データ構造を更新する．
+	auto erase_right = [&](int i) {
+		inv -= ft.sum(a[i] + 1, m);
+		ft.add(a[i], -1);
+	};
+
+	// 区間の左から a[i] を削除し，データ構造を更新する．
+	auto erase_left = [&](int i) {
+		inv -= ft.sum(0, a[i]);
+		ft.add(a[i], -1);
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	auto get_sol = [&](int j) {
+		return inv;
+	};
+
+	// --------------------------------------------------------------
+
+	// lpt[rpt] : 半開区間の左[右] 端の位置
+	int lpt = 0, rpt = 0;
+
+	// クエリを順に処理していく．
+	rep(tmp, q) {
+		int j = get<2>(lb_sr_j[tmp]);
+
+		// 区間を広げる．
+		while (lpt > l[j]) insert_left(--lpt);
+		while (rpt < r[j]) insert_right(rpt++);
+
+		// 区間を狭める．
+		while (lpt < l[j]) erase_left(lpt++);
+		while (rpt > r[j]) erase_right(--rpt);
+
+		// 区間 [l[j]..r[j]) に対する解を得る．
+		res[j] = get_sol(j);
+	}
+
+	return res;
+}
+
+
+//【Mo's algorithm（rollback）】O(n√q α + q log q)
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
@@ -329,7 +425,7 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 *	a[l..r) を左右反転する．
 *
 * rotate(int l, int m, int r) : O(log n)
-*	a[l, r) を，a[m] が先頭にくるよう巡回シフトする．
+*	a[l..r) を，a[m] が先頭にくるよう巡回シフトする．
 *
 * Implicit_treap split(int key) : O(log n)
 *	自身から位置 key 以上の要素を切り出し，切り出して出来た木を返す．
@@ -348,13 +444,13 @@ class Implicit_treap {
 	inline static mt19937 rnd;
 
 	struct Node {
-		S value; // 頂点の値
-		S acc; // 部分木のノードの総 op
-		F lazy; // 部分木のノードへの遅延作用
-		unsigned int priority; // ランダムに決めた優先度
-		int cnt; // 部分木のノード数
-		bool rev; // 部分木が反転されているか
-		Node* l, * r; // 左右の子へのポインタ
+		S value;				// 頂点の値
+		S acc;					// 部分木のノードの総和
+		F lazy;					// 部分木のノードへの遅延作用
+		unsigned int priority;	// ランダムに決めた優先度
+		int cnt;				// 部分木のノード数
+		bool rev;				// 部分木が反転されているか
+		Node* l, * r;			// 左右の子へのポインタ
 		Node(S value, unsigned int priority) : value(value), acc(e()), lazy(id()), priority(priority),
 			cnt(1), rev(false), l(nullptr), r(nullptr) {}
 	};
@@ -366,7 +462,7 @@ class Implicit_treap {
 		return t ? t->cnt : 0;
 	}
 
-	// op(部分木 t) を返す．
+	// Σ(部分木 t) を返す．
 	S acc(Node* t) {
 		return t ? t->acc : e();
 	}
@@ -376,7 +472,7 @@ class Implicit_treap {
 		if (t) t->cnt = cnt(t->l) + 1 + cnt(t->r);
 	}
 
-	// op(部分木 t) を更新する．
+	// Σ(部分木 t) を更新する．
 	void update_acc(Node* t) {
 		if (t) t->acc = op(acc(t->l), op(t->value, acc(t->r)));
 	}
@@ -600,7 +696,7 @@ public:
 		apply(i, i + 1, f);
 	}
 
-	// op( a[l..r) ) を返す（空なら e() を返す）
+	// Σa[l..r) を返す（空なら e() を返す）
 	S prod(int l, int r) {
 		// verify : https://judge.yosupo.jp/problem/dynamic_sequence_range_affine_range_sum
 
@@ -629,7 +725,7 @@ public:
 		return prod(i, i + 1);
 	}
 
-	// g( op( a[l..r) ) ) = true となる最大の r を返す．
+	// g( Σa[l..r) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& g) {
 		// verify : https://atcoder.jp/contests/practice2/tasks/practice2_j
 
@@ -647,7 +743,7 @@ public:
 		return res;
 	}
 
-	// g( op( a[l..r) ) ) = true となる最小の l を返す．
+	// g( Σa[l..r) ) = true となる最小の l を返す．
 	int min_left(int r, const function<bool(S)>& g) {
 		Node* lt, * rt;
 
@@ -1036,7 +1132,7 @@ public:
 };
 
 
-//【平方分割（モノイド）】
+//【バケット平方分割（モノイド）】
 /*
 * Quadratic_division<S, op, e>(int n) : O(n e)
 *	v[0..n) = e() で初期化する．
@@ -1058,7 +1154,7 @@ template <class S, S(*op)(S, S), S(*e)()>
 struct Quadratic_division {
 	using vS = vector<S>;
 
-	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
+	int n, w, m; // n : 要素数，w : バケット幅，m : バケット数
 	vector<S> v, v_mul;
 
 	// コンストラクタ（e() で初期化）
@@ -1089,7 +1185,7 @@ struct Quadratic_division {
 		// 要素 v[i] の更新
 		v[i] = x;
 
-		// v[i] を含むブロックの総積を再計算する．
+		// v[i] を含むバケットの総積を再計算する．
 		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
 		v_mul[j] = e();
 		repi(i, i_min, i_max) v_mul[j] = op(v_mul[j], v[i]);
@@ -1132,7 +1228,7 @@ struct Quadratic_division {
 };
 
 
-//【平方分割（M-集合）】
+//【バケット平方分割（M-集合）】
 /*
 * Quadratic_division<S, F, act, comp, id>(int n) : O(n id)
 *	v[0..n) = id() で初期化する．
@@ -1154,7 +1250,7 @@ template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 struct Quadratic_division_Mset {
 	using vF = vector<F>;
 
-	int n, w, m; // n : 要素数，w : ブロック幅，m : ブロック数
+	int n, w, m; // n : 要素数，w : バケット幅，m : バケット数
 	vF v, v_mul;
 
 	// コンストラクタ（e() で初期化）
@@ -1187,7 +1283,7 @@ struct Quadratic_division_Mset {
 		// 要素 v[i] の更新
 		v[i] = x;
 
-		// v[i] を含むブロックの総積を再計算する．
+		// v[i] を含むバケットの総積を再計算する．
 		int j = i / w, i_min = j * w, i_max = min(i_min + w, n) - 1;
 		v_mul[j] = id();
 		repi(i, i_min, i_max) v_mul[j] = comp(v_mul[j], v[i]);
@@ -1217,6 +1313,92 @@ struct Quadratic_division_Mset {
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Quadratic_division_Mset qd) {
 		rep(i, qd.n) os << qd.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【rollback 配列】
+/*
+* Rollback_array<T>(int n) : O(n)
+*	a[0..n) を T の初期値で初期化する．
+*
+* Rollback_array<T>(int n, T x) : O(n)
+*	a[0..n) を x で初期化する．
+*
+* Rollback_array<T>(vT a) : O(n)
+*	a[0..n) で初期化する．
+*
+* void set(int i, T x) : O(1)
+*	a[i] = x とする．
+*
+* T get(int i) : O(1)
+*	a[i] を返す．
+*
+* void snapshot() : O(1)
+*	スナップショットを作成する．
+*
+* rollback() : O(1)
+*	直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
+*/
+template <class T>
+class Rollback_array {
+	int n;
+	vector<T> a;
+	stack<pair<int, T>> history;
+
+public:
+	// a[0..n) を T の初期値で初期化する．
+	Rollback_array(int n) : n(n), a(n) {}
+
+	// a[0..n) を x で初期化する．
+	Rollback_array(int n, T x) : n(n), a(n, x) {
+		// verify : https://yukicoder.me/problems/no/2338
+	}
+
+	// a[0..n) で初期化する．
+	Rollback_array(const vector<T>& a) : n(sz(a)), a(a) {}
+	Rollback_array() : n(0) {}
+
+	// a[i] = x とする．
+	void set(int i, T x) {
+		// verify : https://yukicoder.me/problems/no/2338
+
+		Assert(0 <= i && i < n);
+
+		history.emplace(i, a[i]);
+		a[i] = x;
+	}
+
+	// a[i] を返す．
+	T get(int i) const {
+		// verify : https://yukicoder.me/problems/no/2338
+
+		return a[i];
+	}
+
+	// スナップショットを作成する．
+	void snapshot() {
+		// verify : https://yukicoder.me/problems/no/2338
+
+		history.emplace(INF, 0);
+	}
+
+	// 直前に作成したスナップショットの状態まで巻き戻す．
+	void rollback() {
+		// verify : https://yukicoder.me/problems/no/2338
+
+		while (true) {
+			auto [i, x] = history.top(); history.pop();
+			if (i == INF) break;
+			a[i] = x;
+		}
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Rollback_array RA) {
+		os << RA.a << endl;
 		return os;
 	}
 #endif

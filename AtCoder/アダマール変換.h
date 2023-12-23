@@ -20,18 +20,7 @@ void hadamard(vector<T>& a) {
 	//	A[5] = a[0] - a[1] + a[2] - a[3] - a[4] + a[5] - a[6] + a[7] + ...
 	//	A[6] = a[0] + a[1] - a[2] - a[3] - a[4] - a[5] + a[6] + a[7] + ...
 	//	A[7] = a[0] - a[1] - a[2] + a[3] - a[4] + a[5] + a[6] - a[7] + ...
-	//
-	// 係数行列の + の部分だけ書くと，
-	//	+ + + + + + + +
-	//	+   +   +   +  
-	//  + +     + +    
-	//  +     + +     +
-	//  + + + +        
-	//  +   +     +   +
-	//  + +         + +
-	//  +     +   + +  
-	// となり，シェルピンスキーのギャスケットっぽいがゴミが付いている．
-
+	
 	int n = msb(sz(a));
 
 	rep(i, n) repb(set, n) {
@@ -49,6 +38,8 @@ void hadamard(vector<T>& a) {
 //【逆アダマール変換】: O(2^n n)
 /*
 * A[0..2^n) を逆アダマール変換したものに上書きする．
+* 
+* 制約：A の要素は 2 で割れる．
 */
 template <class T>
 void hadamard_inv(vector<T>& A) {
@@ -71,6 +62,8 @@ void hadamard_inv(vector<T>& A) {
 //【逆アダマール変換（mint）】: O(2^n n + log(mod))
 /*
 * A[0..2^n) を逆アダマール変換したものに上書きする．
+* 
+* 制約：mint の法は 2 の倍数でない
 *
 * 利用：【アダマール変換】
 */
@@ -85,17 +78,16 @@ void hadamard_inv(vm& A) {
 }
 
 
-//【対称差畳込み】O(2^n n)
+//【XOR 畳込み】O(2^n n)
 /*
 * 与えられた a[0..2^n), b[0..2^n) に対して
-*       Σ(set1△set2 = set) a[set1] b[set2]
+*       c[set] = Σ(set1 XOR set2 = set) a[set1] b[set2]
 * なる c[0..2^n) を返す．
-* △ は集合の対称差であり，添字でいうと XOR である．
 *
 * 利用：【アダマール変換】,【逆アダマール変換】
 */
 template <class T>
-vector<T> symmetric_difference_convolution(vector<T> a, vector<T> b) {
+vector<T> xor_convolution(vector<T> a, vector<T> b) {
 	// 参考 : https://kazuma8128.hatenablog.com/entry/2018/05/31/144519
 	// verify : https://judge.yosupo.jp/problem/bitwise_xor_convolution
 
@@ -119,8 +111,8 @@ vector<T> symmetric_difference_convolution(vector<T> a, vector<T> b) {
 *               [1 -1]
 * 
 * A[0..2^n) を逆高速アダマール変換して a[0..2^n) にする線形変換の表現行列は，
-* アダマール行列を 1/2 倍した [1/2  1/2] の d 個のクロネッカー積に等しい．
-*                           [1/2 -1/2]
+* アダマール行列の逆行列 [1/2  1/2] の d 個のクロネッカー積に等しい．
+*                      [1/2 -1/2]
 * 
 * verify : https://atcoder.jp/contests/abc212/tasks/abc212_h
 */

@@ -2,6 +2,7 @@
 #include "header.h"
 #include "数論変換.h"
 #include "二項係数.h"
+#include "構造(グラフ).h"
 // ■■■■■ 一般グラフのマッチング ■■■■■
 
 
@@ -18,47 +19,79 @@
 */
 
 
-//【最小コスト完全マッチング】O(2^n n)
+//【最小コスト完全マッチング（隣接行列）】O(1.618^n n)
 /*
-* 重み付きグラフ g の隣接行列 adj を元に，g の最小コスト完全マッチングのコストを返す．
+* 重み付き対称隣接行列 c[0..n)[0..n) が表す無向グラフ g の完全マッチングの最小コストを返す．
 *
 *（bit DP）
 */
-ll minimum_cost_matching(const vvl& adj) {
-	int n = sz(adj);
-	if (n % 2 == 1) {
-		return -INFL;
-	}
+template <class T>
+T minimum_cost_matching(const vector<vector<T>>& c) {
+	//【方法】
+	// 完全マッチングのみを考えるので，全頂点がいずれかの頂点と組になる．
+	// そこで組を作るときに番号最小の頂点を優先的に選ぶことにすれば，
+	// 例えば状態 0000 → 0011, 0101, 1001 としか遷移せず 0110, 1010, 1100 は無視できる．
 
-	// dp[set] : set に含まれる頂点で作れる完全マッチングの最小コスト
-	vl dp(1LL << n, INF);
-	vb seen(1LL << n);
+	int n = sz(c);
+
+	unordered_map<int, T> dp;
 	dp[0] = 0;
-	seen[0] = true;
 
-	// set : 考慮すべき頂点の集合
-	function<ll(int)> rf = [&](int set) {
-		// 計算済ならその値を返す．
-		if (seen[set]) {
-			return dp[set];
-		}
-		seen[set] = true;
+	// メモ化再帰で貰う DP することで計算不要な状態を自動的に無視できる．
+	function<int(T)> rf = [&](int set) {
+		auto it = dp.find(set);
+		if (it != dp.end()) return it->second;
 
 		// s : set で最も番号の小さい頂点
 		int s = lsb(set);
 
 		// t : s とペアになる set の頂点
-		repi(t, s + 1, n - 1) {
-			if (set & (1 << t)) {
-				chmin(dp[set], rf(set - (1 << s) - (1 << t)) + adj[s][t]);
-			}
+		T val = (T)INFL; int set2 = set - (1 << s);
+		repis(t, set2) {
+			chmin(val, rf(set2 - (1 << t)) + c[s][t]);
 		}
 
-		return dp[set];
+		return dp[set] = val;
 	};
 
-	// 全頂点に対して最小コストを計算する．
 	return rf((1 << n) - 1);
+}
+
+
+//【最小コストマッチング】O(2^n n)
+/*
+* 与えられた重み付きグラフ g に対し，各頂点集合 set⊂[0..n) について，
+* 誘導部分グラフ g[set] の完全マッチングの最小コストを格納したリストを返す．
+*
+*（bit DP）
+*/
+vl minimum_cost_matching(const WGraph& g) {
+	// verify : https://atcoder.jp/contests/abc318/tasks/abc318_d
+
+	int n = sz(g);
+
+	vvl adj(n, vl(n, INFL));
+	rep(s, n) repe(t, g[s]) adj[s][t] = t.cost;
+
+	// dp[set] : 誘導部分グラフ g[set] の完全マッチングの最小コスト
+	vl dp(1LL << n, INFL);
+	dp[0] = 0;
+
+	// 貰う DP
+	repb(set, n) {
+		if (set == 0) continue;
+
+		// s : set で最も番号の小さい頂点
+		int s = lsb(set);
+
+		// t : s とペアになる set の頂点
+		int set2 = set - (1 << s);
+		repis(t, set2) {
+			chmin(dp[set], dp[set2 - (1 << t)] + adj[s][t]);
+		}
+	}
+
+	return dp;
 }
 
 

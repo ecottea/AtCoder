@@ -7,6 +7,8 @@ using namespace std;
 
 #define Assert assert
 
+#define __int128 ll
+
 
 //【GCC のビルトイン関数との互換用】
 
@@ -28,7 +30,7 @@ inline int lsb(int n) {
 inline int lsb(ll n) {
 	if (n == 0) return -1;
 	unsigned long i;
-	_BitScanForward64(&i, (unsigned long long)n);
+	_BitScanForward64(&i, (ull)n);
 	return i;
 }
 
@@ -42,39 +44,26 @@ inline int msb(int n) {
 inline int msb(ll n) {
 	if (n == 0) return -1;
 	unsigned long i;
-	_BitScanReverse64(&i, (unsigned long long)n);
+	_BitScanReverse64(&i, (ull)n);
 	return i;
-}
-
-// 最大公約数
-template <class T> T gcd(T a, T b) {
-	// gcc の __gcd では負の数を入れるとバグる．
-	Assert(a >= 0 && b >= 0);
-
-	while (b > 0) {
-		a %= b;
-		swap(a, b);
-	}
-
-	return a;
 }
 
 
 //【出力演算子 << のオーバーロード（デバッグ用）】
-template <class T, class U>
-inline ostream& operator<<(ostream& os, const pair<T, U>& p) {
+template <class T1, class T2>
+inline ostream& operator<<(ostream& os, const pair<T1, T2>& p) {
 	os << "(" << p.first << "," << p.second << ")";
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, const vector<T>& v) {
+template <class T, class Allocator>
+inline ostream& operator<< (ostream& os, const vector<T, Allocator>& v) {
 	repe(x, v) os << x << " ";
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, const list<T>& v) {
+template <class T, class Allocator>
+inline ostream& operator<< (ostream& os, const list<T, Allocator>& v) {
 	repe(x, v) os << x << " ";
 	return os;
 }
@@ -85,56 +74,32 @@ inline ostream& operator<< (ostream& os, const array<T, N>& v) {
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, const set<T>& s) {
+template <class Key, class Compare, class Allocator>
+inline ostream& operator<< (ostream& os, const set<Key, Compare, Allocator>& s) {
 	repe(x, s) os << x << " ";
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, const set<T, greater<T>>& s) {
+template <class Key, class Compare, class Allocator>
+inline ostream& operator<< (ostream& os, const multiset<Key, Compare, Allocator>& s) {
 	repe(x, s) os << x << " ";
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, const multiset<T>& s) {
+template <class Key, class Hash, class Pred, class Allocator>
+inline ostream& operator<< (ostream& os, const unordered_set<Key, Hash, Pred, Allocator>& s) {
 	repe(x, s) os << x << " ";
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, const multiset<T, greater<T>>& s) {
-	repe(x, s) os << x << " ";
-	return os;
-}
-
-template <class T>
-inline ostream& operator<< (ostream& os, const unordered_set<T>& s) {
-	repe(x, s) os << x << " ";
-	return os;
-}
-
-template <class T, class U>
-inline ostream& operator<< (ostream& os, const map<T, U>& m) {
+template <class Key, class T, class Compare, class Allocator>
+inline ostream& operator<< (ostream& os, const map<Key, T, Compare, Allocator>& m) {
 	repe(p, m) os << p << " ";
 	return os;
 }
 
-template <class T, class U>
-inline ostream& operator<< (ostream& os, const map<T, U, greater<T>>& m) {
-	repe(p, m) os << p << " ";
-	return os;
-}
-
-template <class T, class U>
-inline ostream& operator<< (ostream& os, const multimap<T, U>& m) {
-	repe(p, m) os << p << " ";
-	return os;
-}
-
-template <class T, class U>
-inline ostream& operator<< (ostream& os, const multimap<T, U, greater<T>>& m) {
+template <class Key, class T, class Compare, class Allocator>
+inline ostream& operator<< (ostream& os, const multimap<Key, T, Compare, Allocator>& m) {
 	repe(p, m) os << p << " ";
 	return os;
 }
@@ -145,8 +110,8 @@ inline ostream& operator<< (ostream& os, const unordered_map<Key, T, Hash, Pred,
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, stack<T> s) {
+template <class T, class Container>
+inline ostream& operator<< (ostream& os, stack<T, Container> s) {
 	while (!s.empty()) {
 		os << s.top() << " ";
 		s.pop();
@@ -154,8 +119,8 @@ inline ostream& operator<< (ostream& os, stack<T> s) {
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, queue<T> q) {
+template <class T, class Container>
+inline ostream& operator<< (ostream& os, queue<T, Container> q) {
 	while (!q.empty()) {
 		os << q.front() << " ";
 		q.pop();
@@ -163,8 +128,8 @@ inline ostream& operator<< (ostream& os, queue<T> q) {
 	return os;
 }
 
-template <class T>
-inline ostream& operator<< (ostream& os, deque<T> q) {
+template <class T, class Allocator >
+inline ostream& operator<< (ostream& os, deque<T, Allocator> q) {
 	while (!q.empty()) {
 		os << q.front() << " ";
 		q.pop_front();
@@ -268,3 +233,4 @@ template <class T> void dump_mat(vector<vector<T>> a) {
 		cout << (i < sz(a) - 1 ? ",\n" : "}\n");
 	}
 }
+

@@ -488,3 +488,68 @@ mint count_common_subsequences(const vector<T>& s, const vector<T>& t) {
 }
 
 
+//【最長増加部分列の数え上げ（位置区別あり）】O(n log n)
+/*
+* 数列 a[0..n) の（狭義）最長増加部分列の (長さ, 個数) の組を返す．
+* ただし部分列として同じでも，添字列として異なるものは区別する．
+*
+* 利用：【動的セグメント木（モノイド）】
+*/
+int op_clis(int a, int b) { return max(a, b); }
+int e_clis() { return 0; } // max の単位元が -INF でなく 0 であることに注意
+template <class T>
+pair<int, mint> count_LIS(const vector<T>& a) {
+	// verify : https://yukicoder.me/problems/no/992
+
+	int n = sz(a);
+
+	// a[0..n) を座標圧縮した結果を b[0..n) に格納する（番兵 -INF 付き）
+	vector<T> a_uniqed(a); a_uniqed.push_back(numeric_limits<T>::lowest());
+	uniq(a_uniqed); int m = sz(a_uniqed);
+	vi b(n); rep(i, n) b[i] = lbpos(a_uniqed, a[i]);
+
+	// seg[i][j] : 長さが i で右端の値が j であるような増加部分列の個数（最長以外は正しくない値が入る）
+	vector<Dynamic_segtree<Add_monoid>> seg(n + 1, Dynamic_segtree<Add_monoid>(m));
+	seg[0].set(0, 1);
+
+	// dp_i[j] : b[0..i] までで右端の値が j であるような最長増加部分列の長さ
+	segtree<int, op_clis, e_clis> dp(m);
+
+	//（例）b[0..5) = [3, 1, 2, 2, 0] のとき
+	//	dp_0[0..3) = [0, 0, 0, 0]
+	//	dp_1[0..3) = [0, 0, 0, 1] (max(0, 0, 0) + 1 = 1)
+	//	dp_2[0..3) = [0, 1, 0, 1] (max(0)       + 1 = 1)
+	//	dp_3[0..3) = [0, 1, 2, 1] (max(0, 1)    + 1 = 2)
+	//	dp_4[0..3) = [0, 1, 2, 1] (max(0, 1)    + 1 = 2)
+	//	dp_5[0..3) = [1, 1, 2, 1] (max()        + 1 = 1)
+
+	// j = b[i] を順に見ていく
+	rep(i, n) {
+		int j = b[i];
+
+		// j を右端にもてるのは，それまでの右端が j 未満のもののみ．
+		// よってその中での最長増加部分列の長さを求め，それに 1 を加える．
+		int len = dp.prod(0, j);
+		len++;
+
+		// j を右端とするより長いものが作れれば更新する．
+		// dp[j] 以外は更新されることはないので，更新は O(log n) で終わる．
+		// この性質が dp テーブルのインライン化と相性が良い．
+		int len_prv = dp.get(j);
+		if (len >= len_prv) {
+			dp.set(j, len);
+
+			// 長さが len-1 で右端の数字が j 未満であるような増加部分列の個数を加算する．
+			mint cnt = seg[len - 1].prod(0, j);
+			seg[len].apply_left(j, cnt);
+		}
+	}
+
+	// 右端の値を任意としたときの最長増加部分列の長さを得る．
+	int len = dp.prod(0, m);
+	mint cnt = seg[len].all_prod();
+
+	return { len, cnt };
+}
+
+

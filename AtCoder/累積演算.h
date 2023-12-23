@@ -21,15 +21,15 @@ class Cumulative_sum {
 public:
 	// 配列 a[0..n) で初期化する．
 	Cumulative_sum(const vector<T>& a) : n(sz(a)), acc(n + 1) {
-		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_h
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/math_and_algorithm_ai
 
 		rep(i, n) acc[i + 1] = acc[i] + a[i];
 	}
-	Cumulative_sum() : n(0) {} // ダミー
+	Cumulative_sum() : n(0) {}
 
 	// Σa[l..r) を返す．（空なら 0 を返す．範囲外の値は 0 とみなす）
-	T sum(int l, int r) {
-		// verify : https://atcoder.jp/contests/abc216/tasks/abc216_h
+	inline T sum(int l, int r) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/math_and_algorithm_ai
 
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
@@ -41,7 +41,7 @@ public:
 
 //【間引き累積和】
 /*
-* Thinning_cumulative_sum<T>(vT a, int m) : O(n)
+* Thinning_cumulative_sum<T>(vT a, int m) : O(n + m)
 *	配列 a[0..n) と法 m で初期化する．
 *
 * T sum(int l, int r, int k) : O(1)
@@ -65,7 +65,7 @@ struct Thinning_cumulative_sum {
 	Thinning_cumulative_sum() : n(0), m(1) {} // ダミー
 
 	// set = {i∈[l..r) | i=k (mod m)} とし Σa[set] を返す．
-	T sum(int l, int r, int k) {
+	inline T sum(int l, int r, int k) {
 		// verify : https://atcoder.jp/contests/abc288/tasks/abc288_d
 
 		chmax(l, 0); chmin(r, n);
@@ -86,10 +86,10 @@ struct Thinning_cumulative_sum {
 * T sum(int l, int r, ll a, ll b) : O(1)
 *	Σj∈[l..r) (a j + b) v[j] を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
 *
-* T sum_right(int l, int r, ll w0, ll w1) : O(1)
+* T sum_to_right(int l, int r, ll w0, ll w1) : O(1)
 *	v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
 *
-* T sum_left(int r, int l, ll w0, ll w1) : O(1)
+* T sum_to_left(int r, int l, ll w0, ll w1) : O(1)
 *	v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
 */
 template <class T>
@@ -103,6 +103,8 @@ class Linear_weighted_cumulative_sum {
 public:
 	// 配列 a[0..n) で初期化する．
 	Linear_weighted_cumulative_sum(const vector<T>& v) : n(sz(v)), acc(2, vector<T>(n + 1)) {
+		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
+		
 		acc[0][0] = acc[1][0] = T(0);
 		rep(i, n) {
 			acc[0][i + 1] = acc[0][i] + v[i];
@@ -112,7 +114,7 @@ public:
 	Linear_weighted_cumulative_sum() : n(0) {}
 
 	// Σj∈[l..r) (a j + b) v[j] を返す．
-	T sum(int l, int r, ll a, ll b) {
+	inline T sum(int l, int r, ll a, ll b) {
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return T(0);
 
@@ -122,7 +124,7 @@ public:
 	}
 
 	// v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-	T sum_right(int l, int r, ll w0, ll w1) {
+	inline T sum_to_right(int l, int r, ll w0, ll w1) {
 		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
 
 		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
@@ -132,7 +134,7 @@ public:
 	}
 
 	// v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-	T sum_left(int r, int l, ll w0, ll w1) {
+	inline T sum_to_left(int r, int l, ll w0, ll w1) {
 		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
 
 		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
@@ -176,7 +178,7 @@ public:
 	Exponential_weighted_cumulative_sum() : n(0) {}
 
 	// Σi∈[l..r) B^(i-l) v[i] を返す．
-	mint sum(int l, int r) {
+	inline mint sum(int l, int r) {
 		// verify : https://yukicoder.me/problems/no/2170
 
 		chmax(l, 0); chmin(r, n);
@@ -192,7 +194,7 @@ public:
 * Cumulative_sum_2D<T>(vvT a) : O(h w)
 *	二次元配列 a[0..h)[0..w) で初期化する．
 *
-* T sum(int x1, int y1, int x2, int y2) : O(1)
+* T sum(int x1, int x2, int y1, int y2) : O(1)
 *	Σa[x1..x2)[y1..y2) を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
 */
 template <class T>
@@ -208,6 +210,8 @@ class Cumulative_sum_2D {
 public:
 	// 二次元配列 a[0..h)[0..w) で初期化する．
 	Cumulative_sum_2D(const vvT& a) : h(sz(a)), w(sz(a[0])), acc(h + 1, vT(w + 1)) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_h
+
 		// 元データを仮格納する．
 		rep(i, h) rep(j, w) acc[i + 1][j + 1] = a[i][j];
 
@@ -220,14 +224,14 @@ public:
 	Cumulative_sum_2D() : h(0), w(0) {}
 
 	// Σa[x1..x2)[y1..y2) を返す．
-	T sum(int x1, int y1, int x2, int y2) {
-		// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
+	inline T sum(int x1, int x2, int y1, int y2) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_h
 
 		chmax(x1, 0); chmax(y1, 0);
 		chmin(x2, h); chmin(y2, w);
 		if (x1 >= x2 || y1 >= y2) return T(0);
 
-		T res(0);
+		T res = 0;
 		res += acc[x2][y2];
 		res -= acc[x1][y2];
 		res -= acc[x2][y1];
@@ -243,20 +247,20 @@ public:
 * Cumulative_sum_2D_tri<T>(vvT a) : O(h w)
 *	二次元配列 a[0..h)[0..w) で初期化する（範囲外の値は 0 とみなす）
 *
-* T sum_rect(int x1, int y1, int x2, int y2) : O(1)
-*	[x1..x2) * [y1..y2) の要素の和を返す．
+* T sum_rect(int x1, int x2, int y1, int y2) : O(1)
+*	[x1..x2)×[y1..y2) の要素の和を返す．
 *
 * T sum_tri_DL(int x, int y, int d) : O(1)
-*	[x-d..x) * [y-d..y) の右下がりの対角線以下の要素の和を返す．
+*	[x-d..x)×[y-d..y) の右下がりの対角線以下の要素の和を返す．
 *
 * T sum_tri_UR(int x, int y, int d) : O(1)
-*	[x-d..x) * [y-d..y) の右下がりの対角線以上の要素の和を返す．
+*	[x-d..x)×[y-d..y) の右下がりの対角線以上の要素の和を返す．
 *
 * T sum_tri_DR(int x, int y, int d) : O(1)
-*	[x-d..x) * [y..y+d) の右上がりの対角線以下の要素の和を返す．
+*	[x-d..x)×[y..y+d) の右上がりの対角線以下の要素の和を返す．
 *
 * T sum_tri_UL(int x, int y, int d) : O(1)
-*	[x-d..x) * [y..y+d) の右上がりの対角線以上の要素の和を返す．
+*	[x-d..x)×[y..y+d) の右上がりの対角線以上の要素の和を返す．
 */
 template <class T>
 class Cumulative_sum_2D_tri {
@@ -294,8 +298,8 @@ public:
 	}
 	Cumulative_sum_2D_tri() : h(0), w(0) {}
 
-	// [x1..x2) * [y1..y2) の要素の和を返す．
-	T sum_rect(int x1, int y1, int x2, int y2) {
+	// [x1..x2)×[y1..y2) の要素の和を返す．
+	inline T sum_rect(int x1, int x2, int y1, int y2) {
 		chmax(x1, 0);
 		chmax(y1, 0);
 		chmin(x2, h);
@@ -311,8 +315,8 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y-d..y) の右下がりの対角線以下の要素の和を返す．
-	T sum_tri_DL(int x, int y, int d) {
+	// [x-d..x)×[y-d..y) の右下がりの対角線以下の要素の和を返す．
+	inline T sum_tri_DL(int x, int y, int d) {
 		if (x > h) {
 			d -= x - h;
 			y -= x - h;
@@ -336,8 +340,8 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y-d..y) の右下がりの対角線以上の要素の和を返す．
-	T sum_tri_UR(int x, int y, int d) {
+	// [x-d..x)×[y-d..y) の右下がりの対角線以上の要素の和を返す．
+	inline T sum_tri_UR(int x, int y, int d) {
 		T res(0);
 		res += sum_rect(x - d, y - d, x, y);
 		res -= sum_tri_DL(x, y - 1, d - 1);
@@ -345,8 +349,8 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y..y+d) の右上がりの対角線以下の要素の和を返す．
-	T sum_tri_DR(int x, int y, int d) {
+	// [x-d..x)×[y..y+d) の右上がりの対角線以下の要素の和を返す．
+	inline T sum_tri_DR(int x, int y, int d) {
 		if (x > h) {
 			d -= x - h;
 			y += x - h;
@@ -369,8 +373,8 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y..y+d) の右上がりの対角線以上の要素の和を返す．
-	T sum_tri_UL(int x, int y, int d) {
+	// [x-d..x)×[y..y+d) の右上がりの対角線以上の要素の和を返す．
+	inline T sum_tri_UL(int x, int y, int d) {
 		T res(0);
 		res += sum_rect(x - d, y, x, y + d);
 		res -= sum_tri_DR(x, y + 1, d - 1);
@@ -385,7 +389,7 @@ public:
 * Cumulative_sum_3D<T>(vvT a) : O(h w d)
 *	三次元配列 a[0..h)[0..w)[0..d) で初期化する．
 *
-* T sum(int x1, int y1, int x2, int y2, int z1, int z2) : O(1)
+* T sum(int x1, int x2, int y1, int y2, int z1, int z2) : O(1)
 *	Σa[x1..x2)[y1..y2)[z1..z2) を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
 */
 template <class T>
@@ -415,13 +419,11 @@ public:
 
 		// 奥行き方向に累積和をとる．
 		repi(i, 0, h) repi(j, 0, w) repi(k, 1, d) acc[i][j][k] += acc[i][j][k - 1];
-
-		dumpel(acc);
 	}
 	Cumulative_sum_3D() : h(0), w(0), d(0) {}
 
 	// Σa[x1..x2)[y1..y2)[z1..z2) を返す．
-	T sum(int x1, int y1, int z1, int x2, int y2, int z2) {
+	T sum(int x1,int x2, int y1, int y2, int z1, int z2) {
 		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_g
 
 		chmax(x1, 0); chmax(y1, 0); chmax(z1, 0);
@@ -772,7 +774,7 @@ public:
 * Sparse_table<T>(vvT a, bool min_flag = true) : O(h w log h log w)
 *	二次元配列 a[0..h)[0..w) で初期化する．min_flag = true[false] のときは最小値[最大値] を求める．
 *
-* T sum(int x1, int y1, int x2, int y2) : O(1)
+* T get(int x1, int x2, int y1, int y2) : O(1)
 *	min a[x1..x2)[y1..y2) を返す．（空なら numeric_limits<T>::max() を返す）
 */
 template <class T>
@@ -821,7 +823,7 @@ struct Sparse_table_2D {
 	}
 
 	// min a[x1..x2)[y1..y2) を返す．
-	T get(int x1, int y1, int x2, int y2) {
+	T get(int x1, int x2, int y1, int y2) {
 		// verify : https://atcoder.jp/contests/abc233/tasks/abc233_g
 
 		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);

@@ -6,9 +6,9 @@
 //【ランレングス符号（文字列）】O(n)
 /*
 * 文字列 s[0..n) をランレングス符号化し，結果を格納したリスト cls を返す．
-* cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
+* cls[i] = {c, l} は前から i 番目の連が l 個の文字 c からなることを表す．
 */
-vector<pair<char, int>> run_length_encodeing(const string& s) {
+vector<pair<char, int>> run_length_encoding(const string& s) {
 	// verify : https://atcoder.jp/contests/abc124/tasks/abc124_d
 
 	int n = sz(s);
@@ -44,10 +44,10 @@ vector<pair<char, int>> run_length_encodeing(const string& s) {
 //【ランレングス符号】O(n)
 /*
 * a[0..n) をランレングス符号化し，結果を格納したリスト cls を返す．
-* cls[i] = {c, l} は前から i 番目の列が l 個の文字 c からなることを表す．
+* cls[i] = {c, l} は前から i 番目の連が l 個の文字 c からなることを表す．
 */
 template <class T>
-vector<pair<T, int>> run_length_encodeing(const vector<T>& a) {
+vector<pair<T, int>> run_length_encoding(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/arc024/tasks/arc024_2
 
 	int n = sz(a);
@@ -86,7 +86,7 @@ vector<pair<T, int>> run_length_encodeing(const vector<T>& a) {
 * 前から i 番目の連が a[x[i]..x[i+1]) で，その文字が c[i] であったことを格納する．
 */
 template <class T>
-void run_length_encodeing(const vector<T>& a, vector<T>& c, vi& x) {
+void run_length_encoding(const vector<T>& a, vector<T>& c, vi& x) {
 	// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
 
 	int n = sz(a);
@@ -174,6 +174,8 @@ vi first_position(const string& s) {
 * s で最後に文字 c が現れる位置（無いなら -1）を pos[c] に格納し pos を返す．
 */
 vi last_position(const string& s) {
+	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_b
+
 	int n = sz(s);
 	const int k = 26;
 

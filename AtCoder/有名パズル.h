@@ -5,24 +5,22 @@
 // ■■■■■ 有名パズル ■■■■■
 
 
-//【8 クイーン問題】O(n! n)
+//【N クイーン問題】O(n! n)
 /*
-* 既に (x0[i], y0[i]) に置かれたクイーンを含む，n * n の格子上で互いに効きに入らないような
-* クイーンの配置例において，i 行目のクイーンが y[i] 列目にあることを格納する．
-* 適切な配置が存在しないなら false を返す．
+* 既に (x0[i], y0[i]) に置かれたクイーンを含む，n×n の格子上で互いに効きに入らないような
+* クイーンの配置例を見つけ，i 行目のクイーンが何列目にあるかを格納したリストを返す（不可能なら空リスト）
 *
 *（順列全探索）
 */
-bool queen8_problem(int n, const vi& x0, const vi& y0, vi& y) {
+vi N_queen_problem(int n, const vi& x0, const vi& y0) {
 	// verify : https://atcoder.jp/contests/arc001/tasks/arc001_3
 
 	int k = sz(x0);
-	y.clear();
-
+	
 	unordered_map<int, int> x_to_y;
 	rep(i, k) {
 		// 同じ行に 2 つクイーンがある場合は明らかに不可能．
-		if (x_to_y.count(x0[i])) return false;
+		if (x_to_y.count(x0[i])) return vi();
 
 		x_to_y[x0[i]] = y0[i];
 	}
@@ -36,12 +34,7 @@ bool queen8_problem(int n, const vi& x0, const vi& y0, vi& y) {
 		vb rd(2 * n - 1), ld(2 * n - 1);
 
 		// 初期配置と矛盾がないかのチェック
-		repe(xy, x_to_y) {
-			int x, y;
-			tie(x, y) = xy;
-
-			if (p[x] != y) goto NEXT_LOOP;
-		}
+		for (auto [x, y] : x_to_y) if (p[x] != y) goto NEXT_LOOP;
 
 		rep(i, n) {
 			// 左下がりの対角線方向のチェック
@@ -53,13 +46,12 @@ bool queen8_problem(int n, const vi& x0, const vi& y0, vi& y) {
 			rd[i - p[i] + n - 1] = true;
 		}
 
-		y = p;
-		return true;
+		return p;
 
 	NEXT_LOOP:;
 	}
 
-	return false;
+	return vi();
 }
 
 
@@ -70,16 +62,17 @@ bool queen8_problem(int n, const vi& x0, const vi& y0, vi& y) {
 * sol[i][j] = false[true] はマス (i, j) を押さない[押す] ことを表す．
 * 解が存在しないなら false を返す．
 *
-*（呼び出すとき lights_out<N> としないと gcc でエラーになるので注意．）
+*（呼び出すとき lights_out<M> としないと gcc でエラーになるので注意．）
 *
-* 制約：N は h * w + 1 以上の定数
+* 制約：h * w ≦ M
 *
-* 利用：【ビット行列】,【連立一次方程式】
+* 利用：【ビット行列】,【線形方程式】
 */
-template <int N> bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1') {
+template <int M>
+bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1') {
 	int h = sz(s), w = sz(s[0]);
 
-	Bit_matrix<N> mat(h * w);
+	Bit_matrix<M> mat(h * w, h * w); vb vec(h * w);
 	rep(x, h) rep(y, w) {
 		// 押したマスは点灯状態が反転する．
 		mat[x * w + y][x * w + y] = 1;
@@ -91,21 +84,21 @@ template <int N> bool lights_out(const vvc& s, vvb* sol = nullptr, char one = '1
 
 			if (nx < 0 || h <= nx || ny < 0 || w <= ny) continue;
 
-			mat[x * w + y][nx * w + ny] = 1;
+			mat[nx * w + ny][x * w + y] = 1;
 		}
 
 		// 目標とする点灯パターン
-		mat[x * w + y][h * w] = (s[x][y] == one);
+		vec[x * w + y] = (s[x][y] == one);
 	}
 
-	// 連立方程式を解いて押し方を見つける．
-	bitset<N> res;
-	bool able = solve_eq<N>(mat, h * w, &res);
+	// 線形方程式を解いて押し方を見つける．
+	bitset<M> res;
+	bool able = gauss_jordan_elimination<M>(mat, vec, &res);
 
-	// 連立方程式に解が無いなら不可能．
+	// 線形方程式に解が無いなら不可能．
 	if (!able) return false;
 
-	// 連立方程式の解から押し方を復元する．
+	// 線形方程式の解から押し方を復元する．
 	if (sol != nullptr) {
 		*sol = vvb(h, vb(w));
 		rep(x, h) rep(y, w) (*sol)[x][y] = res[x * w + y];
@@ -130,7 +123,6 @@ int solve_15puzzle(const vvi& a_, int max_step = 45) {
 	const int OPEN = h * w - 1;
 
 	// 盤面のハッシュ化用関数
-	using ull = unsigned long long;
 	function<void(ull, vi&)> integer_digits = [&](ull n, vi& digits) {
 		int b = h * w, i = 0;
 		digits.resize(b);
@@ -181,7 +173,7 @@ int solve_15puzzle(const vvi& a_, int max_step = 45) {
 
 	// 総距離の下界，盤面, 空きマスの x, y 座標，操作回数を昇順に取り出すキュー
 	//（総距離の下界 = 操作回数とするとただの幅優先探索になる．）
-	priority_queue_rev<tuple< int, ull, int, int, int >> q;
+	priority_queue_rev<tuple<int, ull, int, int, int>> q;
 
 	ull hash = from_digits(a);
 	dist[hash] = d;
@@ -189,8 +181,9 @@ int solve_15puzzle(const vvi& a_, int max_step = 45) {
 
 	// 解けるまで探索する．
 	while (!q.empty()) {
-		vi a; ull hash; int d, x, y, step;
-		tie(d, hash, x, y, step) = q.top(); q.pop();
+		auto [d, hash, x, y, step] = q.top(); q.pop();
+		
+		vi a;
 		integer_digits(hash, a);
 
 		// 解けたなら手数を返す．
@@ -225,7 +218,7 @@ int solve_15puzzle(const vvi& a_, int max_step = 45) {
 
 //【こおりのぬけみち】O(n log n)
 /*
-* n 個の岩が (x[i], y[i]) >= 0 に配置された「こおりのぬけみち」について，
+* n 個の岩が (x[i], y[i]) ≧ 0 に配置されたこおりのぬけみちについて，
 * (sx, sy) から (tx, ty) で停止するまでの最小移動回数を返す（不可能なら INF を返す）
 *
 * 利用：【幅優先探索】
@@ -289,6 +282,45 @@ int ice_path(const vl& x, const vl& y, ll sx, ll sy, ll tx, ll ty) {
 	vi dist = breadth_first_search(g, 0);
 
 	return dist[xy_to_i[tx * w + ty]];
+}
+
+
+//【ラテン方格】O(?)（n=5 まで動く）
+/*
+* 数字 [0..n) からなる n×n ラテン方格のリストを返す．
+*/
+vvvi enumerate_latin_squares(int n) {
+	// verify : https://atcoder.jp/contests/abc326/tasks/abc326_d
+
+	vvb used_x(n, vb(n)), used_y(n, vb(n));
+
+	vvi a(n, vi(n, -1));
+	vvvi res;
+
+	// (i, j): 注目位置
+	function<void(int, int)> dfs = [&](int x, int y) {
+		if (x == n) {
+			res.push_back(a);
+			return;
+		}
+
+		if (y == n) {
+			dfs(x + 1, 0);
+			return;
+		}
+
+		rep(k, n) {
+			if (used_x[x][k] || used_y[y][k]) continue;
+
+			used_x[x][k] = used_y[y][k] = true;
+			a[x][y] = k;
+			dfs(x, y + 1);
+			used_x[x][k] = used_y[y][k] = false;
+		}
+	};
+	dfs(0, 0);
+
+	return res;
 }
 
 

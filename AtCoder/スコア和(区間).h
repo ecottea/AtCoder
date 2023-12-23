@@ -44,7 +44,7 @@ ll interval_OR_sum(const vi& a) {
 		rep(i, n) seq[i] = get(a[i], b);
 
 		// ビット列をランレングス符号化する．
-		auto rle = run_length_encodeing(seq);
+		auto rle = run_length_encoding(seq);
 
 		// 全ての区間の個数を加算する．
 		ll cnt = (ll)n * (n + 1) / 2;

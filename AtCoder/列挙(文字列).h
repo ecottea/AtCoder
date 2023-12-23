@@ -7,7 +7,9 @@
 /*
 * 文字集合 cs の要素からなる長さ n の文字列全てを格納したリストを返す．
 */
-vector<string> enumerate_all_strings(int n, const vc& cs) {
+vector<string> enumerate_all_strings(int n, const string& cs) {
+	// verify : https://yukicoder.me/problems/no/3015
+
 	vector<string> strs;
 	string s;
 

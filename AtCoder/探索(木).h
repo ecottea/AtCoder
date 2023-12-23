@@ -16,7 +16,7 @@ void tree_dfs(G& g, int st, vi& seq) {
 
 	// 再帰用の関数
 	function<void(int, int)> dfs = [&](int s, int p) {
-		// 行きがけ順の処理
+		// 行きがけ順の処理を書くのはここ
 		seq.push_back(s);
 
 		repe(t, g[s]) {
@@ -26,11 +26,11 @@ void tree_dfs(G& g, int st, vi& seq) {
 			// 未探索の頂点を探索しにいく．
 			dfs(t, s);
 
-			// 通りがけ順（兼，最後は帰りがけ順）の処理
+			// 通りがけ順（兼，最後は帰りがけ順）の処理を書くのはここ
 			seq.push_back(s);
 		}
 
-		// 帰りがけ順の処理を書くのはここだが，今回は必要ない．
+		// 帰りがけ順の処理を書くのはここ
 	};
 
 	// 根を始点として再帰関数を呼び出す．

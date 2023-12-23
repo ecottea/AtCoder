@@ -11,6 +11,8 @@
 */
 template <class T>
 inline double distance_P_L(const Point<T>& p, const Line<T>& l) {
+	// verify : https://atcoder.jp/contests/abc314/tasks/abc314_h
+
 	Point<double> d = (l.second - l.first).normalize();
 	Point<double> n(-d.y, d.x);
 	Point<double> p2 = p - l.first;
@@ -238,9 +240,13 @@ T doubled_area_polygon(const Polygon<T>& poly) {
 * 
 * 利用：【円と直線の交点】
 */
-double area_intersection_C_Poly(const Circle<ll>& c, const Polygon<ll>& poly) {
+double area_intersection_C_Poly(const Circle<ll>& c, const Polygon<ll>& poly, double EPS = 1e-15) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_H
 	
+	//【注意】
+	// 面積を足し引きする図形が三角形か扇形かの違いは結果に大きな影響を与えるので，
+	// 円と辺が接することがない保証がない限りは ll を double にすることはできない．
+
 	int n = sz(poly);
 	Point<double> o = Point<double>(c.first);
 	double r_sq = (double)pow(c.second, 2);
@@ -403,16 +409,14 @@ double caliper(const Polygon<T>& poly, pii& id) {
 
 //【格子点の個数】O(log|x2 - x1|)
 /*
-* x 軸以上かつ (x1, y1) と (x2, y2) を結ぶ線分以下にある格子点の個数を返す．
-* 条件：x1 != x2, y1 >= 0, y2 >= 0
+* x 軸以上かつ (x1, y1) と (x2, y2) を結ぶ閉線分以下にある格子点の個数を返す．
+* 条件：x1 != x2, y1 ≧ 0, y2 ≧ 0
 */
 ll count_lattice_point_le(ll x1, ll y1, ll x2, ll y2) {
-	if (x1 > x2) {
-		swap(x1, x2);
-	}
-	if (y1 > y2) {
-		swap(y1, y2);
-	}
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ao
+
+	if (x1 > x2) swap(x1, x2);
+	if (y1 > y2) swap(y1, y2);
 
 	ll res = (x2 - x1 + 1) * (y2 - y1 + 1);
 	res += gcd(x2 - x1, y2 - y1) + 1;
@@ -424,16 +428,14 @@ ll count_lattice_point_le(ll x1, ll y1, ll x2, ll y2) {
 
 //【格子点の個数】O(log|x2 - x1|)
 /*
-* x 軸以上かつ (x1, y1) と (x2, y2) を結ぶ線分より下にある格子点の個数を返す．
-* 条件：x1 != x2, y1 >= 0, y2 >= 0
+* x 軸以上かつ (x1, y1) と (x2, y2) を結ぶ閉線分より下にある格子点の個数を返す．
+* 条件：x1 != x2, y1 ≧ 0, y2 ≧ 0
 */
 ll count_lattice_point_l(ll x1, ll y1, ll x2, ll y2) {
-	if (x1 > x2) {
-		swap(x1, x2);
-	}
-	if (y1 > y2) {
-		swap(y1, y2);
-	}
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ao
+
+	if (x1 > x2) swap(x1, x2);
+	if (y1 > y2) swap(y1, y2);
 
 	ll res = (x2 - x1 + 1) * (y2 - y1 + 1);
 	res -= gcd(x2 - x1, y2 - y1) + 1;

@@ -14,81 +14,166 @@
 */
 
 
+//【部分文字列の辞書順比較】
+/*
+* Substring_compare(sting s) : O(n log n)
+*	文字列 s[0..n) で初期化する．
+*
+* bool comp(int l1, int r1, int l2, int r2) : O(1)
+*	s[l1..r1) < s[l2..r2) かを返す．
+*
+* int lcp(int l1, int r1, int l2, int r2) : O(1)
+*	s[l1..r1) と s[l2..r2) の LCP の長さを返す．
+*/
+template <class STR>
+class Substring_compare {
+	int n;
+
+	vi sa_inv;
+
+	// LCP 配列用の min-Sparse Table
+	vvi lcp_min;
+
+public:
+	// 文字列 s[0..n) で初期化する．
+	Substring_compare(const STR& s) : n(sz(s)), sa_inv(n) {
+		// verify : https://atcoder.jp/contests/toyota2023spring-final/tasks/toyota2023spring_final_d
+
+		if (n == 1) return;
+
+		auto sa = suffix_array(s);
+		rep(i, n) sa_inv[sa[i]] = i;
+
+		int K = msb(n - 1) + 1;
+		lcp_min = vvi(K);
+
+		lcp_min[0] = lcp_array(s, sa);
+		repi(k, 1, K - 1) {
+			lcp_min[k].resize(n - 1);
+			int w = 1 << (k - 1);
+			rep(i, n - 1 - w) {
+				lcp_min[k][i] = min(lcp_min[k - 1][i], lcp_min[k - 1][i + w]);
+			}
+		}
+	}
+
+	// s[l1..r1) < s[l2..r2) かを返す．
+	bool comp(int l1, int r1, int l2, int r2) const {
+		// verify : https://judge.yosupo.jp/problem/suffixarray
+
+		chmax(l1, 0); chmax(l2, 0); chmin(r1, n); chmin(r2, n);
+
+		if (l1 == l2) return r1 < r2;
+
+		int i1 = sa_inv[l1], i2 = sa_inv[l2];
+		int w1 = r1 - l1, w2 = r2 - l2;
+
+		bool swap_flag = false;
+		if (i1 > i2) {
+			swap(i1, i2);
+			swap(w1, w2);
+			swap_flag = true;
+		}
+
+		int k = msb(i2 - i1);
+		int lcp = min(lcp_min[k][i1], lcp_min[k][i2 - (1 << k)]);
+
+		if (w2 > lcp) return !swap_flag;
+		if (w1 > w2) return swap_flag;
+		if (w1 < w2) return !swap_flag;
+		return false;
+	}
+
+	// s[l1..r1) と s[l2..r2) の LCP の長さを返す．
+	int lcp(int l1, int r1, int l2, int r2) const {
+		// verify : https://atcoder.jp/contests/toyota2023spring-final/tasks/toyota2023spring_final_d
+
+		chmax(l1, 0); chmax(l2, 0); chmin(r1, n); chmin(r2, n);
+
+		int w1 = r1 - l1, w2 = r2 - l2;
+		if (l1 == l2) return min(w1, w2);
+
+		int i1 = sa_inv[l1], i2 = sa_inv[l2];
+		if (i1 > i2) swap(i1, i2);
+		int k = msb(i2 - i1);
+		int lcp = min(lcp_min[k][i1], lcp_min[k][i2 - (1 << k)]);
+
+		return lcp;
+	}
+};
+
+
 //【数値の大小と辞書順】
 /*
 * 非負整数 x, y とその数値文字列 X, Y について，x < y であるための必要十分条件は
 *	(1) |X| < |Y|
 *	(2) |X| = |Y| かつ X < Y
 * のいずれかが成り立つことである（ただし前 0 は認めない）
-* 
+*
 * 整数部分が 0 の非負小数 x, y とその数値文字列 X, Y については x < y ⇔ X < Y である．
-* 
+*
 * verify : https://atcoder.jp/contests/tenka1-2015-qualb/tasks/tenka1_2015_qualB_d
 */
 
 
-//【連結と比較】
+//【辞書順で小さい数の数え上げ】O(log n + log k)
 /*
-* 文字列 s, t をどの順で連結する方が小さいかで定まる順序
-*	s << t := s + t < t + s
-* は全順序である．"<<" に関して s = t となるのは，
-*	∃w∈Σ*, ∃n,m∈N, s = n w かつ t = m w
-* となるときである．
-* 
-* 証明：s, t をそれぞれ |Σ| 進数表示された整数 S, T とみなすと，
-*	s << t
-*	⇔ S * b^|t| + T < T * b^|s| + S（|s+t|=|t+s| より数値としての大小に一致）
-*	⇔ S (b^|t| - 1) < T (b^|s| - 1)
-*	⇔ S / (b^|s| - 1) < T / (b^|t| - 1)
-* となるので，各文字列のみに依存する実数の通常の全順序による比較と同値となる．
-* 
-* verify : https://atcoder.jp/contests/abc225/tasks/abc225_f
+* 数 [0..n) のうち，B 進表記したとき辞書順で k より小さいものの個数を返す．
 */
+template <class T>
+T count_lex_small_numbers(T n, T k, T B = 10) {
+	// verify : https://yukicoder.me/problems/no/2455
+
+	//【方法】
+	// 例えば n = 314, k = 57, B = 10 のとき，
+	//	0 桁 : 0
+	//	1 桁 : [1..5]				（辞書順で "5" < "57" ≦ "6"）
+	//	2 桁 : [10..57)				（辞書順で "56" < "57" ≦ "57"）
+	//	3 桁 : [100..min(314,570))	（辞書順で "569" < "57" ≦ "570"）
+	//	4 桁以上 : なし
+	// が条件を満たす数である．
+
+	if (n <= 0 || k == 0) return 0;
+
+	// dn : n の桁数
+	int dn = 0; T n_tmp = n;
+	while (n_tmp > 0) {
+		n_tmp /= B;
+		dn++;
+	}
+
+	// sk[d] : k の上から d 桁目の数
+	vector<T> sk;
+	while (k > 0) {
+		sk.push_back(k % B);
+		k /= B;
+	}
+	reverse(all(sk));
+
+	// dk : k の桁数
+	int dk = sz(sk);
+
+	// sk の末尾を 0 で埋めておく．
+	while (sz(sk) < dn) sk.push_back(0);
+
+	T res = 1; // "0" を数える
+
+	// k_suf : sk[0..d) の値, powB : B^d
+	T k_suf = sk[0], powB = 1;
+
+	// d : 桁数
+	repi(d, 1, dn - 1) {
+		res += max<T>((k_suf + (d < dk ? 1 : 0)) - powB, 0);
+		k_suf = k_suf * 10 + sk[d];
+		powB *= B;
+	}
+	res += max<T>(min<T>(k_suf + (dn < dk ? 1 : 0), n) - powB, 0);
+
+	return res;
+}
 
 
-//【無限連結と辞書順】
-/*
-* 文字列 s, t を無限個連結した文字列をそれぞれ S, T とするとき，以下が成り立つ：
-*	s + t < t + s ⇔ S < T
-*
-* 証明：【連結と比較】の最後の不等式が無限個連結した文字列の比較に対応している．
-* 
-* verify : https://yukicoder.me/problems/no/2030
-*/
-
-
-//【連結と辞書順】
-/*
-* 文字列の連結 "+" と辞書順比較 "<" の間には
-*		A + B < A + C ⇔ B < C
-* なる関係がある（"+" と "<" が左両立する．）
-* 文字列を後ろから順に走査していくとこの性質を活用しやすい．
-* 
-* verify : https://atcoder.jp/contests/abc225/tasks/abc225_f
-*		
-* 一方
-*		A + C < B + C ⇔ A < B
-* は成り立たない（反例： bac < bc かつ ba > b）
-*/
-
-
-//【接尾辞配列】
-/*
-* ACL の vi sa = suffix_array(string s) を利用すればよい．
-* 
-* sa[i] は辞書順 i 番目の接尾辞が s[sa[i]..n) であることを表す．
-*/
-
-
-//【LCP array】
-/*
-* ACL の vi lcp = lcp_array(string s, vi sa) を利用すればよい（sa は s の【接尾辞配列】）
-* 
-* lcp[i] は s[sa[i]..n) と s[sa[i+1]..n) の最長共通接頭辞の長さ．
-*/
-
-
-//【任意列の辞書順 d 番目】
+//【任意列の辞書順 d 番目】O(n)
 /*
 * [0..k) からなる長さ n 以下の列（空列含む）を辞書順に並べたとき d 番目に現れる列を返す（なければ {-1} を返す）
 */
@@ -106,8 +191,7 @@ vi lex_order_allseq(int k, int n, ll d) {
 		if (cnt[i] == INFL) break;
 		cnt[i] = (cnt[i] - 1) / (k - 1);
 	}
-	dump(cnt);
-
+	
 	// 列が足りないなら false を返す．
 	if (d > cnt[n]) return vi{ -1 };
 
@@ -122,6 +206,49 @@ vi lex_order_allseq(int k, int n, ll d) {
 
 		d %= cnt[i];
 		dump(d, res);
+	}
+
+	return res;
+}
+
+
+//【隣接互換による最小文字列】
+/*
+* s[0..n) に対し k 回以下の隣接互換を適用して得られる辞書順最小文字列を返す．
+*/
+template <class T> pair<T, int> opsba(pair<T, int> a, pair<T, int> b) { return min(a, b); }
+template <class T> pair<T, int> esba() { return { numeric_limits<T>::max(), -1 }; }
+int opsba2(int a, int b) { return a + b; }
+int esba2() { return 0; }
+template <class T>
+vector<T> smallest_by_adjswap(const vector<T>& s, ll k) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/problems/0365
+
+	int n = sz(s);
+
+	vector<pair<T, int>> ini(n);
+	rep(i, n) ini[i] = { s[i], i };
+	segtree<pair<T, int>, opsba<T>, esba<T>> S(ini);
+	dump(S);
+
+	// rem[i] : s[i] が未使用か
+	vi ini2(n, 1);
+	segtree<int, opsba2, esba2> rem(ini2);
+	dump(rem);
+
+	vector<T> res(n);
+
+	// 位置 l に移動できる範囲の文字のうち最小次いで最左のものを貪欲に移動する．
+	rep(l, n) {
+		int r = rem.max_right(0, [&](int cnt) { return cnt <= k + 1; });
+		auto [x, i] = S.prod(0, r);
+		dump(r, x, i);
+
+		res[l] = x;
+		S.set(i, { numeric_limits<T>::max(), -1 });
+		rem.set(i, 0);
+		k -= rem.prod(0, i);
+		dump(S); dump(rem); dump(k);
 	}
 
 	return res;
@@ -432,6 +559,51 @@ string shortest_common_nonsubsequence(const string& s, const string& t) {
 
 	return res;
 }
+
+
+//【連結と比較】
+/*
+* 文字列 s, t をどの順で連結する方が小さいかで定まる順序
+*	s << t := s + t < t + s
+* は全順序である．"<<" に関して s = t となるのは，
+*	∃w∈Σ*, ∃n,m∈N, s = n w かつ t = m w
+* となるときである．
+*
+* 証明：s, t をそれぞれ |Σ| 進数表示された整数 S, T とみなすと，
+*	s << t
+*	⇔ S * b^|t| + T < T * b^|s| + S（|s+t|=|t+s| より数値としての大小に一致）
+*	⇔ S (b^|t| - 1) < T (b^|s| - 1)
+*	⇔ S / (b^|s| - 1) < T / (b^|t| - 1)
+* となるので，各文字列のみに依存する実数の通常の全順序による比較と同値となる．
+*
+* verify : https://atcoder.jp/contests/abc225/tasks/abc225_f
+*/
+
+
+//【無限連結と辞書順】
+/*
+* 文字列 s, t を無限個連結した文字列をそれぞれ S, T とするとき，以下が成り立つ：
+*	s + t < t + s ⇔ S < T
+*
+* 証明：【連結と比較】の最後の不等式が無限個連結した文字列の比較に対応している．
+*
+* verify : https://yukicoder.me/problems/no/2030
+*/
+
+
+//【連結と辞書順】
+/*
+* 文字列の連結 "+" と辞書順比較 "<" の間には
+*		A + B < A + C ⇔ B < C
+* なる関係がある（"+" と "<" が左両立する．）
+* 文字列を後ろから順に走査していくとこの性質を活用しやすい．
+*
+* verify : https://atcoder.jp/contests/abc225/tasks/abc225_f
+*
+* 一方
+*		A + C < B + C ⇔ A < B
+* は成り立たない（反例： bac < bc かつ ba > b）
+*/
 
 
 //【最小の連結文字列】O(n k^2 max|s[i]|)

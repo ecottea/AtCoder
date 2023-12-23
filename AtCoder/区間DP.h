@@ -10,7 +10,7 @@
 *
 *（区間 DP）
 */
-ll matrix_chain_multiplication_problem(vl& d) {
+ll matrix_chain_multiplication(vl& d) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_10_B
 
 	int n = sz(d) - 1;
@@ -86,9 +86,9 @@ ll merge_slimes(const vl& c) {
 * 探索頻度が p[i] である n 個の要素を葉に持つ順序付き二分探索木を作るときの
 * コスト Σi p[i] depth[i] の最小値を返す．（depth は深さで，根の深さを 0 とする）
 *
-*（モンジュ DP）
+*（Monge DP）
 */
-ll monge_intervalDP(const vl& p) {
+ll optimal_binary_tree_monge(const vl& p) {
 	// 参考 : https://atcoder.jp/contests/atc002/tasks/atc002_c
 
 	//【方法】
@@ -99,14 +99,14 @@ ll monge_intervalDP(const vl& p) {
 	// これの右が 1 つ伸びたものなので，最善の分割位置が左にずれることはない．
 	// p[l+1..r) ← p[l+1..k1) + p[k1..r) が最善であるならば，p[l..r) は
 	// これの左が 1 つ伸びたものなので，最善の分割位置が右にずれることはない．
-	// 両者より，調べるべき k の範囲は k0 <= k <= k1 に限られる．
+	// 両者より，調べるべき k の範囲は k0 ≦ k ≦ k1 に限られる．
 
-	//【モンジュ性】
-	// 区間に対する非負重み関数を f とする．f がモンジュ性をもつとは，
-	//		f(a∪b) + f(a∩b) >= f(a) + f(b)　（∀a,b : 区間）
+	//【Monge 性】
+	// 区間に対する非負重み関数を f とする．f が Monge 性をもつとは，
+	//		f(a∪b) + f(a∩b) ≧ f(a) + f(b)　（∀a,b : 区間）
 	// を満たすことをいい，その場合は同様の区間 DP の高速化が可能となる．
 	//
-	// 今回の重み関数は f(a) = Σi∈a p[i] であり，モンジュ性をもつ．
+	// 今回の重み関数は f(a) = Σi∈a p[i] であり，Monge 性をもつ．
 
 	int n = sz(p);
 

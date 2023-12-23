@@ -79,3 +79,63 @@ mint rectangle_capacity_sum(const vl& h, const vl& w) {
 }
 
 
+//y“]“|”‚Ì˜azO(n log n)
+/*
+* ˆÊ’u [0..n) ‚Ì’l‚ª p[0..n) ‚Æw’èi-1 ‚È‚ç”CˆÓj‚³‚ê‚½ [0..n) ‚Ì‡—ñ‘S‚Ä‚Ì“]“|”‚Ì˜a‚ğ•Ô‚·D
+*/
+mint inversion_sum(const vi& p) {
+	// verify : https://yukicoder.me/problems/no/2327
+
+	int n = sz(p);
+
+	// rem[j] : ” i ‚ª–¢g—p‚©
+	vi rem(n, 1);
+	rep(i, n) if (p[i] != -1) rem[p[i]] = 0;
+
+	// acc_rem[j] : ” [0..j) ‚Ì’†‚Ì–¢g—p‚Ì‚à‚Ì‚ÌŒÂ”
+	vi acc_rem(n + 1);
+	rep(i, n) acc_rem[i + 1] = acc_rem[i] + rem[i];
+
+	// acc_open[i] : ˆÊ’u [0..i) ‚Ì’†‚Ì‹ó‚«‚ÌŒÂ”
+	vi acc_open(n + 1);
+	rep(i, n) acc_open[i + 1] = acc_open[i] + (int)(p[i] == -1);
+
+	// K : ‹ó‚«‚Ì‘”
+	int K = acc_open[n];
+
+	// Šú‘Ò’l‚ğl‚¦‚éD
+	mint ex = 0;
+
+	// (-1, -1) ‚©‚ç‚ÌŠñ—^
+	ex += mint(K) * (K - 1) / 4;
+
+	if (K > 0) {
+		mint K_inv = mint(K).inv();
+		rep(i, n) {
+			if (p[i] == -1) continue;
+
+			// (p[i], -1) ‚©‚ç‚ÌŠñ—^
+			ex += mint(acc_open[n] - acc_open[i]) * acc_rem[p[i]] * K_inv;
+
+			// (-1, p[i]) ‚©‚ç‚ÌŠñ—^
+			ex += mint(acc_open[i]) * (acc_rem[n] - acc_rem[p[i]]) * K_inv;
+		}
+	}
+
+	// (p[i2], p[i]) ‚©‚ç‚ÌŠñ—^
+	fenwick_tree<mint> FT(n);
+	rep(i, n) {
+		if (p[i] == -1) continue;
+
+		ex += FT.sum(p[i], n);
+		FT.add(p[i], 1);
+	}
+
+	// ŒÂ”‚É’¼‚·D
+	mint res = ex;
+	repi(i, 1, K) res *= i;
+
+	return res;
+}
+
+

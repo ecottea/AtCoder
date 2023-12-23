@@ -46,7 +46,7 @@ vvi largest_square(const vector<vector<T>>& a, T able = 1) {
 /*
 * ヒストグラム hist[0..n) に包まれる長方形の面積の最大値を返す．
 * すなわち max_(l<r) (r-l) min(hist[l..r)) を返す．
-* また長方形が [l..r) * [0..h) であることを l, r, h に格納する．
+* また長方形が [l..r)×[0..h) であることを l, r, h に格納する．
 */
 template <class T>
 ll largest_rectangle_in_histogram(vector<T>& hist, int* l = nullptr, int* r = nullptr, ll* h = nullptr) {
@@ -168,6 +168,35 @@ void bomberman(const vector<vector<T>>& c, vvi& u, vvi& d, vvi& l, vvi& r, T wal
 			r[i][j] = pos;
 		}
 	}
+}
+
+
+//【上三角 → 矩形集合】
+/*
+* n×n 格子の狭義上三角部分 S = {(i,j) | 0≦i<j<n} を矩形に分割し，矩形のリストを返す．
+* strict = false にすると広義上三角部分 S = {(i,j) | 0≦i≦j<n} を矩形に分割する．
+* 矩形 [i1..i2)×[j1..j2) は 4 つ組 {i1, i2, j1, j2} で表す．
+*
+*（分割統治法）
+*/
+vector<tuple<int, int, int, int>> trig_to_rects(int n, bool strict = true) {
+	vector<tuple<int, int, int, int>> rects;
+
+	// {(i,j) | l≦i<j<r} を矩形に分割する．
+	function<void(int, int)> rf = [&](int l, int r) {
+		if (r - l == 1) {
+			if (!strict) rects.emplace_back(l, l + 1, l, l + 1);
+			return;
+		}
+
+		int m = (l + r) / 2;
+		rects.emplace_back(l, m, m, r);
+		rf(l, m);
+		rf(m, r);
+	};
+	rf(0, n);
+
+	return rects;
 }
 
 

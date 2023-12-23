@@ -11,10 +11,10 @@
 using namespace std;
 
 // 型名の短縮
-using ll = long long; // -2^63 ～ 2^63 = 9 * 10^18（int は -2^31 ～ 2^31 = 2 * 10^9）
+using ll = long long; using ull = unsigned long long; // -2^63 ～ 2^63 = 9 * 10^18（int は -2^31 ～ 2^31 = 2 * 10^9）
 using pii = pair<int, int>;	using pll = pair<ll, ll>;	using pil = pair<int, ll>;	using pli = pair<ll, int>;
-using vi = vector<int>;		using vvi = vector<vi>;		using vvvi = vector<vvi>;
-using vl = vector<ll>;		using vvl = vector<vl>;		using vvvl = vector<vvl>;
+using vi = vector<int>;		using vvi = vector<vi>;		using vvvi = vector<vvi>;	using vvvvi = vector<vvvi>;
+using vl = vector<ll>;		using vvl = vector<vl>;		using vvvl = vector<vvl>;	using vvvvl = vector<vvvl>;
 using vb = vector<bool>;	using vvb = vector<vb>;		using vvvb = vector<vvb>;
 using vc = vector<char>;	using vvc = vector<vc>;		using vvvc = vector<vvc>;
 using vd = vector<double>;	using vvd = vector<vd>;		using vvvd = vector<vvd>;
@@ -25,8 +25,7 @@ using Graph = vvi;
 const double PI = acos(-1);
 const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi DY = { 0, 1, 0, -1 };
-int INF = 1001001001; ll INFL = 4004004004004004004LL;
-double EPS = 1e-15;
+int INF = 1001001001; ll INFL = 4004004003104004004LL; // (int)INFL = 1010931620;
 
 // 入出力高速化
 struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(18); } } fastIOtmp;
@@ -43,11 +42,13 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
 #define repe(v, a) for(const auto& v : (a)) // a の全要素（変更不可能）
 #define repea(v, a) for(auto& v : (a)) // a の全要素（変更可能）
-#define repb(set, d) for(int set = 0; set < (1 << int(d)); ++set) // d ビット全探索（昇順）
+#define repb(set, d) for(int set = 0, set##_ub = 1 << int(d); set < set##_ub; ++set) // d ビット全探索（昇順）
+#define repis(i, set) for(int i = lsb(set), bset##i = set; i >= 0; bset##i -= 1 << i, i = lsb(bset##i)) // set の全要素（昇順）
 #define repp(a) sort(all(a)); for(bool a##_perm = true; a##_perm; a##_perm = next_permutation(all(a))) // a の順列全て（昇順）
 #define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
 #define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
 #define EXIT(a) {cout << (a) << endl; exit(0);} // 強制終了
+#define inQ(x, y, u, l, d, r) ((u) <= (x) && (l) <= (y) && (x) < (d) && (y) < (r)) // 半開矩形内判定
 
 // 汎用関数の定義
 template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
@@ -68,6 +69,10 @@ template <class T> inline vector<T>& operator++(vector<T>& v) { repea(x, v) ++x;
 #include <atcoder/all>
 using namespace atcoder;
 
+#ifdef _MSC_VER
+#include "localACL.hpp"
+#endif
+
 //using mint = modint1000000007;
 using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
@@ -76,7 +81,7 @@ namespace atcoder {
 	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
 }
-using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;
+using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using vvvvm = vector<vvvm>;
 #endif
 
 
@@ -89,7 +94,6 @@ inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
 inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
 inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
 inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
-#define gcd __gcd
 #define dump(...)
 #define dumpel(v)
 #define dump_list(v)
@@ -130,6 +134,9 @@ stringstream ss{ str };
 string s;
 while (getline(ss, s, ' ')) {}
 
+// str が部分文字列として pat を含むかを返す：O(n m)
+str.find(pat) != string::npos
+
 // 集合の共通部分，和集合，差集合を得る
 set_intersection(all(a), all(b), inserter(res, res.end()));
 set_union(all(a), all(b), inserter(res, res.end()));
@@ -144,9 +151,24 @@ ll x = rnd(mt);
 mt19937_64 mt((int)time(NULL));
 shuffle(all(a), mt);
 
-// 型 T の最小値[最大値] を取得する．
+// 型 T の最小値[最大値] を取得する
 numeric_limits<T>::lowest();
 numeric_limits<T>::max();（__int128 だと 0 になるので注意）
+
+// vector のメモリ解放
+a.resize(0);
+a.shrink_to_fit();
+
+// map を逆順で使う
+map<S, T, greater<S>>
+
+// 多倍長整数
+#include <boost/multiprecision/cpp_int.hpp>
+using Bint = boost::multiprecision::cpp_int;
+Bint gcd(const Bint& x, const Bint& y) { return boost::math::gcd(x, y); }
+Bint lcm(const Bint& x, const Bint& y) { return boost::math::lcm(x, y); }
+boost::swap ?
+boost::move ?
 
 // 時間計測して TLE 寸前に終了
 auto start = chrono::system_clock::now();
@@ -188,7 +210,7 @@ int main() {
 
 	int t;
 	cin >> t; // マルチテストケースの場合
-//	t = 1; // シングルテストケースの場合
+//	t = 1;    // シングルテストケースの場合
 
 	while (t--) {
 		dump("------------------------------");
@@ -224,7 +246,7 @@ void bug_find() {
 
 	mt19937_64 mt;
 	mt.seed((int)time(NULL));
-	uniform_int_distribution<ll> rnd(0LL, 1LL << 62);
+	uniform_int_distribution<ll> rnd(0LL, 1LL << 60);
 
 	mute_dump = true;
 
@@ -239,6 +261,7 @@ void bug_find() {
 		if (res_naive != res_solve) {
 			cout << "----------error!----------" << endl;
 			cout << "input:" << endl;
+			cout << n << endl;
 			cout << a << endl;
 			cout << "results:" << endl;
 			cout << res_naive << endl;
@@ -253,6 +276,41 @@ void bug_find() {
 }
 
 --------------------------------------------------------------- */
+
+
+// mint を手元環境でだけ有理数表示したいとき用
+/* -----------------------------------------------------------------
+
+string mint_to_frac(mint x, int v_max = 31595) {
+	repi(dnm, 1, v_max) {
+		int num = (x * dnm).val();
+		if (num == 0) {
+			return "0";
+		}
+		if (num <= v_max) {
+			if (dnm == 1) return to_string(num);
+			return to_string(num) + "/" + to_string(dnm);
+		}
+		if (mint::mod() - num <= v_max) {
+			if (dnm == 1) return "-" + to_string(mint::mod() - num);
+			return "-" + to_string(mint::mod() - num) + "/" + to_string(dnm);
+		}
+	}
+
+	return to_string(x.val());
+}
+
+namespace atcoder {
+	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+#ifdef _MSC_VER
+	inline ostream& operator<<(ostream& os, const mint& x) { os << mint_to_frac(x); return os; }
+#else
+	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
+#endif	
+}
+
+-------------------------------------------------------------- - */
+
 
 
 // インタラクティブ問題のデバッグ用の雛形

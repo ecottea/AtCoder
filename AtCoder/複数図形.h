@@ -377,7 +377,7 @@ int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>
 }
 
 
-//【線分群の交点（軸平行）】O(n log w)
+//【線分群の交点（軸平行）】O(n log w + w)
 /*
 * 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分について，
 * (L 字型の共有点の個数, T 字型の共有点の個数, 十字型の共有点の個数) の 3 つ組を返す．
@@ -449,13 +449,13 @@ tuple<ll, ll, ll> count_intersections(const vi& x1, const vi& y1, const vi& x2, 
 }
 
 
-//【線分群の連結成分数（軸平行）】O(n log w)
+//【線分群の連結成分数（軸平行）】O(n log w + w)
 /*
 * 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分について，連結成分数を返す．
 *
 * 制約：y1[i]≧0，線分は軸平行，互いに平行な線分同士は共有点をもたない．
 */
-int opccc(int x, int y) { return min(x, y); }
+int opccc(int a, int b) { return min(a, b); }
 int eccc() { return INF; }
 int opccc2(int a, int b) { return max(a, b); }
 int eccc2() { return -1; }
@@ -555,6 +555,8 @@ int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const v
 */
 template <class T>
 double minimum_bitonic_tour(vector<Point<T>>& p) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_2_C
+
 	int n = sz(p);
 
 	sort(all(p));
@@ -742,12 +744,12 @@ public:
 		vi p;
 		repe(tmp, thi) p.emplace_back(tmp.second);
 
-		return count_illegal_parenthesis_pair(p);
+		return count_illegal_colored_parenthesis_pair(p);
 	}
 };
 
 
-//【一定距離以内の点対の列挙】O(?)
+//【一定距離以内の点対の列挙（ユークリッド距離）】O(?)
 /*
 * n 個の点 (x[i], y[i]) からなる対で距離 d 以内にあるものを res に格納する．
 * 点対は添字の対 (i, j)（i < j）として表し，辞書順に並べるものとする．
@@ -785,7 +787,7 @@ void enumerate_point_pair(const vl& x, const vl& y, ll d, vector<pii>& res, ll l
 		// 尺取法で x 座標の差が d 以内である点対を数える．
 		l = 0, r = 0;
 		while (r < n) {
-			if (pi[r].first.x - pi[l].first.x <= d + EPS) {
+			if (pi[r].first.x - pi[l].first.x <= d + 1e-12) {
 				sum += r - l;
 				r++;
 			}
@@ -802,7 +804,7 @@ void enumerate_point_pair(const vl& x, const vl& y, ll d, vector<pii>& res, ll l
 		// 尺取法で x 座標の差が d 以内である点対を列挙し，精密に距離を求める．
 		l = 0; r = 0;
 		while (r < n) {
-			if (pi[r].first.x - pi[l].first.x <= d + EPS) {
+			if (pi[r].first.x - pi[l].first.x <= d + 1e-12) {
 				repi(i, l, r - 1) {
 					int jr = pi[r].second;
 					int ji = pi[i].second;
@@ -827,7 +829,7 @@ void enumerate_point_pair(const vl& x, const vl& y, ll d, vector<pii>& res, ll l
 }
 
 
-//【最近点対】O(?)（TODO : 嘘解法なのでやり直す）
+//【最近点対（ユークリッド距離）】O(?)
 /*
 * n 個の点 (x[i], y[i]) について，最も近い 2 点の距離を返す．
 * またその点対が i 番目と j 番目であることを ps = {i, j} として格納する．
@@ -926,34 +928,121 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 }
 
 
-//【2 点間マンハッタン距離の最大値】O(n)
+//【最遠点（マンハッタン距離）】O(n)
 /*
-* n 個の点 (x[i], y[i]) から選んだ 2 点のマンハッタン距離の最大値を返す．
+* 与えられた n 個の点 (x[i], y[i]) について，各点とのマンハッタン距離が最大の点のリストを返す．
 */
-ll maximize_manhattan_distance(const vl& x, const vl& y) {
-	// verify : https://atcoder.jp/contests/abc178/tasks/abc178_e
+template <class T>
+vi maximum_manhattan_distance(const vector<T>& x, const vector<T>& y) {
+	// verify : https://yukicoder.me/problems/no/2436
 
 	//【方法】
-	// 点 (x1, y1) より点 (x2, y2) が右下にある場合，マンハッタン距離は
-	//		(x2 - x1) + (y2 - y1) = (x2 + y2) - (x1 + y1)
-	// とも表される．点 (x1, y1) より点 (x2, y2) が左下にある場合，マンハッタン距離は
-	//		(x2 - x1) - (y2 - y1) = (x2 - y2) - (x1 - y1)
-	// とも表される．2 点の位置関係はこれらのうちいずれかなので，
-	//		max(x[i] + y[i]) - min(x[i] + y[i])
-	//		max(x[i] - y[i]) - min(x[i] - y[i])
-	// のうち大きい方が答えである．
+	// 45° 回転する変数変換
+	//		u = x + y, v = x - y
+	// を施すと，2 点 p[i], p[j] 間のマンハッタン距離は
+	//		dist(p[i], p[j]) = max(u[i] - u[j], u[j] - u[i], v[i] - v[j], v[j] - v[i])
+	// と表される．よって max のネストを整理して
+	//		max_j dist(p[i], p[j])
+	//		= max(u[i] - min(u), max(u) - u[i], v[i] - min(v), max(v) - v[i])
+	// となる．
 
 	int n = sz(x);
 
-	ll s_max = -INFL, s_min = INFL, d_max = -INFL, d_min = INFL;
+	vector<T> u(n), v(n);
 	rep(i, n) {
-		chmax(s_max, x[i] + y[i]);
-		chmin(s_min, x[i] + y[i]);
-		chmax(d_max, x[i] - y[i]);
-		chmin(d_min, x[i] - y[i]);
+		u[i] = x[i] + y[i];
+		v[i] = x[i] - y[i];
 	}
 
-	ll res = max(s_max - s_min, d_max - d_min);
+	pair<T, int> u_max = { -(T)INFL, -1 }, u_min = { (T)INFL, -1 };
+	pair<T, int> v_max = { -(T)INFL, -1 }, v_min = { (T)INFL, -1 };
+
+	rep(i, n) {
+		chmax(u_max, { u[i], i });
+		chmin(u_min, { u[i], i });
+		chmax(v_max, { v[i], i });
+		chmin(v_min, { v[i], i });
+	}
+
+	vi res(n);
+	rep(i, n) {
+		T dist = -(T)INFL;
+		if (chmax(dist, u[i] - u_min.first)) res[i] = u_min.second;
+		if (chmax(dist, u_max.first - u[i])) res[i] = u_max.second;
+		if (chmax(dist, v[i] - v_min.first)) res[i] = v_min.second;
+		if (chmax(dist, v_max.first - v[i])) res[i] = v_max.second;
+	}
+
+	return res;
+}
+
+
+//【最近点（マンハッタン距離）】O(n log n)
+/*
+* 与えられた n 個の点 (x[i], y[i]) について，各点とのマンハッタン距離が（自身を除き）最小の点のリストを返す．
+*
+* 利用：【座標圧縮】
+*/
+template <class T> pair<T, int> opmmd(pair<T, int> a, pair<T, int> b) { return min(a, b); }
+template <class T> pair<T, int> emmd() { return { (T)INFL, -1 }; }
+template <class T>
+vi minimum_manhattan_distance(const vector<T>& x, const vector<T>& y) {
+	// verify : https://yukicoder.me/problems/no/2436
+
+	//【方法】
+	// 2 点 p[i], p[j] 間のマンハッタン距離
+	//		|x[i] - x[j]| + |y[i] - y[j]|
+	// は，座標の大小関係により
+	//		(x[i] + y[i]) - (x[j] + y[j])  (x[i] ≧ x[j] かつ y[i] ≧ y[j] のとき)
+	//		(x[i] - y[i]) - (x[j] - y[j])  (x[i] ≧ x[j] かつ y[i] ≦ y[j] のとき)
+	//		-(x[i] - y[i]) + (x[j] - y[j])  (x[i] ≦ x[j] かつ y[i] ≧ y[j] のとき)
+	//		-(x[i] + y[i]) + (x[j] + y[j])  (x[i] ≦ x[j] かつ y[i] ≦ y[j] のとき)
+	// と場合分けして表される．よって
+	//		min_j≠i (|x[i] - x[j]| + |y[i] - y[j]|)
+	//		= min( (x[i] + y[i]) - max_j≠i (x[j] + y[j]) | x[i] ≧ x[j] かつ y[i] ≧ y[j],
+	//			   (x[i] - y[i]) - max_j≠i (x[j] - y[j]) | x[i] ≧ x[j] かつ y[i] ≦ y[j],
+	//			  -(x[i] - y[i]) + min_j≠i (x[j] - y[j]) | x[i] ≦ x[j] かつ y[i] ≧ y[j],
+	//			  -(x[i] + y[i]) + min_j≠i (x[j] + y[j]) | x[i] ≦ x[j] かつ y[i] ≦ y[j] )
+	// となる．
+
+	int n = sz(x);
+
+	vi y_cp;
+	int w = coordinate_compression(y, y_cp);
+
+	vector<pair<T, int>> xi(n);
+	rep(i, n) xi[i] = { x[i], i };
+	sort(all(xi));
+
+	vi res(n, -1); vector<T> dist(n, (T)INFL);
+
+	segtree<pair<T, int>, opmmd<T>, emmd<T>> nu_min(w), nv_min(w);
+	rep(t, n) {
+		int i = xi[t].second;
+
+		auto [nu, j1] = nu_min.prod(0, y_cp[i]);
+		if (chmin(dist[i], (x[i] + y[i]) + nu)) res[i] = j1;
+
+		auto [nv, j2] = nv_min.prod(y_cp[i], w);
+		if (chmin(dist[i], (x[i] - y[i]) + nv)) res[i] = j2;
+
+		nu_min.set(y_cp[i], min(nu_min.get(y_cp[i]), { -(x[i] + y[i]), i }));
+		nv_min.set(y_cp[i], min(nv_min.get(y_cp[i]), { -(x[i] - y[i]), i }));
+	}
+
+	segtree<pair<T, int>, opmmd<T>, emmd<T>> u_min(w), v_min(w);
+	repir(t, n - 1, 0) {
+		int i = xi[t].second;
+
+		auto [v, j1] = v_min.prod(0, y_cp[i]);
+		if (chmin(dist[i], v - (x[i] - y[i]))) res[i] = j1;
+
+		auto [u, j2] = u_min.prod(y_cp[i], w);
+		if (chmin(dist[i], u - (x[i] + y[i]))) res[i] = j2;
+
+		u_min.set(y_cp[i], min(u_min.get(y_cp[i]), { x[i] + y[i], i }));
+		v_min.set(y_cp[i], min(v_min.get(y_cp[i]), { x[i] - y[i], i }));
+	}
 
 	return res;
 }

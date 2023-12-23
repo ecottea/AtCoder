@@ -123,13 +123,24 @@ mint count_replaced_strings_contain_subsequence(const string& s, const string& t
 * k 種の英小文字と '?' からなる文字列 s[0..n) について，それぞれの '?' を英小文字に置き換えて
 * 得られる文字列のうち，w[0..m) を部分文字列に含むものの個数を返す．
 */
-mint count_replaced_strings_contain_substring(const string& s, const string& w, int k = 26) {
+mint count_replaced_strings_contain_substring(const string& s, const string& w, int k = 26, char A = 'a') {
+	// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/5
+
 	//【方法】
 	// KMP 法を書き写し，数え上げ DP 用に書き直した．
 
 	int n = sz(s), m = sz(w);
 
-	vi l = morris_pratt(w);
+	// l[i] : w[0..i) の接頭辞と接尾辞が最大何文字一致しているか（i 文字未満）
+	vi l(m + 1);
+	l[0] = -1;
+
+	// モーリスプラット
+	int j = -1;
+	rep(i, m) {
+		while (j >= 0 && w[i] != w[j]) j = l[j];
+		l[i + 1] = ++j;
+	}
 
 	vvm dp(n + 1, vm(m + 1));
 	dp[0][0] = 1;
@@ -140,7 +151,7 @@ mint count_replaced_strings_contain_substring(const string& s, const string& w, 
 		auto dp_prv(dp[ij]);
 
 		rep(c, k) {
-			if (s[ij] != '?' && s[ij] != 'a' + c) continue;
+			if (s[ij] != '?' && s[ij] != A + c) continue;
 
 			repir(j, min(ij, m), 0) {
 				int i = ij - j;
@@ -148,7 +159,7 @@ mint count_replaced_strings_contain_substring(const string& s, const string& w, 
 				if (j == m) {
 					dp[ij + 1][j] += dp[ij][j];
 				}
-				else if (w[j] == 'a' + c) {
+				else if (w[j] == A + c) {
 					dp[ij + 1][j + 1] += dp[ij][j];
 				}
 				else {

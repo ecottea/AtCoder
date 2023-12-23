@@ -1,54 +1,57 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
+#include "包含.h"
 // ■■■■■ 写像 12 相とその類題 ■■■■■
 
 
-//【ボールの区別あり，箱の区別あり，箱の中身は任意】
+//【写像の数（ボールの区別あり，箱の区別あり，箱の中身は任意）】
 /*
-* ボールが n 個，箱が m 個の場合，重複順列の考え方より
-* ボールの入れ方は m^n 通りとなる．
+* n 点集合から m 点集合への写像の数は，重複順列の考え方より m^n 通りとなる．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_A
 */
 
 
-//【ボールの区別あり，箱の区別あり，箱の中身は 1 個以下】
+//【単射の数（ボールの区別あり，箱の区別あり，箱の中身は 1 個以下）】
 /*
-* ボールが n 個，箱が m 個の場合，順列の考え方より
-* ボールの入れ方は perm(m, n) 通りとなる．
+* n 点集合から m 点集合への単射の数は，順列の考え方より perm(m, n) 通りとなる．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_B
 */
 
 
-//【全射の数（ボールの区別あり，箱の区別あり，箱の中身は 1 個以上）】O(n m)
+//【全射の数（ボールの区別あり，箱の区別あり，箱の中身は 1 個以上，n,m 一括）】O(n m)
 /*
-* 各 i ∈ [0..n], j ∈ [0..m] について，
-* i 点集合から j 点集合への全射の数を c[i][j] に格納する．
+* 各 i∈[0..n], j∈[0..m] について，i 点集合から j 点集合への全射の数を c[i][j] に格納し c を返す．
 */
-void count_surjections(int n, int m, vvm& c) {
+vvm count_surjections_all_N_M(int n, int m) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_C
 
 	//【方法】
-	// c[i][j] : [0, i) から [0, j) への全射の数，についての漸化式を作る．
+	// c[i][j] : [0..i) から [0..j) への全射の数，についての漸化式を作る．
 	//
-	// case 1. [0, i-1) の行き先が [0, j) のとき：
-	// i の行き先は [0, j) の j 通りから自由に選べる．
+	// case 1. [0..i-1) の行き先が [0..j) のとき：
+	// i の行き先は [0..j) の j 通りから自由に選べる．
 	//
-	// case 2. [0, i-1) の行き先が [0, j) でないとき：
-	// [0, i-1) の行き先は [0, j) からある元 j0 を除いたものでなければならない．
+	// case 2. [0..i-1) の行き先が [0..j) でないとき：
+	// [0..i-1) の行き先は [0..j) からある元 j0 を除いたものでなければならない．
 	// その j0 の選び方が j 通りあり，i の行き先は j0 に限定される．
 	//
 	// これらをまとめて，漸化式
-	//		c[i][j] = c[i - 1][j] * j + c[i - 1][j - 1] * j
+	//		c[i][j] = c[i-1][j] * j + c[i-1][j-1] * j
 	// を得る．
 
+	//【備考】
+	// c[i][j] = s(i, j) * j! である（s(i, j) は第二種スターリング数）
+
 	// c[i][j] : [0, i) から [0, j) への全射の数
-	c = vvm(n + 1, vm(m + 1));
+	vvm c(n + 1, vm(m + 1));
 	c[0][0] = 1;
 
 	repi(i, 1, n) repi(j, 1, m) c[i][j] = (c[i - 1][j] + c[i - 1][j - 1]) * j;
+
+	return c;
 }
 
 
@@ -56,9 +59,9 @@ void count_surjections(int n, int m, vvm& c) {
 /*
 * n 点集合から m 点集合への全射の数を返す．
 *
-* 利用：【階乗など（法が大きな素数）】
+* 制約：fm は m! まで計算可能
 */
-mint count_surjections(ll n, int m) {
+mint count_surjections(ll n, int m, const Factorial_mint& fm) {
 	// verify : https://yukicoder.me/problems/no/391
 
 	//【方法】
@@ -72,8 +75,6 @@ mint count_surjections(ll n, int m) {
 	//		Σj∈[0..m] (-1)^(m-j) bin(m, j) j^n 通り
 	// である．
 
-	Factorial_mint fm(m);
-
 	mint res = 0;
 	repi(j, 0, m) {
 		res += ((m - j) % 2 == 0 ? 1 : -1) * fm.bin(m, j) * mint(j).pow(n);
@@ -83,15 +84,33 @@ mint count_surjections(ll n, int m) {
 }
 
 
-//【全射の数（ボールの区別あり，箱の区別あり，箱の中身は 1 個以上，一括）】
+//【全射の数（ボールの区別あり，箱の区別あり，箱の中身は 1 個以上，m 一括, mod 998244353）】
 /*
-* 重複順列に対して【個数系包除原理（一括，mod998244353）】を用いれば良い．
-* 
-* verify : https://yukicoder.me/problems/no/1100
+* 各 j∈[0..m] について，n 点集合から j 点集合への全射の数を格納したリストを返す．
+*
+* 制約 : fm は m! まで計算可能
+*
+* 利用：【下位集合メビウス変換（大きさ依存, mod 998244353）】
 */
+vm count_surjections_all_M(ll n, int m, const Factorial_mint& fm) {
+	// verify: https://yukicoder.me/problems/no/1100
+
+	//【方法】
+	// n 点集合から m 点集合への写像のうち，特定の j 要素のみを射つものは j^n 通りである．
+	// これに対して大きさ依存の下位集合メビウス変換を適用すれば，
+	// n 点集合から m 点集合への写像のうち，特定の j 要素のみを漏れなく射つものの個数が求まる．
+	// これは n 点集合から j 点集合への全射の数にほかならない．
+
+	vm g(m + 1);
+	repi(j, 0, m) g[j] = mint(j).pow(n);
+
+	vm f = set_submobius_size(g, fm);
+
+	return f;
+}
 
 
-//【ボールの区別なし，箱の区別あり，箱の中身は任意】
+//【自然数の順序付き分割の数（ボールの区別なし，箱の区別あり，箱の中身は任意）】
 /*
 * ボールが n 個，箱が m 個の場合，重複組合せの考え方より
 * ボールの入れ方は hom(m, n) = bin(n+m-1, m-1) 通りとなる．
@@ -122,7 +141,7 @@ mint count_surjections(ll n, int m) {
 /*
 * ボールが n 個，箱が m 個の場合，ボールの入れ方は以下の式で与えられる：
 *	[z^n] (1-z^k)^m (1-z)^(-m)
-* これは二項定理と負の二項定理を用いて O(n / k) で計算できる．
+* これは二項定理と負の二項定理を用いて O(n/k) で計算できる．
 * 
 * verify : https://atcoder.jp/contests/agc009/tasks/agc009_e
 */
@@ -139,7 +158,7 @@ mint count_surjections(ll n, int m) {
 //【ボールの区別あり，箱の区別なし，箱の中身は 1 個以下】
 /*
 * ボールが n 個，箱が m 個の場合，ボールの入れ方は明らかに
-* n <= k のとき 1 通り，n > k のとき 0 通りとなる．
+* n ≦ k のとき 1 通り，n > k のとき 0 通りとなる．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_H
 */
@@ -147,10 +166,10 @@ mint count_surjections(ll n, int m) {
 
 //【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）】O(n^2)
 /*
-* 各 i ∈ [0..n], j ∈ [0..n] について，
+* 各 i∈[0..n], j∈[0..n] について，
 * i 点集合をちょうど j 個に分割する方法の数を格納した二次元リストを返す．
 */
-vvm stirling_S2(int n) {
+vvm stirling_S2_all_N_K(int n) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
 
 	//【方法】
@@ -204,13 +223,13 @@ mint stirling_S2(int n, int k) {
 }
 
 
-//【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上，mod998244353）】O(n log n)
+//【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上，mod 998244353）】O(n log n)
 /*
-* n 点集合をちょうど k 個に分割する方法の数 s(n, k) を s[k] に格納する．
+* 各 j∈[0..n] について，n 点集合をちょうど j 個に分割する方法の数 s(n, k) を格納したリストを返す．
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-void stirling_S2(int n, vm& s) {
+vm stirling_S2_all_K(int n) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E6%95%B0
 	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_second_kind
 
@@ -229,14 +248,16 @@ void stirling_S2(int n, vm& s) {
 		g[i] = mint(i).pow(n) * fm.fact_inv(i);
 	}
 
-	s = convolution(f, g);
+	vm s = convolution(f, g);
 	s.resize(n + 1);
+
+	return s;
 }
 
 
 //【自然数の分割の数（ボールの区別なし，箱の区別なし，箱の中身は任意）】O(n m)
 /*
-* 各 i ∈ [0..n], j ∈ [0..m] について，
+* 各 i∈[0..n], j∈[0..m] について，
 * 自然数 i を j 個以下に分割する方法の数を c[i][j] に格納する．
 *
 * c[i][j] は，自然数 i を j 以下の自然数に分割する方法の数とも解釈できる．
@@ -285,7 +306,7 @@ void count_integer_partitions(int n, int m, vvm& c) {
 
 //【自然数の分割の数（個数上限付き）】O(n m)
 /*
-* 各 i ∈ [0..n], j ∈ [0..m] について，同じ自然数は k 個以下しか使えない条件で，
+* 各 i∈[0..n], j∈[0..m] について，同じ自然数は k 個以下しか使えない条件で，
 * 自然数 i を j 個以下に分割する方法の数を c[i][j] に格納する．
 *
 * c[i][j] は，次に大きい自然数との差が k 以下でなくてはならない条件で，
@@ -329,7 +350,7 @@ void count_cntlimited_integer_partitions(int n, int m, int k, vvm& c) {
 
 //【自然数の分割の数（大きさ上限付き）】O(n m d)
 /*
-* 各 i ∈ [0..n], j ∈ [0..m], k ∈ [0..d] について，
+* 各 i∈[0..n], j∈[0..m], k∈[0..d] について，
 * 自然数 i を j 以下の自然数 k 個以下に分割する方法の数を c[i][j][k] に格納する．
 */
 void count_maxlimited_integer_partitions(int n, int m, int d, vvvm& c) {
@@ -359,7 +380,7 @@ void count_maxlimited_integer_partitions(int n, int m, int d, vvvm& c) {
 
 //【分割数】O(n)
 /*
-* 各 i ∈ [0..n] について自然数 i を分割する方法の数を p[i] に格納する．
+* 各 i∈[0..n] について自然数 i を分割する方法の数を p[i] に格納する．
 */
 void partition_function(int n, vm& p) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E5%88%86%E5%89%B2%E6%95%B0
@@ -390,7 +411,7 @@ void partition_function(int n, vm& p) {
 //【ボールの区別なし，箱の区別なし，箱の中身は 1 個以下】
 /*
 * ボールが n 個，箱が m 個の場合，ボールの入れ方は明らかに
-* n <= k のとき 1 通り，n > k のとき 0 通りとなる．
+* n ≦ k のとき 1 通り，n > k のとき 0 通りとなる．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_K
 */

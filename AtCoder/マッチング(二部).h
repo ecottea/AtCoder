@@ -2,10 +2,11 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "木DP.h"
+#include "フロー.h"
 // ■■■■■ 二部グラフのマッチング ■■■■■
 
 
-//【二部グラフの最大マッチング，最小辺被覆，最小点被覆】
+//【二部グラフの最大マッチング（最小辺被覆，最小点被覆）】
 /*
 * 二部グラフ (S, T) の最大マッチングなどを求める．
 *
@@ -279,10 +280,10 @@ struct Minimum_cost_edge_cover {
 //【完全二部グラフの最小コスト完全マッチング】O(|S|^3 ?)
 /*
 * S[i], T[j] 間のコストが c[i][j] で与えられる重み付き完全二部グラフ (S, T) について，
-* 完全マッチングのうち最小のコストをもつもののコストを返す．
+* 完全マッチングの最小コストを返す．
 * また S[i], T[j] がマッチングを成すことを p[i] = j として格納する．
 * 
-* 利用：【二部グラフの最大マッチング，最小辺被覆，最小点被覆】
+* 利用：【二部グラフの最大マッチング】
 */
 ll hungarian(const vvl& c_, vi& p) {
 	// 参考 : http://www.bunkyo.ac.jp/~nemoto/lecture/network/2010/matching1_2010.pdf
@@ -293,8 +294,6 @@ ll hungarian(const vvl& c_, vi& p) {
 	p.resize(n);
 
 	while (true) {
-		dumpel(c);
-
 		// 各行について行の最小値を引く．
 		vl y_min(n, INFL);
 		rep(i, n) {
@@ -453,7 +452,7 @@ mint count_bipartite_perfect_matching(const vector<vector<T>>& e, T ex) {
 * 【二部グラフの完全マッチングの数え上げ】の戻り値は
 * 0,1 を成分にもつ二部隣接行列 e[0..n)[0..n) のパーマネント perm(e) とも解釈できる．
 *
-* mod 2 では perm(e) = det(e) であり，det(e) は O(n^3) で計算できる．
+* mod 2 では perm(e) ≡ det(e) であり，det(e) は O(n^3) で計算できる．
 * verify : https://atcoder.jp/contests/arc054/tasks/arc054_c
 */
 
@@ -550,13 +549,12 @@ mint count_bipartite_perfect_matching_LEG(const vi& sb, const vi& tb) {
 */
 using T_tbm = int;
 void merge_tbm(T_tbm& x, const T_tbm& y, int s) { x += y; }
-T_tbm e_tbm() { return 0; }
 T_tbm leaf_tbm(int s) { return 0; }
 T_tbm apply_tbm(const T_tbm& x, int s, int t) { return (T_tbm)(x == 0); }
 int tree_maximum_matching(const Graph& g) {
 	// verify : https://atcoder.jp/contests/agc014/tasks/agc014_d
 	
-	vector<T_tbm> dp = tree_getDP_vmerge<T_tbm, merge_tbm, e_tbm, leaf_tbm, apply_tbm>(g, 0);
+	auto dp = tree_getDP_vmerge<T_tbm, merge_tbm, leaf_tbm, apply_tbm>(g, 0);
 	
 	int res = 0;
 	rep(i, sz(g)) res += (int)(dp[i] > 0);
@@ -573,13 +571,12 @@ int tree_maximum_matching(const Graph& g) {
 */
 using T_mmi = bool; // 根を必ず使うか
 T_mmi merge_mmi(T_mmi x, T_mmi y, int s) { return x || y; }
-T_mmi e_mmi(int s) { return false; }
 T_mmi leaf_mmi(int s) { return false; }
 T_mmi apply_mmi(T_mmi x, int p, int s) { return !x; }
 vb tree_maximum_matching_intersection(Graph& g) {
 	// verify : https://atcoder.jp/contests/abc223/tasks/abc223_g
 
-	return rerooting<T_mmi, merge_mmi, e_mmi, leaf_mmi, apply_mmi>(g);
+	return rerooting<T_mmi, merge_mmi, leaf_mmi, apply_mmi>(g);
 }
 
 
@@ -622,10 +619,10 @@ vb tree_maximum_matching_intersection(Graph& g) {
 * (S, T) には必ず完全マッチングが存在し，これを帰納的に適用して辺集合を完全マッチングに分割できる．
 * 
 * 証明：各頂点の次数を d とする．ホールの結婚定理において，
-*		∀X ⊂ S, |X| <= |f(X)|
+*		∀X ⊂ S, |X| ≦ |f(X)|
 * を示せば良い．X から出る辺は d |X| 本であり，これは f(X) に入る辺の本数以下である．
 * f(X) の各頂点の次数も d なので，f(X) に入る辺の本数が d |X| 本以上となるためには
-* f(X) が少なくとも |X| 個の頂点を含んでいなければならず，|X| <= |f(X)| である．
+* f(X) が少なくとも |X| 個の頂点を含んでいなければならず，|X| ≦ |f(X)| である．
 * 
 * verify : https://yukicoder.me/problems/no/2263
 */
@@ -634,7 +631,7 @@ vb tree_maximum_matching_intersection(Graph& g) {
 //【点と区間の最大マッチング】O(n log n + m log m)
 /*
 * n 個の点 xs[i] と m 個の区間 [ls[j]..rs[j]) がある．
-* ls[j] <= xs[i] < rs[j] を満たす組 (i, j) の最大個数を返し，組 (i, j) を ps に格納する．
+* ls[j] ≦ xs[i] < rs[j] を満たす組 (i, j) の最大個数を返し，組 (i, j) を ps に格納する．
 */
 int point_interval_matching(const vl& xs, const vl& ls, const vl& rs, vector<pii>* ps = nullptr) {
 	// verify : https://atcoder.jp/contests/code-festival-2014-morning-easy/tasks/code_festival_morning_easy_d
@@ -654,8 +651,7 @@ int point_interval_matching(const vl& xs, const vl& ls, const vl& rs, vector<pii
 
 	// 区間の右端昇順に点とマッチングさせていく．
 	rep(j, m) {
-		ll r; int id;
-		tie(r, id) = rj[j];
+		auto[r, id] = rj[j];
 		ll l = ls[id];
 
 		// 区間内の点のうち最も左にあるものを見つける（無ければマッチング失敗）
@@ -775,8 +771,7 @@ int bipartite_edge_chromatic(int ns, int nt, const vi& u, const vi& v, vi& col) 
 
 	// g の全ての辺について
 	rep(s, n) repe(it, g[s]) {
-		int i, t;
-		tie(i, t) = it;
+		auto [i, t] = it;
 
 		if (col[i] != -1) continue;
 

@@ -76,17 +76,18 @@ vl lowest_cost_path(const WGraph& g, int gl) {
 /*
 * DAG g の各頂点から gl までのパスの個数を格納したリストを返す．
 */
-vm count_path(const Graph& g, int gl) {
+template <class T>
+vector<T> count_path(const Graph& g, int gl) {
 	// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_b
 
 	int n = sz(g);
 
 	// cnt[s] : 頂点 s からのパスの個数
-	vm cnt(n); vb seen(n);
+	vector<T> cnt(n); vb seen(n);
 	cnt[gl] = 1; seen[gl] = true;
 
 	// 貰う DP
-	function<mint(int)> dfs = [&](int s) {
+	function<T(int)> dfs = [&](int s) {
 		if (seen[s]) return cnt[s];
 		seen[s] = true;
 
@@ -288,6 +289,57 @@ ll highest_score_twinpath(const Graph& g, const vl& w) {
 }
 
 
+//【到達可能性（DAG）】O((n + m) q / 64)
+/*
+* 与えられた DAG g に対し，各 j∈[0..q) について，
+* 頂点 u[j] から頂点 v[j] に到達可能かを格納したリストを返す．
+*/
+vb reachability_DAG(const Graph& g, const vi& u, const vi& v) {
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_bg
+
+	//【方法】
+	// bool 値をもつ素朴な配る DP を考え，それをクエリをまとめて扱うことで 64 倍高速化する．
+
+	//【注意】
+	// いっそのこと bitset で n 個まとめてやれば良さそうだがそれだと MLE の危険がある．
+
+	int n = sz(g), q = sz(u);
+	vb res(q);
+
+	int j = 0;
+	while (j < q) {
+		// dp[i] :「頂点 i に到達可能か」を 64 個まとめたもの
+		vector<ull> dp(n);
+
+		// 初期化（初期位置 u[j] を 1 にする）
+		int b = 0;
+		for (; b < 64; ) {
+			dp[u[j]] += 1ULL << (b++);
+			if (++j == q) break;
+		}
+
+		// 配る DP をビット演算で 64 倍高速化する．
+		rep(s, n) repe(t, g[s]) dp[t] |= dp[s];
+
+		// 結果の格納
+		rep(b2, b) {
+			int j2 = j - (b - b2);
+			res[j2] = get(dp[v[j2]], b2);
+		}
+	}
+
+	return res;
+}
+
+
+//【到達可能な頂点数】
+/*
+* DAG g の各頂点から到達可能な頂点の個数を一括で求める問題を効率良く解く方法は知られていない．
+* 
+* 参考 : https://twitter.com/noshi91/status/1633031948938645505
+*/
+
+
 //【Dilworth の定理】
 /*
 *（推移的とは限らない）DAG g の最小パス被覆の大きさは，最大反鎖の大きさに一致する．
@@ -382,3 +434,8 @@ int minimum_path_cover(const Graph& g) {
 * verify : https://atcoder.jp/contests/agc043/tasks/agc043_c
 */
 
+
+//【格子 DAG の座標圧縮】
+/*
+* 座標圧縮.h へ
+*/

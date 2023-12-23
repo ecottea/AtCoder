@@ -18,14 +18,14 @@
 *		   条件 (i∈S ⇔ x[i] に違反がある) に変更したときの対象の個数
 * と定めたときの f(φ) を求めることに相当する．
 *
-* f を上位ゼータ変換した集合関数を g とすると，g は
-*	f(S) = 条件 (どの x[0..N) の要素にも違反がない) を
+* f を上位集合ゼータ変換した集合関数を g とすると，g は
+*	g(S) = 条件 (どの x[0..N) の要素にも違反がない) を
 *		   条件 (i∈S ⇒ x[i] に違反がある) に変更したときの対象の個数
 * と解釈できる．g(S) であれば i∈S でない i は無条件となり考えやすくなる．
 */
 
 
-//【上位ゼータ変換】O(2^N N)
+//【上位集合ゼータ変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の上位集合からの累積和が
 *       g[S] = ΣT⊃S f[T] （S : [0..N) の部分集合）
@@ -33,7 +33,7 @@
 */
 template <class T>
 void set_superzeta(vector<T>& f) {
-	// verify : https://judge.yosupo.jp/problem/bitwise_fnd_convolution
+	// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
 
 	//【例（N = 3 のとき）】
 	//	g[0] = f[0] + f[1] + f[2] + f[3] + f[4] + f[5] + f[6] + f[7]
@@ -53,7 +53,7 @@ void set_superzeta(vector<T>& f) {
 }
 
 
-//【上位メビウス変換】O(2^N N)
+//【上位集合メビウス変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の上位集合からの累積和が
 *       g[S] = ΣT⊃S f[T] （S : [0..N) の部分集合）
@@ -83,7 +83,7 @@ void set_supermobius(vector<T>& g) {
 }
 
 
-//【上位メビウス変換（最小元）】O(2^N)
+//【上位集合メビウス変換（最小元）】O(2^N)
 /*
 * [0..N) 上の集合関数 f(S) の上位集合からの累積和が
 *       g[S] = ΣT⊃S f(T) （S : [0..N) の部分集合）
@@ -106,7 +106,7 @@ T set_supermobius_bottom(const vector<T>& g) {
 }
 
 
-//【上位メビウス変換（大きさ依存, mod 998244353）】O(N log N)
+//【上位集合メビウス変換（大きさ依存, mod 998244353）】O(N log N)
 /*
 * [0..N) 上の集合関数 f(S) が S の大きさ |S| のみに依存する関数を用いて
 *		f(S) = f[|S|]
@@ -153,7 +153,7 @@ vm set_supermobius_size(vm g, const Factorial_mint& fm) {
 }
 
 
-//【上位メビウス変換（大きさ依存，最小元）】O(N)
+//【上位集合メビウス変換（大きさ依存，最小元）】O(N)
 /*
 * [0..N) 上の集合関数 f(S) の上位集合からの累積和
 *		g(S) = ΣT⊃S f(T) （S : [0..N) の部分集合）
@@ -179,7 +179,7 @@ mint set_supermobius_size_bottom(const vm& g, const Factorial_mint& fm) {
 }
 
 
-//【上位メビウス変換（大きさごと，最小元）】O(N)
+//【上位集合メビウス変換（大きさごと，最小元）】O(N)
 /*
 * [0..N) 上の集合関数 f(S) の上位集合からの累積和を
 *		g(S) = ΣT⊃S f(T) （S : [0..N) の部分集合）
@@ -206,21 +206,21 @@ vector<T> and_convolution(vector<T> f, vector<T> g) {
 
 	int N = msb(sz(f));
 
-	// f, g を上位ゼータ変換する．
+	// f, g を上位集合ゼータ変換する．
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set] += f[set + (1 << i)];
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set] += g[set + (1 << i)];
 
 	// 各点積をとる．
 	repb(set, N) f[set] *= g[set];
 
-	// 結果を上位メビウス変換する．
+	// 結果を上位集合メビウス変換する．
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set] -= f[set + (1 << i)];
 
 	return f;
 }
 
 
-//【上位 max ゼータ変換】O(2^N N)
+//【上位集合 max ゼータ変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の上位集合からの累積 max が
 *       g[S] = MAX_(T⊃S) f[T] （S : [0..N) の部分集合）
@@ -244,7 +244,7 @@ template <class T>
 vector<T> superset_and_max_convolution(vector<T> f, vector<T> g) {
 	int N = msb(sz(f));
 
-	// f, g を上位 max ゼータ変換する．
+	// f, g を上位集合 max ゼータ変換する．
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) chmax(f[set], f[set + (1 << i)]);
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) chmax(g[set], g[set + (1 << i)]);
 
@@ -255,7 +255,7 @@ vector<T> superset_and_max_convolution(vector<T> f, vector<T> g) {
 }
 
 
-//【下位ゼータ変換】O(2^N N)
+//【下位集合ゼータ変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の下位集合からの累積和が
 *       g[S] = ΣT⊂S f[T] （S : [0..N) の部分集合）
@@ -277,13 +277,15 @@ void set_subzeta(vector<T>& f) {
 	//
 	// シェルピンスキーのギャスケットのパターンが見えている．
 
-	int N = msb(sz(f));
+	int n = sz(f);
+	int N = msb(n - 1) + 1;
 
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] += f[set];
+	// n が 2 冪でなくても [0..n) の範囲では正しく計算できる．
+	rep(i, N) rep(set, n) if (get(set, i)) f[set] += f[set - (1 << i)];
 }
 
 
-//【下位メビウス変換】O(2^N N)
+//【下位集合メビウス変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の下位集合からの累積和が
 *       g[S] = ΣT⊂S f[T] （S : [0..N) の部分集合）
@@ -313,6 +315,74 @@ void set_submobius(vector<T>& g) {
 }
 
 
+//【下位集合メビウス変換（大きさ依存, mod 998244353）】O(N log N)
+/*
+* [0..N) 上の集合関数 f(S) が S の大きさ |S| のみに依存する関数を用いて
+*		f(S) = f[|S|]
+* と書けるとする．このとき f(S) の下位集合からの累積和
+*		g(S) = ΣT⊂S f(T) （S : [0..N) の部分集合）
+* もまた
+*		g(S) = g[|S|]
+* と書ける．与えられた g[0..N] に対応する f[0..N] を返す．
+*
+* 具体的には
+*		f[n] = Σk∈[0..n] (-1)^(n-k) bin(n,k) g[k]
+* で表される．
+*
+* 制約：fm は N! まで計算可能
+*/
+vm set_submobius_size(vm g, const Factorial_mint& fm) {
+	// verify : https://yukicoder.me/problems/no/2388
+
+	//【方法】
+	// メビウス変換の式を変形すると，
+	//		f[n] = n! Σk∈[0..n] ((-1)^(n-k) / (n-k)!) (g[k] / k!)
+	// となるので，畳込みで高速に計算できる．
+
+	int N = sz(g) - 1;
+
+	repi(n, 0, N) g[n] *= fm.fact_inv(n);
+
+	// coef : exp(-z) の係数
+	vm coef(N + 1);
+	repi(n, 0, N) coef[n] = (n % 2 ? -1 : 1) * fm.fact_inv(n);
+
+	// coef と g を畳み込んで下側を取得する．
+	vm f = convolution(coef, g);
+	f.resize(N + 1);
+
+	repi(n, 0, N) f[n] *= fm.fact(n);
+
+	return f;
+}
+
+
+//【下位集合メビウス変換（大きさ依存，最大元）】O(N)
+/*
+* [0..N) 上の集合関数 f(S) の下位集合からの累積和
+*		g(S) = ΣT⊂S f(T) （S : [0..N) の部分集合）
+* が S の大きさ |S| のみに依存する関数 g[|S|] を用いて
+*		g(S) = g[|S|]
+* と書けるとする．与えられた g[0..N] に対応する f([0..N)) を返す．
+*
+* 具体的には
+*		f([0..N)) = Σk⊂[0..N] (-1)^(N-k) bin(N,k) g[k]
+* で表される．
+*
+* 制約：fm は N! まで計算可能
+*/
+mint set_submobius_size_top(const vm& g, const Factorial_mint& fm) {
+	// verify : https://yukicoder.me/problems/no/1815
+
+	int N = sz(g) - 1;
+
+	mint f0;
+	repi(k, 0, N) f0 += ((N - k) % 2 ? -1 : 1) * fm.bin(N, k) * g[k];
+
+	return f0;
+}
+
+
 //【和集合畳込み】O(2^N N)
 /*
 * 与えられた [0..N) 上の集合関数 f, g に対して
@@ -326,21 +396,21 @@ vector<T> or_convolution(vector<T> f, vector<T> g) {
 
 	int N = msb(sz(f));
 
-	// f, g を下位ゼータ変換する．
+	// f, g を下位集合ゼータ変換する．
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] += f[set];
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] += g[set];
 
 	// 各点積をとる．
 	repb(set, N) f[set] *= g[set];
 
-	// 結果を下位メビウス変換する．
+	// 結果を下位集合メビウス変換する．
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] -= f[set];
 
 	return f;
 }
 
 
-//【下位 max ゼータ変換】O(2^N N)
+//【下位集合 max ゼータ変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の下位集合からの累積 max が
 *       g[S] = MAX_(T⊂S) f[T] （S : [0..N) の部分集合）
@@ -366,7 +436,7 @@ template <class T>
 vector<T> subset_or_max_convolution(vector<T> f, vector<T> g) {
 	int N = msb(sz(f));
 
-	// f, g を下位 max ゼータ変換する．
+	// f, g を下位集合 max ゼータ変換する．
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) chmax(f[set + (1 << i)], f[set]);
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) chmax(g[set + (1 << i)], g[set]);
 
@@ -424,38 +494,68 @@ vector<T> distinct_subset_or_max_convolution(const vector<T>& f) {
 * 与えられた [0..N) 上の集合関数 f, g に対して
 *       h[S] = Σ_(T凵U = S) f[T] g[U] （凵 は非交和）
 * なる h[0..2^N) を返す．
-* 
-* 利用：【形式的冪級数（可換環）】,【和集合畳込み】
 */
-template <class T> T add_duc(T x, T y) { return x + y; }
-template <class T> T o_duc() { return 0; }
-template <class T> T mi_duc(T x) { return -x; }
-template <class T> T mul_duc(T x, T y) { return x * y; }
-template <class T> T e_duc() { return 1; }
-#define Add_mul_cring_duc T, add_duc, o_duc, mi_duc, mul_duc, e_duc
 template <class T>
 vector<T> disjoint_union_convolution(const vector<T>& f, const vector<T>& g) {
 	// 参考 : https://37zigen.com/subset-convolution/
 	// verify : https://judge.yosupo.jp/problem/subset_convolution
 
+	//【方法】
+	// f[set] を多項式 f[set] z^|set| に対応させ，多項式として和集合畳込みを行うと，
+	//		h[S](z) = Σ_(T∪U = S) f[T](z) g[U](z)
+	// なる h が得られる．T∪U = S が非交和でないとき，
+	//		[z^|S|] f[T](z) g[U](z)
+	//		= [z^|S|] f[T] z^|T| g[U] z^|U|
+	//		= [z^|S|] f[T] g[U] z^(|T| + |U|)
+	//		= 0 （|T| + |U| > |S| より）
+	// となるので，
+	//		[z^|S|] h[S](z)
+	//		= [z^|S|] Σ_(T凵U = S) f[T](z) g[U](z)
+	//		= Σ_(T凵U = S) f[T] g[U]
+	// が成り立つ．
+
 	int N = msb(sz(f));
 
-	vector<FPS<Add_mul_cring_duc>> F(1LL << N), G(1LL << N);
+	// f, g にランク（集合の要素数）の情報を付加する．
+	vector<vector<T>> f2(1LL << N, vector<T>(N + 1)), g2(1LL << N, vector<T>(N + 1));
 	repb(set, N) {
-		F[set] = f[set] * FPS<Add_mul_cring_duc>::monomial(popcount(set));
-		G[set] = g[set] * FPS<Add_mul_cring_duc>::monomial(popcount(set));
+		int r = popcount(set);
+		f2[set][r] = f[set];
+		g2[set][r] = g[set];
+	}
+	
+	// f のランク付き下位ゼータ変換
+	rep(i, N) repb(set, N) repi(r, 0, N) {
+		if (!(set & (1 << i))) f2[set + (1 << i)][r] += f2[set][r];
 	}
 
-	auto H = or_convolution(F, G);
+	// g のランク付き下位ゼータ変換
+	rep(i, N) repb(set, N) repi(r, 0, N) {
+		if (!(set & (1 << i))) g2[set + (1 << i)][r] += g2[set][r];
+	}
+	
+	// 各点積 h = f * g（ただしランクが N より大きい項は無視する）
+	vector<vector<T>> h2(1LL << N, vector<T>(N + 1));
+	repb(set, N) {
+		// f2[set] と g2[set] の畳込み積
+		repi(r, 0, N) repi(rf, 0, r) h2[set][r] += f2[set][rf] * g2[set][r - rf];
+	}
 
+	// h のランク付き下位メビウス変換
+	rep(i, N) repb(set, N) repi(r, 0, N) {
+		if (!(set & (1 << i))) h2[set + (1 << i)][r] -= h2[set][r];
+	}
+	
+	// 非交和でなかったところは集合の要素数よりランクが大きくなっているので，
+	// 集合の要素数とランクが一致している項だけを抜き出す．
 	vector<T> h(1LL << N);
-	repb(set, N) h[set] = H[set][popcount(set)];
+	repb(set, N) h[set] = h2[set][popcount(set)];
 
 	return h;
 }
 
 
-//【高速ゼータ／メビウス変換と行列のクロネッカー積】
+//【集合の高速ゼータ／メビウス変換と行列のクロネッカー積】
 /*
 * f[0..2^n) を上位集合で高速ゼータ変換して g[0..2^n) にする線形変換の表現行列は，
 * 上三角行列 [1 1] の d 個のクロネッカー積に等しい．
@@ -479,7 +579,7 @@ vector<T> disjoint_union_convolution(const vector<T>& f, const vector<T>& g) {
 // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 以下抽象代数上の実装 ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
 
-//【ゼータ変換（上位集合，可換モノイド）】O(2^n n)
+//【上位集合ゼータ変換（可換モノイド）】O(2^n n)
 /*
 * 可換モノイド (S, op, e) の元を要素とする a[0..2^n) を
 *       A[set] = Πsup⊃set a[sup]
@@ -497,7 +597,7 @@ void set_superzeta(vector<S>& f) {
 }
 
 
-//【メビウス変換（上位集合，アーベル群）】O(2^n n)
+//【上位集合メビウス変換（アーベル群）】O(2^n n)
 /*
 * アーベル群 (S, op, e, inv) の元を要素とする A[0..2^n) を
 *       A[set] = Πsup⊃set a[sup]
@@ -561,7 +661,7 @@ vector<S> superset_and_convolution(vector<S> a, vector<S> b) {
 }
 
 
-//【ゼータ変換（下位集合，可換モノイド）】O(2^n n)
+//【下位集合ゼータ変換（可換モノイド）】O(2^n n)
 /*
 * 可換モノイド (S, op, e) の元を要素とする a[0..2^n) を
 *       A[set] = Σsub⊂set a[sub]
@@ -579,7 +679,7 @@ void set_subzeta(vector<S>& f) {
 }
 
 
-//【メビウス変換（下位集合，アーベル群）】O(2^n n)
+//【下位集合メビウス変換（アーベル群）】O(2^n n)
 /*
 * アーベル群 (S, op, e, inv) の元を要素とする A[0..2^n) を
 *       A[set] = Σsub⊂set a[sub]

@@ -177,6 +177,360 @@ struct Segtree {
 };
 
 
+//【間引きセグメント木（モノイド）】
+/*
+* Thinning_segtree<S, op, e>(int n, int m) : O(n)
+*	v[0..n) = e() と法 m で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*
+* Thinning_segtree<S, op, e>(vS v) : O(n)
+*	配列 v[0..n) と法 m で初期化する．
+*
+* set(int i, S x) : O(log n)
+*	v[i] = x とする．
+*
+* S get(int i) : O(1)
+*	v[i] を返す．
+*
+* S prod(int l, int r, int k) : O(log n)
+*	set = {i∈[l..r) | i=k (mod m)} とし，Πv[set] を返す．空なら e() を返す．
+*
+* S all_prod(int k) : O(1)
+*	set = {i∈[0..n) | i=k (mod m)} とし，Πv[set] を返す．空なら e() を返す．
+*
+* int max_right(int l, function<bool(S)> f, int k) : O(log n)
+*	set = {i∈[l..r) | i=k (mod m)} とし，f( Πv[set] ) = true となる最大の r(=k (mod m)) を返す．
+*   制約：f(e()) = true，f は単調
+*
+* int min_left(int r, function<bool(S)> f, int k) : O(log n)
+*	set = {i∈[l..r) | i=k (mod m)} とし，f( Πv[set] ) = true となる最小の l(=k (mod m)) を返す．
+*	制約：f(e()) = true，f は単調
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Thinning_segtree {
+	int n, m;
+	vector<segtree<S, op, e>> segs;
+
+public:
+	// v[0..n) = e() と法 m で初期化する．
+	Thinning_segtree(int n_, int m_) : n(n_), m(m_), segs(m) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		rep(j, m) segs[j] = segtree<S, op, e>((n + m - 1 - j) / m);
+	}
+
+	// 配列 v[0..n) と法 m で初期化する．
+	Thinning_segtree(vector<S>& v, int m_) : n(sz(v)), m(m_), segs(m) {
+		vector<vector<S>> v2(m);
+		rep(i, n) v2[i % m].push_back(v[i]);
+		rep(j, m) segs[j] = segtree<S, op, e>(v2[j]);
+	}
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		segs[i % m].set(i / m, x);
+	}
+
+	// v[i] を返す．
+	S get(int i) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		return segs[i % m].get(i / m);
+	}
+
+	// set = {i∈[l..r) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+	S prod(int l, int r, int k) {
+		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+
+		return segs[k % m].prod((l - k + m - 1) / m, (r - k + m - 1) / m);
+	}
+
+	// set = {i∈[0..n) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
+	S all_prod(int k) {
+		return prod(0, n, k);
+	}
+
+	// set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最大の r(=k (mod m)) を返す．
+	int max_right(int l, const function<bool(S)>& f, int k) {
+		k %= m;
+		return segs[k].max_right((l - k + m - 1) / m, f) * m + k;
+	}
+
+	// set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最小の l(=k (mod m)) を返す．
+	int min_left(int r, const function<bool(S)>& f, int k) {
+		k %= m;
+		return segs[k].min_left((r - k + m - 1) / m, f) * m + k;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Thinning_segtree segm) {
+		rep(i, segm.n) os << segm.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【動的セグメント木（モノイド）】
+/*
+* Dynamic_segtree<S, op, e>(ll n) : O(1)
+*	a[0..n) = e() で初期化する．
+*	要素はモノイド (S, op, e) の元とする．
+*
+* set(ll i, S x) : O(log n)
+*	a[i] = x とする．
+*
+* apply_left(ll i, S x) : O(log n)
+*	a[i] = op(x, a[i]) とする．
+*
+* apply_right(ll i, S x) : O(log n)
+*	a[i] = op(a[i], x) とする．
+*
+* S get(ll i) : O(log n)
+*	a[i] を返す（なければ e() を返す）
+*
+* S prod(ll l, ll r) : O(log n)
+*	Πa[l..r) を返す．空なら e() を返す．
+*
+* S all_prod() : O(1)
+*	Πa[0..n) を返す．
+*
+* ll max_right(ll l, function<bool(S)> f) : O(log n)
+*	f( Πa[l..r) ) = true となる最大の r を返す．
+*   制約：f( e() ) = true，f は単調
+*
+* ll min_left(ll r, function<bool(S)> f) : O(log n)
+*	f( Πa[l..r) ) = true となる最小の l を返す．
+*	制約：f( e() ) = true，f は単調
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Dynamic_segtree {
+	// 参考 : https://lorent-kyopro.hatenablog.com/entry/2021/03/12/025644
+
+	struct Node {
+		ll pos; // ノードの位置
+		S val; // ノードの値
+		S acc; // 部分木の値
+		Node* l, * r;
+
+		Node(ll pos, S val) : pos(pos), val(val), acc(val), l(nullptr), r(nullptr) {}
+
+		// acc を正しい値にする．
+		void update() {
+			acc = val;
+			if (l) acc = op(l->acc, acc);
+			if (r) acc = op(acc, r->acc);
+		}
+	};
+
+	static constexpr int SET = 0, APL = 1, APR = 2;
+
+	ll n;
+	Node* root;
+
+	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [il..ir) に対応する）
+	void set(Node*& t, ll il, ll ir, ll pos, S val, int q_type) const {
+		// ノードが存在しなかった場合は新たに作成する．
+		if (!t) {
+			t = new Node(pos, val);
+			return;
+		}
+
+		// ちょうど pos に対応するノードだった場合はそこに val を書き込む．
+		if (t->pos == pos) {
+			if (q_type == SET) t->val = val;
+			else if (q_type == APL) t->val = op(val, t->val);
+			else t->val = op(t->val, val);
+
+			t->update();
+			return;
+		}
+
+		// 区間の中央
+		ll im = (il + ir) / 2LL;
+
+		// 区間の左側に対象位置 pos がある場合
+		if (pos < im) {
+			// pos < t->pos であるようにする．
+			if (pos > t->pos) {
+				swap(pos, t->pos);
+				swap(val, t->val);
+			}
+
+			set(t->l, il, im, pos, val, q_type);
+		}
+		// 区間の右側に対象位置 pos がある場合
+		else {
+			// t->pos < pos であるようにする．
+			if (t->pos > pos) {
+				swap(pos, t->pos);
+				swap(val, t->val);
+			}
+
+			set(t->r, im, ir, pos, val, q_type);
+		}
+
+		t->update();
+	}
+
+	S get(Node* t, ll il, ll ir, ll pos) const {
+		// ノードが存在しなかった場合は単位元を返す．
+		if (!t) return e();
+
+		// ちょうど pos に対応するノードだった場合はそこの val を返す．
+		if (t->pos == pos) return t->val;
+
+		// 区間の中央
+		ll im = (il + ir) / 2LL;
+
+		if (pos < im) return get(t->l, il, im, pos);
+		else return get(t->r, im, ir, pos);
+	}
+
+	S prod(Node* t, ll il, ll ir, ll l, ll r) const {
+		// ノードが存在しなかった場合や完全に [il, ir) の範囲外になった場合は単位元を返す．
+		if (!t || ir <= l || r <= il) return e();
+
+		// 完全に [il, ir) の範囲内だった場合はそこの acc を返す．
+		if (l <= il && ir <= r) return t->acc;
+
+		// 区間の中央
+		ll im = (il + ir) / 2LL;
+
+		S res = prod(t->l, il, im, l, r);
+		if (l <= t->pos && t->pos < r) res = op(res, t->val);
+		res = op(res, prod(t->r, im, ir, l, r));
+
+		return res;
+	}
+
+	ll max_right(Node* t, ll il, ll ir, ll l, const function<bool(S)>& f, S& acc) const {
+		if (!t || ir <= l) return n;
+		if (f(op(acc, t->acc))) {
+			acc = op(acc, t->acc);
+			return n;
+		}
+		ll im = (il + ir) / 2;
+		ll res = max_right(t->l, il, im, l, f, acc);
+		if (res != n) return res;
+		if (l <= t->pos) {
+			acc = op(acc, t->val);
+			if (!f(acc)) return t->pos;
+		}
+		return max_right(t->r, im, ir, l, f, acc);
+	}
+
+	ll min_left(Node* t, ll il, ll ir, ll r, const function<bool(S)>& f, S& acc) const {
+		if (!t || r <= il) return 0LL;
+		if (f(op(t->acc, acc))) {
+			acc = op(t->acc, acc);
+			return 0L;
+		}
+		ll im = (il + ir) / 2;
+		ll res = min_left(t->r, im, ir, r, f, acc);
+		if (res != 0) return res;
+		if (t->pos < r) {
+			acc = op(t->val, acc);
+			if (!f(acc)) return t->pos + 1LL;
+		}
+		return min_left(t->l, il, im, r, f, acc);
+	}
+
+	void print(Node* t, ostream& os) const {
+		if (!t) return;
+
+		print(t->l, os);
+		os << "(" << t->pos << "," << t->val << ") ";
+		print(t->r, os);
+	}
+
+public:
+	// a[0..n) = e() で初期化する．
+	Dynamic_segtree(ll n) : n(n), root(nullptr) {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+	}
+	Dynamic_segtree() : n(0LL), root(nullptr) {}
+
+	// a[i] = x とする．
+	void set(ll i, S x) {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+
+		Assert(0LL <= i && i < n);
+
+		set(root, 0LL, n, i, x, SET);
+	}
+
+	// a[i] = op(x, a[i]) とする．
+	void apply_left(ll i, S x) {
+		// verify : https://mojacoder.app/users/Tonegawac/problems/data-structure2
+
+		Assert(0LL <= i && i < n);
+
+		set(root, 0LL, n, i, x, APL);
+	}
+
+	// a[i] = op(a[i], x) とする．
+	void apply_right(ll i, S x) {
+		Assert(0LL <= i && i < n);
+
+		set(root, 0LL, n, i, x, APR);
+	}
+
+	// a[i] を返す．
+	S get(ll i) const {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+
+		Assert(0LL <= i && i < n);
+
+		return get(root, 0LL, n, i);
+	}
+
+	// op( a[l..r) ) を返す．空なら e() を返す．
+	S prod(ll l, ll r) const {
+		// verify : https://www.spoj.com/problems/ADAAPHID/
+
+		chmax(l, 0LL); chmin(r, n);
+		if (l >= r) return e();
+
+		return prod(root, 0LL, n, l, r);
+	}
+
+	// op( a[0..n) ) を返す．
+	S all_prod() const {
+		return root ? root->acc : e();
+	}
+
+	// f( op( a[l..r) ) ) = true となる最大の r を返す．
+	ll max_right(ll l, const function<bool(S)>& f) const {
+		// verify : https://www.spoj.com/problems/COUNT1IT/
+
+		chmax(l, 0LL);
+
+		S acc = e();
+		assert(f(acc));
+		return max_right(root, 0LL, n, l, f, acc);
+	}
+
+	// f( op( a[l..r) ) ) = true となる最小の l を返す．
+	ll min_left(ll r, const function<bool(S)>& f) const {
+		chmin(r, n);
+
+		S acc = e();
+		assert(f(acc));
+		return min_left(root, 0LL, n, r, f, acc);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Dynamic_segtree seg) {
+		seg.print(seg.root, os);
+		return os;
+	}
+#endif
+};
+
+
 //【双対セグメント木（M-集合）】
 /*
 * Dual_segtree<S, F, act, comp, id>(vS v) : O(n)
@@ -194,6 +548,9 @@ struct Segtree {
 *
 * apply(int l, int r, F f) : O(log n)
 *	v[l..r) = f( v[l..r) ) とする．
+*
+* vS get_all() : O(n)
+*	v[0..n) を返す．
 */
 template <class S, class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 class Dual_segtree {
@@ -203,7 +560,7 @@ class Dual_segtree {
 	// S の要素の格納用配列
 	vector<S> v;
 
-	// F の遅延評価用の完全二分木
+	// F の遅延評価用の完全二分木（lazy[0] は使わない）
 	vector<F> lazy;
 
 	// 遅延させていた評価を行う．：O(1)
@@ -324,8 +681,20 @@ public:
 
 	// v[i] = f( v[i] ) とする．
 	void apply(int i, F f) {
+		// verify : https://yukicoder.me/problems/no/1000
+
 		Assert(0 <= i && i < actual_n);
 		apply_sub(i, i + 1, f, 1, 0, n);
+	}
+
+	// v[0..n) を返す．
+	vector<S> get_all() {
+		// verify : https://atcoder.jp/contests/agc044/tasks/agc044_c
+
+		repi(i, 1, n - 1) eval(i);
+		auto res(v);
+		res.resize(actual_n);
+		return res;
 	}
 
 #ifdef _MSC_VER
@@ -549,7 +918,7 @@ public:
 		return prod(i, i + 1);
 	}
 
-	// op( v[l..r) ) を返す．空なら e() を返す．
+	// Πv[l..r) を返す．空なら e() を返す．
 	S prod(int l, int r) {
 		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 
@@ -568,13 +937,13 @@ public:
 		apply_sub(l, r, f, 1, 0, n);
 	}
 
-	// g( op( v[l..r) ) ) = true となる最大の r を返す．
+	// g( Πv[l..r) ) = true となる最大の r を返す．
 	int max_right(int l, const function<bool(S)>& g) {
 		S x = e();
 		return max_right_sub(l, actual_n, x, 1, 0, n, g);
 	}
 
-	// g( op( v[l..r) ) ) = true となる最小の l を返す．
+	// g( Πv[l..r) ) = true となる最小の l を返す．
 	int min_left(int r, const function<bool(S)>& g) {
 		S x = e();
 		return min_left_sub(0, r, x, 1, 0, n, g) + 1;
@@ -589,317 +958,182 @@ public:
 };
 
 
-//【間引きセグメント木（モノイド）】
+//【動的遅延評価セグメント木（M-モノイド）】
 /*
-* Thinning_segtree<S, op, e>(int n, int m) : O(n)
-*	v[0..n) = e() と法 m で初期化する．
-*	要素はモノイド (S, op, e) の元とする．
-*
-* Thinning_segtree<S, op, e>(vS v) : O(n)
-*	配列 v[0..n) と法 m で初期化する．
-*
-* set(int i, S x) : O(log n)
-*	v[i] = x とする．
-*
-* S get(int i) : O(1)
-*	v[i] を返す．
-*
-* S prod(int l, int r, int k) : O(log n)
-*	set = {i∈[l..r) | i=k (mod m)} とし，Πv[set] を返す．空なら e() を返す．
-*
-* S all_prod(int k) : O(1)
-*	set = {i∈[0..n) | i=k (mod m)} とし，Πv[set] を返す．空なら e() を返す．
-*
-* int max_right(int l, function<bool(S)> f, int k) : O(log n)
-*	set = {i∈[l..r) | i=k (mod m)} とし，f( Πv[set] ) = true となる最大の r(=k (mod m)) を返す．
-*   制約：f(e()) = true，f は単調
-*
-* int min_left(int r, function<bool(S)> f, int k) : O(log n)
-*	set = {i∈[l..r) | i=k (mod m)} とし，f( Πv[set] ) = true となる最小の l(=k (mod m)) を返す．
-*	制約：f(e()) = true，f は単調
-*/
-template <class S, S(*op)(S, S), S(*e)()>
-class Thinning_segtree {
-	int n, m;
-	vector<segtree<S, op, e>> segs;
-
-public:
-	// v[0..n) = e() と法 m で初期化する．
-	Thinning_segtree(int n_, int m_) : n(n_), m(m_), segs(m) {
-		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
-
-		rep(j, m) segs[j] = segtree<S, op, e>((n + m - 1 - j) / m);
-	}
-
-	// 配列 v[0..n) と法 m で初期化する．
-	Thinning_segtree(vector<S>& v, int m_) : n(sz(v)), m(m_), segs(m) {
-		vector<vector<S>> v2(m);
-		rep(i, n) v2[i % m].push_back(v[i]);
-		rep(j, m) segs[j] = segtree<S, op, e>(v2[j]);
-	}
-
-	// v[i] = x とする．
-	void set(int i, S x) {
-		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
-
-		segs[i % m].set(i / m, x);
-	}
-
-	// v[i] を返す．
-	S get(int i) {
-		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
-
-		return segs[i % m].get(i / m);
-	}
-
-	// set = {i∈[l..r) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
-	S prod(int l, int r, int k) {
-		// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
-
-		return segs[k % m].prod((l - k + m - 1) / m, (r - k + m - 1) / m);
-	}
-
-	// set = {i∈[0..n) | i=k (mod m)} とし，op(v[set]) を返す．空なら e() を返す．
-	S all_prod(int k) {
-		return prod(0, n, k);
-	}
-
-	// set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最大の r(=k (mod m)) を返す．
-	int max_right(int l, const function<bool(S)>& f, int k) {
-		k %= m;
-		return segs[k].max_right((l - k + m - 1) / m, f) * m + k;
-	}
-
-	// set = {i∈[l..r) | i=k (mod m)} とし，f( op(v[set]) ) = true となる最小の l(=k (mod m)) を返す．
-	int min_left(int r, const function<bool(S)>& f, int k) {
-		k %= m;
-		return segs[k].min_left((r - k + m - 1) / m, f) * m + k;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Thinning_segtree segm) {
-		rep(i, segm.n) os << segm.get(i) << " ";
-		return os;
-	}
-#endif
-};
-
-
-//【動的セグメント木（モノイド）】
-/*
-* Dynamic_segtree<S, op, e>(ll n) : O(1)
+* Dynamic_lazy_segtree<S, op, e>(ll n) : O(1)
 *	a[0..n) = e() で初期化する．
-*	要素はモノイド (S, op, e) の元とする．
+*	要素は左作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
 *
 * set(ll i, S x) : O(log n)
 *	a[i] = x とする．
-*
-* apply_left(ll i, S x) : O(log n)
-*	a[i] = op(x, a[i]) とする．
-*
-* apply_right(ll i, S x) : O(log n)
-*	a[i] = op(a[i], x) とする．
 *
 * S get(ll i) : O(log n)
 *	a[i] を返す（なければ e() を返す）
 *
 * S prod(ll l, ll r) : O(log n)
-*	op( a[l..r) ) を返す．空なら e() を返す．
+*	Πa[l..r) を返す．空なら e() を返す．
 *
-* S all_prod() : O(1)
-*	op( a[0..n) ) を返す．
+* apply(ll i, F f) : O(log n)
+*	a[i] = f( a[i] ) とする．
 *
-* ll max_right(ll l, function<bool(S)> f) : O(log n)
-*	f( op( a[l..r) ) ) = true となる最大の r を返す．
-*   制約：f( e() ) = true，f は単調
-*
-* ll min_left(ll r, function<bool(S)> f) : O(log n)
-*	f( op( a[l..r) ) ) = true となる最小の l を返す．
-*	制約：f( e() ) = true，f は単調
+* apply(ll l, ll r, F f) : O(log n)
+*	a[l..r) = f( a[l..r) ) とする．
 */
-template <class S, S(*op)(S, S), S(*e)()>
-class Dynamic_segtree {
-	// 参考 : https://lorent-kyopro.hatenablog.com/entry/2021/03/12/025644
-
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Dynamic_lazy_segtree {
 	struct Node {
-		ll pos; // ノードの位置
-		S val; // ノードの値
-		S acc; // 部分木の値
-		Node* l, * r;
+		S val;			// ノードの値
+		F lazy;			// 遅延させている作用
+		Node* lc, * rc;	// 左右の子
 
-		Node(ll pos, S val) : pos(pos), val(val), acc(val), l(nullptr), r(nullptr) {}
-
-		// acc を正しい値にする．
-		void update() {
-			acc = val;
-			if (l) acc = op(l->acc, acc);
-			if (r) acc = op(acc, r->acc);
-		}
+		Node() : val(e()), lazy(id()), lc(nullptr), rc(nullptr) {}
 	};
-
-	const int SET = 0, APL = 1, APR = 2;
 
 	ll n;
 	Node* root;
 
-	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [il..ir) に対応する）
-	void set(Node*& t, ll il, ll ir, ll pos, S val, int q_type) const {
+	// 遅延させていた作用を適用する．
+	void eval(Node*& t, ll tL, ll tR) {
+		// 遅延させていた作用がなければ何もしない．
+		if (t->lazy == id()) return;
+
+		// 遅延作用を子に移す．
+		if (tR - tL >= 2) {
+			if (!t->lc) t->lc = new Node();
+			t->lc->lazy = comp(t->lazy, t->lc->lazy);
+
+			if (!t->rc) t->rc = new Node();
+			t->rc->lazy = comp(t->lazy, t->rc->lazy);
+		}
+
+		// 自身の値に遅延させていた作用を適用する．
+		t->val = act(t->lazy, t->val);
+		t->lazy = id();
+	}
+
+	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [tL..tR) に対応する）
+	void set(Node*& t, ll tL, ll tR, ll pos, S val) {
 		// ノードが存在しなかった場合は新たに作成する．
-		if (!t) {
-			t = new Node(pos, val);
+		if (!t) t = new Node();
+
+		// 範囲外なら何もしない．
+		if (pos < tL || tR <= pos) return;
+
+		// 葉まで降りてきたら値を代入して帰る．
+		if (tL == pos && tR == pos + 1) {
+			t->val = val;
+			t->lazy = id();
 			return;
 		}
 
-		// ちょうど pos に対応するノードだった場合はそこに val を書き込む．
-		if (t->pos == pos) {
-			if (q_type == SET) t->val = val;
-			else if (q_type = APL) t->val = op(val, t->val);
-			else t->val = op(t->val, val);
+		// 自身の遅延作用を適用する．
+		eval(t, tL, tR);
 
-			t->update();
+		// 区間の中央
+		ll tM = (tL + tR) / 2LL;
+
+		// 左右の子に対する処理を行う．
+		set(t->lc, tL, tM, pos, val);
+		set(t->rc, tM, tR, pos, val);
+
+		// 自身の値を更新する．
+		t->val = op(t->lc->val, t->rc->val);
+	}
+
+	// 部分木 t 内の区間 [tL..tR)∩[l..r) に属する要素の積を返す．
+	S prod(Node*& t, ll tL, ll tR, ll l, ll r) {
+		// ノードが存在しなかった場合は新たに作成する．
+		if (!t) t = new Node();
+
+		// [tL..tR) ∩ [l..r) = {} の場合は単位元を返す．
+		if (r <= tL || tR <= l) return e();
+
+		// 自身の遅延作用を適用する．
+		eval(t, tL, tR);
+
+		// [tL..tR) ⊂ [l..r) の場合は区間の総積を返す．
+		if (l <= tL && tR <= r) return t->val;
+
+		// 区間の中央
+		ll tM = (tL + tR) / 2LL;
+
+		// 左右の子からの寄与を求める．
+		S vL = prod(t->lc, tL, tM, l, r);
+		S vR = prod(t->rc, tM, tR, l, r);
+
+		// それらの積を返す．
+		return op(vL, vR);
+	}
+
+	// 部分木 t 内の区間 [tL..tR)∩[l..r) に f を作用させる．
+	void apply(Node*& t, ll tL, ll tR, ll l, ll r, F f) {
+		// ノードが存在しなかった場合は新たに作成する．
+		if (!t) t = new Node();
+
+		// 自身の遅延作用を適用する．
+		eval(t, tL, tR);
+
+		// [tL..tR) ∩ [l..r) = {} の場合は何もしない．
+		if (r <= tL || tR <= l) return;
+
+		// [tL..tR) ⊂ [l..r) の場合は自身の値を更新する．
+		if (l <= tL && tR <= r) {
+			t->lazy = comp(f, t->lazy);
+			eval(t, tL, tR);
 			return;
 		}
 
 		// 区間の中央
-		ll im = (il + ir) / 2LL;
+		ll tM = (tL + tR) / 2LL;
 
-		// 区間の左側に対象位置 pos がある場合
-		if (pos < im) {
-			// pos < t->pos であるようにする．
-			if (pos > t->pos) {
-				swap(pos, t->pos);
-				swap(val, t->val);
-			}
+		// 左右の子に f を作用させる．
+		apply(t->lc, tL, tM, l, r, f);
+		apply(t->rc, tM, tR, l, r, f);
 
-			set(t->l, il, im, pos, val, q_type);
-		}
-		// 区間の右側に対象位置 pos がある場合
-		else {
-			// t->pos < pos であるようにする．
-			if (t->pos > pos) {
-				swap(pos, t->pos);
-				swap(val, t->val);
-			}
-
-			set(t->r, im, ir, pos, val, q_type);
-		}
-
-		t->update();
+		// 自身の値を更新する．
+		t->val = op(t->lc->val, t->rc->val);
 	}
 
-	S get(Node* t, ll il, ll ir, ll pos) const {
-		// ノードが存在しなかった場合は単位元を返す．
-		if (!t) return e();
-
-		// ちょうど pos に対応するノードだった場合はそこの val を返す．
-		if (t->pos == pos) return t->val;
-
-		// 区間の中央
-		ll im = (il + ir) / 2LL;
-
-		if (pos < im) return get(t->l, il, im, pos);
-		else return get(t->r, im, ir, pos);
-	}
-
-	S prod(Node* t, ll il, ll ir, ll l, ll r) const {
-		// ノードが存在しなかった場合や完全に [il, ir) の範囲外になった場合は単位元を返す．
-		if (!t || ir <= l || r <= il) return e();
-
-		// 完全に [il, ir) の範囲内だった場合はそこの acc を返す．
-		if (l <= il && ir <= r) return t->acc;
-
-		// 区間の中央
-		ll im = (il + ir) / 2;
-
-		S res = prod(t->l, il, im, l, r);
-		if (l <= t->pos && t->pos < r) res = op(res, t->val);
-		res = op(res, prod(t->r, im, ir, l, r));
-
-		return res;
-	}
-
-	ll max_right(Node* t, ll il, ll ir, ll l, const function<bool(S)>& f, S& acc) const {
-		if (!t || ir <= l) return n;
-		if (f(op(acc, t->acc))) {
-			acc = op(acc, t->acc);
-			return n;
-		}
-		ll im = (il + ir) / 2;
-		ll res = max_right(t->l, il, im, l, f, acc);
-		if (res != n) return res;
-		if (l <= t->pos) {
-			acc = op(acc, t->val);
-			if (!f(acc)) return t->pos;
-		}
-		return max_right(t->r, im, ir, l, f, acc);
-	}
-
-	ll min_left(Node* t, ll il, ll ir, ll r, const function<bool(S)>& f, S& acc) const {
-		if (!t || r <= il) return 0LL;
-		if (f(op(t->acc, acc))) {
-			acc = op(t->acc, acc);
-			return 0L;
-		}
-		ll im = (il + ir) / 2;
-		ll res = min_left(t->r, im, ir, r, f, acc);
-		if (res != 0) return res;
-		if (t->pos < r) {
-			acc = op(t->val, acc);
-			if (!f(acc)) return t->pos + 1LL;
-		}
-		return min_left(t->l, il, im, r, f, acc);
-	}
-
-	void print(Node* t, ostream& os) const {
+	void print(Node* t, ll tL, ll tR, ostream& os) {
 		if (!t) return;
 
-		print(t->l, os);
-		os << "(" << t->pos << "," << t->val << ") ";
-		print(t->r, os);
+		// 自身の遅延作用を適用する．
+		eval(t, tL, tR);
+
+		// 区間の中央
+		ll tM = (tL + tR) / 2LL;
+
+		print(t->lc, tL, tM, os);
+		if (tR - tL == 1) os << "(" << tL << "," << t->val << ") ";
+		print(t->rc, tM, tR, os);
 	}
 
 public:
 	// a[0..n) = e() で初期化する．
-	Dynamic_segtree(ll n) : n(n), root(nullptr) {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+	Dynamic_lazy_segtree(ll n) : n(n), root(nullptr) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 	}
-	Dynamic_segtree() : n(0LL), root(nullptr) {}
+	Dynamic_lazy_segtree() : n(0LL), root(nullptr) {}
 
 	// a[i] = x とする．
 	void set(ll i, S x) {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 
 		Assert(0LL <= i && i < n);
 
-		set(root, 0LL, n, i, x, SET);
-	}
-
-	// a[i] = op(x, a[i]) とする．
-	void apply_left(ll i, S x) {
-		Assert(0LL <= i && i < n);
-
-		set(root, 0LL, n, i, x, APL);
-	}
-
-	// a[i] = op(a[i], x) とする．
-	void apply_right(ll i, S x) {
-		Assert(0LL <= i && i < n);
-
-		set(root, 0LL, n, i, x, APR);
+		set(root, 0LL, n, i, x);
 	}
 
 	// a[i] を返す．
-	S get(ll i) const {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
-
+	S get(ll i) {
 		Assert(0LL <= i && i < n);
 
-		return get(root, 0LL, n, i);
+		return prod(root, 0LL, n, i, i + 1);
 	}
 
-	// op( a[l..r) ) を返す．空なら e() を返す．
-	S prod(ll l, ll r) const {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+	// Πa[l..r) を返す．空なら e() を返す．
+	S prod(ll l, ll r) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 
 		chmax(l, 0LL); chmin(r, n);
 		if (l >= r) return e();
@@ -907,40 +1141,238 @@ public:
 		return prod(root, 0LL, n, l, r);
 	}
 
-	// op( a[0..n) ) を返す．
-	S all_prod() const {
-		return root ? root->acc : e();
+	// a[i] = f( a[i] ) とする．
+	void apply(ll i, F f) {
+		apply(root, 0LL, n, i, i + 1, f);
 	}
 
-	// a[l..r) を全て e() にする．
-	void reset(ll l, ll r) {
-		chmax(l, 0LL); chmin(r, n);
-		if (l >= r) return;
+	// a[l..r) = f( a[l..r) ) とする．
+	void apply(ll l, ll r, F f) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
 
-		return reset(root, 0LL, n, l, r);
-	}
-
-	// f( op( a[l..r) ) ) = true となる最大の r を返す．
-	ll max_right(ll l, const function<bool(S)>& f) const {
-		chmax(l, 0LL);
-
-		S acc = e();
-		assert(f(acc));
-		return max_r(root, 0LL, n, l, f, acc);
-	}
-
-	// f( op( a[l..r) ) ) = true となる最小の l を返す．
-	ll min_left(ll r, const function<bool(S)>& f) const {
-		chmin(r, n);
-
-		S acc = e();
-		assert(f(acc));
-		return min_l(root, 0LL, n, r, f, acc);
+		apply(root, 0LL, n, l, r, f);
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Dynamic_segtree seg) {
-		seg.print(seg.root, os);
+	friend ostream& operator<<(ostream& os, Dynamic_lazy_segtree& seg) {
+		seg.print(seg.root, 0LL, seg.n, os);
+		return os;
+	}
+#endif
+};
+
+
+//【二次元セグメント木（可換モノイド）】
+/*
+* Segtree_2D<S, op, o>(int h, int w) : O(h w)
+*	v[0..h)[0..w) = o() で初期化する．
+*	要素は可換モノイド (S, op, o) の元とする．
+*
+* Segtree_2D<S, op, o>(vvS v) : O(h w)
+*	二次元配列 v[0..h)[0..w) の要素で初期化する．
+*
+* set(int i, int j, S x) : O(log h log w)
+*	v[i][j] = x とする．
+*
+* S get(int i, int j) : O(1)
+*	v[i][j] を返す．
+*
+* S sum(int x1, int y1, int x2, int y2) : O(log h log w)
+*	Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．
+*
+* S all_sum() : O(1)
+*	Σv[0..h)[0..w) を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)()>
+class Segtree_2D {
+	// 参考 : https://blog.hamayanhamayan.com/entry/2017/12/09/015937
+	// 参考 : https://maspypy.com/segment-tree-%e3%81%ae%e3%81%8a%e5%8b%89%e5%bc%b71
+
+	int h, w;
+	vector<vector<S>> v;
+
+public:
+	// v[0..h)[0..w) = o() で初期化する．
+	Segtree_2D(int h, int w) : h(h), w(w) {
+		v = vector<vector<S>>(2 * h, vector<S>(2 * w, o()));
+	}
+
+	// 二次元配列 v[0..h)[0..w) の要素で初期化する．
+	Segtree_2D(vector<vector<S>>& v_) : Segtree_2D(sz(v_), sz(v_[0])) {
+		rep(i, h) rep(j, w) v[i + h][j + w] = v_[i][j];
+
+		repir(i, 2 * h - 1, 1) repir(j, w - 1, 1) v[i][j] = op(v[i][j * 2], v[i][j * 2 + 1]);
+		repir(i, h - 1, 1) repir(j, 2 * w - 1, 1) v[i][j] = op(v[i * 2][j], v[i * 2 + 1][j]);
+	}
+	Segtree_2D() : h(0), w(0) {}
+
+	// v[i][j] = x とする．
+	void set(int i, int j, S x) {
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+		i += h; j += w;
+
+		v[i][j] = x;
+
+		int j2 = j;
+		while (j2 > 1) {
+			j2 /= 2;
+			v[i][j2] = op(v[i][j2 * 2], v[i][j2 * 2 + 1]);
+		}
+
+		while (i > 1) {
+			i /= 2;
+
+			j2 = j;
+			while (j2 > 1) {
+				j2 /= 2;
+				v[i][j2] = op(v[i * 2][j2], v[i * 2 + 1][j2]);
+			}
+		}
+	}
+
+	// v[i][j] を返す．
+	S get(int i, int j) const {
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+		return v[i + h][j + w];
+	}
+
+	// Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．
+	S sum(int x1, int y1, int x2, int y2) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/1068
+
+		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);
+		if (x1 >= x2 || y1 >= y2) return o();
+
+		x1 += h; y1 += w; x2 += h; y2 += w;
+		S res = o();
+
+		auto add_y = [&](int x, int y1, int y2) {
+			while (y1 < y2) {
+				if (y1 & 1) {
+					res = op(res, v[x][y1]);
+					y1++;
+				}
+				if (y2 & 1) {
+					res = op(res, v[x][y2 - 1]);
+				}
+				y1 /= 2; y2 /= 2;
+			}
+		};
+
+		while (x1 < x2) {
+			if (x1 & 1) {
+				add_y(x1, y1, y2);
+				x1++;
+			}
+			if (x2 & 1) {
+				add_y(x2 - 1, y1, y2);
+			}
+			x1 /= 2; x2 /= 2;
+		}
+
+		return res;
+	}
+
+	// Σv[0..h)[0..y) を返す．
+	S all_sum() const {
+		return v[1][1];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Segtree_2D seg) {
+		rep(i, seg.h) rep(j, seg.w) os << seg.get(i, j) << " \n"[j == seg.w - 1];
+		return os;
+	}
+#endif
+};
+
+
+//【二次元動的セグメント木（可換モノイド）】
+/*
+* Dynamic_segtree_2D<S, op, o>(int h, ll w) : O(h)
+*	a[0..h)[0..w) = o() で初期化する．
+*	要素は可換モノイド (S, op, o) の元とする．
+*
+* apply(int i, ll j, S x) : O(log h log w)
+*	a[i][j] += x とする．
+*
+* S get(int i, ll j) : O(log h log w)
+*	a[i][j] を返す（なければ o() を返す）
+*
+* S sum(int x1, ll y1, int x2, ll y2) : O(log h log w)
+*	Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
+*
+* S all_prod() : O(log w)
+*	Σa[0..h)[0..w) を返す．
+*
+* 利用：【動的セグメント木（モノイド）】
+*/
+template <class S, S(*op)(S, S), S(*o)()>
+class Dynamic_segtree_2D {
+	// 参考 : https://blog.hamayanhamayan.com/entry/2017/12/09/015937
+
+	int h; ll w;
+	vector<Dynamic_segtree<S, op, o>> v;
+
+public:
+	// a[0..h)[0..w) = o() で初期化する．
+	Dynamic_segtree_2D(int h, ll w) : h(h), w(w), v(2 * h, Dynamic_segtree<S, op, o>(w)) {
+		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
+	}
+	Dynamic_segtree_2D() : h(0), w(0) {}
+
+	// a[i][j] += x とする．
+	void apply(int i, ll j, S x) {
+		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
+
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+
+		i += h;
+		while (i >= 1) {
+			v[i].apply_left(j, x);
+			i /= 2;
+		}
+	}
+
+	// a[i][j] を返す（なければ o() を返す）
+	S get(int i, ll j) const {
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+
+		return v[i + h].get(j);
+	}
+
+	// Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
+	S sum(int x1, ll y1, int x2, ll y2) const {
+		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
+
+		chmax(x1, 0); chmax(y1, 0LL); chmin(x2, h); chmin(y2, w);
+		if (x1 >= x2 || y1 >= y2) return o();
+
+		x1 += h; x2 += h;
+		S res = o();
+
+		while (x1 < x2) {
+			if (x1 & 1) {
+				res = op(res, v[x1].prod(y1, y2));
+				x1++;
+			}
+			if (x2 & 1) {
+				res = op(res, v[x2 - 1].prod(y1, y2));
+			}
+			x1 /= 2; x2 /= 2;
+		}
+
+		return res;
+	}
+
+	// Σa[0..h)[0..w) を返す．
+	S all_sum() const {
+		return v[1].all_prod();
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Dynamic_segtree_2D seg) {
+		rep(i, seg.h) rep(j, seg.w) os << seg.get(i, j) << " \n"[j == seg.w - 1];
 		return os;
 	}
 #endif
@@ -1748,226 +2180,6 @@ public:
 
 		return sum_rf(l, r, p, M - 1, 1, 0, N);
 	}
-};
-
-
-//【二次元セグメント木（可換モノイド）】
-/*
-* Segtree_2D<S, op, o>(int h, int w) : O(h w)
-*	v[0..h)[0..w) = o() で初期化する．
-*	要素は可換モノイド (S, op, o) の元とする．
-*
-* Segtree_2D<S, op, o>(vvS v) : O(h w)
-*	二次元配列 v[0..h)[0..w) の要素で初期化する．
-*
-* set(int i, int j, S x) : O(log h log w)
-*	v[i][j] = x とする．
-*
-* S get(int i, int j) : O(1)
-*	v[i][j] を返す．
-*
-* S sum(int x1, int y1, int x2, int y2) : O(log h log w)
-*	Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．
-*
-* S all_sum() : O(1)
-*	Σv[0..h)[0..w) を返す．
-*/
-template <class S, S(*op)(S, S), S(*o)()>
-class Segtree_2D {
-	// 参考 : https://blog.hamayanhamayan.com/entry/2017/12/09/015937
-	// 参考 : https://maspypy.com/segment-tree-%e3%81%ae%e3%81%8a%e5%8b%89%e5%bc%b71
-
-	int h, w;
-	vector<vector<S>> v;
-
-public:
-	// v[0..h)[0..w) = o() で初期化する．
-	Segtree_2D(int h, int w) : h(h), w(w) {
-		v = vector<vector<S>>(2 * h, vector<S>(2 * w, o()));
-	}
-
-	// 二次元配列 v[0..h)[0..w) の要素で初期化する．
-	Segtree_2D(vector<vector<S>>& v_) : Segtree_2D(sz(v_), sz(v_[0])) {
-		rep(i, h) rep(j, w) v[i + h][j + w] = v_[i][j];
-
-		repir(i, 2 * h - 1, 1) repir(j, w - 1, 1) v[i][j] = op(v[i][j * 2], v[i][j * 2 + 1]);
-		repir(i, h - 1, 1) repir(j, 2 * w - 1, 1) v[i][j] = op(v[i * 2][j], v[i * 2 + 1][j]);
-	}
-	Segtree_2D() : h(0), w(0) {}
-
-	// v[i][j] = x とする．
-	void set(int i, int j, S x) {
-		Assert(0 <= i && i < h && 0 <= j && j < w);
-		i += h; j += w;
-
-		v[i][j] = x;
-
-		int j2 = j;
-		while (j2 > 1) {
-			j2 /= 2;
-			v[i][j2] = op(v[i][j2 * 2], v[i][j2 * 2 + 1]);
-		}
-
-		while (i > 1) {
-			i /= 2;
-
-			j2 = j;
-			while (j2 > 1) {
-				j2 /= 2;
-				v[i][j2] = op(v[i * 2][j2], v[i * 2 + 1][j2]);
-			}
-		}
-	}
-
-	// v[i][j] を返す．
-	S get(int i, int j) const {
-		Assert(0 <= i && i < h && 0 <= j && j < w);
-		return v[i + h][j + w];
-	}
-
-	// Σv[x1..x2)[y1..y2) を返す．空なら o() を返す．
-	S sum(int x1, int y1, int x2, int y2) const {
-		// verify : https://onlinejudge.u-aizu.ac.jp/problems/1068
-
-		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);
-		if (x1 >= x2 || y1 >= y2) return o();
-
-		x1 += h; y1 += w; x2 += h; y2 += w;
-		S res = o();
-
-		auto add_y = [&](int x, int y1, int y2) {
-			while (y1 < y2) {
-				if (y1 & 1) {
-					res = op(res, v[x][y1]);
-					y1++;
-				}
-				if (y2 & 1) {
-					res = op(res, v[x][y2 - 1]);
-				}
-				y1 /= 2; y2 /= 2;
-			}
-		};
-
-		while (x1 < x2) {
-			if (x1 & 1) {
-				add_y(x1, y1, y2);
-				x1++;
-			}
-			if (x2 & 1) {
-				add_y(x2 - 1, y1, y2);
-			}
-			x1 /= 2; x2 /= 2;
-		}
-
-		return res;
-	}
-
-	// Σv[0..h)[0..y) を返す．
-	S all_sum() const {
-		return v[1][1];
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Segtree_2D seg) {
-		rep(i, seg.h) rep(j, seg.w) os << seg.get(i, j) << " \n"[j == seg.w - 1];
-		return os;
-	}
-#endif
-};
-
-
-//【二次元動的セグメント木（可換モノイド）】
-/*
-* Dynamic_segtree_2D<S, op, o>(int h, int w) : O(h)
-*	a[0..h)[0..w) = o() で初期化する．
-*	要素は可換モノイド (S, op, o) の元とする．
-*
-* set(int i, int j, S x) : O(log h log w)
-*	a[i][j] = x とする．
-*
-* apply(int i, int j, S x) : O(log h log w)
-*	a[i][j] += x とする．
-*
-* S get(int i, int j) : O(log h log w)
-*	a[i][j] を返す（なければ o() を返す）
-*
-* S sum(int x1, int y1, int x2, int y2) : O(log h log w)
-*	Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
-*
-* S all_prod() : O(log w)
-*	Σa[0..h)[0..w) を返す．
-*
-* 利用：【動的セグメント木（モノイド）】
-*/
-template <class S, S(*op)(S, S), S(*o)()>
-class Dynamic_segtree_2D {
-	// 参考 : https://blog.hamayanhamayan.com/entry/2017/12/09/015937
-
-	int h; ll w;
-	vector<Dynamic_segtree<S, op, o>> v;
-
-public:
-	// a[0..h)[0..w) = o() で初期化する．
-	Dynamic_segtree_2D(int h, ll w) : h(h), w(w), v(2 * h, Dynamic_segtree<S, op, o>(w)) {
-		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
-	}
-	Dynamic_segtree_2D() : h(0), w(0) {}
-
-	// a[i][j] += x とする．
-	void apply(int i, ll j, S x) {
-		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
-
-		Assert(0 <= i && i < h && 0 <= j && j < w);
-
-		i += h;
-		while (i >= 1) {
-			v[i].apply_left(j, x);
-			i /= 2;
-		}
-	}
-
-	// a[i][j] を返す（なければ o() を返す）
-	S get(int i, ll j) const {
-		Assert(0 <= i && i < h && 0 <= j && j < w);
-
-		return v[i + h].get(j);
-	}
-
-	// Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
-	S sum(int x1, ll y1, int x2, ll y2) const {
-		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
-
-		chmax(x1, 0); chmax(y1, 0LL); chmin(x2, h); chmin(y2, w);
-		if (x1 >= x2 || y1 >= y2) return o();
-
-		x1 += h; x2 += h;
-		S res = o();
-
-		while (x1 < x2) {
-			if (x1 & 1) {
-				res = op(res, v[x1].prod(y1, y2));
-				x1++;
-			}
-			if (x2 & 1) {
-				res = op(res, v[x2 - 1].prod(y1, y2));
-			}
-			x1 /= 2; x2 /= 2;
-		}
-
-		return res;
-	}
-
-	// Σa[0..h)[0..w) を返す．
-	S all_sum() const {
-		return v[1].all_prod();
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Dynamic_segtree_2D seg) {
-		rep(i, seg.h) rep(j, seg.w) os << seg.get(i, j) << " \n"[j == seg.w - 1];
-		return os;
-	}
-#endif
 };
 
 

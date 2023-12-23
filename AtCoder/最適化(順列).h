@@ -12,7 +12,7 @@
 * 特に 0 < a < b < c < d なる a, b, c, d について以下が成り立つ：
 *		a d + b c < a c + b d < a b + c d
 *
-* verify：https://atcoder.jp/contests/arc145/tasks/arc145_c
+* verify：https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bs
 */
 
 
@@ -34,6 +34,42 @@
 *
 * verify : https://atcoder.jp/contests/arc120/tasks/arc120_d
 */
+
+
+//【一次関数の合成の最小化】
+/*
+* n 個の一次関数 f_i(x) = a[i] x + b[i] を任意の順で x0 に適用したときの最小値を返す．
+* またそのときの適用順（0 番目が最初）を p[0..n) に格納する．
+*
+* 制約：b[i] > 0
+*/
+template <class T>
+T minimize_affine_composite(const vl& a, const vl& b, T x0, vi* p = nullptr) {
+	// verify : https://atcoder.jp/contests/abc305/tasks/abc305_h
+
+	//【方法】
+	// x に対し f_i を f_j より先に適用すべき条件は
+	//		f_j(f_i(x)) < f_i(f_j(x))
+	//		⇔ a[j] (a[i] x + b[i]) + b[j] < a[i] (a[j] x + b[j]) + b[i]
+	//		⇔ a[j] a[i] x + a[j] b[i] + b[j] < a[i] a[j] x + a[i] b[j] + b[i]
+	//		⇔ a[j] b[i] - b[i] < a[i] b[j] - b[j]
+	//		⇔ (a[j] - 1) / b[j] < (a[i] - 1) / b[i] （b[i], b[j] > 0 より）
+	// として x に依存せずしかも i, j について分離できる．
+	// よってこれを任意比較関数として {f} をソートし，順に x0 に適用すればよい．
+
+	int n = sz(a);
+	if (p == nullptr) p = new vi();
+
+	p->resize(n);
+	iota(all(*p), 0);
+
+	sort(all(*p), [&](int i, int j) {
+		return a[j] * b[i] - b[i] < a[i] * b[j] - b[j];
+		});
+
+	rep(i, n) x0 = a[(*p)[i]] * x0 + b[(*p)[i]];
+	return x0;
+}
 
 
 //【隣接項の差の総和の最大化】O(n log n)

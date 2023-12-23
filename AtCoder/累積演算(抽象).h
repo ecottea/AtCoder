@@ -24,7 +24,7 @@ struct Cumulative_prod {
 
 	// 配列 a[0..n) で初期化する．
 	Cumulative_prod(const vector<S>& a) : n(sz(a)), acc(n + 1), acc_inv(n + 1) {
-		// verify : https://judge.yosupo.jp/problem/static_range_sum
+		// verify : https://yukicoder.me/problems/no/2443
 
 		// acc[0] = e()
 		acc[0] = e();
@@ -42,7 +42,7 @@ struct Cumulative_prod {
 
 	// Πa[l..r) を返す．（空なら e() を返す．範囲外の値は e() とみなす）
 	S prod(int l, int r) {
-		// verify : https://judge.yosupo.jp/problem/static_range_sum
+		// verify : https://yukicoder.me/problems/no/2443
 		
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return e();
@@ -181,6 +181,8 @@ class Cumulative_lossy_prod {
 public:
 	// コンストラクタ（配列で初期化）
 	Cumulative_lossy_prod(const vector<S>& a) : n(sz(a)), acc_l(n + 1), acc_r(n + 1) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_j
+		
 		acc_l[0] = acc_r[n] = e();
 		rep(i, n) acc_l[i + 1] = op(acc_l[i], a[i]);
 		repir(i, n - 1, 0) acc_r[i] = op(a[i], acc_r[i + 1]);
@@ -189,14 +191,14 @@ public:
 
 	// Πa[0..r] を返す．
 	S left_prod(int r) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_1_D
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_j
 
 		return acc_l[r + 1];
 	}
 
 	// Πa[l..n) を返す．
 	S right_prod(int l) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_1_D
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_j
 
 		return acc_r[l];
 	}
@@ -216,7 +218,7 @@ public:
 *	二次元配列 a[0..h)[0..w) で初期化する．
 *	要素はアーベル群 <S, op, o, inv> の元とする．
 *
-* S sum(int x1, int y1, int x2, int y2) : O(1)
+* S sum(int x1, int x2, int y1, int y2) : O(1)
 *	Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す，範囲外の値は o() とみなす）
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
@@ -244,7 +246,7 @@ public:
 	Cumulative_sum_2D() : h(0), w(0) {}
 
 	// Σa[x1..x2)[y1..y2) を返す．
-	S sum(int x1, int y1, int x2, int y2) {
+	S sum(int x1, int x2, int y1, int y2) {
 		// verify : https://atcoder.jp/contests/abc005/tasks/abc005_4
 
 		if (x1 >= h || y1 >= w || x2 <= 0 || y2 <= 0) return o();
@@ -270,20 +272,20 @@ public:
 *	二次元配列 a[0..h)[0..w) で初期化する（範囲外の値は o() とみなす）
 *	要素はアーベル群 <S, op, o, inv> の元とする．
 *
-* S sum_rect(int x1, int y1, int x2, int y2) : O(1)
-*	[x1..x2) * [y1..y2) の要素の和を返す．
+* S sum_rect(int x1, int x2, int y1, int y2) : O(1)
+*	[x1..x2)×[y1..y2) の要素の和を返す．
 *
 * S sum_tri_DL(int x, int y, int d) : O(1)
-*	[x-d..x) * [y-d..y) の右下がりの対角線以下の要素の和を返す．
+*	[x-d..x)×[y-d..y) の右下がりの対角線以下の要素の和を返す．
 *
 * S sum_tri_UR(int x, int y, int d) : O(1)
-*	[x-d..x) * [y-d..y) の右下がりの対角線以上の要素の和を返す．
+*	[x-d..x)×[y-d..y) の右下がりの対角線以上の要素の和を返す．
 *
 * S sum_tri_DR(int x, int y, int d) : O(1)
-*	[x-d..x) * [y..y+d) の右上がりの対角線以下の要素の和を返す．
+*	[x-d..x)×[y..y+d) の右上がりの対角線以下の要素の和を返す．
 *
 * S sum_tri_UL(int x, int y, int d) : O(1)
-*	[x-d..x) * [y..y+d) の右上がりの対角線以上の要素の和を返す．
+*	[x-d..x)×[y..y+d) の右上がりの対角線以上の要素の和を返す．
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 class Cumulative_sum_2D_tri {
@@ -323,8 +325,8 @@ public:
 	}
 	Cumulative_sum_2D_tri() : h(0), w(0) {}
 
-	// [x1..x2) * [y1..y2) の要素の和を返す．
-	S sum_rect(int x1, int y1, int x2, int y2) {
+	// [x1..x2)×[y1..y2) の要素の和を返す．
+	S sum_rect(int x1, int x2, int y1, int y2) {
 		chmax(x1, 0);
 		chmax(y1, 0);
 		chmin(x2, h);
@@ -340,7 +342,7 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y-d..y) の右下がりの対角線以下の要素の和を返す．
+	// [x-d..x)×[y-d..y) の右下がりの対角線以下の要素の和を返す．
 	S sum_tri_DL(int x, int y, int d) {
 		if (x > h) {
 			d -= x - h;
@@ -365,7 +367,7 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y-d..y) の右下がりの対角線以上の要素の和を返す．
+	// [x-d..x)×[y-d..y) の右下がりの対角線以上の要素の和を返す．
 	S sum_tri_UR(int x, int y, int d) {
 		S res = o();
 		res = op(res, sum_rect(x - d, y - d, x, y));
@@ -374,7 +376,7 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y..y+d) の右上がりの対角線以下の要素の和を返す．
+	// [x-d..x)×[y..y+d) の右上がりの対角線以下の要素の和を返す．
 	S sum_tri_DR(int x, int y, int d) {
 		// verify : https://atcoder.jp/contests/indeednow-finala-open/tasks/indeednow_2015_finala_f
 
@@ -400,77 +402,13 @@ public:
 		return res;
 	}
 
-	// [x-d..x) * [y..y+d) の右上がりの対角線以上の要素の和を返す．
+	// [x-d..x)×[y..y+d) の右上がりの対角線以上の要素の和を返す．
 	S sum_tri_UL(int x, int y, int d) {
 		S res = o();
 		res = op(res, sum_rect(x - d, y, x, y + d));
 		res = op(res, inv(sum_tri_DR(x, y + 1, d - 1)));
 
 		return res;
-	}
-};
-
-
-//【二次元累積和（スパース，アーベル群）】
-/*
-* Static_rectangle_sum(vl x, vl y, vS v) : O(n log n)
-*	値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
-*
-* S sum(ll x1, ll y1, ll x2, ll y2) : O(log n)
-*	[x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
-*
-* 利用：【永続セグメント木（モノイド）】,【座標圧縮】
-*/
-template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
-class Static_rectangle_sum {
-	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
-
-	// x[y] 座標の昇順列（x 座標は全て，y 座標はユニーク）
-	vl xs, ys;
-
-	// x 座標を時刻とみなした，圧縮後の y 座標に関する永続セグメント木
-	Persistent_segtree<S, op, o> seg;
-
-public:
-	// 値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
-	Static_rectangle_sum(const vl& x, const vl& y, const vector<S>& v) {
-		// verify : https://judge.yosupo.jp/problem/rectangle_sum
-
-		int n = sz(x);
-		xs.resize(n);
-
-		// y 座標を座標圧縮しておく．
-		vi y_cp;
-		int m = coordinate_compression(y, y_cp, &ys);
-
-		// 点群を x 座標昇順にソートする
-		vector<pli> xi(n);
-		rep(i, n) xi[i] = { x[i], i };
-		sort(all(xi));
-
-		// x 座標を時刻とみなして永続セグメント木に乗せる．
-		seg = Persistent_segtree<S, op, o>(m);
-		rep(t, n) {
-			int i;
-			tie(xs[t], i) = xi[t];
-
-			S val = seg.get(y_cp[i], t);
-			seg.set(y_cp[i], op(val, v[i]), t);
-		}
-	}
-
-	// [x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
-	S sum(ll x1, ll y1, ll x2, ll y2) const {
-		// verify : https://judge.yosupo.jp/problem/rectangle_sum
-
-		if (x1 >= x2 || y1 >= y2) return o();
-
-		int t1 = lbpos(xs, x1);
-		int t2 = lbpos(xs, x2);
-		int j1 = lbpos(ys, y1);
-		int j2 = lbpos(ys, y2);
-
-		return op(seg.prod(j1, j2, t2), inv(seg.prod(j1, j2, t1)));
 	}
 };
 
@@ -808,11 +746,11 @@ public:
 
 //【二次元 Sparse Table（冪等可換モノイド）】
 /*
-* Sparse_table<S, op, o>(vvS a) : O(h w log(h w))
+* Sparse_table<S, op, o>(vvS a) : O(h w log h log w)
 *	二次元配列 a[0..h)[0..w) で初期化する．
 *	要素は冪等可換モノイド <S, op, o> の元とする．
 *
-* S get(int x1, int y1, int x2, int y2) : O(1)
+* S get(int x1, int x2, int y1, int y2) : O(1)
 *	Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す）
 */
 template <class S, S(*op)(S, S), S(*o)()>
@@ -858,7 +796,7 @@ struct Sparse_table_2D {
 	Sparse_table_2D() : h(0), w(0), bh(0), bw(0) {}
 
 	// Σa[x1..x2)[y1..y2) を返す．（空なら o() を返す）
-	S get(int x1, int y1, int x2, int y2) {
+	S get(int x1, int x2, int y1, int y2) {
 		// verify : https://codeforces.com/problemset/problem/713/D
 		
 		chmax(x1, 0); chmax(y1, 0); chmin(x2, h); chmin(y2, w);
@@ -903,8 +841,7 @@ struct Sparse_table_2D {
 template <class S, S(*op)(S, S), S(*e)()>
 class Disjoint_sparse_table {
 	// 参考 : https://noshi91.hatenablog.com/entry/2018/05/08/183946
-	// verify : https://judge.yosupo.jp/problem/staticrmq
-
+	
 	int n, m;
 
 	// acc[j][i] : a[0..n) を幅 2^(j+1) のブロックに区切ったときの中央からの累積積
@@ -913,6 +850,8 @@ class Disjoint_sparse_table {
 public:
 	// 配列 a[0..n) で初期化する．
 	Disjoint_sparse_table(const vector<S>& a) : n(sz(a)), m(msb(n) + 1), acc(m, vector<S>(n, e())) {
+		// verify : https://judge.yosupo.jp/problem/staticrmq
+		
 		rep(i, n) acc[0][i] = a[i];
 
 		repi(j, 1, m - 1) {
@@ -941,6 +880,8 @@ public:
 
 	// Πa[l..r) を返す．（空なら e() を返す）
 	S get(int l, int r) {
+		// verify : https://judge.yosupo.jp/problem/staticrmq
+
 		// 空の場合の例外処理
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return e();

@@ -147,7 +147,7 @@ int minimize_interval_length(const vl& a, ll s) {
 *（尺取り法）
 */
 ll count_intervals(const vl& a, ll s) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_3_C
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_cl
 
 	int n = sz(a);
 
@@ -238,6 +238,8 @@ ll count_interval_la(const vl& a, ll s) {
 *（尺取り法）
 */
 int maximize_interval_length_la_aa(const vi& a) {
+	// verify : https://yukicoder.me/problems/no/3009
+	
 	int n = sz(a);
 
 	// 空和は 0 とする．

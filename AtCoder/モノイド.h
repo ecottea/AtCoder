@@ -4,7 +4,7 @@
 // ¡¡¡¡¡ ƒ‚ƒmƒCƒh ¡¡¡¡¡
 
 
-//yƒ‚ƒmƒCƒhz
+//yƒ‚ƒmƒCƒh‚Ì’è‹`z
 /*
 * ƒ‚ƒmƒCƒh (S, op, e) ‚ğ•\‚·D
 * 
@@ -15,20 +15,64 @@
 */
 
 
-//y‰ÁZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
+//y‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/arc035/tasks/arc035_d */
 using S001 = ll;
 S001 op001(S001 a, S001 b) { return a + b; }
 S001 e001() { return 0; }
-#define Add_monoid S001, op001, e001
+#define Sum_monoid S001, op001, e001
 
 
-//y‘g‚Ì‰ÁZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
+//y‘g‚Ì‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_f */
 using S023 = pli;
 S023 op023(S023 a, S023 b) { return { a.first + b.first, a.second + b.second }; }
 S023 e023() { return { 0, 0 }; }
-#define Pairadd_monoid S023, op023, e023
+#define PairSum_monoid S023, op023, e023
+
+
+//yƒxƒNƒgƒ‹‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify : https://mojacoder.app/users/take44444/contests/tbc002/tasks/3 */
+constexpr int N033 = 25;
+using T033 = int;
+using S033 = array<T033, N033>;
+S033 op033(S033 a, S033 b) {
+	S033 c;
+	rep(i, N033) c[i] = a[i] + b[i];
+	return c;
+}
+S033 e033() {
+	S033 e{ 0 };
+	return e;
+}
+#define VecSum_monoid S033, op033, e033
+
+
+//yüŒ`‰Ád˜a ƒ‚ƒmƒCƒhz
+/*
+* S ¹ x = {xv, xs, xc} : x ‚É‘Î‰‚·‚é‹æŠÔ x[0..n) ‚É‚Â‚¢‚Ä‚ÌˆÈ‰º‚Ì’l‚ğ•\‚·F
+*	xv : 0,1,...,n-1 ‚É‚æ‚é x[0..n) ‚Ì‰Ád˜a
+*	xs : ‹æŠÔ‚Ì‘˜a
+*	xc : ‹æŠÔ‚Ì’·‚³
+*	(xv + xs      : 1,2,...,n ‚É‚æ‚é x[0..n) ‚Ì‰Ád˜a)
+*	(xs * xc - xv : n,...,2,1 ‚É‚æ‚é x[0..n) ‚Ì‰Ád˜a)
+* x op y : x, y ‚É‘Î‰‚·‚é‹æŠÔ‚ğ˜AŒ‹‚µ‚½‹æŠÔ‚ğ•\‚·D
+*/
+// verify : https://mojacoder.app/users/shinnshinn/problems/section-sum-sum
+using T034 = mint;
+using S034 = tuple<T034, T034, T034>;
+S034 op034(S034 x, S034 y) {
+	auto [xv, xs, xc] = x;
+	auto [yv, ys, yc] = y;
+
+	auto zv = xv + yv + xc * ys;
+	auto zs = xs + ys;
+	auto zc = xc + yc;
+
+	return { zv, zs, zc };
+}
+S034 e034() { return { 0, 0, 0 }; }
+#define LinearWgtSum_monoid S034, op034, e034
 
 
 //ymax ‰ÂŠ·ƒ‚ƒmƒCƒhz
@@ -47,7 +91,7 @@ S004 e004() { return INFL; }
 #define Min_monoid S004, op004, e004
 
 
-//yæZ ‰ÂŠ·ƒ‚ƒmƒCƒhz
+//y‘Ï ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://codeforces.com/contest/1748/problem/D */
 using S024 = mint;
 S024 op024(S024 a, S024 b) { return a * b; }
@@ -55,23 +99,26 @@ S024 e024() { return 1; }
 #define Mul_monoid S024, op024, e024
 
 
-//ys—ñæZ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
+//ys—ñ‘Ï ƒ‚ƒmƒCƒhz
 /* verify : https://codeforces.com/contest/1681/problem/E */
-using S002 = Matrix<mint>;
+constexpr int N002 = 2;
+using S002 = Fixed_matrix<mint, N002>;
 S002 op002(S002 a, S002 b) { return a * b; }
-S002 e002() { return Matrix<mint>(3); }
+S002 e002() { return S002(1); }
 #define MatrixMul_monoid S002, op002, e002
 
 
-//y‹ts—ñæZ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
+//y‹ts—ñ‘Ï ƒ‚ƒmƒCƒhz
 /* verify: https://atcoder.jp/contests/arc025/tasks/arc025_4 */
-using S020 = Matrix<mint>;
+constexpr int N020 = 2;
+using S020 = Fixed_matrix<mint, N020>;
 S020 op020(S020 a, S020 b) { return b * a; }
-S020 e020() { return Matrix<mint>(3); }
+S020 e020() { return S020(1); }
 #define InvMul_monoid S020, op020, e020
 
 
 //yXOR ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify : https://mojacoder.app/users/shinnshinn/contests/ochacon01/tasks/4 */
 using S010 = int;
 S010 op010(S010 a, S010 b) { return a ^ b; }
 S010 e010() { return 0; }
@@ -87,6 +134,7 @@ S011 e011() { return 0; }
 
 
 //yAND ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify : https://atcoder.jp/contests/jsc2022-final/tasks/jsc2022_final_d */
 using S012 = int;
 S012 op012(S012 a, S012 b) { return a & b; }
 S012 e012() { return ~0; }
@@ -96,28 +144,28 @@ S012 e012() { return ~0; }
 //yGCD ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4 */
 using S015 = ll;
-S015 op015(S015 a, S015 b) { return gcd(abs(a), abs(b)); }
+S015 op015(S015 a, S015 b) { return gcd(a, b); }
 S015 e015() { return 0; }
 #define GCD_monoid S015, op015, e015
 
 
 //yLCM ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S016 = ll;
-S016 op016(S016 a, S016 b) { return a / gcd(abs(a), abs(b)) * b; }
+S016 op016(S016 a, S016 b) { return lcm(a, b); }
 S016 e016() { return 1; }
 #define LCM_monoid S016, op016, e016
 
 
 //y¶•ÏX ƒ‚ƒmƒCƒhz
 using S005 = int;
-S005 e005() { return INF; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
+S005 e005() { return INF + 1; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S005 op005(S005 a, S005 b) { return a == e005() ? b : a; }
 #define LUpdate_monoid S005, op005, e005
 
 
 //y‰E•ÏX ƒ‚ƒmƒCƒhz
 using S006 = int;
-S006 e006() { return INF; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
+S006 e006() { return INF + 1; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
 S006 op006(S006 a, S006 b) { return b == e006() ? a : b; }
 #define RUpdate_monoid S006, op006, e006
 
@@ -136,11 +184,11 @@ S007 e007() { return ""; }
 * 
 * s—ñ (a, b; 0, 1) ‚Ì‘S‘Ì‚ªÏ‚ÉŠÖ‚µ‚Äì‚Á‚Ä‚¢‚éƒ‚ƒmƒCƒh‚Æ‚à‚İ‚È‚¹‚éD
 */
-using S008 = pair<mint, mint>;
+using T008 = mint;
+using S008 = pair<T008, T008>;
 S008 op008(S008 f, S008 g) {
-	mint a, b, c, d;
-	tie(a, b) = f; // f(x) = a x + b;
-	tie(c, d) = g; // g(x) = c x + d;
+	auto [a, b] = f; // f(x) = a x + b;
+	auto [c, d] = g; // g(x) = c x + d;
 
 	// (f o g)(x) = a (c x + d) + b = (a c)x + (a d + b)
 	return { a * c, a * d + b };
@@ -207,6 +255,54 @@ S014 e014() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -‡)
 #define TropicalAffineInvcomposite_monoid S014, op014, e014
 
 
+//ybitƒAƒtƒBƒ“•ÏŠ·‚Ì‡¬ ƒ‚ƒmƒCƒhz
+/*
+* S ¹ f = {a, b} : ˆêŸŠÖ” f(x) = (a AND x) XOR b ‚ğ•\‚·D
+*	{a, b} = { c,  0} : f(x) = c AND x
+*	{a, b} = {~c,  c} : f(x) = c OR x
+*	{a, b} = {~0,  c} : f(x) = x XOR c
+*	{a, b} = {~0, ~0} : f(x) = NOT x
+*	{a, b} = {~c, ~0} : f(x) = x IMPLY c
+* f op g : ‡¬‚µ‚½ˆêŸŠÖ” f o g ‚ğ•Ô‚·D
+*/
+using T035 = int;
+using S035 = pair<T035, T035>; // s—ñ (a, b; 0, 1)i1 := ~0j
+S035 op035(S035 f, S035 g) {
+	auto [a, b] = f; // s—ñ (a, b; 0, 1)
+	auto [c, d] = g; // s—ñ (c, d; 0, 1)
+
+	// [a, b] [c, d] = [a c , a d + b ]
+	// [0, 1] [0, 1]   [ 0  ,    1    ]
+	return { (a & c), (a & d) ^ b };
+}
+S035 e035() { return { ~0, 0 }; }
+#define BitAffineComposite_monoid S035, op035, e035
+
+
+//ybitƒAƒtƒBƒ“•ÏŠ·‚Ì‹t‡¬ ƒ‚ƒmƒCƒhz
+/*
+* S ¹ f = {a, b} : ˆêŸŠÖ” f(x) = (a AND x) XOR b ‚ğ•\‚·D
+*	{a, b} = { c,  0} : f(x) = c AND x
+*	{a, b} = {~c,  c} : f(x) = c OR x
+*	{a, b} = {~0,  c} : f(x) = x XOR c
+*	{a, b} = {~0, ~0} : f(x) = NOT x
+*	{a, b} = {~c, ~0} : f(x) = x IMPLY c
+* f op g : ‡¬‚µ‚½ˆêŸŠÖ” f o g ‚ğ•Ô‚·D
+*/
+using T036 = int;
+using S036 = pair<T036, T036>; // s—ñ (a, b; 0, 1)i1 := ~0j
+S036 op036(S036 f, S036 g) {
+	auto [a, b] = g; // s—ñ (a, b; 0, 1)
+	auto [c, d] = f; // s—ñ (c, d; 0, 1)
+
+	// [a, b] [c, d] = [a c , a d + b ]
+	// [0, 1] [0, 1]   [ 0  ,    1    ]
+	return { (a & c), (a & d) ^ b };
+}
+S036 e036() { return { ~0, 0 }; }
+#define BitAffineInvcomposite_monoid S036, op036, e036
+
+
 //yƒrƒbƒg—ñã “]“|” ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {inv, c0, c1} : —ñ x ‚Ì“]“|”C0 ‚ÌŒÂ”C1 ‚ÌŒÂ”‚Ì‘g
@@ -230,10 +326,10 @@ S017 e017() { return { 0LL, 0, 0 }; }
 #define Inversion_monoid S017, op017, e017
 
 
-//y’uŠ·‚Ì‡¬ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
+//yÊ‘œ‚Ì‡¬ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
 /*
-* S ¹ f[0..n) : ’uŠ· i ¨ f[i] ‚ğ•\‚·D
-* f op g : ‡¬’uŠ· f o g ‚ğ•Ô‚·D
+* S ¹ f[0..n) : Ê‘œ i ¨ f[i] ‚ğ•\‚·D
+* f op g : ‡¬Ê‘œ f o g ‚ğ•Ô‚·D
 */
 // verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
 using S018 = vi;
@@ -248,28 +344,28 @@ S018 op018(S018 a, S018 b) {
 	return res;
 }
 S018 e018() { return S018(); }
-#define PermutationComposite_monoid S018, op018, e018
+#define MapComposite_monoid S018, op018, e018
 
 
-//y’uŠ·‚Ì‹t‡¬ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
+//yÊ‘œ‚Ì‹t‡¬ ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
 /*
-* S ¹ f[0..n) : ’uŠ· i ¨ f[i] ‚ğ•\‚·D
-* f op g : ‡¬’uŠ· g o f ‚ğ•Ô‚·D
+* S ¹ f[0..n) : Ê‘œ i ¨ f[i] ‚ğ•\‚·D
+* f op g : ‡¬Ê‘œ g o f ‚ğ•Ô‚·D
 */
-// verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
-using S019 = vi;
-S019 op019(S019 a, S019 b) {
-	if (sz(a) == 0) return b;
-	if (sz(b) == 0) return a;
-
-	int n = sz(a);
-	S019 res(n);
-	rep(i, n) res[i] = b[a[i]];
-
-	return res;
+// verify : https://mojacoder.app/users/first_vil/contests/Iamsorry2/tasks/5
+constexpr int N019 = 2;
+using S019 = array<int, N019>;
+S019 op019(S019 f, S019 g) {
+	S019 h;
+	rep(i, N019) h[i] = g[f[i]];
+	return h;
 }
-S019 e019() { return S019(); }
-#define PermutationInvcomposite_monoid S019, op019, e019
+S019 e019() {
+	S019 f;
+	iota(all(f), 0);
+	return f;
+}
+#define MapInvcomposite_monoid S019, op019, e019
 
 
 //y‘æ“ñÅ‘å’l ‰ÂŠ·ƒ‚ƒmƒCƒhz

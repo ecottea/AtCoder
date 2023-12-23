@@ -122,10 +122,13 @@
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\libs\boost\include\boost-1_83</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\libs\boost\lib</AdditionalLibraryDirectories>
+      <StackReserveSize>100000000</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -138,12 +141,15 @@
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>26451;6297;4334</DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\libs\boost\include\boost-1_83</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\libs\boost\lib</AdditionalLibraryDirectories>
+      <StackReserveSize>100000000</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -151,6 +157,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DP.h" />
+    <ClInclude Include="矩形クエリ.h" />
+    <ClInclude Include="数え上げ%28分割%29.h" />
+    <ClInclude Include="畳込み%28他演算%29.h" />
+    <ClInclude Include="累乗.h" />
+    <ClInclude Include="最適化%28集合%29.h" />
+    <ClInclude Include="変換%28木%29.h" />
     <ClInclude Include="GCD.h" />
     <ClInclude Include="localACL.hpp" />
     <ClInclude Include="フーリエ変換.h" />
@@ -164,7 +176,7 @@
     <ClInclude Include="01計画問題.h" />
     <ClInclude Include="monotone.h" />
     <ClInclude Include="スコア和%28区間分割%29.h" />
-    <ClInclude Include="列の管理.h" />
+    <ClInclude Include="列クエリ.h" />
     <ClInclude Include="列挙(部分列).h" />
     <ClInclude Include="前処理(ビット列).h" />
     <ClInclude Include="数え上げ(区間分割).h" />
@@ -200,11 +212,10 @@
     <ClInclude Include="スコア和%28ビット列%29.h" />
     <ClInclude Include="スコア和(集合).h" />
     <ClInclude Include="セグメント木.h" />
-    <ClInclude Include="ダブリング.h" />
     <ClInclude Include="デザイン.h" />
     <ClInclude Include="ハッシュ.h" />
     <ClInclude Include="ビット列.h" />
-    <ClInclude Include="ビット演算.h" />
+    <ClInclude Include="bit演算.h" />
     <ClInclude Include="マトロイド.h" />
     <ClInclude Include="不完全M-モノイド.h" />
     <ClInclude Include="一変数最適化.h" />
@@ -221,13 +232,14 @@
     <ClInclude Include="分析(文字列).h" />
     <ClInclude Include="列挙(列).h" />
     <ClInclude Include="列挙(文字列).h" />
-    <ClInclude Include="列挙(格子).h" />
+    <ClInclude Include="タイリング.h" />
     <ClInclude Include="列挙%28分割%29.h" />
     <ClInclude Include="前処理(列).h" />
     <ClInclude Include="文脈自由文法.h" />
     <ClInclude Include="最適化(ビット列).h" />
     <ClInclude Include="最適化(区間).h" />
     <ClInclude Include="最適化(木).h" />
+    <ClInclude Include="最適化%28区間分割%29.h" />
     <ClInclude Include="有理数.h" />
     <ClInclude Include="束.h" />
     <ClInclude Include="構文解析.h" />
@@ -238,6 +250,7 @@
     <ClInclude Include="積の和典型.h" />
     <ClInclude Include="累積演算.h" />
     <ClInclude Include="線形空間.h" />
+    <ClInclude Include="論理.h" />
     <ClInclude Include="辞書%28動的%29.h" />
     <ClInclude Include="整除算.h" />
     <ClInclude Include="区間DP.h" />
@@ -286,7 +299,7 @@
     <ClInclude Include="順列.h" />
     <ClInclude Include="有名数列.h" />
     <ClInclude Include="数列の和.h" />
-    <ClInclude Include="ビット行列.h" />
+    <ClInclude Include="bit行列.h" />
     <ClInclude Include="複数図形.h" />
     <ClInclude Include="区間.h" />
     <ClInclude Include="合同式.h" />
@@ -317,7 +330,7 @@
     <ClInclude Include="辞書%28静的%29.h" />
     <ClInclude Include="部分列.h" />
     <ClInclude Include="部分和問題.h" />
-    <ClInclude Include="ビット全探索.h" />
+    <ClInclude Include="bit全探索.h" />
     <ClInclude Include="数論%28高速%29.h" />
     <ClInclude Include="M-全順序集合.h" />
   </ItemGroup>

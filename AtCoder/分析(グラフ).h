@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "変換(グラフ).h"
 #include "DAG.h"
 // ■■■■■ グラフの性質の分析 ■■■■■
 
@@ -63,6 +64,8 @@ vi topological_sort(const Graph& g) {
 	rep(i, n) if (in_degree[i] == 0) q.push(i);
 
 	vi seq;
+	seq.reserve(n);
+
 	while (!q.empty()) {
 		auto s = q.front(); q.pop();
 
@@ -157,86 +160,7 @@ vvi strongly_connected_component(const Graph& g) {
 }
 
 
-//【有向グラフの閉路分割】O(n + m) 
-/*
-* 有向グラフ g をいくつかの単純閉路に分割する（失敗したら false を返す）
-*
-* g : 有向グラフ
-* cycles[i] : 検出した i 番目の閉路の頂点番号を順に格納したリスト
-*/
-bool directed_cycle_partition(const Graph& g_, vvi& cycles) {
-	int n = sz(g_);
-	cycles.clear();
-
-	// 辺を逆向きにしつつ，削除できるようスタックで辺をもつ
-	vector<stack<int>> g(n);
-	rep(s, n) {
-		repe(t, g_[s]) {
-			g[t].push(s);
-		}
-	}
-
-	// r : 開始頂点，戻り値 : 成功か
-	function<bool(int)> find_cycle = [&](int r) {
-		stack<int> path; // 途中で通った頂点の列
-		vb seen(n);
-
-		int s = r;
-
-		// r に戻ってくるまで
-		while (true) {
-			// s に来たことを記録
-			path.push(s);
-			seen[s] = true;
-
-			// 行き止まりになったら失敗
-			if (g[s].empty()) {
-				return false;
-			}
-
-			// t : 次に進む予定の頂点
-			int t = g[s].top();
-			g[s].pop();
-
-			// 閉路を検出した場合
-			if (seen[t]) {
-				// 閉路を逆順に記録する．予め逆順にしておいたので正順に記録できる．
-				cycles.push_back(vi({ t }));
-				while (path.top() != t) {
-					int v = path.top();
-					path.pop();
-					seen[v] = false;
-
-					cycles.rbegin()->push_back(v);
-				}
-				path.pop();
-				seen[t] = false;
-
-				// 開始頂点 r に戻ってきたら終了
-				if (t == r) {
-					return true;
-				}
-			}
-
-			// 次の頂点へ進む
-			s = t;
-		}
-	};
-
-	// 各頂点 s について
-	rep(s, n) {
-		// 既になぞった連結成分に属する頂点なら何もしない．
-		if (g[s].empty()) continue;
-
-		// s から始まる閉路を探す．閉路分割に失敗したら false を返す．
-		if (!find_cycle(s)) return false;
-	}
-
-	return true;
-}
-
-
-//【無向グラフの閉路抽出】O(n + m)
+//【閉路抽出（無向グラフ）】O(n + m)
 /*
 * 無向グラフ g に単純閉路があれば頂点を順に vs に，辺を順に es に格納し，その長さを返す（無ければ -1）
 * vs[0] から出て vs[1] に入る辺を es[0] とする．
@@ -315,95 +239,143 @@ int cycle_detection(const vector<vector<E>>& g, vi& vs, vector<E>* es = nullptr)
 }
 
 
-//【有向グラフの閉路抽出】O(n + m)
+//【閉路抽出（有向グラフ）】O(n + m)
 /*
-* 有向グラフ g の単純閉路を何か 1 つ見つける．
-*
-* g : 有向グラフ
-* cycle : 検出した閉路の頂点番号を順に格納したリスト（閉路なしなら空リスト）
-*
-* 利用：【強連結成分分解】
+* 有向グラフ g から極大個数の単純閉路を抽出し，各閉路に含まれる辺のリストを返す．
 */
-template <class G>
-void directed_cycle_detection(const G& g, vi& cycle) {
-	// verify : https://judge.yosupo.jp/problem/cycle_detection
+vvi directed_cycles_detection(IGraph g) {
+	// verify : https://yukicoder.me/problems/no/2464
 
 	int n = sz(g);
-	cycle.clear();
 
-	// 注目している強連結成分に含まれる頂点の集合
-	set<int> valid;
+	vvi cycles;
 
-	function<void(void)> ikiatari_battari = [&]() {
-		vb seen(n);
+	// 0 : 未探索，1 : 探索済，2 : 閉路の端点
+	vi seen(n);
 
-		// 深さ優先探索用の関数
-		// s : 注目頂点
-		// 戻り値 : 逆順に検出した閉路の末端（-1: 未検出，-2: 抽出完了）
-		function<int(int)> dfs = [&](int s) {
-			// 注目している強連結成分に含まれる頂点でなければすぐに帰る．
-			if (!valid.count(s)) return -1;
+	// 0 : 探索モード，2 : 閉路抽出モード
+	int tp = 0;
 
-			// 既に訪れたことのある頂点に辿り着いたら閉路を検出したことになる．
-			if (seen[s]) {
-				cycle.push_back(s);
-				return s;
-			}
-			seen[s] = true;
+	function<void(int)> dfs = [&](int s) {
+		seen[s] = 1;
 
-			// s から辿れる頂点 t それぞれについて
-			repe(t, g[s]) {
-				// t に対して深さ優先探索を行う．
-				auto end = dfs(t);
+		while (!g[s].empty()) {
+			// 同じ辺を二度見ないように削除しておく．
+			auto t = g[s].back(); g[s].pop_back();
 
-				// 閉路が検出できなかったなら何もせず次の t を考える．
-				if (end == -1) continue;
-
-				// s が検出した閉路の末端であれば，閉路の記録をここで終わる．
-				if (end == s || end == -2) return -2;
-
-				// 検出した閉路を逆順に記録していく．
-				if (end >= 0) cycle.push_back(s);
-
-				return end;
+			// 自己ループは単独の閉路として記録する．
+			if (t == s) {
+				cycles.push_back(vi{ t.id });
+				continue;
 			}
 
-			return -1;
-		};
+			// 探索済の頂点にたどり着いたなら閉路を検出できた．
+			if (seen[t.to] == 1) {
+				// t が閉路の端点であることを覚えておく．
+				seen[t.to] = 2;
 
-		// 各頂点 v について
-		rep(v, n) {
-			// 既になぞった連結成分に属する頂点なら何もしない．
-			if (seen[v]) continue;
+				// 閉路抽出モードに移行する．
+				tp = 2;
+				cycles.push_back(vi());
+				cycles.back().push_back(t.id);
+				break;
+			}
 
-			// v から深さ優先探索を始める．
-			int end = dfs(v);
+			dfs(t.to);
 
-			// 閉路を検出していたら終了．
-			if (end != -1) {
-				// 逆順に検出しているので正順に戻す．
-				reverse(all(cycle));
+			// 閉路抽出モードなら，探索は一休みして閉路を抽出する．
+			if (tp == 2) {
+				cycles.back().push_back(t.id);
 
-				return;
+				// 閉路の端点まで抽出しきったのなら探索モードに移行する．
+				if (seen[s] == 2) {
+					reverse(all(cycles.back()));
+					seen[s] = 1;
+					tp = 0;
+					continue;
+				}
+				break;
 			}
 		}
+
+		// 頂点に関しては二度以上見る必要があるのでバックトラッキングする．
+		seen[s] = 0;
 	};
 
-	// まず強連結成分分解する．
-	vvi scc = strongly_connected_component(g);
+	// 各頂点 s を通る閉路をできるかぎり抽出する．
+	rep(s, n) while (!g[s].empty()) dfs(s);
 
-	// 各強連結成分 vs について
-	repe(vs, scc) {
-		// 大きさ 2 以上の強連結成分 vs があれば閉路がある．
-		if (sz(vs) > 1) {
-			// 通っても良い頂点の集合に vs の頂点を記録する．
-			repe(v, vs) valid.insert(v);
+	return cycles;
+}
 
-			// vs 内なら行き止まりがないので，行きあたりばったりで閉路検出ができる．
-			ikiatari_battari();
-			return;
+
+//【オイラー路】O(n + m) 
+/*
+* 有向グラフ g の ST から GL へのオイラー路を返す（なければ空リスト）
+*/
+vi eulerian_trail(Graph g, int ST, int GL) {
+	// verify : https://atcoder.jp/contests/abc227/tasks/abc227_h
+
+	int n = sz(g);
+
+	// まず ST から GL への何らかの小道 trail を見つける．
+	deque<int> trail; int s = ST;
+	while (s != GL) {
+		// s を通ったことを記録する．
+		trail.push_back(s);
+
+		// 行き止まりになったら失敗．
+		if (g[s].empty()) return vi();
+
+		// t : 次に訪れる頂点
+		int t = g[s].back();
+
+		// 同じ辺を 2 度通らないように削除しておく．
+		g[s].pop_back();
+
+		// t へ移動する．
+		s = t;
+	}
+	trail.push_back(GL);
+
+	// 訪れられなかった頂点をオイラー路の末尾や trail の先頭に付け加えながら trail をなぞる．
+	vi res;
+	while (!trail.empty()) {
+		int v = trail.front(); trail.pop_front();
+		res.push_back(v);
+
+		// v に接続する辺がもうなければ次へ．
+		if (g[v].empty()) continue;
+
+		// v を通る回路 circuit を見つける．
+		stack<int> circuit; int s = v;
+		do {
+			// 行き止まりになったら失敗．
+			if (g[s].empty()) return vi();
+
+			// t : 次に訪れる頂点
+			int t = g[s].back();
+
+			// 同じ辺を 2 度通らないように削除しておく．
+			g[s].pop_back();
+
+			// t を通ることを記録する．
+			circuit.push(t);
+
+			// t へ移動する．
+			s = t;
+		} while (s != v);
+
+		// circuit を trail の先頭に追加する．
+		while (!circuit.empty()) {
+			trail.push_front(circuit.top()); circuit.pop();
 		}
 	}
+
+	// それでも訪れられなかった頂点が残っているなら非連結なので失敗．
+	rep(s, n) if (!g[s].empty()) return vi();
+
+	return res;
 }
 
 
@@ -412,7 +384,8 @@ void directed_cycle_detection(const G& g, vi& cycle) {
 * 連結無向グラフが二部グラフかどうか判定する．
 * 二部グラフならその彩色例を col に格納する（色は 0, 1 で表す）
 */
-bool bipartite_graphQ(const Graph& g, vi& col) {
+template <class G>
+bool bipartite_graphQ(const G& g, vi& col) {
 	// verify : https://atcoder.jp/contests/code-festival-2017-qualb/tasks/code_festival_2017_qualb_c
 
 	int n = sz(g);
@@ -505,14 +478,14 @@ void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 *
 * bool articulation_pointQ(int s) : O(1)
 *	頂点 s が関節点かを返す．
-*	関節点：その頂点を取り除くとグラフの連結成分が 1 つ増える頂点
+*	関節点：その頂点を取り除くとグラフの連結成分が増える頂点
 *
 * vi get_articulation_points() : O(n)
 *	g の関節点の昇順リストを返す．
 *
 * bool bridgeQ(int j) : O(1)
 *	辺 j が橋かを返す．
-*	橋：その辺を取り除くとグラフの連結成分が 1 つ増える辺
+*	橋：その辺を取り除くとグラフの連結成分が増える辺
 *
 * vi get_bridges() : O(m)
 *	g の橋の番号の昇順リストを返す．
@@ -521,6 +494,12 @@ void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 *	g を二重辺連結成分分解し，二重辺連結成分の頂点集合のリストを返す．
 *	二重辺連結成分：任意の 1 辺を取り除いても連結な部分グラフ
 *
+* vvi get_two_vertex_connected_components() : O(n + m)
+*	g を二重頂点連結成分分解し，二重頂点連結成分の辺集合の番号のリストを返す．
+*	二重頂点連結成分：任意の 1 頂点を取り除いても連結な極大部分グラフ
+*	制約：g は自己ループをもたない．
+*	注意：孤立点のみからなる二重頂点連結成分は辺をもたないので検出されない．
+*
 * bool connectedQ(int s, int t) : O(1)
 *	頂点 s, t が連結かを返す．
 *
@@ -528,7 +507,7 @@ void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 *	頂点 s, t 間に橋 j が存在するかを返す．
 */
 class Lowlink {
-	// 参考 : https://algo-logic.info/articulation-points/
+	// 参考 : https://kntychance.hatenablog.jp/entry/2022/09/16/161858
 
 	int n, m;
 	IGraph g;
@@ -551,16 +530,12 @@ class Lowlink {
 	vb is_bg;
 
 public:
-	Lowlink(const IGraph& g) : n(sz(g)), m(0), g(g), in(n, -1), low(n), is_ap(n) {
+	// 参照付き無向グラフ g（多重辺可，自己ループ可）で初期化する．
+	Lowlink(const IGraph& g) : n(sz(g)), m(-1), g(g), in(n, -1), low(n), is_ap(n) {
 		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
 
-		// e_cnt[s][t] : 頂点 s, t を結ぶ辺の本数
-		vector<unordered_map<int, int>> e_cnt(n);
-		rep(s, n) repe(t, g[s]) {
-			e_cnt[s][t]++;
-			m++;
-		}
-		m /= 2;
+		rep(s, n) repe(t, g[s]) chmax(m, t.id);
+		m++;
 		in_e.resize(m), out_e.resize(m);
 		is_bg.assign(m, false);
 
@@ -568,43 +543,42 @@ public:
 		ll time = 0; // 現在時刻
 
 		// DFS 木をなぞる．
-		function<void(int, int)> dfs = [&](int s, int p) {
+		function<void(int, int)> dfs = [&](int s, int id) {
 			// s を最初に訪れた
 			in[s] = low[s] = time++;
 
 			int child_cnt = 0; // DFS 木における子の個数
 
 			repe(t, g[s]) {
-				// 親に戻る辺と自己ループは通らない．
-				//	自己ループは連結性に影響を与えないので無視できる
-				if (t == p || t == s) continue;
+				// 戻る辺と自己ループは通らない．
+				//（自己ループは連結性に影響を与えないので無視できる）
+				if (t.id == id || t == s) continue;
 
 				// t を既に訪れていた場合
 				if (in[t] != -1) {
-					// s→t または t→s は後退辺なので in[t] で low[s] を更新する．
-					//	s→t が後退辺のとき：
-					//		t から DFS 木の辺を辿って他の頂点 v に行けたとしても，
-					//		必ず in[t] < in[v] となっているので無視できる．
-					//	t→s が後退辺のとき：
-					//		s→t は DFS 木に対するショートカットとなるので，
-					//		必ず in[s] < in[t] となり更新は起こらないので安心．
+					// s→t が後退辺のとき：
+					//		t から DFS 木の辺を辿って他の頂点 v に行けたとしても
+					//		必ず in[t] < in[v] となっているので low[s] = in[t] で確定．
+					// t→s が後退辺のとき：
+					// 		s→t は DFS 木に対するショートカットとなるので
+					//		必ず low[s] ≦ in[s] < in[t] となるから更新不要．
+					// chmin を使えば両方同時に対応可能である．
 					chmin(low[s], in[t]);
 				}
 				// t をまだ訪れていない場合
 				else {
 					// 再帰的になぞりにいく．
 					in_e[t.id] = time++;
-					dfs(t, s);
+					dfs(t, t.id);
 					out_e[t.id] = time++;
 
 					// s→t は DFS 木の辺なので low[t] で low[s] を更新する．
 					chmin(low[s], low[t]);
 
 					// s→t を渡ってしまうと DFS 木の s の先祖に帰れないなら s-t は橋である．
-					//（ただし多重辺は橋にはなりえない．）
-					if (in[s] < low[t] && e_cnt[s][t] == 1) is_bg[t.id] = true;
+					if (in[s] < low[t]) is_bg[t.id] = true;
 
-					// t から DFS 木の s の真の先祖に帰れないなら s は関節点である．
+					// t から DFS 木の s の真の先祖に帰れないなら s は t にとって関節点である．
 					//（ただし s が根の場合は後で例外処理する．）
 					is_ap[s] = is_ap[s] || (in[s] <= low[t]);
 					child_cnt++;
@@ -613,22 +587,27 @@ public:
 
 			// s が根の場合，子が 2 つ以上ないと関節点にはなり得ない．
 			if (s == rt) is_ap[s] = (child_cnt >= 2);
-		};
+			};
 
-		// 適当な点を始点（根）として DFS を行う．
+		// 各連結成分ごとに適当な点を始点（根）として DFS を行い，in と　low を求める．
 		rep(s, n) {
 			if (in[s] != -1) continue;
 
+			// 連結成分を跨ぐには INF 時間かかる
 			time = (time / INF + 1) * INF;
+
+			// s を根として DFS し，同連結成分内の in と low を定める．
 			rt = s;
 			dfs(s, -1);
 		}
 	}
 
+	// 頂点 s が関節点かを返す．
 	bool articulation_pointQ(int s) {
 		return is_ap[s];
 	}
 
+	// g の関節点の昇順リストを返す．
 	vi get_articulation_points() {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_A
 
@@ -637,10 +616,12 @@ public:
 		return aps;
 	}
 
+	// 辺 j が橋かを返す．
 	bool bridgeQ(int j) {
 		return is_bg[j];
 	}
 
+	// g の橋の番号の昇順リストを返す．
 	vi get_bridges() {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_3_B
 
@@ -649,10 +630,11 @@ public:
 		return bgs;
 	}
 
+	// g を二重辺連結成分分解し，二重辺連結成分の頂点集合のリストを返す．
 	vvi get_two_edge_connected_components() {
 		// verify : https://judge.yosupo.jp/problem/two_edge_connected_components
 
-		// ccs : 連結成分のリスト
+		// ccs : 連結成分の頂点のリスト
 		vvi ccs; vb seen(n);
 
 		function<void(int, int)> dfs = [&](int s, int p) {
@@ -665,13 +647,55 @@ public:
 
 				dfs(t, s);
 			}
-		};
+			};
 
 		rep(s, n) {
 			if (seen[s]) continue;
 
 			ccs.push_back(vi());
 			dfs(s, -1);
+		}
+
+		return ccs;
+	}
+
+	// g を二重頂点連結成分分解し，二重頂点連結成分の辺集合の番号のリストを返す．
+	vvi get_two_vertex_connected_components() {
+		// verify : https://judge.yosupo.jp/problem/biconnected_components
+
+		// ccs : 連結成分の辺のリスト
+		vvi ccs; vb seen(m);
+
+		// s : 注目頂点
+		// ap : 探索を開始した関節点または根
+		// k : 何番目の二重頂点連結成分を検出中か
+		function<void(int, int, int)> dfs = [&](int s, int ap, int k) {
+			repe(t, g[s]) {
+				// 探索済の辺には進まない．
+				if (seen[t.id]) continue;
+				seen[t.id] = true;
+
+				// s が t にとっての関節点であるような辺 s-t の先は別の二重頂点連結成分である．
+				if (in[s] <= low[t]) {
+					ccs.push_back(vi{ t.id });
+					dfs(t, s, sz(ccs) - 1);
+					continue;
+				}
+
+				// 辺を記録する．
+				ccs[k].push_back(t.id);
+
+				// 後退辺でなければ先を探索する．
+				if (in[s] < in[t]) dfs(t, ap, k);
+			}
+			};
+
+		rep(s, n) repe(t, g[s]) {
+			if (seen[t.id]) continue;
+			seen[t.id] = true;
+
+			ccs.push_back(vi{ t.id });
+			dfs(t, s, sz(ccs) - 1);
 		}
 
 		return ccs;
@@ -694,118 +718,11 @@ public:
 };
 
 
-//【二重頂点連結成分分解】O(n + m)
-/*
-* 無向グラフ g を二重頂点連結成分分解し，二重頂点連結成分の {始点, 辺} の組の集合のリストを返す．
-* 二重頂点連結成分：任意の 1 頂点を取り除いても連結な部分グラフ
-* 
-* 制約：孤立した頂点は存在しない
-*/
-template <class E>
-vector<vector<pair<int, E>>> two_vertex_connected_component(const vector<vector<E>>& g) {
-	// 参考 : https://ei1333.github.io/luzhiled/snippets/graph/bi-connected-components.html
-	// verify : https://judge.yosupo.jp/problem/biconnected_components
-
-	int n = sz(g);
-
-	// in[s] : DFS で頂点 s を何番目に探索したか
-	// low[s] : s から DFS 木を逆走せず後退辺を高々 1 回用いて到達できる頂点 t についての min in[t]
-	//			後退辺とは，DFS でなぞられなかった g の辺のことをいう．
-	vi in(n), low(n); vb seen(n);
-
-	int time = 0;
-
-	// in, low を定める再帰用の関数
-	function<void(int, int)> dfs = [&](int s, int p) {
-		// s を最初に訪れた
-		in[s] = time++;
-		low[s] = in[s];
-		seen[s] = true;
-
-		repe(t, g[s]) {
-			// 親に戻る辺と自己ループは通らない．
-			//	自己ループは連結性に影響を与えないので無視できる
-			if (t == p || t == s) continue;
-
-			// t を既に訪れていた場合
-			if (seen[t]) {
-				// s→t または t→s は後退辺なので in[t] で low[s] を更新する．
-				//	s→t が後退辺のとき：
-				//		t から DFS 木の辺を辿って他の頂点 v に行けたとしても，
-				//		必ず in[t] < in[v] となっているので無視できる．
-				//	t→s が後退辺のとき：
-				//		s→t は DFS 木に対するショートカットとなるので，
-				//		必ず in[s] < in[t] となり更新は起こらないので安心．
-				chmin(low[s], in[t]);
-			}
-			// t をまだ訪れていない場合
-			else {
-				// 再帰的になぞりにいく．
-				dfs(t, s);
-
-				// s→t は DFS 木の辺なので low[t] で low[s] を更新する．
-				chmin(low[s], low[t]);
-			}
-		}
-	};
-
-	// 適当な点を根（始点）として DFS を行う．
-	rep(s, n) if (!seen[s])	dfs(s, -1);
-
-	// cces : 二重頂点連結成分のリスト
-	vector<vector<pair<int, E>>> cces;
-	stack<pair<int, E>> stk; // 作業用スタック
-	seen.assign(n, false);
-
-	function<void(int, int)> dfs2 = [&](int s, int p) {
-		seen[s] = true;
-
-		repe(t, g[s]) {
-			// 親には帰らない．
-			if (t == p) continue;
-
-			// まだ訪れていない頂点への辺と後退辺は記録しておく．
-			if (!seen[t] || in[t] < in[s]) {
-				stk.push({ s, t });
-			}
-
-			// t がまだ訪れていない頂点なら，t から先の二重頂点連結成分を先に見つける．
-			if (seen[t]) continue;
-			int stk_size = sz(stk);
-			dfs2(t, s);
-
-			// t から後退辺を通って s の祖先まで戻れない場合
-			if (low[t] >= in[s]) {
-				// 二重頂点連結成分が見つかったので記録する．
-				cces.emplace_back();
-				while (sz(stk) >= stk_size) {
-					cces.back().emplace_back(stk.top());
-					stk.pop();
-				}
-			}
-		}
-	};
-
-	// 先と同じ順で DFS を行う．
-	rep(s, n) if (!seen[s]) dfs2(s, -1);
-
-	return cces;
-}
-
-
-//【通行可能性と壁の連結性の双対性】
-/*
-* L から R まで通行可能[不可能] ⇔ U 側の壁と D 側の壁が非連結[連結]
-* 
-* verify : https://atcoder.jp/contests/abc181/tasks/abc181_f
-*/
-
-
 //【DFS 木の性質】
 /*
 * 無向グラフ g の DFS 木 t に含まれない全ての辺 u-v について，
 * u と v は t において先祖と子孫の関係にある．
-* 
+*
 * verify : https://atcoder.jp/contests/abc251/tasks/abc251_f
 */
 
@@ -819,6 +736,137 @@ vector<vector<pair<int, E>>> two_vertex_connected_component(const vector<vector<
 */
 
 
+//【グラフのデカルト木】O(n + m α(n))
+/*
+* 与えられた無向グラフ g に対し，以下の規則で構築される n-1 を根とする有向根付き木 T を返す：
+*	頂点 p に隣接する p 未満の頂点のみからなる各連結成分 S に対し，S 内の番号最大の頂点 s を p の子とする．
+*
+* 性質：
+*	g で s 以下の頂点のみからなるパス s-t が存在する ⇔ T で t は s の子孫
+*	特に g で隣接する 2 頂点は T で先祖-子孫の関係にある．
+*/
+Graph graph_cartesian_tree(const Graph& g) {
+	// verify : https://yukicoder.me/problems/no/2588
+
+	int n = sz(g);
+
+	Graph g2(n);
+
+	dsu d(n);
+
+	// v_max[l] : l をリーダーとする連結成分内の最大頂点番号
+	vi v_max(n); iota(all(v_max), 0);
+
+	rep(s, n) {
+		repe(t, g[s]) {
+			if (t > s) continue;
+
+			// 既に s と連結済なら何もしない．
+			if (d.same(s, t)) continue;
+
+			// s の子を t を含む連結成分内の最大頂点とする．
+			g2[s].push_back(v_max[d.leader(t)]);
+
+			// s と t を連結する．
+			d.merge(s, t);
+		}
+
+		// s を含む連結成分内の最大頂点は s である．
+		v_max[d.leader(s)] = s;
+	}
+
+	return g2;
+}
+
+
+//【誘導部分グラフの抽出（密度保証）】O(n^2 (n + m))
+/*
+* 無向グラフ g に対し，誘導部分グラフ g[vs] の密度が d_num/d_dnm より大きい vs を返す（なければ空リスト）
+* 密度：(辺の数)/(頂点の数)
+*/
+vi goldberg(const Graph& g, ll d_num, ll d_dnm) {
+	// 参考 : http://dopal.cs.uec.ac.jp/okamotoy/lect/2021/gn/lect09.pdf
+
+	int n = sz(g);
+
+	// m : g の辺数
+	ll m = 0;
+	rep(s, n) m += sz(g[s]);
+	m /= 2;
+
+	int ST = n, GL = ST + 1;
+	mf_graph<ll> g2(GL + 1);
+
+	rep(s, n) {
+		// 辺 ST→v の容量を m とする．
+		g2.add_edge(ST, s, m * d_dnm);
+
+		// 辺 v→GL の容量を m + 2 (密度保証) - deg(v) とする．
+		g2.add_edge(s, GL, m * d_dnm + 2 * d_num - sz(g[s]) * d_dnm);
+
+		// 辺 s→t の容量を 1 とする．
+		repe(t, g[s]) g2.add_edge(s, t, d_dnm);
+	}
+
+	// グラフ g2 の最小カットを求める
+	auto cap = g2.flow(ST, GL);
+
+	// 最小カットの容量が m n 以上なら密度保証を満たす誘導部分グラフは存在しない．
+	//（等号のときは，密度 d_num/d_dnm のグラフを見つけた or {ST} を見つけてしまった）
+	if (cap >= m * n * d_dnm) return vi();
+
+	// さもなくば，最小カットにおいて ST にある頂点集合が条件を満たす．
+	vi res;
+	auto b = g2.min_cut(ST);
+	rep(s, n) if (b[s]) res.push_back(s);
+
+	return res;
+}
+
+
+//【到達可能性】O((n + m) q / 64)
+/*
+* 与えられた有向グラフ g に対し，各 j∈[0..q) について，
+* 頂点 u[j] から頂点 v[j] に到達可能かを格納したリストを返す．
+*
+* 利用：【強連結成分分解】，【頂点の縮約】，【到達可能性（DAG）】
+*/
+vb reachability(const Graph& g, const vi& u, const vi& v) {
+	// verify : https://atcoder.jp/contests/abc204/tasks/abc204_c
+
+	int n = sz(g), q = sz(u);
+	vb res(q);
+
+	// g を強連結成分分解する．
+	auto ccs = strongly_connected_component(g);
+
+	// id[s] : g の頂点 s が何番目の強連結成分に属しているか
+	vi id(n);
+	rep(i, sz(ccs)) repe(s, ccs[i]) id[s] = i;
+
+	// u2[j], v2[j] : u[j], v[j] の属する強連結成分の番号
+	vi u2(q), v2(q);
+	rep(j, q) {
+		u2[j] = id[u[j]];
+		v2[j] = id[v[j]];
+	}
+
+	// g2 : g の強連結成分を縮約した DAG
+	auto g2 = vertex_contraction(g, ccs);
+
+	// DAG g2 において到達可能性を調べれば良い．
+	return reachability_DAG(g2, u2, v2);
+}
+
+
+//【通行可能性と壁の連結性の双対性】
+/*
+* L から R まで通行可能[不可能] ⇔ U 側の壁と D 側の壁が非連結[連結]
+* 
+* verify : https://atcoder.jp/contests/abc181/tasks/abc181_f
+*/
+
+
 //【連結性を保った頂点消去】
 /*
 * 連結無向グラフ g について，連結性を保ったまま頂点を消去していくには，
@@ -826,5 +874,110 @@ vector<vector<pair<int, E>>> two_vertex_connected_component(const vector<vector<
 * 
 * verify : https://atcoder.jp/contests/arc119/tasks/arc119_d
 */
+
+
+//【閉路長の倍数条件】
+/*
+* 強連結な有向グラフ g について，以下の 2 条件は同値である：
+*	(1) 頂点 ST を含む全ての閉路の長さが D の倍数
+*	(2) 任意の辺 e:s→t について，dist[ST][s] + e.cost ≡ dist[ST][t] (mod D)
+* 
+* (1)⇒(2) の証明：
+*	ST を根とする g の最短路木を T とすると，任意の e∈T について (2) が成り立つことに注意する．
+*	まず ST を終点とする辺 e:s→ST を 1 つ固定する．
+*	T の辺のみからなる ST から s へのパスをとり，これと e を繋ぐことで ST を通る閉路 C が得られる．
+*	(1) より C の長さは D の倍数であり，T の辺は全て (2) を満たすので e も (2) を満たす．
+*	次に C 上のある点 t2 と t2 を終点とする辺 e2:s2→t2 を 1 つ固定する．
+*	T の辺のみからなる ST から s2 へのパスを取り，これと e2 を繋ぎ，さらに C の辺のみからなる
+*	t2 から ST へのパスを繋ぐことで，ST を通る閉路 C2 が得られる．
+*	(1) より C2 の長さは D の倍数であり，T, C の辺は全て (2) を満たすので e2 も (2) を満たす．
+*	g は強連結なので，同様の手順を繰り返すことで全ての辺が (2) を満たすことが示せる．
+* 
+* (2)⇒(1) の証明：
+*	ST から ST への任意の閉路 C について，(2) より
+*		dist[ST][ST] + Σe∈C e.cost ≡ dist[ST][ST] (mod D)
+*	が成り立つ．これは閉路長が D の倍数であることを意味している．
+* 
+* verify : https://atcoder.jp/contests/abc306/tasks/abc306_g
+*/
+
+
+//【パスグラフ判定】
+/*
+* 無向グラフ g がパスグラフかを返す．
+*/
+template <class G>
+bool path_graphQ(const G& g) {
+	// verify : https://atcoder.jp/contests/abc287/tasks/abc287_c
+
+	int n = sz(g);
+
+	// 空グラフもパスグラフと認めることにする．
+	if (n == 0) return true;
+
+	// 1 頂点からなるグラフに対する例外処理
+	if (n == 1) {
+		if (sz(g[0]) == 0) return true;
+		return false;
+	}
+
+	// c1 : 次数 1 の頂点の個数，c2 : 次数 2 の頂点の個数
+	int c1 = 0, c2 = 0;
+	rep(i, n) {
+		int deg = sz(g[i]);
+		c1 += (deg == 1);
+		c2 += (deg == 2);
+	}
+
+	if (c1 != 2 || c2 != n - 2) return false;
+
+	// 連結性の確認
+	dsu d(n);
+	rep(s, n) repe(t, g[s]) d.merge(s, t);
+
+	return d.size(0) == n;
+}
+
+
+//【ウニグラフ判定】
+/*
+* 無向グラフ g がウニグラフかを返す．
+*/
+template <class G>
+bool uni_graphQ(const G& g) {
+	// verify : https://atcoder.jp/contests/abc225/tasks/abc225_b
+
+	int n = sz(g);
+
+	// 空グラフもウニグラフと認めることにする．
+	if (n == 0) return true;
+
+	// 1 頂点からなるグラフに対する例外処理
+	if (n == 1) {
+		if (sz(g[0]) == 0) return true;
+		return false;
+	}
+
+	// c1 : 次数 1 の頂点の個数，cn1 : 次数 n-1 の頂点の個数
+	int c1 = 0, cn1 = 0;
+	rep(i, n) {
+		int deg = sz(g[i]);
+		c1 += (deg == 1);
+		cn1 += (deg == n - 1);
+	}
+
+	if (n == 2) {
+		if (c1 != 2) return false;
+	}
+	else {
+		if (c1 != n - 1 || cn1 != 1) return false;
+	}
+
+	// 連結性の確認
+	dsu d(n);
+	rep(s, n) repe(t, g[s]) d.merge(s, t);
+
+	return d.size(0) == n;
+}
 
 

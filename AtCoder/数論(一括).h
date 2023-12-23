@@ -11,6 +11,7 @@
 * n ˆÈ‰º‚Ì‘f”‚ğ¸‡‚É—ñ‹“‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 */
 vi eratosthenes(int n) {
+	// Ql : https://37zigen.com/sieve-eratosthenes/
 	// verify : https://judge.yosupo.jp/problem/enumerate_primes
 
 	vi ps;
@@ -26,6 +27,7 @@ vi eratosthenes(int n) {
 		if (is_prime[i]) {
 			ps.push_back(i);
 
+			// i*2, ..., i*(i-1) ‚ÍŠù‚É‚Ó‚é‚¢—‚Æ‚³‚ê‚Ä‚¢‚é‚Ì‚Å i*i ‚©‚ç‚Å—Ç‚¢D
 			for (int j = i * i; j <= n; j += i) is_prime[j] = false;
 		}
 	}
@@ -37,27 +39,30 @@ vi eratosthenes(int n) {
 }
 
 
-//y‘f”‚Ì—ñ‹“i‹æŠÔjzO((ãr + (r - l))log(log r))
+//y‘f”‚Ì—ñ‹“i‹æŠÔjzO((ãr + (r-l)) log(log r))
 /*
 * [l..r) ‚ÉŠÜ‚Ü‚ê‚é‘f”‚ğ¸‡‚ÉŠi”[‚µ‚½ƒŠƒXƒg‚ğ•Ô‚·D
 *
 * —˜—pFy‘f”‚Ì—ñ‹“z
 */
 vl eratosthenes_interval(ll l, ll r) {
+	// Ql : https://37zigen.com/sieve-eratosthenes/
 	// verify : https://algo-method.com/tasks/332
 
-	vl ps;
-	vi ps_sub = eratosthenes(int(sqrt(r) + 0.01));
+	vi ps_sub = eratosthenes((int)(sqrt(r) + 0.01));
 
-	// ‘f”‚©‚Ç‚¤‚©‚ğ‹L˜^‚µ‚Ä‚¨‚­‚½‚ß‚Ìƒe[ƒuƒ‹
+	// is_prime[i - l] : i ‚ª‘f”‚©
 	vb is_prime(r - l, true);
-	if (l == 1) is_prime[0] = false; // 1 ‚Í‘f”‚Å‚Í‚È‚¢
+	if (1 - l >= 0) is_prime[1 - l] = false;
+
 	repe(p, ps_sub) {
-		for (ll j = (l + p - 1) / p * p; j < r; j += p) {
-			if (j != p) is_prime[j - l] = false;
-		}
+		// j_min : [l..r) “à‚Å p^2 ˆÈã‚ÌÅ¬‚Ì p ‚Ì”{”
+		ll j_min = max((l + p - 1) / p * p, (ll)p * p);
+
+		for (ll j = j_min; j < r; j += p) is_prime[j - l] = false;
 	}
 
+	vl ps;
 	rep(i, r - l) if (is_prime[i]) ps.push_back(l + i);
 
 	return ps;
@@ -66,20 +71,23 @@ vl eratosthenes_interval(ll l, ll r) {
 
 //y‘fˆö”•ª‰ği•¡”jz
 /*
-* Factor_integer(int n) : O(n log(log n))
+* Osa_k(int n) : O(n log(log n))
 *	n ˆÈ‰º‚Ì©‘R”‚ğ‚‘¬‚É‘fˆö”•ª‰ğ‚·‚é€”õ‚ğs‚¤D
 *
-* map<int, int> get(int i) : O(log n)
+* map<int, int> factor_integer(int i) : O(log n)
 *	i ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê‚ğ•Ô‚·D
+*
+* bool primeQ(int i) : O(1)
+*	i ‚ª‘f”‚©‚ğ•Ô‚·D
 */
-struct Factor_integer {
+struct Osa_k {
 	int n;
 
-	// d[i] : i ‚ğŠ„‚èØ‚éÅ¬‚Ì‘f”
+	// d[i] : i ‚ğŠ„‚èØ‚éÅ‘å‚Ì‘f”
 	vi d;
 
 	// n ˆÈ‰º‚Ì©‘R”‚ğ‚‘¬‚É‘fˆö”•ª‰ğ‚·‚é€”õ‚ğs‚¤D
-	Factor_integer(int n_) : n(n_), d(n + 1) {
+	Osa_k(int n_) : n(n_), d(n + 1) {
 		// verify : https://yukicoder.me/problems/no/2207
 
 		iota(all(d), 0);
@@ -89,10 +97,10 @@ struct Factor_integer {
 			for (int i = p; i <= n; i += p) d[i] = p;
 		}
 	}
-	Factor_integer() : n(0) {}
+	Osa_k() : n(0) {}
 
 	// i ‚Ì‘fˆö”•ª‰ğŒ‹‰Ê‚ğ•Ô‚·D
-	map<int, int> get(int i) const {
+	map<int, int> factor_integer(int i) const {
 		// verify : https://yukicoder.me/problems/no/2207
 
 		Assert(i <= n);
@@ -103,6 +111,15 @@ struct Factor_integer {
 			i /= d[i];
 		}
 		return pps;
+	}
+
+	// i ‚ª‘f”‚©‚ğ•Ô‚·D
+	bool primeQ(int i) {
+		// verify : https://yukicoder.me/problems/no/1396
+
+		Assert(i <= n);
+
+		return d[i] == i;
 	}
 };
 
@@ -141,9 +158,9 @@ vector<map<int, int>> factor_integer_all(int n) {
 }
 
 
-//yˆêŠ‡‘fˆö”•ª‰ği‹æŠÔjzO((ãr + (r - l))log(log r))
+//yˆêŠ‡‘fˆö”•ª‰ği‹æŠÔjzO((ãr + (r-l)) log(log r))
 /*
-* [l..r) ‚ÉŠÜ‚Ü‚ê‚é©‘R” i ‚Ì‘fˆö”•ª‰ğ‚ğ pps[i - l] ‚ÉŠi”[‚µCpps ‚ğ•Ô‚·D
+* [l..r) ‚ÉŠÜ‚Ü‚ê‚é©‘R” i ‚Ì‘fˆö”•ª‰ğ‚ğ pps[i-l] ‚ÉŠi”[‚µCpps ‚ğ•Ô‚·D
 *
 * —˜—pFy‘f”‚Ì—ñ‹“z
 */
@@ -151,7 +168,7 @@ vector<map<ll, int>> factor_integer_interval(ll l, ll r) {
 	vector<map<ll, int>> pps(r - l);
 
 	// ps : ãr ˆÈ‰º‚Ì‘f”‚ÌƒŠƒXƒg
-	vi ps = eratosthenes(int(sqrt(r) + EPS));
+	vi ps = eratosthenes((int)(sqrt(r) + 0.01));
 
 	// ‡‚É‘f”‚ÅŠ„‚Á‚Ä‚¢‚Á‚½c‚è‚Ì’l‚ğ‹L˜^‚µ‚Ä‚¨‚­‚½‚ß‚Ìƒe[ƒuƒ‹
 	vl a(r - l);

@@ -118,11 +118,48 @@ template <class T>
 using Polygon = vector<Point<T>>;
 
 
-//【直線の標準形】
+//【直線の標準化】O(log max(dx, dy))
 /*
-* 与えられた点群のうち少なくとも 2 点を通る直線は，
-* 通る点のうち辞書順最小のものと，互いに素な成分をもつ方向ベクトルの組で一意に表せる．
-* 
-* verify : https://atcoder.jp/contests/arc082/tasks/arc082_c
+* 直線 l を標準化したものを返す．
 */
+template <class T>
+Line<T> standard_form(const Line<T>& l) {
+	// verify : https://yukicoder.me/problems/no/2355
+
+	// p1, p2 : 直線 l が通る 2 点
+	auto [p1, p2] = l;
+
+	// (dx, dy) : l の方向ベクトル（x 軸正の方向を向く，垂直な直線は例外）
+	T dx = p2.x - p1.x;
+	T dy = p2.y - p1.y;
+	if (dx < 0) {
+		dx *= -1;
+		dy *= -1;
+	}
+
+	// dx, dy を gcd(dx, dy) で割り，方向を変えず最も短いものにする．
+	T g = gcd(dx, dy);
+	dx /= g;
+	dy /= g;
+
+	// (x0, y0) : l 上かつ半平面 x ≧ 0 上の点のうち x 座標最小の点（l が垂直な場合は例外）
+	T x0 = p1.x;
+	T y0 = p1.y;
+	if (dx > 0) {
+		T q = x0 / dx - (T)(x0 % dx < 0);
+		x0 -= dx * q;
+		y0 -= dy * q;
+	}
+	else {
+		y0 = 0;
+		dy = 1;
+	}
+
+	// (x1, y1) : (x0, y0) から (dx, dy) だけ進んだ位置にある点
+	T x1 = x0 + dx;
+	T y1 = y0 + dy;
+
+	return Line<T>{{x0, x1}, { y0, y1 }};
+}
+
 

@@ -1,13 +1,13 @@
 #pragma once
 #include "header.h"
-#include "列の管理.h"
+#include "列クエリ.h"
 // ■■■■■ 階乗，二項係数など ■■■■■
 
 
 //【階乗など（法が大きな素数）】
 /*
-* Factorial_mint(int n_max) : O(n_max)
-*	n_max まで計算可能として初期化する．
+* Factorial_mint(int N) : O(n)
+*	N まで計算可能として初期化する．
 *
 * mint fact(int n) : O(1)
 *	n! を返す．
@@ -108,8 +108,8 @@ public:
 
 //【階乗など（法が小さな素数）】
 /*
-* Factorial_small_prime_mod(int p, ll n_max = INFL) : O(min(n_max, p))
-*	素数 p を法として，n_max! まで計算可能として初期化する．
+* Factorial_small_prime_mod(int p, ll N = INFL) : O(min(N, p))
+*	素数 p を法として，N! まで計算可能として初期化する．
 *
 * int fact(ll n) : O(log n)
 *	n! mod p を返す．
@@ -343,8 +343,8 @@ struct Factorial_arbitrary_small_mod {
 
 //【階乗など（法が任意）】
 /*
-* Factorial_arbitrary_mod(int m, int n_max) : O(min(m, n_max))
-*	m を法として，n_max! まで計算可能として初期化する．
+* Factorial_arbitrary_mod(int m, int N) : O(min(m, N))
+*	m を法として，N! まで計算可能として初期化する．
 *
 * int fact(int n) : O(ω(m) (log n + log m))
 *	n! mod m を返す．
@@ -485,29 +485,32 @@ struct Factorial_arbitrary_mod {
 
 //【階乗など（対数）】
 /*
-* Factorial_log(int n_max) : O(n_max)
-*	n_max! まで計算可能として初期化する．
+* Factorial_log<D>(int N) : O(N)
+*	N! まで計算可能として初期化する．
 *
-* double fact(int n) : O(1)
+* D fact(int n) : O(1)
 *	log n! を返す．
 *
-* double perm(int n, int r) : O(1)
+* D perm(int n, int r) : O(1)
 *	順列の数の対数 log nPr を返す．
 *
-* double bin(int n, int r) : O(1)
+* D bin(int n, int r) : O(1)
 *	二項係数の対数 log nCr を返す．
 *
-* double mul(vi r) : O(|r|)
-*	多項係数の対数 log nC[r] を返す．（n = Σr）
+* D mul(vi rs) : O(|rs|)
+*	多項係数の対数 log nC[rs] を返す．（n = Σrs）
 */
+template <class D = double>
 class Factorial_log {
 	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_max;
-	vd fac;
+	vector<D> fac;
 
 public:
 	// n! までの階乗とその逆数を前計算しておく．O(n)
 	Factorial_log(int n) : n_max(n) {
+		// verify : https://atcoder.jp/contests/arc035/tasks/arc035_d
+
 		fac.resize(n + 1);
 		fac[0] = 0;
 		repi(i, 1, n) fac[i] = fac[i - 1] + log(i);
@@ -515,34 +518,35 @@ public:
 	Factorial_log() : n_max(0) {} // ダミー
 
 	// log n! を返す．O(1)
-	double fact(int n) const {
+	D fact(int n) const {
 		Assert(0 <= n && n <= n_max);
 		return fac[n];
 	}
 
 	// 順列の数の対数 log nPr を返す．O(1)
-	double perm(int n, int r) const {
+	D perm(int n, int r) const {
 		Assert(n <= n_max);
-		if (r < 0 || n - r < 0) return 0;
+		if (r < 0 || n - r < 0) return -D(INFL);
 		return fac[n] - fac[n - r];
 	}
 
 	// 二項係数の対数 log nCr を返す．O(1)
-	double bin(int n, int r) const {
+	D bin(int n, int r) const {
 		// verify : https://atcoder.jp/contests/arc035/tasks/arc035_d
 
 		Assert(n <= n_max);
-		if (r < 0 || n - r < 0) return 0;
+		if (r < 0 || n - r < 0) return -D(INFL);
 		return fac[n] - fac[r] - fac[n - r];
 	}
 
-	// 多項係数の対数 log nC[r] を返す．O(|r|)
-	double mul(const vi& r) const {
-		int n = accumulate(all(r), 0);
+	// 多項係数の対数 log nC[rs] を返す．O(|rs|)
+	D mul(const vi& rs) const {
+		if (*min_element(all(rs)) < 0) return -D(INFL);
+		int n = accumulate(all(rs), 0);
 		Assert(n <= n_max);
 
 		double res = fac[n];
-		repe(ri, r) res -= fac[ri];
+		repe(i, rs) res -= fac[i];
 
 		return res;
 	}
@@ -570,6 +574,8 @@ T fact(int n) {
 template <class T>
 T perm(ll n, int r) {
 	// verify : https://mojacoder.app/users/milkcoffee/contests/milkcoffee-contest-001/tasks/3
+
+	if (r < 0 || n - r < 0) return 0;
 
 	T val = 1;
 	rep(i, r) val *= n - i;
@@ -604,6 +610,8 @@ ll bin(ll n, ll r) {
 * nCr を返す．
 */
 mint bin_mint(ll n, ll r) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ad
+
 	Assert(n >= 0);
 
 	mint num = 1, dnm = 1;
@@ -616,6 +624,19 @@ mint bin_mint(ll n, ll r) {
 		dnm *= i + 1;
 	}
 	return num / dnm;
+}
+
+
+//【二項係数（mod 2）】O(1)
+/*
+* nCr mod 2 を返す．
+*/
+template <class T>
+int bin2(T n, T r) {
+	// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
+
+	if (r < 0 || n < r) return 0;
+	return (n & r) == r;
 }
 
 
@@ -635,6 +656,8 @@ mint bin_mint(ll n, ll r) {
 *
 * 特に p = 2 のときは以下の合同式が成り立つ：
 *	bin(n, r) ≡ Boole[(n & r) == r]  (mod 2)
+* 
+* verify : https://mojacoder.app/users/YSatUT/problems/divisible_nCr
 */
 
 
@@ -766,6 +789,40 @@ vm binomial_fixed_r(ll n1, ll n2, int r) {
 
 	// bin(i, r) = iPr / r!
 	rep(i, dn) bin[i] = perm[i] * fac_inv;
+
+	return bin;
+}
+
+
+//【二項係数（一括，n-r が固定，r が小さい，法が大きな素数）】O(r)
+/*
+* 各 i∈[0..r) について bin(n+i, i) を順に格納したリストを返す．
+*/
+vm binomial_fixed_diff(ll n, int r) {
+	// verify : https://yukicoder.me/problems/no/1489
+
+	//【方法】
+	// bin(n+i, i) = Π[n+1..n+i] / i! なので，
+	// 分子を累積積で計算していき，最後に階乗の逆数を掛ければ良い．
+
+	if (r <= 0) return vm();
+
+	// bin[i] : bin(n+i, i)
+	// fac : (r-1)!
+	vm bin(r); mint fac = 1;
+	bin[0] = 1;
+	repi(i, 1, r - 1) {
+		bin[i] = bin[i - 1] * (n + i);
+		fac *= i;
+	}
+
+	// fac_inv : 1/(r-1)!
+	mint fac_inv = fac.inv();
+
+	repir(i, r - 1, 1) {
+		bin[i] *= fac_inv;
+		fac_inv *= i;
+	}
 
 	return bin;
 }
@@ -1021,24 +1078,6 @@ public:
 */
 
 
-//【ホッケースティック恒等式】
-/*
-* パスカルの三角形の斜め方向の累積和は以下の式で求められる：
-*	Σi=[i0..i1) bin(i, r) = bin(i1, r+1) - bin(i0, r+1)
-* 
-* verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
-*/
-
-
-//【二項係数の線形加重和】
-/*
-* 二項係数と一次式の積の和について，以下の式が成り立つ：
-*	Σr=[0..n] (a r + b) bin(n, r) = (a n + 2 b) 2^(n-1)
-* 
-* verify : https://atcoder.jp/contests/abc150/tasks/abc150_e
-*/
-
-
 //【二項係数の累積和（一括，r が固定）】O(n)
 /*
 * 各 i∈[0..n) について Σj∈[0..r) bin(i, j) を格納したリストを返す．
@@ -1048,6 +1087,9 @@ public:
 vm binomial_sum_fixed_r(int n, int r, const Factorial_mint& fm) {
 	// verify : https://www.codechef.com/problems/MEX_SEQ
 
+	//【方法】
+	// 大体 2 倍でいいが，パスカルの三角形で右にはみ出た分だけ引き算する．
+
 	vm res(n);
 	if (n == 0 || r <= 0) return res;
 
@@ -1056,6 +1098,80 @@ vm binomial_sum_fixed_r(int n, int r, const Factorial_mint& fm) {
 
 	return res;
 }
+
+
+//【ホッケースティック恒等式】
+/*
+* パスカルの三角形の斜め方向の累積和は以下の式で求められる：
+*	Σi=[i0..i1) bin(i, r) = bin(i1, r+1) - bin(i0, r+1)
+* 
+* verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
+*/
+
+
+//【1 つ抜きホッケースティック和（法が大きな素数）】
+/*
+* Hockey_stick_thinning_sum_mint(int n) : O(n√n)
+*	bin(n, -) まで計算可能として初期化する．
+*
+* get(int n, int r) : O(√n)
+*	Σ_i≧0 bin(n-2i, r) を返す．
+*
+* 利用：【階乗など（法が大きな素数）】
+*/
+class Hockey_stick_thinning_sum_mint {
+	//【方法】
+	// S(n, r) := Σ_i≧0 bin(n-2i, r) とおくと，
+	//		S(n, r) = 1/2 (S(n-1, r-1) + bin(n+1, r+1))
+	// が成り立つ．
+	// よって適当な間隔の r について S(n, r) 全てを前計算しておけば途中から計算を始められる．
+
+	int N, M;
+
+	// S[j][n] : Σ_i≧0 bin(2n-2i, M j)
+	vvm S;
+
+	Factorial_mint fm;
+
+public:
+	// bin(n, -) まで計算可能として初期化する．
+	Hockey_stick_thinning_sum_mint(int n) : N(n), M((int)(sqrt(N) + 0.01)), S(N / M + 1, vm(N / 2 + 1)), fm(max(N + 1, 2)) {
+		// verify : https://yukicoder.me/problems/no/2512
+
+		repi(j, 0, N / M) {
+			int r = j * M;
+			S[j][0] = fm.bin(0, r);
+			repi(i, 1, N / 2) S[j][i] = S[j][i - 1] + fm.bin(2 * i, r);
+		}
+	}
+	Hockey_stick_thinning_sum_mint() : N(0), M(0) {}
+
+	// Σ_i≧0 bin(n-2i, r) を返す．
+	mint get(int n, int r) {
+		// verify : https://yukicoder.me/problems/no/2512
+
+		Assert(n <= N);
+		if (n < 0 || r < 0 || n < r) return 0;
+
+		int j0 = r / M, k0 = r % M;
+
+		mint res = S[j0][(n - k0) / 2];
+		if ((n - k0) & 1) res = fm.bin(n - k0 + 1, M * j0 + 1) - res;
+
+		repir(k, k0 - 1, 0) res = (res + fm.bin(n + 1 - k, r + 1 - k)) * fm.inv(2);
+
+		return res;
+	}
+};
+
+
+//【二項係数の線形加重和】
+/*
+* 二項係数と一次式の積の和について，以下の式が成り立つ：
+*	Σr=[0..n] (a r + b) bin(n, r) = (a n + 2 b) 2^(n-1)
+* 
+* verify : https://atcoder.jp/contests/abc150/tasks/abc150_e
+*/
 
 
 //【二項係数の二次元累積和（菱形領域）】
@@ -1086,10 +1202,97 @@ vm binomial_sum_fixed_r(int n, int r, const Factorial_mint& fm) {
 */
 
 
+//【二重階乗（mint 利用）】
+/*
+* Double_factorial(int N) : O(N)
+*	N!! まで計算可能として初期化する．
+*
+* mint dfact(int i) : O(1)
+*	i!! を返す．
+*
+* mint dfact_inv(int i) : O(1)
+*	1/i!! を返す（n≦-2 なら 0 を返す）
+*/
+class Double_factorial_mint {
+	int n_max;
+	vm dfac, dfac_inv;
+
+public:
+	Double_factorial_mint(int n) : n_max(max(n, 1)), dfac(n_max + 1), dfac_inv(n_max + 1) {
+		// verify : https://atcoder.jp/contests/agc053/tasks/agc053_c
+
+		dfac[0] = dfac[1] = 1;
+		repi(i, 2, n) dfac[i] = dfac[i - 2] * i;
+
+		dfac_inv[n] = dfac[n].inv();
+		dfac_inv[n - 1] = dfac[n - 1].inv();
+		repir(i, n - 2, 1) dfac_inv[i] = dfac_inv[i + 2] * (i + 2);
+	};
+	Double_factorial_mint() : n_max(0) {};
+
+	// i!! を返す．
+	mint dfact(int i) const {
+		// verify : https://atcoder.jp/contests/abl/tasks/abl_f
+
+		Assert(i <= n_max);
+		return i <= 0 ? 1 : dfac[i];
+	}
+
+	// 1/i!! を返す．
+	mint dfact_inv(int i) const {
+		// verify : https://atcoder.jp/contests/agc053/tasks/agc053_c
+
+		Assert(i <= n_max);
+		return i <= -2 ? 0 : (i <= 0 ? 1 : dfac_inv[i]);
+	}
+};
+
+
+//【順列の数（一括，r が固定で小さい）】O(n2 - n1 + r)
+/*
+* 各 n∈[n1..n2) について nPr を格納したリストを返す．
+*
+* 利用：【キュー（モノイド）】
+*/
+mint op_pfr(mint x, mint y) { return x * y; }
+mint e_pfr() { return 1; }
+vm perm_fixed_r(ll n1, ll n2, int r) {
+	// verify : https://atcoder.jp/contests/arc160/tasks/arc160_d
+
+	//【方法】
+	// perm(n1, r) = Π[n1-r+1..n1] であり，n を増やすと区間が右に 1 つずれる．
+	// mint の積はモノイドを成すので，これらは SWAG で効率的に計算できる．
+
+	if (n1 >= n2) return vm();
+	if (r == 0) return vm(n2 - n1, 1);
+
+	Queue_SWAG<mint, op_pfr, e_pfr> SWAG;
+	for (ll i = n1 - r + 1; i < n1; i++) SWAG.push(i);
+
+	vm res(n2 - n1);
+	for (ll n = n1; n < n2; n++) {
+		SWAG.push(n);
+		res[n - n1] = SWAG.prod();
+		SWAG.pop();
+	}
+
+	return res;
+}
+
+
+//【順列の数の和】
+/*
+* 順列の数の累積和は以下の式で求められる：
+*	Σi=[r..n) perm(i, r) = perm(n, r) (n-r) / (r+1)
+*
+* verify : https://yukicoder.me/problems/no/1886
+*/
+
+
 //【q-階乗など】
 /*
-* Q_Factorial_mint(int n_max, int q) : O(n_max)
-*	[n_max]_q まで計算可能として初期化する．
+* Q_Factorial_mint(int N, int q) : O(N)
+*	[N]_q まで計算可能として初期化する．
 *
 * mint val(int n) : O(1)
 *	q-数 [n]_q を返す．
@@ -1107,6 +1310,7 @@ vm binomial_sum_fixed_r(int n, int r, const Factorial_mint& fm) {
 *
 * mint bin(int n, int r) : O(1)
 *	q-二項係数 nCr_q を返す．
+*	nCr_q = (Πi∈[n-k+1..n] (1 - q^i)) / (Πi∈[1..k] (1 - q^i))
 *
 * mint mul(vi rs) : O(|rs|)
 *	q-多項係数 nC[rs]_q を返す．（n = Σrs）
@@ -1199,201 +1403,15 @@ public:
 };
 
 
-//【二重階乗（mint 利用）】
-/*
-* Double_factorial(int n) : O(n)
-*	n!! まで計算可能として初期化する．
-*
-* mint [](int i) : O(1)
-*	i!! を返す．
-*/
-class Double_factorial_mint {
-	int n_max;
-	vm dfact;
-
-public:
-	Double_factorial_mint(int n_max) : n_max(n_max) {
-		// verify : https://atcoder.jp/contests/abl/tasks/abl_f
-
-		dfact.assign(n_max + 1, 1);
-		repi(i, 2, n_max) dfact[i] = dfact[i - 2] * i;
-	};
-	Double_factorial_mint() : n_max(0) {};
-
-	// i!! を返す．
-	mint const& operator[](int i) const {
-		// verify : https://atcoder.jp/contests/abl/tasks/abl_f
-
-		Assert(i <= n_max);
-		return i <= 0 ? dfact[0] : dfact[i];
-	}
-};
-
-
-//【順列の数（一括，r が固定で小さい）】O(n2 - n1 + r)
-/*
-* 各 n∈[n1..n2) について nPr を格納したリストを返す．
-*
-* 利用：【キュー（モノイド）】
-*/
-mint op_pfr(mint x, mint y) { return x * y; }
-mint e_pfr() { return 1; }
-vm perm_fixed_r(ll n1, ll n2, int r) {
-	// verify : https://atcoder.jp/contests/arc160/tasks/arc160_d
-
-	//【方法】
-	// perm(n1, r) = Π[n1-r+1..n1] であり，n を増やすと区間が右に 1 つずれる．
-	// mint の積はモノイドを成すので，これらは SWAG で効率的に計算できる．
-
-	if (n1 >= n2) return vm();
-	if (r == 0) return vm(n2 - n1, 1);
-
-	Queue_SWAG<mint, op_pfr, e_pfr> SWAG;
-	for (ll i = n1 - r + 1; i < n1; i++) SWAG.push(i);
-
-	vm res(n2 - n1);
-	for (ll n = n1; n < n2; n++) {
-		SWAG.push(n);
-		res[n - n1] = SWAG.prod();
-		SWAG.pop();
-	}
-
-	return res;
-}
-
-
-//【順列の数の和】
-/*
-* 順列の数の累積和は以下の式で求められる：
-*	Σi=[r..n) perm(i, r) = perm(n, r) (n-r) / (r+1)
-*
-* verify : https://yukicoder.me/problems/no/1886
-*/
-
-
-//【累乗（mint 利用）】
-/*
-* Pow_mint(ll B, int n) : O(n)
-*	底を B とし，B^(-n) から B^n まで計算可能として初期化する．
-*	制約 : B は mint の法と互いに素
-*
-* mint [](int i) : O(1)
-*	B^i を返す．
-*/
-class Pow_mint {
-	int n;
-	vm powB, powB_inv;
-
-public:
-	Pow_mint(ll B, int n) : n(n) {
-		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
-
-		// B の累乗を計算する．
-		powB.resize(n + 1);
-		powB[0] = 1;
-		rep(i, n) powB[i + 1] = powB[i] * B;
-
-		// B の逆元の累乗を計算する．
-		mint invB = mint(1) / B;
-		powB_inv.resize(n + 1);
-		powB_inv[0] = 1;
-		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB;
-	};
-	Pow_mint() : n(0) {}
-
-	// B^i を返す．
-	mint const& operator[](int i) const {
-		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
-
-		Assert(abs(i) <= n);
-
-		return i >= 0 ? powB[i] : powB_inv[-i];
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Pow_mint& pw) {
-		os << pw.powB << endl;
-		os << pw.powB_inv << endl;
-		return os;
-	}
-#endif
-};
-
-
-//【累乗】
-/*
-* Pow(ll B, int n, ll M) : O(n)
-*	底を B とし，B^(-n) から B^n (mod M) まで計算可能として初期化する．
-*	制約 : B と M は互いに素
-*
-* ll [](int i) : O(1)
-*	B^i mod M を返す．
-*/
-class Pow {
-	int n;
-	vl powB, powB_inv;
-
-	// a x + b y = g の解 (x, y) を返す．
-	pll extended_gcd(ll a, ll b) {
-		if (b == 0) {
-			Assert(a == 1);
-			return make_pair(1LL, 0LL);
-		}
-
-		ll q = a / b, r = a % b;
-		ll X, Y;
-		tie(X, Y) = extended_gcd(b, r);
-
-		return make_pair(Y, X - q * Y);
-	}
-
-public:
-	Pow(ll B, int n, ll M) : n(n) {
-		// verify : https://codeforces.com/contest/715/problem/C
-
-		B %= M;
-
-		// B の累乗を計算する．
-		powB.resize(n + 1);
-		powB[0] = 1;
-		rep(i, n) powB[i + 1] = powB[i] * B % M;
-
-		// 拡張ユークリッドの互除法で B の逆元を計算する．
-		ll invB, tmp;
-		tie(invB, tmp) = extended_gcd(B, M);
-
-		// B の逆元の累乗を計算する．
-		powB_inv.resize(n + 1);
-		powB_inv[0] = 1;
-		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB % M;
-	};
-
-	// B^i を返す．
-	ll const& operator[](int i) const {
-		// verify : https://codeforces.com/contest/715/problem/C
-
-		Assert(abs(i) <= n);
-
-		return i >= 0 ? powB[i] : powB_inv[-i];
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Pow& pw) {
-		os << pw.powB << endl;
-		os << pw.powB_inv << endl;
-		return os;
-	}
-#endif
-};
-
-
 //【階乗などの埋め込み】
 /*
 * 階乗とその逆数を埋め込み，任意の n に対し n!, 1/n! を O(WIDTH) で得られるようにする．
-* AtCoder の提出コードは 512KB が上限なので，WIDTH = 4*10^4 あたりが限界．
+* AtCoder の提出コードは 512KB が上限なので，WIDTH ≧ 4*10^4 あたりが限界．
 */
 const int WIDTH = (int)1e7; int MOD = mint::mod();
 void embed_factorial() {
+	// verify : https://judge.yosupo.jp/problem/many_factorials
+
 	mint fac = 1;
 	vm res;
 	rep(i, MOD) {

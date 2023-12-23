@@ -10,17 +10,17 @@
 *（二分探索で高速化したインライン DP）
 */
 template <class T>
-int longest_increasing_subsequence(const vector<T>& a) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/problems/DPL_1_D
+int LIS_length_to_val(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_x
 
 	int n = sz(a);
 
-	// dp_i[j] : a[0..i) までで，長さが j である増加部分列の右端の値の最小値
+	// dp_i[j] : a[0..i) で，長さが j である増加部分列の右端の値の最小値
 	//	短い増加部分列はそれより長い増加部分列の部分列なので，広義単調増加性がある．
 	vector<T> dp(n + 1, numeric_limits<T>::max());
 	dp[0] = numeric_limits<T>::lowest();
 
-	// a[0..5) = [4, 2, 3, 3, 1] のときの遷移例
+	//（例）a[0..5) = [4, 2, 3, 3, 1] のとき
 	//	dp_0[0..5] = [-INF, INF, INF, INF, INF, INF]
 	//	dp_1[0..5] = [-INF,   4, INF, INF, INF, INF]
 	//	dp_2[0..5] = [-INF,   2, INF, INF, INF, INF]
@@ -59,7 +59,7 @@ int longest_increasing_subsequence(const vector<T>& a) {
 *（二分探索で高速化したインライン DP）
 */
 template <class T>
-int weakly_longest_increasing_subsequence(const vector<T>& a) {
+int weakly_LIS(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
 
 	int n = sz(a);
@@ -105,29 +105,27 @@ int weakly_longest_increasing_subsequence(const vector<T>& a) {
 * 数列 a[0..n) の（狭義）最長増加部分列の長さを返す．またその一例の添字列を lis に構成する．
 *
 *（セグメント木で高速化したインライン DP）
-*
-* 利用：【座標圧縮】
 */
 pii op_lis(pii a, pii b) { return max(a, b); }
 pii e_lis() { return { 0, -1 }; } // max の単位元が -INF でなく 0 であることに注意
 template <class T>
-int longest_increasing_subsequence(const vector<T>& a, vi* lis = nullptr) {
+int LIS_val_to_length(const vector<T>& a, vi* lis = nullptr) {
 	// verify : https://judge.yosupo.jp/problem/longest_increasing_subsequence
 
 	int n = sz(a);
 
 	// a を座標圧縮した結果を b に格納する．
-	vi b;
-	int m = coordinate_compression(a, b);
+	vector<T> a_uniqed(a); uniq(a_uniqed); int m = sz(a_uniqed);
+	vi b(n); rep(i, n) b[i] = lbpos(a_uniqed, a[i]);
 
-	// dp_i[j] : b[0..i] までで右端の値が j であるような最長増加部分列の長さとそのときの右端位置
+	// dp_i[j] : b[0..i] で右端の値が j であるような最長増加部分列の長さとそのときの右端位置
 	segtree<pii, op_lis, e_lis> dp(m);
 
 	// prv[j] : 右端が b[i] の最長増加部分列について，右端の 1 つ前の要素の位置（DP 復元用）
 	//（インライン DP を行うので，これを持たずに DP テーブルから復元しようとすると失敗する．）
 	vi prv(n, -1);
 
-	// b[0..5) = [3, 1, 2, 2, 0] のときの遷移例
+	//（例）b[0..5) = [3, 1, 2, 2, 0] のとき
 	//	dp_0[0..3) = [0, 0, 0, 0]
 	//	dp_1[0..3) = [0, 0, 0, 1] (max(0, 0, 0) + 1 = 1)
 	//	dp_2[0..3) = [0, 1, 0, 1] (max(0)       + 1 = 1)
@@ -141,8 +139,7 @@ int longest_increasing_subsequence(const vector<T>& a, vi* lis = nullptr) {
 
 		// j を右端にもてるのは，それまでの右端が j 未満のもののみ．
 		// よってその中での最長増加部分列の長さを求め，それに 1 を加える．
-		int len, pos;
-		tie(len, pos) = dp.prod(0, j);
+		auto [len, pos] = dp.prod(0, j);
 		len++;
 
 		// j を右端とするより長いものが作れれば更新する．
@@ -155,8 +152,7 @@ int longest_increasing_subsequence(const vector<T>& a, vi* lis = nullptr) {
 	}
 
 	// 右端の値を任意としたときの最長増加部分列の長さを得る．
-	int len, pos;
-	tie(len, pos) = dp.prod(0, m);
+	auto [len, pos] = dp.prod(0, m);
 
 	// DP 復元を行う．
 	if (lis != nullptr) {
@@ -181,7 +177,7 @@ int longest_increasing_subsequence(const vector<T>& a, vi* lis = nullptr) {
 * 利用：【狭義単調な点列】，【めぐる式二分探索】
 */
 template <class T>
-int longest_increasing_subsequence_2D(const vector<T>& a, const vector<T>& b) {
+int LIS_2D(const vector<T>& a, const vector<T>& b) {
 	// 参考 : https://topcoder-g-hatena-ne-jp.jag-icpc.org/skyaozora/20141216.html
 	// verify : https://onlinejudge.u-aizu.ac.jp/problems/1341
 
@@ -206,13 +202,11 @@ int longest_increasing_subsequence_2D(const vector<T>& a, const vector<T>& b) {
 }
 
 
-//【スコア最大増加部分列】O(n log n)
+//【最大スコア増加部分列】O(n log n)
 /*
-* 非負スコア c[0..n) が与えられた数列 a[0..n) のスコア最大増加部分列のスコアを返す．
+* 非負スコア c[0..n) が与えられた数列 a[0..n) の増加部分列の最大スコアを返す．
 *
 *（セグメント木で高速化したインライン DP）
-*
-* 利用：【座標圧縮】
 */
 ll op_mis(ll a, ll b) { return max(a, b); }
 ll e_mis() { return 0; }
@@ -223,8 +217,8 @@ ll maxscore_increasing_subsequence(const vector<T>& a, const vl& c) {
 	int n = sz(a);
 
 	// a を座標圧縮した結果を b に格納する．
-	vi b;
-	int m = coordinate_compression(a, b);
+	vector<T> a_uniqed(a); uniq(a_uniqed); int m = sz(a_uniqed);
+	vi b(n); rep(i, n) b[i] = lbpos(a_uniqed, a[i]);
 
 	// dp[j] : 今まで見てきた中での，右端の値が j であるような増加部分列の最大スコア
 	segtree<ll, op_mis, e_mis> dp(m);
@@ -236,6 +230,7 @@ ll maxscore_increasing_subsequence(const vector<T>& a, const vl& c) {
 		// j を右端にもてるのは，それまでの右端が j 未満のもののみ．
 		// よってその中での増加部分列の最大スコアを求め，それに c[i] を加える．
 		ll score = dp.prod(0, j) + c[i];
+		// ll score = dp.prod(0, j + 1) + c[i]; // 広義単調増加の場合
 
 		// j を右端とするよりスコアの大きいものが作れれば更新する．
 		// dp[j] 以外は更新されることはないので，更新は O(log n) で終わる．
@@ -250,7 +245,7 @@ ll maxscore_increasing_subsequence(const vector<T>& a, const vl& c) {
 }
 
 
-//【最長増加部分列（区分的）】O(n log n)
+//【最長増加部分列（区分的）】O(m n log n)
 /*
 * 数列 a[0..n) の，m 箇所以下の違反を認めた（狭義）最長増加部分列の長さを返す．
 *
@@ -258,7 +253,7 @@ ll maxscore_increasing_subsequence(const vector<T>& a, const vl& c) {
 */
 ll op_lpis(ll a, ll b) { return min(a, b); }
 ll e_lpis() { return INFL; }
-int longest_piecewise_increasing_subsequence(const vl& a, int m) {
+int piecewise_LIS(const vl& a, int m) {
 	// verify : https://atcoder.jp/contests/dwacon2018-final-open/tasks/dwacon2018_final_b
 
 	int n = sz(a);
@@ -293,6 +288,71 @@ int longest_piecewise_increasing_subsequence(const vl& a, int m) {
 	}
 
 	return r[m] - 1;
+}
+
+
+//【最長増加部分列問題の双対】
+/*
+* 狭義[広義] 最長増加部分列の長さ = 広義[狭義] 減少部分列への分割の最小個数
+*
+* 証明：数列 a[0..n) に対し，DAG G = (V, E) を
+*	V = [0..n)，
+*	e = i→j ∈ E ⇔ a[i] ≧ a[j]
+* として定める．このとき
+*	狭義最長増加部分列の長さ = G の最大半鎖の大きさ
+*	広義減少部分列への分割の最小個数 = G の最小パス被覆の大きさ
+* となるので，ディルワースの定理よりこれらは等しい．
+*
+* verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
+*/
+
+
+//【最長凸部分列（単調増加，両端含む）】O(n log n)
+/*
+* 与えられた広義単調増加列 a[0..n) に対し，a[0] と a[n-1] を含む
+* 下に凸（階差が広義単調増加）な部分列で，その長さを最大にするものの添字列を返す．
+*/
+template <class T>
+vi longest_convex_subsequence(const vector<T>& a) {
+	// verify : https://leetcode.com/problems/find-maximum-non-decreasing-array-length/description/
+
+	int n = sz(a);
+
+	// dp[i] : a[i] を最後の要素とする凸部分列についての最後の階差の最小値
+	vector<T> dp(n, (T)INFL);
+	dp[0] = 0;
+
+	rep(i, n - 1) {
+		// 最後の要素を a[i] から a[i+1] に変更する場合，a[i] が階差に上乗せされる．
+		// a は単調増加なので，凸性は自動的にみたされる．
+		chmin(dp[i + 1], dp[i] + a[i + 1] - a[i]);
+
+		// ni : 凸性をみたせる中で最も手前の位置
+		// a は単調増加なので凸性をみたせるか否かには単調性がある．
+		int ni = lbpos(a, a[i] + dp[i]);
+		// int ni = ubpos(a, a[i] + dp[i]); // 狭義凸ならこっち
+
+		if (ni < n) chmin(dp[ni], a[ni] - a[i]);
+	}
+
+	// DP 復元を行う．
+	vi sel; int i = n - 1;
+	while (true) {
+		sel.push_back(i);
+
+		bool end_flag = true;
+		repir(ni, i - 1, 0) {
+			if (a[i] - a[ni] == dp[i]) {
+				i = ni;
+				end_flag = false;
+				break;
+			}
+		}
+		if (end_flag) break;
+	}
+	reverse(all(sel));
+
+	return sel;
 }
 
 
@@ -372,11 +432,10 @@ ll levenshtein_distance(const vector<T>& s, const vector<T>& t,
 
 	int n = sz(s), m = sz(t);
 
-	ll fit, ins, del, sub;
-	tie(fit, ins, del, sub) = dist;
+	auto [fit, ins, del, sub] = dist;
 
 	// dp[i][j] : s[0..i) から t[0..j) への距離
-	vvl dp(n + 1, vl(m + 1, INF));
+	vvl dp(n + 1, vl(m + 1, INFL));
 	dp[0][0] = 0;
 
 	// 貰う DP
@@ -424,19 +483,36 @@ ll levenshtein_distance(const vector<T>& s, const vector<T>& t,
 }
 
 
-//【最長増加部分列問題の双対】
+//【最長回文部分列】O(n^2)
 /*
-* 狭義[広義] 最長増加部分列の長さ = 広義[狭義] 減少部分列への分割の最小個数
+* s[0..n) の回文である部分列のうち最長のものの長さを返す．
 *
-* 証明：数列 a[0..n) に対し，DAG G = (V, E) を
-*	V = [0..n)，
-*	e = i→j ∈ E ⇔ a[i] ≧ a[j]
-* として定める．このとき
-*	狭義最長増加部分列の長さ = G の最大半鎖の大きさ
-*	広義減少部分列への分割の最小個数 = G の最小パス被覆の大きさ
-* となるので，ディルワースの定理よりこれらは等しい．
-*
-* verify : https://atcoder.jp/contests/abc134/tasks/abc134_e
+*（区間 DP）
 */
+int longest_palindrome_subsequence(const string& s) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ct
+
+	int n = sz(s);
+
+	// dp[l][r] : s[l..r) の最長回文部分列長
+	vvi dp(n + 1, vi(n + 1));
+
+	// 1 文字の場合
+	rep(i, n) dp[i][i + 1] = 1;
+
+	// 貰う区間 DP
+	repir(l, n - 1, 0) repi(r, l + 2, n) {
+		// s[l] を使わない場合
+		chmax(dp[l][r], dp[l + 1][r]);
+
+		// s[r-1] を使わない場合
+		chmax(dp[l][r], dp[l][r - 1]);
+
+		// s[l] と s[r-1] を対応させる場合
+		if (s[l] == s[r - 1]) chmax(dp[l][r], dp[l + 1][r - 1] + 2);
+	}
+
+	return dp[0][n];
+}
 
 

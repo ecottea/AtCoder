@@ -29,6 +29,51 @@ T maximize_pair_diff(const vector<T>& a, pii* ids = nullptr) {
 }
 
 
+//【組の XOR の最小化】O(n log n)
+/*
+* a[0..n) に対して以下の値を返す：
+*		max_(i < j) (a[j] XOR a[i])
+* また最小値を与える (i, j) を ids に格納する．
+*/
+template <class T>
+T minimize_pair_XOR(const vector<T>& a, pii* ids = nullptr) {
+	// 参考 : https://twitter.com/pro_anyone/status/1666487254175604736
+
+	//【方法】
+	// ソートして隣接要素の XOR のみを調べれば良い．
+
+	//【証明】
+	// x < y < z のとき
+	//		min(x XOR y, y XOR z) < x XOR z
+	// であることを示せば良い．
+	// x, z を上位ビットから順に見ていき，初めて食い違ったのが d 桁目とする．
+	// y[d] = 0 なら x[d] = y[d] なので x XOR y < x XOR z となり，
+	// y[d] = 1 なら y[d] = z[d] なので y XOR z < x XOR z となる．
+
+	int n = sz(a);
+	if (ids == nullptr) ids = new pii;
+
+	vector<pair<T, int>> ai(n);
+	rep(i, n) ai[i] = { a[i], i };
+	sort(all(ai));
+
+	T res = numeric_limits<T>::max();
+	rep(i, n - 1) if (chmin(res, ai[i].first ^ ai[i + 1].first)) {
+		*ids = { ai[i].second, ai[i + 1].second };
+	}
+
+	return res;
+}
+
+
+//【組の XOR の最大化】O(n log n)
+/*
+*【binary trie】の max_element(mask) を用いれば良い．
+* 
+* verify : https://codeforces.com/contest/1847/problem/C
+*/
+
+
 //【組の LCM の最小化】O(A log A)（A = max(a)）
 /*
 * a[0..n) > 0 に対して以下の値を返す：

@@ -14,27 +14,27 @@
 *	-1 : p が s の右側にある場合（a → b → p が時計回り）
 *	 2 : p が s の b より先にある場合（a < b < p 順）
 *	-2 : p が s の a より後ろにある場合（p < a < b 順）
-*	 0 : p が s 上にある場合（a <= p <= b 順）
+*	 0 : p が s 上にある場合（a ≦ p ≦ b 順）
 */
 template <typename T>
 inline int ccw(const Point<T>& p, const Line<T>& s) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_1_C
 
 	auto op = (s.second - s.first).cross(p - s.first);
-	if (op > 0) {
+	if (op > T(0)) {
 		// p が s の左側にある
 		return 1;
 	}
-	else if (op < 0) {
+	else if (op < T(0)) {
 		// p が s の右側にある
 		return -1;
 	}
 	else {
-		if ((s.first - s.second).dot(p - s.second) < 0) {
+		if ((s.first - s.second).dot(p - s.second) < T(0)) {
 			// p が s の前にある
 			return 2;
 		}
-		else if ((s.second - s.first).dot(p - s.first) < 0) {
+		else if ((s.second - s.first).dot(p - s.first) < T(0)) {
 			// p が s の後ろにある
 			return -2;
 		}
@@ -65,12 +65,14 @@ inline bool intersectQ_L_L(const Line<T>& l1, const Line<T>& l2) {
 */
 template <typename T>
 inline bool intersectQ_L_CS(const Line<T>& l, const Line<T>& s) {
+	// verify : https://yukicoder.me/problems/no/2594
+
 	// 共有点をもつ
 	// ⇔ s[0] と s[1] が l について逆側
 	T op0 = (l.second - l.first).cross(s.first - l.first);
 	T op1 = (l.second - l.first).cross(s.second - l.first);
 
-	return (op0 >= 0 && op1 <= 0) || (op0 <= 0 && op1 >= 0);
+	return (op0 >= T(0) && op1 <= T(0)) || (op0 <= T(0) && op1 >= T(0));
 }
 
 
@@ -200,7 +202,7 @@ inline int pos_relation_C_C(const Circle<T>& c1, const Circle<T>& c2) {
 *	点 p が多角形 poly の境界にあれば 0
 *	点 p が多角形 poly の内部にあれば 1
 */
-template <class T> int inner_polygon(const Polygon<T>& poly, Point<T>& p) {
+template <class T> int inner_polygon(const Polygon<T>& poly, const Point<T>& p) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_3_C
 
 	int n = sz(poly);
@@ -214,19 +216,15 @@ template <class T> int inner_polygon(const Polygon<T>& poly, Point<T>& p) {
 		Point<T> v2 = poly[(i + 1) % n] - p;
 
 		// v1 の方が下側になるようにする．
-		if (v1.y > v2.y) {
-			swap(v1, v2);
-		}
+		if (v1.y > v2.y) swap(v1, v2);
 
 		// 半直線と辺が交わっているか判定する．
 		// ちょうど半直線が頂点を通っている場合に備えて，
-		// 片方の y 座標は <= もう片方は < で判定する．
-		if (v1.y <= 0 && v2.y > 0 && v1.cross(v2) < 0) {
-			res *= -1;
-		}
+		// 片方の y 座標は ≦ もう片方は < で判定する．
+		if (v1.y <= T(0) && v2.y > T(0) && v1.cross(v2) < T(0)) res *= -1;
 
 		// 辺上にあるか判定する．
-		if (v1.cross(v2) == 0 && v1.dot(v2) <= 0) {
+		if (v1.cross(v2) == T(0) && v1.dot(v2) <= T(0)) {
 			res = 0;
 			break;
 		}

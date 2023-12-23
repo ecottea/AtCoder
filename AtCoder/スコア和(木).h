@@ -13,7 +13,6 @@
 using T_ds = pll; // (‹——£‚Ö‚ÌŠñ—^‚Ì˜a, ’¸“_‚Ì”)
 int n_ds;
 void merge_ds(T_ds& x, const T_ds& y, int s) { x.first += y.first; x.second += y.second - 1; }
-T_ds e_ds() { return { 0, 1 }; }
 T_ds leaf_ds(int s) { return { 0, 1 }; }
 T_ds apply_ds(const T_ds& x, int s, int t) {
 	return { x.first + x.second * (n_ds - x.second), x.second + 1 };
@@ -22,7 +21,7 @@ ll distance_sum(const Graph& g) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_am
 
 	n_ds = sz(g);
-	auto dp = tree_getDP_vmerge<T_ds, merge_ds, e_ds, leaf_ds, apply_ds>(g, 0);
+	auto dp = tree_getDP_vmerge<T_ds, merge_ds, leaf_ds, apply_ds>(g, 0);
 	return dp[0].first;
 }
 
@@ -45,7 +44,6 @@ void merge_dss(T_dss& x, const T_dss& y, int s) {
 
 	x = { nds, nds2, ncnt };
 }
-T_dss e_dss() { return { 0, 0, 1 }; }
 T_dss leaf_dss(int s) { return { 0, 0, 1 }; }
 T_dss apply_dss(const T_dss& x, int s, int t) {
 	auto [ds, ds2, cnt] = x;
@@ -62,7 +60,7 @@ vl distance_sum_subtree(const Graph& g, int r) {
 	int n = sz(g);
 	vl res(n);
 
-	auto dp = tree_getDP_vmerge<T_dss, merge_dss, e_dss, leaf_dss, apply_dss>(g, r);
+	auto dp = tree_getDP_vmerge<T_dss, merge_dss, leaf_dss, apply_dss>(g, r);
 
 	rep(s, n) res[s] = get<0>(dp[s]);
 	return res;
@@ -78,15 +76,14 @@ vl distance_sum_subtree(const Graph& g, int r) {
 */
 using T_ds = pll; // (ª‚©‚ç‚Ì‹——£‚Ì˜a, ’¸“_‚Ì”)
 T_ds merge_ds(T_ds x, T_ds y, int s) { return { x.first + y.first, x.second + y.second - 1 }; }
-T_ds e_ds(int s) { return { 0, 1 }; }
 T_ds leaf_ds(int s) { return { 0, 1 }; }
 T_ds apply_ds(T_ds x, int s, int t) { return { x.first + x.second, x.second + 1 }; }
-vl distance_sum(Graph& g) {
+vl distance_sum_endpoint(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc220/tasks/abc220_f
 
 	int n = sz(g);
 
-	auto tmp = rerooting<T_ds, merge_ds, e_ds, leaf_ds, apply_ds>(g);
+	auto tmp = rerooting<T_ds, merge_ds, leaf_ds, apply_ds>(g);
 
 	vl res(n);
 	rep(i, n) res[i] = tmp[i].first;
@@ -101,19 +98,19 @@ vl distance_sum(Graph& g) {
 *
 * —˜—pFy–á‚¤–Ø DPi’¸“_ƒ}[ƒWCd‚İ•t‚«jz
 */
-using T_dsw = pair<mint, int>; // (‹——£‚Ö‚ÌŠñ—^‚Ì˜a, ’¸“_‚Ì”)
+using S_dsw = mint;
+using T_dsw = pair<S_dsw, int>; // (‹——£‚Ö‚ÌŠñ—^‚Ì˜a, ’¸“_‚Ì”)
 int n_dsw;
 void merge_dsw(T_dsw& x, const T_dsw& y, int s) { x.first += y.first; x.second += y.second - 1; }
-T_dsw e_dsw() { return { 0, 1 }; }
 T_dsw leaf_dsw(int s) { return { 0, 1 }; }
 T_dsw apply_dsw(const T_dsw& x, int s, int t, ll c) {
-	return { x.first + mint(c) * x.second * (n_dsw - x.second), x.second + 1 };
+	return { x.first + S_dsw(c) * x.second * (n_dsw - x.second), x.second + 1 };
 }
-mint distance_sum(const WGraph& g) {
+S_dsw distance_sum(const WGraph& g) {
 	// verify : https://yukicoder.me/problems/no/1207
 
 	n_dsw = sz(g);
-	auto dp = tree_getDP_vmerge<T_dsw, merge_dsw, e_dsw, leaf_dsw, apply_dsw>(g, 0);
+	auto dp = tree_getDP_vmerge<T_dsw, merge_dsw, leaf_dsw, apply_dsw>(g, 0);
 	return dp[0].first;
 }
 

@@ -6,26 +6,26 @@
 //【行列（半環）】
 /*
 * Matrix<S, add, o, mul, e>(m, n) : O(m n)
-*	m * n 零行列で初期化する．
+*	m×n 零行列で初期化する．
 *   成分は半環 <S, add, o, mul, e> の元とする．
 *
 * Matrix<S, add, o, mul, e>(n) : O(n^2)
-*	n * n 単位行列で初期化する．
+*	n×n 単位行列で初期化する．
 *
-* Matrix<S, add, o, mul, e>(a) : O(m n)
-*	配列 a の要素で初期化する．
+* Matrix<S, add, o, mul, e>(vvS a) : O(m n)
+*	配列 a[0..m)[0..n) の要素で初期化する．
 *
 * A + B : O(m n)
-*	m * n 行列 A, B の和を返す．+= も使用可．
+*	m×n 行列 A, B の和を返す．+= も使用可．
 *
 * c * A ／ A * c : O(m n)
-*	m * n 行列 A とスカラー c のスカラー積を返す．
+*	m×n 行列 A とスカラー c のスカラー積を返す．
 *
 * A * x ／ x * A : O(m n)
 *	行列ベクトル積[ベクトル行列積]を返す．
 *
 * A * B : O(l m n)
-*	l * m 行列 A と m * n 行列 B の積を返す．
+*	l×m 行列 A と m×n 行列 B の積を返す．
 *
 * pow(d) : O(n^3 log d)
 *	自身を d 乗した行列を返す．
@@ -121,6 +121,138 @@ struct Matrix {
 		rep(i, a.m) {
 			rep(j, a.n) os << a[i][j] << " ";
 			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【正方行列（固定サイズ，半環）】
+/*
+* Fixed_matrix<S, add, o, mul, e, n>() : O(n^2)
+*	n×n 零行列で初期化する．
+*   成分は半環 <S, add, o, mul, e> の元とする．
+*
+* Fixed_matrix<S, add, o, mul, e, n>(bool identity = true) : O(n^2)
+*	n×n 単位行列で初期化する．
+*
+* Fixed_matrix<S, add, o, mul, e, n>(vvS a) : O(n^2)
+*	二次元配列 a[0..n)[0..n) の要素で初期化する．
+*
+* A + B : O(n^2)
+*	n×n 行列 A, B の和を返す．+= も使用可．
+*
+* c * A ／ A * c : O(n^2)
+*	n×n 行列 A とスカラー c のスカラー積を返す．*= も使用可
+*
+* A * x : O(n^2)
+*	n×n 行列 A と n 次元列ベクトル array<S, n> x の積を返す．
+*
+* x * A : O(n^2)
+*	n 次元行ベクトル array<S, n> x と n×n 行列 A の積を返す．
+*
+* A * B : O(n^3)
+*	n×n 行列 A と n×n 行列 B の積を返す．
+*
+* Mat pow(ll d) : O(n^3 log d)
+*	自身を d 乗した行列を返す．
+*/
+template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)(), int n>
+struct Fixed_matrix {
+	array<array<S, n>, n> v; // 行列の成分
+
+	// n×n 零行列で初期化する．identity = true なら n×n 単位行列で初期化する．
+	Fixed_matrix(bool identity = false) {
+		rep(i, n) v[i].fill(o());
+		if (identity) rep(i, n) v[i][i] = e();
+	}
+
+	// 二次元配列 a[0..n)[0..n) の要素で初期化する．
+	Fixed_matrix(const vector<vector<S>>& a) {
+		Assert(sz(a) == n && sz(a[0]) == n);
+		rep(i, n) rep(j, n) v[i][j] = a[i][j];
+	}
+
+	// 代入
+	Fixed_matrix(const Fixed_matrix& b) = default;
+	Fixed_matrix& operator=(const Fixed_matrix& b) = default;
+
+	// アクセス
+	inline array<S, n> const& operator[](int i) const { return v[i]; }
+	inline array<S, n>& operator[](int i) { return v[i]; }
+
+	// 入力
+	friend istream& operator>>(istream& is, Fixed_matrix& a) {
+		rep(i, n) rep(j, n) is >> a[i][j];
+		return is;
+	}
+
+	// 比較
+	bool operator==(const Fixed_matrix& b) const { return v == b.v; }
+	bool operator!=(const Fixed_matrix& b) const { return !(*this == b); }
+
+	// 加算
+	Fixed_matrix& operator+=(const Fixed_matrix& b) {
+		rep(i, n) rep(j, n) v[i][j] = add(v[i][j], b[i][j]);
+		return *this;
+	}
+	Fixed_matrix operator+(const Fixed_matrix& b) const { return Fixed_matrix(*this) += b; }
+
+	// 左右からのスカラー倍
+	Fixed_matrix& operator*=(const S& c) {
+		rep(i, n) rep(j, n) v[i][j] *= c;
+		return *this;
+	}
+	Fixed_matrix operator*(const S& c) const { return Fixed_matrix(*this) *= c; }
+	friend Fixed_matrix operator*(const S& c, const Fixed_matrix& a) { return a * c; }
+
+	// 行列ベクトル積 : O(n^2)
+	array<S, n> operator*(const array<S, n>& x) const {
+		// verify : https://atcoder.jp/contests/abc317/tasks/abc317_h
+
+		array<S, n> y;
+		y.fill(o());
+		rep(i, n) rep(j, n)	y[i] = add(y[i], mul(v[i][j], x[j]));
+		return y;
+	}
+
+	// ベクトル行列積 : O(n^2)
+	friend array<S, n> operator*(const array<S, n>& x, const Fixed_matrix& a) {
+		array<S, n> y;
+		y.fill(o());
+		rep(i, n) rep(j, n) y[j] = add(y[j], mul(x[i], a[i][j]));
+		return y;
+	}
+
+	// 積：O(n^3)
+	Fixed_matrix operator*(const Fixed_matrix& b) const {
+		// verify : https://atcoder.jp/contests/abc317/tasks/abc317_h
+
+		Fixed_matrix res;
+		rep(i, n) rep(j, n) rep(k, n) res[i][j] = add(res[i][j], mul(v[i][k], b[k][j]));
+		return res;
+	}
+
+	// 累乗：O(n^3 log d)
+	Fixed_matrix pow(ll d) const {
+		// verify : https://atcoder.jp/contests/abc236/tasks/abc236_g
+
+		Fixed_matrix res(true), pow2(*this);
+		while (d > 0) {
+			if (d & 1) res = res * pow2;
+			pow2 = pow2 * pow2;
+			d /= 2;
+		}
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Fixed_matrix& a) {
+		rep(i, n) {
+			os << "[";
+			rep(j, n) os << a[i][j] << " ]"[j == n - 1];
+			if (i < n - 1) os << "\n";
 		}
 		return os;
 	}
@@ -245,7 +377,7 @@ struct SymMatrix {
 };
 
 
-//【線形漸化式】O(d^3 log n)
+//【線形漸化式（半環）】O(d^3 log n)
 /*
 * 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
 * 半環 <S, add, o, mul, e> 上の数列 a について，a[n] の値を返す．
@@ -268,6 +400,33 @@ S linearly_recurrent_sequence(vector<S> a, const vector<S>& c, ll n) {
 
 	// 行列累乗をし，初項ベクトルに掛けて結果を得る．
 	return (mat.pow(n) * a)[d - 1];
+}
+
+
+//【パーマネント（半環）】O(2^n n)
+/*
+* n 次正方行列 mat のパーマネントを返す．
+*/
+template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
+S parmanent(const Matrix<S, add, o, mul, e>& mat) {
+	int n = mat.n;
+
+	// dp[set] : 行の集合が set，列の集合が [n-|set|..n) である小パーマネント
+	vector<S> dp(1LL << n);
+	dp[0] = e();
+
+	// より小さいパーマネントから順に余因子展開で計算していく．
+	repi(set, 1, (1 << n) - 1) {
+		int j = n - popcount(set);
+
+		rep(i, n) {
+			if (!(set & (1 << i))) continue;
+
+			dp[set] = add(dp[set], mul(mat[i][j], dp[set - (1LL << i)]));
+		}
+	}
+
+	return dp[(1LL << n) - 1];
 }
 
 

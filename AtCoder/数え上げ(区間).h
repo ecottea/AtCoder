@@ -2,13 +2,14 @@
 #include "header.h"
 #include "前処理(列).h"
 #include "辞書(動的).h"
+#include "FPS(mint).h"
 // ■■■■■ 数え上げ（区間） ■■■■■
 
 
 //【区間端範囲制約を満たす区間の数え上げ】O(n log n)
 /*
-* [0..n) の区間 [l..r] (l <= r) で，l_min[r] <= l <= l_max[r] かつ
-* r_min[l] <= r <= r_max[l] を満たすものの個数を返す．
+* [0..n) の区間 [l..r] (l ≦ r) で，l_min[r] ≦ l ≦ l_max[r] かつ
+* r_min[l] ≦ r ≦ r_max[l] を満たすものの個数を返す．
 */
 ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& r_max) {
 	// 参考 : https://betrue12.hateblo.jp/entry/2020/03/28/112326
@@ -150,7 +151,7 @@ vector<pair<T, ll>> count_min_intervals(const vector<T>& a) {
 
 //【区間被覆の数え上げ】O(n log n + m + n log m)
 /*
-* 与えられた [0..m) 上の n 個の区間 [l[i], r[i]) に対し，
+* 与えられた [0..m) 上の n 個の区間 [l[i]..r[i]) に対し，
 * 全区間 [0..m) を被覆するような区間の選び方が何通りあるかを返す．
 */
 mint op_cic(mint x, mint y) { return x + y; }
@@ -180,6 +181,39 @@ mint count_interval_covering(int m, const vi& l, const vi& r) {
 	}
 
 	return seg.get(m);
+}
+
+
+//【全体を被覆する自由区間の数え上げ（mod 998244353）】O(N log N)
+/*
+* [1..2n]∩Z を端点にもつ互いに端点を共有しない n 個の閉区間で，
+* 全区間 [1..2n] を被覆するものの個数を c[n] とする（c[0] = 0）．c[0..N] を返す．
+*
+* 利用：【形式的冪級数】
+*/
+vm count_connected_colored_parenthesis(int N) {
+	// verify : https://mojacoder.app/users/googol_S0/problems/n-cut-n-eat
+
+	//【方法】
+	// 被覆条件を無視したときの個数を b[n] とすれば，2n 個の整数を n 個の 2 つ組に分ければよいので，
+	//		b[n] = (2n)! / (2^n n!) = (2n-1)!!
+	// である．被覆条件を満たしている区間に分割して考えることにより，
+	//		b[n] = Boole[n=0] + c[n] + Σ_(i+j=n) c[i] c[j] + Σ_(i+j+k=n) c[i] c[j] c[k] + ...
+	// なる等式を得る．これを母関数で表現すると，
+	//		B(z) = 1 + C(z) + C(z)^2 + C(z)^3 + ...
+	//			 = 1/(1-C(z))
+	// となるので，C(z) について解くと
+	//		C(z) = 1 - 1/B(z)
+	// を得る．
+
+	MFPS B(0, N + 1);
+	B[0] = -1;
+	repi(n, 1, N) B[n] = B[n - 1] * (2 * n - 1);
+
+	MFPS C = B.inv(N + 1);
+	C[0] = 0;
+
+	return C.c;
 }
 
 

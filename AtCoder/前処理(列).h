@@ -3,37 +3,13 @@
 // ■■■■■ 列に対する汎用性のある前処理 ■■■■■
 
 
-//【index を足す前処理による swap への帰着】
+//【最近傍要素】
 /*
-* 数列 a[0..n) に対して，
-*		(i) swap(a[i], a[i+1])
-*		(ii) a[i, i+1] += [1, -1]
-* という一連の処理は，
-*		b[i] := a[i] + i
-* と変換すると
-*		swap(b[i], b[i+1])
-* に等価である．
-* 
-* verify : https://atcoder.jp/contests/arc120/tasks/arc120_c
-*/
-
-
-//【隣接 3 項 XOR の swap への帰着】
-/*
-* 隣接 3 項 XOR
-*		a[i] ← a[i-1] XOR a[i] XOR a[i+1]
-* は，
-*		b[i] = a[i] XOR a[i+1]
-* とおくことで swap(b[i], b[i+1]) と等価になる．
-*
-* verify : https://yukicoder.me/problems/no/1209
-*/
-
-
-//【最近大小元】
-/*
-* Inc_dec_jump(vT a) : O(n)
+* Nearest_element(vT a) : O(n)
 *	数列 a[0..n) で初期化する．
+*
+* set_prev_equal() : O(n)
+*	自身に等しい数の前の位置を一括計算する．
 *
 * set_prev_less(strict = true) : O(n)
 *	自身より小さい数の前の位置を一括計算する．strict = false にすると自身以下とする．
@@ -41,20 +17,26 @@
 * set_prev_greater(strict = true) : O(n)
 *	自身より大きい数の前の位置を一括計算する．strict = false にすると自身以上とする．
 *
+* set_next_equal() : O(n)
+*	自身に等しい数の次の位置を一括計算する．
+*
 * set_next_less(strict = true) : O(n)
 *	自身より小さい数の次の位置を一括計算する．strict = false にすると自身以下とする．
 *
 * set_next_greater(strict = true) : O(n)
 *	自身より大きい数の次の位置を一括計算する．strict = false にすると自身以上とする．
 *
-* set_all(strict = true) : O(n)
-*	以上の 4 つを一括計算する．
+* int prev_equal(int i) : O(1)
+*	a[0..i) 内にある a[i] に等しい要素の最右位置を返す（なければ -1）
 *
 * int prev_less(int i) : O(1)
 *	a[0..i) 内にある a[i] より小さい[以下の] 要素の最右位置を返す（なければ -1）
 *
 * int prev_greater(int i) : O(1)
 *	a[0..i) 内にある a[i] より大きい[以上の] 要素の最右位置を返す（なければ -1）
+*
+* int next_equal(int i) : O(1)
+*	a(i..n) 内にある a[i] に等しい要素の最左位置を返す（なければ n）
 *
 * int next_less(int i) : O(1)
 *	a(i..n) 内にある a[i] より小さい[以下の] 要素の最左位置を返す（なければ n）
@@ -63,20 +45,40 @@
 *	a(i..n) 内にある a[i] より大きい[以上の] 要素の最左位置を返す（なければ n）
 */
 template <class T>
-class Nearest_LG_element {
+class Nearest_element {
 	int n;
 	vector<T> a;
-	vi pl, pg, nl, ng;
+	vi pe, pl, pg, ne, nl, ng;
 
 public:
 	// 数列 a[0..n) で初期化する．
-	Nearest_LG_element(const vector<T>& a) : n(sz(a)), a(a), pl(n, -1), pg(n, -1), nl(n, n), ng(n, n) { }
-	Nearest_LG_element() {}
+	Nearest_element(const vector<T>& a) : n(sz(a)), a(a) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bh
+	}
+	Nearest_element() {}
+
+	// 自身に等しい数の前の位置を一括計算する．
+	void set_prev_equal() {
+		pe.assign(n, -1);
+
+		// val_to_pos[x] : 値 x が最後に現れた位置（左から走査する）
+		unordered_map<T, int> val_to_pos;
+
+		rep(i, n) {
+			auto it = val_to_pos.find(a[i]);
+			if (it != val_to_pos.end()) {
+				pe[i] = it->second;
+				it->second = i;
+			}
+			else val_to_pos[a[i]] = i;
+		}
+	}
 
 	// 自身より小さい数の前の位置を一括計算する．strict = false にすると自身以下とする．
 	void set_prev_less(bool strict = true) {
 		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
-		
+
+		pl.assign(n, -1);
 		stack<pair<int, T>> st;
 		repir(i, n - 1, 0) {
 			while (!st.empty() && st.top().second >= a[i]) {
@@ -90,8 +92,9 @@ public:
 
 	// 自身より大きい数の前の位置を一括計算する．strict = false にすると自身以上とする．
 	void set_prev_greater(bool strict = true) {
-		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+		// verify: https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bh
 
+		pg.assign(n, -1);
 		stack<pair<int, T>> st;
 		repir(i, n - 1, 0) {
 			while (!st.empty() && st.top().second <= a[i]) {
@@ -103,8 +106,30 @@ public:
 		}
 	}
 
+	// 自身に等しい数の次の位置を一括計算する．
+	void set_next_equal() {
+		// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
+
+		ne.assign(n, n);
+
+		// val_to_pos[x] : 値 x が最後に現れた位置（右から走査する）
+		unordered_map<T, int> val_to_pos;
+
+		repir(i, n - 1, 0) {
+			auto it = val_to_pos.find(a[i]);
+			if (it != val_to_pos.end()) {
+				ne[i] = it->second;
+				it->second = i;
+			}
+			else val_to_pos[a[i]] = i;
+		}
+	}
+
 	// 自身より小さい数の次の位置を一括計算する．strict = false にすると自身以下とする．
 	void set_next_less(bool strict = true) {
+		// verify : https://atcoder.jp/contests/ddcc2020-final/tasks/ddcc2020_final_c
+
+		nl.assign(n, n);
 		stack<pair<int, T>> st;
 		rep(i, n) {
 			while (!st.empty() && st.top().second >= a[i]) {
@@ -118,6 +143,7 @@ public:
 
 	// 自身より大きい数の次の位置を一括計算する．strict = false にすると自身以上とする．
 	void set_next_greater(bool strict = true) {
+		ng.assign(n, n);
 		stack<pair<int, T>> st;
 		rep(i, n) {
 			while (!st.empty() && st.top().second <= a[i]) {
@@ -129,48 +155,56 @@ public:
 		}
 	}
 
-	// 以上の 4 つを一括計算する．
-	void set_all(bool strict = true) {
-		set_prev_less(strict);
-		set_prev_greater(strict);
-		set_next_less(strict);
-		set_next_greater(strict);
+	// a[0..i) 内にある a[i] に等しい要素の最右位置を返す（なければ -1）
+	int prev_equal(int i) {
+		Assert(0 <= i && i < n);
+		return pe[i];
 	}
 
 	// a[0..i) 内にある a[i] より小さい[以下の] 要素の最右位置を返す（なければ -1）
 	int prev_less(int i) {
 		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
 
-		chmax(i, 0), chmin(i, n);
+		Assert(0 <= i && i < n);
 		return pl[i];
 	}
 
 	// a[0..i) 内にある a[i] より大きい[以上の] 要素の最右位置を返す（なければ -1）
 	int prev_greater(int i) {
-		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+		// verify: https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bh
 
-		chmax(i, 0), chmin(i, n);
+		Assert(0 <= i && i < n);
 		return pg[i];
+	}
+
+	// a(i..n) 内にある a[i] に等しい要素の最左位置を返す（なければ n）
+	int next_equal(int i) {
+		// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
+
+		Assert(0 <= i && i < n);
+		return ne[i];
 	}
 
 	// a(i..n) 内にある a[i] より小さい[以下の] 要素の最左位置を返す（なければ n）
 	int next_less(int i) {
-		chmax(i, 0), chmin(i, n);
+		// verify : https://atcoder.jp/contests/ddcc2020-final/tasks/ddcc2020_final_c
+
+		Assert(0 <= i && i < n);
 		return nl[i];
 	}
 
 	// a(i..n) 内にある a[i] より大きい[以上の] 要素の最左位置を返す（なければ n）
 	int next_greater(int i) {
-		chmax(i, 0), chmin(i, n);
+		Assert(0 <= i && i < n);
 		return ng[i];
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Nearest_LG_element& idj) {
-		os << "pl: " << idj.pl << endl;
-		os << "pg: " << idj.pg << endl;
-		os << "nl: " << idj.nl << endl;
-		os << "ng: " << idj.ng << endl;
+	friend ostream& operator<<(ostream& os, const Nearest_element& ne) {
+		os << "pl: " << ne.pl << endl;
+		os << "pg: " << ne.pg << endl;
+		os << "nl: " << ne.nl << endl;
+		os << "ng: " << ne.ng << endl;
 		return os;
 	}
 #endif
@@ -211,62 +245,6 @@ vvi next_greater_positions(const vector<T>& a, int k, bool eq = false) {
 }
 
 
-//【自身と同じ数の次の位置】O(n)
-/*
-* 与えられた a[0..n) に対し，各 i∈[0..n) について i < j かつ a[i] = a[j] なる
-* 最小の j（なければ n）を格納したリストを返す．
-*/
-template <class T>
-vi next_equal(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/agc036/tasks/agc036_b
-
-	int n = sz(a);
-
-	// nxt[i] : j > i かつ a[j] = a[i] となる最小の j（なければ n）
-	vi nxt(n, n);
-
-	// num_to_pos[x] : 値 x が最後に現れた位置（右から走査する）
-	unordered_map<T, int> num_to_pos;
-
-	repir(i, n - 1, 0) {
-		if (num_to_pos.count(a[i])) {
-			nxt[i] = num_to_pos[a[i]];
-		}
-		num_to_pos[a[i]] = i;
-	}
-
-	return nxt;
-}
-
-
-//【自身と同じ数の前の位置】O(n)
-/*
-* a[0..n) で，各 i∈[0..n) について j < i かつ a[j] = a[i] なる
-* 最大の j（なければ -1）を格納したリストを返す．
-*/
-template <class T> 
-vi prev_equal(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/agc031/tasks/agc031_b
-
-	int n = sz(a);
-
-	// prv[i] : j < i かつ a[j] = a[i] となる最大の j（なければ -1）
-	vi prv(n, -1);
-
-	// num_to_pos[x] : 値 x が最後に現れた位置（左から走査する）
-	unordered_map<T, int> num_to_pos;
-
-	rep(i, n) {
-		if (num_to_pos.count(a[i])) {
-			prv[i] = num_to_pos[a[i]];
-		}
-		num_to_pos[a[i]] = i;
-	}
-
-	return prv;
-}
-
-
 //【自身より 1 つ大きい数の次の位置】O(n)
 /*
 * a[0..n) で，i < j かつ a[i]+1 = a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
@@ -275,7 +253,7 @@ template <class T>
 vi next_greater1(const vector<T>& a, vi& nxt) {
 	int n = sz(a);
 
-	// nxt[i] : j > i かつ a[j] = a[i] となる最小の j（なければ n）
+	// nxt[i] : j > i かつ a[j] = a[i]+1 となる最小の j（なければ n）
 	vi nxt(n, n);
 
 	// num_to_pos[x] : 値 x が最後に現れた位置（右から走査する）
@@ -314,6 +292,33 @@ vvi next_greater_position(int m, const vi& a) {
 }
 
 
+//【index を足す前処理による swap への帰着】
+/*
+* 数列 a[0..n) に対する
+*		(i)  swap(a[i], a[i+1])
+*		(ii) a[i, i+1] += [1, -1]
+* という一連の処理は，
+*		b[i] := a[i] + i
+* と変換すると
+*		swap(b[i], b[i+1])
+* に等価である．
+*
+* verify : https://atcoder.jp/contests/arc120/tasks/arc120_c
+*/
+
+
+//【隣接 3 項 XOR の swap への帰着】
+/*
+* 隣接 3 項 XOR
+*		a[i] ← a[i-1] XOR a[i] XOR a[i+1]
+* は，
+*		b[i] = a[i] XOR a[i+1]
+* とおくことで swap(b[i], b[i+1]) と等価になる．
+*
+* verify : https://yukicoder.me/problems/no/1209
+*/
+
+
 //【デカルト木】
 /*
 * Cartesian_tree(vT a, smaller = true) : O(n)
@@ -346,6 +351,11 @@ struct Cartesian_tree {
 	// 数列 a[0..n) で初期化する．
 	Cartesian_tree(const vector<T>& a, bool smaller = true) : n(sz(a)), rt(0), v(n) {
 		// verify : https://judge.yosupo.jp/problem/cartesian_tree
+
+		if (n == 0) {
+			rt = -1;
+			return;
+		}
 
 		// 木の構造を決定する．
 		repi(i, 1, n - 1) {
@@ -382,8 +392,8 @@ struct Cartesian_tree {
 	Cartesian_tree() : n(0), rt(-1) {} // ダミー
 
 	// アクセス
-	Node const& operator[](int i) const { return v[i]; }
-	Node& operator[](int i) { return v[i]; }
+	inline Node const& operator[](int i) const { return v[i]; }
+	inline Node& operator[](int i) { return v[i]; }
 
 	// 大きさ
 	int size() const { return n; }

@@ -20,7 +20,7 @@
 * one_indexed : 入力が 1-indexed か（省略すれば true）
 */
 Graph read_Graph(int n, int m = -1, bool undirected = true, bool one_indexed = true) {
-	// verify : https://codeforces.com/contest/764/problem/C
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bi
 
 	Graph g(n);
 	if (m == -1) m = n - 1;
@@ -160,26 +160,28 @@ void write_WGraph(const WGraph& g, bool undirected = true, bool one_indexed = tr
 
 //【参照付きグラフの辺】
 /*
-* to : 行き先の頂点番号
-* id : 辺の番号
+* int from : 始点
+* int to : 終点
+* int id : 辺番号
+* bool dir : 順方向か
 */
 struct IEdge {
 	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
 
-	int to; // 行き先の頂点番号
-	int id; // 辺の番号
+	int from; // 始点
+	int to; // 終点
+	int id; // 辺番号
 	bool dir; // 順方向か
 
-	IEdge() : to(-1), id(-1), dir(true) {}
-	IEdge(int to, int id) : to(to), id(id), dir(true) {}
-	IEdge(int to, int id, bool dir) : to(to), id(id), dir(dir) {}
+	IEdge() : from(-1), to(-1), id(-1), dir(true) {}
+	IEdge(int from, int to, int id, bool dir = true) : from(from), to(to), id(id), dir(dir) {}
 
 	// プレーングラフで呼ばれたとき用
 	operator int() const { return to; }
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const IEdge& e) {
-		os << '(' << "to:" << e.to << ',' << "id:" << e.id << ',' << (e.dir ? "fwd" : "rev") << ')';
+		os << '(' << e.from << "→" << e.to << ',' << "id:" << e.id << ',' << (e.dir ? "fwd" : "rev") << ')';
 		return os;
 	}
 #endif
@@ -219,8 +221,8 @@ IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 
 		if (one_indexed) { --a; --b; }
 
-		g[a].push_back({ b, j, true });
-		if (undirected) g[b].push_back({ a, j, false });
+		g[a].push_back({ a, b, j, true });
+		if (undirected) g[b].push_back({ b, a, j, false });
 
 		if (es != nullptr) (*es)[j] = { a, b };
 	}
@@ -229,51 +231,41 @@ IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 }
 
 
+//【参照付きグラフの出力】O(n + m)
+/*
+* グラフを【グラフの入力】で受け取る入力と同じ形式で出力する．
+*
+* one_indexed : 入力が 1-indexed か（省略すれば true）
+*/
+void write_Graph(const IGraph& g, bool one_indexed = true) {
+	int n = sz(g);
+
+	// m : 辺の数
+	int m = -1;
+	rep(s, n) repe(t, g[s]) chmax(m, t.id);
+	m++;
+
+	vi u(m), v(m);
+	rep(s, n) repe(t, g[s]) {
+		if (t.dir) {
+			u[t.id] = s;
+			v[t.id] = t;
+		}
+	}
+
+	cout << n << " " << m << endl;
+	rep(j, m) cout << u[j] << " " << v[j] << endl;
+}
+
+
 //【Functional Graph】
 /*
 * 任意の頂点の出次数が 1 であるような有向グラフを Functional Graph という．
 * G が Functional Graph であるとき，G の各弱連結成分には閉路がただ 1 つ存在する．
-* G 自身は弱連結とは限らないので注意！！！
+* G 自身は弱連結とは限らないので注意！
 *
 * verify : https://atcoder.jp/contests/abc256/tasks/abc256_e
 */
-
-
-//【グリッドグラフ上のハミルトンサイクルの構築】
-/*
-* h×w グリッドグラフ上のハミルトンサイクルをなす点列を構築し返す．
-*/
-vector<pii> create_grid_hamilton_cycle(int h, int w) {
-	// verify : https://atcoder.jp/contests/arc118/tasks/arc118_d
-
-	// 幅が 1 の場合は蛇腹が構築できない．
-	if (h == 1 || w == 1) return vector<pii>();;
-
-	// h, w ともに奇数だと頂点数が奇数個になるが，
-	// グリッドグラフは二部グラフなのでハミルトンサイクルは存在し得ない．
-	if (h % 2 == 1 && w % 2 == 1) return vector<pii>();
-
-	vector<pii> res{ {0, 0} };
-
-	// h が偶数のときは，横方向に往復する蛇腹状に構築できる．
-	if (h % 2 == 0) {
-		rep(i, h) {
-			if (i % 2 == 0)	repi(j, 1, w - 1) res.emplace_back(i, j);
-			else repir(j, w - 1, 1) res.emplace_back(i, j);
-		}
-		repir(i, h - 1, 1) res.emplace_back(i, 0);
-	}
-	// w が偶数のときは，縦方向に往復する蛇腹状に構築できる．
-	else {
-		rep(j, w) {
-			if (j % 2 == 0)	repi(i, 1, h - 1) res.emplace_back(i, j);
-			else repir(i, h - 1, 1) res.emplace_back(i, j);
-		}
-		repir(j, w - 1, 1) res.emplace_back(0, j);
-	}
-
-	return res;
-}
 
 
 //【無向グラフのランダム生成】O(n^2)
@@ -302,6 +294,31 @@ Graph create_random_undirected_Graph(int n, int p, bool no_loop = true) {
 			if (rnd(mt) >= p) continue;
 			g[s].emplace_back(s);
 		}
+	}
+
+	return g;
+}
+
+
+//【有向グラフのランダム生成】O(n^2)
+/*
+* n 頂点で，辺の存在確率が p % であるランダムな有向グラフを返す．
+* no_loop : 自己ループを禁止するか（デフォルトでは true）
+*/
+Graph create_random_Graph(int n, int p, bool no_loop = true) {
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+	uniform_int_distribution<int> rnd_edge(0, 99);
+
+	Graph g(n);
+	rep(s, n) rep(t, n) {
+		if (no_loop && s == t) continue;
+		if (rnd_edge(mt) >= p) continue;
+
+		g[s].emplace_back(t);
 	}
 
 	return g;

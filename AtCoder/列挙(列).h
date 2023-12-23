@@ -9,7 +9,7 @@
 */
 template <class T>
 vector<vector<T>> enumerate_all_sequences(int n, const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/agc043/tasks/agc043_d
+	// verify : https://yukicoder.me/problems/no/2329
 
 	vector<vector<T>> seqs;
 	vector<T> seq; // 作成途中の列
@@ -94,7 +94,7 @@ vvi enumerate_all_sequences(const vi& ub) {
 
 //【任意数列の列挙（要素ごと上下限指定）】O(Π(ub[0..n)-lb[0..n)))
 /*
-* 数列 a[0..n) で，∀i, lb[i] <= a[i] < ub[i] を満たすもの全てを格納したリストを返す．
+* 数列 a[0..n) で，∀i, lb[i] ≦ a[i] < ub[i] を満たすもの全てを格納したリストを返す．
 */
 vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
 	// verify : https://atcoder.jp/contests/arc066/tasks/arc066_c

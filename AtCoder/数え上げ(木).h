@@ -3,6 +3,7 @@
 #include "分析(木).h"
 #include "二項係数.h"
 #include "木DP.h"
+#include "数論変換.h"
 // ■■■■■ 木（数え上げ） ■■■■■
 
 
@@ -14,13 +15,12 @@
 */
 using T_cind = pair<mint, mint>; // (根を選択，根を非選択)
 void merge_cind(T_cind& x, const T_cind& y, int s) { x.first *= y.first; x.second *= y.second; }
-T_cind e_cind() { return { 1, 1 }; }
 T_cind leaf_cind(int s) { return { 1, 1 }; }
 T_cind apply_cind(const T_cind& x, int s, int t) { return { x.second, x.first + x.second }; }
 mint count_independent_set(const Graph& g) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_p
 
-	auto dp = tree_getDP_vmerge<T_cind, merge_cind, e_cind, leaf_cind, apply_cind>(g, 0);
+	auto dp = tree_getDP_vmerge<T_cind, merge_cind, leaf_cind, apply_cind>(g, 0);
 	return dp[0].first + dp[0].second;
 }
 
@@ -46,7 +46,6 @@ void merge_cs(T_cs& x, const T_cs& y) {
 	rep(i, ns) rep(j, nt) nx[i + j] += x[i] * y[j];
 	x = move(nx);
 }
-T_cs e_cs() { return T_cs{ 1 }; }
 T_cs leaf_cs(int s) {
 	// 空の部分木も認める．
 	return T_cs{ 1, 1 };
@@ -62,7 +61,7 @@ void apply_cs(T_cs& x, int s) {
 vector<T_cs> count_subtree(const Graph& g, int r) {
 	// 参考 : https://snuke.hatenablog.com/entry/2019/01/15/211812
 
-	return tree_getDP_forest<T_cs, merge_cs, e_cs, leaf_cs, apply_cs>(g, r);
+	return tree_getDP_forest<T_cs, merge_cs, leaf_cs, apply_cs>(g, r);
 }
 
 
@@ -86,7 +85,6 @@ void merge_csk(T_csk& x, const T_csk& y) {
 	rep(i, ns) repi(j, 0, min(nt - 1, k_csk - i)) nx[i + j] += x[i] * y[j];
 	x = move(nx);
 }
-T_csk e_csk() { return T_csk{ 1 }; }
 T_csk leaf_csk(int s) { return T_csk{ 1, 1 }; }
 void apply_csk(T_csk& x, int s) {
 	int ns = sz(x);
@@ -106,7 +104,7 @@ vector<T_csk> count_subtree(const Graph& g, int r, int k) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_eel
 
 	k_csk = k;
-	return tree_getDP_forest<T_csk, merge_csk, e_csk, leaf_csk, apply_csk>(g, r);
+	return tree_getDP_forest<T_csk, merge_csk, leaf_csk, apply_csk>(g, r);
 }
 
 
@@ -144,13 +142,12 @@ void merge_csl(T_csl& x, const T_csl& y) {
 	rep(i, ns) rep(j, nt) nx[i + j] += x[i] * y[j];
 	x = move(nx);
 }
-T_csl e_csl() { return T_csl{ 1 }; }
 T_csl leaf_csl(int s) { return T_csl{ 1, 1 }; }
 void apply_csl(T_csl& x, int s) {
 	x[1]++; // s が葉である部分木
 }
 vector<T_csl> count_subtree_leaf(const Graph& g, int r) {
-	return tree_getDP_forest<T_csl, merge_csl, e_csl, leaf_csl, apply_csl>(g, r);
+	return tree_getDP_forest<T_csl, merge_csl, leaf_csl, apply_csl>(g, r);
 }
 
 
@@ -278,39 +275,43 @@ vvm count_coprime_path(const Graph& g, int r) {
 */
 using T_st = mint;
 T_st merge_st(T_st x, T_st y, int s) { return x * y; }
-T_st e_st(int s) { return 1; }
 T_st leaf_st(int s) { return 1; }
 T_st apply_st(T_st x, int p, int s) { return x + 1; }
-vm count_subtree(Graph& g) {
+vm count_subtree(const Graph& g) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_v
 
-	return rerooting<T_st, merge_st, e_st, leaf_st, apply_st>(g);
+	return rerooting<T_st, merge_st, leaf_st, apply_st>(g);
 }
 
 
-//【木の構築方法の数え上げ】O(n)
+//【ヒープの数え上げ】O(n)
 /*
-* 与えられた木 g に対し，各 s∈[0..n) について，
-* 頂点 s から始めて連結性を保ったまま辺の追加を行い木 g を構築する方法の数を格納したリストを返す．
+* 与えられた木 g の頂点に対する数 [0..n) の割り当て方のうち，
+* 各 s∈[0..n) を根とみなしたときヒープをなすものの数を格納したリストを返す．
 *
-* 利用：【全方位木 DP】,【階乗など（法が大きな素数）】
+* 制約：fm は n! まで計算可能
+*
+* 利用：【全方位木 DP】
 */
-using T_cctc = pair<mint, int>; // (構築方法の数, 辺の数)
-Factorial_mint fm_cctc;
-T_cctc merge_cctc(T_cctc x, T_cctc y, int s) {
-	mint cnt = x.first * y.first * fm_cctc.bin(x.second + y.second, x.second);
+using T_ch = pair<mint, int>; // (ヒープの数, 辺の数)
+Factorial_mint const* fm_ch;
+T_ch merge_ch(T_ch x, T_ch y, int s) {
+	// 根以外の頂点については左右で独立に数を割り当てられる．根は 0 で確定．
+	mint cnt = x.first * y.first * fm_ch->bin(x.second + y.second, x.second);
 	return { cnt, x.second + y.second };
 }
-T_cctc e_cctc(int s) { return { 1, 0 }; }
-T_cctc leaf_cctc(int s) { return { 1, 0 }; }
-T_cctc apply_cctc(T_cctc x, int p, int s) { return { x.first, x.second + 1 }; }
-vm count_continuous_tree_construction(Graph& g) {
+T_ch leaf_ch(int s) { return { 1, 0 }; }
+T_ch apply_ch(T_ch x, int p, int s) {
+	// 根に新たに 0 を割り当て，他については全体に 1 加算すれば良い．
+	return { x.first, x.second + 1 };
+}
+vm count_heap(const Graph& g, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc160/tasks/abc160_f
 
 	int n = sz(g);
-	fm_cctc = Factorial_mint(n);
+	fm_ch = &fm;
 
-	auto dp = rerooting<T_cctc, merge_cctc, e_cctc, leaf_cctc, apply_cctc>(g);
+	auto dp = rerooting<T_ch, merge_ch, leaf_ch, apply_ch>(g);
 
 	vm res(n);
 	rep(i, n) res[i] = dp[i].first;
@@ -424,11 +425,11 @@ vl tree_distance_frequency(const Graph& g) {
 		// nc : cent に隣接する頂点の個数，c_dep : cent の深さ
 		int nc = sz(g[cent]), c_dep = cd[cent].dep;
 
-		// cnt[i][j] : cent を始点にもち，cent の i 番目の隣接頂点方向へ向かう長さ j のパスの本数
-		vvl cnt(nc, vl(1, 1));
+		// cnt[i][j] : cent を始点にもち，cent の i 番目の隣接頂点方向へ向かう長さ j（>0）のパスの本数
+		vvl cnt(nc);
 
-		// cnt_all[j] : cent を始点にもつ長さ j のパスの本数
-		vl cnt_all(1, 1);
+		// cnt_all[j] : cent を始点にもつ長さ j（>0）のパスの本数
+		vl cnt_all;
 
 		// cent で分割された各部分木の cent に隣接する頂点を根として dfs する．
 		rep(i, nc) {
@@ -437,10 +438,10 @@ vl tree_distance_frequency(const Graph& g) {
 
 			function<void(int, int, int)> dfs = [&](int s, int p, int len) {
 				// 長さ len のパスの存在を記録する
-				if (sz(cnt[i]) == len) cnt[i].resize(len + 1);
+				if (sz(cnt[i]) <= len) cnt[i].resize(len + 1);
 				cnt[i][len]++;
 
-				if (sz(cnt_all) == len) cnt_all.resize(len + 1);
+				if (sz(cnt_all) <= len) cnt_all.resize(len + 1);
 				cnt_all[len]++;
 
 				// 再帰処理
@@ -454,19 +455,22 @@ vl tree_distance_frequency(const Graph& g) {
 			dfs(g[cent][i], -1, 1);
 		}
 
-		// cent を含むパスを数える．
+		// cent を（端点としてでなく）通過するパスを数える．
 		auto conv = convolution_ll(cnt_all, cnt_all);
 		rep(j, 2 * sz(cnt_all) - 1) res[j] += conv[j];
 
+		// cent で折り返すパスを数えすぎているので引く．
 		rep(i, nc) {
-			// cent で折り返すパスを数えすぎているので引く．
-			cnt[i][0] = 0;
 			auto conv = convolution_ll(cnt[i], cnt[i]);
 			rep(j, 2 * sz(cnt[i]) - 1) res[j] -= conv[j];
 		}
+
+		// cent を端点にもつパスを数える（最後に 2 で割るので 2 倍しておく）
+		rep(j, sz(cnt_all)) res[j] += cnt_all[j] * 2;
 	}
 
-	rep(j1, n) res[j1] /= 2;
+	// 有向パスとして数えてしまっているので 2 で割る．
+	repi(j, 1, n - 1) res[j] /= 2;
 
 	return res;
 }
@@ -492,6 +496,8 @@ vl tree_distance_frequency(const Graph& g) {
 //【二分木の数え上げ】
 /*
 * n 頂点の二分木の個数は Catalan(n) = bin(2n,n)/(n+1) である．
+* 
+* 注意：wikipedia には，2n+1 頂点の "全" 二分木の個数が Catalan(n) であることが載っている．
 * 
 * 証明：n 頂点の二分木（根が空も許す）の個数を a[n] とおき，その母関数
 *		f(z) = Σn∈[0..∞) a[n] z^n
@@ -537,8 +543,69 @@ vl tree_distance_frequency(const Graph& g) {
 /*
 * n 頂点のラベル付き木の個数は n^(n-2) である．（Cayley の定理）
 * 
-* 証明：【ラベル付き根付き木の数え上げ】の結果を，どれを根としているかの n で割り引けばよい．
+* 証明：n^(n-2) 通りのプリューファーコードと 1:1 対応があることから明らか．
+* あるいは【ラベル付き根付き木の数え上げ】の結果を，どれを根としているかの n で割り引けばよい．
 */
+
+
+//【ラベル付き木の数え上げ（次数制約付き）】
+/*
+* n 頂点のラベル付き木で頂点 i の次数が d[i] であるものの個数は以下の多項係数で与えられる：
+*	mul(n-2, d-1) = (n-2)! / (Πi (d[i]-1)!)
+*
+* 参考 : https://drken1215.hatenablog.com/entry/2020/10/25/132900
+* verify : https://atcoder.jp/contests/NYC2015/tasks/nyc2015_5
+*/
+
+
+//【根付き木の数え上げ（子の順序の区別あり）】
+/*
+* 子の順序を区別する n+1 頂点の根付き木の個数は Catalan(n) = bin(2n,n)/(n+1) である．
+* 
+* 証明：根から始めて左優先で DFS を行い，辺を降りるときに '('，昇るときに ')' を
+* 出力して得られる文字列は，長さ 2n の正しい括弧列を一意に生成する．
+*/
+
+
+//【根付き木の数え上げ（子の順序の区別なし，mod 998244353）】O(n (log n)^2)
+/*
+* 各 i∈[0..n] について，子の順序の区別をしない i 頂点の根付き木の個数を格納したリストを返す．
+*
+* 利用：【オンライン畳込み（mod 998244353）】
+*/
+vm count_unique_rooted_tree(int n) {
+	// 参考 : https://oeis.org/A000081
+	// 参考 : https://mathworld.wolfram.com/EulerTransform.html
+
+	//【方法】
+	// n 頂点の根付き木（根が空は許さない）の個数を a[n] とおく．
+	// 根にぶらさがる部分木をどう選ぶかは個数制限なし部分和問題と同様に考えられるので，
+	//		a[n+1] = [z^n] Πi∈[0..n] 1/(1 - z^i)^a[i]
+	// なる漸化式を得る．
+	//
+	// a の母関数を A(z) = Σi∈[0..∞) a[i] z^i とおくと，右辺について
+	//		log( Πi∈[0..n] 1/(1 - z^i)^a[i] )
+	//		= Σi∈[0..n] -a[i] log(1 - z^i)
+	//		= Σi∈[0..n] a[i] Σk∈[1..∞) 1/k (z^i)^k
+	//		= Σk∈[1..∞) 1/k Σi∈[0..n] a[i] (z^k)^i
+	//		= Σk∈[1..∞) 1/k A(z^k)
+	// と計算できることから，母関数についての関数方程式
+	//		A(z)/z = exp( Σk∈[1..∞) 1/k A(z^k) )
+	// を得る．オンラインで指数関数を計算することにより a[i] が順次得られる．
+
+	vm a(n + 1), c(n + 1);
+	a[1] = 1;
+
+	Online_convolution O(n + 1);
+
+	repi(i, 1, n - 1) {
+		for (int j = i; j <= n; j += i) c[j] += i * a[i];
+		O.set(a[i], c[i]);
+		a[i + 1] = O[i - 1] / i;
+	}
+
+	return a;
+}
 
 
 //【ラベル付き根付き木の数え上げ】

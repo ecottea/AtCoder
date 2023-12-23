@@ -67,7 +67,9 @@ Graph wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, T 
 * 隣接行列 e[0..n)[0..n) で辺の有無が表される有向グラフ g を返す．
 */
 template <class T>
-Graph construct_graph(const vector<vector<T>>& e, T exist = 1) {
+Graph from_adjacency_matrix(const vector<vector<T>>& e, T exist = 1) {
+	// verify : https://mojacoder.app/users/take44444/contests/tbc001/tasks/5
+
 	int n = sz(e);
 	Graph g(n);
 	rep(i, n) rep(j, n) if (e[i][j] == exist) g[i].push_back(j);
@@ -138,12 +140,36 @@ Graph complement_graph(const Graph& g) {
 }
 
 
+//【接続二部グラフ】
+/*
+* g の n 個の頂点に対応する頂点 [0..n) と m 本の辺に対応する頂点 [n..n+m) をもち，
+* 頂点 i が辺 j の端点であるときに限り辺 i-(n+j) をもつ二部グラフ gc を返す．
+* undirected = false とすると有向辺 i→(n+j) にする．
+*/
+Graph incidence_bipartite_graph(const IGraph& g, bool undirected = true) {
+	// verify : https://atcoder.jp/contests/abc318/tasks/abc318_g
+
+	int n = sz(g);
+
+	int m = -1;
+	rep(s, n) repe(t, g[s]) chmax(m, t.id);
+	m++;
+
+	Graph g2(n + m);
+	rep(s, n) repe(t, g[s]) {
+		g2[s].push_back(n + t.id);
+		if (undirected) g2[n + t.id].push_back(s);
+	}
+
+	return g2;
+}
+
+
 //【誘導部分グラフ】O(n + m)
 /*
 * グラフ g について，頂点集合を vs とする誘導部分グラフを返す．
 */
-template <class G>
-G induced_subgraph(const G& g, const vi& vs) {
+Graph induced_subgraph(const Graph& g, const vi& vs) {
 	// verify : https://atcoder.jp/contests/abc253/tasks/abc253_h
 
 	int n = sz(g), n2 = sz(vs);
@@ -152,7 +178,7 @@ G induced_subgraph(const G& g, const vi& vs) {
 	vi id(n, -1);
 	rep(i, n2) id[vs[i]] = i;
 
-	G g2(n2);
+	Graph g2(n2);
 
 	// 選ばれていない頂点は無視しながら g2 に誘導部分グラフを構築する．
 	rep(s, n) {
@@ -162,6 +188,36 @@ G induced_subgraph(const G& g, const vi& vs) {
 			if (id[t] == -1) continue;
 
 			g2[id[s]].push_back(id[t]);
+		}
+	}
+
+	return g2;
+}
+
+
+//【誘導部分グラフ（重み付き）】O(n + m)
+/*
+* 重み付きグラフ g について，頂点集合を vs とする誘導部分グラフを返す．
+*/
+WGraph induced_subgraph(const WGraph& g, const vi& vs) {
+	// verify : https://leetcode.com/contest/biweekly-contest-119/problems/number-of-possible-sets-of-closing-branches/
+
+	int n = sz(g), n2 = sz(vs);
+
+	// id[v] : g の頂点が誘導部分グラフの何番目の頂点に対応するか（無ければ -1）
+	vi id(n, -1);
+	rep(i, n2) id[vs[i]] = i;
+
+	WGraph g2(n2);
+
+	// 選ばれていない頂点は無視しながら g2 に誘導部分グラフを構築する．
+	rep(s, n) {
+		if (id[s] == -1) continue;
+
+		repe(t, g[s]) {
+			if (id[t] == -1) continue;
+
+			g2[id[s]].push_back({ id[t], t.cost });
 		}
 	}
 
@@ -191,12 +247,7 @@ G eliminate_edge(const G& g, const vector<pii>& e_el) {
 	G g2(n);
 
 	vector<unordered_set<int>> el(n);
-	repe(e, e_el) {
-		int s, t;
-		tie(s, t) = e;
-
-		el[s].insert(t);
-	}
+	for (auto [s, t] : e_el) el[s].insert(t);
 
 	rep(s, n) repe(t, g[s]) {
 		if (el[s].count(t)) continue;
@@ -212,8 +263,9 @@ G eliminate_edge(const G& g, const vector<pii>& e_el) {
 /*
 * グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
 * 自己ループや多重辺が生じた場合は除去され，結果は単純グラフとなる．
+* simple = false とすると自己ループや多重辺の除去を行わない．
 */
-Graph vertex_contraction(const Graph& g, const vvi& p) {
+Graph vertex_contraction(const Graph& g, const vvi& p, bool simple = true) {
 	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_3
 
 	int n = sz(g), m = sz(p);
@@ -222,34 +274,79 @@ Graph vertex_contraction(const Graph& g, const vvi& p) {
 	vi id(n);
 	rep(i, m) repe(v, p[i]) id[v] = i;
 
-	// 多重辺や自己ループを防ぐため一旦辺の集合を unordered_set でもつ．
-	vector<unordered_set<int>> gc_set(m);
-	rep(s, n) {
-		repe(t, g[s]) gc_set[id[s]].insert(id[t]);
-		gc_set[id[s]].erase(id[s]);
-	}
+	if (simple) {
+		// 多重辺や自己ループを防ぐため一旦辺の集合を unordered_set でもつ．
+		vector<unordered_set<int>> gc_set(m);
+		rep(s, n) {
+			repe(t, g[s]) gc_set[id[s]].insert(id[t]);
+			gc_set[id[s]].erase(id[s]);
+		}
 
-	// 結果の構築
-	Graph gc(m);
-	rep(s, m) repe(t, gc_set[s]) gc[s].push_back(t);
+		// 結果の構築
+		Graph gc(m);
+		rep(s, m) repe(t, gc_set[s]) gc[s].push_back(t);
+
+		return gc;
+	}
+	else {
+		Graph gc(m);
+		rep(s, n) repe(t, g[s]) gc[id[s]].push_back(id[t]);
+
+		return gc;
+	}
+}
+
+
+//【頂点の縮約（重み付き）】O(n + m)
+/*
+* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
+* 自己ループや多重辺の除去は行わない．
+*/
+WGraph vertex_contraction(const WGraph& g, const vvi& p) {
+	int n = sz(g), m = sz(p);
+
+	// id[v] : 頂点 v の属する成分
+	vi id(n);
+	rep(i, m) repe(v, p[i]) id[v] = i;
+
+	WGraph gc(m);
+	rep(s, n) repe(t, g[s]) gc[id[s]].push_back({ id[t], t.cost });
 
 	return gc;
 }
 
 
-//【強連結成分の縮約 → DAG】
+//【強連結成分の頂点を縮約 → DAG】
 /*
-* 有向グラフ g の強連結成分を成す頂点集合を縮約すると DAG が得られる．
+* 有向グラフ g の強連結成分を成す頂点集合全てを縮約すると DAG が得られる．
 * 
 * verify : https://atcoder.jp/contests/abc245/tasks/abc245_f
 */
 
 
-//【二重辺連結成分の縮約 → 森】
+//【トーナメントグラフの SCC の頂点を縮約 → パス】
+/*
+* トーナメントグラフ g の強連結成分を成す頂点集合全てを縮約するとパスグラフが得られる．
+* 
+* verify : https://atcoder.jp/contests/arc163/tasks/arc163_d
+*/
+
+
+//【二重辺連結成分の頂点を縮約 → 森】
 /*
 * 無向グラフ g の二重辺連結成分を成す頂点集合を縮約すると森が得られる．
 * 
 * verify : https://atcoder.jp/contests/tenka1-2015-quala/tasks/tenka1_2015_qualA_d
+*/
+
+
+//【接続二部グラフの二重頂点連結成分の辺に対する頂点を縮約 → 森】
+/*
+* 無向グラフ g の辺を二重頂点連結成分を成す辺集合に分割して E = 凵_k E_k とする．
+* g の接続二部グラフに対し，各 E_k に対応する頂点集合を縮約すると森が得られる．
+* これは block-cut tree に似た特性をもつ．
+*
+* verify : https://atcoder.jp/contests/abc318/tasks/abc318_g
 */
 
 
@@ -290,7 +387,7 @@ Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr)
 }
 
 
-//【橋以外の縮約 → 森】
+//【橋以外の辺を縮約 → 森】
 /*
 * 無向グラフ g の橋以外の辺全てを縮約すると森が得られる．
 * 
@@ -298,10 +395,382 @@ Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr)
 */
 
 
+//【左右の区間へ辺を張れるグラフ】
+/*
+* Cointerval_Graph(int n) : O(n)
+*	有向グラフ g を n 頂点 0 辺で初期化する．
+*
+* add_edge(int s, int t) : O(1)
+*	頂点 s から頂点 t に辺を張る．
+*
+* set_vertices(vi vs) : O(K)
+*	注目頂点集合を vs[0..K) に設定する．
+*
+* add_edge_to_left(int s, int j) : O(1)
+*	頂点 s から区間 vs[0..j] に辺を張る．
+*
+* add_edge_to_right(int s, int j) : O(1)
+*	頂点 s から区間 vs[j..K) に辺を張る．
+*
+* add_edge_to_without(int s, int j) : O(1)
+*	頂点 s から 2 区間 vs[0..j) ∪ vs(j..K) に辺を張る．
+*
+* Graph& get() : O(n + ΣK + Q)（Q : add_edge 系を呼び出した回数）
+*	g への参照を返す．
+*/
+class Cointerval_Graph {
+	int n;		// 頂点数
+	int L, R;
+
+public:
+	Graph g;	// 有向グラフ
+
+	// 有向グラフ g を n 頂点 0 辺で初期化する．
+	Cointerval_Graph(int n) : n(n), L(0), R(0), g(n) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+	}
+	Cointerval_Graph() : n(0), L(0), R(0) {}
+
+	// 頂点 s から頂点 t に辺を張る．
+	void add_edge(int s, int t) {
+		g[s].emplace_back(t);
+	}
+
+	// 注目頂点集合を vs[0..K) に設定する．
+	void set_vertices(const vi& vs) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		int K = sz(vs);
+
+		// 左右移動用レーンの分の頂点を新たに作成する．
+		L = n; R = n + K; n = R + K;
+		g.resize(n);
+
+		// 左移動用レーンに左方向への辺を張る．
+		repi(k, 1, K - 1) g[L + k].emplace_back(L + (k - 1));
+
+		// 右移動用レーンに右方向への辺を張る．
+		repi(k, 0, K - 2) g[R + k].emplace_back(R + (k + 1));
+
+		// 左右移動用レーンから元の頂点への辺を張る
+		repi(k, 0, K - 1) {
+			g[L + k].emplace_back(vs[k]);
+			g[R + k].emplace_back(vs[k]);
+		}
+	}
+
+	// 頂点 s から区間 vs[0..j] に辺を張る．
+	void add_edge_to_left(int s, int j) {
+		g[s].emplace_back(L + j);
+	}
+
+	// 頂点 s から区間 vs[j..K) に辺を張る．
+	void add_edge_to_right(int s, int j) {
+		g[s].emplace_back(R + j);
+	}
+
+	// 頂点 s から 2 区間 vs[0..j) ∪ vs(j..K) に辺を張る．
+	void add_edge_to_without(int s, int j) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		if (j > 0) g[s].emplace_back(L + (j - 1));
+		if (R + j < n - 1) g[s].emplace_back(R + (j + 1));
+	}
+
+	// グラフへの参照を返す．
+	Graph& get() {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		return g;
+	}
+};
+
+
+//【左右の区間へ辺を張れるグラフ（重み付き）】
+/*
+* Cointerval_WGraph(int n) : O(n)
+*	重み付き有向グラフ g を n 頂点 0 辺で初期化する．
+*
+* add_edge(int s, int t, ll c) : O(1)
+*	頂点 s から頂点 t に重み c の辺を張る．
+*
+* set_vertices(vi vs) : O(K)
+*	注目頂点集合を vs[0..K) に設定する．
+*
+* add_edge_to_left(int s, int j, ll c) : O(1)
+*	頂点 s から区間 vs[0..j] に重み c の辺を張る．
+*
+* add_edge_to_right(int s, int j, ll c) : O(1)
+*	頂点 s から区間 vs[j..K) に重み c の辺を張る．
+*
+* add_edge_to_without(int s, int j, ll c) : O(1)
+*	頂点 s から 2 区間 vs[0..j) ∪ vs(j..K) に重み c の辺を張る．
+*
+* WGraph& get() : O(n + ΣK + Q)（Q : add_edge 系を呼び出した回数）
+*	g への参照を返す．
+*/
+class Cointerval_WGraph {
+	int n;		// 頂点数
+	int L, R;
+
+public:
+	WGraph g;	// 重み付き有向グラフ
+
+	// 重み付き有向グラフ g を n 頂点 0 辺で初期化する．
+	Cointerval_WGraph(int n) : n(n), L(0), R(0), g(n) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+	}
+	Cointerval_WGraph() : n(0), L(0), R(0) {}
+
+	// 頂点 s から頂点 t に重み c の辺を張る．
+	void add_edge(int s, int t, ll c) {
+		g[s].emplace_back(t, c);
+	}
+
+	// 注目頂点集合を vs[0..K) に設定する．
+	void set_vertices(const vi& vs) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		int K = sz(vs);
+
+		// 左右移動用レーンの分の頂点を新たに作成する．
+		L = n; R = n + K; n = R + K;
+		g.resize(n);
+
+		// 左移動用レーンに左方向へのコスト 0 の辺を張る．
+		repi(k, 1, K - 1) g[L + k].emplace_back(L + (k - 1), 0);
+
+		// 右移動用レーンに右方向へのコスト 0 の辺を張る．
+		repi(k, 0, K - 2) g[R + k].emplace_back(R + (k + 1), 0);
+
+		// 左右移動用レーンから元の頂点へのコスト 0 の辺を張る
+		repi(k, 0, K - 1) {
+			g[L + k].emplace_back(vs[k], 0);
+			g[R + k].emplace_back(vs[k], 0);
+		}
+	}
+
+	// 頂点 s から区間 vs[0..j] に重み c の辺を張る．
+	void add_edge_to_left(int s, int j, ll c) {
+		g[s].emplace_back(L + j, c);
+	}
+
+	// 頂点 s から区間 vs[j..K) に重み c の辺を張る．
+	void add_edge_to_right(int s, int j, ll c) {
+		g[s].emplace_back(R + j, c);
+	}
+
+	// 頂点 s から 2 区間 vs[0..j) ∪ vs(j..K) に重み c の辺を張る．
+	void add_edge_to_without(int s, int j, ll c) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		if (j > 0) g[s].emplace_back(L + (j - 1), c);
+		if (R + j < n - 1) g[s].emplace_back(R + (j + 1), c);
+	}
+
+	// グラフへの参照を返す．
+	WGraph& get() {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		return g;
+	}
+};
+
+
+//【区間へ辺を張れるグラフ】
+/*
+* Interval_Graph(int n) : O(n)
+*	有向グラフ g を n 頂点 0 辺で初期化する．
+*
+* add_edge(int s, int t) : O(1)
+*	頂点 s から頂点 t に辺を張る．
+*
+* set_vertices(vi vs) : O(K)
+*	注目頂点集合を vs[0..K) に設定する．
+*
+* add_edge_to_interval(int s, int l, int r) : O(log K)
+*	頂点 s から区間 vs[l..r) に辺を張る．
+*
+* Graph& get() : O(n + ΣK + Q log K)（Q : add_edge 系を呼び出した回数）
+*	g への参照を返す．
+*/
+class Interval_Graph {
+	int n;		// 頂点数
+	int I;
+	vi vs;
+
+public:
+	Graph g;	// 有向グラフ
+
+	// 有向グラフ g を n 頂点 0 辺で初期化する．
+	Interval_Graph(int n) : n(n), I(0), g(n) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+	}
+	Interval_Graph() : n(0), I(0) {}
+
+	// 頂点 s から頂点 t に辺を張る．
+	void add_edge(int s, int t) {
+		g[s].emplace_back(t);
+	}
+
+	// 注目頂点集合を vs[0..K) に設定する．
+	void set_vertices(const vi& vs_) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		vs = vs_;
+		int K = sz(vs);
+
+		// 完全二分木用の頂点を新たに作成する．
+		I = n - 1; n += K - 1;
+		g.resize(n);
+
+		repi(i, 1, K - 1) {
+			// 左の区間への辺を張る．
+			int l = 2 * i;
+			g[I + i].emplace_back(l < K ? I + l : vs[l - K]);
+
+			// 右の区間への辺を張る．
+			int r = 2 * i + 1;
+			g[I + i].emplace_back(r < K ? I + r : vs[r - K]);
+		}
+	}
+
+	// 頂点 s から区間 vs[l..r) に辺を張る．
+	void add_edge_to_interval(int s, int l, int r) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		int K = sz(vs);
+		l += K; r += K;
+
+		while (l < r) {
+			if (l & 1) {
+				g[s].emplace_back(l < K ? I + l : vs[l - K]);
+				l++;
+			}
+			if (r & 1) {
+				g[s].emplace_back(r - 1 < K ? I + r - 1 : vs[r - 1 - K]);
+			}
+			l >>= 1; r >>= 1;
+		}
+	}
+
+	// グラフへの参照を返す．
+	Graph& get() {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		return g;
+	}
+};
+
+
+//【区間へ辺を張れるグラフ（重み付き）】
+/*
+* Interval_WGraph(int n) : O(n)
+*	重み付き有向グラフ g を n 頂点 0 辺で初期化する．
+*
+* add_edge(int s, int t, ll c) : O(1)
+*	頂点 s から頂点 t に重み c の辺を張る．
+*
+* set_vertices(vi vs) : O(K)
+*	注目頂点集合を vs[0..K) に設定する．
+*
+* set_vertices_to_all() : O(n)
+*	注目頂点集合を [0..n) に設定する．
+*
+* add_edge_to_interval(int s, int l, int r, ll c) : O(log K)
+*	頂点 s から区間 vs[l..r) に重み c の辺を張る．
+*
+* WGraph& get() : O(n + ΣK + Q log K)（Q : add_edge 系を呼び出した回数）
+*	g への参照を返す．
+*/
+class Interval_WGraph {
+	int n0, n;	// 頂点数
+	int I;
+	vi vs;
+
+public:
+	WGraph g;	// 重み付き有向グラフ
+
+	// 重み付き有向グラフ g を n 頂点 0 辺で初期化する．
+	Interval_WGraph(int n) : n0(n), n(n), I(0), g(n) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+	}
+	Interval_WGraph() : n0(0), n(0), I(0) {}
+
+	// 頂点 s から頂点 t に重み c の辺を張る．
+	void add_edge(int s, int t, ll c) {
+		Assert(s >= 0 && s < n0 && t >= 0 && t < n0);
+
+		g[s].emplace_back(t, c);
+	}
+
+	// 注目頂点集合を vs[0..K) に設定する．
+	void set_vertices(const vi& vs_) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		vs = vs_;
+		int K = sz(vs);
+
+		// 完全二分木用の頂点を新たに作成する．
+		I = n - 1; n += K - 1;
+		g.resize(n);
+
+		repi(i, 1, K - 1) {
+			// 左の区間への重み 0 の辺を張る．
+			int l = 2 * i;
+			g[I + i].emplace_back(l < K ? I + l : vs[l - K], 0);
+
+			// 右の区間への重み 0 の辺を張る．
+			int r = 2 * i + 1;
+			g[I + i].emplace_back(r < K ? I + r : vs[r - K], 0);
+		}
+	}
+
+	// 注目頂点集合を [0..n) に設定する．
+	void set_vertices_to_all() {
+		vi vs(n0);
+		iota(all(vs), 0);
+
+		set_vertices(vs);
+	}
+
+	// 頂点 s から区間 vs[l..r) に重み c の辺を張る．
+	void add_edge_to_interval(int s, int l, int r, ll c) {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		Assert(s >= 0 && s < n0);
+
+		int K = sz(vs);
+		chmax(l, 0); chmin(l, K);
+		if (l >= r) return;
+
+		l += K; r += K;
+
+		while (l < r) {
+			if (l & 1) {
+				g[s].emplace_back(l < K ? I + l : vs[l - K], c);
+				l++;
+			}
+			if (r & 1) {
+				g[s].emplace_back(r - 1 < K ? I + r - 1 : vs[r - 1 - K], c);
+			}
+			l >>= 1; r >>= 1;
+		}
+	}
+
+	// グラフへの参照を返す．
+	WGraph& get() {
+		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+
+		return g;
+	}
+};
+
+
 //【大きい頂点への移動】
 /*
 * 頂点 V = s[0..n) ∪ t[0..n) をもち，O(n^2) 個の有向辺
-*		s[i] → t[j] (i <= j)
+*		s[i] → t[j] (i ≦ j)
 * をもつ有向二部グラフ g を考える．
 * 
 * 同じく V を頂点にもつ有向グラフ g' を，O(n) 個の有向辺
@@ -315,7 +784,7 @@ Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr)
 //【大きい頂点への移動コスト】
 /*
 * 頂点 V = s[0..n) ∪ t[0..n) をもち，O(n^2) 個の有向辺
-*		s[i] → t[j] : コスト 0  (i <= j)
+*		s[i] → t[j] : コスト 0  (i ≦ j)
 *		s[i] → t[j] : コスト c  (i > j)
 * をもつ重み付き有向二部グラフ g を考える．
 *
@@ -324,22 +793,6 @@ Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr)
 *		t[i] → t[i + 1] : コスト 0 (i < n - 1)
 *		s[n - 1] → s[0] : コスト c
 * をもつよう構成しても，s[i] から t[j] への最小移動コストは g と変わらない．
-*/
-
-
-//【以外の頂点への移動】
-/*
-* 頂点 V = s[0..n) ∪ t[0..n) をもち，O(n^2) 個の有向辺
-*		s[i] → t[j] (i != j)
-* をもつ有向二部グラフ g を考える．
-* 
-* 頂点 V' = V ∪ tl[0..n) ∪ tr[0..n) をもつ有向グラフ g' を，O(n) 個の有向辺
-*		s[i] → tl[i - 1], tr[i + 1]
-*		tl[i] → tl[i - 1], t[i]
-*		tr[i] → tr[i + 1], t[i]
-* をもつよう構成しても，s[i] から t[j] への移動可能性は g と変わらない．
-*
-* verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
 */
 
 
@@ -356,15 +809,6 @@ Graph edge_contraction(const Graph& g, const vector<pii>& es, vvi* vs = nullptr)
 * をもつよう構成しても，s[i] から t[j] への移動可能性は g と変わらない．
 * 
 * verify : https://atcoder.jp/contests/abc232/tasks/abc232_g
-*/
-
-
-//【区間内の頂点全てへの移動】
-/*
-* 全ての辺を直接張ってしまうと O(n^2) 本必要になるが，
-* セグメント木のように 2 冪個ずつ頂点をまとめれば O(n log n) 本で済む．
-* 
-* verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
 */
 
 

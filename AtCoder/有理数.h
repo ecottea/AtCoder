@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "数論(一括).h"
 // ■■■■■ 有理数 ■■■■■
 
 
@@ -23,6 +24,15 @@
 *
 * reduction() : O(log min(num, dnm))
 *	自身の約分を行う．
+*
+* together(Frac& a, Frac& b) : O(log min(a.dnm, b.dnm))
+*	a と b を通分する．
+*
+* T floor() : O(1)
+*	自身の floor を返す．
+*
+* T ceil() : O(1)
+*	自身の ceil を返す．
 */
 template <class T = ll>
 struct Frac {
@@ -46,7 +56,7 @@ struct Frac {
 	Frac& operator=(const Frac& b) = default;
 
 	// キャスト
-	operator double() const { return (double)num / dnm; }
+	operator double() const { return (double)num / (double)dnm; }
 
 	// 比較
 	bool operator==(const Frac& b) const {
@@ -56,7 +66,7 @@ struct Frac {
 	}
 	bool operator!=(const Frac& b) const { return !(*this == b); }
 	bool operator<(const Frac& b) const {
-		// verify : https://www.codechef.com/problems/ARCTR
+		// verify : https://atcoder.jp/contests/abc308/tasks/abc308_c
 
 		// 分母が等しいときはオーバーフロー防止のために掛け算はせず比較する．
 		if (dnm == b.dnm) return num < b.num;
@@ -133,8 +143,35 @@ struct Frac {
 
 	// 約分を行う．
 	void reduction() {
-		auto g = gcd(abs(num), abs(dnm));
+		// verify : https://atcoder.jp/contests/abc229/tasks/abc229_h
+
+		auto g = gcd(num, dnm);
 		num /= g; dnm /= g;
+	}
+
+	// a と b を通分する．
+	friend void together(Frac& a, Frac& b) {
+		// verify : https://atcoder.jp/contests/abc229/tasks/abc229_h
+
+		T dnm = lcm(a.dnm, b.dnm);
+		a.num *= dnm / a.dnm; a.dnm = dnm;
+		b.num *= dnm / b.dnm; b.dnm = dnm;
+	}
+
+	// 自身の floor を返す．
+	T floor() const {
+		// verify : https://www.codechef.com/problems/LINEFIT?tab=statement
+
+		if (num >= 0) return num / dnm;
+		else return -((-num + dnm - 1) / dnm);
+	}
+
+	// 自身の ceil を返す．
+	T ceil() const {
+		// verify : https://www.codechef.com/problems/LINEFIT?tab=statement
+
+		if (num >= 0) return (num + dnm - 1) / dnm;
+		else return -((-num) / dnm);
 	}
 
 #ifdef _MSC_VER
@@ -331,6 +368,474 @@ string mint_to_frac(mint x, int v_max = 31595) {
 }
 
 
+//【通分】O(B log(log B) + n (log B)^2)（B = max(b)）
+/*
+* Σi∈[0..n) a[i]/b[i] を既約分数 num/dnm で表したときの {num, dnm} を返す．
+*
+* 利用：【素因数分解（複数）】，【素因数の個数】
+*/
+pair<mint, mint> together(const vi& a, const vi& b) {
+	// verify : https://yukicoder.me/problems/no/1931
+
+	int n = sz(a);
+
+	int B = *max_element(all(b));
+	Osa_k O(B);
+
+	// pps_b[i] : b[i] の素因数分解
+	vector<map<int, int>> pps_b(n);
+	rep(i, n) pps_b[i] = O.factor_integer(b[i]);
+
+	// pps_lcm : L = LCM(b[0..n)) の素因数分解
+	// p_to_ei[p] : 素因数 p をもつ b[i] の {ord_p(b[i]), i} のリスト
+	unordered_map<int, int> pps_lcm;
+	unordered_map<int, vector<pii>> p_to_ei;
+	rep(i, n) for (auto [p, e] : pps_b[i]) {
+		chmax(pps_lcm[p], e);
+		p_to_ei[p].push_back({ e, i });
+	}
+
+	// dnm : 分母
+	mint dnm = 1;
+
+	for (auto [p, e] : pps_lcm) {
+		// (分子)/L が p で何回約分できるか調べるため e = ord_p(L) とおき mod p^e で考える．
+		int pe = (int)pow(p, e);
+		modint::set_mod(pe);
+
+		// sum : p^e Σi∈[0..n) a[i]/b[i] (mod p^e)
+		modint sum = 0;
+
+		// ord_p(b[i]) = 0 の項は 0 になるので，その他の項だけの和をとる．
+		for (auto [ei, i] : p_to_ei[p]) {
+			int pei = (int)pow(p, pps_b[i][p]);
+			sum += ll(a[i]) * (pe / pei) * modint(b[i] / pei).inv();
+		}
+
+		// e_del : sum が p で何回割り切れるか
+		int e_del = min(integer_exponent(sum.val(), p), e);
+
+		// 分母に残る素因数 p の個数は e - e_del 個となる．
+		dnm *= pow(p, e - e_del);
+	}
+
+	// 素朴に和を計算して dnm 倍すれば分子 num が求まる．
+	mint num = 0;
+	rep(i, n) num += mint(a[i]) / b[i];
+	num *= dnm;
+
+	return { num, dnm };
+}
+
+
+//【スターン・ブロコット木】
+/*
+* vector<pcT> to_path(T n, T d) : O(log min(n, d))
+*	1/1 から n/d までのパスを，左[右] への移動を 'L'['R'] と表した上で連長圧縮して返す．
+*
+* pTT from_path(vector<pcT> path) : O(|path|)
+*	1/1 から path に沿って移動した先の既約分数を n/d とし，組 {n, d} を返す．
+*
+* pTT lca(T n1, T d1, T n2, T d2) : O(log min(n1, d1, n2, d2))
+*	n1/d1 と n2/d2 との LCA を n/d とし，組 {n, d} を返す．
+*
+* pTT ancestor(T n, T d, T dep) : O(log min(n, d, dep))
+*	n/d の祖先であって深さが dep の有理数を np/dp とし，組 {np, dp} を返す（なければ {-1, -1}）
+*
+* tTTTT range(T n, T d) : O(log min(n, d))
+*	n/d の子孫が属する開区間を (nl/dl, nr/dr) とし，4 つ組 {nl, dl, nr, dr} を返す．
+*
+* pTT bin_search<T>(bool okQ(ll n, ll d), T v_max = INFL) : O(log v_max)
+*	okQ() の true と false の境界となる有理数を n/d とし，組 {n, d} を返す．
+*	制約：n/d は分子と分母が共に v_max 以下
+*
+* pair<vector<tTTTTT>, vector<tTTTTT>> best_approximation_fraction(T n, T d) : O(log min(n, d))
+*	n/d の正の {下側最良近似分数の列の列, 上側最良近似分数の列の列} の組を返す．
+*	最良近似分数の列 n0/d0, (n0+Δn)/(d0+Δd), ...(k 個)..., (n0+(k-1)Δn)/(d0+(k-1)Δd) は
+*	5 つ組 {n0, d0, Δn, Δd, k} > 0 で表す．
+*	注意 : 正の制約がなければ 0/1 が最良近似分数である可能性もある．
+*/
+namespace Stern_brocot_tree {
+	// 1/1 から n/d までのパスを，左[右] への移動を 'L'['R'] と表した上で連長圧縮して返す．
+	template <class T = ll>
+	vector<pair<char, T>> to_path(T n, T d) {
+		// verify : https://judge.yosupo.jp/problem/stern_brocot_tree
+
+		T g = gcd(n, d);
+		n /= g;
+		d /= g;
+
+		T nl = 0, dl = 1;
+		T nr = 1, dr = 0;
+		T nm = 1, dm = 1;
+		vector<pair<char, T>> path;
+
+		// nm/dm < n/d なら始めは右に移動，さもなくば左に移動．
+		int dir = (nm * d < n * dm) ? 1 : -1;
+
+		while (1) {
+			if (nm == n && dm == d) break;
+
+			// 右に移動
+			if (dir == 1) {
+				// k : num/dnm 以上の値になるまでの移動回数
+				T tmp = d * nr - dr * n;
+				T k = (dm * n - d * nm + tmp - 1) / tmp;
+
+				path.emplace_back('R', k);
+				nm += k * nr;
+				dm += k * dr;
+				nl = nm - nr;
+				dl = dm - dr;
+			}
+			// 左に移動
+			else {
+				// k : num/dnm 以下の値になるまでの移動回数
+				T tmp = dl * n - d * nl;
+				T k = (d * nm - dm * n + tmp - 1) / tmp;
+
+				path.emplace_back('L', k);
+				nm += k * nl;
+				dm += k * dl;
+				nr = nm - nl;
+				dr = dm - dl;
+			}
+
+			dir *= -1;
+		}
+
+		return path;
+	}
+
+	// 1/1 から path に沿って移動した先の分数を n/d とし，組 {n, d} を返す．
+	template <class T = ll>
+	pair<T, T> from_path(const vector<pair<char, T>>& path) {
+		// verify : https://judge.yosupo.jp/problem/stern_brocot_tree
+
+		T nl = 0, dl = 1;
+		T nr = 1, dr = 0;
+		T nm = 1, dm = 1;
+
+		for (auto [c, k] : path) {
+			// 右に移動
+			if (c == 'R') {
+				nm += k * nr;
+				dm += k * dr;
+				nl = nm - nr;
+				dl = dm - dr;
+			}
+			// 左に移動
+			else {
+				nm += k * nl;
+				dm += k * dl;
+				nr = nm - nl;
+				dr = dm - dl;
+			}
+		}
+
+		return { nm, dm };
+	}
+
+	// n1/d1 と n2/d2 との LCAを n/d とし，組 {n, d} を返す．
+	template <class T = ll>
+	pair<T, T> lca(T n1, T d1, T n2, T d2) {
+		// verify : https://judge.yosupo.jp/problem/stern_brocot_tree
+
+		T g1 = gcd(n1, d1);
+		n1 /= g1;
+		d1 /= g1;
+
+		T g2 = gcd(n2, d2);
+		n2 /= g2;
+		d2 /= g2;
+
+		T nl = 0, dl = 1;
+		T nr = 1, dr = 0;
+		T nm = 1, dm = 1;
+
+		// nm/dm < n/d なら始めは右に移動，さもなくば左に移動．
+		int dir1 = (nm * d1 < n1 * dm) ? 1 : -1;
+		int dir2 = (nm * d2 < n2 * dm) ? 1 : -1;
+		if (dir1 != dir2) return { 1, 1 };
+
+		while (1) {
+			if (nm == n1 && dm == d1) return { n1, d1 };
+			if (nm == n2 && dm == d2) return { n2, d2 };
+
+			// 右に移動
+			if (dir1 == 1) {
+				// k : num/dnm 以上の値になるまでの移動回数
+				T tmp1 = d1 * nr - dr * n1;
+				T k1 = (dm * n1 - d1 * nm + tmp1 - 1) / tmp1;
+				T tmp2 = d2 * nr - dr * n2;
+				T k2 = (dm * n2 - d2 * nm + tmp2 - 1) / tmp2;
+
+				if (k1 < k2) return { nm + k1 * nr, dm + k1 * dr };
+				if (k1 > k2) return { nm + k2 * nr, dm + k2 * dr };
+
+				nm += k1 * nr;
+				dm += k1 * dr;
+				nl = nm - nr;
+				dl = dm - dr;
+			}
+			// 左に移動
+			else {
+				// k : num/dnm 以下の値になるまでの移動回数
+				T tmp1 = dl * n1 - d1 * nl;
+				T k1 = (d1 * nm - dm * n1 + tmp1 - 1) / tmp1;
+				T tmp2 = dl * n2 - d2 * nl;
+				T k2 = (d2 * nm - dm * n2 + tmp2 - 1) / tmp2;
+
+				if (k1 < k2) return { nm + k1 * nl, dm + k1 * dl };
+				if (k1 > k2) return { nm + k2 * nl, dm + k2 * dl };
+
+				nm += k1 * nl;
+				dm += k1 * dl;
+				nr = nm - nl;
+				dr = dm - dl;
+			}
+
+			dir1 *= -1;
+		}
+
+		return { -1, -1 };
+	}
+
+	// n/d の祖先であって深さが dep の有理数を np/dp とし，組 {np, dp} を返す．
+	template <class T = ll>
+	pair<T, T> ancestor(T n, T d, T dep) {
+		// verify : https://judge.yosupo.jp/problem/stern_brocot_tree
+
+		T g = gcd(n, d);
+		n /= g;
+		d /= g;
+
+		T nl = 0, dl = 1;
+		T nr = 1, dr = 0;
+		T nm = 1, dm = 1;
+
+		// nm/dm < n/d なら始めは右に移動，さもなくば左に移動．
+		int dir = (nm * d < n * dm) ? 1 : -1;
+
+		while (1) {
+			if (nm == n && dm == d) break;
+
+			// 右に移動
+			if (dir == 1) {
+				// k : num/dnm 以上の値になるまでの移動回数
+				T tmp = d * nr - dr * n;
+				T k = (dm * n - d * nm + tmp - 1) / tmp;
+
+				if (k >= dep) return { nm + dep * nr, dm + dep * dr };
+				dep -= k;
+
+				nm += k * nr;
+				dm += k * dr;
+				nl = nm - nr;
+				dl = dm - dr;
+			}
+			// 左に移動
+			else {
+				// k : num/dnm 以下の値になるまでの移動回数
+				T tmp = dl * n - d * nl;
+				T k = (d * nm - dm * n + tmp - 1) / tmp;
+
+				if (k >= dep) return { nm + dep * nl, dm + dep * dl };
+				dep -= k;
+
+				nm += k * nl;
+				dm += k * dl;
+				nr = nm - nl;
+				dr = dm - dl;
+			}
+
+			dir *= -1;
+		}
+
+		return { -1, -1 };
+	}
+
+	// n/d の子孫が属する開区間を (nl/dl, nr/dr) とし，4 つ組 {nl, dl, nr, dr} を返す．
+	template <class T = ll>
+	tuple<T, T, T, T> range(T n, T d) {
+		// verify : https://judge.yosupo.jp/problem/stern_brocot_tree
+
+		T g = gcd(n, d);
+		n /= g;
+		d /= g;
+
+		T nl = 0, dl = 1;
+		T nr = 1, dr = 0;
+		T nm = 1, dm = 1;
+
+		// nm/dm < n/d なら始めは右に移動，さもなくば左に移動．
+		int dir = (nm * d < n * dm) ? 1 : -1;
+
+		while (1) {
+			if (nm == n && dm == d) break;
+
+			// 右に移動
+			if (dir == 1) {
+				// k : num/dnm 以上の値になるまでの移動回数
+				T tmp = d * nr - dr * n;
+				T k = (dm * n - d * nm + tmp - 1) / tmp;
+
+				nm += k * nr;
+				dm += k * dr;
+				nl = nm - nr;
+				dl = dm - dr;
+			}
+			// 左に移動
+			else {
+				// k : num/dnm 以下の値になるまでの移動回数
+				T tmp = dl * n - d * nl;
+				T k = (d * nm - dm * n + tmp - 1) / tmp;
+
+				nm += k * nl;
+				dm += k * dl;
+				nr = nm - nl;
+				dr = dm - dl;
+			}
+
+			dir *= -1;
+		}
+
+		return { nl, dl, nr, dr };
+	}
+
+	// okQ() の true と false の境界を返す．
+	template <class T = ll, class FUNC>
+	pair<T, T> bin_search(const FUNC& okQ, T v_max = T(INFL)) {
+		// verify : https://atcoder.jp/contests/abc294/tasks/abc294_f
+
+		T nl = 0, dl = 1; bool bl = okQ(nl, dl);
+		T nr = 1, dr = 0; bool br = okQ(nr, dr);
+		T nm = 1, dm = 1; bool bm = okQ(nm, dm);
+
+		while (1) {
+			// 右に移動
+			if (bl == bm) {
+				// k : okQ(nm/dm) が切り替わるまでの移動回数
+				T k_ng = 0, k_ok = 1;
+
+				// k の上限がわからないのでまず指数探索を行う．
+				while (okQ(nm + k_ok * nr, dm + k_ok * dr) == bm) {
+					k_ng = k_ok;
+					k_ok *= 2;
+
+					// 十分深くまで探しても T/F が切り替わらなかったら，
+					// nm/dm の子孫は全て同じ T/F であると判断し開区間の右の境界を返す．
+					if (nm + k_ng * nr > v_max || dm + k_ng * dr > v_max) return { nr, dr };
+				}
+
+				// 判明した k の上下界を用いて二分探索を行う．
+				while (k_ok - k_ng > 1) {
+					T k_mid = (k_ok + k_ng) / 2;
+
+					if (okQ(nm + k_mid * nr, dm + k_mid * dr) != bm) k_ok = k_mid;
+					else k_ng = k_mid;
+				}
+
+				bm = br;
+				nm += k_ok * nr;
+				dm += k_ok * dr;
+				nl = nm - nr;
+				dl = dm - dr;
+			}
+			// 左に移動
+			else {
+				// k : okQ(nm/dm) が切り替わるまでの移動回数
+				T k_ng = 0, k_ok = 1;
+
+				// k の上限がわからないのでまず指数探索を行う．
+				while (okQ(nm + k_ok * nl, dm + k_ok * dl) == bm) {
+					k_ng = k_ok;
+					k_ok *= 2;
+
+					// 十分深くまで探しても T/F が切り替わらなかったら，
+					// nm/dm の子孫は全て同じ T/F であると判断し開区間の左の境界を返す．
+					if (nm + k_ng * nl > v_max || dm + k_ng * dl > v_max) return { nl, dl };
+				}
+
+				// 判明した k の上下界を用いて二分探索を行う．
+				while (k_ok - k_ng > 1) {
+					T k_mid = (k_ok + k_ng) / 2;
+
+					if (okQ(nm + k_mid * nl, dm + k_mid * dl) != bm) k_ok = k_mid;
+					else k_ng = k_mid;
+				}
+
+				bm = bl;
+				nm += k_ok * nl;
+				dm += k_ok * dl;
+				nr = nm - nl;
+				dr = dm - dl;
+			}
+		}
+	}
+
+	// n/d の最良近似分数を全て返す．
+	template <class T = ll>
+	pair<vector<tuple<T, T, T, T, T>>, vector<tuple<T, T, T, T, T>>> best_approximation_fraction(T n, T d) {
+		// verify : https://atcoder.jp/contests/abc333/tasks/abc333_g
+
+		T g = gcd(n, d);
+		n /= g;
+		d /= g;
+
+		T nl = 0, dl = 1;
+		T nr = 1, dr = 0;
+		T nm = 1, dm = 1;
+		vector<tuple<T, T, T, T, T>> fl, fr;
+
+		// nm/dm < n/d なら始めは右に移動，さもなくば左に移動．
+		int dir = (nm * d < n * dm) ? 1 : -1;
+
+		while (1) {
+			if (nm == n && dm == d) break;
+
+			// 右に移動
+			if (dir == 1) {
+				// k : num/dnm 以上の値になるまでの移動回数
+				T tmp = d * nr - dr * n;
+				T k = (dm * n - d * nm + tmp - 1) / tmp;
+
+				fl.emplace_back(nm, dm, nr, dr, k);
+
+				nm += k * nr;
+				dm += k * dr;
+				nl = nm - nr;
+				dl = dm - dr;
+			}
+			// 左に移動
+			else {
+				// k : num/dnm 以下の値になるまでの移動回数
+				T tmp = dl * n - d * nl;
+				T k = (d * nm - dm * n + tmp - 1) / tmp;
+
+				fr.emplace_back(nm, dm, nl, dl, k);
+
+				nm += k * nl;
+				dm += k * dl;
+				nr = nm - nl;
+				dr = dm - dl;
+			}
+
+			dir *= -1;
+		}
+
+		return { fl, fr };
+	}
+
+	/* okQ の定義の雛形
+	using T = ll;
+	auto okQ = [&](T num, T dnm) {
+		return true || false;
+	};
+	*/
+};
+
+
 //【正則連分数展開】O(log min(num, dnm))
 /*
 * 正の有理数 num/dnm の正則連分数展開を seq に格納し seq を返す．
@@ -369,12 +874,12 @@ pll from_continued_fraction(const vl& seq) {
 }
 
 
-//【有理数近似】O(log dnm)
+//【有理数近似】O(log dnm)（誤差注意）
 /*
 * 実数 x を分母が dnm_max 以下の既約分数 num / dnm で近似し，組 {num, dnm} を返す．
-* 最良の近似であるとは限らないので注意．
+* 結果は最良近似分数ではあるが，分母が dnm_max 以下の範囲での最良の近似であるとは限らないので注意．
 */
-template <class T>
+template <class T = ll>
 pair<T, T> rationalize(long double x, T dnm_max = T(INFL), long double EPS = 1e-17) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E9%80%A3%E5%88%86%E6%95%B0
 	// verify : https://yukicoder.me/problems/no/2266
@@ -382,7 +887,7 @@ pair<T, T> rationalize(long double x, T dnm_max = T(INFL), long double EPS = 1e-
 	T sign = (x >= 0 ? 1 : -1);
 	x = abs(x);
 
-	vector<T> ps{ 1, (ll)x };
+	vector<T> ps{ 1, (T)x };
 	vector<T> qs{ 0, 1 };
 
 	// x の正則連分数展開に基づく近似を行う．
@@ -406,14 +911,11 @@ pair<T, T> rationalize(long double x, T dnm_max = T(INFL), long double EPS = 1e-
 
 //【真分数 → 循環小数】O(m)
 /*
-* 真分数 frac = n / m の非循環部分の桁の数を noncycle に，
+* 真分数 n / m の非循環部分の桁の数を noncycle に，
 * 循環部分の桁の数を cycle にそれぞれ格納する．
 */
-void real_digits(pii frac, vi& noncycle, vi& cycle, int base = 10) {
+void real_digits(int n, int m, vi& noncycle, vi& cycle, int base = 10) {
 	// verify : https://atcoder.jp/contests/abc174/tasks/abc174_c
-
-	int n, m;
-	tie(n, m) = frac; // n / m
 
 	noncycle.clear();
 	cycle.clear();
@@ -489,6 +991,20 @@ pll from_real_digits(const vi& noncycle, const vi& cycle, int base = 10) {
 }
 
 
+//【[非]循環節の長さ】
+/*
+* 有理数 r を既約分数表示したものを n/m とするとき，r を 10 進小数表記したとき
+*	(r の非循環節の長さ) = max(ord_2(m), ord_5(m))（ord_p(m) は m のもつ素因数 p の個数）
+* である．また
+*	m' = m / (2^ord_2(m) * 5^ord_5(m))
+* とおくと，
+*	(r の循環節の長さ) = ord(10) in (Z/m'Z)*（ord は乗法群 (Z/m'Z)* における位数）
+* である．
+* 
+* verify : https://mojacoder.app/users/YSatUT/problems/repeating_decimal
+*/
+
+
 //【完全循環素数と原始根】
 /*
 * b 進法において，b と互いに素な素数 p について以下が成り立つ：
@@ -502,7 +1018,7 @@ pll from_real_digits(const vi& noncycle, const vi& cycle, int base = 10) {
 /*
 * num / dnm の b 進法での小数第 n 位の数を返す．
 *
-* 制約：dnm * b <= 2*10^9+1000
+* 制約：dnm * b ≦ 2 * 10^9 + 1000
 */
 int real_digit(int num, int dnm, ll n, int b = 10) {
 	// verify : https://yukicoder.me/problems/no/1842
@@ -545,12 +1061,6 @@ int real_digit(int num, int dnm, ll n, int b = 10) {
 * とすれば良い．（キャスト時に 0 方向への丸めが入ることに注意．）
 *
 * verify : https://atcoder.jp/contests/arc015/tasks/arc015_2
-*/
-
-
-//【スターンブロコット木上の探索】(TODO)
-/*
-* https://atcoder.jp/contests/abc294/editorial/6017
 */
 
 

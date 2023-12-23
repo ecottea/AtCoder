@@ -31,12 +31,13 @@ void geq_zeta(vector<T>& a) {
 //【メビウス変換（上位要素）】O(n)
 /*
 * A[0..n) を
-*       a[i] = Σj≧i a[j]
+*       A[i] = Σj≧i a[j]
 * なる a[0..n) に上書きする（上位要素から自身の値への寄与を取り除く）
 */
 template <typename T>
 void geq_mobius(vector<T>& A) {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
+	// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem003
 
 	//【例（n = 8 のとき）】：
 	//	a[0] = A[0] - A[1]
@@ -87,6 +88,7 @@ vector<T> min_convolution(vector<T> a, vector<T> b) {
 template <typename T>
 void leq_zeta(vector<T>& a) {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
+	// verify : https://yukicoder.me/problems/no/2498
 
 	//【例（n = 8 のとき）】：
 	//	A[0] = a[0]
@@ -112,6 +114,7 @@ void leq_zeta(vector<T>& a) {
 template <typename T>
 void leq_mobius(vector<T>& A) {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
+	// verify : https://yukicoder.me/problems/no/2498
 
 	//【例（n = 8 のとき）】：
 	//	a[0] = + A[0]
@@ -150,6 +153,23 @@ vector<T> max_convolution(vector<T> a, vector<T> b) {
 	leq_mobius(a);
 
 	return a;
+}
+
+
+//【二次元メビウス変換（上位要素）】O(h w)
+/*
+* A[0..h)[0..w) を
+*       A[i][j] = Σx≧i Σy≧j a[x][y]
+* なる a[0..h)[0..w) に上書きする（上位要素から自身の値への寄与を取り除く）
+*/
+template <typename T>
+void geq_mobius_2D(vector<vector<T>>& A) {
+	// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem003
+
+	int h = sz(A), w = sz(A[0]);
+
+	repi(i, 0, h - 2) repi(j, 0, w - 1) A[i][j] -= A[i + 1][j];
+	repi(i, 0, h - 1) repi(j, 0, w - 2) A[i][j] -= A[i][j + 1];
 }
 
 

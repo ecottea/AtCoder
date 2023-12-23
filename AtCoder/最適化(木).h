@@ -13,13 +13,12 @@
 */
 using T_mis = pii; // (ª‚ğ‘I‘ğCª‚ğ”ñ‘I‘ğ)
 void merge_mis(T_mis& x, const T_mis& y, int s) { x.first += y.first - 1; x.second += y.second; }
-T_mis e_mis() { return { 1, 0 }; }
 T_mis leaf_mis(int s) { return { 1, 0 }; }
 T_mis apply_mis(const T_mis& x, int s, int t) { return { x.second + 1, max(x.first, x.second) }; }
 int maximum_independent_set(const Graph& g) {
 	// verify : https://yukicoder.me/problems/no/763
 
-	auto dp = tree_getDP_vmerge<T_mis, merge_mis, e_mis, leaf_mis, apply_mis>(g, 0);
+	auto dp = tree_getDP_vmerge<T_mis, merge_mis, leaf_mis, apply_mis>(g, 0);
 	return max(dp[0].first, dp[0].second);
 }
 
@@ -43,7 +42,6 @@ void merge_mcs(T_mcs& x, const T_mcs& y) {
 	rep(i, ns) rep(j, nt) chmin(nx[i + j], x[i] + y[j]);
 	x = move(nx);
 }
-T_mcs e_mcs() { return T_mcs{ 0 }; }
 T_mcs leaf_mcs(int s) { return T_mcs{ 0, c_mcs[s] }; }
 void apply_mcs(T_mcs& x, int s) {
 	int ns = sz(x);
@@ -55,6 +53,6 @@ vector<T_mcs> minimum_cost_subtree(const Graph& g, const vl& c, int r) {
 	// verify : https://atcoder.jp/contests/arc029/tasks/arc029_4
 	
 	c_mcs = c;
-	return tree_getDP_forest<T_mcs, merge_mcs, e_mcs, leaf_mcs, apply_mcs>(g, r);
+	return tree_getDP_forest<T_mcs, merge_mcs, leaf_mcs, apply_mcs>(g, r);
 }
 

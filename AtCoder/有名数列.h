@@ -3,6 +3,7 @@
 #include "行列.h"
 #include "二項係数.h"
 #include "FPS(mint).h"
+#include "数論変換.h"
 // ■■■■■ 有名数列 ■■■■■
 
 
@@ -12,7 +13,7 @@
 */
 template <class T>
 vector<T> fibonacci(int n) {
-	// verify : https://atcoder.jp/contests/tenka1-2012-qualA/tasks/tenka1_2012_qualA_1
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/math_and_algorithm_ap
 
 	vector<T> fib(n);
 	fib[0] = 0;
@@ -55,17 +56,17 @@ mint fibonacci(ll n) {
 
 //【k-ナッチ数】O(n)
 /*
-* i∈[0..n) について，i 番目の k-ナッチ数を seq[i] に格納する．
+* 各 i∈[0..n) について，i 番目の k-ナッチ数を格納したリスト seq を返す．
 * 初項は seq[0..k-1) = 0, seq[k-1] = 1 とする．
 *
 *（累積和で高速化した DP）
 */
 template <class T>
-void k_nacci_acc(int n, int k, vector<T>& seq) {
+vector<T> k_nacci_acc(int n, int k) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_semiexp
 
-	seq = vector<T>(n);
-	if (n < k) return;
+	vector<T> seq(n);
+	if (n < k) return seq;
 	seq[k - 1] = 1;
 
 	// acc[i] : Σseq[0..i)
@@ -79,21 +80,23 @@ void k_nacci_acc(int n, int k, vector<T>& seq) {
 		// acc[i+1] = Σseq[0..i] = acc[i] + seq[i]
 		acc[i + 1] = acc[i] + seq[i];
 	}
+
+	return seq;
 }
 
 
 //【k-ナッチ数】O(n + k)
 /*
-* i∈[0..n) について，i 番目の k-ナッチ数を seq[i] に格納する．
+* 各 i∈[0..n) について，i 番目の k-ナッチ数を格納したリスト seq を返す．
 * 初項は seq[0..k-1) = 0, seq[k-1] = 1 とする．
 *
 *（いもす法で高速化した DP）
 */
 template <class T>
-void k_nacci_imos(int n, int k, vector<T>& seq) {
+vector<T> k_nacci_imos(int n, int k) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_semiexp
 
-	seq = vector<T>(n + k + 1);
+	vector<T> seq(n + k + 1);
 	seq[k - 1] = 1;
 
 	// 初項からの寄与の種を蒔く．
@@ -110,6 +113,7 @@ void k_nacci_imos(int n, int k, vector<T>& seq) {
 	}
 
 	seq.resize(n);
+	return seq;
 }
 
 
@@ -190,27 +194,28 @@ void delannoy_number_imos(int h, int w, int s, int t, vector<vector<T>>& seq) {
 
 //【ベルヌーイ数（mod 998244353）】O(n log n)
 /*
-* i=[0..n) についてベルヌーイ数 B(i) を b[i] に格納する．
+* i∈[0..n) についてのベルヌーイ数 B(i) のリストを返す．
 *
-* 制約：fm は (2(n+1))! まで計算可能であること
+* 制約：fm は n! まで計算可能
 *
-* 利用：【形式的冪級数】,【指数関数】,【階乗など（法が大きな素数）】
+* 利用：【形式的冪級数】
 */
-void bernoulli(int n, vm& b, const Factorial_mint& fm) {
+vm bernoulli(int n, const Factorial_mint& fm) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%99%E3%83%AB%E3%83%8C%E3%83%BC%E3%82%A4%E6%95%B0
 	// verify : https://judge.yosupo.jp/problem/bernoulli_number
 
 	//【方法】
 	// ベルヌーイ数 B(n) はそもそも
-	//		x / (exp(x) - 1) = Σn=[0..∞) B(n) / n! x^n
+	//		z / (exp(z) - 1) = Σn=[0..∞) B(n) / n! z^n
 	// で定義される．
 
-	MFPS f = exp(MFPS(vm({ 0, 1 })), n + 1, fm);
-	f <<= 1;
-	f = f.inv(n);
+	MFPS b(0, n);
+	rep(i, n) b[i] = fm.fact_inv(i + 1);
+	b = b.inv(n);
 
-	b.resize(n);
-	rep(i, n) b[i] = f[i] * fm.fact(i);
+	rep(i, n) b[i] *= fm.fact(i);
+
+	return b.c;
 }
 
 
@@ -379,6 +384,48 @@ public:
 };
 
 
+//【ワイエルシュトラスの p 関数（mod 998244353）】O(n (log n)^2)
+/*
+* [z^[0..n]] p(z; g2, g3) を返す．（[z^(-2)] p(z; g2, g3) = 1 を含めていないので注意）
+*
+* 利用：【オンライン畳込み（mod 998244353）】
+*/
+vm weierstrass_p(int n, mint g2, mint g3) {
+	// verify : https://mojacoder.app/users/googol_S0/problems/Most_Difficult_Exam_Plus
+
+	vm a(n + 1);
+	if (2 < n + 1) a[2] = g2 / 20;
+	if (4 < n + 1) a[4] = g3 / 28;
+	if (n <= 5) return a;
+
+	Online_convolution O2(n + 1), O2w(n + 1), O3(n + 1);
+
+	O2.set(a[2], a[2]);
+	O2w.set(a[2], a[2]);
+	O3.set(O2.back(), a[2]);
+
+	O2.set(a[4], a[4]);
+	O2w.set(2 * a[4], 2 * a[4]);
+	O3.set(O2.back(), a[4]);
+
+	for (int i = 1; 2 * (i + 2) <= n; i++) {
+		int id = 2 * (i + 2);
+
+		a[id] += g2 * a[id - 4];
+		a[id] -= 12 * O2[i - 1];
+		a[id] += 4 * O2w[i - 1];
+		if (i >= 3) a[id] -= 4 * O3[i - 3];
+		a[id] /= 8 * i + 28;
+
+		O2.set(a[id], a[id]);
+		O2w.set((i + 2) * a[id], (i + 2) * a[id]);
+		O3.set(O2.back(), a[id]);
+	}
+
+	return a;
+}
+
+
 //【カタラン数】
 /*
 * n 番目のカタラン数 C[n] は
@@ -398,5 +445,11 @@ public:
 * である．
 * 
 * verify : https://atcoder.jp/contests/xmascon22/tasks/xmascon22_d
+*/
+
+
+//【分割数】
+/*
+* 写像12相.h へ
 */
 

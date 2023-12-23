@@ -40,12 +40,48 @@ vvvi set_partitions(int n) {
 }
 
 
+//【集合の分割の列挙（集合の数が k）】O(s2(n, k))
+/*
+* [0..n) の k 個の集合への分割全てからなるリストを返す．
+*/
+vvvi set_partitions(int n, int k) {
+	vvvi sps; vvi sp;
+
+	function<void(int)> rf = [&](int x) {
+		// 全ての要素の所属を決め終えた場合
+		if (x == n) {
+			if (sz(sp) == k) sps.push_back(sp);
+			return;
+		}
+
+		// 要素 x を既に存在する集合に含める場合
+		rep(i, sz(sp)) {
+			sp[i].push_back(x);
+			rf(x + 1);
+			sp[i].pop_back();
+		}
+
+		// 要素 x を単独で新たな集合とする場合
+		if (sz(sp) < k) {
+			sp.push_back(vi{ x });
+			rf(x + 1);
+			sp.pop_back();
+		}
+
+		return;
+		};
+	rf(0);
+
+	return sps;
+}
+
+
 //【集合の分割の列挙（等分）】O(mul(n,[m]*k)/k!)
 /*
 * n = k m とし，[0..n) の k 個の m 点集合へ分割のリストを返す．
 * 例えば [0..6) の 3 個の 2 点集合への分割の 1 つに {{0, 1}, {2, 5}, {3, 4}} がある．
 */
-vvvi set_partitions(int k, int m) {
+vvvi set_partitions_equal(int k, int m) {
 	// verify : https://atcoder.jp/contests/agc043/tasks/agc043_d
 	
 	int n = k * m;
@@ -211,7 +247,7 @@ vvi integer_partitions_val(int n, const vi& a) {
 	int m = sz(a);
 	vvi ips; vi ip;
 
-	// n を k 以下の数で分割する．
+	// n を a[j..m) の要素で分割する．
 	function<void(int, int)> rf = [&](int n, int j) {
 		// 分割しきった場合
 		if (n == 0) {

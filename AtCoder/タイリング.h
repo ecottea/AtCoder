@@ -1,6 +1,53 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 列挙（格子） ■■■■■
+// ■■■■■ タイリング ■■■■■
+
+
+//【ドミノタイリング】O(h w √(h w))
+/*
+* c[0..h)[0..w) 上に置けるだけドミノ {(i1, j1), (i2, j2)} を配置し，そのリストを返す．
+* c[i][j] = ng であるようなマス (i, j) にはドミノを配置できない．
+*/
+vector<tuple<int, int, int, int>> domino_tiling(const vvc& c, char ng = '#') {
+	// verify : https://atcoder.jp/contests/practice2/tasks/practice2_d
+
+	int h = sz(c), w = sz(c[0]);
+
+	int ST = h * w, GL = ST + 1;
+	mf_graph<int> g(GL + 1);
+
+	rep(i, h) rep(j, w) {
+		if (c[i][j] == ng) continue;
+
+		// ST とマス，マスと GL を繋ぐ
+		if ((i + j) % 2 == 0) g.add_edge(ST, i * w + j, 1);
+		else g.add_edge(i * w + j, GL, 1);
+
+		// マスと隣のマスを繋ぐ
+		if ((i + j) % 2 == 0) {
+			if (i > 0 && c[i - 1][j] != ng) g.add_edge(i * w + j, (i - 1) * w + j, 1);
+			if (i < h - 1 && c[i + 1][j] != ng) g.add_edge(i * w + j, (i + 1) * w + j, 1);
+			if (j > 0 && c[i][j - 1] != ng) g.add_edge(i * w + j, i * w + (j - 1), 1);
+			if (j < w - 1 && c[i][j + 1] != ng) g.add_edge(i * w + j, i * w + (j + 1), 1);
+		}
+	}
+
+	int f = g.flow(ST, GL);
+
+	vector<tuple<int, int, int, int>> res;
+	res.reserve(f);
+
+	repe(e, g.edges()) {
+		// マスとマスを結びフローが流れている辺以外は無視する．
+		if (e.from == ST || e.to == GL || e.flow == 0) continue;
+
+		int i1 = e.from / w, j1 = e.from % w;
+		int i2 = e.to / w, j2 = e.to % w;
+		res.emplace_back(i1, j1, i2, j2);
+	}
+
+	return res;
+}
 
 
 //【ポリオミノの列挙】O(?)（n=8 くらいまで動く）
@@ -219,4 +266,90 @@ vvvi enumerate_Ttetromino_tiling(int h, int w) {
 	return boards;
 }
 
+
+//【トロミノのタイリングの数え上げ】O(h 4^w)
+/*
+* h×w の盤面にトロミノを敷き詰める方法が何通りあるかを返す．
+*/
+ll count_Tromino_tiling(int h, int w) {
+	// マスの数が 3 の倍数でなければ明らかに不可能．
+	if (h * w % 3 != 0) return 0;
+
+	// 盤は縦長だとする．
+	if (h < w) swap(h, w);
+
+	// 敷き詰めに使うピースのリスト
+	// 各ピースは辞書順最小位置を {0, 0} としたマスの集合で表す．
+	vector<vector<pii>> pieces{
+		{ {0, 0}, { 0, 1 }, { 0, 2 } },
+		{ {0, 0}, {0, 1}, {1, 0} },
+		{ {0, 0}, {0, 1}, {1, 1} },
+		{ {0, 0}, {1, -1}, {1, 0} },
+		{ {0, 0}, {1, 0}, {1, 1} },
+		{ {0, 0}, {1, 0}, {2, 0} }
+	};
+
+	// mat[set] : 盤の上 2 行分の敷き詰めが set のとき，そこから遷移できる次の 2 行分のパターンのリスト
+	vvl mat(1LL << (2 * w));
+
+	// set : 盤の上 2 行分の敷き詰めパターン
+	repb(set, 2 * w) {
+		// board[i][j] : 上 3 行の盤の位置 (i, j) にタイルが置かれているか
+		vvb board(3, vb(w));
+		rep(x, 2) rep(y, w) if (get(set, x * w + y)) board[x][y] = 1;
+
+		// board[i][j] を返す（盤外なら true を返す）
+		auto get_board = [&](int i, int j) {
+			if (j < 0 || j >= w) return true;
+			return (bool)board[i][j];
+		};
+
+		// (0, j): 注目位置
+		function<void(int)> dfs = [&](int j) {
+			// 1 行目が埋まったら次の 2 行の形状を記録
+			if (j == w) {
+				int nset = 0;
+				rep(y, w) if (board[1][y]) nset |= 1 << y;
+				rep(y, w) if (board[2][y]) nset |= 1 << (w + y);
+				mat[set].push_back(nset);
+				return;
+			}
+
+			// すでにタイルが敷かれていたら 1 つ右のマスへ
+			if (get_board(0, j)) {
+				dfs(j + 1);
+				return;
+			}
+
+			// 各ピースを置くことができるかをチェックする．
+			repe(piece, pieces) {
+				bool ok = true;
+				for (auto& [di, dj] : piece) {
+					if (get_board(0 + di, j + dj)) {
+						ok = false;
+						break;
+					}
+				}
+				if (!ok) continue;
+
+				for (auto& [di, dj] : piece) board[0 + di][j + dj] = true;
+				dfs(j + 1);
+				for (auto& [di, dj] : piece) board[0 + di][j + dj] = false;
+			}
+		};
+		dfs(0);
+	}
+
+	// dp_i[set] : i 行目までみて，盤の上 2 行のパターンが set である敷き詰め方の数
+	vl dp(1LL << (2 * w));
+	dp[0] = 1;
+
+	rep(hoge, h) {
+		vl ndp(1LL << (2 * w));
+		repb(set, 2 * w) repe(nset, mat[set]) ndp[nset] += dp[set];
+		dp = move(ndp);
+	}
+
+	return dp[0];
+}
 

@@ -1,5 +1,7 @@
 #pragma once
 #include "header.h"
+#include "二項係数.h"
+#include "FPS(mint).h"
 // ■■■■■ 母関数 ■■■■■
 
 
@@ -11,16 +13,18 @@
 *		a[n] ⇔ A(z)
 * と表す．
 * 
-* 畳込み		: Σi∈[0..n] a[i] b[n-i] ⇔ A(z) B(z)
-* 複数畳込み	: ΣΣ_(i+j+k=n) a[i] b[j] c[k] ⇔ A(z) B(z) C(z)
-* n 倍		: n a[n] ⇔ z A'(z)
-* 1/n 倍		: a[n]/n ⇔ ∫ A(z)/z dz（ただし a[0]=0）
-* 右シフト	: a[n-1] ⇔ z A(z)
-* 左シフト	: a[n+1] ⇔ A(z)/z（ただし a[0]=0）
-* 倍右シフト	: (n+1) a[n+1] ⇔ A'(z)
-* 商左シフト : a[n-1]/n ⇔ ∫ A(z) dz（ただし a[0]=0）
-* 累積和		: Σa[0..n] ⇔ A(z)/(1-z)
-* 差分		: a[n]-a[n-1] ⇔ (1-z) A(z)（ただし a[-1]=0 とみなす）
+* 畳込み		: Σi∈[0..n] a[i] b[n-i]  ⇔  A(z) B(z)
+* 複数畳込み	: ΣΣ_(i+j+k=n) a[i] b[j] c[k]  ⇔  A(z) B(z) C(z)
+* n 倍		: n a[n]  ⇔  z A'(z)
+* 1/n 倍		: a[n]/n  ⇔  ∫ A(z)/z dz（ただし a[0]=0）
+* 右シフト	: a[n-1]  ⇔  z A(z)
+* 左シフト	: a[n+1]  ⇔  A(z)/z（ただし a[0]=0）
+* 倍右シフト	: (n+1) a[n+1]  ⇔  A'(z)
+* 商左シフト : a[n-1]/n  ⇔  ∫ A(z) dz（ただし a[0]=0）
+* 累積和		: Σa[0..n]  ⇔  A(z)/(1-z)
+* 差分		: a[n]-a[n-1]  ⇔  (1-z) A(z)（ただし a[-1]=0 とみなす）
+* 分割累積和	: Σλ∈(nの分割) Πi∈λ a[i]  ⇔  exp( Σk∈[1..∞) 1/k A(z^k) )（ただし a[0]=0）
+* 区間累積和 : Σσ∈([1..n]の区間分割) ΠI∈σ a[|I|]  ⇔  1/(1-A(z))（ただし a[0]=0）
 */
 
 
@@ -32,22 +36,34 @@
 *		a[n] ⇔ A(z)
 * と表す．
 *
-* bin畳込み	: Σi∈[0..n] bin(n,i) a[i] b[n-i] ⇔ A(z) B(z)
-* mul畳込み	: ΣΣ_(i+j+k=n) mul(n,[i,j,k]) a[i] b[j] c[k] ⇔ A(z) B(z) C(z)
-* n 倍		: n a[n] ⇔ z A'(z)
-* 1/n 倍		: a[n]/n ⇔ ∫ A(z)/z dz（ただし a[0]=0）
-* 右シフト	: a[n-1] ⇔ ∫ A(z) dz（ただし a[0]=0）
-* 左シフト	: a[n+1] ⇔ A'(z)
-* 倍右シフト	: n a[n-1] ⇔ z A(z)
-* 商左シフト	: a[n+1]/(n+1) ⇔ A(z)/z（ただし a[0]=0）
-* 二項累積和	: Σi∈[0..n] bin(n,i) a[i] ⇔ exp(z) A(z)
-* 二項差分	: Σi∈[0..n] (-1)^(n-i) bin(n,i) a[i] ⇔ A(z) / exp(z)
-* 分割累積和	: Σπ∈([1..n]の分割) Πset∈π a[|set|] ⇔ exp(A(z))（ただし a[0]=0）
+* bin畳込み	: Σi∈[0..n] bin(n,i) a[i] b[n-i]  ⇔  A(z) B(z)
+* mul畳込み	: ΣΣ_(i+j+k=n) mul(n,[i,j,k]) a[i] b[j] c[k]  ⇔  A(z) B(z) C(z)
+* n 倍		: n a[n]  ⇔  z A'(z)
+* 1/n 倍		: a[n]/n  ⇔  ∫ A(z)/z dz（ただし a[0]=0）
+* 右シフト	: a[n-1]  ⇔  ∫ A(z) dz（ただし a[0]=0）
+* 左シフト	: a[n+1]  ⇔  A'(z)
+* 倍右シフト	: n a[n-1]  ⇔  z A(z)
+* 商左シフト	: a[n+1]/(n+1)  ⇔  A(z)/z（ただし a[0]=0）
+* 二項累積和	: Σi∈[0..n] bin(n,i) a[i]  ⇔  exp(z) A(z)
+* 二項差分	: Σi∈[0..n] (-1)^(n-i) bin(n,i) a[i]  ⇔  exp(-z) A(z)
+* 分割累積和	: Σπ∈([1..n]の分割) Πset∈π a[|set|]  ⇔  exp(A(z))（ただし a[0]=0）
+* 区間累積和 : Σσ∈([1..n]の区間分割) mul(n,|σ|) ΠI∈σ a[|I|]  ⇔  1/(1-A(z))（ただし a[0]=0）
 *
 * 畳込みの形に二項係数が掛かっていて邪魔になったときに使える．
 * 特にラベル付きの対象の数え上げで有用である．
 * 
 * 参考 : https://37zigen.com/exponential-generating-function/
+*/
+
+
+//【多変数母関数】
+/*
+* 多変数母関数がそのまま役に立つことはあまりないが，因数分解して変数分離できる場合は役に立つ．
+* 
+* 例えばマンハッタン距離に対する 45° 回転は，
+*	s + 1/s + t + 1/t = (s + t) (1 + 1/st)
+* なる因数分解に対応する．
+* verify : https://atcoder.jp/contests/abc240/tasks/abc240_g
 */
 
 
@@ -69,6 +85,47 @@
 * 
 * verfy : https://atcoder.jp/contests/arc144/tasks/arc144_d
 */
+
+
+//【二項係数の二乗和】
+/*
+* 二項係数の二乗和は中央二項係数になる．すなわち以下の式が成り立つ：
+*	Σr∈[0..n] bin(n, r)^2 = bin(2n, n)
+* 
+* 証明：【二項係数の畳込み】の下式で a=b=n, c=d=0 とすれば直ちに成り立つ．
+*/
+
+
+//【多項係数の累乗和（mod 998244353）】O(n (log n + log d))
+/*
+* 各 n∈[0..N] について，
+*	Σ_(r[0..m) : Σr=n) mul(n, r[0..m))^d （mul は多項係数）
+* の値を格納したリストを返す．
+*
+* 制約：fm は (2(N+1))! まで計算可能
+*
+* 利用：【形式的冪級数】,【累乗】
+*/
+vm multinomial_power_sum(int N, ll m, int d, const Factorial_mint& fm) {
+	// verify : https://yukicoder.me/problems/no/2347
+
+	//【方法】
+	// 多項係数を階乗を用いて書き直すと，求める値は
+	//		(n!)^d Σ_(r[0..m) : Σr=n) Πj∈[0..m) 1/(r[j]!)^d
+	// と表される．これは畳込みの形なので，
+	//		f(z) = Σi∈[0..n] 1/(i!)^d
+	// とおき，
+	//		(n!)^d [z^n] f(z)^m
+	// を一括計算すればよい．
+
+	MFPS f(0, N + 1);
+	repi(n, 0, N) f[n] = fm.fact_inv(n).pow(d);
+
+	f = pow_fps(f, m, N + 1, fm);
+	repi(n, 0, N) f[n] *= fm.fact(n).pow(d);
+
+	return f.c;
+}
 
 
 //【負の二項定理（bin(n+i, i) の母関数）】
@@ -119,6 +176,18 @@
 * 特に木の数え上げにおいて有用である．
 *
 * verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
+*/
+
+
+//【カタラン数の母関数の累乗】
+/*
+* カタラン数の母関数を
+*	f(z) = Σi Catalan(i) z^i = (1-√(1-4z))/(2z)
+* とするとき，
+*	[z^n] f(z)^d = d/(2n+d) bin(2n+d, n)
+* が成り立つ．
+* 
+* verify : https://atcoder.jp/contests/xmascon22/tasks/xmascon22_d
 */
 
 

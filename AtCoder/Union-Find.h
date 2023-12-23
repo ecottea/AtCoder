@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "列の管理.h"
+#include "列クエリ.h"
 // ■■■■■ Union-Find ■■■■■
 
 
@@ -27,7 +27,7 @@
 * vvi groups() : O(n α(n))
 *	連結成分のリストを返す．
 */
-struct Union_find {
+class Union_find {
 	int n; // 頂点の個数
 	int m; // 連結成分の個数
 
@@ -36,13 +36,16 @@ struct Union_find {
 	//	根の場合は属する連結成分の大きさの -1 倍（負）を表す．
 	vi parent_or_size;
 
+public:
 	// 非連結で大きさ n の Union-Find を構築する．
-	Union_find(int n_) : n(n_), m(n), parent_or_size(n, -1) {}
+	Union_find(int n) : n(n), m(n), parent_or_size(n, -1) {}
 	Union_find() : n(0), m(0) {} // ダミー
 
 	// 頂点 a, b を結合する．
 	void merge(int a, int b) {
 		// verify : https://judge.yosupo.jp/problem/unionfind
+
+		Assert(0 <= a && a < n && 0 <= b && b < n);
 
 		// 頂点 a, b の属する連結成分の根 ra, rb を得る．
 		int ra = leader(a);
@@ -68,6 +71,8 @@ struct Union_find {
 	bool same(int a, int b) {
 		// verify : https://judge.yosupo.jp/problem/unionfind
 
+		Assert(0 <= a && a < n && 0 <= b && b < n);
+
 		// 根が同じなら連結である．
 		return leader(a) == leader(b);
 	}
@@ -75,6 +80,8 @@ struct Union_find {
 	// 頂点 a の属する連結成分の根を返す．
 	int leader(int a) {
 		// verify : https://atcoder.jp/contests/abc049/tasks/arc065_b
+
+		Assert(0 <= a && a < n);
 
 		// a が根であれば自分自身を返す．
 		int pa = parent_or_size[a];
@@ -91,6 +98,8 @@ struct Union_find {
 	// 頂点 a の属する連結成分の大きさを返す．
 	int size(int a) {
 		// verify : https://codeforces.com/contest/764/problem/C
+
+		Assert(0 <= a && a < n);
 
 		// a の根を調べ，そこに記録されている大きさの情報を返す．
 		return -parent_or_size[leader(a)];
@@ -141,7 +150,7 @@ struct Union_find {
 *	頂点 a と頂点 b が同じ連結成分に属するかを返す．
 *
 * T get_diff(int a, int b) : O(α(n))
-*	v[b] - v[a] を返す．（差が未確定なら戻り値は未定義とする）
+*	v[b] - v[a] を返す．（差が未確定なら -INFL）
 *
 * int leader(int a) : O(α(n))
 *	頂点 a の属する連結成分の親を返す．
@@ -156,7 +165,7 @@ struct Union_find {
 *	連結成分の (頂点番号, ポテンシャル) の組のリストを返す．
 */
 template <class T>
-struct Potential_union_find {
+class Potential_union_find {
 	int n; // 頂点の個数
 	int m; // 連結成分の個数
 
@@ -165,16 +174,18 @@ struct Potential_union_find {
 	// 根の場合は属する連結成分の大きさの -1 倍（負）を表す．
 	vi parent_or_size;
 
-	// pot[i] : 根からみた頂点 i との差（ポテンシャル）
+	// pot[i] : 親からみた頂点 i への差
+	// 短絡後に参照すれば，根からみた頂点 i への差（ポテンシャル）になる．
 	vector<T> pot;
 
-	// 非連結で大きさ n の重み付き Union-Find を構築する．
+public:
+	// 非連結で大きさ n のポテンシャル Union-Find を構築する．
 	Potential_union_find(int n_) : n(n_), m(n), parent_or_size(n, -1), pot(n) {}
 	Potential_union_find() : n(0), m(0) {}
 
 	// 頂点 a, b 間の差 v[b] - v[a] を設定する．
 	bool set_diff(int a, int b, T d) {
-		// verify : https://atcoder.jp/contests/code-festival-2016-quala/tasks/codefestival_2016_qualA_d
+		// verify : https://atcoder.jp/contests/abc320/tasks/abc320_d
 
 		// 頂点 a, b の属する連結成分の根 ra, rb を得る．
 		int ra = leader(a);
@@ -204,7 +215,7 @@ struct Potential_union_find {
 
 	// 頂点 a, b が同じ連結成分に属するかを返す．
 	bool same(int a, int b) {
-		// verify : https://yukicoder.me/problems/no/2251
+		// verify : https://atcoder.jp/contests/abc320/tasks/abc320_d
 
 		// 根が同じなら連結である．
 		return leader(a) == leader(b);
@@ -212,9 +223,11 @@ struct Potential_union_find {
 
 	// v[b] - v[a] を返す．
 	T get_diff(int a, int b) {
-		// verify : https://yukicoder.me/problems/no/2251
+		// verify : https://atcoder.jp/contests/abc320/tasks/abc320_d
 
-		// 差が確定していると仮定し，根からの差の差として計算する．
+		if (!same(a, b)) return T(INFL);
+
+		// 根からの差の差として計算する．
 		return pot[b] - pot[a];
 	}
 
@@ -531,7 +544,7 @@ struct Persistent_union_find {
 };
 
 
-//【Rollback Union-Find】
+//【rollback Union-Find】
 /*
 * Rollback_Union_find(int n) : O(n)
 *	非連結で大きさ n の Union-Find を構築する．
@@ -554,10 +567,10 @@ struct Persistent_union_find {
 * vvi groups() : O(n log n)
 *	連結成分のリストを返す．
 *
-* snapshot() : O(1) (?)
+* snapshot() : O(1)
 *	スナップショットを作成する．
 *
-* rollback() : O(T)（T : スナップショットを作成してからの結合回数）
+* rollback() : O(1)
 *	直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
 */
 class Rollback_Union_find {
@@ -618,7 +631,7 @@ public:
 	void rollback() {
 		// verify : https://atcoder.jp/contests/abc302/tasks/abc302_h
 
-		while (1) {
+		while (true) {
 			auto [i, v] = history.top(); history.pop();
 			if (i == INF) {
 				m = v;
@@ -704,17 +717,20 @@ public:
 * bool same_odd(int a, int b) : O(α(n))
 *	頂点 a, b 間の距離が奇数かを返す．（非連結なら false を返す）
 */
-struct Parity_union_find {
+class Parity_union_find {
 	int n;
 	dsu d;
 
-	// コンストラクタ（初期化なし，大きさ n で初期化）
+public:
+	// 非連結な頂点 [0..n) で初期化する．
+	Parity_union_find(int n) : n(n), d(2 * n) {}
 	Parity_union_find() : n(0) {}
-	Parity_union_find(int n_) : n(n_), d(2 * n) {}
 
 	// 頂点 a と頂点 b を 1 つに統合する．
 	void merge_even(int a, int b) {
 		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
+
+		Assert(0 <= a && a < n && 0 <= b && b < n);
 
 		d.merge(a, b);
 		d.merge(a + n, b + n);
@@ -724,6 +740,8 @@ struct Parity_union_find {
 	void merge_odd(int a, int b) {
 		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
 
+		Assert(0 <= a && a < n && 0 <= b && b < n);
+
 		d.merge(a, b + n);
 		d.merge(a + n, b);
 	}
@@ -732,12 +750,16 @@ struct Parity_union_find {
 	bool same_even(int a, int b) {
 		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
 
+		Assert(0 <= a && a < n && 0 <= b && b < n);
+
 		return d.same(a, b);
 	}
 
 	// 頂点 a, b 間を奇数回の移動で行き来できるかを返す．
 	bool same_odd(int a, int b) {
 		// verify : https://atcoder.jp/contests/abc126/tasks/abc126_d
+
+		Assert(0 <= a && a < n && 0 <= b && b < n);
 
 		return d.same(a, b + n);
 	}
@@ -1021,7 +1043,7 @@ struct Union_find_sum_amonoid {
 
 //【加算 Union-Find】
 /*
-* Union_find_add(int n) : O(n)
+* Union_find_add<T>(int n) : O(n)
 *	非連結で大きさ n の加算 Union-Find を値 0 で初期化する．
 *
 * merge(int a, int b) : O(log n)
@@ -1039,15 +1061,16 @@ struct Union_find_sum_amonoid {
 * int size() : O(1)
 *	連結成分の個数を返す．
 *
-* void add(int a, ll val) : O(log n)
+* void add(int a, T val) : O(log n)
 *	頂点 a を含む連結成分全体に val を加算する．
 *
-* ll get(int a) : O(log n)
+* T get(int a) : O(log n)
 *	頂点 a の値を返す．
 *
 * vvi groups() : O(n log n)
 *	連結成分のリストを返す．
 */
+template <class T>
 struct Union_find_add {
 	int n; // 頂点の個数
 	int m; // 連結成分の個数
@@ -1057,7 +1080,7 @@ struct Union_find_add {
 	//	根の場合は属する連結成分の大きさの -1 倍（負）を表す．
 	vi parent_or_size;
 
-	vl lazy; // 遅延させている値
+	vector<T> lazy; // 遅延させている値
 
 	// 非連結で大きさ n の Union-Find を構築する．
 	Union_find_add(int n_) : n(n_), m(n), parent_or_size(n, -1), lazy(n) {}
@@ -1075,9 +1098,7 @@ struct Union_find_add {
 		if (ra == rb) return;
 
 		// 根が異なる場合，大きい連結成分の根を改めて ra，小さい方を rb とする．
-		if (-parent_or_size[ra] < -parent_or_size[rb]) {
-			swap(ra, rb);
-		}
+		if (-parent_or_size[ra] < -parent_or_size[rb]) swap(ra, rb);
 
 		// 小さい方の連結成分を ra を根とする連結成分に統合する．
 		parent_or_size[ra] += parent_or_size[rb];
@@ -1107,7 +1128,7 @@ struct Union_find_add {
 		return ra;
 	}
 
-	void add(int a, ll val) {
+	void add(int a, T val) {
 		// verify : https://yukicoder.me/problems/no/1054
 
 		// a の根に遅延評価をセットする．
@@ -1115,11 +1136,11 @@ struct Union_find_add {
 		lazy[ra] += val;
 	}
 
-	ll get(int a) {
+	T get(int a) {
 		// verify : https://yukicoder.me/problems/no/1054
 
 		// a から根までの遅延評価を集める．
-		ll res = 0;
+		T res = 0;
 		while (parent_or_size[a] >= 0) {
 			res += lazy[a];
 			a = parent_or_size[a];
@@ -1165,10 +1186,8 @@ struct Union_find_add {
 };
 
 
-//【連想 Union-Find】
+//【連想 Union-Find】（遅い）
 /*
-* 頂点の統合と連結判定を行う．定数倍が悪いので注意．
-*
 * Union_find_set<T>() : O(1)
 *	空の Union-Find を構築する．
 *	制約：T はハッシュ化可能（だめなら map を使えばいいが log が付く）

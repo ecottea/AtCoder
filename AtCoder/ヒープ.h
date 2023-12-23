@@ -26,7 +26,7 @@
 * merge(Skew_heap<T>& hp) : O(log n)
 *	ヒープ hp を自身に併合する．
 */
-template <typename T>
+template <class T>
 struct Skew_heap {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
 	
@@ -140,7 +140,7 @@ struct Skew_heap {
 * merge(Skew_heap_rev& hp) : O(log n)
 *	ヒープ hp を自身に併合する．
 */
-template <typename T>
+template <class T>
 struct Skew_heap_rev {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
 	
@@ -231,7 +231,7 @@ struct Skew_heap_rev {
 };
 
 
-//【併合可能遅延ヒープ（モノイド作用付き全順序集合）】
+//【併合可能遅延ヒープ（M-全順序集合）】
 /*
 * Lazy_skew_heap<S, leq, inf, F, act, comp, id>() : O(1)
 *	降順に取り出されるヒープを空で初期化する
