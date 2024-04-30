@@ -5,6 +5,7 @@
 #include "列挙(分割).h"
 #include "群論.h"
 #include "bit全探索.h"
+#include "全域木.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
 
@@ -21,6 +22,8 @@
 /*
 * 有向グラフ g に対し，始点 st から各頂点 i への最短経路数を格納したリストを返す．
 * また必要ならそのときの最短距離（到達不能なら INF）を dist[i] に格納する．
+* 
+*（幅優先探索）
 */
 vm count_shortest_path(const Graph& g, int st, vi* dist = nullptr) {
 	// verify : https://atcoder.jp/contests/abc211/tasks/abc211_d
@@ -70,6 +73,8 @@ vm count_shortest_path(const Graph& g, int st, vi* dist = nullptr) {
 /*
 * 正の重み付き有向グラフ g に対し，始点 st から各頂点 i への最短経路数を格納したリストを返す．
 * また必要ならそのときの最短距離（到達不能なら INFL）を dist[i] に格納する．
+* 
+*（ダイクストラ法）
 */
 vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {
 	// verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
@@ -94,8 +99,7 @@ vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {
 
 	while (!que.empty()) {
 		// 未探索の頂点 s を 1 つ得る．
-		ll d; int s, p;
-		tie(d, s, p) = que.top(); que.pop();
+		auto [d, s, p] = que.top(); que.pop();
 		mint c = (p == -1 ? 1 : cnt[p]);
 
 		// 既に最短距離が求まっている場合
@@ -156,6 +160,101 @@ vm count_independent_set(const Graph& g) {
 }
 
 
+//【k-彩色の数え上げ】O(2^n n^3)
+/*
+* 各 k∈[0..n] について，無向グラフ g を k 色で彩色する方法の数を格納したリストを返す．
+*/
+template <class T>
+vector<T> count_chromatic(const Graph& g) {
+	int N = sz(g);
+
+	if (N == 0) return vector<T>{ 1 };
+
+	// is_ind[set] : set が独立集合か
+	vi is_ind(1LL << N, 1);
+
+	// 辺の両端からなる 2 点集合 {s, t} は独立集合ではない．
+	rep(s, N) repe(t, g[s]) {
+		int set = (1 << s) + (1 << t);
+		is_ind[set] = 0;
+	}
+
+	// 独立集合でない集合を部分集合にもつ集合は独立集合ではない．
+	repb(set, N) rep(i, N) {
+		if (set & (1 << i)) {
+			int sub = set - (1 << i);
+			is_ind[set] = is_ind[set] & is_ind[sub];
+		}
+	}
+
+	// is_ind にランク（集合の要素数）の情報を付加して f とする．
+	vector<vector<T>> f(1LL << N, vector<T>(N + 1));
+	repb(set, N) {
+		int r = popcount(set);
+		f[set][r] = is_ind[set];
+	}
+
+	// f のランク付き下位ゼータ変換
+	rep(i, N) repb(set, N) repi(r, 0, N) {
+		if (!(set & (1 << i))) f[set + (1 << i)][r] += f[set][r];
+	}
+
+	// f_pow : f^k
+	vector<vector<T>> f_pow(1LL << N, vector<T>(N + 1));
+	repb(set, N) f_pow[set][0] = 1;
+
+	vector<T> cnt(N + 1);
+	repi(k, 1, N) {
+		// 各点積 h = f^(k-1) * f（ただしランクが N より大きい項は無視する）
+		vector<vector<T>> h(1LL << N, vector<T>(N + 1));
+		repb(set, N) repi(r, 0, N) repi(rf, 0, r) h[set][r] += f_pow[set][rf] * f[set][r - rf];
+		f_pow = move(h);
+
+		// f_pow のランク付き下位メビウス変換（最大元のランク N の項のみ）
+		repb(set, N) cnt[k] += ((N - popcount(set)) & 1 ? -1 : 1) * f_pow[set][N];
+	}
+
+	return cnt;
+}
+
+
+//【k-彩色の数え上げ（辺が少）】
+/*
+* 無向グラフ G=(V,E) の k-彩色の数を P(G, k) と表すとき，∀e∈E について，
+*	P(G, k) = P(G-e, k) - P(G/e, k)
+* が成り立つ（G-e は G から辺 e を取り除いたグラフ，G/e は G の辺 e を縮約したグラフ）
+*
+* また G が n 頂点の木であれば，P(G, k) = k (k-1)^(n-1) である．
+*
+* verify : https://atcoder.jp/contests/abc294/tasks/abc294_h
+*/
+
+
+//【彩色多項式】O(2^N N^2)
+/*
+* 無向グラフ g の彩色多項式 f(z) を返す（f(k) は g を k 色で彩色する場合の数を表す）
+*
+* 利用：【独立集合判定】,【SPS 累乗の係数列挙】,【ラグランジュ補間（多項式復元）】
+*/
+MFPS chromatic_polynomial(const Graph& g) {
+	int n = sz(g);
+
+	auto ind = independent_setQ(g);
+
+	vm s(1LL << n);
+	repb(set, n) s[set] = (int)ind[set];
+
+	vm id(1LL << n);
+	id[0] = 1;
+	auto y = coefficients_of_power_sps(id, s, n + 1); // f(k) のリスト
+
+	vm x(n + 1);
+	iota(all(x), mint(0));
+
+	return lagrange_interpolation(x, y);
+}
+
+
 //【単純パス，単純サイクルの数え上げ】O(2^n n (n+m))
 /*
 * 有向グラフ g について，set を通る単純パス s→t の個数を cnt[s][t][set] に格納し，cnt を返す．
@@ -174,7 +273,7 @@ vvvm count_simple_path_and_cycle(const Graph& g, bool cflag = true) {
 	// 貰う DP で単純パスを数え上げる．
 	repb(set, n) rep(s, n) rep(t, n) {
 		// s→t パスなので s, t を通らないことはありえない．
-		if (!get(set, s) || !get(set, t)) continue;
+		if (!getb(set, s) || !getb(set, t)) continue;
 
 		// set = {s} = {t} の場合は不動の 1 通りのみである．
 		if (s == t && set == (1 << s)) {
@@ -185,7 +284,7 @@ vvvm count_simple_path_and_cycle(const Graph& g, bool cflag = true) {
 		// 各辺 s-v について
 		repe(v, g[s]) {
 			// v が set に含まれていなければ s→v は通れない．
-			if (!get(set, v)) continue;
+			if (!getb(set, v)) continue;
 
 			// s→v と進む単純パスを加算する．
 			dp[s][t][set] += dp[v][t][set - (1 << s)];
@@ -197,7 +296,7 @@ vvvm count_simple_path_and_cycle(const Graph& g, bool cflag = true) {
 		mint inv2 = mint(2).inv();
 		repb(set, n) rep(s, n) {
 			// s→s サイクルなので s を通らないことはありえない．
-			if (!get(set, s)) continue;
+			if (!getb(set, s)) continue;
 
 			// set には少なくとも 3 点含まれていなければならない．
 			if (popcount(set) < 3) continue;
@@ -205,7 +304,7 @@ vvvm count_simple_path_and_cycle(const Graph& g, bool cflag = true) {
 			// 各辺 s-v について
 			repe(v, g[s]) {
 				// v が set に含まれていなければ s→v は通れない．
-				if (!get(set, v)) continue;
+				if (!getb(set, v)) continue;
 
 				// s→v と進む単純パスを加算する（s は終点でもあるので set から除かない）
 				dp[s][s][set] += dp[v][s][set];
@@ -292,7 +391,7 @@ mint count_DAG(const Graph& g) {
 
 		// s に隣接するどの頂点 t も set に属していないなら set は独立集合．
 		bool ok = true;
-		repe(t, g[s]) if (get(set, t)) {
+		repe(t, g[s]) if (getb(set, t)) {
 			ok = false;
 			break;
 		}
@@ -417,73 +516,76 @@ vm count_connected_subgraph(const Graph& g) {
 }
 
 
-//【k-彩色の数え上げ】O(2^n n^3)
+//【有向オイラー閉路の数え上げ（重み付き）】O(n^3)
 /*
-* 各 k∈[0..n] について，無向グラフ g を k 色で彩色する方法の数を格納したリストを返す．
+* 重み付き有向グラフ g のオイラー閉路の個数を返す（辺の重みは辺の本数と解釈する．）
+*
+* 制約 : fm は m! まで計算可能
+*
+* 利用：【有向全域木の数え上げ】
 */
-template <class T>
-vector<T> count_chromatic(const Graph& g) {
-	int N = sz(g);
+mint best_theorem(const WGraph& g, Factorial_mint& fm) {
+	// 参考 : https://atcoder.jp/contests/abc336/editorial/9060
+	// verify : https://atcoder.jp/contests/abc336/tasks/abc336_g
 
-	if (N == 0) return vector<T>{ 1 };
+	int n = sz(g);
 
-	// is_ind[set] : set が独立集合か
-	vi is_ind(1LL << N, 1);
-
-	// 辺の両端からなる 2 点集合 {s, t} は独立集合ではない．
-	rep(s, N) repe(t, g[s]) {
-		int set = (1 << s) + (1 << t);
-		is_ind[set] = 0;
+	// 入次数と出次数を調べる．
+	vl in_deg(n), out_deg(n);
+	rep(s, n) repe(t, g[s]) {
+		in_deg[t] += t.cost;
+		out_deg[t] += t.cost;
 	}
 
-	// 独立集合でない集合を部分集合にもつ集合は独立集合ではない．
-	repb(set, N) rep(i, N) {
-		if (set & (1 << i)) {
-			int sub = set - (1 << i);
-			is_ind[set] = is_ind[set] & is_ind[sub];
-		}
+	// 入次数と出次数が異なる頂点があればオイラー閉路は存在しない．
+	rep(s, n) if (in_deg[s] != out_deg[s]) return 0;
+
+	// vs : 非孤立点，v_id[s] : s が何番目の頂点か
+	vi vs; vi v_id(n, -1);
+	rep(s, n) if (in_deg[s] > 0) {
+		v_id[s] = sz(vs);
+		vs.push_back(s);
 	}
+	int n2 = sz(vs);
 
-	// is_ind にランク（集合の要素数）の情報を付加して f とする．
-	vector<vector<T>> f(1LL << N, vector<T>(N + 1));
-	repb(set, N) {
-		int r = popcount(set);
-		f[set][r] = is_ind[set];
-	}
+	// 辺が 0 本の場合は空のオイラー閉路を 1 つもつと考える．
+	if (n2 == 0) return 1;
 
-	// f のランク付き下位ゼータ変換
-	rep(i, N) repb(set, N) repi(r, 0, N) {
-		if (!(set & (1 << i))) f[set + (1 << i)][r] += f[set][r];
-	}
+	// g2 : 孤立点を除去した有向グラフ
+	WGraph g2(n2);
+	rep(s, n) repe(t, g[s]) g2[v_id[s]].emplace_back(v_id[t], t.cost);
 
-	// f_pow : f^k
-	vector<vector<T>> f_pow(1LL << N, vector<T>(N + 1));
-	repb(set, N) f_pow[set][0] = 1;
+	// g2 が連結でなければオイラー閉路は存在しない．
+	dsu d(n2);
+	rep(s, n2) repe(t, g2[s]) d.merge(s, t);
+	if (d.size(0) != n2) return 0;
 
-	vector<T> cnt(N + 1);
-	repi(k, 1, N) {
-		// 各点積 h = f^(k-1) * f（ただしランクが N より大きい項は無視する）
-		vector<vector<T>> h(1LL << N, vector<T>(N + 1));
-		repb(set, N) repi(r, 0, N) repi(rf, 0, r) h[set][r] += f_pow[set][rf] * f[set][r - rf];
-		f_pow = move(h);
+	// 有向行列木定理で 0 を根とする有向全域木の個数を求める．
+	mint res = directed_matrix_tree_theorem(g2, 0);
 
-		// f_pow のランク付き下位メビウス変換（最大元のランク N の項のみ）
-		repb(set, N) cnt[k] += ((N - popcount(set)) & 1 ? -1 : 1) * f_pow[set][N];
-	}
+	// これに各頂点の (入次数)-1 を掛けたものが求めるオイラー閉路の個数となる．
+	repe(s, vs) res *= fm.fact((int)in_deg[s] - 1);
 
-	return cnt;
+	return res;
 }
 
 
-//【k-彩色の数え上げ（辺が少）】
+//【有向オイラー路の数え上げ】
 /*
-* 無向グラフ G=(V,E) の k-彩色の数を P(G, k) と表すとき，∀e∈E について，
-*	P(G, k) = P(G-e, k) - P(G/e, k)
-* が成り立つ（G-e は G から辺 e を取り除いたグラフ，G/e は G の辺 e を縮約したグラフ）
-*
-* また G が n 頂点の木であれば，P(G, k) = k (k-1)^(n-1) である．
-*
-* verify : https://atcoder.jp/contests/abc294/tasks/abc294_h
+* 始点 ST と終点 GL を指定されたオイラー路（ST=GL も可）の個数は，
+* 辺 GL→ST を追加したグラフのオイラー閉路の個数に等しい．
+* 
+* verify : https://atcoder.jp/contests/agc051/tasks/agc051_d
+*/
+
+
+//【無向オイラー閉路の数え上げ】
+/*
+* 無向グラフのオイラー閉路を多項式時間で数え上げる方法は見つかっていない．
+* もし辺で結ばれている点対が (n-1)+k 個ならば，適当な k 個の対の間の辺の向き付けを決め打ち
+* 有向グラフに変換することで O(m^k n^3) を達成できる．
+* 
+* verify : https://atcoder.jp/contests/agc051/tasks/agc051_d
 */
 
 

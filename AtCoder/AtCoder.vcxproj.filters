@@ -641,12 +641,24 @@
     <ClInclude Include="矩形クエリ.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
+    <ClInclude Include="FPS%28スパース%29.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="2変数FPS.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
+    <ClInclude Include="SPS.h">
+      <Filter>ヘッダー ファイル\代数</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">
       <Filter>リソース ファイル</Filter>
     </Text>
     <Text Include="output.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+    <Text Include="answer.txt">
       <Filter>リソース ファイル</Filter>
     </Text>
   </ItemGroup>

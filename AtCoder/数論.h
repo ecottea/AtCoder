@@ -3,6 +3,48 @@
 // ■■■■■ 数論 ■■■■■
 
 
+//【素数判定】O(√n)
+/*
+* n が素数かを返す．
+*/
+bool primeQ(ll n) {
+	// verify : https://algo-method.com/tasks/319
+
+	if (n == 1) return false;
+
+	// i = (合成数) もループを回ってしまうが気にしない
+	for (ll i = 2; i * i <= n; i++) {
+		if (n % i == 0) return false;
+	}
+	return true;
+}
+
+
+//【素因数分解】O(√n)
+/*
+* n を素因数分解した結果を pps に格納し pps を返す．
+* pps[p] = d は n に素因数 p が d 個含まれていることを表す．
+*/
+template <class T>
+map<T, int> factor_integer(T n) {
+	// verify : https://algo-method.com/tasks/457
+
+	map<T, int> pps;
+
+	for (T i = 2; i * i <= n; i++) {
+		int d = 0;
+		while (n % i == 0) {
+			d++;
+			n /= i;
+		}
+		if (d > 0) pps[i] = d;
+	}
+	if (n > 1) pps[n] = 1;
+
+	return pps;
+}
+
+
 //【約数列挙】O(√n)
 /*
 * n の約数全てを昇順に格納したリストを返す．
@@ -109,6 +151,18 @@ ll divisors_sum(ll n) {
 */
 
 
+//【最小の非約数】
+/*
+* 任意の自然数 N について，N の約数でない最小の正整数 x は x = p^e の形で表される．
+* 
+*（証明）x = p1^e1 p2^e2 ... と表されると仮定する．
+* x の選び方より p1^e1, p2^e2, ... < x は全て N の約数であり，
+* 従ってそれらの積である x も N の約数となり矛盾する．
+* 
+* verify : https://yukicoder.me/problems/9085
+*/
+
+
 //【高度合成数の早見表】
 /*
 * 1 桁の最大  : 6（約数 4 個）
@@ -134,91 +188,6 @@ ll divisors_sum(ll n) {
 */
 
 
-//【素因数分解】O(√n)
-/*
-* n を素因数分解した結果を pps に格納し pps を返す．
-* pps[p] = d は n に素因数 p が d 個含まれていることを表す．
-*/
-template <class T>
-map<T, int> factor_integer(T n) {
-	// verify : https://algo-method.com/tasks/457
-
-	map<T, int> pps;
-
-	for (T i = 2; i * i <= n; i++) {
-		int d = 0;
-		while (n % i == 0) {
-			d++;
-			n /= i;
-		}
-		if (d > 0) pps[i] = d;
-	}
-	if (n > 1) pps[n] = 1;
-
-	return pps;
-}
-
-
-//【素因数と約数の列挙】O(√n)
-/*
-* n の互いに異なる素因数全てをリスト ps に，約数全てをリスト divs にそれぞれ昇順に格納する．
-*/
-void primefactors_and_divisors(ll n, vl& ps, vl& divs) {
-	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
-
-	ps.clear();
-	divs.clear();
-	divs.push_back(1);
-
-	for (ll p = 2; p * p <= n; p++) {
-		int d = 0;
-		while (n % p == 0) {
-			d++;
-			n /= p;
-		}
-		if (d == 0) continue;
-
-		ps.push_back(p);
-
-		vl powp(d);
-		powp[0] = p;
-		rep(i, d - 1) powp[i + 1] = powp[i] * p;
-
-		repir(j, sz(divs) - 1, 0) {
-			rep(i, d) {
-				divs.push_back(divs[j] * powp[i]);
-			}
-		}
-	}
-
-	if (n > 1) {
-		ps.push_back(n);
-
-		repir(j, sz(divs) - 1, 0) {
-			divs.push_back(divs[j] * n);
-		}
-	}
-	sort(all(divs));
-}
-
-
-//【素数判定】O(√n)
-/*
-* n が素数かを返す．
-*/
-bool primeQ(ll n) {
-	// verify : https://algo-method.com/tasks/319
-
-	if (n == 1) return false;
-	
-	// i = (合成数) もループを回ってしまうが気にしない
-	for (ll i = 2; i * i <= n; i++) {
-		if (n % i == 0) return false;
-	}
-	return true;
-}
-
-
 //【オイラー関数】O(√n)
 /*
 * オイラー関数の値 φ(n) を返す．
@@ -234,7 +203,7 @@ ll euler_phi(ll n) {
 	// φ(n) を計算する．
 	ll res = 1;
 	repe(pp, pps) {
-		res *= (pp.first - 1) * pow(pp.first, pp.second - 1);
+		res *= (pp.first - 1) * powi(pp.first, pp.second - 1);
 	}
 	return res;
 }
@@ -268,10 +237,10 @@ ll carmichael_lambda(ll n) {
 		ll v;
 		if (pp.first == 2) {
 			int e = (pp.second >= 3 ? pp.second - 2 : pp.second - 1);
-			v = pow(2, e);
+			v = 1LL << e;
 		}
 		else {
-			v = (pp.first - 1) * pow(pp.first, pp.second - 1);
+			v = (pp.first - 1) * powi(pp.first, pp.second - 1);
 		}
 		res = res / gcd(res, v) * v;
 	}
@@ -316,27 +285,6 @@ int integer_exponent(ll n, ll p) {
 	while (n % p == 0) {
 		n /= p;
 		res++;
-	}
-	return res;
-}
-
-
-//【階乗のもつ素因数】O(log n)
-/*
-* n! がもつ素因数 p の個数を返す．
-*
-* 制約 : p は素数
-*/
-ll legendres(ll n, ll p) {
-	// verify : https://algo-method.com/tasks/452
-
-	//【注意】
-	// ルジャンドル多項式を求める std::legendre() と衝突しないように legendres() にしている．
-
-	ll res = 0;
-	while (n > 0) {
-		res += n / p;
-		n /= p;
 	}
 	return res;
 }

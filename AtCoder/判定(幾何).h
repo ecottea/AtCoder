@@ -173,16 +173,16 @@ inline int pos_relation_C_C(const Circle<T>& c1, const Circle<T>& c2) {
 	T d_sq = (c1.first - c2.first).sqnorm();
 
 	int res;
-	if (d_sq < pow(r1 - r2, 2)) {
+	if (d_sq < powi(r1 - r2, 2)) {
 		res = 0;
 	}
-	else if (d_sq == pow(r1 - r2, 2)) {
+	else if (d_sq == powi(r1 - r2, 2)) {
 		res = 1;
 	}
-	else if (d_sq < pow(r1 + r2, 2)) {
+	else if (d_sq < powi(r1 + r2, 2)) {
 		res = 2;
 	}
-	else if (d_sq == pow(r1 + r2, 2)) {
+	else if (d_sq == powi(r1 + r2, 2)) {
 		res = 3;
 	}
 	else {
@@ -280,7 +280,7 @@ int inner_circle_by_3points(const Point<T>& a, const Point<T>& b, const Point<T>
 	//		(b - c) / (a - c)
 	// と虚部の符号を比較して，等しいなら外部，異なるなら内部と判定できる．
 	//
-	// 複素数 num / dnm = (A + B i) / (C + D i) の虚部の符号の判定方法を考える．
+	// 複素数 num / dnm = (A + B i) / (C + D i) の虚部の符号の決定方法を考える．
 	// 分母の実数化を行うと，
 	//		(A + B i) / (C + D i)
 	//		= (A + B i) (C - D i) / (C^2 + D^2)

@@ -170,20 +170,100 @@ vvi enumerate_connected_component(const Graph& g, int k) {
 
 //【有向木の列挙】O(?)
 /*
-* 参照付きグラフ g の r を根とする大きさ k の有向木の辺集合のリストを返す．
-* 辺集合は辺に付けられた参照番号を並べたリストで表す．
+* 有向グラフ g（多重辺不可）の r を根とする大きさ k の有向木全てのリストを返す．
 */
-vvi enumerate_tree(IGraph& g, int r, int k) {
-	// verify : https://atcoder.jp/contests/arc009/tasks/arc009_4
-
+vector<Graph> enumerate_tree(Graph& g, int r, int k) {
 	int n = sz(g);
-	vvi dts;
+
+	vector<Graph> res;
+	Graph g2(n);
 
 	// seen_v[i] : 頂点 i の探索を済ませたか
 	vb seen_v(n);
 
 	// seen_e[i][j] : 頂点 i から頂点 j への辺の探索を済ませたか
 	vvb seen_e(n, vb(n));
+
+	// 今選択している頂点の集合
+	vi sel;
+
+	// バックトラッキング用の再帰関数
+	// rmd : あと何個頂点を選べば良いか
+	function<void(int)> dfs = [&](int rmd) {
+		// もう頂点を選ぶ必要がなければ大きさ k の有向木の発見．
+		if (rmd == 0) {
+			res.push_back(g2);
+			return;
+		}
+
+		// 探索すべき辺を記憶しておくためのリスト
+		vector<pii> sts;
+
+		// 選択済みの各頂点 s について
+		repe(s, sel) {
+			// s から出る各辺 s→t について
+			repe(t, g[s]) {
+				// もし s→t や t が探索済なら何もしない．
+				if (seen_e[s][t] || seen_v[t]) continue;
+
+				// s→t と t が未探索なら探索すべき辺として記録する．
+				sts.push_back({ s, t });
+			}
+		}
+
+		// 探索すべき各辺 s→t について
+		for (auto [s, t] : sts) {
+			// もし s→t や t が探索済なら何もしない．
+			if (seen_e[s][t] || seen_v[t]) continue;
+
+			// s→t と t を選択済みの状態にして再帰を回し，その後状態を元に戻す．
+			// ただし 2←0→1 の後で 1←0→2 を見に行ったりするのを防ぐため，
+			// s→t の状態だけは探索済のままにしておく．
+			seen_e[s][t] = true;
+			seen_v[t] = true;
+			sel.push_back(t);
+			g2[s].push_back(t);
+			dfs(rmd - 1);
+			g2[s].pop_back();
+			sel.pop_back();
+			seen_v[t] = false;
+		}
+
+		// s→t を探索済の状態にしたままだと，
+		// 例えば先に続いて 0→2→1 のようなものを見落としてしまうので，
+		// ちゃんと状態を未探索に戻しておく．
+		for (auto [s, t] : sts) seen_e[s][t] = false;
+	};
+
+	sel.push_back(r);
+	seen_v[r] = true;
+	dfs(k - 1);
+
+	return res;
+}
+
+
+//【有向木の列挙（参照付き）】O(?)
+/*
+* 参照付き有向グラフ g の r を根とする大きさ k の有向木の辺集合のリストを返す．
+* 辺集合は辺に付けられた参照番号を並べたリストで表す．
+*/
+vvi enumerate_tree(IGraph& g, int r, int k) {
+	// verify : https://atcoder.jp/contests/arc009/tasks/arc009_4
+
+	int n = sz(g);
+
+	int m = 0;
+	rep(s, n) repe(e, g[s]) chmax(m, e.id);
+	m++;
+
+	vvi res;
+
+	// seen_v[i] : 頂点 i の探索を済ませたか
+	vb seen_v(n);
+
+	// seen_e[id] : 辺番号 id の辺の探索を済ませたか
+	vb seen_e(m);
 
 	// 今選択している頂点の集合，辺番号の集合
 	vi sel, ids;
@@ -193,7 +273,7 @@ vvi enumerate_tree(IGraph& g, int r, int k) {
 	function<void(int)> dfs = [&](int rmd) {
 		// もう頂点を選ぶ必要がなければ大きさ k の有向木の発見．
 		if (rmd == 0) {
-			dts.push_back(ids);
+			res.push_back(ids);
 			return;
 		}
 
@@ -205,26 +285,22 @@ vvi enumerate_tree(IGraph& g, int r, int k) {
 			// s から出る各辺 e について
 			repe(e, g[s]) {
 				// もし e や e の先が探索済なら何もしない．
-				if (seen_e[s][e.to] || seen_v[e.to]) continue;
+				if (seen_e[e.id] || seen_v[e.to]) continue;
 
 				// e と e の先が未探索なら探索すべき辺として記録する．
 				stids.push_back({ s, e.to, e.id });
 			}
 		}
 
-		// 探索すべき各辺 e : s -> t について
-		repe(stid, stids) {
-			int s, t, id;
-			tie(s, t, id) = stid;
-
+		// 探索すべき各辺 e : s→t について
+		for (auto [s, t, id] : stids) {
 			// もし e や e の先が探索済なら何もしない．
-			if (seen_e[s][t] || seen_v[t]) continue;
+			if (seen_e[id] || seen_v[t]) continue;
 
 			// e と e の先を選択済みの状態にして再帰を回し，その後状態を元に戻す．
 			// ただし 2←0→1 の後で 1←0→2 を見に行ったりするのを防ぐため，
 			// e の状態だけは探索済のままにしておく．
-			seen_e[s][t] = true;
-			seen_e[t][s] = true;
+			seen_e[id] = true;
 			seen_v[t] = true;
 			sel.push_back(t);
 			ids.push_back(id);
@@ -237,20 +313,14 @@ vvi enumerate_tree(IGraph& g, int r, int k) {
 		// e を探索済の状態にしたままだと，
 		// 例えば先に続いて 0→2→1 のようなものを見落としてしまうので，
 		// ちゃんと状態を未探索に戻しておく．
-		repe(stid, stids) {
-			int s, t, id;
-			tie(s, t, id) = stid;
-
-			seen_e[s][t] = false;
-			seen_e[t][s] = false;
-		}
+		for (auto [s, t, id] : stids) seen_e[id] = false;
 	};
 
 	sel.push_back(r);
 	seen_v[r] = true;
 	dfs(k - 1);
 
-	return dts;
+	return res;
 }
 
 
@@ -287,8 +357,6 @@ vvi enumerate_clique(const Graph& g) {
 	function<void()> naive = [&]() {
 		// 全ての部分集合 set について
 		repb(set, n) {
-			bool sum = 0;
-
 			// n 頂点それぞれについて
 			rep(i, n) {
 				// set に選んでいないなら無関係
@@ -312,7 +380,6 @@ vvi enumerate_clique(const Graph& g) {
 		}
 	};
 
-	int res = 1;
 	while (n > 0) {
 		// 辺に対して頂点が十分少ないなら素朴な方法で構わない．
 		if (deg_min * deg_min >= deg_sum) {
@@ -378,5 +445,3 @@ vvi enumerate_clique(const Graph& g) {
 /*
 * マッチング(一般).h へ
 */
-
-

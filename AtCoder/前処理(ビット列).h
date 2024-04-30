@@ -13,6 +13,7 @@
 *	(e) 1 がある位置を並べた列（2 列の swap 距離が分かる）
 *	(f) i 番目の 1 がある位置の位置 i からの偏差を並べた列（1 の連が判別できる）
 *	(g) 0 で区切られた 1 の連の長さを並べた列
+*	(h) 番兵に 0 を置いて要素と境界の列（重複組合せの考え方で用いる）
 * などがある．
 *
 * 例：
@@ -24,12 +25,14 @@
 *	(e) :        1     3  4  5        8    10
 *	(f) :        1     2  2  2        4     5
 *	(g) :  0  1     3           0  1     1
+*	(h) :  0  01 01 01 0  0  01 0  01 01 01 01 0
 *
 * verify :
 *	(d) : https://atcoder.jp/contests/agc056/tasks/agc056_c
 *	(e) : https://atcoder.jp/contests/tkppc6-2/tasks/tkppc6_2_b
 *	(f) : https://atcoder.jp/contests/abc229/tasks/abc229_g
 *	(g) : https://atcoder.jp/contests/agc046/tasks/agc046_c
+*	(h) : https://atcoder.jp/contests/arc172/tasks/arc172_f
 */
 
 

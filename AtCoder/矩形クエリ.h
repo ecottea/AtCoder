@@ -5,7 +5,7 @@
 // ■■■■■ 矩形クエリ ■■■■■
 
 
-//【1 点加算／矩形和（一括）】
+//【1 点加算 → 矩形和（一括）】
 /*
 * Offline_rectangle_sum<T>() : O(1)
 *	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
@@ -33,7 +33,7 @@ class Offline_rectangle_sum {
 
 public:
 	// v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
-	Offline_static_rectangle_sum() : w(1), q(0) {
+	Offline_rectangle_sum() : w(1), q(0) {
 		// verify : https://judge.yosupo.jp/problem/rectangle_sum
 	}
 
@@ -85,7 +85,97 @@ public:
 };
 
 
-//【1 点加算／矩形和（静的，アーベル群）】
+//【1 点加算 → 矩形和（一括，アーベル群）】
+/*
+* Offline_rectangle_sum<S, op, o, inv>() : O(1)
+*	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
+*	値はアーベル群 (S, op, o, inv) の要素とする．
+*
+* void point_add(ll x, int y, S val) : O(1)
+*	v[x][y] += val とする．
+*
+* void add_query(ll x1, ll x2, int y1, int y2) : O(1)
+*	クエリ Σv[x1..x2)[y1..y2) を追加する．
+*
+* vS sum() : O(w + (n + q) log w)
+*	現在の v[0..h)[0..w) への各クエリに対する答えを格納したリストを返す．
+*
+* 利用：【フェニック木（アーベル群）】
+*
+*（平面走査）
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+class Offline_rectangle_sum {
+	int w, q;
+
+	// (x 座標，イベントタイプ，クエリ番号，左位置，右位置, 加算値) の組
+	using EV = tuple<ll, int, int, int, int, S>;
+	vector<EV> ev;
+	const int DE = 0; // 長方形の下辺
+	const int UE = 1; // 長方形の上辺
+	const int PT = 2; // 点
+
+public:
+	// v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
+	Offline_rectangle_sum() : w(1), q(0) {
+		// verify : https://mojacoder.app/users/shogo314/problems/rectangle_product
+	}
+
+	// v[x][y] += val とする．
+	void point_add(ll x, int y, S val) {
+		// verify : https://mojacoder.app/users/shogo314/problems/rectangle_product
+
+		ev.emplace_back(x, PT, -1, y, -1, val);
+
+		chmax(w, y);
+	}
+
+	// クエリ Σv[x1..x2)[y1..y2) を追加する．
+	void add_query(ll x1, ll x2, int y1, int y2) {
+		// verify : https://mojacoder.app/users/shogo314/problems/rectangle_product
+
+		ev.emplace_back(x1, UE, q, y1, y2, S());
+		ev.emplace_back(x2, DE, q, y1, y2, S());
+
+		chmax(w, y2);
+		q++;
+	}
+
+	// 各クエリに対する答えを格納したリストを返す．
+	vector<S> sum() {
+		// verify : https://mojacoder.app/users/shogo314/problems/rectangle_product
+
+		// イベントソート
+		sort(all(ev), [](const EV& l, const EV& r) {
+			ll xl, xr; int tpl, tpr;
+			tie(xl, tpl, ignore, ignore, ignore, ignore) = l;
+			tie(xr, tpr, ignore, ignore, ignore, ignore) = r;
+			if (xl != xr) return xl < xr;
+			return tpl < tpr;
+		});
+
+		Fenwick_tree<S, op, o, inv> fen(w + 1);
+		vector<S> res(q);
+
+		// 下方向に平面走査していく．
+		for (auto& [x, tp, j, yl, yr, val] : ev) {
+			if (tp == PT) {
+				fen.add(yl, val);
+			}
+			else if (tp == UE) {
+				res[j] = inv(fen.sum(yl, yr));
+			}
+			else if (tp == DE) {
+				res[j] = op(res[j], fen.sum(yl, yr));
+			}
+		}
+
+		return res;
+	}
+};
+
+
+//【1 点加算 → 矩形和（アーベル群）】
 /*
 * Static_rectangle_sum<S, op, o, inv>(vl x, vl y, vS v) : O(n log n)
 *	値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
@@ -150,16 +240,16 @@ public:
 };
 
 
-//【1 点加算／矩形和（動的）】
+//【1 点加算／矩形和（アーベル群）】
 /*
-* 動的に与えられる 1 点加算／矩形和 のクエリを処理したい場合は
+* 動的に与えられる 1 点加算／矩形和 の混合クエリを処理したい場合は
 * セグメント木.h の【二次元動的セグメント木】を利用すればよい．
 * 
 * verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
 */
 
 
-//【1 点加算／非可逆矩形和（可換モノイド，一括）】
+//【1 点加算 → 開放矩形和（可換モノイド，一括）】
 /*
 * Offline_rectangle_sum<S, op, o>() : O(1)
 *	v[0..h)[0..w) = o() で初期化する（h, w は自動で調整される）
@@ -177,7 +267,7 @@ public:
 *（平面走査）
 */
 template <class S, S(*op)(S, S), S(*o)()>
-class Offline_rectangle_lossy_sum {
+class Offline_rectangle_open_sum {
 	int w, q;
 
 	// (x 座標，イベントタイプ，クエリ番号，左位置，右位置, 加算値) の組
@@ -187,7 +277,7 @@ class Offline_rectangle_lossy_sum {
 
 public:
 	// v[0..h)[0..w) = o() で初期化する（h, w は自動で調整される）
-	Offline_rectangle_lossy_sum() : w(1), q(0) {
+	Offline_rectangle_open_sum() : w(1), q(0) {
 		// verify : https://www.codechef.com/problems/PIARQ
 	}
 
@@ -235,7 +325,7 @@ public:
 };
 
 
-//【矩形加算／1 点取得（一括）】
+//【矩形加算 → 1 点参照（一括）】
 /*
 * Offline_rectangle_add<T>() : O(1)
 *	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
@@ -328,7 +418,25 @@ public:
 };
 
 
-//【矩形加算／矩形和（一括）】
+//【矩形加算／1 点参照（アーベル群）】
+/*
+* 動的に与えられる 矩形加算／1 点参照 の混合クエリを処理したい場合は
+* セグメント木.h の【二次元動的セグメント木】と二次元いもす法を利用すればよい．
+* 
+* verify : https://judge.yosupo.jp/problem/rectangle_add_point_get
+*/
+
+
+//【矩形 chmax → 1 点参照（一括）】
+/*
+* セグメント木.h の【可換双対セグメント木（M<E>-集合）】に
+*【要素の挿入&削除 作用付き 最大値 集合】を載せて平面走査すれば良い．
+* 
+* verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
+*/
+
+
+//【矩形加算 → 矩形和（一括）】
 /*
 * Offline_rectangle_add_sum<T>() : O(1)
 *	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）

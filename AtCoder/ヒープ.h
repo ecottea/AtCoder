@@ -235,7 +235,7 @@ struct Skew_heap_rev {
 /*
 * Lazy_skew_heap<S, leq, inf, F, act, comp, id>() : O(1)
 *	降順に取り出されるヒープを空で初期化する
-*	要素はモノイド左作用付き全順序集合 (S, leq(≦), inf, F, act, comp, id) の元とする．
+*	要素はモノイド左作用付き全順序集合 (S, leq, inf, F, act, comp, id) の元とする．
 *
 * bool empty() : O(1)
 *	ヒープが空かを返す．
@@ -255,8 +255,8 @@ struct Skew_heap_rev {
 * merge(Lazy_skew_heap& hp) : O(log n)
 *	ヒープ hp を自身に併合する．
 *
-* apply(F val) : O(1)
-*	ヒープ内の全要素に val を作用させる．
+* apply(F f) : O(1)
+*	ヒープ内の全要素に f を作用させる．
 */
 template <class S, bool(*leq)(S, S), S(*inf)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 class Lazy_skew_heap {
@@ -377,6 +377,420 @@ private:
 };
 
 
+//【削除可能ヒープ】
+/*
+* Eraseable_heap<T, comp = less<T>>() : O(1)
+*	最大値を管理するヒープを空で初期化する．
+*
+* bool empty() : O(1)
+*	ヒープが空かを返す．
+*
+* int size() : O(1)
+*	ヒープ内の要素数を返す．
+*
+* T top() : ならし O(log n)
+*	ヒープ内の最大の要素を返す．
+*	制約 : ヒープが空でない
+*
+* void push(T x) : O(log n)
+*	ヒープに x を追加する．
+*
+* void pop() : ならし O(log n)
+*	ヒープ内の最大の要素を削除する．
+*	制約 : ヒープが空でない
+*
+* void erase(T x) : O(log n)
+*	ヒープ内の要素 x を削除する．
+*	制約 : ヒープ内に要素 x が存在する．
+*/
+template <class T, class comp = less<T>>
+class Eraseable_heap {
+	// q : 順位キュー
+	// qe : 削除された要素を覚えておく順位キュー
+	priority_queue<T, vector<T>, comp> q, qe;
+
+	void shrink() {
+		// 最大要素が削除済みである限り実際に削除する．
+		while (!q.empty() && !qe.empty()) {
+			if (q.top() == qe.top()) {
+				q.pop();
+				qe.pop();
+			}
+			else break;
+		}
+	}
+
+public:
+	// 空で初期化する．
+	Eraseable_heap() {
+		// verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
+	}
+
+	// 空かを返す．
+	bool empty() {
+		// verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
+
+		return sz(q) == sz(qe);
+	}
+
+	// 要素数を返す．
+	int size() const {
+		return sz(q) - sz(qe);
+	}
+
+	// 最大の要素を返す．
+	T top() {
+		// verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
+
+		shrink();
+		Assert(!q.empty());
+		return q.top();
+	}
+
+	// x を追加する．
+	void push(T x) {
+		// verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
+
+		q.push(x);
+	}
+
+	// 最大の要素を削除する．
+	void pop() {
+		shrink();
+		Assert(!q.empty());
+		q.pop();
+	}
+
+	// x を削除する．
+	void erase(T x) {
+		// verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
+
+		qe.push(x);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Eraseable_heap q) {
+		while (!q.empty()) {
+			os << q.top() << " ";
+			q.pop();
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【削除可能分離ヒープ】
+/*
+* Eraseable_separated_heap<T, comp = less<T>>() : O(1)
+*	空のヒープで初期化する．
+*
+* bool empty_l(), empty_h() : O(1)
+*	ヒープが空かを返す．
+*
+* int size_l(), size_h() : O(1)
+*	ヒープの大きさを返す．
+*
+* void push_l(T x), push_h(T x) :ならし  O(log n)
+*	ヒープに要素 x を追加する．set_l ≦ set_h は自動的に保たれる．
+*
+* T max_l(), min_h() : ならし O(log n)
+*	ヒープ内の最大値[最小値]を返す．
+*	制約 : ヒープが空でない．
+*
+* erase_l(T x), erase_h(T x) : ならし O(log n)
+*	ヒープ内の要素 x を削除する．
+*	制約 : どちらかのヒープ内に要素 x が存在する．
+*
+* void decrease_l(), decrease_r() : O(1)
+*	ヒープの大きさを 1 減らす．逆側は 1 増える．
+*	制約 : ヒープは空でない
+*
+* 利用：【削除可能ヒープ】
+*/
+template <class T>
+class Eraseable_separated_heap {
+	int nl, nh;
+	Eraseable_heap<T> ql;
+	Eraseable_heap<T, greater<T>> qh;
+
+	// ql, qh の大きさが nl, nh に一致するよう調整する．
+	void move() {
+		while (sz(ql) < nl) {
+			ql.push(qh.top());
+			qh.pop();
+		}
+		while (sz(qh) < nh) {
+			qh.push(ql.top());
+			ql.pop();
+		}
+	}
+
+public:
+	// 空で初期化
+	Eraseable_separated_heap() : nl(0), nh(0) {
+		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
+	}
+
+	// ヒープが空かを返す．
+	bool empty_l() const { return nl == 0; }
+	bool empty_h() const { return nh == 0; }
+
+	// ヒープの大きさを返す．
+	int size_l() const { return nl; }
+	int size_h() const { return nh; }
+
+	// ヒープに要素 x を追加する．
+	void push_l(const T& x) {
+		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
+
+		if (qh.empty() || x <= qh.top()) ql.push(x);
+		else qh.push(x);
+		++nl;
+	}
+	void push_h(const T& x) {
+		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
+
+		if (ql.empty() || x >= ql.top()) qh.push(x);
+		else ql.push(x);
+		++nh;
+	}
+
+	// ヒープ内の最大値[最小値]を返す．
+	T max_l() {
+		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
+
+		Assert(nl > 0);
+		move();
+		return ql.top();
+	}
+	T min_h() {
+		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
+
+		Assert(nh > 0);
+		move();
+		return qh.top();
+	}
+
+	// ヒープ内の要素 x を削除する．
+	void erase_l(const T& x) {
+		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
+
+		if (!ql.empty() && x <= ql.top()) ql.erase(x);
+		else qh.erase(x);
+		--nl;
+	}
+	void erase_h(const T& x) {
+		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
+
+		if (!qh.empty() && x >= qh.top()) qh.erase(x);
+		else ql.erase(x);
+		--nh;
+	}
+
+	// ヒープの大きさを 1 減らす．
+	void decrese_l() {
+		Assert(nl > 0);
+		nl--; nh++;
+	}
+	void decrese_h() {
+		Assert(nh > 0);
+		nh--; nl++;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Eraseable_separated_heap<T> q) {
+		q.move();
+		os << "l: " << q.ql << endl;
+		os << "h: " << q.qh << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【削除可能分離ヒープ（和）】
+/*
+* Eraseable_separated_heap_sum<T, comp = less<T>>() : O(1)
+*	空のヒープで初期化する．
+*
+* bool empty_l(), empty_h() : O(1)
+*	ヒープが空かを返す．
+*
+* int size_l(), size_h() : O(1)
+*	ヒープの大きさを返す．
+*
+* void push_l(T x), push_h(T x) :ならし  O(log n)
+*	ヒープに要素 x を追加する．set_l ≦ set_h は自動的に保たれる．
+*
+* T max_l(), min_h() : ならし O(log n)
+*	ヒープ内の最大値[最小値]を返す．
+*	制約 : ヒープが空でない．
+*
+* erase_l(T x), erase_h(T x) : ならし O(log n)
+*	ヒープ内の要素 x を削除する．
+*	制約 : どちらかのヒープ内に要素 x が存在する．
+*
+* void decrease_l(), decrease_r() : O(1)
+*	ヒープの大きさを 1 減らす．逆側は 1 増える．
+*	制約 : ヒープは空でない
+*
+* void sum_l(), sum_r() : ならし O(1)
+*	ヒープ内の要素の和を返す．
+*
+* 利用：【削除可能ヒープ】
+*/
+template <class T>
+class Eraseable_separated_heap_sum {
+	int nl, nh;
+	Eraseable_heap<T> ql;
+	Eraseable_heap<T, greater<T>> qh;
+	T suml, sumh;
+
+	// ql, qh の大きさが nl, nh に一致するよう調整する．
+	void move() {
+		while (sz(ql) < nl) {
+			auto x = qh.top();
+			ql.push(x);
+			suml += x;
+			qh.pop();
+			sumh -= x;
+		}
+		while (sz(qh) < nh) {
+			auto x = ql.top();
+			qh.push(x);
+			sumh += x;
+			ql.pop();
+			suml -= x;
+		}
+	}
+
+public:
+	// 空で初期化
+	Eraseable_separated_heap_sum() : nl(0), nh(0), suml(T(0)), sumh(T(0)) {
+		// verify : https://atcoder.jp/contests/abc306/tasks/abc306_e
+	}
+
+	// ヒープが空かを返す．
+	bool empty_l() const { return nl == 0; }
+	bool empty_h() const { return nh == 0; }
+
+	// ヒープの大きさを返す．
+	int size_l() const { return nl; }
+	int size_h() const {
+		// verify : https://atcoder.jp/contests/abc281/tasks/abc281_e
+
+		return nh;
+	}
+
+	// ヒープに要素 x を追加する．
+	void push_l(const T& x) {
+		// verify : https://atcoder.jp/contests/abc306/tasks/abc306_e
+
+		if (qh.empty() || x <= qh.top()) {
+			ql.push(x);
+			suml += x;
+		}
+		else {
+			qh.push(x);
+			sumh += x;
+		}
+		++nl;
+	}
+	void push_h(const T& x) {
+		// verify : https://atcoder.jp/contests/abc306/tasks/abc306_e
+
+		if (ql.empty() || x >= ql.top()) {
+			qh.push(x);
+			sumh += x;
+		}
+		else {
+			ql.push(x);
+			suml += x;
+		}
+		++nh;
+	}
+
+	// ヒープ内の最大値[最小値]を返す．
+	T max_l() {
+		Assert(nl > 0);
+		move();
+		return ql.top();
+	}
+	T min_h() {
+		Assert(nh > 0);
+		move();
+		return qh.top();
+	}
+
+	// ヒープ内の要素 x を削除する．
+	void erase_l(const T& x) {
+		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
+
+		if (!ql.empty() && x <= ql.top()) {
+			ql.erase(x);
+			suml -= x;
+		}
+		else {
+			qh.erase(x);
+			sumh -= x;
+		}
+		--nl;
+	}
+	void erase_h(const T& x) {
+		// verify : https://atcoder.jp/contests/abc306/tasks/abc306_e
+
+		if (!qh.empty() && x >= qh.top()) {
+			qh.erase(x);
+			sumh -= x;
+		}
+		else {
+			ql.erase(x);
+			suml -= x;
+		}
+		--nh;
+	}
+
+	// ヒープの大きさを 1 減らす．
+	void decrese_l() {
+		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
+
+		Assert(nl > 0);
+		nl--; nh++;
+	}
+	void decrese_h() {
+		// verify : https://atcoder.jp/contests/abc281/tasks/abc281_e
+
+		Assert(nh > 0);
+		nh--; nl++;
+	}
+
+	// ヒープ内の和を返す．
+	T sum_l() {
+		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
+
+		move();
+		return suml;
+	}
+	T sum_h() {
+		// verify : https://atcoder.jp/contests/abc306/tasks/abc306_e
+
+		move();
+		return sumh;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Eraseable_separated_heap_sum<T> q) {
+		q.move();
+		os << "l: " << q.ql << endl;
+		os << "h: " << q.qh << endl;
+		os << "sum: " << q.suml << " " << q.sumh << endl;
+		return os;
+	}
+#endif
+};
+
+
 //【多重集合（大小分離）】
 /*
 * Separated_multiset<T>() : O(1)
@@ -397,7 +811,7 @@ private:
 * bool erase_l(T val), erase_h(T val) : O(log n)
 *	多重集合内の値 val を削除する（空なら何もせず false を返す）
 *	どちらにも要素がなければ false を返す．
-* 
+*
 * void decrease_l(), decrease_r() : O(log n)
 *	多重集合の大きさを 1 減らす．逆側は 1 増える（空なら何もしない）
 */
@@ -420,7 +834,7 @@ struct Separated_multiset {
 	// 多重集合に値 val を追加する．
 	void insert_l(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
-		
+
 		if (nh == 0 || val <= *sh.begin()) {
 			sl.insert(val);
 		}
@@ -433,7 +847,7 @@ struct Separated_multiset {
 	}
 	void insert_h(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
-		
+
 		if (nl == 0 || val >= *sl.rbegin()) {
 			sh.insert(val);
 		}
@@ -452,7 +866,7 @@ struct Separated_multiset {
 	// 多重集合内の値 val を削除する．
 	bool erase_l(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
-		
+
 		if (nl == 0) return false;
 
 		auto it_l = sl.lower_bound(val);
@@ -475,7 +889,7 @@ struct Separated_multiset {
 	}
 	bool erase_h(const T& val) {
 		// verify : https://atcoder.jp/contests/abc218/tasks/abc218_g
-		
+
 		if (nh == 0) return false;
 
 		auto it_h = sh.lower_bound(val);
@@ -503,7 +917,7 @@ struct Separated_multiset {
 
 		sh.insert(*sl.rbegin());
 		sl.erase(prev(sl.end()));
-		
+
 		nl--; nh++;
 	}
 	void decrese_h() {
@@ -511,7 +925,7 @@ struct Separated_multiset {
 
 		sl.insert(*sh.begin());
 		sh.erase(sh.begin());
-		
+
 		nh--; nl++;
 	}
 
@@ -537,7 +951,7 @@ struct Separated_multiset {
 *	多重集合の大きさを返す．
 *
 * void insert_l(T val), insert_h(T val) : O(log n)
-*	多重集合に値 val を 1 つ追加する．set_l <= set_h は自動的に保たれる．
+*	多重集合に値 val を 1 つ追加する．set_l ≦ set_h は自動的に保たれる．
 *
 * T max_l(), min_h() : O(log n)
 *	多重集合内の最大値[最小値]を返す．
@@ -566,10 +980,10 @@ struct Separated_multiset_sum {
 	bool empty_h() const { return nh == 0; }
 
 	// 多重集合の大きさを返す．
-	int size_l() const { 
+	int size_l() const {
 		// verify : https://atcoder.jp/contests/pakencamp-2022-day2/tasks/pakencamp_2022_day2_e
 
-		return nl; 
+		return nl;
 	}
 	int size_h() const {
 		// verify : https://yukicoder.me/problems/no/2028
@@ -690,13 +1104,13 @@ struct Separated_multiset_sum {
 	}
 
 	// 多重集合内の和を返す．
-	T sum_l() const { 
+	T sum_l() const {
 		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
 		return suml;
 	}
 	T sum_h() const {
 		// verify : https://yukicoder.me/problems/no/2028
-		
+
 		return sumh;
 	}
 
@@ -743,7 +1157,6 @@ struct Separated_multiset_sum {
 /*
 * Binary_heap<T>() : O(1)
 *	空ヒープで初期化する．
-*	制約：T は比較可能な型
 *
 * Binary_heap<T>(vT a) : O(n log n)
 *	配列 a[0..n) で初期化する．

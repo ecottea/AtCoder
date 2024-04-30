@@ -7,11 +7,39 @@
 /*
 * 条件 okQ() を満たす要素 ok と満たさない要素 ng との境界を二分探索する．
 * 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
+* debug_mode = true にして実行すると手元では単調かどうかチェックしながら全探索する．
 */
 template <class T, class FUNC>
-T meguru_search(T ok, T ng, const FUNC& okQ) {
+T meguru_search(T ok, T ng, const FUNC& okQ, bool debug_mode = false) {
 	// 参考 : https://twitter.com/meguru_comp/status/697008509376835584
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
+
+	Assert(ok != ng);
+
+#ifdef _MSC_VER	
+	// 単調かどうか自身がないとき用
+	if (debug_mode) {
+		T step = ok < ng ? 1 : -1; T res = ok; bool is_ok = true;
+		for (T i = ok; i != ng + step; i += step) {
+			auto b = okQ(i);
+			if (b) {
+				if (!is_ok) {
+					cout << "not monotony!" << endl;
+					for (T i = ok; i != ng + step; i += step) {
+						cout << i << " : " << okQ(i) << endl;
+					}
+					exit(1);
+				}
+			}
+			else {
+				if (is_ok) res = i - step;
+				is_ok = false;
+			}
+		}
+
+		return res;
+	}
+#endif
 
 	// 境界が決定するまで
 	while (abs(ok - ng) > 1) {
@@ -64,15 +92,40 @@ T bin_search(T ok, T ng, const FUNC& okQ, double EPS = 1e-12) {
 }
 
 
-//【三分探索（上に凸）】O(log(r - l))
+//【三分探索（最大値）】O(log(r - l))
 /*
 * 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
+* debug_mode = true にして実行すると手元では単峰かどうかチェックしながら全探索する．
 */
 template <class FUNC>
-ll ternary_search_uc(ll l, ll r, const FUNC& f) {
+ll ternary_search_max(ll l, ll r, const FUNC& f, bool debug_mode = false) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_f
 
 	Assert(r - l >= 2);
+
+#ifdef _MSC_VER	
+	// 単峰かどうか自身がないとき用
+	if (debug_mode) {
+		auto p_val = f(l + 1); int p_sgn = 1;
+		auto val_max = p_val; ll i_max = l + 1;
+
+		for (ll i = l + 2; i < r; i++) {
+			auto val = f(i);
+			if (chmax(val_max, val)) i_max = i;
+
+			int sgn = (val > p_val) - (val < p_val);
+			if (p_sgn < sgn) {
+				cout << "not unimodal!" << endl;
+				for (ll i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
+				exit(1);
+			}
+			p_val = val;
+			p_sgn = sgn;
+		}
+
+		return i_max;
+	}
+#endif
 
 	while (r - l > 2) {
 		ll s = l + r;
@@ -92,13 +145,38 @@ ll ternary_search_uc(ll l, ll r, const FUNC& f) {
 }
 
 
-//【三分探索（下に凸）】O(log(r - l))
+//【三分探索（最小値）】O(log(r - l))
 /*
 * 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
+* debug_mode = true にして実行すると手元では単峰かどうかチェックしながら全探索する．
 */
 template <class FUNC>
-ll ternary_search_lc(ll l, ll r, const FUNC& f) {
+ll ternary_search_min(ll l, ll r, const FUNC& f, bool debug_mode = false) {
 	// verify : https://atcoder.jp/contests/abc279/tasks/abc279_d
+
+#ifdef _MSC_VER	
+// 単峰かどうか自身がないとき用
+	if (debug_mode) {
+		auto p_val = f(l + 1); int p_sgn = -1;
+		auto val_min = p_val; ll i_min = l + 1;
+
+		for (ll i = l + 2; i < r; i++) {
+			auto val = f(i);
+			if (chmin(val_min, val)) i_min = i;
+
+			int sgn = (val > p_val) - (val < p_val);
+			if (p_sgn > sgn) {
+				cout << "not unimodal!" << endl;
+				for (ll i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
+				exit(1);
+			}
+			p_val = val;
+			p_sgn = sgn;
+		}
+
+		return i_min;
+	}
+#endif
 
 	while (r - l > 2) {
 		ll s = l + r;
@@ -118,13 +196,53 @@ ll ternary_search_lc(ll l, ll r, const FUNC& f) {
 }
 
 
-//【ランダム三分探索（下に凸）】O(log(r - l))
+//【ランダム三分探索（最大値）】O(log(r - l))
 /*
-* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
-* 下に凸でなくても運が良ければ正しい x を返す．
+* 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
+* 上に単峰でなくても運が良ければ正しい x を返す．
 */
 template <class FUNC>
-ll random_ternary_search_lc(ll l, ll r, const FUNC& f) {
+ll random_ternary_search_max(ll l, ll r, const FUNC& f) {
+	// verify : https://atcoder.jp/contests/abc342/tasks/abc342_f
+
+	static bool first_call = true;
+
+	static mt19937 mt;
+	static uniform_int_distribution<ll> rnd;
+	if (first_call) {
+		first_call = false;
+		mt.seed((int)time(NULL));
+		rnd = uniform_int_distribution<ll>(0, INFL);
+	}
+
+	while (r - l > 2) {
+		ll m1 = l + 1 + rnd(mt) % (r - l - 1);
+		ll m2 = l + 1 + rnd(mt) % (r - l - 1);
+		if (m1 == m2) continue;
+		if (m1 > m2) swap(m1, m2);
+
+		if (f(m1) < f(m2)) l = m1;
+		else r = m2;
+	}
+	return l + 1;
+
+	/* f の定義の雛形
+	auto f = [&](ll x) {
+		return x;
+	};
+	*/
+}
+
+
+//【ランダム三分探索（最小値）】O(log(r - l))
+/*
+* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
+* 下に単峰でなくても運が良ければ正しい x を返す．
+*/
+template <class FUNC>
+ll random_ternary_search_min(ll l, ll r, const FUNC& f) {
+	// verify : https://yukicoder.me/problems/no/2627
+
 	static bool first_call = true;
 
 	static mt19937 mt;
@@ -159,39 +277,26 @@ ll random_ternary_search_lc(ll l, ll r, const FUNC& f) {
 * Fibonacci_search(ll w) : O(log w)
 *	最大で幅 w の開区間まで扱えるよう初期化する．
 *
-* ll search(ll left, ll right, function<ll(ll)> f, bool up = true) : O(log(right - left))
-*	関数 f(i) の開区間 (left, right) における最大[小]値を与える i を返す．
-*	up = true なら f の階差の符号変化は + → 0 → - で，返すのは最大値となる．
-*	up = false なら f の階差の符号変化は - → 0 → + で，返すのは最小値となる．
+* ll search_max(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
+*	開区間 (l..r) で上に単峰な関数 f の最大値が f(i) であるとし，組 {i, f(i)} を返す．
+*
+* ll search_min(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
+*	開区間 (l..r) で下に単峰な関数 f の最小値が f(i) であるとし，組 {i, f(i)} を返す．
 */
-struct Fibonacci_search {
+class Fibonacci_search {
 	int n;
 	vl fib;
 
-	Fibonacci_search(ll w) : n(1), fib({ 1, 1 }) {
-		// 利用する範囲のフィボナッチ数列を準備する．
-		while (fib[n] < w) {
-			fib.push_back(fib[n] + fib[n - 1]);
-			n++;
-		}
-	}
+	pll search(ll left, ll right, const function<ll(ll)>& f, ll sgn) const {
+		Assert(right - left >= 2);
 
-	ll search(ll left, ll right, const function<ll(ll)>& f_, bool up = true) const {
-		auto f = [&](ll x) {
-			// 符号変化の条件を満たすよう範囲外の値を定めておく．
-			ll val;
-			if (x <= left) {
-				val = -INFL - (left - x);
-			}
-			else if (x >= right) {
-				// たぶん大丈夫だけどオーバーフローに注意
-				val = -INFL - (x - right);
-			}
-			else {
-				val = (up ? f_(x) : -f_(x));
-			}
+		// 最大値の候補が 1 つしかない場合の例外処理（f(i) が不要なら省略可）
+		if (right - left == 2) return make_pair(left + 1, f(left + 1));
 
-			return val;
+		// 符号変化の条件を満たすよう範囲外の値を定めておく．
+		auto F = [&](ll x) {
+			if (x >= right) return -INFL - (x - right); // たぶん大丈夫だけどオーバーフローに注意
+			else return sgn * f(x);
 		};
 
 		// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点を得る．
@@ -203,8 +308,8 @@ struct Fibonacci_search {
 		i -= 3;
 
 		// 内分点における関数値の計算
-		ll v1 = f(m1);
-		ll v2 = f(m2);
+		ll v1 = F(m1);
+		ll v2 = F(m2);
 
 		// 候補が内分点のみになるまで
 		while (i > 0) {
@@ -219,7 +324,7 @@ struct Fibonacci_search {
 
 				// 左の内分点を新たに計算する．
 				m1 = l + fib[i];
-				v1 = f(m1);
+				v1 = F(m1);
 			}
 			// 右の内分点での値の方が大きければ，次の区間は右側をとる．
 			else {
@@ -232,23 +337,54 @@ struct Fibonacci_search {
 
 				// 右の内分点を新たに計算する．
 				m2 = r - fib[i];
-				v2 = f(m2);
+				v2 = F(m2);
 			}
 			i--;
 		}
 
-		// 最後の候補を比較し，大きかった方の番号を返す．
-		return (v1 > v2) ? m1 : m2;
+		// 最後の候補を比較し，大きかった方の番号と値を返す．
+		return (v1 > v2) ? make_pair(m1, sgn * v1) : make_pair(m2, sgn * v2);
 	}
+
+public:
+	Fibonacci_search(ll w) : n(1), fib({ 1, 1 }) {
+		// verify : https://yukicoder.me/problems/no/2627
+
+		// 利用する範囲のフィボナッチ数列を準備する．
+		while (fib[n] < w) {
+			fib.push_back(fib[n] + fib[n - 1]);
+			n++;
+		}
+	}
+
+	// 開区間 (l..r) で上に単峰な関数 f の最大値が f(i) であるとし，組 {i, f(i)} を返す．
+	pll search_max(ll l, ll r, const function<ll(ll)>& f) const {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ba
+
+		return search(l, r, f, 1);
+	}
+
+	// 開区間 (l..r) で下に単峰な関数 f の最小値が f(i) であるとし，組 {i, f(i)} を返す．
+	pll search_min(ll l, ll r, const function<ll(ll)>& f) const {
+		// verify : https://atcoder.jp/contests/abc330/tasks/abc330_c
+
+		return search(l, r, f, -1);
+	}
+
+	/* f の定義の雛形
+	auto f = [&](ll x) {
+		return x;
+	};
+	*/
 };
 
 
-//【黄金分割探索（実数，上に凸）】O(log((r - l) / EPS))
+//【黄金分割探索（実数，最大値）】O(log((r - l) / EPS))
 /*
-* 全域で狭義に上に凸な関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
+* 全域で上に単峰な関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
 */
 template <class FUNC>
-double golden_search_uc(double l, double r, const FUNC& f, double EPS = 1e-12) {
+double golden_search_max(double l, double r, const FUNC& f, double EPS = 1e-12) {
 	constexpr double phi = 1.61803398875; // 黄金数
 
 	int L = max((int)(log((r - l) / EPS) / log(phi)), 1);
@@ -302,25 +438,25 @@ double golden_search_uc(double l, double r, const FUNC& f, double EPS = 1e-12) {
 }
 
 
-//【黄金分割探索（実数，下に凸）】O(log((r - l) / EPS))
+//【黄金分割探索（実数，最小値）】O(log((r - l) / EPS))
 /*
-* 全域で狭義に下に凸な関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
+* 全域で下に単峰な関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
 */
-template <class FUNC>
-double golden_search_lc(double l, double r, const FUNC& f, double EPS = 1e-12) {
+template <class D, class FUNC>
+D golden_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_b
 
-	constexpr double phi = 1.61803398875; // 黄金数
+	constexpr D phi = 1.618033988749895; // 黄金数
 
 	int L = max((int)(log((r - l) / EPS) / log(phi)), 1);
 
 	// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点
-	double m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
-	double m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
+	D m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
+	D m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
 
 	// 内分点における関数値の計算
-	double v1 = f(m1);
-	double v2 = f(m2);
+	D v1 = f(m1);
+	D v2 = f(m2);
 
 	// 絶対誤差か相対誤差が EPS 以下になるまで
 	rep(hoge, L) {
@@ -363,25 +499,25 @@ double golden_search_lc(double l, double r, const FUNC& f, double EPS = 1e-12) {
 }
 
 
-//【ランダム三分探索（実数，下に凸）】O(log((r - l) / EPS))
+//【ランダム三分探索（実数，最小値）】O(log((r - l) / EPS))
 /*
-* 全域で狭義に下に凸な関数 f(x) の開区間 (l, r) における最小値を与える x を返す．
-* 下に凸じゃなくても運が良ければ正しい x を返す．
+* 全域で下に単峰な関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
+* 下に単峰じゃなくても運が良ければ正しい x を返す．
 */
-template <class FUNC>
-double random_ternary_search_lc(double l, double r, const FUNC& f, double EPS = 1e-12) {
+template <class D, class FUNC>
+D random_ternary_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_f
 
 	static bool first_call = true;
 
 	static mt19937 mt;
-	static uniform_real_distribution<> rnd(0, 1);
+	static uniform_real_distribution<D> rnd(0, 1);
 	if (first_call) {
 		mt.seed((int)time(NULL));
 		first_call = false;
 	}
 
-	double m1 = l, m2 = r;
+	D m1 = l, m2 = r;
 
 	// 絶対誤差か相対誤差が EPS 以下になるまで
 	while (r - l > EPS && r - l > EPS * (r + l) / 2) {

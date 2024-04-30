@@ -12,7 +12,7 @@
 */
 
 
-//【部分集合の和の和（要素数ごと）】O(n)
+//【部分集合の和の総和（要素数ごと）】O(n)
 /*
 * 与えられた a[0..n) について，各 k=[0..n] についての
 *		Σ|set|=k Σi∈set a[i]
@@ -51,7 +51,7 @@ vm subset_sum_sum(const vector<T>& a) {
 }
 
 
-//【部分集合の積の和（要素数ごと，mod 998244353）】O(n (log n)^2)
+//【部分集合の積の総和（要素数ごと，mod 998244353）】O(n (log n)^2)
 /*
 * 与えられた a[0..n) について，各 k=[0..n] について
 *		Σ|set|=k Πi∈set a[i]
@@ -67,11 +67,11 @@ vm subset_product_sum(const vector<T>& a) {
 	// を計算したときの x^k の係数として求めることができる．
 
 	int n = sz(a);
-	vm resn + 1);
+	vm res(n + 1);
 
 	if (n == 0) {
 		res[0] = 1;
-		return;
+		return res;
 	}
 
 	// 代わりに Πi=[0..n) (x + a[i]^(-1)) を求め，Πa[0..n) 倍する．
@@ -90,4 +90,44 @@ vm subset_product_sum(const vector<T>& a) {
 	return res;
 }
 
+
+//【部分集合の XOR の総和（要素数ごと，mod 998244353）】O(n log n log A)
+/*
+* 与えられた a[0..n) について，各 k=[0..n] について
+*		Σ|set|=k XOR_i∈set a[i]
+* の値を格納したリストを返す．
+* 
+* 制約：fm は n! まで計算可能
+*/
+template <class T>
+vm subset_XOR_sum(const vector<T>& a, const Factorial_mint& fm) {
+	//【方法】
+	// ビットごとに独立に考える．
+	// 寄与があるのは 1 を奇数個，0 を偶数個選んでいる場合なので，そのような選び方の数を畳込みで求める．
+
+	int n = sz(a);
+
+	vm res(n + 1);
+
+	int B = msb(*max_element(all(a))) + 1;
+	rep(b, B) {
+		dump("b:", b);
+
+		array<int, 2> cnt{ 0, 0 };
+		rep(i, n) cnt[getb(a[i], b)]++;
+		dump(cnt);
+
+		vm c1(cnt[1] + 1);
+		repi(i, 0, cnt[1]) if (i & 1) c1[i] = fm.bin(cnt[1], i);
+
+		vm c0(cnt[0] + 1);
+		repi(i, 0, cnt[0]) c0[i] = fm.bin(cnt[0], i);
+
+		vm c = convolution(c1, c0);
+
+		repi(i, 0, n) res[i] += c[i] * (1 << b);
+	}
+
+	return res;
+}
 

@@ -13,7 +13,7 @@
 */
 template <class T>
 map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vector<T>&)>& nxt) {
-	// verify : https://yukicoder.me/problems/no/2132
+	// verify : https://atcoder.jp/contests/abc349/tasks/abc349_e
 
 	map<pair<int, T>, int> res;
 

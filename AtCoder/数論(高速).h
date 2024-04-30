@@ -67,7 +67,9 @@ bool miller_rabin(ll n) {
 
 //【約数検出】O(n^(1/4))
 /*
-* n の真の約数を何か 1 つ返す（なければ n を返す）
+* n の真の約数を何か 1 つ返す（失敗すれば n を返す）
+* 
+* 制約 : n は非素数
 *
 * 利用：【有限体 F_p 上の計算（64 bit）】
 */
@@ -212,19 +214,14 @@ vl divisors(ll n) {
 
 	vl divs{ 1 };
 	repe(pp, pps) {
-		ll p; int d;
-		tie(p, d) = pp;
+		auto [p, d] = pp;
 
 		vl powp(d);
 		powp[0] = p;
 		rep(i, d - 1) powp[i + 1] = powp[i] * p;
 
 		int m = sz(divs);
-		repir(j, m - 1, 0) {
-			rep(i, d) {
-				divs.push_back(divs[j] * powp[i]);
-			}
-		}
+		repir(j, m - 1, 0) rep(i, d) divs.push_back(divs[j] * powp[i]);
 	}
 
 	sort(all(divs));

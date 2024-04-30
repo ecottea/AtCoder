@@ -18,7 +18,7 @@ vector<pair<char, int>> run_length_encoding(const string& s) {
 
 	cls.emplace_back(s[0], 1);
 
-	// 今読んでいる文字の種類を記憶する．
+	// いま読んでいる文字の種類を記憶する．
 	char c = s[0];
 
 	repi(i, 1, n - 1) {
@@ -111,7 +111,8 @@ void run_length_encoding(const vector<T>& a, vector<T>& c, vi& x) {
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
 * s[i..n) で最初に文字 c が現れる位置（無いなら n）を nxt[i][c] に格納し nxt を返す．
 */
-vvi next_position(const string& s, int k = 26, char a = 'a') {
+template <class STR = string, class T = char>
+vvi next_position(const STR& s, int k = 26, T a = 'a') {
 	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_e
 
 	int n = sz(s);
@@ -133,7 +134,8 @@ vvi next_position(const string& s, int k = 26, char a = 'a') {
 * k = 26 種類の英小文字からなる文字列 s[0..n) について，
 * s[0..i) で最後に文字 c が現れる位置（無いなら -1）を prv[i][c] に格納し prv を返す．
 */
-vvi prev_position(const string& s, int k = 26, char a = 'a') {
+template <class STR = string, class T = char>
+vvi prev_position(const STR& s, int k = 26, T a = 'a') {
 	// verify : https://yukicoder.me/problems/no/2281
 
 	int n = sz(s);

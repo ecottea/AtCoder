@@ -74,11 +74,14 @@ vl eratosthenes_interval(ll l, ll r) {
 * Osa_k(int n) : O(n log(log n))
 *	n 以下の自然数を高速に素因数分解する準備を行う．
 *
+* bool primeQ(int i) : O(1)
+*	i が素数かを返す．
+*
 * map<int, int> factor_integer(int i) : O(log n)
 *	i の素因数分解結果を返す．
 *
-* bool primeQ(int i) : O(1)
-*	i が素数かを返す．
+* vi divisors(int i) : O(σ(n))
+*	i の約数の昇順リストを返す．
 */
 struct Osa_k {
 	int n;
@@ -99,6 +102,15 @@ struct Osa_k {
 	}
 	Osa_k() : n(0) {}
 
+	// i が素数かを返す．
+	bool primeQ(int i) {
+		// verify : https://yukicoder.me/problems/no/1396
+
+		Assert(i <= n);
+
+		return d[i] == i;
+	}
+
 	// i の素因数分解結果を返す．
 	map<int, int> factor_integer(int i) const {
 		// verify : https://yukicoder.me/problems/no/2207
@@ -113,13 +125,26 @@ struct Osa_k {
 		return pps;
 	}
 
-	// i が素数かを返す．
-	bool primeQ(int i) {
-		// verify : https://yukicoder.me/problems/no/1396
+	// i の約数の昇順リストを返す．
+	vi divisors(int i) const {
+		// verify : https://yukicoder.me/problems/no/2718
 
 		Assert(i <= n);
 
-		return d[i] == i;
+		vi divs{ 1 };
+
+		auto pps = factor_integer(i);
+		for (auto [p, d] : pps) {
+			vi powp(d);
+			powp[0] = p;
+			rep(i, d - 1) powp[i + 1] = powp[i] * p;
+
+			int m = sz(divs);
+			repir(j, m - 1, 0) rep(i, d) divs.push_back(divs[j] * powp[i]);
+		}
+		sort(all(divs));
+
+		return divs;
 	}
 };
 
@@ -187,6 +212,93 @@ vector<map<ll, int>> factor_integer_interval(ll l, ll r) {
 
 	return pps;
 }
+
+
+//【非平方因子（一括）】O(n)
+/*
+* [1..n] の非平方因子のリストを返す．
+*/
+vi square_free_factor(int n) {
+	// verify : https://atcoder.jp/contests/abc254/tasks/abc254_d
+
+	vi res(n + 1);
+	iota(all(res), 0);
+
+	for (int i = 2; i * i <= n; i++) {
+		int i2 = i * i;
+		for (int j = i2; j <= n; j += i2) {
+			while (res[j] % i2 == 0) res[j] /= i2;
+		}
+	}
+
+	return res;
+}
+
+
+//【位数（法が素数，複数）】
+/*
+* Order_prime(T p) : O(√p)
+*	法を p として初期化する．
+*
+* T pow(T a, T x) : O(log x)
+*	a^x (mod p) を返す．
+*
+* T ord(T a) : O((log p)^2)
+*	a^x ≡ 1 (mod p) となる最小の正整数 x を返す（なければ -1）
+*/
+template <class T>
+class Order_prime {
+	T P;
+	vector<pair<T, T>> ppds; // {p, p^d} のリスト
+
+public:
+	Order_prime(T p) : P(p) {
+		T n = p - 1;
+		for (T i = 2; i * i <= n; i++) {
+			T pd = 1;
+			while (n % i == 0) {
+				pd *= i;
+				n /= i;
+			}
+			if (pd > 1) ppds.emplace_back(i, pd);
+		}
+		if (n > 1) ppds.emplace_back(n, n);
+	}
+	Order_prime() : P(0) {}
+
+	// a^x (mod p) を返す．
+	T pow(T a, T x) {
+		__int128 res = 1, pow2 = a;
+		while (x > 0) {
+			if (x & 1) res = (res * pow2) % P;
+			pow2 = (pow2 * pow2) % P;
+			x /= 2;
+		}
+		return (T)res;
+	}
+
+	// a^x ≡ 1 (mod p) となる最小の自然数 x を返す（なければ -1）
+	T ord(T a) {
+		if (a % P == 0) return -1;
+
+		T res = 1;
+
+		for (auto [p, pd] : ppds) {
+			T a2 = pow(a, (P - 1) / pd);
+
+			T e = 1;
+			while (true) {
+				if (pow(a2, e) == 1) {
+					res *= e;
+					break;
+				}
+				e *= p;
+			}
+		}
+
+		return res;
+	}
+};
 
 
 //【約数和関数（一括）】O(n log(log n))
@@ -288,7 +400,7 @@ void euler_phi_sum(ll n, int nl, int nh, vm& bl, vm& Bh) {
 	// ζ(s-1) は数論関数 c[i] = i に対応するディリクレ級数である．
 
 	if (nl <= 0 || nh <= 0) return;
-	Multiplicative_dirichlet_convolution_acc_mint mdia(nl);
+	Multiplicative_dirichlet_convolution_acc_mint M(nl);
 
 	vm al(nl + 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1); mint inv2 = mint(2).inv();
 	repi(i, 1, nl) {
@@ -300,7 +412,7 @@ void euler_phi_sum(ll n, int nl, int nh, vm& bl, vm& Bh) {
 		Ch[i] = mint(n / i) * (n / i + 1) * inv2;
 	}
 
-	mdia.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
+	M.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
 }
 
 
@@ -325,13 +437,13 @@ void mertens(ll n, int nl, int nh, vl& bl, vl& Bh) {
 	// 1 は数論関数 c[i] = (i = 1 ? 1 : 0) に対応するディリクレ級数である．
 
 	if (nl <= 0 || nh <= 0) return;
-	Multiplicative_dirichlet_convolution_acc<ll> mdia(nl);
+	Multiplicative_dirichlet_convolution_acc<ll> M(nl);
 
 	vl al(nl + 1, 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1, 1);
 	cl[1] = 1;
 	repi(i, 1, nh) Ah[i] = n / i;
 
-	mdia.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
+	M.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
 }
 
 

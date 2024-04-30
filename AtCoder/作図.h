@@ -18,7 +18,7 @@ inline Point<double> rotate(const Point<double>& p, const Point<double>& c, doub
 }
 
 
-//y90‹‰ñ“]zO(1)
+//y90‹ ‰ñ“]zO(1)
 /*
 * “_ p ‚ğ“_ c ‚ğ’†S‚É 90‹ ~ i ‚¾‚¯‰ñ“]‚µ‚½“_‚ğ•Ô‚·D
 */
@@ -52,7 +52,7 @@ inline Point<T> rotate90(const Point<T>& p, const Point<T>& c, int i) {
 /*
 * Ú a o b ‚Ì“ñ“™•ªü‚ğ•Ô‚·D
 */
-template <typename T>
+template <class T>
 inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const Point<T>& b) {
 	Point<double> p1 = o;
 	Point<double> p2 = p1 + (a - o).normalize() + (b - o).normalize();
@@ -64,7 +64,7 @@ inline Line<double> corner_bisector(const Point<T>& a, const Point<T>& o, const 
 /*
 * ü•ª l ‚Ì‚’¼“ñ“™•ªü‚ğ•Ô‚·D
 */
-template <typename T>
+template <class T>
 inline Line<double> vertical_bisector(const Line<T>& l) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_C
 
@@ -105,7 +105,7 @@ inline Point<double> symmetrical_move(const Point<double>& p, const Line<double>
 /*
 * 2 ’¼ü l1, l2 ‚ÌŒğ“_‚ğ•Ô‚·D
 */
-template <typename T>
+template <class T>
 Point<double> intersection_L_L(const Line<T>& l1, const Line<T>& l2) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_2_C
 
@@ -396,7 +396,7 @@ int common_tangent(const Circle<ll>& c1, const Circle<ll>& c2, vector<Point<doub
 /*
 * OŠpŒ` a b c ‚Ì“àÚ‰~‚ğ•Ô‚·D
 */
-template <typename T>
+template <class T>
 Circle<double> incircle(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_B
 
@@ -420,33 +420,29 @@ Circle<double> incircle(const Point<T>& a, const Point<T>& b, const Point<T>& c)
 //yŠOÚ‰~zO(1)
 /*
 * OŠpŒ` a b c ‚ÌŠOÚ‰~‚ğ•Ô‚·D
-*
-* —˜—pFy‚’¼“ñ“™•ªüz,y2 ’¼ü‚ÌŒğ“_z
 */
-template <typename T>
+template <class T>
 Circle<double> circircle(const Point<T>& a, const Point<T>& b, const Point<T>& c) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_7_C
 
-	auto lb = vertical_bisector(Line<double>{ a, b });
-	auto lc = vertical_bisector(Line<double>{ a, c });
-	auto o = intersection_L_L(lb, lc);
+	//y•û–@z
+	// Mathematica ‚Å
+	//	Solve[(x1-x)^2 + (y1-y)^2 == (x2-x)^2 + (y2-y)^2 == (x3-x)^2 + (y3-y)^2, {x, y}] // FullSimplify
+	// ‚ğÀs‚µCŒ‹‰Ê‚ğ CForm[] ‚µ‚Ä®Œ`‚µ‚½D
+
+	double x1 = a.x, y1 = a.y;
+	double x2 = b.x, y2 = b.y;
+	double x3 = c.x, y3 = c.y;
+
+	double dnm = 2 * (x3 * (-y1 + y2) + x2 * (y1 - y3) + x1 * (-y2 + y3));
+
+	Point<double> o;
+	o.x = (x3 * x3 * (y2 - y1) + x2 * x2 * (y1 - y3)
+		+ (x1 * x1 + (y1 - y2) * (y1 - y3)) * (y3 - y2)) / dnm;
+	o.y = (y3 * y3 * (x1 - x2) + (y2 * y2) * (x3 - x1)
+		+ ((y1 * y1) + (x1 - x2) * (x1 - x3)) * (x2 - x3)) / dnm;
 	auto r = (Point<double>(a) - o).norm();
 	return { o, r };
-
-	/* ”Šw“I‚É‚Í‡‚Á‚Ä‚é‚ªC‹¤ü‚É‹ß‚¢“İŠpOŠpŒ`‚Ì‚Æ‚«‚ÉŒë·‚ª‘å‚«‚­‚È‚éD
-	double len_a = (b - c).norm();
-	double len_b = (c - a).norm();
-	double len_c = (a - b).norm();
-	Point<double> da = a;
-	Point<double> db = b;
-	Point<double> dc = c;
-	double w_a = len_a * len_a * (len_b * len_b + len_c * len_c - len_a * len_a);
-	double w_b = len_b * len_b * (len_c * len_c + len_a * len_a - len_b * len_b);
-	double w_c = len_c * len_c * (len_a * len_a + len_b * len_b - len_c * len_c);
-	Point<double> o = (w_a * da + w_b * db + w_c * dc) / (w_a + w_b + w_c);
-	double r = (o - a).norm();
-	return { o, r };
-	*/
 }
 
 
@@ -456,7 +452,7 @@ Circle<double> circircle(const Point<T>& a, const Point<T>& b, const Point<T>& c
 *
 * —˜—pFy2 ’¼ü‚ÌŒğ“_z
 */
-template <typename T>
+template <class T>
 void convex_cut(const Polygon<T>& poly, const Line<T>& l, Polygon<double>& lpoly) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_C
 

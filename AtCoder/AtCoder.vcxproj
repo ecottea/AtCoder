@@ -139,7 +139,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <DisableSpecificWarnings>26451;6297;4334</DisableSpecificWarnings>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>C:\libs\boost\include\boost-1_83</AdditionalIncludeDirectories>
     </ClCompile>
@@ -157,6 +158,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DP.h" />
+    <ClInclude Include="2変数FPS.h" />
+    <ClInclude Include="SPS.h" />
+    <ClInclude Include="FPS%28スパース%29.h" />
     <ClInclude Include="矩形クエリ.h" />
     <ClInclude Include="数え上げ%28分割%29.h" />
     <ClInclude Include="畳込み%28他演算%29.h" />
@@ -335,6 +339,7 @@
     <ClInclude Include="M-全順序集合.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="answer.txt" />
     <Text Include="input.txt" />
     <Text Include="output.txt" />
   </ItemGroup>

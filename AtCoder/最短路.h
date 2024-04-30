@@ -194,7 +194,7 @@ vl dijkstra(const WGraph& g, int st) {
 }
 
 
-//【単一始点最短路（貰う遷移）】O(n + m log n)
+//【単一始点最短路（貰う遷移）】O(n + m log n)（ちょっと遅い）
 /*
 * 非負の重み付きグラフ g に対し st から各頂点への最短距離（到達不能なら INFL）を格納したリストを返す．
 */
@@ -374,14 +374,43 @@ vl potentialed_dijkstra(const WGraph& g, const vl& u, int st) {
 }
 
 
-//【ペナルティ付きダイクストラ法】
+//【ダイクストラ法（任意コスト）】O(n + m log n)
 /*
-* これまでの距離に依存してコストが追加でかかってくる状況でも
-* それを加味すればダイクストラ法を使うことができる．
-* 
-* 参考 : https://miscalc.hatenablog.com/entry/2022/10/10/115348
-* verify : https://atcoder.jp/contests/abc192/tasks/abc192_e
+* 参照付きグラフ g に対し st から各頂点への最小コスト（到達不能なら INFL）を格納したリストを返す．
+* 初期コストは ini_cost で，コスト x の状態で辺 j を通ると，通過後のコストは f(j, x) になるとする．
+*
+* 制約：
+*	f(x) は x について広義単調増加（途中であえてコストを増やすメリットがない）
+*	f(x) ≧ x（辺を通ることでコストが減ることがない）
 */
+template <class FUNC>
+vl dijkstra(const IGraph& g, int st, const FUNC& f, ll ini_cost) {
+	// 参考 : https://miscalc.hatenablog.com/entry/2022/10/10/115348
+	// verify : https://atcoder.jp/contests/abc342/tasks/abc342_e
+
+	int n = sz(g);
+	vl cost(n, INFL); // st からのコスト
+	cost[st] = ini_cost;
+
+	// 組 (st からのコスト, 頂点番号) を入れる優先度付きキュー
+	priority_queue_rev<pli> q;
+	q.push({ ini_cost, st });
+
+	while (!q.empty()) {
+		auto [c, s] = q.top(); q.pop();
+
+		// すでにより小さいコストに更新されていたなら何もしない（忘れると O(n^2)）
+		if (cost[s] < c) continue;
+
+		// より小さいコストで辿り着けるならコストを更新し，その先も探索する．
+		repe(e, g[s]) {
+			ll nc = f(e.id, c);
+			if (chmin(cost[e.to], nc)) q.push({ nc, e.to });
+		}
+	}
+
+	return cost;
+}
 
 
 //【最短路木】O(n + m log n)
@@ -597,7 +626,9 @@ int dynamic_shortest_path(T st, T gl, const function<vector<T>(T)>& nxt, vector<
 	while (!que.empty()) {
 		// 未探索の頂点 s を得る．
 		auto s = que.front(); que.pop();
+		dump(s, ":", dist[s]);
 
+		bool end_flag = false;
 		repe(t, nxt(s)) {
 			// t が発見済みの頂点なら何もしない．
 			if (dist.count(t)) continue;
@@ -607,11 +638,16 @@ int dynamic_shortest_path(T st, T gl, const function<vector<T>(T)>& nxt, vector<
 			p[t] = s;
 
 			// ゴールに到着したら終了．
-			if (t == gl) break;
+			if (t == gl) {
+				end_flag = true;
+				break;
+			}
 
 			// 未探索の頂点として t を追加する．
 			que.push(t);
 		}
+
+		if (end_flag) break;
 	}
 
 	// st から gl まで到達不能の場合

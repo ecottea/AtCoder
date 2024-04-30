@@ -3,7 +3,167 @@
 // ■■■■■ 周期性 ■■■■■
 
 
-//【周期数列の和】
+//【周期数列（配列）】
+/*
+* Periodic_sequence_sum<T>(vT a, int n0) : O(n)
+*	A = a[0..n0) + a[n0..n)*∞ なる数列 A[0..∞) で初期化する．
+*
+* T sum(ll n)
+*	ΣA[0..n) を返す．
+*/
+template <class T>
+class Periodic_sequence {
+	// n0 : 非周期部分の長さ，n1 : 周期部分の長さ
+	int n0, n1;
+
+	// acc0[i] : ΣA[0..i)，acc1[i] : ΣA[n0..n0+i)
+	vector<T> acc0, acc1;
+
+public:
+	// A[0..∞) = a[0..n0) + a[n0..n)*∞ なる無限数列 A で初期化する．
+	Periodic_sequence(const vector<T>& a, int n0) : n0(n0), n1(sz(a) - n0) {
+		// verify : https://projecteuler.net/problem=167
+
+		Assert(n0 >= 0); Assert(n1 >= 0);
+		acc0.resize(n0 + 1);
+		acc1.resize(n1 + 1);
+		rep(i, n0) acc0[i + 1] = acc0[i] + a[i];
+		rep(i, n1) acc1[i + 1] = acc1[i] + a[n0 + i];
+	}
+
+	// Σi = [0..n) a[i] を返す．
+	T sum(ll n) {
+		// verify : https://projecteuler.net/problem=167
+
+		if (n <= n0) return acc0[n];
+
+		T res = acc0[n0];
+		n -= n0;
+		res += acc1[n1] * (n / n1) + acc1[n % n1];
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Periodic_sequence& p) {
+		os << "acc0: " << p.n0 << "(" << p.acc0 << ")" << endl;
+		os << "acc1: " << p.n1 << "(" << p.acc1 << ")" << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【周期文字列】
+/*
+* Cyclic_string(string s, int C = 26, char a = 'a', ll M = 1) : O(n C)
+*	S[0..Mn) = s[0..n)×M で初期化する．文字種は a から始まる連続する C 種類とする．
+*
+* ll next(ll l, char c, ll k = 0) : O(1)
+*	S[l..Mn) 内の文字 c の左から k 番目（0-indexed）の位置を返す（なければ Mn を返す）
+*
+* ll prev(ll r, char c, ll k = 0) : O(1)
+*	S[0..r) 内の文字 c の右から k 番目（0-indexed）の位置を返す（なければ -1 を返す）
+*
+* ll count(ll l, ll r, char c) : O(1)
+*	S[l..r) 内の文字 c の個数を返す．
+*/
+class Cyclic_string {
+	int n;
+
+	int C; int a; ll M;
+
+	// pos[c] : s[0..n) 内の文字 c がある位置の昇順リスト
+	vvi pos;
+
+	// acc[c][i] : 文字 c が s[0..i) に含まれている個数
+	vvi acc;
+
+	//【備考】
+	// acc に対してさらに c 方向に累積和をとっておけば，
+	// 自身より大きい[小さい] 文字に関するなんやかんやも O(1) で処理できるようになる．
+
+public:
+	// S[0..Mn) = s[0..n)×M で初期化する．文字種は a から始まる連続する C 種類とする．
+	Cyclic_string(const string& s, int C = 26, char a = 'a', ll M = 1)
+		: n(sz(s)), C(C), a(a), M(M), pos(C), acc(C, vi(n + 1))
+	{
+		// verify : https://atcoder.jp/contests/abc346/tasks/abc346_f
+
+		rep(i, n) {
+			int c = s[i] - a;
+			pos[c].emplace_back(i);
+			rep(c2, C) acc[c2][i + 1] += acc[c2][i] + (c2 == c);
+		}
+	}
+
+	// S[l..Mn) 内の文字 c の左から k 番目（0-indexed）の位置を返す（なければ Mn を返す）
+	ll next(ll l, char c, ll k = 0) {
+		// verify : https://atcoder.jp/contests/abc346/tasks/abc346_f
+
+		c -= a;
+		Assert(0 <= c && c < C);
+
+		if (l >= M * n) return M * n;
+		chmax(l, 0LL);
+
+		// K : s[0..n) 内の文字 c の個数
+		ll K = acc[c][n];
+		if (K == 0) return M * n;
+
+		// S[0..Mn) 内の左から k 番目とする．
+		k += (l / n) * K + acc[c][l % n];
+		if (k >= M * K) return M * n;
+
+		// ni : S[0..Mn) 内の左から k 番目の文字 c の位置
+		ll ni = (k / K) * n + pos[c][k % K];
+		if (ni > M * n) ni = M * n;
+
+		return ni;
+	}
+
+	// S[0..r) 内の文字 c の右から k 番目（0-indexed）の位置を返す（なければ -1 を返す）
+	ll prev(ll r, char c, ll k = 0) {
+		c -= a;
+		Assert(0 <= c && c < C);
+
+		if (r < 0) return -1LL;
+		chmin(r, M * n);
+
+		// K : s[0..n) 内の文字 c の個数
+		ll K = acc[c][n];
+		if (K == 0) return -1LL;
+
+		// S[0..Mn) 内の左から k 番目とする．
+		k = (r / n) * K + acc[c][r % n] - 1 - k;
+		if (k < 0) return -1LL;
+
+		// ni : S[0..Mn) 内の左から k 番目の文字 c の位置
+		ll ni = (k / K) * n + pos[c][k % K];
+
+		return ni;
+	}
+
+	// S[l..r) 内の文字 c の個数を返す．
+	ll count(ll l, ll r, char c) {
+		c -= a;
+		Assert(0 <= c && c < C);
+
+		chmax(l, 0LL); chmin(r, M * n);
+		if (l >= r) return 0LL;
+
+		// K : s[0..n) 内の文字 c の個数
+		ll K = acc[c][n];
+
+		ll res = (r / n) * K + acc[c][r % n];
+		res -= (l / n) * K + acc[c][l % n];
+
+		return res;
+	}
+};
+
+
+//【周期数列の和（漸化式）】
 /*
 * Periodic_sequence_sum(function<T(T)> f, T a0) : O(nc + c)
 *	a[i+1] = f(a[i]), a[0] = a0 なる数列で初期化する．
@@ -130,6 +290,8 @@ pii floyds_cycle_finding(const function<T(T)>& f, T a0) {
 */
 template <class STR>
 int pseudo_cycle(const STR& a) {
+	// verify : https://atcoder.jp/contests/arc172/tasks/arc172_e
+
 	int n = sz(a);
 	Rolling_hash A(a);
 

@@ -26,7 +26,19 @@ S401 e401() { return 1; }
 #define Add_Mul_cring S401, add401, o401, mi401, mul401, e401
 
 
+//yZ/2^64Z ‰ÁZ - æZ ‰ÂŠ·ŠÂz
+/* verify : https://judge.yosupo.jp/problem/convolution_mod_2_64 */
+using S406 = ull;
+S406 add406(S406 x, S406 y) { return x + y; }
+S406 o406() { return 0; }
+S406 mi406(S406 x) { return ~x + 1; }
+S406 mul406(S406 x, S406 y) { return x * y; }
+S406 e406() { return 1; }
+#define Ull_Add_Mul_cring S406, add406, o406, mi406, mul406, e406
+
+
 //yXOR - AND ‰ÂŠ·ŠÂz
+/* verify : https://atcoder.jp/contests/abc009/tasks/abc009_4 */
 using S402 = unsigned int;
 S402 add402(S402 x, S402 y) { return x ^ y; }
 S402 o402() { return 0; }

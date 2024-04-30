@@ -11,17 +11,27 @@
 /*
 * 木 g の独立集合（辺を共有しない頂点の集合）の個数を返す．
 *
-* 利用：【貰う木 DP（頂点マージ）】
+* 利用：【貰う木 DP】
 */
-using T_cind = pair<mint, mint>; // (根を選択，根を非選択)
-void merge_cind(T_cind& x, const T_cind& y, int s) { x.first *= y.first; x.second *= y.second; }
-T_cind leaf_cind(int s) { return { 1, 1 }; }
-T_cind apply_cind(const T_cind& x, int s, int t) { return { x.second, x.first + x.second }; }
+struct T_cind { mint c1, c0; }; // (根を選択，根を非選択)
+T_cind leaf_cind(int s) {
+	return T_cind{ 1, 1 };
+}
+T_cind add_edge_cind(const T_cind& x, int p, int s) {
+	return T_cind{ x.c0, x.c0 + x.c1 };
+}
+void merge_cind(T_cind& x, const T_cind& y, int s) {
+	x.c0 *= y.c0;
+	x.c1 *= y.c1;
+}
+void add_vertex_cind(T_cind& x, int s) {
+	;
+}
 mint count_independent_set(const Graph& g) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_p
 
-	auto dp = tree_getDP_vmerge<T_cind, merge_cind, leaf_cind, apply_cind>(g, 0);
-	return dp[0].first + dp[0].second;
+	auto dp = tree_getDP_virtual<T_cind, leaf_cind, add_edge_cind, merge_cind, add_vertex_cind>(g, 0);
+	return dp[0].c0 + dp[0].c1;
 }
 
 
@@ -33,24 +43,27 @@ mint count_independent_set(const Graph& g) {
 *
 *（二乗の木 DP）
 *
-* 利用：【貰う木 DP（森経由）】
+* 利用：【貰う木 DP】
 */
 using T_cs = vm;
-void merge_cs(T_cs& x, const T_cs& y) {
+T_cs leaf_cs(int s) {
+	// 空の部分木も認める．
+	return T_cs{ 1, 1 };
+}
+T_cs add_edge_cs(const T_cs& x, int p, int s) {
+	return x;
+}
+void merge_cs(T_cs& x, const T_cs& y, int s) {
 	// ns[nt] : 部分木 x[ y ] の大きさ + 1
 	int ns = sz(x), nt = sz(y);
 
-	// これは畳込みなので mod 998244353 なら O(n log n) まで高速化できそうだが，
+	// これは畳込みなので mod 998244353 なら O(n log n) まで高速化できそうな気になるが，
 	// 毛虫グラフに近いとき長さ O(1) と O(n) の畳込みを O(n) 回やるのでだめ．
 	T_cs nx(ns + nt - 1);
 	rep(i, ns) rep(j, nt) nx[i + j] += x[i] * y[j];
 	x = move(nx);
 }
-T_cs leaf_cs(int s) {
-	// 空の部分木も認める．
-	return T_cs{ 1, 1 };
-}
-void apply_cs(T_cs& x, int s) {
+void add_vertex_cs(T_cs& x, int s) {
 	// ns : 部分木 x の大きさ + 1
 	int ns = sz(x);
 
@@ -61,54 +74,53 @@ void apply_cs(T_cs& x, int s) {
 vector<T_cs> count_subtree(const Graph& g, int r) {
 	// 参考 : https://snuke.hatenablog.com/entry/2019/01/15/211812
 
-	return tree_getDP_forest<T_cs, merge_cs, leaf_cs, apply_cs>(g, r);
+	return tree_getDP_virtual<T_cs, leaf_cs, add_edge_cs, merge_cs, add_vertex_cs>(g, r);
 }
 
 
-//【根付き木の部分木の数え上げ（大きさ毎，大きさ k 以下）】O(n k)
+//【根付き木の部分木の数え上げ（大きさ毎，大きさ K 以下）】O(n K)
 /*
 * 与えられた r を根とする根付き木 g に対し，
-* 各 s∈[0..n) および各 i∈[0..min(|s|,k)]（|s| は部分木 s の大きさ）について，
+* 各 s∈[0..n) および各 i∈[0..min(|s|,K)]（|s| は部分木 s の大きさ）について，
 * 部分木 s の大きさ i の部分木の個数を格納した二次元リストを返す．
 *
 *（二乗の木 DP）
 *
-* 利用：【貰う木 DP（森経由）】
+* 利用：【貰う木 DP】
 */
-int k_csk; // 部分木の大きさの最大値
+int K_csk; // 部分木の大きさの最大値
 using T_csk = vm;
-void merge_csk(T_csk& x, const T_csk& y) {
+T_csk leaf_csk(int s) {
+	return T_csk{ 1, 1 };
+}
+T_csk add_edge_csk(const T_csk& x, int p, int s) {
+	return x;
+}
+void merge_csk(T_csk& x, const T_csk& y, int s) {
 	int ns = sz(x), nt = sz(y);
-	int n = min(ns + nt - 1, k_csk + 1);
+	int n = min(ns + nt - 1, K_csk + 1);
 
 	T_csk nx(n);
-	rep(i, ns) repi(j, 0, min(nt - 1, k_csk - i)) nx[i + j] += x[i] * y[j];
+	rep(i, ns) repi(j, 0, min(nt - 1, K_csk - i)) nx[i + j] += x[i] * y[j];
 	x = move(nx);
 }
-T_csk leaf_csk(int s) { return T_csk{ 1, 1 }; }
-void apply_csk(T_csk& x, int s) {
+void add_vertex_csk(T_csk& x, int s) {
 	int ns = sz(x);
-	int n = min(ns + 1, k_csk + 1);
+	int n = min(ns + 1, K_csk + 1);
 
 	x.resize(n);
 	repir(i, n - 1, 1) x[i] = x[i - 1];
 	x[0] = 1;
 }
-vector<T_csk> count_subtree(const Graph& g, int r, int k) {
+vector<T_csk> count_subtree(const Graph& g, int r, int K) {
 	// 参考 : https://snuke.hatenablog.com/entry/2019/01/15/211812
-	
-	//【補足】
-	// 定数倍を少し犠牲にするなら，O(n^2) の二乗の木 DP において merge や apply の直後に
-	//		x.resize(min(sz(x), k + 1));
-	// を付けるだけでいい．
-	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_eel
 
-	k_csk = k;
-	return tree_getDP_forest<T_csk, merge_csk, leaf_csk, apply_csk>(g, r);
+	K_csk = K;
+	return tree_getDP_virtual<T_csk, leaf_csk, add_edge_csk, merge_csk, add_vertex_csk>(g, r);
 }
 
 
-//【根付き木の部分木の数え上げ（大きさ毎，mod 998244353）】O(n (log n)^2)
+//【根付き木の部分木の数え上げ（大きさ毎，mod 998244353）】O(n (log n)^3)
 /*
 * 与えられた r を根とする根付き木 g に対し，
 * 各 i∈[0..n] について大きさ i の部分木の個数を格納したリストを返す．
@@ -132,26 +144,31 @@ vm count_subtree_MFPS(const Graph& g, int r) {
 *
 *（二乗の木 DP）
 *
-* 利用：【貰う木 DP（森経由）】
+* 利用：【貰う木 DP】
 */
 using T_csl = vm;
-void merge_csl(T_csl& x, const T_csl& y) {
-	int ns = sz(x), nt = sz(y);
-
-	T_csl nx(ns + nt - 1);
-	rep(i, ns) rep(j, nt) nx[i + j] += x[i] * y[j];
-	x = move(nx);
+T_csl leaf_csl(int s) {
+	return T_csl{ 1, 1 };
 }
-T_csl leaf_csl(int s) { return T_csl{ 1, 1 }; }
-void apply_csl(T_csl& x, int s) {
+T_csl add_edge_csl(const T_csl& x, int p, int s) {
+	return x;
+}
+void merge_csl(T_csl& x, const T_csl& y, int s) {
+	int nx = sz(x), ny = sz(y);
+
+	T_csl z(nx + ny - 1);
+	rep(i, nx) rep(j, ny) z[i + j] += x[i] * y[j];
+	x = move(z);
+}
+void add_vertex_csl(T_csl& x, int s) {
 	x[1]++; // s が葉である部分木
 }
-vector<T_csl> count_subtree_leaf(const Graph& g, int r) {
-	return tree_getDP_forest<T_csl, merge_csl, leaf_csl, apply_csl>(g, r);
+vector<T_csl> count_subtree_by_leaf(const Graph& g, int r) {
+	return tree_getDP_virtual<T_csl, leaf_csl, add_edge_csl, merge_csl, add_vertex_csl>(g, r);
 }
 
 
-//【根付き木の部分木の数え上げ（葉の数毎，mod 998244353）】O(n (log n)^2)
+//【根付き木の部分木の数え上げ（葉の数毎，mod 998244353）】O(n (log n)^3)
 /*
 * 与えられた r を根とする根付き木 g に対し，
 * 各 i∈[0..n] について葉を i 個もつ部分木の個数を格納したリストを返す．
@@ -160,12 +177,57 @@ vector<T_csl> count_subtree_leaf(const Graph& g, int r) {
 */
 MFPS leaf_cslM(int s) { return MFPS(vm{ 1,1 }); }
 pair<MFPS, MFPS> apply_cslM(int s) { return { MFPS(1), MFPS(vm{ 0,1 }) }; }
-vm count_subtree_leaf_MFPS(const Graph& g, int r) {
+vm count_subtree_by_leaf_MFPS(const Graph& g, int r) {
 	// verify : https://atcoder.jp/contests/abc269/tasks/abc269_h
 
 	auto res = tree_getDP_forest_MFPS<leaf_cslM, apply_cslM>(g, r);
-	res.resize(sz(g) + 1);
+	res.resize(sz(g) + 1); // 葉の数以降の次数の係数は 0 で埋まっている．
 	return res.c;
+}
+
+
+//【根付き木の誘導部分グラフの数え上げ（葉の色指定）】O(n)
+/*
+* 与えられた r を根とする根付き木 g とその頂点の色 c[0..n)∈{0,1}^n に対し，
+* 各 s∈[0..n) について部分木 s の誘導部分グラフで葉の色が全て 1 であるものの個数を格納したリストを返す．
+*
+* 利用：【貰う木 DP（頂点マージ）】
+*/
+vi c_cislc; // 頂点の色 ∈ {0,1}
+using T_cislc = tuple<mint, mint, mint>; // 根の次数が (0, 1, 2 以上)，ただし根の次数 1 のとき根だけはルールを無視する．
+void merge_cislc(T_cislc& x, const T_cislc& y, int s) {
+	auto [x0, x1, x2] = x;
+	auto [y0, y1, y2] = y;
+
+	// s のみからなる誘導部分グラフを引きつつ数え上げる．
+	mint z0 = x0 + y0;
+	mint z1 = x1 + y1 - 1;
+	mint z2 = x2 * y2 + x2 * y1 + x1 * y2 + (x1 - 1) * (y1 - 1);
+
+	x = { z0, z1, z2 };
+}
+T_cislc leaf_cislc(int s) { return { 0, 1, 0 }; }
+T_cislc apply_cislc(const T_cislc& x, int p, int s) {
+	auto [x0, x1, x2] = x;
+
+	// s のみ，p のみからなる誘導部分グラフに注意して数え上げる．
+	mint z0 = x0 + x2 + (c_cislc[s] ? x1 : 0);
+	mint z1 = x1 + x2 + (c_cislc[s] ? 1 : 0);
+	mint z2 = 0;
+
+	return { z0, z1, z2 };
+}
+vm count_induced_subtree_by_leaf_color(const Graph& g, int r) {
+	// verify : https://atcoder.jp/contests/abc340/tasks/abc340_g
+
+	int n = sz(g);
+	auto dp = tree_getDP_vmerge<T_cislc, merge_cislc, leaf_cislc, apply_cislc>(g, r);
+	vm res(n);
+	rep(s, n) {
+		auto [x0, x1, x2] = dp[s];
+		res[s] = x0 + x2 + (c_cislc[s] ? x1 : 0);
+	}
+	return res;
 }
 
 
@@ -177,31 +239,54 @@ vm count_subtree_leaf_MFPS(const Graph& g, int r) {
 *
 *（二乗の木 DP）
 *
-* 利用：【貰う木 DP（一括）】
+* 利用：【貰う木 DP】
 */
-using T_cis = vector<pair<mint, mint>>; // (根を含まない, 根を含む)
-void merge_cis(T_cis& x, int s, const T_cis& y, int t) {
-	int ns = sz(x), nt = sz(y);
-
-	T_cis nx(ns + nt);
-	rep(i, ns) rep(j, nt) {
-		nx[i + j].first += x[i].first * y[j].first;
-		nx[i + j].first += x[i].first * y[j].second;
-		nx[i + j].second += x[i].second * y[j].first;
-		nx[i + j + 1].second += x[i].second * y[j].second;
-	}
-	x = move(nx);
+struct T_cis { vm c0, c1; }; // (根を含まない, 根を含む)
+T_cis leaf_cis(int s) {
+	return T_cis{ {1}, {1} };
 }
-T_cis leaf_cis(int s) { return T_cis{ {1, 1} }; }
+T_cis add_edge_cis(const T_cis& x, int p, int s) {
+	int n = sz(x.c0);
+
+	T_cis z;
+	z.c0.resize(n + 1);
+	z.c1.resize(n + 1);
+
+	rep(i, n) {
+		z.c0[i] += x.c0[i];
+		z.c0[i] += x.c1[i];
+		z.c1[i] += x.c0[i];
+		z.c1[i + 1] += x.c1[i]; // 隣接する頂点をともに選ぶなら間の辺も選ばれる
+	}
+	return z;
+}
+void merge_cis(T_cis& x, const T_cis& y, int s) {
+	int nx = sz(x.c0), ny = sz(y.c0);
+
+	T_cis z;
+	z.c0.resize(nx + ny);
+	z.c1.resize(nx + ny);
+
+	rep(i, nx) rep(j, ny) {
+		z.c0[i + j] += x.c0[i] * y.c0[j];
+		z.c1[i + j] += x.c1[i] * y.c1[j];
+	}
+
+	x = move(z);
+}
+void add_vertex_cis(T_cis& x, int s) {
+	;
+}
 vvm count_induced_subtree(const Graph& g, int r) {
 	int n = sz(g);
-	
-	auto dp = tree_getDP_once<T_cis, merge_cis, leaf_cis>(g, r);
-	
+
+	auto dp = tree_getDP_virtual<T_cis, leaf_cis, add_edge_cis, merge_cis, add_vertex_cis>(g, r);
+
 	vvm res(n);
 	rep(i, n) {
-		res[i].resize(sz(dp[i]));
-		rep(j, sz(dp[i])) res[i][j] = dp[i][j].first + dp[i][j].second;
+		int L = sz(dp[i].c0);
+		res[i].resize(L);
+		rep(j, L) res[i][j] = dp[i].c0[j] + dp[i].c1[j];
 	}
 
 	return res;
@@ -216,50 +301,63 @@ vvm count_induced_subtree(const Graph& g, int r) {
 *
 *（二乗の木 DP）
 *
-* 利用：【貰う木 DP（一括）】
+* 利用：【貰う木 DP】
 */
-using T_ccp = vector<tuple<mint, mint, mint>>; // (根がパスに属さない, 根がパスの端点, 根がパスの端点以外)
-void merge_ccp(T_ccp& x, int s, const T_ccp& y, int t) {
-	int ns = sz(x), nt = sz(y);
-	int n = ns + nt;
-
-	T_ccp nx(n);
-	rep(i, ns) {
-		auto [cs0, cs1, cs2] = x[i];
-
-		rep(j, nt) {
-			auto [ct0, ct1, ct2] = y[j];
-
-			// 辺 s→t がパスに属さない場合
-			mint sum = ct0 + ct1 + ct2;
-			get<0>(nx[i + j]) += cs0 * sum;
-			get<1>(nx[i + j]) += cs1 * sum;
-			get<2>(nx[i + j]) += cs2 * sum;
-
-			// 辺 s→t がパスに属する場合
-			if (i + j + 1 < n) get<1>(nx[i + j + 1]) += cs0 * ct0;
-			get<1>(nx[i + j]) += cs0 * ct1;
-			get<2>(nx[i + j]) += cs1 * ct0;
-			if (i + j - 1 >= 0) get<2>(nx[i + j - 1]) += cs1 * ct1;
-		}
-	}
-	x = move(nx);
+struct T_ccp {
+	vm n, e, o; // (根がパスに属さない, 根がパスの端点, 根が端点以外のパス上)
+};
+T_ccp leaf_ccp(int s) {
+	return T_ccp{ {1}, {0}, {0} };
 }
-T_ccp leaf_ccp(int s) { return T_ccp{ {1, 0, 0} }; }
+T_ccp add_edge_ccp(const T_ccp& x, int p, int s) {
+	int n = sz(x.n);
+
+	T_ccp z;
+	z.n.resize(n + 1);
+	z.e.resize(n + 1);
+	z.o.resize(n + 1);
+
+	rep(i, n) {
+		z.n[i] += x.n[i] + x.e[i] + x.o[i];
+		z.e[i] += x.e[i];
+		z.e[i + 1] += x.n[i]; // 辺 p-s を新たにパスとする．
+	}
+
+	return z;
+}
+void merge_ccp(T_ccp& x, const T_ccp& y, int s) {
+	int nx = sz(x.n), ny = sz(y.n);
+
+	T_ccp z;
+	z.n.resize(nx + ny);
+	z.e.resize(nx + ny);
+	z.o.resize(nx + ny);
+
+	rep(i, nx) rep(j, ny) {
+		z.n[i + j] += x.n[i] * y.n[j];
+		z.e[i + j] += x.n[i] * y.e[j];
+		z.o[i + j] += x.n[i] * y.o[j];
+		z.e[i + j] += x.e[i] * y.n[j];
+		if (i + j - 1 >= 0) z.o[i + j - 1] += x.e[i] * y.e[j];
+		z.o[i + j] += x.o[i] * y.n[j];
+	}
+	x = move(z);
+}
+void add_vertex_ccp(T_ccp& x, int s) {
+	;
+}
 vvm count_coprime_path(const Graph& g, int r) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_eel
-	
+
 	int n = sz(g);
 
-	auto dp = tree_getDP_once<T_ccp, merge_ccp, leaf_ccp>(g, r);
+	auto dp = tree_getDP_virtual<T_ccp, leaf_ccp, add_edge_ccp, merge_ccp, add_vertex_ccp>(g, r);
 
 	vvm res(n);
 	rep(i, n) {
-		res[i].resize(sz(dp[i]));
-		rep(j, sz(dp[i])) {
-			auto [c0, c1, c2] = dp[i][j];
-			res[i][j] = c0 + c1 + c2;
-		}
+		int L = sz(dp[i].n);
+		res[i].resize(L);
+		rep(j, L) res[i][j] = dp[i].n[j] + dp[i].e[j] + dp[i].o[j];
 	}
 
 	return res;
@@ -293,17 +391,24 @@ vm count_subtree(const Graph& g) {
 *
 * 利用：【全方位木 DP】
 */
-using T_ch = pair<mint, int>; // (ヒープの数, 辺の数)
+struct T_ch {
+	mint v; // ヒープの数
+	int c; // 辺の数
+};
 Factorial_mint const* fm_ch;
-T_ch merge_ch(T_ch x, T_ch y, int s) {
-	// 根以外の頂点については左右で独立に数を割り当てられる．根は 0 で確定．
-	mint cnt = x.first * y.first * fm_ch->bin(x.second + y.second, x.second);
-	return { cnt, x.second + y.second };
+T_ch leaf_ch(int s) {
+	return { 1, 0 };
 }
-T_ch leaf_ch(int s) { return { 1, 0 }; }
-T_ch apply_ch(T_ch x, int p, int s) {
-	// 根に新たに 0 を割り当て，他については全体に 1 加算すれば良い．
-	return { x.first, x.second + 1 };
+T_ch add_edge_ch(const T_ch& x, int p, int s) {
+	return { x.v, x.c + 1 };
+}
+T_ch merge_ch(const T_ch& x, const T_ch& y, int s) {
+	// 左右それぞれで大小順が変わらない限り，独立に数の再割り当てができる．
+	return { x.v * y.v * fm_ch->bin(x.c + y.c, x.c), x.c + y.c };
+}
+T_ch add_vertex_ch(const T_ch& x, int s) {
+	// 根に割り当てられる数は 0 しかなく，他については全体に 1 加算される．
+	return x;
 }
 vm count_heap(const Graph& g, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc160/tasks/abc160_f
@@ -311,10 +416,10 @@ vm count_heap(const Graph& g, const Factorial_mint& fm) {
 	int n = sz(g);
 	fm_ch = &fm;
 
-	auto dp = rerooting<T_ch, merge_ch, leaf_ch, apply_ch>(g);
+	auto dp = rerooting<T_ch, leaf_ch, add_edge_ch, merge_ch, add_vertex_ch>(g);
 
 	vm res(n);
-	rep(i, n) res[i] = dp[i].first;
+	rep(i, n) res[i] = dp[i].v;
 
 	return res;
 }
@@ -329,9 +434,8 @@ vm count_heap(const Graph& g, const Factorial_mint& fm) {
 ll count_tree_distance(const Graph& g, int k) {
 	// verify : https://csacademy.com/contest/round-58/task/path-inversions/
 
-	if (k <= 0) return 0;
-
 	int n = sz(g);
+	if (k <= 0 || k >= n) return 0;
 
 	// 木 g を重心分解する．
 	Centroid_decomposition<Graph> cd(g);
@@ -410,67 +514,50 @@ ll count_tree_distance(const Graph& g, int k) {
 /*
 * 各 d∈[0..n) について，木 g の異なる 2 点の組で距離が d であるものの個数のリストを返す．
 *
-* 利用：【木の重心分解】
+* 利用：【木の 1/3 重心分解】
 */
 vl tree_distance_frequency(const Graph& g) {
-	// verify : https://judge.yosupo.jp/problem/frequency_table_of_tree_distance
-
 	int n = sz(g);
-	Centroid_decomposition<Graph> cd(g);
 
 	vl res(n);
 
-	// cent : 部分木の重心
-	rep(cent, n) {
-		// nc : cent に隣接する頂点の個数，c_dep : cent の深さ
-		int nc = sz(g[cent]), c_dep = cd[cent].dep;
+	auto f = [&](const Graph& gl, const vi& idl, const Graph& gr, const vi& idr) {
+		// 左側の部分木（根を除く）についての根からの距離の分布を求める．
+		int nl = sz(gl);
+		vl cntl(nl);
 
-		// cnt[i][j] : cent を始点にもち，cent の i 番目の隣接頂点方向へ向かう長さ j（>0）のパスの本数
-		vvl cnt(nc);
+		function<void(int, int, int)> dfsl = [&](int s, int p, int d) {
+			cntl[d]++;
+			repe(t, gl[s]) {
+				if (t == p) continue;
+				dfsl(t, s, d + 1);
+			}
+		};
+		dfsl(0, -1, 0);
+		cntl[0]--;
 
-		// cnt_all[j] : cent を始点にもつ長さ j（>0）のパスの本数
-		vl cnt_all;
+		// 右側の部分木（根を除く）についての根からの距離の分布を求める．
+		int nr = sz(gr);
+		vl cntr(nr);
 
-		// cent で分割された各部分木の cent に隣接する頂点を根として dfs する．
-		rep(i, nc) {
-			// cent と同じかそれより浅い頂点は無視する．
-			if (cd[g[cent][i]].dep <= c_dep) continue;
+		function<void(int, int, int)> dfsr = [&](int s, int p, int d) {
+			cntr[d]++;
+			repe(t, gr[s]) {
+				if (t == p) continue;
+				dfsr(t, s, d + 1);
+			}
+		};
+		dfsr(0, -1, 0);
+		cntr[0]--;
 
-			function<void(int, int, int)> dfs = [&](int s, int p, int len) {
-				// 長さ len のパスの存在を記録する
-				if (sz(cnt[i]) <= len) cnt[i].resize(len + 1);
-				cnt[i][len]++;
+		// 左右の部分木を跨ぐパスの長さの分布を求める．
+		auto cnt = convolution_ll(cntl, cntr);
+		rep(i, sz(cnt)) res[i] += cnt[i];
+	};
+	one_third_centroid_decomposition(g, f);
 
-				if (sz(cnt_all) <= len) cnt_all.resize(len + 1);
-				cnt_all[len]++;
-
-				// 再帰処理
-				repe(t, g[s]) {
-					// cent と同じかそれより浅い頂点は無視する．
-					if (cd[t].dep <= c_dep || t == p) continue;
-
-					dfs(t, s, len + 1);
-				}
-			};
-			dfs(g[cent][i], -1, 1);
-		}
-
-		// cent を（端点としてでなく）通過するパスを数える．
-		auto conv = convolution_ll(cnt_all, cnt_all);
-		rep(j, 2 * sz(cnt_all) - 1) res[j] += conv[j];
-
-		// cent で折り返すパスを数えすぎているので引く．
-		rep(i, nc) {
-			auto conv = convolution_ll(cnt[i], cnt[i]);
-			rep(j, 2 * sz(cnt[i]) - 1) res[j] -= conv[j];
-		}
-
-		// cent を端点にもつパスを数える（最後に 2 で割るので 2 倍しておく）
-		rep(j, sz(cnt_all)) res[j] += cnt_all[j] * 2;
-	}
-
-	// 有向パスとして数えてしまっているので 2 で割る．
-	repi(j, 1, n - 1) res[j] /= 2;
+	// 大きさ 2 の部分木（g の辺）に対する例外処理
+	if (n >= 2) res[1] += n - 1;
 
 	return res;
 }

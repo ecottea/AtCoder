@@ -82,6 +82,9 @@ struct Thinning_cumulative_prod {
 
 	// set = {i∈[l..r) | i=k (mod m)} とし，Πa[set] を返す．（空なら e() を返す）
 	S prod(int l, int r, int k) {
+		k %= m;
+		if (k < 0) k += m;
+
 		return cps[k].prod((l - k + m - 1) / m, (r - k + m - 1) / m);
 	}
 };
@@ -716,14 +719,14 @@ public:
 */
 template <class S, S(*op)(S, S), S(*o)()>
 class Thinning_sparse_table {
-	// verify : https://atcoder.jp/contests/arc080/tasks/arc080_c
-
 	int m; // 法
 	vector<Sparse_table<S, op, o>> sts;
 
 public:
 	// 配列 a[0..n) と法 m で初期化する
 	Thinning_sparse_table(const vector<S>& a, int m_) : m(m_), sts(m) {
+		// verify : https://atcoder.jp/contests/arc080/tasks/arc080_c
+		
 		vector<vector<S>> a2(m);
 		rep(i, sz(a)) a2[i % m].push_back(a[i]);
 		rep(j, m) sts[j] = Sparse_table<S, op, o>(a2[j]);
@@ -732,6 +735,11 @@ public:
 
 	// set = {x∈[l..r) | x mod m = k} とし，Σa[set] を返す．（空なら o() を返す）
 	S sum(int l, int r, int k) {
+		// verify : https://atcoder.jp/contests/arc080/tasks/arc080_c
+		
+		k %= m;
+		if (k < 0) k += m;
+
 		return sts[k].sum((l - k + m - 1) / m, (r - k + m - 1) / m);
 	}
 

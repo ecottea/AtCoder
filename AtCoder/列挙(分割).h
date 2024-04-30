@@ -3,13 +3,21 @@
 // ■■■■■ 列挙（集合の分割） ■■■■■
 
 
-//【集合の分割の列挙】O(BellB(n))（n=12 くらいまで動く）
+//【集合の分割の列挙】O(BellB(n))（n=11 くらいまで動く）
 /*
 * [0..n) の分割全てからなるリストを返す．
 * 例えば [0..6) の分割の 1 つに {{0, 1, 4}, {2, 5}, {3}} がある．
 */
 vvvi set_partitions(int n) {
 	// verify : https://yukicoder.me/problems/no/1561
+
+	//【具体例】
+	// n = 3 のとき：
+	//	0: {0, 1, 2}
+	//	1: {0, 1}, {2}
+	//	2: {0, 2}, {1}
+	//	3: {0}, {1, 2}
+	//	4: {0}, {1}, {2}
 
 	vvvi sps; vvi sp;
 
@@ -40,11 +48,17 @@ vvvi set_partitions(int n) {
 }
 
 
-//【集合の分割の列挙（集合の数が k）】O(s2(n, k))
+//【集合の分割の列挙（k 個）】O(s2(n, k))
 /*
 * [0..n) の k 個の集合への分割全てからなるリストを返す．
 */
 vvvi set_partitions(int n, int k) {
+	//【具体例】
+	// (n, k) = (3, 2) のとき：
+	//	0: {0, 1}, {2}
+	//	1: {0, 2}, {1}
+	//	2: {0}, {1, 2}
+
 	vvvi sps; vvi sp;
 
 	function<void(int)> rf = [&](int x) {
@@ -55,10 +69,12 @@ vvvi set_partitions(int n, int k) {
 		}
 
 		// 要素 x を既に存在する集合に含める場合
-		rep(i, sz(sp)) {
-			sp[i].push_back(x);
-			rf(x + 1);
-			sp[i].pop_back();
+		if (sz(sp) + (n - x - 1) >= k) {
+			rep(i, sz(sp)) {
+				sp[i].push_back(x);
+				rf(x + 1);
+				sp[i].pop_back();
+			}
 		}
 
 		// 要素 x を単独で新たな集合とする場合
@@ -69,7 +85,7 @@ vvvi set_partitions(int n, int k) {
 		}
 
 		return;
-		};
+	};
 	rf(0);
 
 	return sps;
@@ -116,6 +132,65 @@ vvvi set_partitions_equal(int k, int m) {
 		return;
 	};
 	rf(0);
+
+	return sps;
+}
+
+
+//【多重集合の順序付き分割の列挙（K 個）】O(Πbin(c[i]+K-1,K-1))
+/*
+* a[0..n) を各 c[0..n) 個含む多重集合を K 個の集合に順序付きで分割する方法全てからなるリストを返す．
+*/
+template <class T>
+vector<vector<vector<T>>> ordered_multiset_partitions(const vector<T>& a, vi c, int K) {
+	// verify : https://mojacoder.app/users/ocv_contest/problems/f26bcaf3-ae22-4fa2-acdc-81b92115ac2e
+
+	//【具体例】
+	// a[0..2) = [0, 1], c[0..2) = [2, 2], K = 2 のとき：
+	//	0: {0, 0, 1}, {1}
+	//	1: {0, 0}, {1, 1}
+	//	2: {0, 1, 1}, {0}
+	//	3: {0, 1}, {0, 1}
+	//	4: {0}, {0, 1, 1}
+	//	5: {1, 1}, {0, 0}
+	//	6: {1}, {0, 0, 1}
+
+	int n = sz(a);
+
+	int rem = accumulate(all(c), 0);
+
+	vector<vector<vector<T>>> sps; vector<vector<T>> sp(K); int emp_cnt = K;
+
+	// k 番目の集合に a[i] を入れるかどうか決める．
+	function<void(int, int)> rf = [&](int k, int i) {
+		// 全ての要素の所属を決め終えた場合
+		if (rem == 0) {
+			sps.push_back(sp);
+			return;
+		}
+
+		// k 番目の集合に a[i] を入れる場合
+		if (c[i] > 0 && rem - 1 >= K - 1 - k) {
+			sp[k].push_back(a[i]);
+			c[i]--;
+			rem--;
+
+			rf(k, i);
+
+			sp[k].pop_back();
+			c[i]++;
+			rem++;
+		}
+
+		// k 番目の集合に a[i] を入れない場合
+		if (k < K - 1 || c[i] == 0) {
+			if (i == n - 1) {
+				if (!sp[k].empty()) rf(k + 1, 0);
+			}
+			else rf(k, i + 1);
+		}
+	};
+	rf(0, 0);
 
 	return sps;
 }
@@ -280,6 +355,8 @@ vvi integer_partitions_val(int n, const vi& a) {
 * 自然数 n を d 個の非負整数に順序付きで分割する方法のリストを返す．
 */
 vvi ordered_integer_partitions_len(int n, int d) {
+	// verify : https://projecteuler.net/problem=862
+
 	//【具体例】
 	// (n, d) = (3, 3) のとき：
 	//	0: 0 0 3

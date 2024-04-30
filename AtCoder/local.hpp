@@ -5,12 +5,16 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#define Assert assert
 
 #define __int128 ll
+//#include <boost/multiprecision/cpp_int.hpp> // warning STL4038 がうざい
+//#define __int128 boost::multiprecision::int128_t
 
 
-//【GCC のビルトイン関数との互換用】
+#define Assert assert
+
+
+//【gcc のビルトイン関数との互換用】
 
 // 全ビット中の 1 の個数
 inline int popcount(int n) {
@@ -32,6 +36,11 @@ inline int lsb(ll n) {
 	unsigned long i;
 	_BitScanForward64(&i, (ull)n);
 	return i;
+}
+template <size_t N>
+inline int lsb(const bitset<N>& b) {
+	rep(i, N) if (b[i]) return i;
+	return N;
 }
 
 // 最上位ビットの位置（0-indexed）
@@ -229,7 +238,7 @@ template <class T> void dump_mat(vector<vector<T>> a) {
 	cout << "{";
 	rep(i, sz(a)) {
 		cout << "{";
-		rep(j, sz(a[0])) cout << a[i][j] << (j < sz(a[0]) - 1 ? "," : "}");
+		rep(j, sz(a[i])) cout << a[i][j] << (j < sz(a[i]) - 1 ? "," : "}");
 		cout << (i < sz(a) - 1 ? ",\n" : "}\n");
 	}
 }

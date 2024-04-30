@@ -102,20 +102,20 @@ template <class T>
 using Line = pair<Point<T>, Point<T>>;
 
 
-//y•½–Ê“à‚Ì‰~z
-/*
-* {p, r} : “_ p ‚ğ’†S‚Æ‚·‚é”¼Œa r ‚Ì‰~‚ğ•\‚·D
-*/
-template <class T>
-using Circle = pair<Point<T>, T>;
-
-
 //y•½–Ê“à‚Ì‘½ŠpŒ`z
 /*
 * Polygon(p[0..n)) : ‚±‚ê‚ç‚Ì“_‚ğü‚é‡‚É’¸“_‚É‚à‚Â n ŠpŒ`‚ğ•\‚·D
 */
 template <class T>
 using Polygon = vector<Point<T>>;
+
+
+//y•½–Ê“à‚Ì‰~z
+/*
+* {p, r} : “_ p ‚ğ’†S‚Æ‚·‚é”¼Œa r ‚Ì‰~‚ğ•\‚·D
+*/
+template <class T>
+using Circle = pair<Point<T>, T>;
 
 
 //y’¼ü‚Ì•W€‰»zO(log max(dx, dy))

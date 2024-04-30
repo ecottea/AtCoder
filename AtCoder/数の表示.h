@@ -9,7 +9,7 @@
 *
 * 制約：|b| ≧ 2
 */
-vi integer_digits(ll n, int b = 10) {
+vi integer_digits(ll n, ll b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	Assert(abs(b) >= 2);
@@ -20,7 +20,7 @@ vi integer_digits(ll n, int b = 10) {
 	// mod |b| を取れば最下位桁から順に決定していく．
 	vi ds;
 	while (n != 0) {
-		int d = smod(n, abs(b));
+		int d = (int)smod(n, abs(b));
 		ds.push_back(d);
 		n = (n - d) / b;
 	}
@@ -38,7 +38,7 @@ vi integer_digits(ll n, int b = 10) {
 *
 * 制約：|b| ≧ 2
 */
-vi integer_digits(ll n, int len, int b = 10) {
+vi integer_digits(ll n, int len, ll b = 10) {
 	// verify : https://yukicoder.me/problems/no/327
 
 	Assert(abs(b) >= 2);
@@ -46,7 +46,7 @@ vi integer_digits(ll n, int len, int b = 10) {
 	// mod |b| を取れば最下位桁から順に決定していく．
 	vi ds(len);
 	rep(i, len) {
-		int d = smod(n, abs(b));
+		int d = (int)smod(n, abs(b));
 		ds[len - 1 - i] = d;
 		n = (n - d) / b;
 	}
@@ -116,17 +116,33 @@ ll digit_sum(ll n, ll B = 10) {
 
 //【数字和と繰り上がり】
 /*
-* b 進表記での数字和を s で表す．x + y の b 進での繰り上がりが k 回あるとき以下が成り立つ：
-*	s(x + y) = s(x) + s(y) - (b - 1)k
+* B 進表記での数字和を s で表す．x + y の B 進での繰り上がりが k 回あるとき以下が成り立つ：
+*	s(x + y) = s(x) + s(y) - (B - 1)k
 * 
 * verify : https://atcoder.jp/contests/arc144/tasks/arc144_a
 */
 
 
+//【繰り上がり回数の別表現】
+/*
+* B 進表記された非負整数 n に対し，s(n) を
+*	s(n) := Σi∈[0..∞) floor(n / B^i)
+* と定める．このとき，x + y の B 進での繰り上がり回数は
+*	s(x + y) - (s(x) + s(y))
+* で与えられる．
+* 
+*（証明）floor(n / B^i) は，n の B^[i..∞) の位のみを抜き出した数を表すので，
+*	floor((x+y) / B^i) - (floor(x / B^i) + floor(y / B^i))
+* は B^(i-1) の位から B^i の位への繰り上がりの量を表す．これを全ての桁にわたって加え合わせている．
+* 
+* verify : https://judge.yosupo.jp/problem/multivariate_convolution
+*/
+
+
 //【数字根】
 /*
-* 正の数 n を b 進表記したときの数字根は以下で与えられる：
-*	(n - 1) % (b - 1) + 1
+* 正の数 n を B 進表記したときの数字根は以下で与えられる：
+*	(n - 1) mod (B - 1) + 1
 * 
 * verify : https://yukicoder.me/problems/no/1252
 */

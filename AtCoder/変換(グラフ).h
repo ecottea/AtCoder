@@ -62,6 +62,39 @@ Graph wall_to_graph(const vector<vector<T>>& wx, const vector<vector<T>>& wy, T 
 }
 
 
+//【グラフ → 隣接行列】O(n^2)
+/*
+* 有向グラフ g の 0-1 隣接行列 adj[0..n)[0..n) を返す．
+*/
+vvi adjacency_matrix(const Graph& g) {
+	// verify : https://yukicoder.me/problems/no/2733
+
+	int n = sz(g);
+
+	vvi adj(n, vi(n));
+	rep(s, n) repe(t, g[s]) adj[s][t] = 1;
+
+	return adj;
+}
+
+
+//【グラフ → 隣接行列（重み付き）】O(n^2)
+/*
+* 重み付き有向グラフ g の重み付き隣接行列 adj[0..n)[0..n) を返す．
+* 辺が無い頂点間の重みは，対角成分は diag，その他は non_diag とする．
+*/
+vvl adjacency_matrix(const WGraph& g, ll diag = 0, ll non_diag = INFL) {
+	int n = sz(g);
+
+	vvl adj(n, vl(n, non_diag));
+	rep(i, n) adj[i][i] = diag;
+
+	rep(s, n) repe(t, g[s]) adj[s][t] = t.cost;
+
+	return adj;
+}
+
+
 //【隣接行列 → グラフ】O(n^2)
 /*
 * 隣接行列 e[0..n)[0..n) で辺の有無が表される有向グラフ g を返す．
@@ -225,9 +258,39 @@ WGraph induced_subgraph(const WGraph& g, const vi& vs) {
 }
 
 
+//【誘導部分グラフ（参照付き）】O(n + m)
+/*
+* 重み付きグラフ g について，頂点集合を vs とする誘導部分グラフを返す．
+*/
+IGraph induced_subgraph(const IGraph& g, const vi& vs) {
+	// verify : https://atcoder.jp/contests/abc336/tasks/abc336_g
+
+	int n = sz(g), n2 = sz(vs);
+
+	// v_id[v] : g の頂点が誘導部分グラフの何番目の頂点に対応するか（無ければ -1）
+	vi v_id(n, -1);
+	rep(i, n2) v_id[vs[i]] = i;
+
+	IGraph g2(n2);
+
+	// 選ばれていない頂点は無視しながら g2 に誘導部分グラフを構築する．
+	rep(s, n) {
+		if (v_id[s] == -1) continue;
+
+		repe(t, g[s]) {
+			if (v_id[t] == -1) continue;
+
+			g2[v_id[s]].push_back({ v_id[s], v_id[t], t.id, t.dir });
+		}
+	}
+
+	return g2;
+}
+
+
 //【頂点の除去】
 /*
-* グラフ g から頂点の集合 V' とそれに接続する辺を除去したグラフは，
+* 有向グラフ g から頂点の集合 V' とそれに接続する辺を除去したグラフは，
 * V\V' による g の誘導部分グラフに等しい．
 * 
 * verify : https://onlinejudge.u-aizu.ac.jp/problems/2347
@@ -261,7 +324,7 @@ G eliminate_edge(const G& g, const vector<pii>& e_el) {
 
 //【頂点の縮約】O(n + m)
 /*
-* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
+* 有向グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
 * 自己ループや多重辺が生じた場合は除去され，結果は単純グラフとなる．
 * simple = false とすると自己ループや多重辺の除去を行わない．
 */
@@ -299,7 +362,7 @@ Graph vertex_contraction(const Graph& g, const vvi& p, bool simple = true) {
 
 //【頂点の縮約（重み付き）】O(n + m)
 /*
-* グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
+* 重み付き有向グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
 * 自己ループや多重辺の除去は行わない．
 */
 WGraph vertex_contraction(const WGraph& g, const vvi& p) {
@@ -577,7 +640,7 @@ public:
 };
 
 
-//【区間へ辺を張れるグラフ】
+//【区間と辺を張れるグラフ】
 /*
 * Interval_Graph(int n) : O(n)
 *	有向グラフ g を n 頂点 0 辺で初期化する．
@@ -588,28 +651,33 @@ public:
 * set_vertices(vi vs) : O(K)
 *	注目頂点集合を vs[0..K) に設定する．
 *
+* set_vertices_to_all() : O(n)
+*	注目頂点集合を [0..n) に設定する．
+*
 * add_edge_to_interval(int s, int l, int r) : O(log K)
 *	頂点 s から区間 vs[l..r) に辺を張る．
 *
-* Graph& get() : O(n + ΣK + Q log K)（Q : add_edge 系を呼び出した回数）
-*	g への参照を返す．
+* add_edge_from_interval(int l, int r, int t) : O(log K)
+*	区間 vs[l..r) から頂点 t に辺を張る．
 */
 class Interval_Graph {
-	int n;		// 頂点数
-	int I;
+	int n; // 頂点数
+	int It = 0, If = 0;
 	vi vs;
 
 public:
-	Graph g;	// 有向グラフ
+	Graph g; // 有向グラフ
 
 	// 有向グラフ g を n 頂点 0 辺で初期化する．
-	Interval_Graph(int n) : n(n), I(0), g(n) {
+	Interval_Graph(int n) : n(n), g(n) {
 		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
 	}
-	Interval_Graph() : n(0), I(0) {}
+	Interval_Graph() : n(0) {}
 
 	// 頂点 s から頂点 t に辺を張る．
 	void add_edge(int s, int t) {
+		// verify : https://codeforces.com/contest/1903/problem/F
+
 		g[s].emplace_back(t);
 	}
 
@@ -620,19 +688,39 @@ public:
 		vs = vs_;
 		int K = sz(vs);
 
-		// 完全二分木用の頂点を新たに作成する．
-		I = n - 1; n += K - 1;
+		// 区間へ辺を張るための完全二分木用の頂点を新たに作成する（不要ならコメントアウト可）
+		It = n - 1; n += K - 1;
 		g.resize(n);
-
 		repi(i, 1, K - 1) {
 			// 左の区間への辺を張る．
 			int l = 2 * i;
-			g[I + i].emplace_back(l < K ? I + l : vs[l - K]);
+			g[It + i].emplace_back(l < K ? It + l : vs[l - K]);
 
 			// 右の区間への辺を張る．
 			int r = 2 * i + 1;
-			g[I + i].emplace_back(r < K ? I + r : vs[r - K]);
+			g[It + i].emplace_back(r < K ? It + r : vs[r - K]);
 		}
+
+		// 区間から辺を張るための完全二分木用の頂点を新たに作成する（不要ならコメントアウト可）
+		If = n - 1; n += K - 1;
+		g.resize(n);
+		repi(i, 1, K - 1) {
+			// 左の区間からの辺を張る．
+			int l = 2 * i;
+			g[l < K ? If + l : vs[l - K]].emplace_back(If + i);
+
+			// 右の区間からの辺を張る．
+			int r = 2 * i + 1;
+			g[r < K ? If + r : vs[r - K]].emplace_back(If + i);
+		}
+	}
+
+	// 注目頂点集合を [0..n) に設定する．
+	void set_vertices_to_all() {
+		vi vs(n);
+		iota(all(vs), 0);
+
+		set_vertices(vs);
 	}
 
 	// 頂点 s から区間 vs[l..r) に辺を張る．
@@ -640,25 +728,39 @@ public:
 		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
 
 		int K = sz(vs);
+		chmax(l, 0); chmin(r, K);
 		l += K; r += K;
 
 		while (l < r) {
 			if (l & 1) {
-				g[s].emplace_back(l < K ? I + l : vs[l - K]);
+				g[s].emplace_back(l < K ? It + l : vs[l - K]);
 				l++;
 			}
 			if (r & 1) {
-				g[s].emplace_back(r - 1 < K ? I + r - 1 : vs[r - 1 - K]);
+				g[s].emplace_back(r - 1 < K ? It + r - 1 : vs[r - 1 - K]);
 			}
 			l >>= 1; r >>= 1;
 		}
 	}
 
-	// グラフへの参照を返す．
-	Graph& get() {
-		// verify : https://atcoder.jp/contests/abc210/tasks/abc210_f
+	// 区間 vs[l..r) から頂点 s に辺を張る．
+	void add_edge_from_interval(int l, int r, int t) {
+		// verify : https://codeforces.com/contest/1904/problem/F
 
-		return g;
+		int K = sz(vs);
+		chmax(l, 0); chmin(r, K);
+		l += K; r += K;
+
+		while (l < r) {
+			if (l & 1) {
+				g[l < K ? If + l : vs[l - K]].emplace_back(t);
+				l++;
+			}
+			if (r & 1) {
+				g[r - 1 < K ? If + r - 1 : vs[r - 1 - K]].emplace_back(t);
+			}
+			l >>= 1; r >>= 1;
+		}
 	}
 };
 

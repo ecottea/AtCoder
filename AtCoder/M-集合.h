@@ -1,8 +1,9 @@
 #pragma once
 #include "header.h"
 #include "行列.h"
-#include "ビット行列.h"
+#include "bit行列.h"
 #include "FPS(bit).h"
+#include "ヒープ.h"
 // ■■■■■ モノイド作用付き集合 ■■■■■
 
 
@@ -136,7 +137,7 @@ FB05 idB05() { return Bit_matrix<NB05>(NB05); }
 * F ∋ f : m×n 行列
 *	m = 0 のとき，単位行列を表す．
 *	m = 1 のとき，f を 1 行目にもつコンパニオン行列を表す．
-*	m >= 2 のとき，f そのものを表す．
+*	m ≧ 2 のとき，f そのものを表す．
 */
 // verify : https://atcoder.jp/contests/arc027/tasks/arc027_4
 int NB03 = 10;
@@ -280,5 +281,35 @@ SB15 actB15(FB15 f, SB15 x) { return ACTB15[f][x]; }
 FB15 compB15(FB15 f, FB15 g) { return COMPB15[f][g]; }
 FB15 idB15() { return S0; }
 #define S3_012_mset SB15, FB15, actB15, compB15, idB15
+
+
+//【可換モノイド作用付き生成集合の定義】
+/*
+* 可換モノイド作用付き生成集合 (S, F, act, id, E, comp) を表す．
+*
+* すなわち，S が集合，(F, comp, id) が E で生成されたモノイド，act が作用で，
+*	合成   : ∀x ∈ S, ∀f, g ∈ F,	(f g)(x) = f(g(x))
+*	可換   : ∀f, g ∈ F,				f o g = g o f
+*   恒等射 : ∀x ∈ S,				id(x) = x
+* を満たすものとする．
+*/
+
+
+//【要素の挿入&削除 作用付き 最大値 集合】
+/* verify : https://atcoder.jp/contests/abc342/tasks/abc342_g */
+using S201 = int;
+using F201 = Eraseable_heap<int>;
+using E201 = pii; // (val, tp) (tp=1:挿入, -1:削除)
+void act201(F201& f, S201& x) {
+	if (f.empty()) return;
+	chmax(x, f.top());
+}
+void comp201(E201 e, F201& f) {
+	auto [val, tp] = e;
+	if (tp == 1) f.push(val);
+	else f.erase(val);
+}
+F201 id201() { return F201(); }
+#define SetInsErs_MaxInt_mset S201, F201, act201, id201, E201, comp201 
 
 

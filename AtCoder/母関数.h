@@ -25,6 +25,7 @@
 * 差分		: a[n]-a[n-1]  ⇔  (1-z) A(z)（ただし a[-1]=0 とみなす）
 * 分割累積和	: Σλ∈(nの分割) Πi∈λ a[i]  ⇔  exp( Σk∈[1..∞) 1/k A(z^k) )（ただし a[0]=0）
 * 区間累積和 : Σσ∈([1..n]の区間分割) ΠI∈σ a[|I|]  ⇔  1/(1-A(z))（ただし a[0]=0）
+* 二項変換	: Σi∈[0..n] bin(n,i) a[i]  ⇔  1/(1-z) A(z/(1-z))
 */
 
 
@@ -44,8 +45,8 @@
 * 左シフト	: a[n+1]  ⇔  A'(z)
 * 倍右シフト	: n a[n-1]  ⇔  z A(z)
 * 商左シフト	: a[n+1]/(n+1)  ⇔  A(z)/z（ただし a[0]=0）
-* 二項累積和	: Σi∈[0..n] bin(n,i) a[i]  ⇔  exp(z) A(z)
-* 二項差分	: Σi∈[0..n] (-1)^(n-i) bin(n,i) a[i]  ⇔  exp(-z) A(z)
+* 二項変換	: Σi∈[0..n] bin(n,i) a[i]  ⇔  exp(z) A(z)
+* 逆二項変換	: Σi∈[0..n] (-1)^(n-i) bin(n,i) a[i]  ⇔  exp(-z) A(z)
 * 分割累積和	: Σπ∈([1..n]の分割) Πset∈π a[|set|]  ⇔  exp(A(z))（ただし a[0]=0）
 * 区間累積和 : Σσ∈([1..n]の区間分割) mul(n,|σ|) ΠI∈σ a[|I|]  ⇔  1/(1-A(z))（ただし a[0]=0）
 *
@@ -169,7 +170,7 @@ vm multinomial_power_sum(int N, ll m, int d, const Factorial_mint& fm) {
 *	[z^0]f(z) = 0,  [z^0]g(z) = 0,
 *	[z^1]f(z) != 0, [z^1]g(z) != 0
 * を満たすとき，以下の等式が成り立つ：
-*	[z^n]f(z) = (1/n) [z^(n-1)]((z / g(z))^n)
+*	[z^n]f(z) = 1/n [z^(n-1)](z / g(z))^n
 *
 *（使い所）
 * f(z) = (z の式) とは書けていないが z = (f(z) の式) という表示が得られている場合．
@@ -179,14 +180,62 @@ vm multinomial_power_sum(int N, ll m, int d, const Factorial_mint& fm) {
 */
 
 
+//【ラグランジュの反転公式（累乗）】
+/*
+*【ラグランジュの反転公式】と同じ条件で以下の等式が成り立つ：
+*	[z^n]f(z)^k = k/n [z^(n-k)](z / g(z))^n
+* 
+* 参考 : https://mathlog.info/articles/881
+* verify : https://yukicoder.me/problems/10539
+*/
+
+
+//【ラグランジュの反転公式（一般化）】
+/*
+*【ラグランジュの反転公式】と同じ条件で以下の等式が成り立つ：
+*	[z^n]h(f(z)) = 1/n [z^(n-1)] h'(z) (z / g(z))^n
+*
+* 参考 : https://atcoder.jp/contests/abc345/editorial/9549
+*/
+
+
 //【カタラン数の母関数の累乗】
 /*
 * カタラン数の母関数を
-*	f(z) = Σi Catalan(i) z^i = (1-√(1-4z))/(2z)
+*	C(z) = Σi Catalan(i) z^i = (1-√(1-4z))/(2z)
 * とするとき，
-*	[z^n] f(z)^d = d/(2n+d) bin(2n+d, n)
+*	[z^n] C(z)^k = k/(2n+k) bin(2n+k, n)
 * が成り立つ．
 * 
+*（証明）
+* C(z) は
+*	C(z) = (1-√(1-4z))/(2z)
+*	⇒ 2z C(z) - 1 = -√(1-4z)
+*	⇒ 4z^2 C(z)^2 - 4z C(z) + 1 = 1 - 4z
+*	⇒ -z^2 C(z)^2 + z C(z) = z
+* なる関数等式を満たす．そこで
+*	f(z) = z C(z)
+* とおくと，f(z) は
+*	-f(z)^2 + f(z) = z
+* という関数等式を満たし，したがって逆関数
+*	g(z) = -z^2 + z
+* をもつ．さらに f(z), g(z) はラグランジュの反転公式の前提条件
+*	[z^0]f(z) = 0,  [z^0]g(z) = 0,
+*	[z^1]f(z) != 0, [z^1]g(z) != 0
+* を満たす．
+* 
+* 求めたいものは f(z) を用いて
+*	[z^n] C(z)^k = [z^(n+k)] f(z)^k
+* と表されるので，【ラグランジュの反転公式（累乗）】より
+*	[z^(n+k)] f(z)^k
+*	= k/(n+k) [z^(n+k-k)](z / g(z))^(n+k)
+*	= k/(n+k) [z^n](1-z)^(-(n+k))
+*	= k/(n+k) bin(n+(n+k)-1, (n+k)-1)  (負の二項定理より)
+*	= k/(n+k) bin(2n+k-1, n+k-1)
+*	= k/(2n+k) bin(2n+k, n+k)
+*	= k/(2n+k) bin(2n+k, n)
+* となる．
+*
 * verify : https://atcoder.jp/contests/xmascon22/tasks/xmascon22_d
 */
 

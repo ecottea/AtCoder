@@ -111,20 +111,19 @@
 */
 
 
-//【整数計画問題（2 変数，1 制約）】O(√e)
+//【整数計画問題（2 変数，1 制約，最大化）】O(√e)
 /*
 * 変数 x, y についての整数計画問題
 *	maximize	a x + b y
 *	subject to	c x + d y ≦ e
-*				x ≧ 0
-*				y ≧ 0
+*				x, y ≧ 0
 * の解の目的関数値を返し，実行可能解を sx, sy に格納する．
 *
 * 制約：c > 0, d > 0, e ≧ 0
 *
 *（平方分割）
 */
-ll integer_programming(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
+ll integer_programming_maximize(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
 	// verify : https://atcoder.jp/contests/arc139/tasks/arc139_b
 
 	Assert(c > 0 && d > 0 && e >= 0);
@@ -183,6 +182,61 @@ ll integer_programming(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ 
 
 		if (swap_flag) swap(sx, sy);
 	}
+
+	if (sx_ != nullptr) *sx_ = sx;
+	if (sy_ != nullptr) *sy_ = sy;
+	return res;
+}
+
+
+//【整数計画問題（2 変数，1 制約，最小化）】O(√e)
+/*
+* 変数 x, y についての整数計画問題
+*	minimize	a x + b y
+*	subject to	c x + d y ≧ e
+*				x, y ≧ 0
+* の解の目的関数値を返し，実行可能解を sx, sy に格納する．
+*
+* 制約：a > 0, b > 0, c > 0, d > 0, e ≧ 0
+*
+*（平方分割）
+*/
+ll integer_programming_minimize(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
+	Assert(a > 0 && b > 0 && c > 0 && d > 0 && e >= 0);
+
+	ll sx = -1, sy = -1, res = INFL;
+
+	// a d - b c ≧ 0 としておく．
+	bool swap_flag = false;
+	if (a * d - b * c < 0) {
+		swap(a, b); swap(c, d);
+		swap_flag = true;
+	}
+
+	// O(e/d) の全探索を採用する場合
+	if (e / d < d) {
+		// (x, y) = (0, ceil(e/d)) より目的関数値を大きくしてしまうものは調べる必要はないので，
+		// 0 ≦ y ≦ ceil(e/d) の範囲で y を決め打ち全探索する．
+		repi(y, 0, (e + d - 1) / d) {
+			// c x + d y ≧ e より x ≧ (e - d y) / c
+			ll x = max((e - d * y + c - 1) / c, 0LL);
+
+			if (chmin(res, a * x + b * y)) { sx = x; sy = y; };
+		}
+	}
+	// O(d) の全探索を採用する場合
+	else {
+		// 最適解 (x0, y0) においては 0 ≦ x0 < d なので，x を決め打ち全探索する．
+		//（もし x0 ≧ d だと (x0 - d, y0 + c) の方が目的関数値を小さくする．）
+		repi(x, 0, min(d - 1, e / c)) {
+			// c x + d y ≧ e より y ≧ (e - c x) / d
+			ll y = max((e - c * x + d - 1) / d, 0LL);
+
+			if (chmin(res, a * x + b * y)) { sx = x; sy = y; };
+		}
+	}
+
+	if (swap_flag) swap(sx, sy);
 
 	if (sx_ != nullptr) *sx_ = sx;
 	if (sy_ != nullptr) *sy_ = sy;

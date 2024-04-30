@@ -230,6 +230,15 @@ int tree_centroid(const G& g, int* c2 = nullptr) {
 }
 
 
+//【深さの和の最小化 → 重心】
+/*
+* 木 g をある頂点 v を根とする根付き木とみなした全頂点の深さの和 Σdep を考えるとき，
+* v を g の重心とすると Σdep を最小化できる．
+* 
+* verify : https://atcoder.jp/contests/abc348/tasks/abc348_e
+*/
+
+
 //【木の重心分解】
 /*
 * Centroid_decomposition<G>(G g) : O(n log n)
@@ -355,6 +364,108 @@ struct Centroid_decomposition {
 	}
 #endif
 };
+
+
+//【木の 1/3 重心分解】O(n log n)
+/*
+* 無向木 g を 1/3 重心分解する．
+* 対象となった部分木の (左側構造, 左側の元の頂点番号, 右側構造, 右側の元の頂点番号) = (gl, idl, gr, idr) の
+* それぞれに対して f(gl, idl, gr, idr) を呼び出す．
+* 共通の根はそれぞれの 0 番目の頂点とする．
+* 大きさ 2 以下の部分木（g の辺，頂点）は含まれていないので個別に処理する必要があることに注意！
+*/
+template <class FUNC>
+void one_third_centroid_decomposition(const Graph& g, const FUNC& f) {
+	// 参考 : https://maspypy.com/%E9%87%8D%E5%BF%83%E5%88%86%E8%A7%A3%E3%83%BB1-3%E9%87%8D%E5%BF%83%E5%88%86%E8%A7%A3%E3%81%AE%E3%81%8A%E7%B5%B5%E6%8F%8F%E3%81%8D
+	// verify : https://judge.yosupo.jp/problem/frequency_table_of_tree_distance
+
+	int n = sz(g);
+
+	vi w(n);
+
+	// 無向グラフ g の重心 cent を返す．
+	// また cent を根としたときの部分木 t の大きさを w[t] に格納する．
+	function<int(const Graph&, int, int)> dfs = [&](const Graph& g, int s, int p) {
+		w[s] = 1;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			int cent = dfs(g, t, s);
+			if (cent != -1) return cent;
+
+			w[s] += w[t];
+		}
+
+		// p を含む部分木の大きさも |g|/2 以下ならば s は重心である．
+		int n = sz(g);
+		if (2 * (n - w[s]) <= n) {
+			if (p != -1) w[p] = n - w[s];
+			return s;
+		}
+
+		return -1;
+	};
+
+	// (g, id) の部分木 p→s を (g2, id2) にコピーする．
+	function<void(const Graph&, const vi&, int, int, Graph&, vi&, int p2)> dfs2
+		= [&](const Graph& g, const vi& id, int s, int p, Graph& g2, vi& id2, int p2)
+	{
+		int s2 = sz(g2);
+		g2.push_back(vi());
+		id2.push_back(id[s]);
+
+		g2[p2].push_back(s2);
+		g2[s2].push_back(p2);
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+			dfs2(g, id, t, s, g2, id2, s2);
+		}
+	};
+
+	// (g, id) を分割する．
+	function<void(const Graph&, const vi& id)> sep = [&](const Graph& g, const vi& id) {
+		int m = sz(g) - 1;
+
+		// 辺が 1 本以下の部分木は記録しない．
+		if (m <= 1) return;
+
+		int cent = dfs(g, 0, -1);
+
+		Graph gl(1), gr(1);
+		vi idl{ id[cent] }, idr{ id[cent] };
+
+		int w_sum = 0;
+		repe(t, g[cent]) {
+			if (3 * (w_sum + w[t]) <= 2 * m) {
+				dfs2(g, id, t, cent, gl, idl, 0);
+				w_sum += w[t];
+			}
+			else {
+				dfs2(g, id, t, cent, gr, idr, 0);
+			}
+		}
+
+		f(gl, idl, gr, idr);
+
+		sep(gl, idl);
+		sep(gr, idr);
+	};
+
+	vi ini(n);
+	iota(all(ini), 0);
+
+	sep(g, ini);
+
+	/* f の定義の雛形
+	auto f = [&](const Graph& gl, const vi& idl, const Graph& gr, const vi& idr) {
+		// dump("-----"); dumpel(gl); dump(idl); dumpel(gr); dump(idr);
+		int nl = sz(gl), nr = sz(gr);
+		return;
+	};
+	*/
+}
 
 
 //【重心からの距離】O(n log n)
@@ -714,7 +825,7 @@ vi rooted_tree_classification(const Graph& g, int r) {
 }
 
 
-//【根付き木の頂点の深さ】O(n)
+//【木の深さ】O(n)
 /*
 * 各 s∈[0..n) について，r を根とする木 g の頂点 s の深さを格納したリストを返す．
 * s の深さとは，根から s までの辺の本数のことである．
@@ -740,7 +851,7 @@ vi depth_of_tree(const Graph& g, int r) {
 }
 
 
-//【根付き木の頂点の深さ（重み付き）】O(n)
+//【木の深さ（重み付き）】O(n)
 /*
 * 各 s∈[0..n) について，r を根とする重み付き木 g の頂点 s の深さを格納したリストを返す．
 * s の深さとは，根から s までの距離のことである．
@@ -764,7 +875,7 @@ vl depth_of_tree(const WGraph& g, int r) {
 }
 
 
-//【根付き木の重さ】O(n)
+//【木の重さ】O(n)
 /*
 * 各 s∈[0..n) について，r を根とする木 g の頂点 s の重さを格納したリストを返す．
 * s の重さとは，部分木 s に含まれる辺の本数（s 自身を除く子孫の数）のことである．
@@ -824,7 +935,7 @@ vi height_of_tree(const Graph& g, int r) {
 using T_hut = int;
 T_hut merge_hut(T_hut x, T_hut y, int s) { return max(x, y); }
 T_hut leaf_hut(int s) { return 0; }
-T_hut apply_hut(T_hut x, int s, int t) { return x + 1; }
+T_hut apply_hut(T_hut x, int p, int s) { return x + 1; }
 vi height_of_undirected_tree(Graph& g) {
 	return rerooting<T_hut, merge_hut, leaf_hut, apply_hut>(g);
 }
@@ -856,14 +967,23 @@ vl height_of_undirected_tree(const WGraph& g) {
 * 利用：【全方位木 DP】
 */
 using T_ss = int;
-T_ss merge_ss(T_ss x, T_ss y, int s) { return x + y - 1; }
-T_ss leaf_ss(int s) { return 1; }
-T_ss apply_ss(T_ss x, int p, int s) { return x + 1; }
+T_ss leaf_ss(int s) {
+	return 1;
+}
+T_ss add_edge_ss(const T_ss& x, int p, int s) {
+	return x;
+}
+T_ss merge_ss(const T_ss& x, const T_ss& y, int s) {
+	return x + y;
+}
+T_ss add_vertex_ss(const T_ss& x, int s) {
+	return x + 1;
+}
 vvi subtree_size(Graph& g) {
 	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
 
 	vvi res;
-	rerooting<T_ss, merge_ss, leaf_ss, apply_ss>(g, &res);
+	rerooting<T_ss, leaf_ss, add_edge_ss, merge_ss, add_vertex_ss>(g, &res);
 
 	return res;
 }

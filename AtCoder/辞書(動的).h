@@ -465,6 +465,7 @@ public:
 		l_to_v[L] = v0;
 		l_to_v[R] = v0; // 番兵
 	}
+	Interval_map() : L(0), R(0) {}
 
 	// 区間 [l..r) に値 v を割り当てる．
 	void set(S l, S r, T v) {
@@ -812,12 +813,12 @@ struct Trie_tree_map {
 };
 
 
-//【多重集合】
+//【index 付き多重集合】
 /*
 * Multi_set<T>(int n) : O(n)
 *	[0..n) を記録可能な辞書を空で初期化する．
 *
-* Multi_set<T>(int n, vi a) : O(n)
+* Multi_set<T>(int n, vi a) : O(n + |a|)
 *	[0..n) を記録可能な辞書を多重集合 a で初期化する．
 *
 * T size() : O(log n)
@@ -836,10 +837,10 @@ struct Trie_tree_map {
 *	要素 v を k 個削除する．個数は負数にもなる．
 *
 * int get(T i) : O(log n)
-*	昇順で i 番目の要素（i : 0-indexed）を返す．なければ n を返す．
+*	昇順で i 番目（0-indexed）の要素を返す．なければ n を返す．
 *
 * T lower_bound(int v) : O(log n)
-*	v が（あるとすれば）昇順で何番目の要素かを返す．（0-indexed）
+*	v 以上の最小の要素が昇順で何番目（0-indexed）の要素かを返す．
 *
 * 利用：【フェニック木（アーベル群）】
 */
@@ -848,20 +849,19 @@ template <class T> T edd() { return 0; }
 template <class T> T invdd(T x) { return -x; }
 template <class T>
 struct Multi_set {
-	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_c
-
 	int n;
 
 	// ft[v] : 要素 v の個数
 	using RSQ = Fenwick_tree<T, opdd<T>, edd<T>, invdd<T>>;
 	RSQ ft;
 
-
 	// [0..n) を記録可能な辞書を空で初期化する．
-	Multi_set(int n_) : n(n_), ft(n) {}
+	Multi_set(int n) : n(n), ft(n) {
+		// verify : https://judge.yosupo.jp/problem/range_kth_smallest
+	}
 
 	// [0..n) を記録可能な辞書を多重集合 a で初期化する．
-	Multi_set(int n_, const vi& a) : n(n_) {
+	Multi_set(int n, const vi& a) : n(n) {
 		// verify : https://judge.yosupo.jp/problem/predecessor_problem
 
 		vector<T> cnt(n);

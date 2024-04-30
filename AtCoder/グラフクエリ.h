@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "Union-Find.h"
 // ■■■■■ グラフのクエリ処理 ■■■■■
 
 
@@ -216,6 +217,143 @@ public:
 		return os;
 	}
 #endif
+};
+
+
+//【offline dynamic connectivity】
+/*
+* Offline_dynamic_connectivity(int n) : O(1)
+*	n 頂点の空の無向グラフで初期化する．
+*
+* add_edge(int u, int v) : O(1)
+*	辺 u-v を追加する．多重辺も可．
+*
+* erase_edge(int u, int v) : O(1)
+*	辺 u-v を削除する．
+*
+* add_query(int id) : O(1)
+*	識別番号 id のクエリを追加する．
+*
+* solve(const function<void(int)>& f) : O(Q log Q log n)
+*	各クエリに対する答えを一括計算する．
+*	f(id) は識別番号 id のクエリが追加された時点でのグラフの状態に対する答えの計算を行う．
+*/
+class Offline_dynamic_connectivity {
+	// 参考 : https://ei1333.github.io/luzhiled/snippets/other/offline-dynamic-connectivity.html
+	// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
+
+	int T = 1; // 現在時刻
+
+	vector<pii> es; // 管理すべき無向辺 e = u-v のリスト（u < v）
+	vector<unordered_map<int, int>> e_id; // 辺の ID
+
+	vi e_cnt; // 各辺の本数
+	vi appear; // 各辺が出現した時刻
+	vector<tuple<int, int, int>> ex; // 各辺の存在していた時刻の半開区間と ID
+
+	vvi qs; // 各時刻に処理すべきクエリのリスト
+
+	vvi seg; // 辺の存在区間を管理するセグメント木
+
+	// 時刻 [l..r) に辺 id が存在したことを記録する．
+	void add_interval(int l, int r, int id) {
+		l += T;
+		r += T;
+
+		while (l < r) {
+			if (l & 1) {
+				seg[l].emplace_back(id);
+				l++;
+			}
+			if (r & 1) {
+				seg[r - 1].emplace_back(id);
+			}
+
+			l >>= 1;
+			r >>= 1;
+		}
+	}
+
+	// セグ木を再帰的になぞる．
+	void rf(int k, const function<void(int)>& f) {
+		uf.snapshot();
+
+		repe(id, seg[k]) {
+			auto [u, v] = es[id];
+			uf.merge(u, v);
+		}
+
+		if (k < T) {
+			rf(2 * k, f);
+			rf(2 * k + 1, f);
+		}
+		else {
+			repe(qid, qs[k - T]) f(qid);
+		}
+
+		uf.rollback();
+	}
+
+public:
+	int n; // 頂点数
+
+	Rollback_Union_find uf;
+
+	// n 頂点の空グラフで初期化する．
+	Offline_dynamic_connectivity(int n) : e_id(n), qs(1), n(n), uf(n) {}
+	Offline_dynamic_connectivity() : n(0) {}
+
+	// 辺 u-v を追加する．
+	void add_edge(int u, int v) {
+		if (u > v) swap(u, v);
+
+		auto it = e_id[u].find(v);
+		if (it == e_id[u].end()) {
+			e_id[u][v] = sz(es);
+			e_cnt.emplace_back(1);
+			appear.emplace_back(T);
+			es.emplace_back(u, v);
+		}
+		else {
+			int id = it->second;
+			if (e_cnt[id] == 0) appear[id] = T;
+			e_cnt[id]++;
+		}
+
+		qs.emplace_back(vi());
+		T++;
+	}
+
+	// 辺 u-v を削除する．
+	void erase_edge(int u, int v) {
+		if (u > v) swap(u, v);
+
+		Assert(e_id[u].count(v));
+		int id = e_id[u][v];
+		Assert(e_cnt[id] > 0);
+
+		e_cnt[id]--;
+		if (e_cnt[id] == 0) ex.emplace_back(appear[id], T, id);
+
+		qs.emplace_back(vi());
+		T++;
+	}
+
+	// 識別番号 id のクエリを追加する．
+	void add_query(int id) {
+		qs.back().emplace_back(id);
+	}
+
+	// 各クエリに対する答えを一括計算する．
+	void solve(const function<void(int)>& f) {
+		// 辺の存在区間を管理するセグメント木を構築する．
+		seg.resize(T * 2);
+		for (auto& [l, r, id] : ex) add_interval(l, r, id);
+		rep(id, sz(e_cnt)) if (e_cnt[id] > 0) add_interval(appear[id], T, id);
+
+		// セグ木を再帰的になぞりながら各クエリに対する答えを計算する．
+		rf(1, f);
+	}
 };
 
 

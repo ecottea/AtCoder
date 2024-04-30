@@ -13,7 +13,7 @@
 * T get(int i) : O(log n)
 *	昇順で i 番目の要素を返す．
 *
-* T get(int l, int r, int i) : O(log n))
+* T get(int l, int r, int i) : O(log n)
 *	a[l..r) の中で昇順で i 番目の要素を返す．
 *
 * int count(int l, int r, T v) : O(log n)
@@ -21,7 +21,6 @@
 *
 * int count(int l, int r, T v0, T v1) : O(log n)
 *	a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
-*	注意：点群 {(i, a[i])} に対し，矩形内に存在する点の個数を求めているとも解釈できる．
 *
 * int position(T v, int c) : O((log n)^2)
 *	昇順で c 番目の v の位置を返す．
@@ -268,7 +267,7 @@ public:
 
 	// a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
 	T sum(int l, int r, T v0, T v1) {
-		// verify : https://atcoder.jp/contests/abc276/tasks/abc276_f
+		// verify : https://atcoder.jp/contests/abc339/tasks/abc339_g
 
 		chmax(l, 0); chmin(r, n);;
 		if (l >= r || v0 >= v1) return 0;

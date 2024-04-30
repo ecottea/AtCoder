@@ -204,12 +204,40 @@ vm convolution_verylarge(const vm& a, const vm& b) {
 }
 
 
+//【畳込み（切り替え，mod 998244353）】O(n log n)
+/*
+* a[0..n) と b[0..m) の畳込み（長さは n+m-1）を返す．
+*
+* 制約：n + m - 1 ≦ 8,388,608 = 2^23
+*/
+vm switch_convolution(const vm& a, const vm& b) {
+	// verify : https://judge.yosupo.jp/problem/product_of_polynomial_sequence
+
+	ll n = sz(a), m = sz(b);
+
+	// x+y=128 と xy=2200 の交点や x+y=256 と xy=4000 の交点を求めるとこのくらいが良い気がする．
+	if (min(n, m) <= 15LL) {
+		return internal::convolution_naive(a, b);
+	}
+	// 2 冪を跨ぐたびに適切な閾値が変わる．
+	// if が多すぎて遅くなったら本末転倒なのでとりあえず 2 つに場合分けしてみた．
+	else if (n + m <= 128LL) {
+		if (n * m <= 2000LL) return internal::convolution_naive(a, b);
+		return internal::convolution_fft(a, b);
+	}
+	else {
+		if (n * m <= 4000LL) return internal::convolution_naive(a, b);
+		return internal::convolution_fft(a, b);
+	}
+}
+
+
 //【畳込み（複数，mod 998244353）】O(n (log n)^2)
 /*
 * 数列の集合 a の要素を全て畳込んだ結果（長さは n）を返す．
 */
 vm multi_convoluion(vvm a) {
-	// verify : https://atcoder.jp/contests/abl/tasks/abl_f
+	// verify : https://judge.yosupo.jp/problem/product_of_polynomial_sequence
 
 	int m = sz(a);
 	if (m == 0) return vm{ 1 };
@@ -645,12 +673,12 @@ public:
 //【上三角畳込み（mod 998244353）】O(n (log n)^2)
 /*
 * a[0..n) と b[0..n) の上三角畳込み c を
-*	c[k] = Σ_(i+j=k,i<j) a[i] b[j]（strict = false なら i≦j）
+*	c[k] = Σ_(i+j=k,i<j) a[i] b[j]（eq = true なら i≦j）
 * で定義し，c[0..2n-1) を返す．
 *
 *（分割統治法）
 */
-vm triangle_convolution(const vm& a, const vm& b, bool strict = true) {
+vm triangle_convolution(const vm& a, const vm& b, bool eq = false) {
 	//【方法】
 	// 上三角部分を矩形に分割し，各矩形について通常の畳込みを用いれば良い．
 
@@ -664,7 +692,7 @@ vm triangle_convolution(const vm& a, const vm& b, bool strict = true) {
 	// l ≦ i < j < r からの寄与を計算する．
 	function<void(int, int)> rf = [&](int l, int r) {
 		if (r - l == 1) {
-			if (!strict) c[2 * l] += a[l] * b[l];
+			if (eq) c[2 * l] += a[l] * b[l];
 			return;
 		}
 
@@ -686,83 +714,52 @@ vm triangle_convolution(const vm& a, const vm& b, bool strict = true) {
 
 //【二次元畳込み（mod 998244353）】O((ha + hb) (wa + wb) (log(ha + hb) + log(wa + wb)))
 /*
-* a[0..ha)[0..wa) と b[0..hb)[0..wb) の二次元畳込みを返す．
+* 2変数FPS.h へ
 */
-vvm convolution_2D(vvm a, vvm b) {
-	int ha = sz(a), wa = sz(a[0]);
-	int hb = sz(b), wb = sz(b[0]);
 
-	// 高さと幅を 2 冪に拡張しておく．
-	int H = 1 << (msb(ha + hb - 2) + 1);
-	int W = 1 << (msb(wa + wb - 2) + 1);
-	a.resize(H); b.resize(H);
-	rep(i, H) { a[i].resize(W); b[i].resize(W); }
 
-	// 行方向の NTT
-	rep(i, H) { internal::butterfly(a[i]); internal::butterfly(b[i]); }
+//【フィルタリング（mod 998244353）】O((n + m) log(n + m))
+/*
+* a[0..n+m-1) にフィルタ b[0..m) をかけた結果 c[0..n) を返す．c[i] は以下の式で表される：
+*		c[i] = Σj∈[0..m) a[i+j] b[j]
+* i はフィルタの平行移動量を表す．
+*
+*（middle product）
+*/
+vm filtering(vm a, vm b) {
+	// 参考 : https://noshi91.hatenablog.com/entry/2023/12/10/163348
+	// verify : https://yukicoder.me/problems/no/2330
 
-	// 転置
-	vvm aT(W, vm(H)), bT(W, vm(H));
-	rep(i, H) rep(j, W) { aT[j][i] = a[i][j]; bT[j][i] = b[i][j]; }
+	//【方法】
+	// b[0..m) を左右反転すると middle product そのものである．
 
-	// 列方向の NTT
-	rep(j, W) { internal::butterfly(aT[j]); internal::butterfly(bT[j]); }
+	int m = sz(b), n = sz(a) - m + 1;
+	if (n <= 0) return vm();
+	if (m == 0) return vm(n);
 
-	// 各点積
-	rep(j, W) rep(i, H) aT[j][i] *= bT[j][i];
+	reverse(all(b));
 
-	// 列方向の INTT
-	rep(j, W) internal::butterfly_inv(aT[j]);
+	int W = 1 << (msb(n + m - 2) + 1);
 
-	// 転置
-	rep(i, H) rep(j, W) a[i][j] = aT[j][i];
+	a.resize(W);
+	b.resize(W);
 
-	// 行方向の INTT
-	rep(i, H) internal::butterfly_inv(a[i]);
+	internal::butterfly(a);
+	internal::butterfly(b);
+	rep(i, W) a[i] *= b[i];
+	internal::butterfly_inv(a);
 
-	// 不要な部分の削除
-	a.resize(ha + hb - 1);
-	rep(i, ha + hb - 1) a[i].resize(wa + wb - 1);
+	a.erase(a.begin(), a.begin() + (m - 1));
+	a.resize(n);
 
-	// 定数倍の調整
-	mint inv = mint(H * W).inv();
-	rep(i, ha + hb - 1) rep(j, wa + wb - 1) a[i][j] *= inv;
+	mint inv = mint(W).inv();
+	rep(i, n) a[i] *= inv;
 
 	return a;
 }
 
 
-//【フィルタリング（mod 998244353）】O(n log n)
-/*
-* a[0..n) にフィルタ b[0..m) をかけた結果 c[0..n-m+1) を返す．c[i] は以下の式で表される：
-*		c[i] = Σj∈[0..m) a[i+j] b[j]
-*/
-vm filtering(const vm& a, vm b) {
-	// verify : https://yukicoder.me/problems/no/2330
-
-	//【方法】
-	// b[0..m) を左右反転すると
-	//		c[i] = Σj∈[0..m) a[i+j] b[m-1-j]
-	// となる．さらに j ← m-1-j とすると
-	//		c[i] = Σj∈[0..m) a[i+m-1-j] b[j]
-	// となる．よって畳込みを用いて
-	//		c[i] = (a＊b)[i+m-1]
-	// と計算すれば良い．
-
-	int n = sz(a), m = sz(b);
-	if (n < m) return vm();
-
-	reverse(all(b));
-	vm conv = convolution(a, b);
-
-	vm c(n - m + 1);
-	rep(i, n - m + 1) c[i] = conv[i + m - 1];
-
-	return c;
-}
-
-
-//【畳込み（法が任意）】O((n + m) log(n + m))
+//【畳込み（法が任意）】O((n + m) log(n + m))（手元ではオーバーフローでバグるので注意）
 /*
 * a と b の MOD を法とした畳込みを返す．
 *
@@ -825,7 +822,7 @@ vi convolution_arbitrary_mod(const vi& a, const vi& b, int MOD = (int)1e9 + 7) {
 }
 
 
-//【畳込み（法が任意，mint）】O((n + m) log(n + m))
+//【畳込み（法が任意，mint）】O((n + m) log(n + m))（手元ではオーバーフローでバグるので注意）
 /*
 * a と b の MOD を法とした畳込みを返す．
 *
@@ -935,7 +932,7 @@ vi convolution_arbitrary_mod_sep(const vi& a, const vi& b, int mod = (int)1e9 + 
 //【数論変換とシフト】
 /*
 * 数列 a[0..2^m) の数論変換対が A[0..2^m) であるとき，
-* b[i] = a[(i - 1) mod 2^m] の数論変換対は B[i] = ω^i A[i] である．
+* b[i] = a[(i-1) mod 2^m] の数論変換対は B[i] = ω^i A[i] である．
 * ここで ω は数論変換に用いた 1 の原始 2^m 乗根である．
 */
 
@@ -966,9 +963,6 @@ vi convolution_arbitrary_mod_sep(const vi& a, const vi& b, int mod = (int)1e9 + 
 */
 struct NTT {
 	// 参考 : https://qiita.com/Sen_comp/items/9401382df736e51564c1
-
-	using mint = modint998244353;
-	using vm = vector<mint>;
 
 	// N : 扱える数列の長さの上限（N = 2^M）
 	int N, M;
@@ -1031,6 +1025,15 @@ struct NTT {
 	void ntt(const vm& a, vm& A) {
 		// verify : https://judge.yosupo.jp/problem/convolution_mod
 
+		//【備考】
+		// 列 a[0..n) に NTT を施して A[0..n) を得ることは，w を 1 の原始 n 乗根として，
+		//	[ A[0] ]   [w^0 w^0     w^0      ... w^0         ] [ a[0] ]
+		//	[ A[1] ]   [w^0 w^1     w^2      ... w^(n-1)     ] [ a[1] ]
+		//	[ A[2] ] = [w^0 w^2     w^4      ... w^2(n-1)    ] [ a[2] ]
+		//	...
+		//	[A[n-1]]   [w^0 w^(n-1) w^2(n-1) ... w^(n-1)(n-1)] [a[n-1]]
+		// なる行列ベクトル積として表現できる．
+
 		Assert(sz(a) <= N);
 
 		int n = sz(a);
@@ -1048,6 +1051,15 @@ struct NTT {
 	// 長さが 2 冪の列 A に対し mod 998244353 で逆数論変換を行った結果を a に格納する．
 	void intt(const vm& A, vm& a) {
 		// verify : https://judge.yosupo.jp/problem/convolution_mod
+
+		//【備考】
+		// 列 A[0..n) に INTT を施して a[0..n) を得ることは，z = w^(n-1) として，
+		//	[ a[0] ]   [z^0 z^0     z^0      ... z^0         ] [ A[0] ]
+		//	[ a[1] ]   [z^0 z^1     z^2      ... z^(n-1)     ] [ A[1] ]
+		//	[ a[2] ] = [z^0 z^2     z^4      ... z^2(n-1)    ] [ A[2] ]
+		//	...
+		//	[a[n-1]]   [z^0 z^(n-1) z^2(n-1) ... z^(n-1)(n-1)] [A[n-1]]
+		// なる行列ベクトル積として表現できる．
 
 		Assert(sz(A) <= N);
 

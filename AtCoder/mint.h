@@ -4,53 +4,52 @@
 
 
 //【有限体 F_p 上の計算（32 bit）】
-#ifndef _MSC_VER
-template <ll MOD> struct static_modint {
+template <ll MOD> struct Static_modint {
 	// verify : https://www.codechef.com/problems/MUSICAL
 
 	ll v;
 
 	// コンストラクタ
-	static_modint() noexcept : v(0) {};
-	static_modint(const static_modint& a) = default;
-	static_modint(int a) noexcept : v(a% MOD) { if (v < 0) v += MOD; };
-	static_modint(ll a) noexcept : v(a% MOD) { if (v < 0) v += MOD; };
+	Static_modint() noexcept : v(0) {};
+	Static_modint(const Static_modint& a) = default;
+	Static_modint(int a) noexcept : v(a% MOD) { if (v < 0) v += MOD; };
+	Static_modint(ll a) noexcept : v(a% MOD) { if (v < 0) v += MOD; };
 
 	// 代入
-	static_modint& operator=(const static_modint& a) = default;
-	static_modint& operator=(int a) { v = a % MOD; if (v < 0) v += MOD; return *this; }
-	static_modint& operator=(ll a) { v = a % MOD; if (v < 0) v += MOD; return *this; }
+	Static_modint& operator=(const Static_modint& a) = default;
+	Static_modint& operator=(int a) { v = a % MOD; if (v < 0) v += MOD; return *this; }
+	Static_modint& operator=(ll a) { v = a % MOD; if (v < 0) v += MOD; return *this; }
 
 	// 入出力
-	friend istream& operator>> (istream& is, static_modint& x) {
+	friend istream& operator>> (istream& is, Static_modint& x) {
 		is >> x.v; x.v %= MOD; if (x.v < 0) x.v += MOD; return is;
 	}
-	friend ostream& operator<< (ostream& os, const static_modint& x) { os << x.v; return os; }
+	friend ostream& operator<< (ostream& os, const Static_modint& x) { os << x.v; return os; }
 
 	// 比較（参考 : https://twitter.com/KakurenboUni/status/1717463221190414472）
-	friend bool operator==(const static_modint& a, const static_modint& b) { return a.v == b.v; }
-	friend bool operator!=(const static_modint& a, const static_modint& b) { return a.v != b.v; }
+	friend bool operator==(const Static_modint& a, const Static_modint& b) { return a.v == b.v; }
+	friend bool operator!=(const Static_modint& a, const Static_modint& b) { return a.v != b.v; }
 
 	// 単項演算
-	static_modint operator-() const { static_modint a; if (v > 0) a.v = MOD - v; return a; }
-	static_modint& operator++() { v++; if (v == MOD) v = 0; return *this; }
-	static_modint operator++(int) { static_modint tmp = *this; ++(*this); return tmp; }
-	static_modint& operator--() { v--; if (v == -1) v = MOD - 1; return *this; }
-	static_modint operator--(int) { static_modint tmp = *this; --(*this); return tmp; }
+	Static_modint operator-() const { Static_modint a; if (v > 0) a.v = MOD - v; return a; }
+	Static_modint& operator++() { v++; if (v == MOD) v = 0; return *this; }
+	Static_modint operator++(int) { Static_modint tmp = *this; ++(*this); return tmp; }
+	Static_modint& operator--() { v--; if (v == -1) v = MOD - 1; return *this; }
+	Static_modint operator--(int) { Static_modint tmp = *this; --(*this); return tmp; }
 
 	// 二項演算
-	static_modint& operator+=(const static_modint& b) { v += b.v; if (v >= MOD) v -= MOD; return *this; }
-	static_modint& operator-=(const static_modint& b) { v -= b.v; if (v < 0) v += MOD; return *this; }
-	static_modint& operator*=(const static_modint& b) { v = (v * b.v) % MOD; return *this; }
-	static_modint& operator/=(const static_modint& b) { *this *= b.inv(); return *this; }
-	friend static_modint operator+(static_modint a, const static_modint& b) { a += b; return a; }
-	friend static_modint operator-(static_modint a, const static_modint& b) { a -= b; return a; }
-	friend static_modint operator*(static_modint a, const static_modint& b) { a *= b; return a; }
-	friend static_modint operator/(static_modint a, const static_modint& b) { a /= b; return a; }
+	Static_modint& operator+=(const Static_modint& b) { v += b.v; if (v >= MOD) v -= MOD; return *this; }
+	Static_modint& operator-=(const Static_modint& b) { v -= b.v; if (v < 0) v += MOD; return *this; }
+	Static_modint& operator*=(const Static_modint& b) { v = (v * b.v) % MOD; return *this; }
+	Static_modint& operator/=(const Static_modint& b) { *this *= b.inv(); return *this; }
+	friend Static_modint operator+(Static_modint a, const Static_modint& b) { a += b; return a; }
+	friend Static_modint operator-(Static_modint a, const Static_modint& b) { a -= b; return a; }
+	friend Static_modint operator*(Static_modint a, const Static_modint& b) { a *= b; return a; }
+	friend Static_modint operator/(Static_modint a, const Static_modint& b) { a /= b; return a; }
 
 	// 累乗（0^0 := 1）
-	static_modint pow(ll d) const {
-		static_modint res(1), pow2 = *this;
+	Static_modint pow(ll d) const {
+		Static_modint res(1), pow2 = *this;
 		while (d > 0) {
 			if (d & 1) res *= pow2;
 			pow2 *= pow2;
@@ -60,7 +59,7 @@ template <ll MOD> struct static_modint {
 	}
 
 	// 逆元（0^(-1) は未定義）
-	static_modint inv() const { Assert(v != 0); return pow(MOD - 2); }
+	Static_modint inv() const { Assert(v != 0); return pow(MOD - 2); }
 
 	// 法の確認
 	static int mod() { return int(MOD); }
@@ -68,10 +67,9 @@ template <ll MOD> struct static_modint {
 	// 値の確認
 	int val() const { return int(v); }
 };
-//using mint = static_modint<1000000007>;
-using mint = static_modint<998244353>;
-using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; 
-#endif
+//using mint = Static_modint<1000000007>;
+//using mint = Static_modint<998244353>;
+using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;  using vvvvm = vector<vvvm>; using pim = pair<int, mint>;
 
 
 //【有限体 F_p 上の計算（64 bit）】
@@ -137,7 +135,7 @@ struct mll {
 	}
 
 	// 逆元
-	mll inv() const { Assert(v != 0); return pow(MOD - 2); }
+	mll inv() const { Assert(v != 0); return pow((ll)(MOD - 2)); }
 
 	// 法の設定，確認
 	static void set_mod(ll MOD_) { Assert(MOD_ > 0); MOD = MOD_; }

@@ -20,7 +20,7 @@
 */
 
 
-// 【畳込み遷移（mod 998244353）】O(n log n)
+//【畳込み遷移（mod 998244353）】O(n log n)
 /*
 * DP の初項と漸化式が，dp0, c[0..n) を用いて
 *	dp[0] = dp0
@@ -105,7 +105,10 @@ vm convolution_DP_exp(mint dp0, const vm& c, const Factorial_mint& fm) {
 *
 * 利用：【オンライン畳込み（片側固定，mod 998244353）】
 */
-vm convolution_DP(mint dp0, const vm& c, const function<mint(int i, mint val)>& f) {
+template <class FUNC>
+vm convolution_DP(mint dp0, const vm& c, const FUNC& f) {
+	// verify : https://atcoder.jp/contests/abc318/tasks/abc318_h
+
 	int n = sz(c);
 	if (n == 0) return vm{ dp0 };
 
@@ -120,6 +123,207 @@ vm convolution_DP(mint dp0, const vm& c, const function<mint(int i, mint val)>& 
 	}
 
 	return dp;
+
+	/* f の定義の雛形
+	auto f = [&](int i, mint x) {
+		return x;
+	};
+	*/
+}
+
+
+//【畳込み遷移（mod 998244353，任意関数，分割統治 FFT）】O(n (log n)^2)
+/*
+* DP の初項と漸化式が，dp0, c[0..n), {f_i} を用いて
+*	dp[0] = dp0
+*	dp[i+1] = f_i( Σj∈[0..i] c[i-j] dp[j] ) （i≧0）
+* で与えられるときの dp[0..n] を返す．
+*
+*（分割統治 FFT）
+*/
+template <class FUNC>
+vm convolution_DP_dc(mint dp0, const vm& c, const FUNC& f) {
+	// verify : https://atcoder.jp/contests/abc318/tasks/abc318_h
+
+	int n = sz(c);
+
+	vm dp(n + 1);
+
+	// dp[l..r) に正しい値を書き込む．ただし以下の条件が満たされていることを前提とする：
+	//		dp[0..l) には正しい値が書き込まれている．
+	//		dp[0..l) から dp[l..r) への寄与は既に dp[l..r) に加算済である．      
+	function<void(int, int)> rf = [&](int l, int r) {
+		// 単一要素のみになったら f_i を作用させて終了する．
+		if (r - l == 1) {
+			if (l == 0) dp[l] = dp0; // 初項だけは例外
+			else dp[l] = f(l - 1, dp[l]);
+			return;
+		}
+
+		// m : 中央位置
+		int m = (l + r) / 2;
+
+		// dp[l..m) を正しい値に設定する（前提条件は [l..r) のそれより弱い）
+		rf(l, m);
+
+		// dp[l..m) から dp[m..r) への寄与は
+		//	dp[m]   += c[0] dp[m-1] + c[1] dp[m-2] + c[2] dp[m-3] + ... + c[m-l-1] dp[l]
+		//	dp[m+1] +=                c[1] dp[m-1] + c[2] dp[m-2] + ... + c[m-l]   dp[l]
+		//	dp[m+2] +=                               c[2] dp[m-1] + ... + c[m-l+1] dp[l]
+		//	...
+		//	dp[r-1] +=                                                    c[r-l-2] dp[l]
+		// であるが，右辺は c[0..r-l-1) と dp[l..m) との畳込みで一括計算できる．
+		vm c_sub(c.begin(), c.begin() + min(r - l - 1, n));
+		vm dp_sub(dp.begin() + l, dp.begin() + m);
+		vm tmp = convolution(c_sub, dp_sub);
+		repi(i, m, r - 1) dp[i] += tmp[i - l - 1];
+
+		// 右側を正しい値に設定する．
+		rf(m, r);
+	};
+	rf(0, n + 1);
+
+	return dp;
+
+	/* f の定義の雛形
+	auto f = [&](int i, mint x) {
+		return x;
+	};
+	*/
+}
+
+
+//【累積畳込み遷移（mod 998244353）】O((n + N) K log n log N)
+/*
+* DP の初項と漸化式が，a[0..n], K 次未満の多項式族 {f_i} を用いて
+*	dp[i] = [z^n] a(z) Πj∈[0..i) f_j(z)  (i≧0)
+* で与えられるときの dp[0..N] を返す．
+* 
+* 制約 : f_i(z) は dp[0..i] しか参照しない．
+* 
+*（分割統治 FFT）
+*/
+template <class FUNC>
+vm acc_convolution_DP(vm a, int K, const FUNC& f, int N) {
+	// verify : https://atcoder.jp/contests/abc345/tasks/abc345_g
+
+	//【方法】
+	// dp[l..r) の計算に必要になるのは
+	//		[z^[n-(r-l-1)(K-1)..n]] a(z) Πi∈[0..l) f_i(z)
+	// のみである．
+	//		z^[n-(r-l-1)(K-1)..n] → [0..n]
+	//		a(z) Πi∈[0..l) f_i(z) → a(z)
+	// と置き換えれば，これは元の問題と同じ構造で規模の小さい問題であることが分かる．
+	// 従って分割統治法を用いて再帰的に計算していくことができる．
+
+	int n = sz(a) - 1;
+
+	vm dp(N + 1);
+
+	// Πi∈[l..r) f_i(z) を返す．
+	// 計算には，g : [z^[n-(r-l-1)(K-1)..n]] a(z) Πi∈[0..l) f_i(z) を利用する．
+	function<vm(int, int, vm)> rf = [&](int l, int r, vm g) {
+		if (r - l == 1) {
+			// 返すべきものは
+			//		f_l(z)
+			// である．引数に与えられた g は
+			//		[z^n] a(z) Πi∈[0..l) f_i(z)
+			// であり，漸化式よりこれが dp[l] に等しい．
+			dp[l] = g.back();
+			return f(l, dp);
+		}
+
+		int m = (l + r) / 2;
+
+		// f_lm = Πi∈[l..m) f_i(z)
+		int w = min((m - l - 1) * (K - 1), n);
+		vm f_lm = rf(l, m, vm(g.begin() + (sz(g) - w - 1), g.end()));
+
+		// g_mr : [z^[n-(r-m-1)(K-1)..n]] a(z) Πi∈[0..m) f_i(z)
+		vm g_mr = convolution(g, f_lm); // 必要な部分以外は壊れるが，もう用はない
+		w = min((r - m - 1) * (K - 1), n);
+		g_mr = vm(g_mr.begin() + (sz(g) - w - 1), g_mr.begin() + sz(g)); // [z^[n-(r-m-1)(K-1)..n]] だけ切り取る
+
+		// f_mr = Πi∈[m..r) f_i(z)
+		vm f_mr = rf(m, r, g_mr);
+
+		// f_lr = Πi∈[l..r) f_i(z)
+		vm f_lr = convolution(f_lm, f_mr);
+		if (sz(f_lr) > n + 1) f_lr.resize(n + 1);
+
+		return f_lr;
+	};
+	rf(0, N + 1, a); // 本当はちゃんと長さを調節するべき
+
+	return dp;
+
+	/* f の定義の雛形
+	int K = 2;
+	auto f = [&](int i, const vm& dp) {
+		vm poly(K);
+		return poly;
+	};
+	*/
+}
+
+
+//【累積畳込み遷移（mod 998244353，[z^i]）】O(n (log n)^2)
+/*
+* DP の初項と漸化式が，f[0..n) を用いて
+*	dp[i] = [z^i] f(z) Πj∈[0..i) (1 + dp[j] z)  (i≧0)
+* で与えられるときの dp[0..n) を返す．
+*
+*（分割統治 FFT）
+*/
+vm acc_convolution_DP(const vm& f) {
+	// verify : https://atcoder.jp/contests/abc281/tasks/abc281_h
+
+	//【方法】
+	// dp[l..r) の計算に必要になるのは
+	//		[z^[l..r)] f(z) Πi∈[0..l) (1 + dp[i] z)
+	// のみである．
+	//		[l..r) → [0..n)
+	//		f(z) Πi∈[0..l) (1 + dp[i] z) → f(z)
+	// と置き換えれば，これは元の問題と同じ構造で規模の小さい問題であることが分かる．
+	// 従って分割統治法を用いて再帰的に計算していくことができる．
+
+	int n = sz(f);
+
+	vm dp(n);
+
+	// Πi∈[l..r) (1 + dp[i] z) を返す．
+	// 計算には，g : [z^[l..r)] f(z) Πi∈[0..l) (1 + dp[i] z) を利用する．
+	function<vm(int, int, vm)> rf = [&](int l, int r, vm g) {
+		if (r - l == 1) {
+			// 返すべきものは
+			//		1 + dp[l] z
+			// である．引数に与えられた g は
+			//		[z^l] f(z) Πi∈[0..l) (1 + dp[i] z)
+			// であり，漸化式よりこれが dp[l] に等しい．
+			dp[l] = g[0];
+			return vm{ 1, g[0] };
+		}
+
+		int m = (l + r) / 2;
+
+		// f_lm = Πi∈[l..m) (1 + dp[i] z)
+		vm f_lm = rf(l, m, vm(g.begin(), g.begin() + (m - l)));
+
+		// g_mr : [z^[m..r)] f(z) Πi∈[0..m) (1 + dp[i] z)
+		vm g_mr = convolution(g, f_lm); // [z^[l..m)] は壊れるが，もう用はない
+		g_mr = vm(g_mr.begin() + (m - l), g_mr.end()); // [z^[m..r)] だけ切り取る
+
+		// f_mr = Πi∈[m..r) (1 + dp[i] z)
+		vm f_mr = rf(m, r, g_mr);
+
+		// f_lr = Πi∈[l..r) (1 + dp[i] z)
+		vm f_lr = convolution(f_lm, f_mr);
+
+		return f_lr;
+	};
+	rf(0, n, f);
+
+	return dp;
 }
 
 
@@ -129,20 +333,20 @@ vm convolution_DP(mint dp0, const vm& c, const function<mint(int i, mint val)>& 
 *	dp[0] = dp0
 *	dp[i] = f_i( MIN_j∈[0..i) (a(j) x(i) + b(j)) ) （i≧1）
 * で与えられるときの dp[0..n] を返す．
-* min_flag = false とすると代わりに max 遷移で計算する．
+* max_flag = true とすると代わりに max 遷移で計算する．
 *
 * 利用：【Convex-Hull Trick】
 */
 vl linear_min_DP(int n, ll dp0, const function<ll(int j, const vl& dp)>& a,
 	const function<ll(int j, const vl& dp)>& b, const function<ll(int i, const vl& dp)>& x,
-	const function<ll(int i, ll val)>& f, bool min_flag = true)
+	const function<ll(int i, ll val)>& f, bool max_flag = false)
 {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_z
 
 	vl dp(n + 1);
 	dp[0] = dp0;
 
-	Convex_hull_trick<ll> CHT;
+	Convex_hull_trick<ll> CHT(max_flag);
 
 	repi(i, 1, n) {
 		CHT.insert(a(i - 1, dp), b(i - 1, dp));

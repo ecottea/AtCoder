@@ -24,12 +24,21 @@
 * mint bin(int n, int r) : O(1)
 *	二項係数 nCr を返す．
 *
+* mint bin_inv(int n, int r) : O(1)
+*	二項係数の逆数 1/nCr を返す．
+*
 * mint mul(vi rs) : O(|rs|)
 *	多項係数 nC[rs] を返す．（n = Σrs）
+*
+* mint hom(int n, int r) : O(1)
+*	重複組合せの数 nHr = n+r-1Cr を返す（0H0 = 1 とする）
+*
+* mint neg_bin(int n, int r) : O(1)
+*	負の二項係数 nCr = (-1)^r -n+r-1Cr を返す（n ≦ 0, r ≧ 0）
 */
 class Factorial_mint {
 	int n_max;
-	
+
 	// 階乗と階乗の逆数の値を保持するテーブル
 	vm fac, fac_inv;
 
@@ -74,7 +83,7 @@ public:
 	// 順列の数 nPr を返す．
 	mint perm(int n, int r) const {
 		// verify : https://atcoder.jp/contests/abc172/tasks/abc172_e
-		
+
 		Assert(n <= n_max);
 
 		if (r < 0 || n - r < 0) return 0;
@@ -83,11 +92,20 @@ public:
 
 	// 二項係数 nCr を返す．
 	mint bin(int n, int r) const {
-		// verify : https://atcoder.jp/contests/abc034/tasks/abc034_c
+		// verify : https://judge.yosupo.jp/problem/binomial_coefficient_prime_mod
 
 		Assert(n <= n_max);
 		if (r < 0 || n - r < 0) return 0;
 		return fac[n] * fac_inv[r] * fac_inv[n - r];
+	}
+
+	// 二項係数の逆数 1/nCr を返す．
+	mint bin_inv(int n, int r) const {
+		// verify : https://www.codechef.com/problems/RANDCOLORING
+
+		Assert(n <= n_max);
+		Assert(r >= 0 || n - r >= 0);
+		return fac_inv[n] * fac[r] * fac[n - r];
 	}
 
 	// 多項係数 nC[rs] を返す．
@@ -102,6 +120,26 @@ public:
 		repe(r, rs) res *= fac_inv[r];
 
 		return res;
+	}
+
+	// 重複組合せの数 nHr = n+r-1Cr を返す（0H0 = 1 とする）
+	mint hom(int n, int r) {
+		// verify : https://mojacoder.app/users/riantkb/problems/toj_ex_2
+
+		if (n == 0) return (int)(r == 0);
+		Assert(n + r - 1 <= n_max);
+		if (r < 0 || n - 1 < 0) return 0;
+		return fac[n + r - 1] * fac_inv[r] * fac_inv[n - 1];
+	}
+
+	// 負の二項係数 nCr を返す（n ≦ 0, r ≧ 0）
+	mint neg_bin(int n, int r) {
+		// verify : https://atcoder.jp/contests/abc345/tasks/abc345_g
+
+		if (n == 0) return (int)(r == 0);
+		Assert(-n + r - 1 <= n_max);
+		if (r < 0 || -n - 1 < 0) return 0;
+		return (r & 1 ? -1 : 1) * fac[-n + r - 1] * fac_inv[r] * fac_inv[-n - 1];
 	}
 };
 
@@ -158,7 +196,7 @@ struct Factorial_small_prime_mod {
 	}
 
 	// n! mod p を返す．
-	int fact(ll n) {
+	int fact(ll n) const {
 		// n が p 以上なら明らかに p の倍数
 		if (n >= (ll)p) return 0;
 
@@ -167,7 +205,7 @@ struct Factorial_small_prime_mod {
 	}
 
 	// 二項係数 nCr mod p を返す．
-	int bin(ll n, ll r) {
+	int bin(ll n, ll r) const {
 		// verify : https://judge.yosupo.jp/problem/binomial_coefficient_prime_mod
 
 		if (r < 0 || n - r < 0) return 0;
@@ -206,7 +244,7 @@ struct Factorial_small_prime_mod {
 };
 
 
-//【階乗など（法が小さい）】
+//【階乗など（法が小さい任意の数）】
 /*
 * Factorial_arbitrary_small_mod(int m) : O(m)
 *	m を法として初期化する．
@@ -219,8 +257,6 @@ struct Factorial_small_prime_mod {
 *	nCr mod m を返す．
 */
 struct Factorial_arbitrary_small_mod {
-	// verify : https://judge.yosupo.jp/problem/binomial_coefficient
-
 	// m のもつ素因数の数
 	int np;
 
@@ -232,6 +268,8 @@ struct Factorial_arbitrary_small_mod {
 
 	// m を法として初期化する．
 	Factorial_arbitrary_small_mod(int m) {
+		// verify : https://judge.yosupo.jp/problem/binomial_coefficient
+		
 		// m を素因数分解する．
 		for (int p = 2; p * p <= m; p++) {
 			int d = 0, pd = 1;
@@ -306,7 +344,7 @@ struct Factorial_arbitrary_small_mod {
 		vl rgt(np);
 		rep(i, np) {
 			if (pw[i] >= ds[i]) rgt[i] = 0;
-			else rgt[i] = rm[i] * pow(ps[i], (int)pw[i]);
+			else rgt[i] = rm[i] * powi(ps[i], (int)pw[i]);
 		}
 
 		// 中国剰余定理で連立合同式の解を求める．
@@ -315,6 +353,8 @@ struct Factorial_arbitrary_small_mod {
 
 	// 二項係数 nCr mod m を返す．
 	int bin(ll n, ll r) const {
+		// verify : https://judge.yosupo.jp/problem/binomial_coefficient
+		
 		if (r < 0 || n - r < 0) return 0;
 
 		// n, r, n-r それぞれの pow および mod を得る．
@@ -332,7 +372,7 @@ struct Factorial_arbitrary_small_mod {
 			rm = (rm * inv_mod(rm_s[i], pds[i])) % pds[i];
 
 			if (pw >= ds[i]) rgt[i] = 0;
-			else rgt[i] = rm * pow(ps[i], (int)pw);
+			else rgt[i] = rm * powi(ps[i], (int)pw);
 		}
 
 		// 中国剰余定理で連立合同式の解を求める．
@@ -341,7 +381,7 @@ struct Factorial_arbitrary_small_mod {
 };
 
 
-//【階乗など（法が任意）】
+//【階乗など（法が大きい任意の数）】
 /*
 * Factorial_arbitrary_mod(int m, int N) : O(min(m, N))
 *	m を法として，N! まで計算可能として初期化する．
@@ -446,7 +486,7 @@ struct Factorial_arbitrary_mod {
 		vl rgt(np);
 		rep(i, np) {
 			if (pw[i] >= ds[i]) rgt[i] = 0;
-			else rgt[i] = rm[i] * pow(ps[i], (int)pw[i]);
+			else rgt[i] = rm[i] * powi(ps[i], (int)pw[i]);
 		}
 
 		// 中国剰余定理で連立合同式の解を求める．
@@ -474,7 +514,7 @@ struct Factorial_arbitrary_mod {
 			rm = (rm * inv_mod(rm_s[i], pds[i])) % pds[i];
 
 			if (pw >= ds[i]) rgt[i] = 0;
-			else rgt[i] = rm * pow(ps[i], (int)pw);
+			else rgt[i] = rm * powi(ps[i], (int)pw);
 		}
 
 		// 中国剰余定理で連立合同式の解を求める．
@@ -505,7 +545,7 @@ class Factorial_log {
 	// 階乗，階乗の逆数，逆数の値を保持するテーブル
 	int n_max;
 	vector<D> fac;
-
+	
 public:
 	// n! までの階乗とその逆数を前計算しておく．O(n)
 	Factorial_log(int n) : n_max(n) {
@@ -567,6 +607,35 @@ T fact(int n) {
 }
 
 
+//【階乗のもつ素因数の個数】O(log n)
+/*
+* n! がもつ素因数 p の個数を返す．
+*
+* 制約 : p は素数
+*/
+ll legendres(ll n, ll p) {
+	// verify : https://algo-method.com/tasks/452
+
+	//【注意】
+	// ルジャンドル多項式を求める std::legendre() と衝突しないように legendres() にしている．
+
+	ll res = 0;
+	while (n > 0) {
+		res += n / p;
+		n /= p;
+	}
+	return res;
+}
+
+
+//【階乗のもつ素因数 2 の個数】
+/*
+* ord_2(n!) = n - popcount(n)
+* 
+* verify : https://mofecoder.com/contests/yurufuwa_onsite_06/tasks/yurufuwa_onsite_06_f
+*/
+
+
 //【順列の数（r が小さい）】O(r)
 /*
 * nPr を返す．
@@ -590,12 +659,11 @@ T perm(ll n, int r) {
 ll bin(ll n, ll r) {
 	// verify : https://atcoder.jp/contests/arc106/tasks/arc106_f
 
-	Assert(n >= 0);
-
 	ll val = 1;
 	chmin(r, n - r);
 
 	if (r < 0) return 0;
+	Assert(n >= 0);
 
 	rep(i, r) {
 		val *= n - i;
@@ -612,18 +680,40 @@ ll bin(ll n, ll r) {
 mint bin_mint(ll n, ll r) {
 	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_ad
 
-	Assert(n >= 0);
-
 	mint num = 1, dnm = 1;
 	chmin(r, n - r);
 
 	if (r < 0) return 0;
+	Assert(n >= 0);
 
 	rep(i, r) {
 		num *= n - i;
 		dnm *= i + 1;
 	}
 	return num / dnm;
+}
+
+
+//【多項係数（n が小さい）】O(n)
+/*
+* 多項係数 nC[rs] を返す．（n = Σrs）
+*/
+template <class T>
+T multinomial(const vi& rs) {
+	// verify : https://projecteuler.net/problem=862
+
+	T val = 1; T mul = 1;
+
+	repe(r, rs) {
+		if (r < 0) return 0;
+
+		repi(i, 1, r) {
+			val *= mul++;
+			val /= i;
+		}
+	}
+
+	return val;
 }
 
 
@@ -1002,8 +1092,6 @@ public:
 * 制約：p は奇素数
 */
 class Binomial_sum_small_prime_mod {
-	// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
-
 	int p; // 法となる素数
 	vvi bin; // bin[i][j] : binomial(i, j)
 	vvi acc; // acc[i][j] : Σbin[i][0..j)
@@ -1012,6 +1100,8 @@ class Binomial_sum_small_prime_mod {
 public:
 	// p を法として初期化する． : O(p^2)
 	Binomial_sum_small_prime_mod(int p_) : p(p_) {
+		// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
+		
 		bin = vvi(p, vi(p));
 		acc = vvi(p, vi(p + 1));
 		pow2.resize(p - 1);
@@ -1035,6 +1125,8 @@ public:
 
 	// Σbin[n][0..r) を返す． : O(log n)
 	int get(ll n, ll r) {
+		// verify : https://atcoder.jp/contests/abc251/tasks/abc251_h
+		
 		if (n == 0) return (int)(r > 0);
 		if (r <= 0) return 0;
 		if (r > n) return pow2[n % (p - 1)];
@@ -1053,7 +1145,7 @@ public:
 
 		int res = 0, mul = 1;
 		rep(i, k) {
-			n -= dn[i] * pow(p, k - 1 - i);
+			n -= dn[i] * powi(p, k - 1 - i);
 			res += acc[dn[i]][dr[i]] * pow2[n % (p - 1)] * mul;
 			mul *= bin[dn[i]][dr[i]];
 			res %= p;
@@ -1067,7 +1159,7 @@ public:
 
 //【二項係数と累積和】
 /*
-* 二項係数は列 1, 0, 0, ... に対して累積和を繰り返しとったものとみなせる．
+* 負の二項定理より，二項係数は列 1, 0, 0, ... に対して累積和を繰り返しとったものとみなせる．
 *             i: 0  1  2  3  4  5  6  7 ...
 *	bin(i-1,-1): 1  0  0  0  0  0  0  0 ...
 *	bin(i+0, 0): 1  1  1  1  1  1  1  1 ...
@@ -1080,7 +1172,7 @@ public:
 
 //【二項係数の累積和（一括，r が固定）】O(n)
 /*
-* 各 i∈[0..n) について Σj∈[0..r) bin(i, j) を格納したリストを返す．
+* 各 i∈[0..n) についての Σj∈[0..r) bin(i, j) を格納したリストを返す．
 *
 * 制約：fm は (n-1)! まで計算可能
 */
@@ -1088,13 +1180,68 @@ vm binomial_sum_fixed_r(int n, int r, const Factorial_mint& fm) {
 	// verify : https://www.codechef.com/problems/MEX_SEQ
 
 	//【方法】
-	// 大体 2 倍でいいが，パスカルの三角形で右にはみ出た分だけ引き算する．
+	//		a[i] := Σj∈[0..r) bin(i, j)
+	// と定め，a[i] についての漸化式を作る．
+	//		a[i+1]
+	//		= Σj∈[0..r) bin(i+1, j)
+	//		= Σj∈[0..r) (bin(i, j-1) + bin(i, j))
+	//		= Σj∈[0..r) bin(i, j-1) + Σj∈[0..r) bin(i, j)
+	//		= Σj∈[-1..r-1) bin(i, j) + Σj∈[0..r) bin(i, j)
+	//		= Σj∈[0..r) bin(i, j) - bin(i, r-1) + Σj∈[0..r) bin(i, j)
+	//		= 2 a[i] - bin(i, r-1)
+	// これに基づいて計算すれば良い．
+	//
+	// パスカルの三角形の右端を微調整しながら 1 段ずつ下に降りていることに相当する．
 
 	vm res(n);
 	if (n == 0 || r <= 0) return res;
 
 	res[0] = 1;
 	repi(i, 1, n - 1) res[i] = res[i - 1] * 2 - fm.bin(i - 1, r - 1);
+
+	return res;
+}
+
+
+//【二項係数の指数加重累積和（一括，r が固定）】O(n)
+/*
+* 各 i∈[0..n) についての
+*	Σj∈[0..r) bin(i, j) p^(i-j) q^j
+* を格納したリストを返す．
+*
+* 制約：fm は (n-1)! まで計算可能
+*/
+vm weighted_binomial_sum_fixed_r(int n, int r, mint p, mint q, const Factorial_mint& fm) {
+	// verify : https://www.codechef.com/START128A/problems/CNTP
+
+	//【方法】
+	//		a[i] := Σj∈[0..r) bin(i, j) p^(i-j) q^j
+	// と定め，a[i] についての漸化式を作る．
+	//		a[i+1]
+	//		= Σj∈[0..r) bin(i+1, j) p^(i+1-j) q^j
+	//		= Σj∈[0..r) (bin(i, j-1) + bin(i, j)) p^(i+1-j) q^j
+	//		= Σj∈[0..r) bin(i, j-1) p^(i+1-j) q^j + Σj∈[0..r) bin(i, j) p^(i+1-j) q^j
+	//		= Σj∈[-1..r-1) bin(i, j) p^(i-j) q^(j+1) + Σj∈[0..r) bin(i, j) p^(i+1-j) q^j
+	//		= q Σj∈[0..r) bin(i, j) p^(i-j) q^j - bin(i, r-1) p^(i-r+1) q^r + p Σj∈[0..r) bin(i, j) p^(i-j) q^j
+	//		= (p + q) a[i] - bin(i, r-1) p^(i-r+1) q^r
+	// これに基づいて計算すれば良い．
+	//
+	// パスカルの三角形の右端を微調整しながら 1 段ずつ下に降りていることに相当する．
+
+	mint s = p + q, q_pow = q.pow(r);
+
+	vm res(n);
+	if (n == 0 || r <= 0) return res;
+
+	res[0] = 1;
+	repi(i, 1, min(r, n) - 1) res[i] = res[i - 1] * s;
+
+	mint p_pow = 1;
+	repi(i, r, n - 1) {
+		mint dif = fm.bin(i - 1, r - 1) * p_pow * q_pow;
+		res[i] = res[i - 1] * s - dif;
+		p_pow *= p;
+	}
 
 	return res;
 }
@@ -1163,6 +1310,32 @@ public:
 		return res;
 	}
 };
+
+
+//【二項係数の一般化桂馬和】O(k log k log n)
+/*
+* Σi∈[0..n/k] bin(n-(k-1)i, i) を返す．
+*
+* 利用：【形式的冪級数】,【線形漸化式】
+*/
+template <class DUMMY = int>
+mint binomial_knight_sum(ll n, int k) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/services/room.html#OUPC2023Day2/problems/I
+
+	//【方法】
+	// パスカルの三角形を描いてみると，a[n] = Σi∈[0..n/k] bin(n-(k-1)i, i) とおいて
+	//		a[0] = ... = a[k-1] = 1
+	//		a[n] = a[n-1] + a[n-k]  (n ≧ k)
+	// なる漸化式が成立することが分かる．
+
+	//【備考】
+	// 特に k=2 のとき，Σi∈[0..n/2] bin(n-i, i) = fib(n+1) である．（ただし fib(0) = 0）
+
+	Assert(k > 0);
+	vm a(k, 1), c(k);
+	c[0] += 1; c[k - 1] += 1;
+	return linearly_recurrent_sequence(a, c, n);
+}
 
 
 //【二項係数の線形加重和】
@@ -1287,6 +1460,66 @@ vm perm_fixed_r(ll n1, ll n2, int r) {
 *
 * verify : https://yukicoder.me/problems/no/1886
 */
+
+
+//【逆数（一括）】O((n2-n1) + log mod)
+/*
+* 1/[n1..n2) を返す（1/0 = 0 とする）
+*
+* 制約：[n1..n2) 内の mod の倍数は高々 1 個
+*/
+vm inverse(ll n1, ll n2) {
+	// verify : https://judge.yosupo.jp/problem/shift_of_sampling_points_of_polynomial
+
+	//【方法】
+	// 階乗と階乗の逆数を前計算しておく方法と大体同じ．
+
+	Assert(n1 <= n2);
+
+	ll MOD = mint::mod();
+
+	// 左半開区間 (n1..n2] に直しておく．
+	n1 = smod(n1 - 1, MOD);
+	n2 = smod(n2 - 1, MOD);
+
+	// (n1..n2] 内に MOD の倍数が存在する場合
+	if (n1 > n2) {
+		int n = (int)max(n2, MOD - n1);
+
+		vm fac(n + 1);
+		fac[0] = 1;
+		repi(i, 1, n) fac[i] = fac[i - 1] * i;
+
+		vm fac_inv(n + 1);
+		fac_inv[n] = fac[n].inv();
+		repir(i, n - 1, 0) fac_inv[i] = fac_inv[i + 1] * (i + 1);
+
+		vm res;
+		res.reserve(MOD + n2 - n1);
+
+		repi(i, n1 + 1, MOD - 1) res.push_back(-fac[MOD - i - 1] * fac_inv[MOD - i]);
+		res.push_back(0);
+		repi(i, 1, n2) res.push_back(fac[i - 1] * fac_inv[i]);
+
+		return res;
+	}
+
+	// [n1..n2] 内に MOD の倍数が存在しない場合
+	int n = (int)(n2 - n1);
+
+	vm perm(n + 1);
+	perm[0] = 1;
+	repi(i, 1, n) perm[i] = perm[i - 1] * (n1 + i);
+
+	vm perm_inv(n + 1);
+	perm_inv[n] = perm[n].inv();
+	repir(i, n - 1, 0) perm_inv[i] = perm_inv[i + 1] * (n1 + i + 1);
+
+	vm res(n);
+	rep(i, n) res[i] = perm[i] * perm_inv[i + 1];
+
+	return res;
+}
 
 
 //【q-階乗など】

@@ -351,7 +351,7 @@ ll hungarian(const vvl& c_, vi& p) {
 //【二部グラフの最小コスト弾性マッチング】O(|S| |T|)
 /*
 * 重み付き完全二部グラフ (S, T) の最小コスト弾性マッチングのコストを返す．
-* またそのようなマッチングを昇順に match に格納する．
+* またそのようなマッチングに含まれる組を昇順に match に格納する．
 *
 * c[i][j] : S[i] と T[j] の間にある辺のコスト．
 * (i, j) ∈ res : S[i] と T[j] がマッチングしていることを表す．
@@ -538,6 +538,63 @@ mint count_bipartite_perfect_matching_LEG(const vi& sb, const vi& tb) {
 	}
 
 	return dp[n];
+}
+
+
+//【安定マッチング】O(n^2)
+/*
+* n 人の男女の男性側最適安定マッチングを構築し，各女性とマッチさせる男性のリストを返す．
+* xc[x][i] は女性 x が i 番目に希望する男性，yc[x][i] は男性 y が i 番目に希望する女性を表す．
+*/
+vi gale_shapley(const vvi& xc, const vvi& yc) {
+	// 参考 : https://manabitimes.jp/math/1078
+	// verify : https://mojacoder.app/users/miiitomi/problems/daycare-matching
+
+	int n = sz(xc);
+
+	// xc_inv[x][y] : 女性 x が男性 y を何番目に希望しているか
+	vvi xc_inv(n, vi(n));
+	rep(x, n) rep(i, n) xc_inv[x][xc[x][i]] = i;
+
+	// keep[x] : 女性 x がキープしている男性（居なければ -1）
+	vi keep(n, -1);
+
+	// kept[y] : 男性 y がいずれかの女性にキープされているか
+	vb kept(n); int kept_sum = 0;
+
+	// dumped[y] : 男性 y が何回振られたか
+	vi dumped(n);
+
+	while (kept_sum < n) {
+		rep(y, n) {
+			if (kept[y]) continue;
+
+			// x : 男性 y が求婚した女性
+			int x = yc[y][dumped[y]];
+
+			// 女性 x にとってキープ中の男性より男性 y の希望順の方が小さければ，
+			// キープ中の男性を振って新しい男性 y をキープする．
+			if (keep[x] == -1 || xc_inv[x][y] < xc_inv[x][keep[x]]) {
+				if (keep[x] == -1) {
+					kept_sum++;
+				}
+				else {
+					dumped[keep[x]]++;
+					kept[keep[x]] = false;
+				}
+
+				keep[x] = y;
+				kept[y] = true;
+			}
+			// さもなくば振る．
+			else {
+				dumped[y]++;
+			}
+		}
+	}
+
+	// 全女性が相手を見つけたら結婚する．
+	return keep;
 }
 
 

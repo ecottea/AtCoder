@@ -174,6 +174,7 @@ public:
 		vi ds(i);
 		i--;
 
+		// ãˆÊŒ…‚©‚ç‡‚ÉæÃ—~‚É‘I‚Ôi‰€‚ª 0, 1 ˆÈŠO‚¾‚Æ‰R‚È‚Ì‚Å’ˆÓj
 		while (i >= 2) {
 			if (fib[i] <= n) {
 				ds[i] = 1;
@@ -191,7 +192,7 @@ public:
 
 //y‘½”{’·®” ¨ ŠKæi–@zO(?)
 /*
-* ”ñ•‰®” x ‚ÌŠKæi–@•\‹L‚ð•Ô‚·D
+* ”ñ•‰®” x ‚Ì n Œ…ŠKæi–@•\‹L‚ð•Ô‚·D
 */
 #include <boost/multiprecision/cpp_int.hpp>
 vi bigint_to_factorial_base(boost::multiprecision::cpp_int x, int n = -1) {

@@ -22,23 +22,32 @@ vector<vector<T>> enumerate_subsequences(const vector<T>& a) {
 }
 
 
-//【部分列の列挙（長さ指定）】O(bin(n, m) m)
+//【部分列の列挙（長さ指定）】O(bin(n, m) m) ?
 /*
 * a[0..n) の長さ m の部分列全てを格納したリストを返す（重複含む）
 */
 template <class T>
 vector<vector<T>> enumerate_subsequences(const vector<T>& a, int m) {
 	int n = sz(a);
+
 	vector<vector<T>> seqs;
+	vector<T> seq(m); // 作成途中の列
 
-	vb p(n);
-	rep(i, m) p[i] = true;
+	// seq[j] の候補として a[l..n) が挙がっている．
+	function<void(int, int)> rf = [&](int l, int j) {
+		// 完成していれば記録する．
+		if (j == m) {
+			seqs.push_back(seq);
+			return;
+		}
 
-	repp(p) {
-		vector<T> seq;
-		rep(i, n) if (p[i]) seq.push_back(a[i]);
-		seqs.push_back(seq);
-	}
+		// seq[j] を決定する．
+		repi(i, l, n - m + j) {
+			seq[j] = a[i];
+			rf(i + 1, j + 1);
+		}
+	};
+	rf(0, 0);
 
 	return seqs;
 }

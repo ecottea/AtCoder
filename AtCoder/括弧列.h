@@ -59,6 +59,64 @@ bool parenthesis_sequenceQ(const string& s) {
 }
 
 
+//【対応する括弧の位置】O(n)
+/*
+* 正しい括弧列 s[0..n) について，s[i] と対応する括弧の位置のリストを返す．
+* 括弧以外の文字は無視され，対応する括弧の位置は -1 とする．
+*/
+vi corresponding_parentheses_pos(const string& s) {
+	// verify : https://atcoder.jp/contests/abc350/tasks/abc350_f
+
+	int n = sz(s);
+
+	vi res(n, -1);
+
+	stack<int> st;
+
+	rep(i, n) {
+		if (s[i] == '(') {
+			st.push(i);
+		}
+		else if (s[i] == ')') {
+			int l = st.top(); st.pop();
+			int r = i;
+
+			res[l] = r;
+			res[r] = l;
+		}
+	}
+
+	return res;
+}
+
+
+//【括弧列の数え上げ（部分文字列）】O(n)
+/*
+* 括弧文字列 s[0..n) の部分文字列で正しい括弧列になっているものの個数を返す．
+*/
+ll count_parenthesis_substrings(const string& s) {
+	int n = sz(s);
+
+	vi cnt(2 * n + 1); int pt = n;
+
+	ll res = 0;
+
+	rep(i, n) {
+		if (s[i] == '(') {
+			cnt[pt]++;
+			pt++;
+		}
+		else {
+			cnt[pt] = 0;
+			pt--;
+			res += cnt[pt];
+		}
+	}
+
+	return res;
+}
+
+
 //【括弧列との内積の最大化】O(n log n)
 /*
 * 与えられた数列 a[0..2n) について，括弧列 s[0..2n) の '(' を +1, ')' を -1 に
@@ -149,7 +207,7 @@ Graph parenthesis_tree(const string& s, vi* ls = nullptr, vi* rs = nullptr) {
 * 色付き括弧列 p[0..2n) が正しい色付き括弧列かどうかを返す．
 */
 bool colored_parenthesis_sequenceQ(const vi& p) {
-	// verify : https://atcoder.jp/contests/arc076/tasks/arc076_c
+	// verify : https://atcoder.jp/contests/abc338/tasks/abc338_e
 
 	int n = sz(p) / 2;
 	if (n == 0) return true;

@@ -162,21 +162,21 @@ string div_bint(string s, string t, int B = 10) {
 
 	// FPS の inv() を真似して書いてみた．ちゃんとは理解していない．
 	string t_inv = "1"; int shift = m; string two = "2";
-	for (int k = 1; k < 32 * (n + 3); k *= 2) {
+	for (int k = 1; k < 32 * (n + 3); k *= 2) { // 16 進のとき 32→64 にしないと WA した．
 		int pshift = shift;
 		int len = max(min(2 * k, n + 3), 1);
 		string tmp;
 		rep(i, min(len, m)) tmp += t[i];
 		shift -= m - sz(tmp);
-		tmp = mul_bint(tmp, t_inv);
+		tmp = mul_bint(tmp, t_inv, B);
 		if (sz(tmp) > len) {
 			shift -= sz(tmp) - len;
 			tmp.resize(len);
 		}
 		while (sz(two) > shift + 1) two.pop_back();
 		while (sz(two) < shift + 1) two += '0';
-		tmp = sub_bint(two, tmp);
-		t_inv = mul_bint(t_inv, tmp);
+		tmp = sub_bint(two, tmp, B);
+		t_inv = mul_bint(t_inv, tmp, B);
 		shift += pshift;
 		if (sz(t_inv) > len) {
 			shift -= sz(t_inv) - len;
@@ -184,13 +184,13 @@ string div_bint(string s, string t, int B = 10) {
 		}
 	}
 
-	string res = mul_bint(s, t_inv);
+	string res = mul_bint(s, t_inv, B);
 
 	res.resize(max(sz(res) - m - sz(t_inv) + 1, 0));
 	if (res.empty()) res = "0";
 
-	string res2 = add_bint(res, "1");
-	if (comp_bint(mul_bint(res2, t), "<=", s)) res = move(res2);
+	string res2 = add_bint(res, "1", B);
+	if (comp_bint(mul_bint(res2, t, B), "<=", s)) res = move(res2);
 
 	return res;
 }

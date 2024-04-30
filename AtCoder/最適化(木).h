@@ -9,17 +9,27 @@
 /*
 * 木 g の最大独立集合（辺を共有しない最大の頂点集合）の大きさを返す．
 *
-* 利用：【貰う木 DP（頂点マージ）】
+* 利用：【貰う木 DP】
 */
-using T_mis = pii; // (根を選択，根を非選択)
-void merge_mis(T_mis& x, const T_mis& y, int s) { x.first += y.first - 1; x.second += y.second; }
-T_mis leaf_mis(int s) { return { 1, 0 }; }
-T_mis apply_mis(const T_mis& x, int s, int t) { return { x.second + 1, max(x.first, x.second) }; }
+struct T_mis { int v1, v0; }; // (根を選択，根を非選択)
+T_mis leaf_mis(int s) {
+	return T_mis{ 1, 0 };
+}
+T_mis add_edge_mis(const T_mis& x, int p, int s) {
+	return T_mis{ x.v0, max(x.v1, x.v0) };
+}
+void merge_mis(T_mis& x, const T_mis& y, int s) {
+	x.v0 += y.v0;
+	x.v1 += y.v1;
+}
+void add_vertex_mis(T_mis& x, int s) {
+	x.v1++;
+}
 int maximum_independent_set(const Graph& g) {
 	// verify : https://yukicoder.me/problems/no/763
 
-	auto dp = tree_getDP_vmerge<T_mis, merge_mis, leaf_mis, apply_mis>(g, 0);
-	return max(dp[0].first, dp[0].second);
+	auto dp = tree_getDP_virtual<T_mis, leaf_mis, add_edge_mis, merge_mis, add_vertex_mis>(g, 0);
+	return max(dp[0].v1, dp[0].v0);
 }
 
 
@@ -31,19 +41,24 @@ int maximum_independent_set(const Graph& g) {
 *
 *（二乗の木 DP）
 *
-* 利用：【貰う木 DP（森経由）】
+* 利用：【貰う木 DP】
 */
 vl c_mcs; // 頂点コスト
 using T_mcs = vl;
-void merge_mcs(T_mcs& x, const T_mcs& y) {
+T_mcs leaf_mcs(int s) {
+	return T_mcs{ 0, c_mcs[s] };
+}
+T_mcs add_edge_mcs(const T_mcs& x, int p, int s) {
+	return x;
+}
+void merge_mcs(T_mcs& x, const T_mcs& y, int s) {
 	int ns = sz(x), nt = sz(y);
 
 	T_mcs nx(ns + nt - 1, INFL);
 	rep(i, ns) rep(j, nt) chmin(nx[i + j], x[i] + y[j]);
 	x = move(nx);
 }
-T_mcs leaf_mcs(int s) { return T_mcs{ 0, c_mcs[s] }; }
-void apply_mcs(T_mcs& x, int s) {
+void add_vertex_mcs(T_mcs& x, int s) {
 	int ns = sz(x);
 	x.resize(ns + 1);
 	repir(i, ns, 1) x[i] = x[i - 1] + c_mcs[s];
@@ -51,8 +66,9 @@ void apply_mcs(T_mcs& x, int s) {
 }
 vector<T_mcs> minimum_cost_subtree(const Graph& g, const vl& c, int r) {
 	// verify : https://atcoder.jp/contests/arc029/tasks/arc029_4
-	
+
 	c_mcs = c;
-	return tree_getDP_forest<T_mcs, merge_mcs, leaf_mcs, apply_mcs>(g, r);
+	return tree_getDP_virtual<T_mcs, leaf_mcs, add_edge_mcs, merge_mcs, add_vertex_mcs>(g, r);
 }
+
 

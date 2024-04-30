@@ -498,7 +498,7 @@ mint count_common_subsequences(const vector<T>& s, const vector<T>& t) {
 int op_clis(int a, int b) { return max(a, b); }
 int e_clis() { return 0; } // max ÇÃíPà å≥Ç™ -INF Ç≈Ç»Ç≠ 0 Ç≈Ç†ÇÈÇ±Ç∆Ç…íçà”
 template <class T>
-pair<int, mint> count_LIS(const vector<T>& a) {
+pim count_LIS(const vector<T>& a) {
 	// verify : https://yukicoder.me/problems/no/992
 
 	int n = sz(a);

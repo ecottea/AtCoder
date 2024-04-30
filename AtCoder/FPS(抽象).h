@@ -16,23 +16,23 @@
 *	n 次未満の項をもつ定数多項式 f = c0 で初期化する．
 *
 * FPS<S, add, o, mi, mul, e>(vS c) : O(n)
-*	f(x) = c[0] + c[1] x + ... + c[n - 1] x^(n-1) で初期化する．
+*	f(x) = c[0] + c[1] x + ... + c[n-1] x^(n-1) で初期化する．
 *
 * c + f, f + c : O(1)	f + g : O(n)
 * f - c : O(1)			c - f, f - g, -f : O(n)
-* c * f, f * c : O(n)	f * g : O(n^2)		f * g_sp : O(n k)（k : g の項数）
-*						f / g : O(n^2)		f / g_sp : O(n k)（k : g の項数）
+* c * f, f * c : O(n)	f * g : O(n^1.6)		f * g_sp : O(n k)（k : g の項数）
+*						f / g : O(n^1.6)		f / g_sp : O(n k)（k : g の項数）
 *	形式的冪級数としての和，差，積，商の結果を返す．
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *	制約 : 商では g(0) = e()
 *
-* FPS f.inv(int d) : O(n^2)
+* FPS f.inv(int d) : O(n^1.6)
 *	1 / f mod x^d を返す．
 *	制約 : f(0) = e()
 *
-* FPS f.quotient(FPS g) : O(n^2)
-* FPS f.reminder(FPS g) : O(n^2)
-* pair<FPS, FPS> f.quotient_remainder(FPS g) : O(n^2)
+* FPS f.quotient(FPS g) : O(n^1.6)
+* FPS f.reminder(FPS g) : O(n^1.6)
+* pair<FPS, FPS> f.quotient_remainder(FPS g) : O(n^1.6)
 *	多項式としての f を g で割った商，余り，商と余りの組を返す．
 *	制約 : g の最高次の係数は e()
 *
@@ -55,7 +55,7 @@
 *	係数列を d だけ右[左]シフトした多項式を返す．
 *  （右シフトは x^d の乗算，左シフトは x^d で割った商と等価）
 *
-* FPS power_mod(FPS f, ll d, FPS g) : O(m^2 log d)　（m = deg g）
+* FPS power_mod(FPS f, ll d, FPS g) : O(m^1.6 log d)　（m = deg g）
 *	f(x)^d mod g(x) を返す．
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
@@ -131,29 +131,68 @@ struct FPS {
 	FPS operator-() const { return FPS(*this) *= mi(e()); }
 
 	// 積
-	FPS& operator*=(const FPS& g) {
-		// verify : https://atcoder.jp/contests/arc059/tasks/arc059_c
+	vector<S> karatsuba(const vector<S>& f, const vector<S>& g) const {
+		// 参考 : https://37zigen.com/fast-multiplication/
 
-		int m = g.deg();
-		if (m == -1) return *this = FPS();
-		resize(n + m);
+		int n = sz(f), m = sz(g);
 
-		// 後ろからインライン配る DP
-		repir(i, n - 1, 0) {
-			// 上位項に係数倍して配っていく．
-			repi(j, 1, m) {
-				if (i + j >= n) break;
-
-				c[i + j] = add(c[i + j], mul(c[i], g[j]));
-			}
-
-			// 定数項は最後に配るか消去しないといけない．
-			c[i] = mul(c[i], g[0]);
+		// min(n, m) が小さいときは愚直に積を計算する．
+		if (n <= 60 || m <= 60) {
+			vector<S> h(n + m - 1, o());
+			rep(i, n) rep(j, m) h[i + j] = add(h[i + j], mul(f[i], g[j]));
+			return h;
 		}
 
-		return *this;
+		int L = min({ max(n, m) / 2, n, m });
+
+		int n0 = min(L, n), n1 = n - n0;
+		int m0 = min(L, m), m1 = m - m0;
+
+		vector<S> f0(n0, o()), f1(n1, o()), f01(max(n0, n1), o());
+		vector<S> g0(m0, o()), g1(m1, o()), g01(max(m0, m1), o());
+		rep(i, n0) {
+			f0[i] = f[i];
+			f01[i] = f[i];
+		}
+		rep(i, n1) {
+			f1[i] = f[n0 + i];
+			f01[i] = add(f01[i], f[n0 + i]);
+		}
+		rep(j, m0) {
+			g0[j] = g[j];
+			g01[j] = g[j];
+		}
+		rep(j, m1) {
+			g1[j] = g[m0 + j];
+			g01[j] = add(g01[j], g[m0 + j]);
+		}
+
+		vector<S> h0 = karatsuba(f0, g0);
+		vector<S> h01 = karatsuba(f01, g01);
+		vector<S> h1 = karatsuba(f1, g1);
+
+		vector<S> h(n + m - 1, o());
+		rep(i, sz(h0)) {
+			h[i] = add(h[i], h0[i]);
+			h[L + i] = add(h[L + i], mi(h0[i]));
+		}
+		rep(i, sz(h1)) {
+			h[2 * L + i] = add(h[2 * L + i], h1[i]);
+			h[L + i] = add(h[L + i], mi(h1[i]));
+		}
+		rep(i, sz(h01)) {
+			h[L + i] = add(h[L + i], h01[i]);
+		}
+
+		return h;
 	}
-	FPS operator*(const FPS& g) const { return FPS(*this) *= g; }
+	FPS operator*(const FPS& g) const {
+		// verify : https://judge.yosupo.jp/problem/convolution_mod_2_64
+
+		if (n == 0 || g.n == 0) return FPS();
+		return FPS(karatsuba(c, g.c));
+	}
+	FPS& operator*=(const FPS& g) { *this = *this * g; return *this; }
 
 	// 除算
 	FPS inv(int d) const {
@@ -311,81 +350,85 @@ struct FPS {
 };
 
 
-//【展開係数（可換環）】O(n^2 log d)
+//【展開係数（可換環）】O(n^1.6 log N)
 /*
-* 有理式 f(x) / g(x) を形式的冪級数に展開したときの x^d の係数を返す．
+* [z^N] f(z)/g(z) を返す．
 *
-* 制約 : deg f < deg g, g[0] = 1
+* 制約 : g[0] = 1
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
-S bostan_mori(const FPS<S, add, o, mi, mul, e>& f, const FPS<S, add, o, mi, mul, e>& g, ll d) {
+S bostan_mori(FPS<S, add, o, mi, mul, e> f, FPS<S, add, o, mi, mul, e> g, ll N) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
 	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
 
 	//【方法】
-	// 分母分子に g(-x) を掛けることにより
-	//		f(x) / g(x) = f(x) g(-x) / g(x) g(-x)
-	// を得る．ここで g(x) g(-x) は偶多項式なので
-	//		g(x) g(-x) = e(x^2)
+	// 分母分子に g(-z) を掛けることにより
+	//		f(z) / g(z) = f(z) g(-z) / g(z) g(-z)
+	// を得る．ここで g(z) g(-z) は偶多項式なので
+	//		g(z) g(-z) = e(z^2)
 	// と表すことができる．
 	// 
 	// 分子について
-	//		f(x) g(-x) = E(x^2) + x O(x^2)
-	// というように偶多項式部分と奇多項式部分に分けると，d が偶数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] E(x^2) / e(x^2)
-	//		= [x^(d/2)] E(x) / e(x)
-	// となり，d が奇数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] x O(x^2) / e(x^2)
-	//		= [x^((d-1)/2)] O(x) / e(x)
+	//		f(z) g(-z) = E(z^2) + z O(z^2)
+	// というように偶多項式部分と奇多項式部分に分けると，N が偶数のときは
+	//		[z^N] f(z) g(-z) / g(z) g(-z)
+	//		= [z^N] E(z^2) / e(z^2)
+	//		= [z^(N/2)] E(z) / e(z)
+	// となり，N が奇数のときは
+	//		[z^N] f(z) g(-z) / g(z) g(-z)
+	//		= [z^N] z O(z^2) / e(z^2)
+	//		= [z^((N-1)/2)] O(z) / e(z)
 	// となる．
 	//
-	// これを繰り返せば d を半分ずつに減らしていくことができる．
+	// これを繰り返せば N を半分ずつに減らしていくことができる．
 
 	Assert(g.n >= 1 && g[0] == e());
 
-	// d = 0 のときは定数項を返す．
-	if (d == 0) return f[0];
+	// f(z) = 0 のときは 0 を返す．
+	if (f.n == 0) return o();
 
-	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
-	FPS<S, add, o, mi, mul, e> f2, g2(g);
-	rep(i, g2.n) if (i % 2) g2[i] = mi(g2[i]);
-	f2 = f * g2;
-	g2 *= g;
+	while (N > 0) {
+		// f2(z) = f(z) g(-z), g2(z) = g(z) g(-z) を求める．
+		FPS<S, add, o, mi, mul, e> f2, g2(g);
+		rep(i, g2.n) if (i & 1) g2[i] = mi(g2[i]);
+		f2 = f * g2;
+		g2 *= g;
 
-	// f3(x) = E(x) or O(x), g3(x) = e(x) を求める．
-	FPS<S, add, o, mi, mul, e> f3, g3;
-	if (d % 2 == 0) for (int i = 0; 2 * i < f2.n; i++) f3.c.push_back(f2[2 * i]);
-	else for (int i = 0; 2 * i + 1 < f2.n; i++) f3.c.push_back(f2[2 * i + 1]);
-	
-	f3.n = sz(f3.c);
-	rep(i, g.n) g3.c.push_back(g2[2 * i]);
-	g3.n = sz(g3.c);
+		// f3(z) = E(z) or O(z), g3(z) = e(z) を求める．
+		f.c.clear(); g.c.clear();
+		if (N & 1) rep(i, min<ll>(f2.n / 2, N / 2 + 1)) f.c.push_back(f2[2 * i + 1]);
+		else rep(i, min<ll>((f2.n + 1) / 2, N / 2 + 1)) f.c.push_back(f2[2 * i]);
+		f.n = sz(f.c);
+		rep(i, min<ll>((g2.n + 1) / 2, N / 2 + 1)) g.c.push_back(g2[2 * i]);
+		g.n = sz(g.c);
 
-	// d を半分にして再帰を回す．
-	return bostan_mori(f3, g3, d / 2);
+		// N を半分にして次のステップに進む．
+		N /= 2;
+	}
+
+	// N = 0 になったら定数項を返す．
+	return f[0];
 }
 
 
-//【線形漸化式（可換環）】O(d^2 log n)
+//【線形漸化式（可換環）】O(n^1.6 log N)
 /*
-* 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
-* 数列 a について，a[n] の値を返す．
+* 初項 a[0..n) と漸化式 a[i] = Σj=[0..n) c[j]a[i-1-j] で定義される
+* 数列 a について，a[N] の値を返す．
 *
-* 利用：【展開係数】
+* 利用：【展開係数（可換環）】
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mi)(S), S(*mul)(S, S), S(*e)()>
-S linearly_recurrent_sequence(const vector<S>& a, const vector<S>& c, ll n) {
+S linearly_recurrent_sequence(const vector<S>& a, const vector<S>& c, ll N) {
 	// verify : https://atcoder.jp/contests/abc009/tasks/abc009_4
 
-	int d = sz(a);
+	int n = sz(a);
 
 	FPS<S, add, o, mi, mul, e> A(a), C(c);
 	FPS<S, add, o, mi, mul, e> Dnm = e() - (C >> 1);
-	FPS<S, add, o, mi, mul, e> Num = (Dnm * A).resize(d);
+	FPS<S, add, o, mi, mul, e> Num = (Dnm * A).resize(n);
 
-	return bostan_mori(Num, Dnm, n);
+	return bostan_mori(Num, Dnm, N);
 }
 
 

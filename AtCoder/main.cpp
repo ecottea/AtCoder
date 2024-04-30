@@ -20,9 +20,9 @@ using Graph = vvi;
 
 // 定数の定義
 const double PI = acos(-1);
-const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
-const vi DY = { 0, 1, 0, -1 };
-int INF = 1001001001; ll INFL = 4004004003104004004LL; // (int)INFL = 1010931620;
+int DX[4] = {1, 0, -1, 0}; // 4 近傍（下，右，上，左）
+int DY[4] = {0, 1, 0, -1};
+int INF = 1001001001; ll INFL = 4004004003094073385LL; // (int)INFL = INF, (int)(-INFL) = -INF;
 
 // 入出力高速化
 struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(18); } } fastIOtmp;
@@ -33,7 +33,6 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define lbpos(a, x) (int)distance((a).begin(), std::lower_bound(all(a), x))
 #define ubpos(a, x) (int)distance((a).begin(), std::upper_bound(all(a), x))
 #define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
-#define YES(b) {cout << ((b) ? "YES\n" : "NO\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -42,16 +41,16 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repb(set, d) for(int set = 0, set##_ub = 1 << int(d); set < set##_ub; ++set) // d ビット全探索（昇順）
 #define repis(i, set) for(int i = lsb(set), bset##i = set; i >= 0; bset##i -= 1 << i, i = lsb(bset##i)) // set の全要素（昇順）
 #define repp(a) sort(all(a)); for(bool a##_perm = true; a##_perm; a##_perm = next_permutation(all(a))) // a の順列全て（昇順）
-#define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
 #define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
 #define EXIT(a) {cout << (a) << endl; exit(0);} // 強制終了
-#define inQ(x, y, u, l, d, r) ((u) <= (x) && (l) <= (y) && (x) < (d) && (y) < (r)) // 矩形内判定
+#define inQ(x, y, u, l, d, r) ((u) <= (x) && (l) <= (y) && (x) < (d) && (y) < (r)) // 半開矩形内判定
 
 // 汎用関数の定義
-template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
+template <class T> inline ll powi(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
 template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; return true; } return false; } // 最大値を更新（更新されたら true を返す）
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
-template <class T> inline T get(T set, int i) { return (set >> i) & T(1); }
+template <class T> inline T getb(T set, int i) { return (set >> i) & T(1); }
+template <class T> inline T smod(T n, T m) { n %= m; if (n < 0) n += m; return n; } // 非負mod
 
 // 演算子オーバーロード
 template <class T, class U> inline istream& operator>>(istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
@@ -70,15 +69,15 @@ using namespace atcoder;
 #include "localACL.hpp"
 #endif
 
-//using mint = modint1000000007;
-using mint = modint998244353;
+using mint = modint1000000007;
+//using mint = modint998244353;
 //using mint = modint; // mint::set_mod(m);
 
 namespace atcoder {
 	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
 }
-using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using vvvvm = vector<vvvm>;
+using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using vvvvm = vector<vvvm>; using pim = pair<int, mint>;
 #endif
 
 
@@ -89,6 +88,7 @@ inline int popcount(int n) { return __builtin_popcount(n); }
 inline int popcount(ll n) { return __builtin_popcountll(n); }
 inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
 inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
+template <size_t N> inline int lsb(const bitset<N>& b) { return b._Find_first(); }
 inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
 inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump(...)
@@ -97,214 +97,387 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump_mat(v)
 #define input_from_file(f)
 #define output_to_file(f)
-#define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
+#define Assert(b) { if (!(b)) { string s; while (1) s += "MLE";} } // メモリ爆食いするが MLE ではなく TLE が出る．
 #endif
 
 
-//【rollback Union-Find】
+//【階乗など（法が大きな素数）】
 /*
-* Rollback_Union_find(int n) : O(n)
-*	非連結で大きさ n の Union-Find を構築する．
+* Factorial_mint(int N) : O(n)
+*	N まで計算可能として初期化する．
 *
-* merge(int a, int b) : O(log n)
-*	頂点 a と頂点 b を統合する．
+* mint fact(int n) : O(1)
+*	n! を返す．
 *
-* bool same(int a, int b) : O(log n)
-*	頂点 a と頂点 b が同じ連結成分に属するかを返す．
+* mint fact_inv(int n) : O(1)
+*	1/n! を返す（n が負なら 0 を返す）
 *
-* int leader(int a) : O(log n)
-*	頂点 a の属する連結成分の親を返す．
+* mint inv(int n) : O(1)
+*	1/n を返す．
 *
-* int size(int a) : O(log n)
-*	頂点 a の属する連結成分の大きさを返す．
+* mint perm(int n, int r) : O(1)
+*	順列の数 nPr を返す．
 *
-* int size() : O(1)
-*	連結成分の個数を返す．
+* mint bin(int n, int r) : O(1)
+*	二項係数 nCr を返す．
 *
-* vvi groups() : O(n log n)
-*	連結成分のリストを返す．
+* mint bin_inv(int n, int r) : O(1)
+*	二項係数の逆数 1/nCr を返す．
 *
-* snapshot() : O(1)
-*	スナップショットを作成する．
+* mint mul(vi rs) : O(|rs|)
+*	多項係数 nC[rs] を返す．（n = Σrs）
 *
-* rollback() : O(1)
-*	直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
+* mint hom(int n, int r) : O(1)
+*	重複組合せの数 nHr = n+r-1Cr を返す（0H0 = 1 とする）
+*
+* mint neg_bin(int n, int r) : O(1)
+*	負の二項係数 nCr = (-1)^r -n+r-1Cr を返す（n ≦ 0, r ≧ 0）
 */
-class Rollback_Union_find {
-	// 参考 : https://snuke.hatenablog.com/entry/2016/07/01/000000
+class Factorial_mint {
+	int n_max;
 
-	int n; // 頂点の個数
-	int m; // 連結成分の個数
-
-	// parent_or_size[i] : 頂点 i の親または属する集合の大きさ
-	//	頂点 i が根でない場合は親の番号（非負）を，
-	//	根の場合は属する連結成分の大きさの -1 倍（負）を表す．
-	vi parent_or_size;
-
-	// 変更履歴
-	stack<pii> history;
+	// 階乗と階乗の逆数の値を保持するテーブル
+	vm fac, fac_inv;
 
 public:
-	// 非連結で大きさ n の Union-Find を構築する．
-	Rollback_Union_find(int n) : n(n), m(n), parent_or_size(n, -1) {
-		// verify : https://codeforces.com/gym/100513/problem/A
+	// n! までの階乗とその逆数を前計算しておく．O(n)
+	Factorial_mint(int n) : n_max(n), fac(n + 1), fac_inv(n + 1) {
+		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
+
+		fac[0] = 1;
+		repi(i, 1, n) fac[i] = fac[i - 1] * i;
+
+		fac_inv[n] = fac[n].inv();
+		repir(i, n - 1, 0) fac_inv[i] = fac_inv[i + 1] * (i + 1);
 	}
-	Rollback_Union_find() : n(0), m(0) {} // ダミー
+	Factorial_mint() : n_max(0) {} // ダミー
 
-	// 頂点 a, b を結合する．
-	void merge(int a, int b) {
-		// verify : https://codeforces.com/gym/100513/problem/A
+	// n! を返す．
+	mint fact(int n) const {
+		// verify : https://atcoder.jp/contests/dwacon6th-prelims/tasks/dwacon6th_prelims_b
 
-		// 頂点 a, b の属する連結成分の根 ra, rb を得る．
-		int ra = leader(a);
-		int rb = leader(b);
-
-		// 根が同じであれば既に連結であるから何もしない．
-		if (ra == rb) return;
-
-		// 根が異なる場合，大きい連結成分の根を改めて ra，小さい方を rb とする．
-		if (-parent_or_size[ra] < -parent_or_size[rb]) swap(ra, rb);
-
-		// 変更前の情報を記録しておく．
-		history.emplace(ra, parent_or_size[ra]);
-		history.emplace(rb, parent_or_size[rb]);
-
-		// 小さい方の連結成分を ra を根とする連結成分に統合する．
-		parent_or_size[ra] += parent_or_size[rb];
-		parent_or_size[rb] = ra;
-
-		// 連結成分の数を 1 つ減らす．
-		m--;
+		Assert(0 <= n && n <= n_max);
+		return fac[n];
 	}
 
-	// スナップショットを作成する．
-	void snapshot() {
-		// verify : https://atcoder.jp/contests/abc302/tasks/abc302_h
+	// 1/n! を返す（n が負なら 0 を返す）
+	mint fact_inv(int n) const {
+		// verify : https://atcoder.jp/contests/abc289/tasks/abc289_h
 
-		history.emplace(INF, m);
+		Assert(n <= n_max);
+		if (n < 0) return 0;
+		return fac_inv[n];
 	}
 
-	// 直前に作成したスナップショットの状態まで巻き戻す．
-	void rollback() {
-		// verify : https://atcoder.jp/contests/abc302/tasks/abc302_h
+	// 1/n を返す．
+	mint inv(int n) const {
+		// verify : https://atcoder.jp/contests/exawizards2019/tasks/exawizards2019_d
 
-		while (true) {
-			auto [i, v] = history.top(); history.pop();
-			if (i == INF) {
-				m = v;
-				break;
-			}
-			parent_or_size[i] = v;
-		}
+		Assert(0 < n && n <= n_max);
+		return fac[n - 1] * fac_inv[n];
 	}
 
-	// 頂点 a, b が同じ連結成分に属するかを返す．
-	bool same(int a, int b) {
-		// verify : https://codeforces.com/gym/100513/problem/A
+	// 順列の数 nPr を返す．
+	mint perm(int n, int r) const {
+		// verify : https://atcoder.jp/contests/abc172/tasks/abc172_e
 
-		// 根が同じなら連結である．
-		return leader(a) == leader(b);
+		Assert(n <= n_max);
+
+		if (r < 0 || n - r < 0) return 0;
+		return fac[n] * fac_inv[n - r];
 	}
 
-	// 頂点 a の属する連結成分の根を返す．
-	int leader(int a) {
-		// a が根であれば自分自身を返す．
-		int pa = parent_or_size[a];
-		if (pa < 0) return a;
+	// 二項係数 nCr を返す．
+	mint bin(int n, int r) const {
+		// verify : https://judge.yosupo.jp/problem/binomial_coefficient_prime_mod
 
-		// a が根でなければ，a の親 pa の根 ra を求める．
-		int ra = leader(pa);
-
-		// 経路圧縮はしない．
-
-		return ra;
+		Assert(n <= n_max);
+		if (r < 0 || n - r < 0) return 0;
+		return fac[n] * fac_inv[r] * fac_inv[n - r];
 	}
 
-	// 頂点 a の属する連結成分の大きさを返す．
-	int size(int a) {
-		// a の根を調べ，そこに記録されている大きさの情報を返す．
-		return -parent_or_size[leader(a)];
+	// 二項係数の逆数 1/nCr を返す．
+	mint bin_inv(int n, int r) const {
+		// verify : https://www.codechef.com/problems/RANDCOLORING
+
+		Assert(n <= n_max);
+		Assert(r >= 0 || n - r >= 0);
+		return fac_inv[n] * fac[r] * fac[n - r];
 	}
 
-	// 連結成分の個数を返す．
-	int size() {
-		return m;
-	}
+	// 多項係数 nC[rs] を返す．
+	mint mul(const vi& rs) const {
+		// verify : https://yukicoder.me/problems/no/2141
 
-	// 連結成分のリストを返す．
-	vvi groups() {
-		vvi res(m);
+		if (*min_element(all(rs)) < 0) return 0;
+		int n = accumulate(all(rs), 0);
+		Assert(n <= n_max);
 
-		vi r_to_i(n, -1); int i = 0;
-		rep(a, n) {
-			int r = leader(a);
-			if (r_to_i[r] == -1) r_to_i[r] = i++;
-			res[r_to_i[r]].push_back(a);
-		}
+		mint res = fac[n];
+		repe(r, rs) res *= fac_inv[r];
 
 		return res;
 	}
 
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Rollback_Union_find d) {
-		repe(g, d.groups()) {
-			repe(v, g) os << v << " ";
-			os << endl;
-		}
-		return os;
+	// 重複組合せの数 nHr = n+r-1Cr を返す（0H0 = 1 とする）
+	mint hom(int n, int r) {
+		// verify : https://mojacoder.app/users/riantkb/problems/toj_ex_2
+
+		if (n == 0) return (int)(r == 0);
+		Assert(n + r - 1 <= n_max);
+		if (r < 0 || n - 1 < 0) return 0;
+		return fac[n + r - 1] * fac_inv[r] * fac_inv[n - 1];
 	}
-#endif
+
+	// 負の二項係数 nCr を返す（n ≦ 0, r ≧ 0）
+	mint neg_bin(int n, int r) {
+		// verify : https://atcoder.jp/contests/abc345/tasks/abc345_g
+
+		if (n == 0) return (int)(r == 0);
+		Assert(-n + r - 1 <= n_max);
+		if (r < 0 || -n - 1 < 0) return 0;
+		return (r & 1 ? -1 : 1) * fac[-n + r - 1] * fac_inv[r] * fac_inv[-n - 1];
+	}
 };
+
+
+//【グラフの入力】O(n + m)
+/*
+* (始点, 終点) の組からなる入力を受け取り，n 頂点 m 辺のグラフを構築して返す．
+*
+* n : グラフの頂点の数
+* m : グラフの辺の数（省略すれば n-1）
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
+*/
+Graph read_Graph(int n, int m = -1, bool directed = false, bool zero_indexed = false) {
+	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bi
+
+	Graph g(n);
+	if (m == -1) m = n - 1;
+
+	rep(j, m) {
+		int a, b;
+		cin >> a >> b;
+		if (!zero_indexed) { --a; --b; }
+
+		g[a].push_back(b);
+		if (!directed && a != b) g[b].push_back(a);
+	}
+
+	return g;
+}
+
+
+//【全方位木 DP】O(n)
+/*
+* 与えられた木 g に対し，各頂点 s∈[0..n) について，
+* s を根と見たときの問題の答えを格納したリストを返す．
+* また必要なら各 s∈[0..n) と s に隣接する各頂点 t（j 番目）について，
+* s-t 間の辺を切断し t を根と見たときの問題の答えを sub[s][j] に格納する．
+*
+* T leaf(int s) :
+*   葉 s のみからなる部分木について，s を根と見たときの答えを返す．
+*
+* T add_edge(T x, int p, int s) :
+*   頂点 s を根とする部分木の暫定の答えが x のとき，
+*   辺 p'→s を追加して p' を仮の根と見たときの答えを返す（記号 ' は仮の頂点を表す）
+*
+* T merge(T x, T y, int s) :
+*   仮の根 s' のみを共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
+*   これらをマージした部分木について同じく s' を仮の根と見たときの答えを返す．
+*
+* T add_vertex(T x, int s) :
+*	仮の根 s' をもつ部分木 s' に対する答えが x のとき，
+*	根 s を追加した部分木 s についての答えを返す．
+*/
+template <class T, T(*leaf)(int), T(*add_edge)(const T&, int, int), T(*merge)(const T&, const T&, int), T(*add_vertex)(const T&, int)>
+vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
+	// 参考 : https://atcoder.jp/contests/abc222/editorial/2749
+	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
+
+	int n = sz(g);
+	vector<T> res(n);
+
+	// sub[s][j] : 
+	// 頂点 s と接続する j 番目の頂点を t としたとき，s-t 間の辺を切断し，t を根と見たときの答え
+	if (sub == nullptr) sub = new vector<vector<T>>;
+	sub->resize(n);
+	rep(s, n) (*sub)[s] = vector<T>(sz(g[s]));
+
+	// 大きさ 1 の木に対する例外処理
+	if (n == 1) return vector<T>{ leaf(0) };
+
+	// p-s 間の辺を切断し，s を根と見たときの答えを計算する．
+	//  p : 0 を根としたときの s の親
+	//  sj : s が p に接続する何番目の頂点か
+	function<void(int, int, int)> dfs1 = [&](int s, int p, int sj) {
+		// 頂点 0 については後で計算するので計算不要．
+		if (p == -1) {
+			rep(tj, sz(g[s])) dfs1(g[s][tj], s, tj);;
+			return;
+		}
+
+		// is_leaf : s が葉か
+		bool is_leaf = true;
+
+		rep(tj, sz(g[s])) {
+			int t = g[s][tj];
+			if (t == p) continue;
+
+			// s-t 間の辺を切断し，t を根と見たときの答えを計算する．
+			dfs1(t, s, tj);
+
+			// 先の部分木に対して辺 s'→t を追加した場合の部分木 s' についての答えを得る．
+			T val = add_edge((*sub)[s][tj], s, t);
+
+			// それを部分木 s' の暫定の答えとマージして答えを計算していく．
+			if (is_leaf) (*sub)[p][sj] = move(val);
+			else (*sub)[p][sj] = merge((*sub)[p][sj], val, s);
+
+			is_leaf = false;
+		}
+
+		// s が葉の場合は専用の答えを代入しておく．
+		if (is_leaf) (*sub)[p][sj] = leaf(s);
+		// そうでない場合は根 s を追加する．
+		else (*sub)[p][sj] = add_vertex((*sub)[p][sj], s);
+	};
+	dfs1(0, -1, -1);
+
+	// s を根と見たときの答えを計算する．
+	//  p : 0 を根としたときの s の親
+	//  val : s-p 間の辺を切断し，p を根と見たときの答え
+	function<void(int, int, const T&)> dfs2 = [&](int s, int p, const T& val) {
+		// K : 根 s から出る辺の数
+		int K = sz(g[s]);
+
+		// ds[j] : 仮の根 s' から出る j 番目の辺だけを s' に接続したときの答え
+		vector<T> ds(K);
+
+		rep(tj, K) {
+			const auto& t = g[s][tj];
+			if (t == p) {
+				(*sub)[s][tj] = val;
+				ds[tj] = add_edge(val, s, p);
+				continue;
+			}
+
+			// s'-t 間の辺を切断し，t を根と見たときの答えは計算し終えているので，
+			// その部分木に対して辺 s'→t を接続し s' を仮の根と見た場合の答えを得る．
+			ds[tj] = add_edge((*sub)[s][tj], s, t);
+		}
+
+		// acc_l[j] : 仮の根 s' の [0..j] 番目の辺を s' に接続したときの答え
+		vector<T> acc_l(K);
+		acc_l[0] = ds[0];
+		repi(tj, 1, K - 1) acc_l[tj] = merge(acc_l[tj - 1], ds[tj], s);
+
+		// acc_r[j] : 仮の根 s' の [j..K) 番目の辺を s' に接続したときの答え
+		vector<T> acc_r(K);
+		acc_r[K - 1] = ds[K - 1];
+		repir(tj, K - 2, 0) acc_r[tj] = merge(acc_r[tj + 1], ds[tj], s);
+
+		// 仮の根 s' から出る全ての辺を s' に接続し，根 s を追加したときの答えが求めるものである．
+		res[s] = add_vertex(acc_l[K - 1], s);
+
+		rep(tj, K) {
+			const auto& t = g[s][tj];
+			if (t == p) continue;
+
+			// 仮の根 s' に辺 s'→t 以外の全ての辺を接続し，根 s を追加したときの答え，
+			// すなわち，辺 t-s を切断し，s を根と見たときの答えを再帰関数に渡す．
+			if (K == 1) dfs2(t, s, leaf(s));
+			else if (tj == 0) dfs2(t, s, add_vertex(acc_r[1], s));
+			else if (tj == K - 1) dfs2(t, s, add_vertex(acc_l[K - 2], s));
+			else dfs2(t, s, add_vertex(merge(acc_l[tj - 1], acc_r[tj + 1], s), s));
+		}
+	};
+	dfs2(0, -1, leaf(0)); // 第 3 引数はダミー
+
+	return res;
+
+	/* 雛形
+	struct T {
+		int v;
+	};
+	T leaf(int s) {
+		return { 1 };
+	}
+	T add_edge(const T& x, int p, int s) {
+		return { x.v };
+	}
+	T merge(const T& x, const T& y, int s) {
+		return { x.v + y.v };
+	}
+	T add_vertex(const T& x, int s) {
+		return { x.v + 1 };
+	}
+	vector<T> solve_by_tree_getDP(const Graph& g) {
+		return rerooting<T, leaf, add_edge, merge, add_vertex>(g);
+	}
+	*/
+};
+
+
+//【ヒープの数え上げ】O(n)
+/*
+* 与えられた木 g の頂点に対する数 [0..n) の割り当て方のうち，
+* 各 s∈[0..n) を根とみなしたときヒープをなすものの数を格納したリストを返す．
+*
+* 制約：fm は n! まで計算可能
+*
+* 利用：【全方位木 DP】
+*/
+struct T_ch {
+	mint v; // ヒープの数
+	int c; // 辺の数
+};
+Factorial_mint const* fm_ch;
+T_ch leaf_ch(int s) {
+	return { 1, 0 }; 
+}
+T_ch add_edge_ch(const T_ch& x, int p, int s) {
+	return { x.v, x.c + 1 };
+}
+T_ch merge_ch(const T_ch& x, const T_ch& y, int s) {
+	// 左右それぞれで大小順が変わらない限り，独立に数の再割り当てができる．
+	return { x.v * y.v * fm_ch->bin(x.c + y.c, x.c), x.c + y.c };
+}
+T_ch add_vertex_ch(const T_ch& x, int s) {
+	// 根に割り当てられる数は 0 しかなく，他については全体に 1 加算される．
+	return x;
+}
+vm count_heap(const Graph& g, const Factorial_mint& fm) {
+	// verify : https://atcoder.jp/contests/abc160/tasks/abc160_f
+
+	int n = sz(g);
+	fm_ch = &fm;
+
+	auto dp = rerooting<T_ch, leaf_ch, add_edge_ch, merge_ch, add_vertex_ch>(g);
+
+	vm res(n);
+	rep(i, n) res[i] = dp[i].v;
+
+	return res;
+}
 
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
-	
-	int h, w;
-	cin >> h >> w;
 
-	vvc c(h, vc(w));
-	cin >> c;
+	int n;
+	cin >> n;
 
-	int cr = 0;
+	auto g = read_Graph(n);
 
-	rep(i, h) rep(j, w) if (c[i][j] == '.') cr++;
-
-	Rollback_Union_find d(h * w);
-
-	rep(i, h) rep(j, w) {
-		if (c[i][j] == '.') continue;
-
-		rep(k, 4) {
-			int ni = i + DX[k];
-			int nj = j + DY[k];
-			if (inQ(ni, nj, 0, 0, h, w) && c[ni][nj] == '#') {
-				d.merge(i * w + j, ni * w + nj);
-			}
-		}
-	}
+	Factorial_mint fm(n);
+	auto cnt = count_heap(g, fm);
 
 	mint res = 0;
-
-	rep(i, h) rep(j, w) {
-		if (c[i][j] == '#') continue;
-
-		d.snapshot();
-
-		rep(k, 4) {
-			int ni = i + DX[k];
-			int nj = j + DY[k];
-			if (inQ(ni, nj, 0, 0, h, w) && c[ni][nj] == '#') {
-				d.merge(i * w + j, ni * w + nj);
-			}
-		}
-
-		res += sz(d) - (cr - 1);
-
-		d.rollback();
-	}
-	res /= cr;
+	rep(i, n) res += cnt[i];
+	res /= 2; // 最初に描く辺の両端の頂点のどちらを根とみなすかの自由度で割る
 
 	cout << res << endl;
 }

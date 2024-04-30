@@ -5,8 +5,6 @@
 
 //【ビット行列】
 /*
-* ビット行列を表す構造体
-*
 * Bit_matrix<M>(int n, int m) : O(n M / 64)
 *	n×m 零行列で初期化する．
 *	制約：m ≦ M
@@ -122,9 +120,11 @@ struct Bit_matrix {
 /*
 * n×m 行列 A と l×m 行列 B について，積 A * B^T（n×l 行列）を返す．
 */
-template <int N>
-Bit_matrix<N> prod_transpose(const Bit_matrix<N>& A, const Bit_matrix<N>& B) {
-	Bit_matrix<N> res(A.n, B.n);
+template <int M>
+Bit_matrix<M> prod_transpose(const Bit_matrix<M>& A, const Bit_matrix<M>& B) {
+	// verify : https://judge.yosupo.jp/problem/matrix_product_mod_2
+
+	Bit_matrix<M> res(A.n, B.n);
 	rep(i, res.n) rep(j, res.m) res[i][j] = (A[i] & B[j]).count() % 2;
 	return res;
 }
@@ -215,7 +215,7 @@ int row_reduced_form(Bit_matrix<M>& A, vi* is = nullptr, vi* js = nullptr) {
 /*
 *【行簡約階段形】を用いて，full rank なら 1，さもなくば 0 と判断できる．
 * 
-* verify : https://yukicoder.me/problems/no/2255
+* verify : https://judge.yosupo.jp/problem/matrix_det_mod_2
 */
 
 
@@ -271,12 +271,13 @@ Bit_matrix<M> inverse_matrix(const Bit_matrix<M>& A) {
 /*
 * 与えられた n×m 行列 A と n 次元ベクトル b に対し，
 * 線形方程式 A x = b の特殊解 x0（m 次元ベクトル）を格納する（なければ false を返す）
-*
-*（呼び出すとき gauss_jordan_elimination<M> としないと gcc でエラーになるので注意．）
+* また同次形 A x = 0 の解空間の基底（m 次元ベクトル）のリストを xs に格納する．
 */
 template <int M>
-bool gauss_jordan_elimination(const Bit_matrix<M>& A, const vb& b, bitset<M>* x0 = nullptr) {
-	// verify : https://atcoder.jp/contests/tenka1-2014-qualb/tasks/tenka1_2014_qualB_c
+bool gauss_jordan_elimination(const Bit_matrix<M>& A, const vb& b,
+	bitset<M>* x0 = nullptr, vector<bitset<M>>* xs = nullptr)
+{
+	// verify : https://atcoder.jp/contests/arc173/tasks/arc173_e
 
 	int n = A.n, m = A.m;
 
@@ -315,11 +316,29 @@ bool gauss_jordan_elimination(const Bit_matrix<M>& A, const vb& b, bitset<M>* x0
 	// 最後に見つかったピボットの位置が第 m 列ならば解なし．
 	if (pivots.back() == m) return false;
 
-	// 解の例の構成
+	// A x = b の特殊解 x0 の構成（任意定数は全て 0 にする）
 	if (x0 != nullptr) {
 		x0->reset();
 		int rnk = sz(pivots);
 		rep(i, rnk) (*x0)[pivots[i]] = v[i][m];
+
+		// 同次形 A x = 0 の一般解 {x} の基底の構成（任意定数を 1-hot にする）
+		if (xs != nullptr) {
+			xs->clear();
+
+			int i = 0;
+			rep(j, m) {
+				if (i < rnk && j == pivots[i]) {
+					i++;
+					continue;
+				}
+
+				bitset<M> x;
+				x[j] = 1;
+				rep(i2, i) x[pivots[i2]] = v[i2][j];
+				xs->emplace_back(move(x));
+			}
+		}
 	}
 
 	return true;

@@ -7,18 +7,18 @@
 
 //【最短経路数】O(h w)
 /*
-* 通過の可否が c[i][j] = '.'['#'] で示された h * w 格子について，
-* c[0][0] から c[i][j] までの最短路の数を cnt[i][j] に格納する．
+* 通過できないマスが WALL で表された格子 c[0..h)[0..w) について，
+* c[0][0] から c[i][j] までの最短路の数を格納した二次元リストを返す．
 *
 *（始点からの格子 DP）
 */
-void count_lattice_path(const vvc& c, vvm& cnt, const char WALL = '#') {
+vvm count_lattice_path(const vvc& c, const char WALL = '#') {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_h
 
 	int h = sz(c), w = sz(c[0]);
 
 	// cnt[i][j] : c[0][0] から c[i][j] までの経路数
-	cnt = vvm(h, vm(w));
+	vvm cnt(h, vm(w));
 	cnt[0][0] = 1;
 
 	// 貰う DP
@@ -35,12 +35,14 @@ void count_lattice_path(const vvc& c, vvm& cnt, const char WALL = '#') {
 		// 左から来れる場合
 		if (j > 0) cnt[i][j] += cnt[i][j - 1];
 	}
+
+	return cnt;
 }
 
 
 //【最短経路数】O(h w)
 /*
-* 通過の可否が c[i][j] = '.'['#'] で示された h * w 格子について，
+* 通過の可否が c[i][j] = '.'['#'] で示された h×w 格子について，
 * c[i][j] から c[h-1][w-1] までの最短路の数を cnt[i][j] に格納する．
 *
 *（終点からの格子 DP）
@@ -73,7 +75,7 @@ void count_lattice_path_rev(const vvc& c, vvm& cnt, const char WALL = '#') {
 
 //【最短経路数（連続で曲がれない）】O(h w)
 /*
-* h * w 格子について，二連続で曲がることを禁止した場合の
+* h×w 格子について，二連続で曲がることを禁止した場合の
 * c[0][0] から c[h-1][w-1] までの最短路の数を返す．
 *
 *（始点からの格子状態 DP）
@@ -116,8 +118,7 @@ mint count_lattice_path_no_continuous_turns(int h, int w) {
 			}
 		}
 	}
-	dumpel(dp);
-
+	
 	// 曲がった直後の停止が禁止なので，1 マス手前も結果に加える．
 	mint res;
 	res += dp[h - 1][w - 1][0];
@@ -129,9 +130,9 @@ mint count_lattice_path_no_continuous_turns(int h, int w) {
 }
 
 
-//【チェス盤距離 d 以内ジャンプ経路数】O(h w)
+//【チェス盤距離 d 以内ジャンプ最短経路数】O(h w)
 /*
-* 通過の可否が c[i][j] = '.'['#'] で示された h * w 格子について，右下方向へのチェス盤距離 d 以下の
+* 通過の可否が c[i][j] = '.'['#'] で示された h×w 格子について，右下方向へのチェス盤距離 d 以下の
 * ジャンプを繰り返すとき，c[0][0] から c[i][j] までの経路の数を seq[i][j] に格納する．
 *
 *（二次元いもす法で高速化した格子 DP）
@@ -170,9 +171,9 @@ void count_chebyshev_path(const vvc& c, int d, vvm& seq, char WALL = '#') {
 }
 
 
-//【マンハッタン距離 d 以内ジャンプ経路数】O(h w)
+//【マンハッタン距離 d 以内ジャンプ最短経路数】O(h w)
 /*
-* 通過の可否が c[i][j] = '.'['#'] で示された h * w 格子について，右下方向へのマンハッタン距離 d 以下の
+* 通過の可否が c[i][j] = '.'['#'] で示された h×w 格子について，右下方向へのマンハッタン距離 d 以下の
 * ジャンプを繰り返すとき，c[0][0] から c[i][j] までの経路の数を seq[i][j] に格納する．
 *
 *（二次元いもす法で高速化した格子 DP）
@@ -257,11 +258,11 @@ void count_manhattan_path(const vvc& c_, int d, vvm& seq, char WALL = '#') {
 //【スコア最大経路（スパーススコア指定）】O(n log n)
 /*
 * n 個の点 (x[i], y[i]) に非負スコア c[i] が与えられており，その他の点のスコアは 0 である．
-* (-inf, -inf) から (inf, inf) までの最短路のうち，スコアの和が最大のもののスコアを返す．
+* (-∞, -∞) から (∞, ∞) までの最短路のうち，スコアの和が最大のもののスコアを返す．
 *
 * 利用：【座標圧縮】
-* 
-*（コスト最大増加部分列）
+*
+*（平面走査）
 */
 ll op_mcp(ll a, ll b) { return max(a, b); }
 ll e_mcp() { return 0; }
@@ -275,20 +276,19 @@ ll maximize_score_path(const vl& x_, const vl& y_, const vl& c) {
 	int h = coordinate_compression(x_, x);
 	int w = coordinate_compression(y_, y);
 
-	// x 座標降順，次いで y 座標降順にソートする．
+	// x 座標昇順，次いで y 座標昇順にソートする．
 	vector<tuple<int, int, ll>> xyc(n);
 	rep(i, n) xyc[i] = { x[i], y[i], c[i] };
-	sort(all(xyc), greater< tuple<int, int, ll> >());
+	sort(all(xyc));
 
-	// dp_i[j] : 点 i までで，y 座標が j である点からの最大スコア 
+	// dp_i[j] : 点 i までで，y 座標が j である点までの最大スコア 
 	segtree<ll, op_mcp, e_mcp> dp(w);
 
 	rep(i, n) {
-		int x, y; ll c;
-		tie(x, y, c) = xyc[i];
+		auto [x, y, c] = xyc[i];
 
-		ll c2 = dp.prod(y, w);
-		dp.set(y, c + c2);
+		ll pc = dp.prod(0, y + 1);
+		dp.set(y, c + pc);
 	}
 
 	return dp.all_prod();
@@ -366,6 +366,18 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 
 	return res;
 }
+
+
+//【最短経路数（x≧y 内）】
+/*
+* (0, 0) から (h, w) までの最短格子路のうち，常に x≧y を満たすものの総数は
+*	bin(h+w,h) (h-w+1) / (h+1)
+* 
+* 特に，(0, 0) から (n, n) までの最短格子路のうち，常に x≧y を満たすものの総数は
+*	bin(2n,n) / (n+1) （カタラン数）
+* 
+* 参考 : https://oeis.org/A009766
+*/
 
 
 //【自由経路数】O(1)

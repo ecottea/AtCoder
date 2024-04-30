@@ -127,7 +127,7 @@ vector<T> semiconcave_max_plus_convolution(const vector<T>& a, const vector<T>& 
 		int iM = (iL + iR) / 2;
 
 		// jM : 行 iM の中の最大要素のある列の番号
-		int jM = -1; T a_max = numeric_limits<T>::min();
+		int jM = -1; T a_max = -2 * T(INFL);
 		repi(j, max(jL, iM - m + 1), min(jR - 1, iM)) {
 			if (chmax(a_max, a[j] + b[iM - j])) jM = j;
 		}
@@ -138,7 +138,7 @@ vector<T> semiconcave_max_plus_convolution(const vector<T>& a, const vector<T>& 
 		// 左上と右下の部分を再帰的に調べていく．
 		rf(iL, iM, jL, jM + 1);
 		rf(iM + 1, iR, jM, jR);
-		};
+	};
 	rf(0, n + m - 1, 0, n);
 
 	return c;
@@ -261,8 +261,8 @@ vector<T> sum_AND_convolution(const vector<T>& a, const vector<T>& b) {
 	vector<T> c(n + m - 1);
 	rep(k, K) {
 		vm ak(n), bk(m);
-		rep(i, n) ak[i] = get(a[i], k);
-		rep(j, m) bk[j] = get(b[j], k);
+		rep(i, n) ak[i] = getb(a[i], k);
+		rep(j, m) bk[j] = getb(b[j], k);
 
 		// intt() をまとめれば定数倍を 2/3 に抑えられる．
 		auto ck = convolution(ak, bk);
@@ -295,8 +295,8 @@ vector<T> sum_OR_convolution(const vector<T>& a, const vector<T>& b) {
 	vector<T> c(n + m - 1);
 	rep(k, K) {
 		vm ak(n), bk(m);
-		rep(i, n) ak[i] = 1 - get(a[i], k);
-		rep(j, m) bk[j] = 1 - get(b[j], k);
+		rep(i, n) ak[i] = 1 - getb(a[i], k);
+		rep(j, m) bk[j] = 1 - getb(b[j], k);
 
 		// intt() をまとめれば定数倍を 2/3 に抑えられる．
 		auto ck = convolution(ak, bk);

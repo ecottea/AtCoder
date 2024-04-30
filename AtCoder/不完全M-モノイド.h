@@ -12,7 +12,9 @@
 *	ほぼ準同型	: ∀x, y ∈ S，∀f ∈ F,	f(x y) = f(x) f(y) or fail
 *	合成			: ∀x ∈ S, ∀f, g ∈ F,	(f g)(x) = f(g(x))
 *   恒等射		: ∀x ∈ S,				id(x) = x
-* を満たし，f(x) の計算に失敗した場合 act() は fail を返すものとする．
+* を満たし，f(x) の計算に失敗した場合 act() は fail を返すものとする（|x|=1 のときは失敗しない）
+* 
+* act() が失敗するとき，区間内の要素の「複雑さ」が減少することが望ましい（複雑さは高々 30 程度）
 */
 
 
@@ -28,13 +30,14 @@
 *	a = -1 のとき，f(x) = b を表す．（変更作用）
 */
 // verify : https://atcoder.jp/contests/abc256/tasks/abc256_h
-const ll LA01 = (ll)1e9 + 7; // 各元の最大値より大きい数
-using SA01 = tuple<ll, ll, ll, bool>; // {sum, max, cnt, equal} 
-using FA01 = pll; // {div, update}
+using TA01 = ll;
+const TA01 LA01 = (TA01)1e9 + 1; // 各元の最大値より大きい数（2 乗がオーバーフローしない程度）
+using SA01 = tuple<TA01, TA01, TA01, bool>; // {sum, max, cnt, equal} 
+using FA01 = pair<TA01, TA01>; // {div, update}
 SA01 failA01() { return SA01{ -1, -1, -1, false }; }
 SA01 opA01(SA01 x, SA01 y) {
-	ll xs, xm, xc, ys, ym, yc; bool xe, ye;
-	tie(xs, xm, xc, xe) = x; tie(ys, ym, yc, ye) = y;
+	auto [xs, xm, xc, xe] = x;
+	auto [ys, ym, yc, ye] = y;
 
 	// (x が空 かつ y が揃っている) または (y が空 かつ x が揃っている)
 	// または (x も y も揃っており，かつ値が等しい) ときに限り全体が揃っている．
@@ -44,8 +47,8 @@ SA01 opA01(SA01 x, SA01 y) {
 }
 SA01 eA01() { return SA01{ 0, -INFL, 0, true }; }
 SA01 actA01(FA01 f, SA01 x) {
-	ll xs, xm, xc, a, b; bool xe;
-	tie(xs, xm, xc, xe) = x; tie(a, b) = f;
+	auto [xs, xm, xc, xe] = x;
+	auto [a, b] = f;
 
 	// x が空の場合や，a が 1 の場合は，何も変わらない．
 	if (xc == 0 || a == 1) return x;
@@ -63,8 +66,8 @@ SA01 actA01(FA01 f, SA01 x) {
 	return failA01();
 }
 FA01 compA01(FA01 f, FA01 g) {
-	ll fa, fb, ga, gb;
-	tie(fa, fb) = f; tie(ga, gb) = g;
+	auto [fa, fb] = f;
+	auto [ga, gb] = g;
 
 	// f が変更作用の場合，合成作用は f と変わらない．
 	if (fa == -1) return f;
@@ -75,7 +78,7 @@ FA01 compA01(FA01 f, FA01 g) {
 	// f, g が共に整除算作用の場合，合成作用は fa * ga での整除算作用になる．
 	return FA01{ min(fa * ga, LA01), -1 };
 }
-FA01 idA01() { return { 1, 0 }; }
+FA01 idA01() { return { 1, -1 }; }
 #define DivUp_SumMax_iamonoid SA01, opA01, eA01, FA01, actA01, compA01, idA01, failA01
 
 
@@ -202,8 +205,8 @@ using SA04 = tuple<ll, ll, ll, ll, ll, int, int, int>; // {min, max, 2ndmin, 2nd
 using FA04 = tuple<ll, ll, ll>; // {min, max, add}
 SA04 failA04() { return SA04{ -1, -1, -1, -1, -1, -1, -1, -1 }; }
 SA04 opA04(SA04 x, SA04 y) {
-	ll xl, xu, xl2, xu2, xs, yl, yu, yl2, yu2, ys; int xc, xcl, xcu, yc, ycl, ycu;
-	tie(xl, xu, xl2, xu2, xs, xc, xcl, xcu) = x; tie(yl, yu, yl2, yu2, ys, yc, ycl, ycu) = y;
+	auto [xl, xu, xl2, xu2, xs, xc, xcl, xcu] = x;
+	auto [yl, yu, yl2, yu2, ys, yc, ycl, ycu] = y;
 
 	ll l, u, l2, u2, s; int c, cl, cu;
 	if (xl < yl) {
@@ -243,8 +246,8 @@ SA04 opA04(SA04 x, SA04 y) {
 }
 SA04 eA04() { return SA04{ INFL, -INFL, INFL, -INFL, 0, 0, 0, 0 }; }
 SA04 actA04(FA04 f, SA04 x) {
-	ll xl, xu, xl2, xu2, xs, fa, fb, fc; int xc, xcl, xcu;
-	tie(xl, xu, xl2, xu2, xs, xc, xcl, xcu) = x; tie(fa, fb, fc) = f;
+	auto [xl, xu, xl2, xu2, xs, xc, xcl, xcu] = x;
+	auto [fa, fb, fc] = f;
 
 	// x が空の場合，何も変わらない．
 	if (xc == 0) return x;
@@ -312,8 +315,8 @@ SA04 actA04(FA04 f, SA04 x) {
 	return failA04();
 }
 FA04 compA04(FA04 f, FA04 g) {
-	ll fa, fb, fc, ga, gb, gc;
-	tie(fa, fb, fc) = f; tie(ga, gb, gc) = g;
+	auto [fa, fb, fc] = f;
+	auto [ga, gb, gc] = g;
 
 	ll A = min(fa - gc, ga);
 	ll B = max(min(fa - gc, gb), fb - gc);

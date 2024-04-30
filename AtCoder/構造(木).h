@@ -9,10 +9,10 @@
 * 親を並べた入力を受け取り，n 頂点の木を構成して返す．
 *
 * n : グラフの頂点の数
-* undirected : 無向グラフなら true
-* one_indexed : 入力が 1-indexed で与えられるなら true
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-Graph read_tree(int n, bool undirected = true, bool one_indexed = true) {
+Graph read_tree(int n, bool directed = false, bool zero_indexed = false) {
 	// verify : https://judge.yosupo.jp/problem/vertex_add_subtree_sum
 
 	Graph g(n);
@@ -20,10 +20,10 @@ Graph read_tree(int n, bool undirected = true, bool one_indexed = true) {
 		int p;
 		cin >> p;
 
-		if (one_indexed) p--;
+		if (!zero_indexed) p--;
 
 		g[p].push_back(i);
-		if (undirected) g[i].push_back(p);
+		if (!directed) g[i].push_back(p);
 	}
 
 	return g;
@@ -111,10 +111,10 @@ struct Rooted_tree {
 /*
 * ([自身] 子の数 子のリスト) を並べた入力を受け取り，n 頂点の根付き木を構築して返す．
 *
-* one_indexed : 入力が 1-indexed で与えられるなら true
-* shuffled : [自身] の指定があるなら true
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
+* shuffled : [自身] の指定があるか（省略すれば false）
 */
-Rooted_tree read_rooted_tree(int n, bool one_indexed = true, bool shuffled = false) {
+Rooted_tree read_rooted_tree(int n, bool zero_indexed = false, bool shuffled = false) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_A
 
 	// is_root[v] : v は根か
@@ -127,7 +127,7 @@ Rooted_tree read_rooted_tree(int n, bool one_indexed = true, bool shuffled = fal
 
 		if (shuffled) {
 			cin >> id;
-			if (one_indexed) id--;
+			if (!zero_indexed) id--;
 		}
 		else id = i;
 
@@ -135,7 +135,7 @@ Rooted_tree read_rooted_tree(int n, bool one_indexed = true, bool shuffled = fal
 		rep(j, k) {
 			int c;
 			cin >> c;
-			if (one_indexed) c--;
+			if (!zero_indexed) c--;
 
 			g[id].push_back(c);
 			g[c].push_back(id);
@@ -332,9 +332,9 @@ struct Binary_Tree {
 * (自身 左の子 右の子) を並べた入力を受け取り，n 頂点の二分木を構築し返す．
 * 非存在を表す入力を nval に与える．
 *
-* one_indexed : 入力が 1-indexed で与えられるなら true
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-Binary_Tree read_binary_tree(int n, bool one_indexed = true, int nval = -1) {
+Binary_Tree read_binary_tree(int n, bool zero_indexed = false, int nval = -1) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_7_B
 
 	vi s(n), l(n), r(n);
@@ -345,7 +345,7 @@ Binary_Tree read_binary_tree(int n, bool one_indexed = true, int nval = -1) {
 		if (l[i] == nval) l[i] = -1;
 		if (r[i] == nval) r[i] = -1;
 
-		if (one_indexed) {
+		if (!zero_indexed) {
 			if (s[i] != -1) s[i]--;
 			if (l[i] != -1) l[i]--;
 			if (r[i] != -1) r[i]--;

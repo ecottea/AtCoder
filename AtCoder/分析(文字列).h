@@ -179,8 +179,7 @@ vi cycle_length(const STR& s) {
 
 //【最長回文長（文字中心）】O(n)
 /*
-* s[0..n) の s[i] を中心とする最長回文の半径（(文字数 + 1) / 2）を r[i] に格納し r を返す．
-* ここで回文の半径とは，(文字数 + 1) / 2 を意味する．
+* s[0..n) の各 s[i] を中心とする最長回文の半径（(文字数+1)/2）を格納したリストを返す．
 */
 template <class STR>
 vi manacher(const STR& s) {
@@ -188,14 +187,14 @@ vi manacher(const STR& s) {
 	// verify : https://judge.yosupo.jp/problem/enumerate_palindromes
 
 	//【方法】
-	// s[i] を中心とする最長回文の半径 j = r[i] が愚直に求まったとする．
+	// s[i] を中心とする最長回文の半径 j = r[i] が求まったとする．
 	// すなわち s(i-j..i+j) が s[i] を中心とする最長回文である．
 	// 
 	// 各 k = [1..j) について，s[i-k] を中心とする最長回文 s(i-k-r[i-k]..i-k+r[i-k]) が
 	// s(i-j+1..i+j-1) の部分文字列であれば，s[i±j] の影響を受けず
 	// s[i] についての左右対称性より r[i+k] = r[i-k] と定まる．
 	// その条件は，左端を比較して
-	//		i - k - r[i-k] >= i - j + 1
+	//		i - k - r[i-k] ≧ i - j + 1
 	//		⇔ k + r[i-k] < j
 	// である．このような結果の使い回しができる限り k を進め，次の i を i + k にする．
 	// 
@@ -203,24 +202,30 @@ vi manacher(const STR& s) {
 	// s(i+k-r[i+k]..i+k+r[i+k]) が s(i-j+1..i+j-1) の部分文字列でないので，
 	// 右端を比較することで
 	//		i + k + r[i+k] > i + j - 1
-	//		⇔ r[i+k] >= j - k
+	//		⇔ r[i+k] ≧ j - k
 	// である．よって次の j は j - k にすればよい．
 
 	int n = sz(s);
 	vi r(n);
 
+	// i : 中心位置，j : 暫定の半径
 	int i = 0, j = 0;
+
 	while (i < n) {
+		// 回文である限り半径を大きくする．
 		while (i - j >= 0 && i + j < n && s[i - j] == s[i + j]) j++;
 		r[i] = j;
 
-		int k = 1;
-		while (i - k >= 0 && k + r[i - k] < j) {
-			r[i + k] = r[i - k];
-			k++;
+		// s[i] を中心とする回文に真に含まれている限り，左側での結果をコピーする．
+		int di = 1;
+		while (i - di >= 0 && di + r[i - di] < j) {
+			r[i + di] = r[i - di];
+			di++;
 		}
-		i += k;
-		j -= k;
+
+		// 次は i + di から調べれば良い．半径についても j - di 以上は保証されている．
+		i += di;
+		j -= di;
 	}
 
 	return r;
@@ -255,6 +260,53 @@ void manacher(const STR& s, vi& lo, vi& le) {
 }
 
 
+//【最長回文接頭辞クエリ】
+/*
+* Longest_palindrome_suffix(string s) : O(n log n)
+*	文字列 s[0..n) で初期化する．
+*
+* int get(int l, int r) : O(log(r-l))
+*	s[l..r) の最長回文接頭辞が s[l..m) のとき m を返す．
+*
+* 利用：【最長回文長（文字中心）】
+*/
+int op_lps(int a, int b) { return max(a, b); }
+int e_lps() { return -INF; }
+class Longest_palindrome_suffix {
+	int n;
+
+	using SEG = segtree<int, op_lps, e_lps>;
+	SEG seg;
+
+public:
+	// 文字列 s[0..n) で初期化する．
+	Longest_palindrome_suffix(const string& s) : n(sz(s)) {
+		// verify : https://yukicoder.me/problems/no/2606
+
+		string s_riffled;
+		s_riffled.resize(2 * n + 1);
+		rep(i, n) s_riffled[2 * i + 1] = s[i];
+		rep(i, n + 1) s_riffled[2 * i] = '$'; // '$' は s に含まれない文字
+
+		vi rad = manacher(s_riffled);
+		rep(i, 2 * n + 1) rad[i] -= i;
+
+		seg = SEG(rad);
+	}
+
+	// s[l..r) の最長回文接頭辞が s[l..m) のとき m を返す．
+	int get(int l0, int r0) {
+		// verify : https://yukicoder.me/problems/no/2606
+
+		int l = 2 * l0 + 1;
+		int r = 2 * r0 + 1;
+		int m = seg.min_left((l + r) / 2, [&](int x) {return x < 1 - l; });
+
+		return l0 + (m - l);
+	}
+};
+
+
 //【回文の種類数】
 /*
 * s[0..n) に部分文字列として現れる回文は高々 n 種類である．
@@ -269,6 +321,18 @@ void manacher(const STR& s, vi& lo, vi& le) {
 * s, t は共に周期 g をもち，その 1 周期も回文となる．
 * 
 * verify : https://atcoder.jp/contests/arc048/tasks/arc048_c
+*/
+
+
+//【回文を連結した周期的文字列】
+/*
+* 以下 0 文字以上の回文を単に回文，1 文字以上の回文を真の回文と呼ぶことにする．
+* 
+* 最小周期 T をもつ文字列 s[0..nT) が (回文)+(回文) の形で書けるとき，
+*	s[0..T) も (回文)+(回文) の形で書ける
+*	s[0..nT) を (回文)+(真の回文) の形に分ける方法は n 通り
+* 
+* verify : https://mofecoder.com/contests/yurufuwa_onsite_06/tasks/yurufuwa_onsite_06_g
 */
 
 
@@ -349,9 +413,9 @@ vi z_algorithm_suffix(STR s) {
 
 //【ワイルドカード付き文字列検索】O((n + m) log(n + m))
 /*
-* 任意文字とマッチする文字 Q および英小文字からなる文字列 s[0..n), p[0..m) について，
+* 任意文字とマッチする文字 Q および英小文字からなる文字列 s[0..n+m-1), p[0..m) について，
 * s[i..i+m) = p[0..m) となる i を昇順に格納したリストを返す．
-* 
+*
 * 制約：m ≦ 1.48×10^6
 */
 vi wildcard_matching(const string& s, const string& p, char Q = '?') {
@@ -378,40 +442,53 @@ vi wildcard_matching(const string& s, const string& p, char Q = '?') {
 	// と書き直すことができる．よって，
 	//		sab[i] = sa[i] sb[i]
 	//		saab[i] = sa[i]^2 sb[i]
-	// などとおき，p をあらかじめ逆順にしていたことにすれば，畳込みで一括計算することができる．
+	// などとおき，p をあらかじめ逆順にしていたことにすれば，middle product で一括計算することができる．
 
 	using mint = modint998244353;
 	using vm = vector<mint>;
 
-	int n = sz(s), m = sz(p);
-	vi pos;
+	int m = sz(p), n = sz(s) - m + 1;
 
-	vm sb(n), sab(n), saab(n);
-	rep(i, n) {
+	int W = 1 << (msb(n + m - 2) + 1);
+
+	vm sb(W), sab(W), saab(W);
+	rep(i, n + m - 1) {
 		mint a = (s[i] == Q ? 0 : s[i] - 'a' + 1);
 		mint b = (s[i] == Q ? 0 : 1);
 
 		sb[i] = b;
 		sab[i] = a * b;
-		saab[i] = a * a * b;
+		saab[i] = a * sab[i];
 	}
 
-	vm pb(m), pab(m), paab(m);
+	vm pb(W), pab(W), paab(W);
 	rep(j, m) {
 		mint a = (p[m - 1 - j] == Q ? 0 : p[m - 1 - j] - 'a' + 1);
 		mint b = (p[m - 1 - j] == Q ? 0 : 1);
 
 		pb[j] = b;
 		pab[j] = a * b;
-		paab[j] = a * a * b;
+		paab[j] = a * pab[j];
 	}
 
-	vm c1 = convolution(saab, pb);
-	vm c2 = convolution(sab, pab);
-	vm c3 = convolution(sb, paab);
+	internal::butterfly(saab);
+	internal::butterfly(pb);
+	rep(i, W) saab[i] *= pb[i];
+	internal::butterfly_inv(saab);
 
-	repi(i, m - 1, n - 1) {
-		mint val = c1[i] - 2 * c2[i] + c3[i];
+	internal::butterfly(sab);
+	internal::butterfly(pab);
+	rep(i, W) sab[i] *= pab[i];
+	internal::butterfly_inv(sab);
+
+	internal::butterfly(sb);
+	internal::butterfly(paab);
+	rep(i, W) sb[i] *= paab[i];
+	internal::butterfly_inv(sb);
+
+	vi pos;
+	repi(i, m - 1, n + m - 2) {
+		mint val = saab[i] - 2 * sab[i] + sb[i];
 		if (val == 0) pos.push_back(i - m + 1);
 	}
 

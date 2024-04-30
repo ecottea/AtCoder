@@ -296,7 +296,7 @@ ll count_Tromino_tiling(int h, int w) {
 	repb(set, 2 * w) {
 		// board[i][j] : 上 3 行の盤の位置 (i, j) にタイルが置かれているか
 		vvb board(3, vb(w));
-		rep(x, 2) rep(y, w) if (get(set, x * w + y)) board[x][y] = 1;
+		rep(x, 2) rep(y, w) if (getb(set, x * w + y)) board[x][y] = 1;
 
 		// board[i][j] を返す（盤外なら true を返す）
 		auto get_board = [&](int i, int j) {

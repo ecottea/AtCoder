@@ -119,7 +119,7 @@ void traverse_binary_tree(Binary_Tree& bt,
 }
 
 
-//【二分木の深さ優先探索】O(n)
+//【二分木の深さ優先探索（スタック）】O(n)
 /*
 * 二分木 bt を深さ優先でなぞりながら，
 * 行きがけ順に pre(i)，通りがけ順に in(i) を実行する．

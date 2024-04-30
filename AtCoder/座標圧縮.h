@@ -253,58 +253,119 @@ Graph lattice_DAG_compression(const vector<T>& x, const vector<T>& y) {
 *
 * Graph create(vi vs, vi& id) : O(k (log k + log n))  (k = |vs|)
 *	頂点集合 vs とそれらの LCA からなる座標圧縮された木 gc（根は 0）を構築して返す．
-*	vs[i] は gc[id[i]] と対応する．
+*	gc[i] は g[id[i]] と対応する．
 *
 * 利用：【オイラーツアー】
 */
 struct Auxiliary_tree {
 	// 参考 : https://tjkendev.github.io/procon-library/python/graph/auxiliary_tree.html
 
-	Euler_tour<Graph> ET;
+	Euler_tour ET;
 
 public:
 	Auxiliary_tree(const Graph& g, int rt) : ET(g, rt) {
-		// verify : https://atcoder.jp/contests/arc086/tasks/arc086_c
+		// verify : https://mojacoder.app/users/Tonegawac/problems/lca_tree
 	}
 
-	// 頂点集合 vs とそれらの LCA からなる座標圧縮された木 g（根は 0）を構築して返す．
-	// vs[i] は g[id[i]] と対応する．
-	Graph create(const vi& vs, vi& id) {
-		// verify : https://atcoder.jp/contests/arc086/tasks/arc086_c
+	// 頂点集合 vs とそれらの LCA からなる座標圧縮された木 gc（根は 0）を構築して返す．
+	// gc[i] は g[id[i]] と対応する．
+	Graph create(vi vs, vi& id) const {
+		// verify : https://mojacoder.app/users/Tonegawac/problems/lca_tree
 
-		int k = sz(vs);
-		id.resize(k);
-
-		vector<pii> vis(k);
-		rep(i, k) vis[i] = { vs[i], i };
+		int K = sz(vs);
+		id.resize(K);
 
 		// 頂点集合 vs をオイラーツアーの行きがけ順にソートする．
-		sort(all(vis), [&](pii a, pii b) { return ET.get_in(a.first) < ET.get_in(b.first); });
+		ET.sort_by_DFS_order(vs);
 
 		// 行きがけ順で隣り合う 2 頂点の LCA は必要なので頂点集合に追加する．
-		rep(i, k - 1) vis.emplace_back(ET.lca(vis[i].first, vis[i + 1].first), -1);
+		rep(k, K - 1) vs.emplace_back(ET.lca(vs[k], vs[k + 1]));
 
 		// LCA も含めた頂点集合 vs をオイラーツアーの行きがけ順にソートし重複を除去する．
-		sort(all(vis), [&](pii a, pii b) { return ET.get_in(a.first) < ET.get_in(b.first); });
-		auto it = unique(all(vis));
-		vis.erase(it, vis.end());
-		k = sz(vis);
+		ET.sort_by_DFS_order(vs);
+		auto it = unique(all(vs));
+		vs.erase(it, vs.end());
+		K = sz(vs);
 
-		// 元の頂点と座標圧縮された木の頂点との対応を調べる．
-		rep(i, k) if (vis[i].second != -1) id[vis[i].second] = i;
-
-		Graph g(k); stack<int> stk;
-		rep(si, k) {
+		Graph gc(K); stack<int> stk;
+		rep(si, K) {
 			// v = vs[si] とし，スタックトップが v の先祖になるまで走査済の頂点をポップする．
-			while (!stk.empty() && ET.get_out(vis[stk.top()].first) < ET.get_in(vis[si].first)) stk.pop();
+			while (!stk.empty() && ET.out[vs[stk.top()]] < ET.in[vs[si]]) stk.pop();
 
 			// v に先祖が居ればそれは直近の先祖であるから辺で繋ぐ．
-			if (!stk.empty()) g[stk.top()].push_back(si);
+			if (!stk.empty()) {
+				gc[stk.top()].push_back(si);
+				gc[si].push_back(stk.top());
+			}
 
 			stk.push(si);
 		}
 
-		return g;
+		id = move(vs);
+
+		return gc;
+	}
+};
+
+
+//【木の座標圧縮（重み付き）】
+/*
+* Auxiliary_tree(WGraph g, int rt) : O(n)
+*	rt を根とする重み付き根付き木 g で初期化する．
+*
+* WGraph create(vi vs, vi& id) : O(k (log k + log n))  (k = |vs|)
+*	頂点集合 vs とそれらの LCA からなる座標圧縮された重み付き木 gc（根は 0）を構築して返す．
+*	gc[i] は g[id[i]] と対応する．
+*
+* 利用：【オイラーツアー（重み付き）】
+*/
+struct Auxiliary_tree {
+	// 参考 : https://tjkendev.github.io/procon-library/python/graph/auxiliary_tree.html
+
+	Euler_tour_weighted ET;
+
+public:
+	Auxiliary_tree(const WGraph& g, int rt) : ET(g, rt) {
+	}
+
+	// 頂点集合 vs とそれらの LCA からなる座標圧縮された木 gc（根は 0）を構築して返す．
+	// gc[i] は g[id[i]] と対応する．
+	WGraph create(vi vs, vi& id) const {
+		int K = sz(vs);
+		id.resize(K);
+
+		// 頂点集合 vs をオイラーツアーの行きがけ順にソートする．
+		ET.sort_by_DFS_order(vs);
+
+		// 行きがけ順で隣り合う 2 頂点の LCA は必要なので頂点集合に追加する．
+		rep(k, K - 1) vs.emplace_back(ET.lca(vs[k], vs[k + 1]));
+
+		// LCA も含めた頂点集合 vs をオイラーツアーの行きがけ順にソートし重複を除去する．
+		ET.sort_by_DFS_order(vs);
+		auto it = unique(all(vs));
+		vs.erase(it, vs.end());
+		K = sz(vs);
+
+		WGraph gc(K); stack<int> stk;
+		rep(si, K) {
+			// v = vs[si] とし，スタックトップが v の先祖になるまで走査済の頂点をポップする．
+			while (!stk.empty() && ET.out[vs[stk.top()]] < ET.in[vs[si]]) stk.pop();
+
+			// v に先祖が居ればそれは直近の先祖であるから辺で繋ぐ．
+			if (!stk.empty()) {
+				int pi = stk.top();
+				ll dist = ET.dep[vs[si]] - ET.dep[vs[pi]];
+
+				gc[pi].emplace_back(si, dist);
+				gc[si].emplace_back(pi, dist);
+			}
+
+			stk.push(si);
+		}
+
+		id = move(vs);
+
+		return gc;
 	}
 };
 

@@ -471,7 +471,7 @@ int power_root(int k, const mint& a) {
 		int qi = (int)pow(q, t - 1 - e);
 		repir(i, t - 1 - e, 0) {
 			// z2 : z2^(q^(e+i)) ‚ª^‚Ì 1 ‚Ì q æª‚É‚È‚é’l
-			mint z2 = v.pow(s * pow(q, t - 1 - e - i));
+			mint z2 = v.pow(s * powi(q, t - 1 - e - i));
 
 			// L : (c^(-1) (z z2^L)^(q^e))^(q^i) ß 1 (mod p) ‚É‚È‚éÅ¬‚Ì”ñ•‰®”
 			int L = log_mint(z2.pow(qe * qi), (c * z.pow((p - 2LL) * qe)).pow(qi), q);

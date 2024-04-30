@@ -7,7 +7,7 @@
 
 //【局面のニム値】O(?)（遅いので実験用）
 /*
-* 初期局面 p から遷移可能な局面とそのニム値のリストを返す．
+* 初期局面 p から遷移可能な局面とそのニム値の組のリストを返す．
 * nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納するものとする．
 */
 template <class T>
@@ -35,6 +35,59 @@ map<T, int> calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt) {
 	calc_nimber(p);
 
 	return nim;
+
+	/* nxt の定義の雛形
+	using T = vi;
+	function<void(const T&, vector<T>&)> nxt = [&](const T& p, vector<T>& nps) {
+
+	};
+	*/
+}
+
+
+//【最善手】O(?)（遅いので実験用）
+/*
+* 初期局面 p から遷移可能な各局面 x について，
+* 組 (x, x のニム値, x から最善手を選んで遷移できる局面のリスト) のリストを返す．
+* nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納するものとする．
+*/
+template <class T>
+vector<tuple<T, int, vector<T>>> best_move(const T& p, function<void(const T&, vector<T>&)>& nxt) {
+	// veirfy : https://mojacoder.app/users/tatyam/problems/yet-another-min-nim
+	
+	map<T, int> nim; // これをグローバル変数にすれば再利用可能
+
+	vector<tuple<T, int, vector<T>>> best;
+
+	function<int(const T&)> calc_nimber = [&](const T& p) {
+		if (nim.count(p)) return nim[p];
+
+		vector<T> nps;
+		nxt(p, nps);
+		uniq(nps);
+		vector<T> win;
+
+		vi next_nimbers;
+		repe(np, nps) {
+			int nimber = calc_nimber(np);
+			if (nimber == 0) win.push_back(np);
+			next_nimbers.push_back(nimber);
+		}
+		uniq(next_nimbers);
+		uniq(win);
+
+		int i = 0;
+		while (i < sz(next_nimbers) && next_nimbers[i] == i) i++;
+		nim[p] = i;
+
+		if (win.empty()) best.emplace_back(p, 0, move(nps));
+		else best.emplace_back(p, i, move(win));
+
+		return i;
+	};
+	calc_nimber(p);
+
+	return best;
 
 	/* nxt の定義の雛形
 	using T = vi;
@@ -76,7 +129,12 @@ struct Mex_multiset {
 	SEG cnt;
 
 	// ニム値 [0..n) を記録可能な多重集合を空で初期化する．
-	Mex_multiset(int n) : n(n), cnt(n) {}
+	Mex_multiset(int n) : n(n) {
+		// verify : https://codeforces.com/contest/1905/problem/D
+
+		vl ini(n);
+		cnt = SEG(ini);
+	}
 
 	// ニム値 [0..n) を記録可能な多重集合を a で初期化する．
 	Mex_multiset(int n, const vi& a) : n(n) {
@@ -136,6 +194,8 @@ struct Mex_multiset {
 * mex a[0..n) を返す．
 */
 int mex(vi a) {
+	// verify : https://atcoder.jp/contests/abc349/tasks/abc349_g
+
 	uniq(a);
 	a.push_back(INF);
 
@@ -215,10 +275,10 @@ vi subtraction_nim(const vi& c, int n) {
 }
 
 
-//【k 以下減算ニム】
+//【K 以下減算ニム】
 /*
-* 山から取り除ける石の個数が k 以下に限られるルールのニムについて，
-* i 個の石からなる山のニム値は i mod (k+1) である．
+* 山から取り除ける石の個数が K 以下に限られるルールのニムについて，
+* i 個の石からなる山のニム値は i mod (K+1) である．
 * 
 * verify : https://atcoder.jp/contests/arc168/tasks/arc168_b
 */
@@ -257,7 +317,45 @@ vi subtraction_nim(const vi& c, int n) {
 * verify : https://yukicoder.me/problems/no/2285
 */
 
-	
+
+//【逆形ニム】O(n)
+/*
+* 初期状態で各山の石の数が a[0..n) であるような逆形ニムが先手必勝かを返す．
+*/
+template <class T>
+bool misere_nim(const vector<T>& a) {
+	// 参考 : https://www.forcia.com/blog/002362.html
+	// verify : https://onlinejudge.u-aizu.ac.jp/services/room.html#RUPC2024Day1/problems/H
+
+	//【方法】
+	// 逆形ニム（手詰まりになった方が勝ちとするニム）の勝敗は次のようにして決定できる：
+	//	1. 全ての山の石の数が 1 のとき，山が偶数個なら先手勝ち，奇数個なら後手勝ち
+	//	2. 石の数が 2 以上の山がただ 1 つ存在するとき，先手勝ち
+	//	3. 石の数の総 XOR が 0 でないとき先手勝ち，0 のとき後手勝ち
+
+	//【証明】
+	// 1. と 2. は明らか．
+	// 3. のときは通常のニムと同じ手順で進めると，途中で必ず 2. の局面を経由する．
+	// そのとき 2. での石の数の総 XOR は非 0 であり，先手勝ちという結果と一致するので問題ない．
+
+	int n = sz(a);
+
+	int cnt1 = 0, cnt2 = 0;
+	rep(i, n) {
+		if (a[i] == 1) cnt1++;
+		else if (a[i] >= 2) cnt2++;
+	}
+
+	if (cnt2 == 0) return cnt1 % 2 == 0;
+	if (cnt2 == 1) return true;
+
+	ll g = 0;
+	rep(i, n) g ^= a[i];
+
+	return g != 0;
+}
+
+
 //【DAG 上のコマ移動ゲーム】O((n + m) log n)　
 /*
 * DAG g のある頂点 v にコマが置かれている．
@@ -411,7 +509,7 @@ class Nim_product {
 	// p[i][j] : i と j のニム積
 	vector<vector<ull>> p;
 
-	// a と　b のニム積を返す（ただし a, b < 2^16）
+	// a と b のニム積を返す（ただし a, b < 2^16）
 	ull prod16(ull a, ull b) {
 		constexpr ull mask = (1ULL << 8) - 1;
 		ull ah = a >> 8, al = a & mask;
@@ -423,7 +521,7 @@ class Nim_product {
 		return val;
 	}
 
-	// a と　b のニム積を返す（ただし a, b < 2^32）
+	// a と b のニム積を返す（ただし a, b < 2^32）
 	ull prod32(ull a, ull b) {
 		constexpr ull mask = (1ULL << 16) - 1;
 		ull ah = a >> 16, al = a & mask;
@@ -435,7 +533,7 @@ class Nim_product {
 		return val;
 	}
 
-	// a と　b のニム積を返す（ただし a, b < 2^64）
+	// a と b のニム積を返す（ただし a, b < 2^64）
 	ull prod64(ull a, ull b) {
 		constexpr ull mask = (1ULL << 32) - 1;
 		ull ah = a >> 32, al = a & mask;
@@ -472,7 +570,7 @@ public:
 		}
 	}
 
-	// x と　y のニム積を返す．
+	// x と y のニム積を返す．
 	ull prod(ull x, ull y) {
 		// verify : https://judge.yosupo.jp/problem/nim_product_64
 

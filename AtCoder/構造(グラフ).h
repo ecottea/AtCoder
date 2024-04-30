@@ -16,23 +16,22 @@
 *
 * n : グラフの頂点の数
 * m : グラフの辺の数（省略すれば n-1）
-* undirected : 無向グラフか（省略すれば true）
-* one_indexed : 入力が 1-indexed か（省略すれば true）
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-Graph read_Graph(int n, int m = -1, bool undirected = true, bool one_indexed = true) {
+Graph read_Graph(int n, int m = -1, bool directed = false, bool zero_indexed = false) {
 	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bi
 
 	Graph g(n);
 	if (m == -1) m = n - 1;
 
-	rep(i, m) {
+	rep(j, m) {
 		int a, b;
 		cin >> a >> b;
-
-		if (one_indexed) { --a; --b; }
+		if (!zero_indexed) { --a; --b; }
 
 		g[a].push_back(b);
-		if (undirected) g[b].push_back(a);
+		if (!directed && a != b) g[b].push_back(a);
 	}
 
 	return g;
@@ -43,10 +42,10 @@ Graph read_Graph(int n, int m = -1, bool undirected = true, bool one_indexed = t
 /*
 * グラフを【グラフの入力】で受け取る入力と同じ形式で出力する．
 *
-* undirected : 無向グラフか（省略すれば true）
-* one_indexed : 入力が 1-indexed か（省略すれば true）
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-void write_Graph(const Graph& g, bool undirected = true, bool one_indexed = true) {
+void write_Graph(const Graph& g, bool directed = false, bool zero_indexed = false) {
 	// verify : https://www.codechef.com/problems/B_BRANCH
 
 	int n = sz(g);
@@ -54,13 +53,13 @@ void write_Graph(const Graph& g, bool undirected = true, bool one_indexed = true
 	// m : 辺の数
 	int m = 0;
 	rep(s, n) m += sz(g[s]);
-	if (undirected) m /= 2;
+	if (!directed) m /= 2;
 
 	cout << n << " " << m << endl;
 	rep(s, n) repe(t, g[s]) {
-		if (undirected && s > t) continue;
+		if (!directed && s > t) continue;
 
-		int u = s + one_indexed, v = t + one_indexed;
+		int u = s + (!zero_indexed), v = t + (!zero_indexed);
 		cout << u << " " << v << " " << endl;
 	}
 }
@@ -108,10 +107,10 @@ using WGraph = vector<vector<WEdge>>;
 *
 * n : グラフの頂点の数
 * m : グラフの辺の数（省略すれば n-1）
-* undirected : 無向グラフか（省略すれば true）
-* one_indexed : 入力が 1-indexed か（省略すれば true）
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-WGraph read_WGraph(int n, int m = -1, bool undirected = true, bool one_indexed = true) {
+WGraph read_WGraph(int n, int m = -1, bool directed = false, bool zero_indexed = false) {
 	// verify : https://judge.yosupo.jp/problem/shortest_path
 
 	WGraph g(n);
@@ -121,10 +120,10 @@ WGraph read_WGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 		int a, b; ll c;
 		cin >> a >> b >> c;
 
-		if (one_indexed) { --a; --b; }
+		if (!zero_indexed) { --a; --b; }
 
 		g[a].push_back({ b, c });
-		if (undirected) g[b].push_back({ a, c });
+		if (!directed && a != b) g[b].push_back({ a, c });
 	}
 
 	return g;
@@ -135,10 +134,10 @@ WGraph read_WGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 /*
 * 重み付きグラフを【重み付きグラフの入力】で受け取る入力と同じ形式で出力する．
 *
-* undirected : 無向グラフか（省略すれば true）
-* one_indexed : 入力が 1-indexed か（省略すれば true）
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-void write_WGraph(const WGraph& g, bool undirected = true, bool one_indexed = true) {
+void write_WGraph(const WGraph& g, bool directed = false, bool zero_indexed = false) {
 	// verify : https://atcoder.jp/contests/discovery2016-final/tasks/discovery_2016_final_d
 
 	int n = sz(g);
@@ -146,13 +145,13 @@ void write_WGraph(const WGraph& g, bool undirected = true, bool one_indexed = tr
 	// m : 辺の数
 	int m = 0;
 	rep(s, n) m += sz(g[s]);
-	if (undirected) m /= 2;
+	if (!directed) m /= 2;
 
 	cout << n << " " << m << endl;
 	rep(s, n) repe(t, g[s]) {
-		if (undirected && s > t) continue;
+		if (!directed && s > t) continue;
 
-		int u = s + one_indexed, v = t + one_indexed;
+		int u = s + (!zero_indexed), v = t + (!zero_indexed);
 		cout << u << " " << v << " " << t.cost << endl;
 	}
 }
@@ -205,10 +204,10 @@ using IGraph = vector<vector<IEdge>>;
 *
 * n : グラフの頂点の数
 * m : グラフの辺の数（省略すれば n-1）
-* undirected : 無向グラフか（省略すれば true）
-* one_indexed : 入力が 1-indexed か（省略すれば true）
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed = true, vector<pii>* es = nullptr) {
+IGraph read_IGraph(int n, int m = -1, bool directed = false, bool zero_indexed = false, vector<pii>* es = nullptr) {
 	// verify : https://judge.yosupo.jp/problem/cycle_detection_undirected
 
 	IGraph g(n);
@@ -219,10 +218,10 @@ IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 		int a, b;
 		cin >> a >> b;
 
-		if (one_indexed) { --a; --b; }
+		if (!zero_indexed) { --a; --b; }
 
 		g[a].push_back({ a, b, j, true });
-		if (undirected) g[b].push_back({ b, a, j, false });
+		if (!directed && a != b) g[b].push_back({ b, a, j, false });
 
 		if (es != nullptr) (*es)[j] = { a, b };
 	}
@@ -235,9 +234,9 @@ IGraph read_IGraph(int n, int m = -1, bool undirected = true, bool one_indexed =
 /*
 * グラフを【グラフの入力】で受け取る入力と同じ形式で出力する．
 *
-* one_indexed : 入力が 1-indexed か（省略すれば true）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-void write_Graph(const IGraph& g, bool one_indexed = true) {
+void write_Graph(const IGraph& g, bool zero_indexed = true) {
 	int n = sz(g);
 
 	// m : 辺の数
@@ -248,8 +247,8 @@ void write_Graph(const IGraph& g, bool one_indexed = true) {
 	vi u(m), v(m);
 	rep(s, n) repe(t, g[s]) {
 		if (t.dir) {
-			u[t.id] = s;
-			v[t.id] = t;
+			u[t.id] = s + (!zero_indexed);
+			v[t.id] = t + (!zero_indexed);
 		}
 	}
 
@@ -271,9 +270,9 @@ void write_Graph(const IGraph& g, bool one_indexed = true) {
 //【無向グラフのランダム生成】O(n^2)
 /*
 * n 頂点で，辺の存在確率が p % であるランダムな無向グラフを返す．
-* no_loop : 自己ループを禁止するか（デフォルトでは true）
+* self_loop : 自己ループを許可するか（デフォルトでは false）
 */
-Graph create_random_undirected_Graph(int n, int p, bool no_loop = true) {
+Graph create_random_undirected_Graph(int n, int p, bool self_loop = false) {
 	Graph g(n);
 
 	static mt19937_64 mt; static bool first_call = true;
@@ -289,7 +288,7 @@ Graph create_random_undirected_Graph(int n, int p, bool no_loop = true) {
 		g[s].emplace_back(t);
 		g[t].emplace_back(s);
 	}
-	if (!no_loop) {
+	if (self_loop) {
 		rep(s, n) {
 			if (rnd(mt) >= p) continue;
 			g[s].emplace_back(s);
@@ -303,9 +302,9 @@ Graph create_random_undirected_Graph(int n, int p, bool no_loop = true) {
 //【有向グラフのランダム生成】O(n^2)
 /*
 * n 頂点で，辺の存在確率が p % であるランダムな有向グラフを返す．
-* no_loop : 自己ループを禁止するか（デフォルトでは true）
+* self_loop : 自己ループを許可するか（デフォルトでは false）
 */
-Graph create_random_Graph(int n, int p, bool no_loop = true) {
+Graph create_random_Graph(int n, int p, bool self_loop = false) {
 	static mt19937_64 mt; static bool first_call = true;
 	if (first_call) {
 		mt = mt19937_64((int)time(NULL));
@@ -315,7 +314,7 @@ Graph create_random_Graph(int n, int p, bool no_loop = true) {
 
 	Graph g(n);
 	rep(s, n) rep(t, n) {
-		if (no_loop && s == t) continue;
+		if (!self_loop && s == t) continue;
 		if (rnd_edge(mt) >= p) continue;
 
 		g[s].emplace_back(t);
@@ -329,9 +328,9 @@ Graph create_random_Graph(int n, int p, bool no_loop = true) {
 /*
 * n 頂点で，コストが [c_min..c_max] 内の一様乱数で与えられ，
 * 辺の存在確率が p % であるランダムな重み付き有向グラフを返す．
-* no_loop : 自己ループを禁止するか（デフォルトでは true）
+* self_loop : 自己ループを許可するか（デフォルトでは false）
 */
-WGraph create_random_WGraph(int n, ll c_min, ll c_max, int p, bool no_loop = true) {
+WGraph create_random_WGraph(int n, ll c_min, ll c_max, int p, bool self_loop = false) {
 	// verify : https://atcoder.jp/contests/discovery2016-final/tasks/discovery_2016_final_d
 
 	WGraph g(n);
@@ -346,7 +345,7 @@ WGraph create_random_WGraph(int n, ll c_min, ll c_max, int p, bool no_loop = tru
 	uniform_int_distribution<int> rnd_edge(0, 99);
 
 	rep(s, n) rep(t, n) {
-		if (no_loop && s == t) continue;
+		if (!self_loop && s == t) continue;
 		if (rnd_edge(mt) >= p) continue;
 
 		g[s].emplace_back(t, rnd_cost(mt));

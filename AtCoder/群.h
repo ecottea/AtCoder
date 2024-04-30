@@ -26,6 +26,7 @@ S601 inv601(S601 a) { return -a; }
 
 
 //y‘Ï ƒA[ƒxƒ‹ŒQz
+/* verify : https://mojacoder.app/users/shogo314/problems/rectangle_product */
 using S602 = mint;
 S602 op602(S602 a, S602 b) { return a * b; }
 S602 e602() { return 1; }
@@ -93,6 +94,15 @@ S608 inv608(S608 f) {
 	return { a.inv(), -b / a };
 }
 #define AffineInvComposite_group S608, op608, e608, inv608
+
+
+//y‹ts—ñ‘Ï ŒQz
+constexpr int N609 = 3;
+using S609 = Matrix<mint>;
+S609 op609(S609 a, S609 b) { return b * a; }
+S609 e609() { return S609(N609); }
+S609 inv609(S609 a) { return inverse_matrix(a); }
+#define MatrixInvMul_group S609, op609, e609, inv609
 
 
 //yƒrƒbƒg—ñã “]“|” ŒQz

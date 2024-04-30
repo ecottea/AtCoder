@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "s—ñ.h"
 // ¡¡¡¡¡ ƒ‚ƒmƒCƒhì—p•t‚«ƒ‚ƒmƒCƒh ¡¡¡¡¡
 
 
@@ -24,7 +25,7 @@
 */
 
 
-//yæZ ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
+//yæZ ì—p•t‚« ‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/acl1/tasks/acl1_e */
 using S101 = mint;
 S101 op101(S101 x, S101 y) { return x + y; }
@@ -36,7 +37,7 @@ F101 id101() { return 1; }
 #define Mul_Sum_mmonoid S101, op101, e101, F101, act101, comp101, id101
 
 
-//y2~2s—ñæZ ¶ì—p•t‚« 2ŸŒ³ƒxƒNƒgƒ‹ ƒ‚ƒmƒCƒhz
+//y2~2s—ñæZ ¶ì—p•t‚« 2ŸŒ³ƒxƒNƒgƒ‹‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://yukicoder.me/problems/no/2439 */
 using T124 = ll;
 using S124 = pair<T124, T124>; // ƒxƒNƒgƒ‹ (x; y)
@@ -73,10 +74,29 @@ F124 id124() {
 	// [0 1]
 	return { 1, 0, 0, 1 };
 }
-#define Matrix2LMul_Vector2_mset S124, op124, e124, F124, act124, comp124, id124
+#define Matrix2LMul_Vector2_mmonoid S124, op124, e124, F124, act124, comp124, id124
 
 
-//ychmin ì—p•t‚« min ƒ‚ƒmƒCƒhz
+//ys—ñæZ ì—p•t‚« ƒxƒNƒgƒ‹‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
+constexpr int N134 = 3;
+using T134 = mint;
+using S134 = array<T134, N134>;
+S134 op134(S134 x, S134 y) {
+	rep(i, N134) x[i] += y[i];
+	return x;
+}
+S134 e134() {
+	S134 x{ 0 };
+	return x;
+}
+using F134 = Fixed_matrix<T134, N134>;
+S134 act134(F134 f, S134 x) { return f * x; }
+F134 comp134(F134 f, F134 g) { return f * g; }
+F134 id134() { return 1; }
+#define Mul_Sum_mmonoid S134, op134, e134, F134, act134, comp134, id134
+
+
+//ychmin ì—p•t‚« min ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://yukicoder.me/problems/no/1868 */
 using T115 = ll;
 using S115 = T115;
@@ -89,7 +109,7 @@ F115 id115() { return INFL; }
 #define Chmin_Min_mmonoid S115, op115, e115, F115, act115, comp115, id115
 
 
-//ychmax ì—p•t‚« max ƒ‚ƒmƒCƒhz
+//ychmax ì—p•t‚« max ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/abc177/tasks/abc177_f */
 using T116 = ll;
 using S116 = T116;
@@ -114,7 +134,7 @@ F102 comp102(F102 f, F102 g) { return f == id102() ? g : f; }
 #define Update_LUpdate_mmonoid S102, op102, e102, F102, act102, comp102, id102
 
 
-//y•ÏX ì—p•t‚« max ƒ‚ƒmƒCƒhz
+//y•ÏX ì—p•t‚« max ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac */
 using S103 = int;
 S103 op103(S103 x, S103 y) { return max(x, y); }
@@ -126,7 +146,7 @@ F103 comp103(F103 f, F103 g) { return f == id103() ? g : f; }
 #define Update_Max_mmonoid S103, op103, e103, F103, act103, comp103, id103
 
 
-//y•ÏX ì—p•t‚« min ƒ‚ƒmƒCƒhz
+//y•ÏX ì—p•t‚« min ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/abc177/tasks/abc177_f */
 using S104 = int;
 S104 op104(S104 x, S104 y) { return min(x, y); }
@@ -138,7 +158,7 @@ F104 comp104(F104 f, F104 g) { return f == id104() ? g : f; }
 #define Update_Min_mmonoid S104, op104, e104, F104, act104, comp104, id104
 
 
-//y‰ÁZ ì—p•t‚« max ƒ‚ƒmƒCƒhz
+//y‰ÁZ ì—p•t‚« max ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4 */
 using S105 = ll;
 S105 op105(S105 x, S105 y) { return max(x, y); }
@@ -150,7 +170,7 @@ F105 id105() { return 0; }
 #define Add_Max_mmonoid S105, op105, e105, F105, act105, comp105, id105
 
 
-//y‰ÁZ ì—p•t‚« min ƒ‚ƒmƒCƒhz
+//y‰ÁZ ì—p•t‚« min ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://atcoder.jp/contests/abc245/tasks/abc245_e */
 using S106 = ll;
 S106 op106(S106 x, S106 y) { return min(x, y); }
@@ -162,45 +182,20 @@ F106 id106() { return 0; }
 #define Add_Min_mmonoid S106, op106, e106, F106, act106, comp106, id106
 
 
-//yƒAƒtƒBƒ“ ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
-/*
-* S ¹ x = {v, c} : c ŒÂ‚ÌŒ³‚Ì˜a‚Å’l v ‚ğ‚Æ‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
-* F ¹ f = {a, b} : ˆêŸŠÖ” f(x) = a x + b ‚ğ•\‚·D
-* x op y : cx + cy ŒÂ‚ÌŒ³‚Ì˜a‚Å’l vx + vy ‚ğ‚Æ‚Á‚Ä‚¢‚éó‘Ô‚É‚·‚éD
-* f act x : c ŒÂ‚ÌŒ³‚Ì˜a‚Å’l f(v) ‚ğ‚Æ‚Á‚Ä‚¢‚éó‘Ô‚É‚·‚éD
-* f comp g : ‡¬‚µ‚½ˆêŸŠÖ” f o g ‚ğ•Ô‚·D
-*/
-// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
-using T107 = mint;
-using S107 = pair<T107, T107>; // ƒxƒNƒgƒ‹ (v, c)
-using F107 = pair<T107, T107>; // s—ñ (a, b; 0, 1)
-S107 op107(S107 x, S107 y) {
-	auto [vx, cx] = x; // ƒxƒNƒgƒ‹ (vx, cx)
-	auto [vy, cy] = y; // ƒxƒNƒgƒ‹ (vy, cy)
-
-	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
-	return { vx + vy, cx + cy };
-}
-S107 e107() { return { 0, 0 }; }
-S107 act107(F107 f, S107 x) {
-	auto [v, c] = x; // ƒxƒNƒgƒ‹ (v, c)
-	auto [a, b] = f; // s—ñ (a, b; 0, 1)
-
-	// (a, b; 0, 1).(v, c) = (a v + b c, c)
-	return { a * v + b * c, c };
-}
-F107 comp107(F107 f, F107 g) {
-	auto [a, b] = f; // s—ñ (a, b; 0, 1)
-	auto [c, d] = g; // s—ñ (c, d; 0, 1)
-
-	// (a, b; 0, 1).(c, d; 0, 1) = (a c, a d + b; 0, 1)
-	return { a * c, a * d + b };
-}
-F107 id107() { return { 1, 0 }; }
-#define Affine_Sum_mmonoid S107, op107, e107, F107, act107, comp107, id107
+//y‰ÁZ ì—p•t‚« min,max ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify : https://atcoder.jp/contests/arc173/tasks/arc173_c */
+using T135 = int;
+using S135 = pair<T135, T135>;
+S135 op135(S135 x, S135 y) { return { min(x.first, y.first), max(x.second, y.second) }; }
+S135 e135() { return { INF, -INF }; }
+using F135 = T135;
+S135 act135(F135 f, S135 x) { return { f + x.first, f + x.second }; }
+F135 comp135(F135 f, F135 g) { return f + g; }
+F135 id135() { return 0; }
+#define Add_MinMax_mmonoid S135, op135, e135, F135, act135, comp135, id135
 
 
-//y‰ÁZ ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
+//y‰ÁZ ì—p•t‚« ‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {v, c} : c ŒÂ‚ÌŒ³‚Ì˜a‚Å’l v ‚ğ‚Æ‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 * F ¹ f = b : ˆêŸŠÖ” f(x) = 1 x + b ‚ğ•\‚·D
@@ -208,6 +203,7 @@ F107 id107() { return { 1, 0 }; }
 * f act x : c ŒÂ‚ÌŒ³‚Ì˜a‚Å’l v + c f ‚ğ‚Æ‚Á‚Ä‚¢‚éó‘Ô‚É‚·‚éD
 * f comp g : ‡¬‚µ‚½ˆêŸŠÖ” f o g ‚ğ•Ô‚·D
 */
+/* verify : https://atcoder.jp/contests/arc174/tasks/arc174_e */
 using T108 = ll;
 using S108 = pair<T108, T108>; // ƒxƒNƒgƒ‹ (v, c)
 using F108 = T108; // s—ñ (1, f; 0, 1)
@@ -233,7 +229,7 @@ F108 id108() { return 0; }
 #define Add_Sum_mmonoid S108, op108, e108, F108, act108, comp108, id108
 
 
-//y•ÏX ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
+//y•ÏX ì—p•t‚« ‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {v, c} : c ŒÂ‚ÌŒ³‚Ì˜a‚Å’l v ‚ğ‚Æ‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 * F ¹ f = b : —ëŸŠÖ” f(x) = 0 x + b ‚ğ•\‚·D
@@ -271,7 +267,45 @@ F109 comp109(F109 f, F109 g) {
 #define Update_Sum_mmonoid S109, op109, e109, F109, act109, comp109, id109
 
 
-//y‰ÁZ ì—p•t‚« •½•û˜a ƒ‚ƒmƒCƒhz
+//yƒAƒtƒBƒ“ ì—p•t‚« ‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/*
+* S ¹ x = {v, c} : c ŒÂ‚ÌŒ³‚Ì˜a‚Å’l v ‚ğ‚Æ‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
+* F ¹ f = {a, b} : ˆêŸŠÖ” f(x) = a x + b ‚ğ•\‚·D
+* x op y : cx + cy ŒÂ‚ÌŒ³‚Ì˜a‚Å’l vx + vy ‚ğ‚Æ‚Á‚Ä‚¢‚éó‘Ô‚É‚·‚éD
+* f act x : c ŒÂ‚ÌŒ³‚Ì˜a‚Å’l f(v) ‚ğ‚Æ‚Á‚Ä‚¢‚éó‘Ô‚É‚·‚éD
+* f comp g : ‡¬‚µ‚½ˆêŸŠÖ” f o g ‚ğ•Ô‚·D
+*/
+// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+using T107 = mint;
+using S107 = pair<T107, T107>; // ƒxƒNƒgƒ‹ (v, c)
+using F107 = pair<T107, T107>; // s—ñ (a, b; 0, 1)
+S107 op107(S107 x, S107 y) {
+	auto [vx, cx] = x; // ƒxƒNƒgƒ‹ (vx, cx)
+	auto [vy, cy] = y; // ƒxƒNƒgƒ‹ (vy, cy)
+
+	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
+	return { vx + vy, cx + cy };
+}
+S107 e107() { return { 0, 0 }; }
+S107 act107(F107 f, S107 x) {
+	auto [v, c] = x; // ƒxƒNƒgƒ‹ (v, c)
+	auto [a, b] = f; // s—ñ (a, b; 0, 1)
+
+	// (a, b; 0, 1).(v, c) = (a v + b c, c)
+	return { a * v + b * c, c };
+}
+F107 comp107(F107 f, F107 g) {
+	auto [a, b] = f; // s—ñ (a, b; 0, 1)
+	auto [c, d] = g; // s—ñ (c, d; 0, 1)
+
+	// (a, b; 0, 1).(c, d; 0, 1) = (a c, a d + b; 0, 1)
+	return { a * c, a * d + b };
+}
+F107 id107() { return { 1, 0 }; }
+#define Affine_Sum_mmonoid S107, op107, e107, F107, act107, comp107, id107
+
+
+//y‰ÁZ ì—p•t‚« •½•û˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {s2, s, c} : ‹æŠÔ‚Ì•½•û˜a‚ª s2C˜a‚ª sC—v‘f”‚ª c ‚Å‚ ‚é‚±‚Æ‚ğ•\‚·D
 * F ¹ f : f ‚ğ‰ÁZ‚·‚éì—p‚ğ•\‚·D
@@ -303,7 +337,58 @@ F120 id120() { return 0; }
 #define Add_Sqsum_mmonoid S120, op120, e120, F120, act120, comp120, id120
 
 
-//yAND ì—p•t‚« XOR ƒ‚ƒmƒCƒhz
+//y•ÏX ¶ì—p•t‚« ‹tƒAƒtƒBƒ“ ƒ‚ƒmƒCƒhz
+/*
+* S ¹ f = {a, b, c} : c ŒÂ‚ÌˆêŸŠÖ”‚Ì‡¬‚Å f(x) = a x + b ‚Æ‚È‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
+* F ¹ s = {a, b, id} : f(x) = a x + b ‚Ö•ÏX‚·‚éì—p‚ğ•\‚·iid = true ‚È‚çP“™ì—pj
+* f op g : ‡¬‚µ‚½ˆêŸŠÖ” g o f ‚ğ•\‚·D
+* s act f : f ‚ğ s ‚É•ÏX‚·‚éD
+* s comp t : s ‚É•ÏX‚·‚éì—p‚É‚·‚éD
+*/
+using T125 = mint;
+using S125 = tuple<T125, T125, int>; // {a, b, c} : c ŒÂ‚Ì‡¬‚Å x ¨ a x + b
+using F125 = tuple<T125, T125, bool>; // {a, b, is_id} : x ¨ a x + b ‚É•ÏX
+S125 op125(S125 f, S125 g) {
+	auto [fa, fb, fc] = f;
+	auto [ga, gb, gc] = g;
+
+	// (g o f)(x) = ga (fa x + fb) + gb = (ga fa)x + (ga fb + gb)
+	return { ga * fa, ga * fb + gb, fc + gc };
+}
+S125 e125() { return { 1, 0, 0 }; }
+S125 act125(F125 s, S125 f) {
+	auto [sa, sb, sid] = s;
+	auto [fa, fb, fc] = f;
+
+	if (sid) return f;
+
+	// sa_pow_sum : ƒ°i¸[0..fc) sa^i
+	T125 sa_pow_sum(0), pow2 = sa, sumpow2 = 1;
+	int n = fc;
+	while (n > 0) {
+		if (n & 1) sa_pow_sum = sa_pow_sum * pow2 + sumpow2;
+		sumpow2 = sumpow2 * pow2 + sumpow2;
+		pow2 = pow2 * pow2;
+		n /= 2;
+	}
+
+	return { sa_pow_sum * (sa - 1) + 1, sa_pow_sum * sb, fc };
+
+}
+F125 comp125(F125 s, F125 t) {
+	auto [sa, sb, sid] = s;
+	auto [ta, tb, tid] = t;
+
+	if (sid) return t;
+	return s;
+}
+F125 id125() {
+	return { 0, 0, true };
+}
+#define Update_InvAffine_mmonoid S125, op125, e125, F125, act125, comp125, id125
+
+
+//yAND ì—p•t‚« XOR ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S110 = int;
 S110 op110(S110 x, S110 y) { return x ^ y; }
 S110 e110() { return 0; }
@@ -314,7 +399,7 @@ F110 id110() { return ~0; }
 #define AND_XOR_mmonoid S110, op110, e110, F110, act110, comp110, id110
 
 
-//y¬‡ƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“ ì—p•t‚« min,max ƒ‚ƒmƒCƒhz
+//y¬‡ƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“ ì—p•t‚« min,max ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {p, q} :
 *	p : ‹æŠÔ‚Ì min
@@ -380,7 +465,49 @@ F128 id128() { return F128{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ‡), -
 #define MixedTropicalAffine_MinMax_mmonoid S128, op128, e128, F128, act128, comp128, id128
 
 
-//ybitƒAƒtƒBƒ“ ì—p•t‚« XOR ƒ‚ƒmƒCƒhz
+//y•ÏX ¶ì—p•t‚« ƒgƒƒsƒJƒ‹ƒAƒtƒBƒ“ ƒ‚ƒmƒCƒhz
+/*
+* S ¹ f = {a, b, c} : c ŒÂ‚ÌƒgƒƒsƒJƒ‹ˆêŸŠÖ”‚Ì‡¬‚Å f(x) = max(a + x, b) ‚Æ‚È‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
+* F ¹ s = {a, b} : f(x) = max(a + x, b) ‚Ö•ÏX‚·‚éì—p‚ğ•\‚·D
+* f op g : ‡¬‚µ‚½ƒgƒƒsƒJƒ‹ˆêŸŠÖ” f o g ‚ğ•\‚·D
+* s act f : f ‚ğ s ‚É•ÏX‚·‚éD
+* s comp t : s ‚É•ÏX‚·‚éì—p‚É‚·‚éD
+*/
+using T129 = ll;
+using S129 = tuple<T129, T129, int>; // {a, b, c} : c ŒÂ‚Ì‡¬‚Å x ¨ max(a + x, b)
+using F129 = tuple<T129, T129>; // {a, b} : x ¨ max(a + x, b) ‚É•ÏX
+S129 op129(S129 g, S129 f) {
+	auto [fa, fb, fc] = f;
+	auto [ga, gb, gc] = g;
+
+	// (g o f)(x) = ga (fa x + fb) + gb = (ga fa)x + (ga fb + gb)
+	return { ga + fa, max(ga + fb, gb), fc + gc };
+}
+S129 e129() { return { 0, -INFL, 0 }; }
+S129 act129(F129 s, S129 f) {
+	auto [sa, sb] = s;
+	auto [fa, fb, fc] = f;
+
+	if (sa == INFL + 1) return f;
+
+	// (a, b; 0, 1)^c = (a^c, (1+a+...+a^(c-1)) b; 0, 1)
+	return { fc * sa, sb + (sa >= 0 ? sa * (fc - 1) : 0), fc };
+
+}
+F129 comp129(F129 s, F129 t) {
+	auto [sa, sb] = s;
+	auto [ta, tb] = t;
+
+	if (sa == INFL + 1) return t;
+	return s;
+}
+F129 id129() {
+	return { INFL + 1, INFL + 1 };
+}
+#define Update_TropicalAffine_mmonoid S129, op129, e129, F129, act129, comp129, id129
+
+
+//ybitƒAƒtƒBƒ“ ì—p•t‚« XOR ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {v, c} :
 *	v : ‹æŠÔ‚Ì‘ XOR
@@ -428,7 +555,7 @@ F127 id127() { return { ~0, 0 }; }
 #define BitAffine_XOR_mmonoid S127, op127, e127, F127, act127, comp127, id127
 
 
-//yæZ ì—p•t‚« GCD ƒ‚ƒmƒCƒhz
+//yæZ ì—p•t‚« GCD ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S113 = ll;
 S113 op113(S113 x, S113 y) { return gcd(x, y); }
 S113 e113() { return 0; }
@@ -439,7 +566,7 @@ F113 id113() { return 1; }
 #define Mul_GCD_mmonoid S113, op113, e113, F113, act113, comp113, id113
 
 
-//yæZ ì—p•t‚« LCM ƒ‚ƒmƒCƒhz
+//yæZ ì—p•t‚« LCM ‰ÂŠ·ƒ‚ƒmƒCƒhz
 using S114 = ll;
 S114 op114(S114 x, S114 y) { return lcm(x, y); }
 S114 e114() { return 1; }
@@ -450,11 +577,11 @@ F114 id114() { return 1; }
 #define Mul_LCM_mmonoid S114, op114, e114, F114, act114, comp114, id114
 
 
-//yüŒ`‰ÁZ ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
+//yüŒ`‰ÁZ ì—p•t‚« ‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
-* S ¹ x = {v, i, 1} : “Yš i ‚ÌŒ³‚ª’l v ‚ğ‚Æ‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
+* S ¹ x = {v, i, 1} : “Yš i ‚ÌŒ³ 1 ŒÂ‚ª’l v ‚ğ‚Æ‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 * F ¹ f = {a, b} : ˆêŸŠÖ” f(x) = a x + b ‚ğ•\‚·D
-* x op y : ’l vx + vy ‚ğ‚Æ‚Á‚Ä‚¢‚éó‘Ô‚É‚·‚éi“Yš‚Æ‚©‚Í‰ó‚ê‚éj
+* x op y : ’l vx + vy ‚ğ‚Æ‚Á‚Ä‚¢‚éó‘Ô‚É‚·‚éi“Yš‚âŒÂ”‚à˜a‚ğ‚Æ‚ç‚ê‚éj
 * f act x : v ‚É’l a i + b ‚ğ‰ÁZ‚·‚éD
 * f comp g : (af + ag) i + (bf + bg) ‚ğ‰ÁZ‚·‚éì—p‚É‚·‚éD
 */
@@ -463,26 +590,23 @@ using T117 = ll;
 using S117 = tuple<T117, T117, T117>; // ƒxƒNƒgƒ‹ (v, i, 1)
 using F117 = pair<T117, T117>; // s—ñ (1, a, b; 0, 1, 0; 0, 0, 1)
 S117 op117(S117 x, S117 y) {
-	T117 vx, vy, sx, sy, cx, cy;
-	tie(vx, sx, cx) = x; // ƒxƒNƒgƒ‹ (vx, sx, cx)
-	tie(vy, sy, cy) = y; // ƒxƒNƒgƒ‹ (vy, sy, cy)
+	auto [vx, sx, cx] = x; // ƒxƒNƒgƒ‹ (vx, sx, cx)
+	auto [vy, sy, cy] = y; // ƒxƒNƒgƒ‹ (vy, sy, cy)
 
 	// (vx, sx, cx) + (vy, sy, cy) = (vx + vy, sx + sy, cx + cy)
 	return { vx + vy, sx + sy, cx + cy };
 }
 S117 e117() { return { 0, 0, 0 }; }
 S117 act117(F117 f, S117 x) {
-	T117 v, s, c, a, b;
-	tie(v, s, c) = x; // ƒxƒNƒgƒ‹ (v, s, c)
-	tie(a, b) = f; // s—ñ (1, a, b; 0, 1, 0; 0, 0, 1)
+	auto [v, s, c] = x; // ƒxƒNƒgƒ‹ (v, s, c)
+	auto [a, b] = f; // s—ñ (1, a, b; 0, 1, 0; 0, 0, 1)
 
 	// (1, a, b; 0, 1, 0; 0, 0, 1).(v, s, c) = (v + a s + b c, s, c)
 	return { v + a * s + b * c, s, c };
 }
 F117 comp117(F117 f, F117 g) {
-	T117 a, b, c, d;
-	tie(a, b) = f; // s—ñ (1, a, b; 0, 1, 0; 0, 0, 1)
-	tie(c, d) = g; // s—ñ (1, c, d; 0, 1, 0; 0, 0, 1)
+	auto [a, b] = f; // s—ñ (1, a, b; 0, 1, 0; 0, 0, 1)
+	auto [c, d] = g; // s—ñ (1, c, d; 0, 1, 0; 0, 0, 1)
 
 	// (1, a, b; 0, 1, 0; 0, 0, 1).(1, c, d; 0, 1, 0; 0, 0, 1) = (1, a + c, b + d; 0, 1, 0; 0, 0, 1)
 	return { a + c, b + d };
@@ -491,7 +615,7 @@ F117 id117() { return { 0, 0 }; }
 #define LinearAdd_Sum_mmonoid S117, op117, e117, F117, act117, comp117, id117
 
 
-//yüŒ`•ÏX ì—p•t‚« ‘˜a ƒ‚ƒmƒCƒhz
+//yüŒ`•ÏX ì—p•t‚« ‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {v, i, 1} : “Yš i ‚ÌŒ³‚ª’l v ‚ğ‚Æ‚Á‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 * F ¹ f = {a, b} : ˆêŸŠÖ” f(x) = a x + b ‚ğ•\‚·D
@@ -499,7 +623,7 @@ F117 id117() { return { 0, 0 }; }
 * f act x : v ‚ğ’l a i + b ‚É•ÏXD
 * f comp g : (af + ag) i + (bf + bg) ‚É•ÏX‚·‚éì—p‚É‚·‚éD
 */
-// verify : https://atcoder.jp/contests/DEGwer2023/tasks/1202Contest_e
+// verify : https://mojacoder.app/users/stoq/problems/RArithQh
 using T121 = ll;
 using S121 = tuple<T121, T121, T121>; // ƒxƒNƒgƒ‹ (v, i, 1)
 using F121 = pair<T121, T121>; // s—ñ (0, a, b; 0, 1, 0; 0, 0, 1)
@@ -528,7 +652,83 @@ F121 comp121(F121 f, F121 g) {
 #define LinearUpdate_Sum_mmonoid S121, op121, e121, F121, act121, comp121, id121
 
 
-//y•ÏX ì—p•t‚« OR ƒ‚ƒmƒCƒhz
+//yüŒ`•ÏX ì—p•t‚« min ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/*
+* S ¹ x = {v, l, r} : ‹æŠÔ [l..r] ‚ÌÅ¬’l‚ª v ‚Å‚ ‚é‚±‚Æ‚ğ•\‚·D
+* F ¹ f = {a, b} : ˆêŸŠÖ” f(i) = a i + b ‚ğ•\‚·D
+* x op y : ‹æŠÔ‚ğŒ‹‡‚µ {min(vx, vy), lx, ry} ‚É‚·‚éD
+* f act x : ˆÊ’u i ‚Ì—v‘f‚ğ a i + b ‚É•ÏX‚·‚éD
+* f comp g : f=id ‚È‚ç gC‚³‚à‚È‚­‚Î f ‚ğ•Ô‚·D
+*/
+// verify : https://mojacoder.app/users/stoq/problems/RArithQh
+using T130 = ll;
+using S130 = tuple<T130, int, int>; // (v, l, r)
+using F130 = pair<T130, T130>; // f(i) = a i + b
+S130 op130(S130 x, S130 y) {
+	auto [vx, lx, rx] = x;
+	auto [vy, ly, ry] = y;
+
+	return { min(vx, vy), min(lx, ly), max(rx, ry) };
+}
+S130 e130() { return { INFL, INF, -INF }; }
+F130 id130() { return { INFL + 1, INFL + 1 }; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
+S130 act130(F130 f, S130 x) {
+	if (f == id130()) return x;
+
+	auto [v, l, r] = x;
+	auto [a, b] = f;
+
+	int i = (a >= 0 ? l : r);
+	ll nv = a * i + b;
+
+	return { nv, l, r };
+}
+F130 comp130(F130 f, F130 g) {
+	if (f == id130()) return g;
+	return f;
+}
+#define LinearUpdate_Min_mmonoid S130, op130, e130, F130, act130, comp130, id130
+
+
+//yüŒ`•ÏX ì—p•t‚« max ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/*
+* S ¹ x = {v, l, r} : ‹æŠÔ [l..r] ‚ÌÅ‘å’l‚ª v ‚Å‚ ‚é‚±‚Æ‚ğ•\‚·D
+* F ¹ f = {a, b} : ˆêŸŠÖ” f(i) = a i + b ‚ğ•\‚·D
+* x op y : ‹æŠÔ‚ğŒ‹‡‚µ {max(vx, vy), lx, ry} ‚É‚·‚éD
+* f act x : ˆÊ’u i ‚Ì—v‘f‚ğ a i + b ‚É•ÏX‚·‚éD
+* f comp g : f=id ‚È‚ç gC‚³‚à‚È‚­‚Î f ‚ğ•Ô‚·D
+*/
+// verify : https://mojacoder.app/users/stoq/problems/RArithQh
+using T131 = ll;
+using S131 = tuple<T131, int, int>; // (v, l, r)
+using F131 = pair<T131, T131>; // f(i) = a i + b
+S131 op131(S131 x, S131 y) {
+	auto [vx, lx, rx] = x;
+	auto [vy, ly, ry] = y;
+
+	return { max(vx, vy), min(lx, ly), max(rx, ry) };
+}
+S131 e131() { return { -INFL, INF, -INF }; }
+F131 id131() { return { INFL + 1, INFL + 1 }; } // g‚í‚È‚¢’l‚È‚ç‰½‚Å‚à OK
+S131 act131(F131 f, S131 x) {
+	if (f == id131()) return x;
+
+	auto [v, l, r] = x;
+	auto [a, b] = f;
+
+	int i = (a >= 0 ? r : l);
+	ll nv = a * i + b;
+
+	return { nv, l, r };
+}
+F131 comp131(F131 f, F131 g) {
+	if (f == id131()) return g;
+	return f;
+}
+#define LinearUpdate_Max_mmonoid S131, op131, e131, F131, act131, comp131, id131
+
+
+//y•ÏX ì—p•t‚« OR ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://codeforces.com/contest/620/problem/E */
 using S118 = ll;
 S118 op118(S118 x, S118 y) { return x | y; }
@@ -627,7 +827,7 @@ F126 id126() { return false; }
 #define XOR_RunLength_mmonoid S126, op126, e126, F126, act126, comp126, id126
 
 
-//y‰ÁZ ì—p•t‚« Å¬Œ³‚ÌŒÂ” ƒ‚ƒmƒCƒhz
+//y‰ÁZ ì—p•t‚« Å¬Œ³‚ÌŒÂ” ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x = {v, c} : Å¬’l v ‚ğ‚à‚Â—v‘f‚ª c ŒÂ‚ ‚é‚±‚Æ‚ğ•\‚·D
 * F ¹ f : f ‰ÁZ‚·‚éì—p‚ğ•\‚·D
@@ -649,14 +849,38 @@ S119 act119(F119 f, S119 x) {
 
 	return { vx + f, cx };
 }
-F119 comp119(F119 f, F119 g) {
-	return f + g;
-}
+F119 comp119(F119 f, F119 g) { return f + g; }
 F119 id119() { return 0; }
 #define Add_CntMin_mmonoid S119, op119, e119, F119, act119, comp119, id119
 
 
-//yAND,OR ì—p•t‚« AND ƒ‚ƒmƒCƒhz
+//y‰ÁZ ì—p•t‚« Å‘åŒ³‚ÌŒÂ” ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/*
+* S ¹ x = {v, c} : Å‘å’l v ‚ğ‚à‚Â—v‘f‚ª c ŒÂ‚ ‚é‚±‚Æ‚ğ•\‚·D
+* F ¹ f : f ‰ÁZ‚·‚éì—p‚ğ•\‚·D
+*/
+using S132 = pair<ll, int>; // (v, c)
+using F132 = ll;
+S132 op132(S132 x, S132 y) {
+	auto [vx, cx] = x;
+	auto [vy, cy] = y;
+
+	if (vx > vy) return x;
+	if (vx < vy) return y;
+	return { vx, cx + cy };
+}
+S132 e132() { return { -INFL, 0 }; }
+S132 act132(F132 f, S132 x) {
+	auto [vx, cx] = x;
+
+	return { vx + f, cx };
+}
+F132 comp132(F132 f, F132 g) { return f + g; }
+F132 id132() { return 0; }
+#define Add_CntMax_mmonoid S132, op132, e132, F132, act132, comp132, id132
+
+
+//yAND,OR ì—p•t‚« AND ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /*
 * S ¹ x
 * F ¹ f = {a, b} : ŠÖ” f(x) = (a OR x) AND b ‚ğ•\‚·D
@@ -686,7 +910,7 @@ F122 id122() { return { 0, ~0 }; }
 #define OrAnd_And_mmonoid S122, op122, e122, F122, act122, comp122, id122
 
 
-//yÊ‘œ ì—p•t‚« ƒxƒNƒgƒ‹‘˜a ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
+//yÊ‘œ ì—p•t‚« ƒxƒNƒgƒ‹‘˜a ‰ÂŠ·ƒ‚ƒmƒCƒhziQÆ“n‚µ‚µ‚Ä‚¢‚È‚¢‚Ì‚Å’x‚¢j
 /*
 * S ¹ x[0..n) : ƒxƒNƒgƒ‹
 * F ¹ f[0..n) : Ê‘œ i ¨ f[i]

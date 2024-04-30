@@ -7,6 +7,93 @@
 // ■■■■■ 順列，置換など ■■■■■
 
 
+//【逆引き順列】
+/*
+* Permutation_rev(vi p) : O(n)
+*	[0..n) の順列 p[0..n) で初期化する．
+*
+* int get(int i) : O(1)
+*	p[i] の値を返す．
+*
+* int pos(int x) : O(1)
+*	値 x の位置を返す．
+*
+* swap_PP(int i, int j) : O(1)
+*	p[i] の値と p[j] の値を入れ替える．
+*
+* swap_PV(int i, int y) : O(1)
+*	p[i] の値と値 y を入れ替える．
+*
+* swap_VV(int x, int y) : O(1)
+*	値 x と値 y を入れ替える．
+*/
+class Permutation_rev {
+	int n;
+	vi p, p_inv;
+
+public:
+	Permutation_rev(const vi& p) : n(sz(p)), p(p), p_inv(n) {
+		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+
+		rep(i, n) p_inv[p[i]] = i;
+	}
+	Permutation_rev() : n(0) {}
+
+	// p[i] の値を返す．
+	int get(int i) {
+		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+
+		return p[i];
+	}
+
+	// x の位置を返す．
+	int pos(int x) {
+		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+
+		return p_inv[x];
+	}
+
+	// p[i] の値と p[j] の値を入れ替える．
+	void swap_PP(int i, int j) {
+		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+
+		if (i == j) return;
+
+		int x = p[i], y = p[j];
+		p[i] = y;
+		p[j] = x;
+		p_inv[y] = i;
+		p_inv[x] = j;
+	}
+
+	// p[i] の値と値 y を入れ替える．
+	void swap_PV(int i, int y) {
+		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+
+		if (p[i] == y) return;
+
+		int x = p[i], j = p_inv[y];
+		p[i] = y;
+		p[j] = x;
+		p_inv[y] = i;
+		p_inv[x] = j;
+	}
+
+	// 値 x と値 y を入れ替える．
+	void swap_VV(int x, int y) {
+		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+
+		if (x == y) return;
+
+		int i = p_inv[x], j = p_inv[y];
+		p[i] = y;
+		p[j] = x;
+		p_inv[y] = i;
+		p_inv[x] = j;
+	}
+};
+
+
 //【転倒数】O(n log n)
 /*
 * a[0..n) の転倒数を返す．
@@ -55,11 +142,11 @@ ll inversion_number_cc(const vector<T>& a) {
 
 	int n = sz(a);
 
-	// a を [0, |a|) に座標圧縮した結果を b に格納する．
+	// b : a を座標圧縮した結果
 	vi b;
 	int m = coordinate_compression(a, b);
 
-	// fw[i] : 今まで見てきた範囲に値 i が何個あったか（∈ {0, 1}）
+	// fw[i] : 今まで見てきた範囲に値 i が何個あったか
 	fenwick_tree<int> fw(m);
 	ll res = 0;
 
@@ -156,12 +243,11 @@ ll swap_distance(const vector<T>& a, const vector<T>& b) {
 }
 
 
-//【置換のサイクル分解】O(n)
+//【置換 → 巡回置換の積】O(n)
 /*
-* [0..n) の置換 p を巡回置換の積に分解して cycles に格納し cycles を返す．
-* p は各 i∈[0..n) を p[i] に動かすような置換を表す．
+* [0..n) の置換 i → p[i] を巡回置換の積に分解し，巡回置換表記のリストを返す．
 */
-vvi permutation_decomposition(const vi& p) {
+vvi cycle_decomposition(const vi& p) {
 	// verify : https://atcoder.jp/contests/abc175/tasks/abc175_d
 
 	int n = sz(p);
@@ -186,6 +272,36 @@ vvi permutation_decomposition(const vi& p) {
 	}
 	
 	return cycles;
+}
+
+
+//【置換 → 隣接互換の積】O(n^2)
+/*
+* [0..n) の置換 i → p[i] を隣接互換 (x, x+1) の積に分解し，x のリストを返す．
+*/
+vi adjacent_transposition_decomposition(vi p) {
+	int n = sz(p);
+	vi res;
+
+	while (true) {
+		// 要素の交換を行ったかどうか
+		bool swapped = false;
+
+		repir(j, n - 2, 0) {
+			// 隣接要素の大小関係が逆転していたら交換する．
+			if (p[j] > p[j + 1]) {
+				swap(p[j], p[j + 1]);
+				res.emplace_back(j);
+				swapped = true;
+			}
+		}
+
+		// 要素の交換が行われなくなったら終了する．
+		if (!swapped) break;
+	}
+	reverse(all(res));
+
+	return res;
 }
 
 

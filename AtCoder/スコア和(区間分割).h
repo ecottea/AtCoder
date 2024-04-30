@@ -35,11 +35,44 @@
 */
 
 
+//【区間和の積の和】O(n)
+/*
+* 数列 a[0..n) に対して
+*	a[l..r) のスコア : Σa[l..r)
+*	a[0..n) の区間分割のスコア : 各区間スコアの積
+* と定め，2^(n-1) 通り全ての区間分割をわたるスコアの総和を返す．
+*/
+template <class T>
+mint sum_product_sum(const vector<T>& a) {
+	// verify : https://mojacoder.app/users/hotman78/problems/sum_of_formula
+
+	//【方法】
+	//【区間数値の積の和】で B = 1 とすればよい．
+
+	int n = sz(a);
+
+	vector<mint> dp(n + 1), cnt(n + 1);
+	cnt[0] = 1;
+
+	rep(i, n) {
+		// 区間を分ける場合
+		dp[i + 1] += dp[i] * a[i];
+		cnt[i + 1] += dp[i];
+
+		// 区間を繋ぐ場合
+		dp[i + 1] += dp[i] + a[i] * cnt[i];
+		cnt[i + 1] += cnt[i];
+	}
+
+	return dp[n];
+}
+
+
 //【区間最大値の積の和】O(n)
 /*
 * 数列 a[0..n) に対して
-*	a[l..r) のスコア：max a[l..r)
-*	a[0..n) の区間分割のスコア：各区間スコアの積
+*	a[l..r) のスコア : max a[l..r)
+*	a[0..n) の区間分割のスコア : 各区間スコアの積
 * と定め，2^(n-1) 通り全ての区間分割をわたるスコアの総和を返す．
 *
 *（スタックで高速化した DP）
@@ -68,7 +101,7 @@ mint max_product_sum(const vi& a) {
 	dp[0] = 1;
 
 	// st : max(a[j..i]) のユニークな値とその範囲の dp の和の組を j について昇順に保持する
-	stack<pair<int, mint>> st;
+	stack<pim> st;
 
 	rep(i, n) {
 		dp[i + 1] = (i == 0 ? 0 : dp[i]);
@@ -78,8 +111,7 @@ mint max_product_sum(const vi& a) {
 
 		// スタックトップの値が a[i] 以上になるまでスタックを掘っていく．
 		while (!st.empty() && st.top().first < a[i]) {
-			int v; mint s;
-			tie(v, s) = st.top(); st.pop();
+			auto [v, s] = st.top(); st.pop();
 
 			dp[i + 1] -= v * s;
 			sum += s;
@@ -96,8 +128,8 @@ mint max_product_sum(const vi& a) {
 //【区間レンジの積の和】O(n)
 /*
 * 数列 a[0..n) に対して
-*	a[l..r) のスコア：max a[l..r) - min a[l..r)
-*	a[0..n) の区間分割のスコア：各区間スコアの積
+*	a[l..r) のスコア : max a[l..r) - min a[l..r)
+*	a[0..n) の区間分割のスコア : 各区間スコアの積
 * と定め，2^(n-1) 通り全ての区間分割をわたるスコアの総和を返す．
 *
 *（スタックで高速化した DP）
@@ -114,16 +146,15 @@ mint range_product_sum(const vi& a) {
 	vm dp(n + 1);
 	dp[0] = 1;
 
-	stack<pair<int, mint>> st_max;
-	stack<pair<int, mint>> st_min;
+	stack<pim> st_max;
+	stack<pim> st_min;
 
 	mint res_max = 0, res_min = 0;
 
 	rep(i, n) {
 		mint sum = dp[i];
 		while (!st_max.empty() && st_max.top().first < a[i]) {
-			int v; mint s;
-			tie(v, s) = st_max.top(); st_max.pop();
+			auto [v, s] = st_max.top(); st_max.pop();
 
 			res_max -= v * s;
 			sum += s;
@@ -151,9 +182,9 @@ mint range_product_sum(const vi& a) {
 
 //【区間数値の積の和】O(n)
 /*
-* 数値文字列 s[0..n) に対して
-*	s[l..r) のスコア：s[l..r) を B 進数とみなしたときの値
-*	s[0..n) の区間分割のスコア：各区間スコアの積
+* 数字文字列 s[0..n) に対して
+*	s[l..r) のスコア : s[l..r) を B 進数とみなしたときの値
+*	s[0..n) の区間分割のスコア : 各区間スコアの積
 * と定め，2^(n-1) 通り全ての区間分割をわたるスコアの総和を返す．
 */
 mint numstr_product_sum(const string& s, int B = 10) {
@@ -186,11 +217,11 @@ mint numstr_product_sum(const string& s, int B = 10) {
 }
 
 
-//【区間数値の OR の和】O(n^2)
+//【区間 2 進数値の OR の和】O(n^2)
 /*
-* 01 文字列 s[0..n) に対して
-*	s[l..r) のスコア：s[l..r) を 2 進数とみなしたときの値
-*	s[0..n) の区間分割のスコア：各区間スコアの OR
+* 01-文字列 s[0..n) に対して
+*	s[l..r) のスコア : s[l..r) を 2 進数とみなしたときの値
+*	s[0..n) の区間分割のスコア : 各区間スコアの OR
 * と定め，2^(n-1) 通り全ての区間分割をわたるスコアの総和を返す．
 */
 mint bitstr_OR_sum(const string& s) {
@@ -231,10 +262,10 @@ mint bitstr_OR_sum(const string& s) {
 //【区間分割のスコア和（任意演算）】O(2^n n)
 /*
 * 列 a[0..n) に対して
-*	a[l..r) のスコア：a[l..r) の総 op1
-*	a[0..n) の区間分割のスコア：各区間スコアの総 op2
-*	a のスコア：2^(n-1) 通りの区間分割のスコアの総 op3
-* と定め，a のスコア返す．
+*	a[l..r) のスコア : a[l..r) の総 op1
+*	a[0..n) の区間分割のスコア : 各区間スコアの総 op2
+*	a のスコア : 2^(n-1) 通りの区間分割のスコアの総 op3
+* と定め，a のスコアを返す．
 */
 template <class T, T(*op1)(T, T), T(*op2)(T, T), T(*op3)(T, T)>
 T interval_partitions_score(const vector<T>& a) {
@@ -256,7 +287,7 @@ T interval_partitions_score(const vector<T>& a) {
 		T val1 = a[0];
 
 		rep(i, n - 1) {
-			if (get(set, i)) {
+			if (getb(set, i)) {
 				apply2(val1);
 				val1 = a[i + 1];
 			}
@@ -270,6 +301,13 @@ T interval_partitions_score(const vector<T>& a) {
 	}
 
 	return val3;
+
+	/* op の定義の雛形
+	using T = mint;
+	T op1(T x, T y) { return x + y; }
+	T op2(T x, T y) { return x * y; }
+	T op3(T x, T y) { return x + y; }
+	*/
 }
 
 

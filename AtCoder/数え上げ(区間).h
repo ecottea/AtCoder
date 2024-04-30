@@ -6,6 +6,22 @@
 // ■■■■■ 数え上げ（区間） ■■■■■
 
 
+//【特定の要素を含む区間の数え上げ（長さごと）】
+/*
+* a[0..n) において a[i] を含む長さ w の区間の個数を c(i,w) とおくと，
+*	c(i,w) = min(i, n-w) - max(i+1-w, 0) + 1
+* である．これは
+*	x = min(i+1, n-i)
+* とおくと，
+*	c(i,w) = w      (1 ≦ w ≦ x)
+*	c(i,w) = x      (x < w ≦ n-x)
+*	c(i,w) = n+1-w  (n-x < w ≦ n)
+* として w の区分線形関数で表される
+* 
+* verify : https://mojacoder.app/users/yunipoke/problems/ave-sum-subarray
+*/
+
+
 //【区間端範囲制約を満たす区間の数え上げ】O(n log n)
 /*
 * [0..n) の区間 [l..r] (l ≦ r) で，l_min[r] ≦ l ≦ l_max[r] かつ

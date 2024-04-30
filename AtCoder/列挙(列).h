@@ -194,7 +194,7 @@ vvi enumerate_weakly_increase_sequences(int n, int m) {
 
 //【真の倍数列の列挙】O(?)（k = 10^4 くらいまで動く）
 /*
-* a[0] | a[1] | ... | a[m] ≦ k なる狭義単調列 a を格納したリストを返す．
+* a[0] | a[1] | ... | a[m] ≦ k なる狭義単調増加列 a を格納したリストを返す．
 */
 vvl enumerate_strongly_multiple_sequences(ll k) {
 	vl a;
@@ -220,6 +220,17 @@ vvl enumerate_strongly_multiple_sequences(ll k) {
 
 	return seqs;
 }
+
+
+//【真の倍数列の列挙（長さ固定，両端固定）】O(?)
+/*
+* 与えられた n, A に対し
+*	1 = a[0] | a[1] | ... a[n-1] | a[n] = A
+* を満たす狭義単調増加列 a[0..n] を列挙するには，
+* A を素因数分解して素因数の多重集合を得て【多重集合の順序付き分割の列挙（K 個）】を利用すれば良い．
+* 
+* verify : https://mojacoder.app/users/ocv_contest/problems/f26bcaf3-ae22-4fa2-acdc-81b92115ac2e
+*/
 
 
 //【作業用スタックを利用して得られる列の列挙】O(Catalan(n))

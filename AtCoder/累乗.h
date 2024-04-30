@@ -6,34 +6,41 @@
 
 //【累乗（mint 利用）】
 /*
-* Pow_mint(T B, int n) : O(n)
-*	底を B とし，B^(-n) から B^n まで計算可能として初期化する．
+* Pow_mint(mint B, int n) : O(n)
+*	底を B とし，B^0 から B^n まで計算可能として初期化する．
+*
+* build_neg() : O(n)
+*	B^(-1) から B^(-n) も計算可能にする．
 *	制約 : B は mint の法と互いに素
 *
 * mint [](int i) : O(1)
 *	B^i を返す．
 */
-template <class T>
 class Pow_mint {
 	int n;
 	vm powB, powB_inv;
 
 public:
-	Pow_mint(T B, int n) : n(n) {
-		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
+	Pow_mint(mint B, int n) : n(max(n, 2)) {
+		// verify : https://yukicoder.me/problems/no/2709
 
 		// B の累乗を計算する．
 		powB.resize(n + 1);
 		powB[0] = 1;
 		rep(i, n) powB[i + 1] = powB[i] * B;
+	};
+	Pow_mint() : n(0) {}
+
+	// 負冪も計算できるようにする．
+	void build_neg() {
+		// verify : https://atcoder.jp/contests/arc116/tasks/arc116_b
 
 		// B の逆元の累乗を計算する．
-		mint invB = mint(1) / B;
+		mint invB = powB[1].inv();
 		powB_inv.resize(n + 1);
 		powB_inv[0] = 1;
 		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB;
-	};
-	Pow_mint() : n(0) {}
+	}
 
 	// B^i を返す．
 	mint const& operator[](int i) const {
@@ -46,73 +53,6 @@ public:
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Pow_mint& pw) {
-		os << pw.powB << endl;
-		os << pw.powB_inv << endl;
-		return os;
-	}
-#endif
-};
-
-
-//【累乗】
-/*
-* Pow(ll B, int n, ll M) : O(n)
-*	底を B とし，B^(-n) から B^n (mod M) まで計算可能として初期化する．
-*	制約 : B と M は互いに素
-*
-* ll [](int i) : O(1)
-*	B^i mod M を返す．
-*/
-class Pow {
-	int n;
-	vl powB, powB_inv;
-
-	// a x + b y = g の解 (x, y) を返す．
-	pll extended_gcd(ll a, ll b) {
-		if (b == 0) {
-			Assert(a == 1);
-			return make_pair(1LL, 0LL);
-		}
-
-		ll q = a / b, r = a % b;
-		ll X, Y;
-		tie(X, Y) = extended_gcd(b, r);
-
-		return make_pair(Y, X - q * Y);
-	}
-
-public:
-	Pow(ll B, int n, ll M) : n(n) {
-		// verify : https://codeforces.com/contest/715/problem/C
-
-		B %= M;
-
-		// B の累乗を計算する．
-		powB.resize(n + 1);
-		powB[0] = 1;
-		rep(i, n) powB[i + 1] = powB[i] * B % M;
-
-		// 拡張ユークリッドの互除法で B の逆元を計算する．
-		ll invB, tmp;
-		tie(invB, tmp) = extended_gcd(B, M);
-
-		// B の逆元の累乗を計算する．
-		powB_inv.resize(n + 1);
-		powB_inv[0] = 1;
-		rep(i, n) powB_inv[i + 1] = powB_inv[i] * invB % M;
-	};
-
-	// B^i を返す．
-	ll const& operator[](int i) const {
-		// verify : https://codeforces.com/contest/715/problem/C
-
-		Assert(abs(i) <= n);
-
-		return i >= 0 ? powB[i] : powB_inv[-i];
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Pow& pw) {
 		os << pw.powB << endl;
 		os << pw.powB_inv << endl;
 		return os;
@@ -171,18 +111,6 @@ ll truncated_pow(ll a, ll n, ll inf = INFL) {
 /*
 * n より大きい最小の 2 冪は 1 << (msb(n) + 1) で得られる．
 * n 以上の最小の 2 冪は 1 << (msb(n - 1) + 1) で得られる（ただし n ≠ 0）
-*/
-
-
-//【積での累乗の分解】
-/*
-*	z^(ij) = (i+j)(i+j-1)/2 - i(i-1)/2 - j(j-1)/2
-*	       = (i+j)(i+j+1)/2 - i(i+1)/2 - j(j+1)/2
-* verify : https://judge.yosupo.jp/problem/multipoint_evaluation_on_geometric_sequence
-* 
-* i+j=k のとき，
-*	z^(ijk) = k(k-1)(k+1)/3 - i(i-1)(i+1)/3 - j(j-1)(j+1)/3
-* verify : https://yukicoder.me/problems/no/2506
 */
 
 

@@ -136,61 +136,24 @@ bool construction_partial_sum_fast(const vi& a, int v, vi& is) {
 }
 
 
-//【部分和問題（復元）】O(n v / 64)
+//【部分和問題（列挙）】O(n M / 64)
 /*
-* 非負整数列 a[0..n) について，Σi∈S a[i] = v なる添字集合 S を is に格納する．
-* S が存在しなければ false を返す．
-*
-* 制約：A は v + 1 以上の定数．
+* 非負整数列 a[0..n) の部分和として i∈[0..M) が作れるかを格納したリストを返す．
 */
-template <size_t A>
-bool construction_partial_sum_fast(const vi& a, int v, vi& is) {
-	// verify : https://atcoder.jp/contests/abc221/tasks/abc221_g
-	
-	int n = sz(a);
-	is.clear();
-
-	// dp[i][j] : a[0..i) の中で和をちょうど j にできるか
-	vector<bitset<A>> dp(n + 1);
-	dp[0][0] = 1;
-
-	// 配る DP
-	rep(i, n) dp[i + 1] = dp[i] | (dp[i] << a[i]);
-
-	// 和が v になる部分集合が存在しない場合
-	if (!dp[n][v]) return false;
-
-	// DP 復元
-	repir(i, n - 1, 0) {
-		if (v - a[i] >= 0 && dp[i][v - a[i]]) {
-			is.push_back(i);
-			v -= a[i];
-		}
-	}
-	reverse(all(is));
-
-	return true;
-}
-
-
-//【部分和問題（列挙）】O(n m / 64)
-/*
-* 非負整数列 a[0..n) の部分和として i が作れるかを res[i]∈res[0..m) に格納する．
-*
-*（ビット演算で高速化した bool DP）
-*/
-template <size_t m>
-void enumerate_partial_sum(const vi& a, bitset<m>& res) {
+template <size_t M>
+bitset<M> enumerate_partial_sum(const vi& a) {
 	// verify : https://algo-method.com/tasks/337
 
 	int n = sz(a);
 
-	// res_i[j] : a[0..i) の中で和をちょうど j にできるか
-	res.reset();
-	res[0] = 1;
+	// dp_i[j] : a[0..i) の中で和をちょうど j にできるか
+	bitset<M> dp;
+	dp[0] = 1;
 
 	// インライン配る DP
-	rep(i, n) res = res | (res << a[i]);
+	rep(i, n) dp |= dp << a[i];
+
+	return dp;
 }
 
 
@@ -499,7 +462,7 @@ bool multiple_partial_sum(const vector<T>& a, int m, int r) {
 			dp[i + 1][j] = dp[i][j];
 
 			// i 番目の数を選ぶ場合
-			dp[i + 1][j] = dp[i + 1][j] | dp[i][smod(j - a[i], m)];
+			dp[i + 1][j] = dp[i + 1][j] | dp[i][smod<T>(j - a[i], m)];
 		}
 	}
 
@@ -623,7 +586,7 @@ mint count_unlimited_partial_sum(const vi& a, ll v) {
 	// であり，分母が二項式の積であることを利用してボスタン-森法で高速に第 v 項を計算できる．
 
 	int n = sz(a);
-	vector<pair<int, mint>> dcs(n);
+	vector<pim> dcs(n);
 	rep(i, n) {
 		Assert(a[i] > 0);
 		dcs[i] = { a[i], -1 };
@@ -789,6 +752,29 @@ int count_signed_partial_sum(const vi& a, vm& cnt) {
 				cnt[j - MIN] += cnt[j - a[i] - MIN];
 			}
 		}
+	}
+
+	return MIN;
+}
+
+
+//【部分和問題（負値可，列挙）】O(n M / 64)
+/*
+* 整数列 a[0..n) の部分和として v を作れるかを ex[v - min(a)] に格納し，min(a) を返す．
+*/
+template <size_t M>
+int enumerate_signed_partial_sum(const vi& a, bitset<M>& ex) {
+	int n = sz(a);
+	int MIN = min(*min_element(all(a)), 0);
+
+	// ex_i[j - MIN] : a[0..i) の中で和がちょうど j になる部分集合があるか
+	ex.reset();
+	ex[0 - MIN] = 1; // 空和が 0 であることに対応
+
+	// インライン配る DP
+	rep(i, n) {
+		if (a[i] > 0)		ex |= ex << a[i];
+		else if (a[i] < 0)	ex |= ex >> (-a[i]);
 	}
 
 	return MIN;

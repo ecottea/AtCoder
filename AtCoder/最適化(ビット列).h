@@ -50,6 +50,7 @@ ll minimize_01distance_sum(const string& s, mint* cnt = nullptr, char one = '1')
 	// ('0','1') を (-1,1) に置き換えて累積和 acc を計算していく．
 	// 累積和 acc が負[正] のときは相手の居ない '0'['1'] が |acc| 個余っているので，
 	// もし '1'['0'] を見たらそれらからペアの相手を選択するのが一律で最善である．
+	// コストについては，s[i] を右に選んだら +i，左に選んだら -i とすれば別々で考えられる．
 
 	int n2 = sz(s);
 	if (cnt == nullptr) cnt = new mint;
@@ -78,7 +79,7 @@ ll minimize_01distance_sum(const string& s, mint* cnt = nullptr, char one = '1')
 
 //【隣接互換での 1 の連続】O(n log n)（n = popcount(s)）
 /*
-* ビット列 s[0..n) に対して隣接ビットの交換を k 回以下行えるとき，
+* ビット列 s[0..n) に対して隣接要素の交換を k 回以下行えるとき，
 * 連続させることのできる '1' の最大個数を返す．
 *
 * 利用：【めぐる式二分探索】

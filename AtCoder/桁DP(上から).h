@@ -408,7 +408,8 @@ mint sum_digit_sum_avoid0(const string& num, int m, int b = 10) {
 		//dump(i + 1, ":");
 		//rep(f, 4) {
 		//	dump("(lz, smaller) =", bitset<2>(f));
-		//	dump(dp[i + 1][f]);
+		//	dump("dp :", dp[i + 1][f]);
+		//	dump("cnt:", cnt[i + 1][f]);
 		//}
 	}
 

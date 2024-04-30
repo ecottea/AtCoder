@@ -45,3 +45,23 @@ int greedy_increasing_subsequence(const vector<T>& a) {
 }
 
 
+//yæÃ—~‘‰Á•”•ª—ñiL‹`jzO(n)
+/*
+* ”—ñ a[0..n) ‚Ì¶‚©‚ç‡‚ÉæÃ—~‚É‘I‚ñ‚¾‘‰Á•”•ª—ñ‚Ì’·‚³‚ğ•Ô‚·D
+*/
+template <class T>
+int weekly_greedy_increasing_subsequence(const vector<T>& a) {
+	int n = sz(a);
+
+	T v = numeric_limits<T>::lowest();
+	int len = 0;
+
+	rep(i, n) if (v <= a[i]) {
+		v = a[i];
+		len++;
+	}
+
+	return len;
+}
+
+

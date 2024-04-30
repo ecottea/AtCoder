@@ -25,7 +25,7 @@ using Graph = vvi;
 const double PI = acos(-1);
 const vi DX = { 1, 0, -1, 0 }; // 4 近傍（下，右，上，左）
 const vi DY = { 0, 1, 0, -1 };
-int INF = 1001001001; ll INFL = 4004004003104004004LL; // (int)INFL = 1010931620;
+int INF = 1001001001; ll INFL = 4004004003094073385LL; // (int)INFL = INF, (int)(-INFL) = -INF;
 
 // 入出力高速化
 struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout << fixed << setprecision(18); } } fastIOtmp;
@@ -36,7 +36,6 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define lbpos(a, x) (int)distance((a).begin(), std::lower_bound(all(a), x))
 #define ubpos(a, x) (int)distance((a).begin(), std::upper_bound(all(a), x))
 #define Yes(b) {cout << ((b) ? "Yes\n" : "No\n");}
-#define YES(b) {cout << ((b) ? "YES\n" : "NO\n");}
 #define rep(i, n) for(int i = 0, i##_len = int(n); i < i##_len; ++i) // 0 から n-1 まで昇順
 #define repi(i, s, t) for(int i = int(s), i##_end = int(t); i <= i##_end; ++i) // s から t まで昇順
 #define repir(i, s, t) for(int i = int(s), i##_end = int(t); i >= i##_end; --i) // s から t まで降順
@@ -45,16 +44,16 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repb(set, d) for(int set = 0, set##_ub = 1 << int(d); set < set##_ub; ++set) // d ビット全探索（昇順）
 #define repis(i, set) for(int i = lsb(set), bset##i = set; i >= 0; bset##i -= 1 << i, i = lsb(bset##i)) // set の全要素（昇順）
 #define repp(a) sort(all(a)); for(bool a##_perm = true; a##_perm; a##_perm = next_permutation(all(a))) // a の順列全て（昇順）
-#define smod(n, m) ((((n) % (m)) + (m)) % (m)) // 非負mod
 #define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
 #define EXIT(a) {cout << (a) << endl; exit(0);} // 強制終了
 #define inQ(x, y, u, l, d, r) ((u) <= (x) && (l) <= (y) && (x) < (d) && (y) < (r)) // 半開矩形内判定
 
 // 汎用関数の定義
-template <class T> inline ll pow(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; }
+template <class T> inline ll powi(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; } // 非負整数乗
 template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; return true; } return false; } // 最大値を更新（更新されたら true を返す）
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
-template <class T> inline T get(T set, int i) { return (set >> i) & T(1); }
+template <class T> inline T getb(T set, int i) { return (set >> i) & T(1); } // 第iビット
+template <class T> inline T smod(T n, T m) { n %= m; if (n < 0) n += m; return n; } // 非負mod
 
 // 演算子オーバーロード
 template <class T, class U> inline istream& operator>>(istream& is, pair<T, U>& p) { is >> p.first >> p.second; return is; }
@@ -81,7 +80,7 @@ namespace atcoder {
 	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
 	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
 }
-using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using vvvvm = vector<vvvm>;
+using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using vvvvm = vector<vvvm>; using pim = pair<int, mint>;
 #endif
 
 
@@ -92,6 +91,7 @@ inline int popcount(int n) { return __builtin_popcount(n); }
 inline int popcount(ll n) { return __builtin_popcountll(n); }
 inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
 inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
+template <size_t N> inline int lsb(const bitset<N>& b) { return b._Find_first(); }
 inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
 inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump(...)
@@ -100,9 +100,8 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump_mat(v)
 #define input_from_file(f)
 #define output_to_file(f)
-#define Assert(b) { if (!(b)) while (1) cout << "OLE"; }
+#define Assert(b) { if (!(b)) { string s; while (1) s += "MLE";} } // メモリ爆食いするが MLE ではなく TLE が出る．
 #endif
-
 
 
 // C++ の便利な機能
@@ -162,7 +161,7 @@ a.shrink_to_fit();
 // map を逆順で使う
 map<S, T, greater<S>>
 
-// 多倍長整数
+// 多倍長整数（入出力が O(n^2) なので注意！）
 #include <boost/multiprecision/cpp_int.hpp>
 using Bint = boost::multiprecision::cpp_int;
 Bint gcd(const Bint& x, const Bint& y) { return boost::math::gcd(x, y); }
@@ -170,13 +169,16 @@ Bint lcm(const Bint& x, const Bint& y) { return boost::math::lcm(x, y); }
 boost::swap ?
 boost::move ?
 
+// bitset で MSB 位置取得（gcc 限定）
+bitset._Find_first();
+
 // 時間計測して TLE 寸前に終了
 auto start = chrono::system_clock::now();
 auto now = chrono::system_clock::now();
 auto msec = chrono::duration_cast<chrono::milliseconds>(now - start).count();
 if (msec >= 1950) break;
 
-// いろいろ高速化
+// QCFium 法
 #pragma GCC target("avx2")
 #pragma GCC optimize("O3")
 #pragma GCC optimize("unroll-loops")
@@ -197,7 +199,7 @@ AtCoder → プロパティ → 構成プロパティ → C/C++ → 詳細設定 → 指定の警告を無効
 */
 
 
-// マルチテストケース 用の雛形
+// マルチテストケース用の雛形
 /* ----------------------------------------------------------------
 
 void Main() {
@@ -208,9 +210,8 @@ int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	int t;
+	int t = 1;
 	cin >> t; // マルチテストケースの場合
-//	t = 1;    // シングルテストケースの場合
 
 	while (t--) {
 		dump("------------------------------");
@@ -244,11 +245,11 @@ void bug_find() {
 #ifdef _MSC_VER
 	// 合わない入力例を見つける．
 
+	mute_dump = true;
+
 	mt19937_64 mt;
 	mt.seed((int)time(NULL));
 	uniform_int_distribution<ll> rnd(0LL, 1LL << 60);
-
-	mute_dump = true;
 
 	rep(hoge, 100) {
 		int n = rnd(mt) % 10 + 1;
@@ -274,6 +275,31 @@ void bug_find() {
 	exit(0);
 #endif
 }
+
+--------------------------------------------------------------- */
+
+
+// Mathematica での P-recursive 実験用
+/* -----------------------------------------------------------------
+
+Clear[c, nn, dpsub];
+seq = { 愚直に計算した a[1..] } (* 添字が 1 始まりなのに注意！ *);
+terms = 3 (* 何項間漸化式の存在を仮定するか *);
+degree = 2 (* 係数多項式の次数を何次未満と仮定するか *);
+eqs = Table[Sum[c[i, j] (nn - i)^j seq[[nn - i]], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0, {nn, terms, Length@seq}];
+fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}], Integers, 2][[1]]
+sol = Solve[Sum[c[i, j] (nn - i)^j dpsub[nn - i], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0 /. fi, dpsub[nn]][[1]]
+CForm@FullSimplify@sol[[1, 2]]
+
+時間がかかりすぎるようなら，fi の 1 行を以下の 2 行に置き換える：
+
+eqs = eqs~Join~{c[0, degree-1] == 1} (* 1 に固定する係数の位置は適宜調整する *);
+fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}]][[1]]
+
+コピペ後の整形では以下の関数を利用できる：
+
+auto dpsub = [&](const mint& x) { return dp[x.val()]; };
+auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; return res; };
 
 --------------------------------------------------------------- */
 
@@ -310,7 +336,6 @@ namespace atcoder {
 }
 
 -------------------------------------------------------------- - */
-
 
 
 // インタラクティブ問題のデバッグ用の雛形
@@ -354,3 +379,5 @@ struct Opponent {
 };
 
 --------------------------------------------------------------- */
+
+

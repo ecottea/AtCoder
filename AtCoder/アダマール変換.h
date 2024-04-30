@@ -52,8 +52,9 @@ void hadamard_inv(vector<T>& A) {
 			T x = A[set];
 			T y = A[set | (1 << i)];
 
-			A[set] = (x + y) / 2;
-			A[set + (1 << i)] = (x - y) / 2;
+			// オーバーフローの危険があるので都度 /2 しないといけない．
+			A[set] = (x + y) >> 1;
+			A[set + (1 << i)] = (x - y) >> 1;
 		}
 	}
 }

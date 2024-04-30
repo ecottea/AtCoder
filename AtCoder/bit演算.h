@@ -32,7 +32,7 @@
 
 //【x との XOR の和】
 /*
-* XOR_sum(vT a) : O(n log max(a))
+* XOR_sum<T>(vT a) : O(n log max(a))
 *	a[0..n) で初期化する．
 *
 * ll sum(T x) : O(log max(a))
@@ -40,28 +40,26 @@
 */
 template <class T>
 struct XOR_sum {
-	// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
-
 	int d;
 	vvi cnt;
 
 	// a[0..n) で初期化する．
 	XOR_sum(const vector<T>& a) {
+		// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
+		
 		T a_max = *max_element(all(a));
-		if (a_max > 0) d = msb((ll)a_max) + 1;
-		else d = 0;
+		d = msb((ll)a_max) + 1;
 
 		cnt = vvi(d, vi(2));
 
-		repe(v, a) {
-			rep(j, d) {
-				cnt[j][(v >> j) & 1]++;
-			}
-		}
+		repe(v, a) rep(j, d) cnt[j][(v >> j) & 1]++;
 	}
+	XOR_sum() : d(0) {}
 
 	// Σi=[0..n) a[i] XOR x の値を返す．
 	ll sum(T x) {
+		// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
+		
 		// ビット毎に独立に寄与を計算し和をとればよい．
 		ll res = 0;
 		rep(j, d) {
@@ -103,9 +101,35 @@ T acc_XOR(T n) {
 }
 
 
+//【等差数列の総 XOR】O((log(an+b))^2)
+/*
+* XOR_i∈[0..n) (a i + b) を返す．
+*
+* 利用：【一次式の切り捨て和】
+*/
+template <class T>
+T arithmetic_XOR(T n, T a, T b) {
+	// verify : https://mojacoder.app/users/Tonegawac/problems/linear-xor
+
+	//【方法】
+	// ビット毎に独立に寄与を計算する．
+	// 第 k ビットが 1 かどうかは，Σi∈[0..n) (a i + b) / 2^k の偶奇から判断できる．
+
+	int K = msb(a * (n - 1) + b);
+
+	T res = 0;
+	repi(k, 0, K) {
+		ll val = floor_sum_large(n, 1LL << k, a, b);
+		if (val & 1LL) res |= T(1) << k;
+	}
+
+	return res;
+}
+
+
 //【XOR 区間の分割】O(log max(r, c))
 /*
-* 集合 {x∈[0..∞) | l ≦ x XOR c < r} を O(log max(r, c)) 個の半開区間に分割し，そのリストを返す．
+* 集合 {x∈[0..∞) | l ≦ (x XOR c) < r} を O(log max(r, c)) 個の半開区間に分割し，そのリストを返す．
 */
 template <class T>
 vector<pair<T, T>> XOR_interval_division(T l, T r, T c) {
@@ -118,7 +142,7 @@ vector<pair<T, T>> XOR_interval_division(T l, T r, T c) {
 
 	vector<pair<T, T>> lrs; T val_l = 0, val_r = 0; bool eq = true;
 	repir(i, n, 0) {
-		T lb = get(l, i), rb = get(r, i), cb = get(c, i);
+		T lb = getb(l, i), rb = getb(r, i), cb = getb(c, i);
 
 		if (eq) {
 			if (lb != rb) eq = false;

@@ -259,3 +259,51 @@ S812 e812() { return 0; }
 *	(3 * 1) XOR (3 * 2) = 3 XOR 6 = 5
 */
 
+
+// ======================================================
+
+//【半環】
+/*
+* 環 (S, add, o, mul, e) の元を表す（add, mul は +, * をそれぞれオーバーロードする）
+*/
+template <class S, S(*add)(S, S), S(*o_)(), S(*mul)(S, S), S(*e_)()>
+struct Semiring {
+	// verify : https://atcoder.jp/contests/abc348/tasks/abc348_g
+
+	S v;
+
+	// 零元
+	static S o() { return o_(); }
+
+	// 単位元
+	static S e() { return e_(); }
+
+	// コンストラクタ
+	Semiring() : v(o()) {}
+	Semiring(S v) : v(v) {}
+
+	// キャスト
+	operator S() const { return v; }
+
+	// 比較
+	bool operator==(const Semiring& b) const { return v == b.v; }
+	bool operator!=(const Semiring& b) const { return v != b.v; }
+
+	// 二項演算
+	Semiring& operator+=(const Semiring& b) { v = add(v, b.v); return *this; }
+	Semiring& operator*=(const Semiring& b) { v = mul(v, b.v); return *this; }
+	friend Semiring operator+(Semiring a, const Semiring& b) { a += b; return a; }
+	friend Semiring operator*(Semiring a, const Semiring& b) { a *= b; return a; }
+
+	// 入出力
+	friend istream& operator>>(istream& is, Semiring& a) { is >> a.v; return is; }
+	friend ostream& operator<<(ostream& os, const Semiring& a) {
+#ifdef _MSC_VER
+		if (a.v == o()) return os << "o";
+		if (a.v == e()) return os << "e";
+#endif
+		return os << a.v;
+	}
+};
+
+

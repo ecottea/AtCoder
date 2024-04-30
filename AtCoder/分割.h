@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "FPS(mint).h"
+#include "SPS.h"
 // ■■■■■ 分割束のゼータ変換・メビウス変換 ■■■■■
 
 
@@ -24,7 +25,7 @@
 *		   条件 (i,j が π の同じブロックに属する ⇔ x[i]=x[j]) に変更したときの対象の個数
 * と定めたときの f(0) を求めることに相当する（0 は分割の最小元）
 * 
-* f を上位ゼータ変換した分割関数を g とすると，g は
+* f を上位分割ゼータ変換した分割関数を g とすると，g は
 *	g(π) = 条件 (x[0..N) の要素が互いに異なる) を
 *		   条件 (i,j が π の同じブロックに属する ⇒ x[i]=x[j]) に変更したときの対象の個数
 * と解釈できる．g(π) であればブロックごとに独立に考えやすくなる．
@@ -33,7 +34,7 @@
 */
 
 
-//【上位ゼータ変換】O(BellB(N)^2) （N=8 くらいまで動く）
+//【上位分割ゼータ変換】O(BellB(N)^2) （N=8 くらいまで動く）
 /*
 * [0..N) 上の分割関数 a[π] の上位分割からの累積和が
 *		b[π] = Σπ:ρの細分 a[ρ] （π:[0..N) の分割）
@@ -89,7 +90,7 @@ map<vvi, T> partition_superzeta(int N, const map<vvi, T>& a) {
 				rep(l2, L) if (l2 != l) np[l2] = p[l2];
 
 				rep(k, K) {
-					if (get(set, k)) np[l].push_back(p[l][k]);
+					if (getb(set, k)) np[l].push_back(p[l][k]);
 					else np[L].push_back(p[l][k]);
 				}
 
@@ -138,7 +139,7 @@ map<vvi, T> partition_superzeta(int N, const map<vvi, T>& a) {
 }
 
 
-//【上位メビウス変換】O(BellB(N)^2 N) （N=8 くらいまで動く）
+//【上位分割メビウス変換】O(BellB(N)^2 N) （N=8 くらいまで動く）
 /*
 * [0..N) 上の分割関数 a[π] の上位分割からの累積和が
 *		b[π] = Σπ:ρの細分 a[ρ] （π:[0..N) の分割）
@@ -204,7 +205,7 @@ map<vvi, T> partition_supermobius(int N, const map<vvi, T>& b) {
 				rep(l2, L) if (l2 != l) np[l2] = p[l2];
 
 				rep(k, K) {
-					if (get(set, k)) np[l].push_back(p[l][k]);
+					if (getb(set, k)) np[l].push_back(p[l][k]);
 					else np[L].push_back(p[l][k]);
 				}
 
@@ -272,7 +273,7 @@ map<vvi, T> partition_supermobius(int N, const map<vvi, T>& b) {
 }
 
 
-//【上位メビウス変換（最小元）】O(BellB(N) N) （N=12 くらいまで動く）
+//【上位分割メビウス変換（最小元）】O(BellB(N) N) （N=12 くらいまで動く）
 /*
 * [0..N) 上の分割関数 a(π) の上位分割からの累積和が
 *		b[π] = Σπ:ρの細分 a(ρ) （π:[0..N) の分割）
@@ -307,7 +308,7 @@ T partition_supermobius_bottom(const vector<pair<vvi, T>>& b) {
 }
 
 
-//【上位ゼータ変換（分割の型依存，最小元）】O(PartitionsP(N) N)
+//【上位分割ゼータ変換（分割の型依存，最小元）】O(PartitionsP(N) N)
 /*
 * [0..N) 上の分割関数 a(π) が π の型 ip(π) のみに依存する自然数分割関数を用いて
 *		a(π) = a[ip(π)]
@@ -341,7 +342,7 @@ mint partition_superzeta_type_bottom(const vector<pair<vi, mint>>& a, const Fact
 }
 
 
-//【上位メビウス変換（分割の型依存，最小元）】O(PartitionsP(N) N)
+//【上位分割メビウス変換（分割の型依存，最小元）】O(PartitionsP(N) N)
 /*
 * [0..N) 上の分割関数 a(π) の上位分割からの累積和
 *		b(π) = Σπ:ρの細分 a(ρ) （π:[0..n) の分割）
@@ -380,7 +381,7 @@ mint partition_supermobius_type_bottom(const vector<pair<vi, mint>>& b, const Fa
 }
 
 
-//【上位ゼータ変換（ブロック依存，最小元，mod 998244353）】O(2^N N^2)
+//【上位分割ゼータ変換（ブロック依存，最小元，mod 998244353）】O(2^N N^2)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック S のみに依存する集合関数 a[S] を用いて
 *		a(π) = ΠS:πのブロック a[S]
@@ -390,62 +391,11 @@ mint partition_supermobius_type_bottom(const vector<pair<vi, mint>>& b, const Fa
 *
 * 具体的には
 *		b(0) = Σπ:[0..N)の分割 ΠT:πのブロック a[T]
-* で表され，これは【下位ゼータ変換（ブロック依存）】の b[(1<<N)-1] で代用できる．
+* で表され，これは【下位分割ゼータ変換（ブロック依存）】の b[(1<<N)-1] で代用できる．
 */
 
 
-//【上位メビウス変換（ブロック依存，最小元）】O(3^N)
-/*
-* [0..N) 上の分割関数 a(π) の上位分割からの累積和
-*		b(π) = Σπ:ρの細分 a(ρ) （π:[0..n) の分割）
-* が π のブロック S のみに依存する集合関数 b[S] を用いて
-*		b(π) = ΠS:πのブロック b[S]
-* と書けるとする．0 を分割束の最小元としたとき，与えられた b[0..2^N) に対応する a(0) を返す．
-*
-* 具体的には
-*		a(0) = Σπ:[0..N)の分割 (-1)^(N-|π|) ΠT:πのブロック (|T|-1)! b[T]
-* で表される．
-*/
-template <class T>
-T partition_supermobius_block_bottom(const vector<T>& b) {
-	// verify : https://atcoder.jp/contests/abc236/tasks/abc236_h
-
-	//【方法】
-	// c[T] = -(|T|-1)! b[T] とおけば
-	//		a(0) = (-1)^N Σπ:[0..N)の分割 ΠT:πのブロック c[T]
-	// となる．これは SoS-bitDP で計算できる．
-
-	int N = msb(sz(b));
-
-	vector<T> fact(N + 1);
-	fact[0] = 1;
-	repi(i, 1, N) fact[i] = fact[i - 1] * i;
-
-	vector<T> c(1LL << N);
-	repi(set, 1, (1 << N) - 1) c[set] = -fact[popcount(set) - 1] * b[set];
-
-	vector<T> a(1LL << N);
-	a[0] = 1;
-
-	// SoS bit DP
-	repb(set, N) {
-		if (set == 0) continue;
-
-		// set1 : set から特定の要素 x を取り除いた集合
-		int set1 = (set - 1) & set;
-
-		// set の分割において x を含む部分集合 set-sub を全探索する．
-		// sub = {} は分割完了を意味する．
-		for (int sub = set1, tmp = 1; tmp > 0; tmp = sub, sub = (sub - 1) & set1) {
-			a[set] += a[sub] * c[set - sub];
-		}
-	}
-
-	return (N % 2 ? -1 : 1) * a[(1 << N) - 1];
-}
-
-
-//【上位メビウス変換（ブロック依存，最小元，mod 998244353）】O(2^N N^2)
+//【上位分割メビウス変換（ブロック依存，最小元）】O(2^N N^2)
 /*
 * [0..N) 上の分割関数 a(π) の上位分割からの累積和
 *		b(π) = Σπ:ρの細分 a(ρ) （π:[0..n) の分割）
@@ -459,36 +409,25 @@ T partition_supermobius_block_bottom(const vector<T>& b) {
 *
 * 制約：fm は (N+1)! まで計算可能
 *
-* 利用：【形式的冪級数】，【指数関数】
+* 利用：【SPS 指数関数】
 */
-mint partition_supermobius_block_bottom(const vm& b, const Factorial_mint& fm) {
+mint partition_supermobius_block_bottom(vm b, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc236/tasks/abc236_h
 
 	//【方法】
-	// -(|S|-1)! b[S] を改めて b[S] とし，exp 版の非交和畳込みを用いれば良い． 
+	// -(|S|-1)! b[S] を改めて b[S] とし，SPS 指数関数を用いれば良い． 
 
 	int N = msb(sz(b));
 
-	vector<MFPS> g(1LL << N);
-	repi(set, 1, (1 << N) - 1) {
-		int pc = popcount(set);
-		g[set] = -fm.fact(pc - 1) * b[set] * MFPS::monomial(pc);
-	}
+	repi(set, 1, (1 << N) - 1) b[set] *= -fm.fact(popcount(set) - 1);
 
-	// ゼータ変換（下位集合）
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] += g[set];
+	auto a = exp_sps(b);
 
-	vector<MFPS> f(1LL << N);
-	repb(set, N) f[set] = exp_fps(g[set], N + 1, fm);
-
-	// メビウス変換（下位集合）
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] -= f[set];
-
-	return (N % 2 ? -1 : 1) * f[(1 << N) - 1][N];
+	return (N % 2 ? -1 : 1) * a[(1 << N) - 1];
 }
 
 
-//【上位ゼータ変換（ブロック数依存）】O(N^2)
+//【上位分割ゼータ変換（ブロック数依存）】O(N^2)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック数 |π| のみに依存する関数を用いて
 *		a(π) = a[|π|]
@@ -523,7 +462,7 @@ vector<T> partition_superzeta_block_count(const vector<T>& a) {
 }
 
 
-//【上位メビウス変換（ブロック数依存）】O(N^2)
+//【上位分割メビウス変換（ブロック数依存）】O(N^2)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック数 |π| のみに依存する関数を用いて
 *		a(π) = a[|π|]
@@ -558,7 +497,7 @@ vector<T> partition_supermobius_block_count(const vector<T>& b) {
 }
 
 
-//【上位メビウス変換（ブロック数依存，最小元，mod 998244353）】O(N log N)
+//【上位分割メビウス変換（ブロック数依存，最小元，mod 998244353）】O(N log N)
 /*
 * [0..N) 上の分割関数 a(π) の上位分割からの累積和
 *		b(π) = Σπ:ρの細分 a(ρ) （π:[0..n) の分割）
@@ -570,16 +509,16 @@ vector<T> partition_supermobius_block_count(const vector<T>& b) {
 *		a(0) = Σk∈[0..n] (-1)^(n-k) S1(n,k) b[k] （S1 は符号なし第 1 種スターリング数）
 * で表される．
 *
-* 制約：fm は N 以上の最小の 2 冪までの階乗計算が可能であること（2N で良い）
+* 制約：fm は N! まで計算可能
 *
-* 利用：【下降階乗冪（符号付き第 1 種スターリング数）】
+* 利用：【一次式の積の展開（等差数列）】
 */
 mint partition_supermobius_block_count_bottom(const vm& b, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc278/tasks/abc278_h
 
 	int N = sz(b) - 1;
 
-	auto S1N = falling_factorial(N, fm);
+	auto S1N = expand_arithmetic(N, -1, 0, fm);
 
 	mint a0 = 0;
 	repi(k, 1, N) a0 += S1N[k] * b[k];
@@ -588,7 +527,7 @@ mint partition_supermobius_block_count_bottom(const vm& b, const Factorial_mint&
 }
 
 
-//【上位ゼータ変換（ブロックの大きさ依存，最小元，mod 998244353）】O(N log N)
+//【上位分割ゼータ変換（ブロックの大きさ依存，最小元，mod 998244353）】O(N log N)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック S の大きさ |S| のみに依存する a[|S|] を用いて
 *		a(π) = ΠS:πのブロック a[|S|]
@@ -599,11 +538,11 @@ mint partition_supermobius_block_count_bottom(const vm& b, const Factorial_mint&
 * 具体的には
 *		b(0) = Σλ:Nの分割 mul(N,λ)/(Πj c[j]!) Πi a[λ_i]
 *		（mul は多項係数，c[j] は λ に含まれる j の個数）
-* で表され，これは【下位ゼータ変換（ブロックの大きさ依存）】の b[N] で代用できる．
+* で表され，これは【下位分割ゼータ変換（ブロックの大きさ依存）】の b[N] で代用できる．
 */
 
 
-//【上位メビウス変換（ブロックの大きさ依存，最小元，mod 998244353）】O(N log N)
+//【上位分割メビウス変換（ブロックの大きさ依存，最小元，mod 998244353）】O(N log N)
 /*
 * [0..N) 上の分割関数 a(π) の上位分割からの累積和
 *		b(π) = Σπ:ρの細分 a(ρ) （π:[0..n) の分割）
@@ -639,7 +578,7 @@ mint partition_supermobius_block_size_bottom(const vm& b, const Factorial_mint& 
 }
 
 
-//【下位ゼータ変換】O(BellB(N)^2) （N=8 くらいまで動く）
+//【下位分割ゼータ変換】O(BellB(N)^2) （N=8 くらいまで動く）
 /*
 * [0..N) 上の分割関数 a[π] の下位分割からの累積和が
 *		b[π] = Σρ:πの細分 a[ρ] （π:[0..N) の分割）
@@ -695,7 +634,7 @@ map<vvi, T> partition_subzeta(int N, const map<vvi, T>& a) {
 				rep(l2, L) if (l2 != l) np[l2] = p[l2];
 
 				rep(k, K) {
-					if (get(set, k)) np[l].push_back(p[l][k]);
+					if (getb(set, k)) np[l].push_back(p[l][k]);
 					else np[L].push_back(p[l][k]);
 				}
 
@@ -744,7 +683,7 @@ map<vvi, T> partition_subzeta(int N, const map<vvi, T>& a) {
 }
 
 
-//【下位メビウス変換】O(BellB(N)^2 N) （N=8 くらいまで動く）
+//【下位分割メビウス変換】O(BellB(N)^2 N) （N=8 くらいまで動く）
 /*
 * [0..N) 上の分割関数 a[π] の下位分割からの累積和が
 *		b[π] = Σρ:πの細分 a[ρ] （π:[0..N) の分割）
@@ -810,7 +749,7 @@ map<vvi, T> partition_submobius(int N, const map<vvi, T>& b) {
 				rep(l2, L) if (l2 != l) np[l2] = p[l2];
 
 				rep(k, K) {
-					if (get(set, k)) np[l].push_back(p[l][k]);
+					if (getb(set, k)) np[l].push_back(p[l][k]);
 					else np[L].push_back(p[l][k]);
 				}
 
@@ -878,7 +817,7 @@ map<vvi, T> partition_submobius(int N, const map<vvi, T>& b) {
 }
 
 
-//【下位ゼータ変換（ブロック依存，mod 998244353）】O(2^N N^2)
+//【下位分割ゼータ変換（ブロック依存）】O(2^N N^2)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック S のみに依存する集合関数 a[S] を用いて
 *		a(π) = ΠS:πのブロック a[S]
@@ -886,49 +825,18 @@ map<vvi, T> partition_submobius(int N, const map<vvi, T>& b) {
 *		b(π) = Σρ:πの細分 a(ρ) （π:[0..n) の分割）
 * もまた集合関数 b[S] を用いて
 *		b(π) = ΠS:πのブロック b[S]
-* と書ける．与えられた a[0..2^N) に対応する b[0..2^N) を返す．
+* と書ける．
+* 
+* 与えられた a[0] = 0 なる a[0..2^N) に対応する b[0..2^N) は，
+* SPS.h の【SPS 指数関数】を用いて b = exp(a) として求められる．
 *
-* 具体的には
+* なお，具体的には
 *		b[S] = Σπ:{S}の細分 ΠT:πのブロック a[T]
 * で表される．
-*
-* 制約：a[0] = 0, fm は (2(N+1))! まで計算可能
-*
-* 利用：【形式的冪級数】，【指数関数】
-* 
-*（集合冪級数の exp）
 */
-vm partition_subzeta_block(const vm& a, const Factorial_mint& fm) {
-	// 参考 : https://atcoder.jp/contests/abc236/editorial/3910
-
-	//【方法】
-	// 集合関数同士の非交和畳込みを * で表すと，
-	//		b = (1/1!)a + (1/2!)a*a + (1/3!)a*a*a + ... =: exp(a) 
-	// となる．非交和畳込みは FPS の積についての和集合畳込みで計算していたが，
-	// その代わりに FPS の exp を用いれば良い．
-
-	int N = msb(sz(a));
-
-	vector<MFPS> f(1LL << N);
-	repb(set, N) f[set] = a[set] * MFPS::monomial(popcount(set));
-
-	// ゼータ変換（下位集合）
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] += f[set];
-
-	vector<MFPS> g(1LL << N);
-	repb(set, N) g[set] = exp_fps(f[set], N + 1, fm);
-
-	// メビウス変換（下位集合）
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] -= g[set];
-
-	vm b(1LL << N);
-	repb(set, N) b[set] = g[set][popcount(set)];
-
-	return b;
-}
 
 
-//【下位メビウス変換（ブロック依存，mod 998244353）】O(2^N N^2)
+//【下位分割メビウス変換（ブロック依存）】O(2^N N^2)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック S のみに依存する集合関数 a[S] を用いて
 *		a(π) = ΠS:πのブロック a[S]
@@ -936,49 +844,18 @@ vm partition_subzeta_block(const vm& a, const Factorial_mint& fm) {
 *		b(π) = Σρ:πの細分 a(ρ) （π:[0..n) の分割）
 * もまた集合関数 b[S] を用いて
 *		b(π) = ΠS:πのブロック b[S]
-* と書ける．与えられた b[0..2^N) に対応する a[0..2^N) を返す．
+* と書ける．
+*
+* 与えられた b[0] = 1 なる b[0..2^N) に対応する a[0..2^N) は，
+* SPS.h の【SPS 対数関数】を用いて a = log(b) として求められる．
 *
 * 具体的には
 *		a[S] = Σπ:{S}の細分 (-1)^(|π|-1) (|π|-1)! ΠT:πのブロック b[T]
 * で表される．
-*
-* 制約：b[0] = 1, fm は (2(N+1))! まで計算可能
-*
-* 利用：【形式的冪級数】，【対数関数】
-* 
-*（集合冪級数の log）
 */
-vm partition_submobius_block(const vm& b, const Factorial_mint& fm) {
-	// verify : https://atcoder.jp/contests/abc321/tasks/abc321_g
-
-	//【方法】
-	// 集合関数同士の非交和畳込みを * で表すと，
-	//		b = (1/1!)a + (1/2!)a*a + (1/3!)a*a*a + ... =: exp(a) 
-	// となるので，a = log(b) である．非交和畳込みは FPS の積についての和集合畳込みで計算していたが，
-	// その代わりに FPS の log を用いれば良い．
-
-	int N = msb(sz(b));
-
-	vector<MFPS> g(1LL << N);
-	repb(set, N) g[set] = b[set] * MFPS::monomial(popcount(set));
-
-	// ゼータ変換（下位集合）
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] += g[set];
-
-	vector<MFPS> f(1LL << N);
-	repb(set, N) f[set] = log_fps(g[set], N + 1, fm);
-
-	// メビウス変換（下位集合）
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] -= f[set];
-
-	vm a(1LL << N);
-	repb(set, N) a[set] = f[set][popcount(set)];
-
-	return a;
-}
 
 
-//【下位ゼータ変換（ブロックの大きさ依存，mod 998244353）】O(N log N)
+//【下位分割ゼータ変換（ブロックの大きさ依存，mod 998244353）】O(N log N)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック S の大きさ |S| のみに依存する関数 a[|S|] を用いて
 *		a(π) = ΠS:πのブロック a[|S|]
@@ -1019,7 +896,7 @@ vm partition_subzeta_block_size(const vm& a, const Factorial_mint& fm) {
 }
 
 
-//【下位メビウス変換（ブロックの大きさ依存，mod 998244353）】O(N log N)
+//【下位分割メビウス変換（ブロックの大きさ依存，mod 998244353）】O(N log N)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック S の大きさ |S| のみに依存する関数 a[|S|] を用いて
 *		a(π) = ΠS:πのブロック a[|S|]
@@ -1060,7 +937,7 @@ vm partition_submobius_block_size(const vm& b, const Factorial_mint& fm) {
 }
 
 
-//【下位ゼータ変換（ブロック数依存，最大元，mod 998244353）】O(N log N)
+//【下位分割ゼータ変換（ブロック数依存，最大元，mod 998244353）】O(N log N)
 /*
 * [0..N) 上の分割関数 a(π) が π のブロック数 |π| のみに依存して
 *		a(π) = a[|π|]
@@ -1098,7 +975,7 @@ mint partition_subzeta_block_count_top(const vm& a, const Factorial_mint& fm) {
 }
 
 
-//【下位メビウス変換（ブロック数依存，最大元，mod 998244353）】O(N log N)
+//【下位分割メビウス変換（ブロック数依存，最大元，mod 998244353）】O(N log N)
 /*
 * [0..N) 上の分割関数 a(π) の下位分割からの累積和
 *		b(π) = Σρ:πの細分 a(ρ) （π:[0..n) の分割）

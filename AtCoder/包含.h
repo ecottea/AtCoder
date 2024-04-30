@@ -281,7 +281,7 @@ void set_subzeta(vector<T>& f) {
 	int N = msb(n - 1) + 1;
 
 	// n が 2 冪でなくても [0..n) の範囲では正しく計算できる．
-	rep(i, N) rep(set, n) if (get(set, i)) f[set] += f[set - (1 << i)];
+	rep(i, N) rep(set, n) if (getb(set, i)) f[set] += f[set - (1 << i)];
 }
 
 
@@ -491,68 +491,8 @@ vector<T> distinct_subset_or_max_convolution(const vector<T>& f) {
 
 //【非交和畳込み】O(2^N N^2)
 /*
-* 与えられた [0..N) 上の集合関数 f, g に対して
-*       h[S] = Σ_(T凵U = S) f[T] g[U] （凵 は非交和）
-* なる h[0..2^N) を返す．
+* SPS.h の【SPS 積】を用いれば良い．
 */
-template <class T>
-vector<T> disjoint_union_convolution(const vector<T>& f, const vector<T>& g) {
-	// 参考 : https://37zigen.com/subset-convolution/
-	// verify : https://judge.yosupo.jp/problem/subset_convolution
-
-	//【方法】
-	// f[set] を多項式 f[set] z^|set| に対応させ，多項式として和集合畳込みを行うと，
-	//		h[S](z) = Σ_(T∪U = S) f[T](z) g[U](z)
-	// なる h が得られる．T∪U = S が非交和でないとき，
-	//		[z^|S|] f[T](z) g[U](z)
-	//		= [z^|S|] f[T] z^|T| g[U] z^|U|
-	//		= [z^|S|] f[T] g[U] z^(|T| + |U|)
-	//		= 0 （|T| + |U| > |S| より）
-	// となるので，
-	//		[z^|S|] h[S](z)
-	//		= [z^|S|] Σ_(T凵U = S) f[T](z) g[U](z)
-	//		= Σ_(T凵U = S) f[T] g[U]
-	// が成り立つ．
-
-	int N = msb(sz(f));
-
-	// f, g にランク（集合の要素数）の情報を付加する．
-	vector<vector<T>> f2(1LL << N, vector<T>(N + 1)), g2(1LL << N, vector<T>(N + 1));
-	repb(set, N) {
-		int r = popcount(set);
-		f2[set][r] = f[set];
-		g2[set][r] = g[set];
-	}
-	
-	// f のランク付き下位ゼータ変換
-	rep(i, N) repb(set, N) repi(r, 0, N) {
-		if (!(set & (1 << i))) f2[set + (1 << i)][r] += f2[set][r];
-	}
-
-	// g のランク付き下位ゼータ変換
-	rep(i, N) repb(set, N) repi(r, 0, N) {
-		if (!(set & (1 << i))) g2[set + (1 << i)][r] += g2[set][r];
-	}
-	
-	// 各点積 h = f * g（ただしランクが N より大きい項は無視する）
-	vector<vector<T>> h2(1LL << N, vector<T>(N + 1));
-	repb(set, N) {
-		// f2[set] と g2[set] の畳込み積
-		repi(r, 0, N) repi(rf, 0, r) h2[set][r] += f2[set][rf] * g2[set][r - rf];
-	}
-
-	// h のランク付き下位メビウス変換
-	rep(i, N) repb(set, N) repi(r, 0, N) {
-		if (!(set & (1 << i))) h2[set + (1 << i)][r] -= h2[set][r];
-	}
-	
-	// 非交和でなかったところは集合の要素数よりランクが大きくなっているので，
-	// 集合の要素数とランクが一致している項だけを抜き出す．
-	vector<T> h(1LL << N);
-	repb(set, N) h[set] = h2[set][popcount(set)];
-
-	return h;
-}
 
 
 //【集合の高速ゼータ／メビウス変換と行列のクロネッカー積】

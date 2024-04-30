@@ -177,7 +177,7 @@ void topological_bfs(const Graph& g, const vi& st, vi& time) {
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
 template <class G>
-vi depth_first_search(G& g, int st) {
+vi depth_first_search(const G& g, int st) {
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_d
 
 	int n = sz(g);

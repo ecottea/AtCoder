@@ -58,7 +58,7 @@ mint count_permutation_type(const vi& p, const Factorial_mint& fm) {
 *
 * 利用：【自然数の分割の列挙（値が k 以下）】,【置換の数え上げ（型指定）】
 */
-vector<pair<int, mint>> permutation_order_distribution(int n, const Factorial_mint& fm) {
+vector<pim> permutation_order_distribution(int n, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc226/tasks/abc226_f
 
 	auto ips = integer_partitions_val(n, n);
@@ -75,7 +75,7 @@ vector<pair<int, mint>> permutation_order_distribution(int n, const Factorial_mi
 		d_to_c[d] += c;
 	}
 
-	vector<pair<int, mint>> res;
+	vector<pim> res;
 	for (auto& [d, c] : d_to_c) res.emplace_back(d, c);
 
 	return res;
@@ -86,20 +86,17 @@ vector<pair<int, mint>> permutation_order_distribution(int n, const Factorial_mi
 /*
 * Z/nZ に位数 d の元が c 個あるとし，{d, c} を昇順に並べたリストを返す．
 *
-* 利用：【約数倍数変換（添字約数制限）】,【素因数と約数の列挙】
+* 利用：【約数倍数変換（添字約数制限）】
 */
 vector<pll> order_distribution(ll n) {
 	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
 
-	vl ps, divs;
-	primefactors_and_divisors(n, ps, divs);
-
-	Limited_div_mul_transform<ll> dmt(ps, divs);
+	Limited_div_mul_transform<ll> D(n);
 
 	unordered_map<ll, ll> cnt;
-	repe(d, divs) cnt[d] = d;
+	repe(d, D.divs) cnt[d] = d;
 
-	dmt.multiple_mobius(cnt);
+	D.multiple_mobius(cnt);
 
 	vector<pll> res;
 	for (auto& [d, c] : cnt) res.emplace_back(d, c);
@@ -147,17 +144,17 @@ vector<pll> order_distribution(ll n) {
 
 //【置換 → 巡回置換の積】
 /*
-* 順列.h の【置換のサイクル分解】を利用すればよい．
+* 順列.h へ
 */
 
 
 //【置換 → 隣接互換の積】
 /*
-* ソート.h の【バブルソート】を改変すればよい．
+* 順列.h へ
 */
 
 
-//【巡回置換 → 隣接互換の積】
+//【巡回置換 → 互換の積】
 /*
 * (12...n) = (12)(23)...(n-1 n) を用いれば良い．
 */

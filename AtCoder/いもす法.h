@@ -7,17 +7,17 @@
 //【いもす法】
 /*
 * Imos<T>(int n) : O(n)
-*	半開区間 [0..n) を 0 で初期化する．
+*	a[0..n) = 0 で初期化する．
 *
-* set(int l, int r, T val) : O(1)
-*	半開区間 [l..r) に val を加算する準備を行う．
+* add(int l, int r, T val) : O(1)
+*	a[l..r) += val とする準備を行う．
 *
-* void sum() : O(n)
+* void execute() : O(n)
 *	実際の加算を行う．
 *
 * T [](int i) : O(1)
-*	加算後の位置 i の値を得る．
-*	制約 : 先に sum() を呼び出すこと．
+*	a[i] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 */
 template <class T>
 class Imos {
@@ -25,9 +25,10 @@ class Imos {
 
 	int n;
 	vector<T> v;
+	bool ex = false;
 
 public:
-	// [0, n) 上の a を 0 で初期化する．
+	// a[0..n) = 0 で初期化する．
 	Imos(int n) : n(n), v(n + 1) {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_g
 	}
@@ -37,8 +38,8 @@ public:
 	inline T const& operator[](int i) const { return v[i]; }
 	inline T& operator[](int i) { return v[i]; }
 
-	// 半開区間 [l..r) に val を加算する準備を行う．
-	void set(int l, int r, T val) {
+	// a[l..r) += val とする準備を行う．
+	void add(int l, int r, T val) {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_g
 
 		chmax(l, 0);
@@ -50,16 +51,17 @@ public:
 	}
 
 	// 実際の加算を行う．
-	void sum() {
+	void execute() {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_g
 
 		rep(i, n) v[i + 1] += v[i];
+		ex = true;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Imos& imos) {
-		rep(i, imos.n) os << imos[i] << " ";
-		os << endl;
+	friend ostream& operator<<(ostream& os, Imos a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
 		return os;
 	}
 #endif
@@ -71,20 +73,21 @@ public:
 * Thinning_imos<T>(int n, int m) : O(n + m)
 *	法を m とし，a[0..n) = 0 で初期化する．
 *
-* set(int l, int r, int k, T val) : O(1)
+* add(int l, int r, int k, T val) : O(1)
 *	S = {i∈[l..r) | i=k (mod m)} とし a[S] += val とする準備を行う．
 *
-* void sum() : O(n)
+* void execute() : O(n)
 *	実際の加算を行う．
 *
 * T [](int i) : O(1)
-*	加算後の a[i] を返す．
-*	制約 : sum() の後に呼び出さなければならない．
+*	a[i] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 */
 template <class T>
 class Thinning_imos {
 	int n, m;
 	vector<T> v;
+	bool ex = false;
 
 public:
 	// 法を m とし，a[0..n) = 0 で初期化する．
@@ -98,7 +101,7 @@ public:
 	inline T& operator[](int i) { return v[i]; }
 
 	// S = {i∈[l..r) | i=k (mod m)} とし a[S] += val とする準備を行う．
-	void set(int l, int r, int k, T val) {
+	void add(int l, int r, int k, T val) {
 		// verify : https://yukicoder.me/problems/no/2359
 
 		chmax(l, 0); chmin(r, n);
@@ -111,15 +114,17 @@ public:
 	}
 
 	// 実際の加算を行う．
-	void sum() {
+	void execute() {
 		// verify : https://yukicoder.me/problems/no/2359
 
 		rep(i, n) v[i + m] += v[i];
+		ex = true;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Thinning_imos& imos) {
-		rep(i, imos.n) os << imos[i] << " ";
+	friend ostream& operator<<(ostream& os, Thinning_imos a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
 		return os;
 	}
 #endif
@@ -128,27 +133,29 @@ public:
 
 //【二次元いもす法（長方形）】
 /*
-* Imos_2D(int h, int w) : O(h w)
-*	[0..h)×[0..w) を 0 で初期化する．
+* Imos_2D<T>(int h, int w) : O(h w)
+*	a[0..h)[0..w) = 0 で初期化する．
 *
-* set(int x1, int x2, int y1, int y2, T val) : O(1)
-*	[x1..x2)×[y1..y2) に val を加算する準備を行う．
+* add(int x1, int x2, int y1, int y2, T val) : O(1)
+*	a[x1..x2)[y1..y2) += val とする準備を行う．
 *
-* sum() : O(h w)
+* execute() : O(h w)
 *	実際に加算を行う．
 *
 * T [][](int i, int j) : O(1)
-*	加算後の位置 (i, j) の値を得る．
-*	制約 : 先に sum() を呼び出すこと．
+*	a[i][j] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 */
 template <class T>
-struct Imos_2D {
+class Imos_2D {
 	// 参考：https://imoz.jp/algorithms/imos_method.html
 
 	int h, w;
 	vector<vector<T>> v;
+	bool ex = false;
 
-	// [0, h)×[0, w) を 0 で初期化する．
+public:
+	// a[0..h)[0..w) = 0 で初期化する．
 	Imos_2D(int h_, int w_) : h(h_), w(w_), v(h + 1, vector<T>(w + 1)) {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_i
 	}
@@ -158,8 +165,8 @@ struct Imos_2D {
 	inline vector<T> const& operator[](int i) const { return v[i]; }
 	inline vector<T>& operator[](int i) { return v[i]; }
 
-	// [x1, x2)×[y1, y2) に val を加算する準備を行う．O(1)
-	void set(int x1, int x2, int y1, int y2, T val) {
+	// a[x1..x2)[y1..y2) += val とする準備を行う．
+	void add(int x1, int x2, int y1, int y2, T val) {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_i
 
 		v[x1][y1] += val;
@@ -168,20 +175,19 @@ struct Imos_2D {
 		v[x2][y2] += val;
 	}
 
-	// 実際の加算を行う．O(h w)
-	void sum() {
+	// 実際の加算を行う．
+	void execute() {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_i
 
 		repi(i, 1, h) repi(j, 0, w) v[i][j] += v[i - 1][j];
 		repi(i, 0, h) repi(j, 1, w) v[i][j] += v[i][j - 1];
+		ex = true;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Imos_2D& imos) {
-		rep(i, imos.h) {
-			rep(j, imos.w) os << imos[i][j] << " ";
-			os << endl;
-		}
+	friend ostream& operator<<(ostream& os, Imos_2D a) {
+		if (!a.ex) a.execute();
+		rep(i, a.h) rep(j, a.w) os << a[i][j] << " \n"[j == a.w - 1];
 		return os;
 	}
 #endif
@@ -191,34 +197,36 @@ struct Imos_2D {
 //【二次元いもす法（長方形，三角形）】
 /*
 * Imos_2D_tri<T>(int h, int w) : O(h w)
-*	[0..h)×[0..w) を 0 で初期化する．
+*	a[0..h)[0..w) = 0 で初期化する．
 *
-* set_rect(int x1, int x2, int y1, int y2, T val) : O(1)
-*	[x1..x2]×[y1..y2] に val を加算する準備を行う．
+* add_rect(int x1, int x2, int y1, int y2, T val) : O(1)
+*	a[x1..x2)[y1..y2) += val とする準備を行う．
 *
-* set_tri(int x, int y, int d, T val) : O(1)
-*	[x..x+d]×[y..y+d] の対角線以下に val を加算する準備を行う．
+* add_tri(int x, int y, int d, T val) : O(1)
+*	a[x..x+d][y..y+d] の対角線以下に val を加算する準備を行う．
 *
-* sum() : O(h w)
+* execute() : O(h w)
 *	実際に加算を行う．
 *
 * T [][](int i, int j) : O(1)
-*	加算後の位置 (i, j) の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
+*	a[i][j] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 *
 * pii size() : O(1)
 *	(高さ, 幅) を返す．
 */
 template <class T>
-struct Imos_2D_tri {
-	// 参考：https://imoz.jp/algorithms/imos_method.html
+class Imos_2D_tri {
+	// 参考 : https://imoz.jp/algorithms/imos_method.html
 
 	using vT = vector<T>; using vvT = vector<vT>;
 
 	int h, w;
 	vvT v;
+	bool ex = false;
 
-	// [0, h)×[0, w) を 0 で初期化する．
+public:
+	// a[0..h)[0..w) = 0 で初期化する．
 	Imos_2D_tri(int h_, int w_) : h(h_), w(w_), v(h + 2, vT(w + 2)) {}
 	Imos_2D_tri() : h(0), w(0) {}
 
@@ -229,8 +237,8 @@ struct Imos_2D_tri {
 	// (高さ, 幅) を返す．
 	pii size() const { return make_pair(h, w); }
 
-	// 長方形 [x1, x2]×[y1, y2] に val を加算する準備を行う．O(1)
-	void set_rect(int x1, int x2, int y1, int y2, T val) {
+	// a[x1..x2)[y1..y2) += val とする準備を行う．
+	void add_rect(int x1, int x2, int y1, int y2, T val) {
 		// 左上の角
 		v[x1][y1] += val;
 		v[x1 + 1][y1 + 1] -= val;
@@ -248,8 +256,8 @@ struct Imos_2D_tri {
 		v[x2 + 2][y2 + 2] -= val;
 	}
 
-	// 正方形 [x, y]×[x + d, y + d] の対角線以下に val を加算する準備を行う．O(1)
-	void set_tri(int x, int y, int d, T val) {
+	// a[x..x+d][y..y+d] の対角線以下に val を加算する準備を行う．
+	void add_tri(int x, int y, int d, T val) {
 		// verify : https://atcoder.jp/contests/joi2012ho/tasks/joi2012ho4
 
 		// 左上の角
@@ -266,7 +274,7 @@ struct Imos_2D_tri {
 	}
 
 	// 実際の加算を行う．O(h w)
-	void sum() {
+	void execute() {
 		// verify : https://atcoder.jp/contests/joi2012ho/tasks/joi2012ho4
 
 		// 下方向への累積和
@@ -275,20 +283,16 @@ struct Imos_2D_tri {
 		// 右方向への累積和
 		repi(i, 0, h) repi(j, 1, w) v[i][j] += v[i][j - 1];
 
-		// 右下がり方向への累積和
+		// 右下がりの斜め方向への累積和
 		repi(i, 1, h) repi(j, 1, w) v[i][j] += v[i - 1][j - 1];
 
-		// 不要な部分の削除
-		v.resize(h);
-		rep(i, h) v[i].resize(w);
+		ex = true;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Imos_2D_tri imos) {
-		rep(i, imos.size().first) {
-			rep(j, imos.size().second) os << imos[i][j] << " ";
-			os << endl;
-		}
+	friend ostream& operator<<(ostream& os, Imos_2D_tri a) {
+		if (!a.ex) a.execute();
+		rep(i, a.h) rep(j, a.w) os << a[i][j] << " \n"[j == a.w - 1];
 		return os;
 	}
 #endif
@@ -298,36 +302,39 @@ struct Imos_2D_tri {
 //【三次元いもす法（直方体）】
 /*
 * Imos_3D(int h, int w, int d) : O(h w d)
-*	[0..h)×[0..w)×[0..d) を 0 で初期化する．
+*	a[0..h)[0..w)[0..d) = 0 で初期化する．
 *
-* set(int x1, int x2, int y1, int y2, int z1, int z2, T val) : O(1)
-*	[x1..x2)×[y1..y2)×[z1..z2) に val を加算する準備を行う．
+* add(int x1, int x2, int y1, int y2, int z1, int z2, T val) : O(1)
+*	a[x1..x2)[y1..y2)[z1..z2) += val とする準備を行う．
 *
-* sum() : O(h w d)
+* execute() : O(h w d)
 *	実際に加算を行う．
 *
 * T [][][](int i, int j, int k) : O(1)
-*	加算後の位置 (i, j, k) の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
+*	a[i][j][k] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 */
 template <class T>
-struct Imos_3D {
+class Imos_3D {
 	// verify : https://atcoder.jp/contests/joi2013yo/tasks/joi2013yo_e
-	
-	int h, w, d;
-	vector<vector<vector<T>>> v;
 
-	// [0..h)×[0..w)×[0..d) を 0 で初期化する．
-	Imos_3D(int h_, int w_, int d_) : h(h_), w(w_), d(d_),
-		v(h + 1, vector<vector<T>>(w + 1, vector<T>(d + 1))) {}
+	using vT = vector<T>; using vvT = vector<vT>; using vvvT = vector<vvT>;
+
+	int h, w, d;
+	vvvT v;
+	bool ex = false;
+
+public:
+	// a[0..h)[0..w)[0..d) = 0 で初期化する．
+	Imos_3D(int h_, int w_, int d_) : h(h_), w(w_), d(d_), v(h + 1, vvT(w + 1, vT(d + 1))) {}
 	Imos_3D() : h(0), w(0), d(0) {}
 
 	// アクセス
-	inline vector<vector<T>> const& operator[](int i) const { return v[i]; }
-	inline vector<vector<T>>& operator[](int i) { return v[i]; }
+	inline vvT const& operator[](int i) const { return v[i]; }
+	inline vvT& operator[](int i) { return v[i]; }
 
-	// [x1..x2)×[y1..y2)×[z1..z2) に val を加算する準備を行う．O(1)
-	void set(int x1, int x2, int y1, int y2, int z1, int z2, T val) {
+	// a[x1..x2)[y1..y2)[z1..z2) += val とする準備を行う．
+	void add(int x1, int x2, int y1, int y2, int z1, int z2, T val) {
 		v[x1][y1][z1] += val;
 		v[x1][y1][z2] -= val;
 		v[x1][y2][z1] -= val;
@@ -339,36 +346,20 @@ struct Imos_3D {
 	}
 
 	// 実際の加算を行う．O(h w d)
-	void sum() {
-		repi(i, 1, h) {
-			repi(j, 0, w) {
-				repi(k, 0, d) {
-					v[i][j][k] += v[i - 1][j][k];
-				}
-			}
-		}
-		repi(i, 0, h) {
-			repi(j, 1, w) {
-				repi(k, 0, d) {
-					v[i][j][k] += v[i][j - 1][k];
-				}
-			}
-		}
-		repi(i, 0, h) {
-			repi(j, 0, w) {
-				repi(k, 1, d) {
-					v[i][j][k] += v[i][j][k - 1];
-				}
-			}
-		}
+	void execute() {
+		repi(i, 1, h) repi(j, 0, w) repi(k, 0, d) v[i][j][k] += v[i - 1][j][k];
+		repi(i, 0, h) repi(j, 1, w) repi(k, 0, d) v[i][j][k] += v[i][j - 1][k];
+		repi(i, 0, h) repi(j, 0, w) repi(k, 1, d) v[i][j][k] += v[i][j][k - 1];
+		ex = true;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Imos_3D& imos) {
-		rep(i, imos.h) {
-			rep(j, imos.w) {
-				rep(k, imos.d) {
-					os << imos[i][j] << " ";
+	friend ostream& operator<<(ostream& os, Imos_3D a) {
+		if (!a.ex) a.execute();
+		rep(i, a.h) {
+			rep(j, a.w) {
+				rep(k, a.d) {
+					os << a[i][j][k] << " ";
 				}
 				os << endl;
 			}
@@ -377,39 +368,43 @@ struct Imos_3D {
 		return os;
 	}
 #endif
-}; 
+};
 
 
-//【線形いもす法】
+//【線形加重いもす法】
 /*
 * Linear_imos<T>(int n) : O(n)
-*	半開区間 [0..n) を 0 で初期化する．
+*	v[0..n) = 0 で初期化する．
 *
-* set(int l, int r, T a, T b) : O(1)
-*	i∈[l..r) に a i + b を一括加算する準備を行う．
+* add(int l, int r, T a, T b) : O(1)
+*	v[l..r) に v[i] += a i + b とする準備を行う．
 *
-* set_right(int l, int r, T w0, T w1) : O(1)
-*	[l..r) に昇順に等差数列 v0, v1, ... を一括加算する準備を行う．
+* add_right(ll l, ll r, T w0, T w1) : O(1)
+*	v[l..r) に昇順に等差数列 w0, w1, ... を加算する準備を行う．
 *
-* set_left(int r, int l, T w0, T w1) : O(1)
-*	(l..r] に降順に等差数列 v0, v1, ... を一括加算する準備を行う．
+* add_left(ll r, ll l, T w0, T w1) : O(1)
+*	v(l..r] に降順に等差数列 w0, w1, ... を加算する準備を行う．
 *
-* void sum() : O(n)
+* void execute() : O(n)
 *	実際の加算を行う．
 *
 * T [](int i) : O(1)
-*	加算後の位置 i の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
+*	v[i] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 */
 template <class T>
 class Linear_imos {
 	int n;
-	vector<vector<T>> v; // v[t] : 添字の t 次の係数
+	array<vector<T>, 2> v; // v[t] : 添字の t 次の係数
+	bool ex = false;
 
 public:
-	// [0, n) 上の a を 0 で初期化する．
-	Linear_imos(int n_) : n(n_), v(2, vector<T>(n + 1)) {
+	// v[0..n) = 0 で初期化する．
+	Linear_imos(int n) : n(n) {
 		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
+
+		v[0].assign(n + 1, 0);
+		v[1].assign(n + 1, 0);
 	}
 	Linear_imos() : n(0) {}
 
@@ -417,9 +412,9 @@ public:
 	inline T const& operator[](int i) const { return v[0][i]; }
 	inline T& operator[](int i) { return v[0][i]; }
 
-	// i∈[l, r) に a i + b を一括加算する準備を行う．
-	void set(int l, int r, T a, T b) {
-		chmax(l, 0);  chmin(r, n);
+	// v[l..r) に v[i] += a i + b とする準備を行う．
+	void add(int l, int r, T a, T b) {
+		chmax(l, 0); chmin(r, n);
 		if (l >= r) return;
 
 		v[0][l] += b;
@@ -428,28 +423,28 @@ public:
 		v[1][r] -= a;
 	}
 
-	// [l, r) に昇順に等差数列 v0, v1, ... を一括加算する準備を行う．
-	void set_right(int l, int r, T w0, T w1) {
+	// v[l..r) に昇順に等差数列 w0, w1, ... を加算する準備を行う．
+	void add_right(ll l, ll r, T w0, T w1) {
 		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
 
 		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
 		ll a = w1 - w0;
 		ll b = w0 - a * l;
-		set(l, r, a, b);
+		add((int)max<ll>(l, 0), (int)min<ll>(r, n), a, b);
 	}
 
-	// (l, r] に降順に等差数列 v0, v1, ... を一括加算する準備を行う．
-	void set_left(int r, int l, T w0, T w1) {
+	// v(l..r] に降順に等差数列 w0, w1, ... を加算する準備を行う．
+	void add_left(ll r, ll l, T w0, T w1) {
 		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
 
 		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
 		ll a = w0 - w1;
 		ll b = w0 - a * r;
-		set(l + 1, r + 1, a, b);
+		add((int)max<ll>(l + 1, 0), (int)min<ll>(r + 1, n), a, b);
 	}
 
 	// 実際の加算を行う．
-	void sum() {
+	void execute() {
 		// verify : https://atcoder.jp/contests/abc268/tasks/abc268_e
 
 		// 正しい係数になるよう累積和をとる．
@@ -460,11 +455,71 @@ public:
 
 		// 計算して項を 1 つにまとめる．
 		rep(i, n) v[0][i] += v[1][i] * i;
+
+		ex = true;
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Linear_imos imos) {
-		rep(i, imos.n) os << imos[i] << " ";
+	friend ostream& operator<<(ostream& os, Linear_imos a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【指数加重いもす法】（未 verify）
+/*
+* Exponential_imos<T>(int n, T B) : O(n)
+*	v[0..n) = 0 と底 B で初期化する．
+*
+* add_right(ll l, ll r, T a) : O(1)
+*	v[l..r) に昇順に等比数列 a, aB, ... を加算する準備を行う．
+*
+* void execute() : O(n)
+*	実際の加算を行う．
+*
+* T [](int i) : O(1)
+*	v[i] を返す．
+*	制約 : 先に execute() を呼び出すこと．
+*/
+template <class T>
+class Exponential_imos {
+	int n; T B;
+	vector<T> v, powB;
+	bool ex = false;
+
+public:
+	// a[0..n) = 0 と底 B で初期化する．
+	Imos(int n, T B) : n(n), B(B), v(n + 1), powB(n + 1) {
+		powB[0] = 1;
+		repi(i, 1, n) powB[i] = powB[i - 1] * B;
+	}
+	Imos() : n(0), B(1) {}
+
+	// アクセス
+	inline T const& operator[](int i) const { return v[i]; }
+	inline T& operator[](int i) { return v[i]; }
+
+	// v[l..r) に昇順に等比数列 a, aB, ... を加算する準備を行う．
+	void add_right(int l, int r, T a) {
+		Assert(0 <= l && l <= r && r <= n);
+
+		v[l] += a;
+		v[r] -= a * powB[r - l];
+	}
+
+	// 実際の加算を行う．
+	void execute() {
+		rep(i, n) v[i + 1] += v[i] * B;
+		ex = true;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Imos a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
 		return os;
 	}
 #endif
@@ -473,31 +528,32 @@ public:
 
 //【木上いもす法（根からのパス，部分木）】
 /*
-* Imos_tree(Graph g, int rt) : O(n)
-*	rt を根とする根付き木 g を 0 で初期化する．
+* Imos_tree<T>(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g と頂点の値 v[0..n) = 0 で初期化する．
 *
-* set_path(int s, T val) : O(1)
+* add_path(int s, T val) : O(1)
 *	根から頂点 s へのパス上の頂点全てに val を加算する準備を行う．
 *
-* set_subtree(int s, T val) : O(1)
+* add_subtree(int s, T val) : O(1)
 *	部分木 s 内の頂点全てに val を加算する準備を行う．
 *
-* sum() : O(n)
+* execute() : O(n)
 *	実際の加算を行う．
 *
-* T get(int s) : O(1)
-*	加算後の頂点 s の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
+* T [](int s) : O(1)
+*	v[s] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 */
 template <class T>
 class Imos_tree {
 	int n; Graph g; int rt;
 	vector<T> v_anc, v_dsc;
+	bool ex = false;
 
 	// 再帰用の関数
-	T sum_sub(int s, int p, T val) {
+	T execute_sub(int s, int p, T val) {
 		v_dsc[s] += val;
-		repe(t, g[s]) if (t != p) v_anc[s] += sum_sub(t, s, v_dsc[s]);
+		repe(t, g[s]) if (t != p) v_anc[s] += execute_sub(t, s, v_dsc[s]);
 		return v_anc[s];
 	};
 
@@ -508,15 +564,19 @@ public:
 	}
 	Imos_tree() : n(0), rt(-1) {}
 
+	// アクセス
+	inline T const& operator[](int i) const { return v_anc[i]; }
+	inline T& operator[](int i) { return v_anc[i]; }
+
 	// 根から頂点 s へのパス上の頂点全てに val を加算する準備を行う．
-	void set_path(int s, T val) {
+	void add_path(int s, T val) {
 		Assert(0 <= s && s < n);
 
 		v_anc[s] += val;
 	}
 
 	// 部分木 s 内の頂点全てに val を加算する準備を行う．
-	void set_subtree(int s, T val) {
+	void add_subtree(int s, T val) {
 		// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
 
 		Assert(0 <= s && s < n);
@@ -525,51 +585,56 @@ public:
 	}
 
 	// 実際の加算を行う．
-	void sum() {
+	void execute() {
 		// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
 
-		sum_sub(rt, -1, 0);
+		execute_sub(rt, -1, 0);
+
+		// 計算結果をまとめておく．
+		rep(s, n) v_anc[s] += v_dsc[s];
+
+		ex = true;
 	}
 
-	// 加算後の頂点 s の値を得る．
-	T get(int s) const {
-		// verify : https://atcoder.jp/contests/abc138/tasks/abc138_d
-
-		Assert(0 <= s && s < n);
-
-		return v_anc[s] + v_dsc[s];
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Imos_tree a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
+		return os;
 	}
+#endif
 };
 
 
 //【木の辺上いもす法（根からのパス，部分木）】
 /*
-* Imos_tree_edge(Graph g, int rt) : O(n)
+* Imos_tree_edge<T>(Graph g, int rt) : O(n)
 *	rt を根とする根付き木 g と辺値 v[0..n) = 0 で初期化する．
-*	辺値 v[s] は頂点 s に入る辺の値を表す（v[rt] は無視）
+*	辺値 v[s] は頂点 s に入る辺の値を表す（v[rt] は無視する）
 *
-* set_path(int s, T val) : O(1)
+* add_path(int s, T val) : O(1)
 *	根から頂点 s へのパス上の辺全てに val を加算する準備を行う．
 *
-* set_subtree(int s, T val) : O(1)
+* add_subtree(int s, T val) : O(1)
 *	部分木 s 内の辺全てに val を加算する準備を行う．
 *
-* sum() : O(n)
+* execute() : O(n)
 *	実際の加算を行う．
 *
-* T get(int s) : O(1)
-*	加算後の頂点 s に入る辺の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
+* T [](int s) : O(1)
+*	v[s] を返す．
+*	制約 : 先に execute() を呼び出すこと．
 */
 template <class T>
 class Imos_tree_edge {
 	int n; Graph g; int rt;
 	vector<T> v_anc, v_dsc, v_add;
+	bool ex = false;
 
 	// 再帰用の関数
-	T sum_sub(int s, int p, T val) {
+	T execute_sub(int s, int p, T val) {
 		v_dsc[s] += val;
-		repe(t, g[s]) if (t != p) v_anc[s] += sum_sub(t, s, v_dsc[s]);
+		repe(t, g[s]) if (t != p) v_anc[s] += execute_sub(t, s, v_dsc[s]);
 		return v_anc[s];
 	};
 
@@ -580,8 +645,12 @@ public:
 	}
 	Imos_tree_edge() : n(0), rt(-1) {}
 
+	// アクセス
+	inline T const& operator[](int i) const { return v_anc[i]; }
+	inline T& operator[](int i) { return v_anc[i]; }
+
 	// 根から頂点 s へのパス上の辺全てに val を加算する準備を行う．
-	void set_path(int s, T val) {
+	void add_path(int s, T val) {
 		// verify : https://atcoder.jp/contests/abc329/tasks/abc329_g
 
 		Assert(0 <= s && s < n);
@@ -590,7 +659,7 @@ public:
 	}
 
 	// 部分木 s 内の辺全てに val を加算する準備を行う．
-	void set_subtree(int s, T val) {
+	void add_subtree(int s, T val) {
 		Assert(0 <= s && s < n);
 
 		v_dsc[s] += val;
@@ -598,24 +667,363 @@ public:
 	}
 
 	// 実際の加算を行う．
-	void sum() {
+	void execute() {
 		// verify : https://atcoder.jp/contests/abc329/tasks/abc329_g
 
-		sum_sub(rt, -1, 0);
+		execute_sub(rt, -1, 0);
+
+		// 計算結果をまとめておく．
+		rep(s, n) v_anc[s] += v_dsc[s] + v_add[s];
+
+		ex = true;
 	}
 
-	// 加算後の頂点 s に入る辺の値を得る．
-	T get(int s) const {
-		// verify : https://atcoder.jp/contests/abc329/tasks/abc329_g
-
-		Assert(0 <= s && s < n);
-
-		return v_anc[s] + v_dsc[s] + v_add[s];
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Imos_tree_edge a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
+		return os;
 	}
+#endif
 };
 
 
 //【木上いもす法（パス，部分木）】
+/*
+* Imos_tree_arbitrary_path<T>(Graph g, int rt) : O(n log n)
+*	rt を根とする根付き木 g と頂点の値 v[0..n) = 0 で初期化する．
+*
+* add(int s, T val) : O(1)
+*	頂点 s に val を加算する準備を行う．
+*
+* add_path(int s, T val) : O(1)
+*	根から頂点 s へのパス上の頂点全てに val を加算する準備を行う．
+*
+* add_path(int s, int t, T val) : O(log n)
+*	パス s-t 上の頂点全てに val を加算する準備を行う．
+*
+* add_subtree(int s, T val) : O(1)
+*	部分木 s 内の頂点全てに val を加算する準備を行う．
+*
+* execute() : O(n)
+*	実際の加算を行う．
+*
+* T [](int s) : O(1)
+*	v[s] を返す．
+*	制約 : 先に execute() を呼び出すこと．
+*
+* int lca(int s, int t) : O(log n)
+*	頂点 s, t の最小共通祖先を返す．
+*/
+pii op_IT(pii a, pii b) { return min(a, b); }
+pii e_IT() { return { INF, -1 }; }
+template <class T>
+class Imos_tree_arbitrary_path {
+	int n;
+	Graph g;
+	int rt;
+	bool ex = false;
+
+public:
+	// in[s]  : rt からの DFS で最初に頂点 s を訪れた時刻（根なら 0）
+	// out[s] : rt からの DFS で最後に頂点 s から離れた時刻（根なら 2n-1）
+	// pos[t] : rt からの DFS で時刻 t に居た頂点の番号（長さ 2n-1）
+	// dep[s] : 頂点 s の深さ
+	vi in, out, pos, dep;
+
+private:
+	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
+	using SEG = segtree<pii, op_IT, e_IT>;
+	SEG seg;
+
+	vector<T> v_anc, v_dsc, v_add;
+
+	// in, out, pos, dep を設定する．
+	void dfs() {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int p) {
+			// s を最初に訪れた
+			in[s] = time;
+			pos[time] = s;
+			time++;
+
+			repe(t, g[s]) {
+				if (t == p) continue;
+
+				dep[t] = dep[s] + 1;
+				rf(t, s);
+				pos[time] = s;
+				time++;
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+
+		// 根から順に探索する．
+		rf(rt, -1);
+	}
+
+	T execute_sub(int s, int p, T val) {
+		v_dsc[s] += val;
+		repe(t, g[s]) if (t != p) v_anc[s] += execute_sub(t, s, v_dsc[s]);
+		return v_anc[s];
+	};
+
+public:
+	// rt を根とする根付き木 g と頂点の値 v[0..n) = 0 で初期化する．
+	Imos_tree_arbitrary_path(const Graph& g, int rt) : n(sz(g)), g(g), rt(rt),
+		in(n), out(n), pos(2 * n - 1), dep(n), v_anc(n), v_dsc(n), v_add(n)
+	{
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		dfs();
+
+		vector<pii> ini(2 * n - 1);
+		rep(t, 2 * n - 1) ini[t] = { dep[pos[t]], pos[t] };
+		seg = SEG(ini);
+	}
+	Imos_tree_arbitrary_path() : n(0), rt(-1) {}
+
+	// アクセス
+	inline T const& operator[](int i) const { return v_anc[i]; }
+	inline T& operator[](int i) { return v_anc[i]; }
+
+	// 根から頂点 s へのパス上の頂点全てに val を加算する準備を行う．
+	void add_path(int s, T val) {
+		Assert(0 <= s && s < n);
+
+		v_anc[s] += val;
+	}
+
+	// 頂点 s, t の最小共通祖先を返す．
+	int lca(int s, int t) const {
+		// 初めて s または t に訪れたとき
+		int l = min(in[s], in[t]);
+
+		// 最後に s または t から離れたとき
+		int r = max(out[s], out[t]);
+
+		// その途中で訪れたことのある最も浅い頂点が最小共通祖先
+		return seg.prod(l, r).second;
+	}
+
+	// 頂点 s に val を加算する準備を行う．
+	void add(int s, T val) {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		Assert(0 <= s && s < n);
+
+		v_add[s] += val;
+	}
+
+	// パス s-t 上の頂点全てに val を加算する準備を行う．
+	void add_path(int s, int t, T val) {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		Assert(0 <= s && s < n && 0 <= t && t < n);
+
+		int p = lca(s, t);
+
+		v_anc[s] += val;
+		v_anc[t] += val;
+		v_anc[p] -= 2 * val;
+		v_add[p] += val;
+	}
+
+	// 部分木 s 内の頂点全てに val を加算する準備を行う．
+	void add_subtree(int s, T val) {
+		Assert(0 <= s && s < n);
+
+		v_dsc[s] += val;
+	}
+
+	// 実際の加算を行う．
+	void execute() {
+		// verify : https://codeforces.com/contest/914/problem/E
+
+		execute_sub(rt, -1, 0);
+
+		// 計算結果をまとめておく．
+		rep(s, n) v_anc[s] += v_dsc[s] + v_add[s];
+
+		ex = true;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Imos_tree_arbitrary_path a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【木の辺上いもす法（パス，部分木）】
+/*
+* Imos_tree_edge_arbitrary_path<T>(Graph g, int rt) : O(n log n)
+*	rt を根とする根付き木 g と辺値 v[0..n) = 0 で初期化する．
+*	辺値 v[s] は頂点 s に入る辺の値を表す（v[rt] は無視する）
+*
+* add_path(int s, T val) : O(1)
+*	根から頂点 s へのパス上の辺全てに val を加算する準備を行う．
+*
+* add_path(int s, int t, T val) : O(log n)
+*	パス s-t 上の辺全てに val を加算する準備を行う．
+*
+* add_subtree(int s, T val) : O(1)
+*	部分木 s 内の辺全てに val を加算する準備を行う．
+*
+* execute() : O(n)
+*	実際の加算を行う．
+*
+* T [](int s) : O(1)
+*	v[s] を返す．
+*	制約 : 先に execute() を呼び出すこと．
+*
+* int lca(int s, int t) : O(log n)
+*	頂点 s, t の最小共通祖先を返す．
+*/
+pii op_ITE(pii a, pii b) { return min(a, b); }
+pii e_ITE() { return { INF, -1 }; }
+template <class T>
+class Imos_tree_edge_arbitrary_path {
+	int n;
+	Graph g;
+	int rt;
+	bool ex = false;
+
+public:
+	// in[s]  : rt からの DFS で最初に頂点 s を訪れた時刻（根なら 0）
+	// out[s] : rt からの DFS で最後に頂点 s から離れた時刻（根なら 2n-1）
+	// pos[t] : rt からの DFS で時刻 t に居た頂点の番号（長さ 2n-1）
+	// dep[s] : 頂点 s の深さ
+	vi in, out, pos, dep;
+
+private:
+	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
+	using SEG = segtree<pii, op_ITE, e_ITE>;
+	SEG seg;
+
+	vector<T> v_anc, v_dsc, v_add;
+
+	// in, out, pos, dep を設定する．
+	void dfs() {
+		int time = 0;
+
+		function<void(int, int)> rf = [&](int s, int p) {
+			// s を最初に訪れた
+			in[s] = time;
+			pos[time] = s;
+			time++;
+
+			repe(t, g[s]) {
+				if (t == p) continue;
+
+				dep[t] = dep[s] + 1;
+				rf(t, s);
+				pos[time] = s;
+				time++;
+			}
+
+			// s から最後に離れる
+			out[s] = time;
+		};
+
+		// 根から順に探索する．
+		rf(rt, -1);
+	}
+
+	T execute_sub(int s, int p, T val) {
+		v_dsc[s] += val;
+		repe(t, g[s]) if (t != p) v_anc[s] += execute_sub(t, s, v_dsc[s]);
+		return v_anc[s];
+	};
+
+public:
+	// rt を根とする根付き木 g と辺値 v[0..n) = 0 で初期化する．
+	Imos_tree_edge_arbitrary_path(const Graph& g, int rt) : n(sz(g)), g(g), rt(rt),
+		in(n), out(n), pos(2 * n - 1), dep(n), v_anc(n), v_dsc(n), v_add(n)
+	{
+		// verify : https://atcoder.jp/contests/abc345/tasks/abc345_f
+
+		dfs();
+
+		vector<pii> ini(2 * n - 1);
+		rep(t, 2 * n - 1) ini[t] = { dep[pos[t]], pos[t] };
+		seg = SEG(ini);
+	}
+	Imos_tree_edge_arbitrary_path() : n(0), rt(-1) {}
+
+	// アクセス
+	inline T const& operator[](int i) const { return v_anc[i]; }
+	inline T& operator[](int i) { return v_anc[i]; }
+
+	// 根から頂点 s へのパス上の辺全てに val を加算する準備を行う．
+	void add_path(int s, T val) {
+		Assert(0 <= s && s < n);
+
+		v_anc[s] += val;
+	}
+
+	// 頂点 s, t の最小共通祖先を返す．
+	int lca(int s, int t) const {
+		// 初めて s または t に訪れたとき
+		int l = min(in[s], in[t]);
+
+		// 最後に s または t から離れたとき
+		int r = max(out[s], out[t]);
+
+		// その途中で訪れたことのある最も浅い頂点が最小共通祖先
+		return seg.prod(l, r).second;
+	}
+
+	// パス s-t 上の辺全てに val を加算する準備を行う．
+	void add_path(int s, int t, T val) {
+		// verify : https://atcoder.jp/contests/abc345/tasks/abc345_f
+
+		Assert(0 <= s && s < n && 0 <= t && t < n);
+
+		int p = lca(s, t);
+
+		v_anc[s] += val;
+		v_anc[t] += val;
+		v_anc[p] -= 2 * val;
+	}
+
+	// 部分木 s 内の辺全てに val を加算する準備を行う．
+	void add_subtree(int s, T val) {
+		Assert(0 <= s && s < n);
+
+		v_dsc[s] += val;
+		v_add[s] -= val;
+	}
+
+	// 実際の加算を行う．
+	void execute() {
+		// verify : https://atcoder.jp/contests/abc345/tasks/abc345_f
+
+		execute_sub(rt, -1, 0);
+
+		// 計算結果をまとめておく．
+		rep(s, n) v_anc[s] += v_dsc[s] + v_add[s];
+
+		ex = true;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Imos_tree_edge_arbitrary_path a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【木上いもす法（パス，部分木，HLD）】
 /*
 * Imos_tree_arbitrary_path<T>(Tree rt) : O(n)
 *	根付き木 rt と初期値 0 で初期化する．
@@ -635,8 +1043,6 @@ public:
 * T get(int v) : O(1)
 *	加算後の頂点 v の値を得る．
 *	制約 : sum() の後に呼び出さなければならない．
-*
-*（いもす法）
 *
 * 利用：【根付き木の HL 分解】
 */
@@ -723,176 +1129,6 @@ struct Imos_tree_arbitrary_path {
 		return os;
 	}
 #endif
-};
-
-
-//【木の辺上いもす法（パス，部分木）】（未 verify）
-/*
-* Imos_tree_edge(Graph g, int rt) : O(n log n)
-*	rt を根とする根付き木 g と辺値 v[0..n) = 0 で初期化する．
-*	辺値 v[s] は頂点 s に入る辺の値を表す（v[rt] は無視）
-*
-* set_path(int s, T val) : O(1)
-*	根から頂点 s へのパス上の辺全てに val を加算する準備を行う．
-*
-* set_path(int s, int t, T val) : O(log n)
-*	パス s-t 上の辺全てに val を加算する準備を行う．
-*
-* set_subtree(int s, T val) : O(1)
-*	部分木 s 内の辺全てに val を加算する準備を行う．
-*
-* sum() : O(n)
-*	実際の加算を行う．
-*
-* T get(int s) : O(1)
-*	加算後の頂点 s に入る辺の値を得る．
-*	制約 : sum() の後に呼び出さなければならない．
-*
-* int lca(int s, int t) : O(log n)
-*	頂点 s, t の最小共通祖先を返す．
-*
-* int get_in(int s) : O(1)
-*	rt からの DFS で最初に頂点 s を訪れた時刻（根なら 0）を返す．
-*
-* int get_out(int s) : O(1)
-*	rt からの DFS で最後に頂点 s から離れた時刻（根なら 2n-1）を返す．
-*
-* int get_pos(int t) : O(1)
-*	rt からの DFS で時刻 t（∈[0..2n-1)）に居た頂点の番号を返す．
-*
-* int get_dep(int s) : O(1)
-*	頂点 s の深さを返す．
-*/
-pii op_ITE(pii a, pii b) { return min(a, b); }
-pii e_ITE() { return { INF, -1 }; }
-template <class T>
-class Imos_tree_edge_arbitrary_path {
-	int n;
-	Graph g;
-	int rt;
-
-	// in[s]  : rt からの DFS で最初に頂点 s を訪れた時刻（根なら 0）
-	// out[s] : rt からの DFS で最後に頂点 s から離れた時刻（根なら 2n-1）
-	// pos[t] : rt からの DFS で時刻 t に居た頂点の番号（長さ 2n-1）
-	// dep[s] : 頂点 s の深さ
-	vi in, out, pos, dep;
-
-	// seg[t] : 時刻 t に居た頂点の (深さ, 番号)
-	using SEG = segtree<pii, op_ITE, e_ITE>;
-	SEG seg;
-
-	vector<T> v_anc, v_dsc, v_add;
-
-	void dfs() {
-		int time = 0;
-
-		function<void(int, int)> rf = [&](int s, int p) {
-			// s を最初に訪れた
-			in[s] = time;
-			pos[time] = s;
-			time++;
-
-			repe(t, g[s]) {
-				if (t == p) continue;
-
-				dep[t] = dep[s] + 1;
-				rf(t, s);
-				pos[time] = s;
-				time++;
-			}
-
-			// s から最後に離れる
-			out[s] = time;
-		};
-
-		// 根から順に探索する．
-		rf(rt, -1);
-	}
-
-	T sum_sub(int s, int p, T val) {
-		v_dsc[s] += val;
-		repe(t, g[s]) if (t != p) v_anc[s] += sum_sub(t, s, v_dsc[s]);
-		return v_anc[s];
-	};
-
-public:
-	// rt を根とする根付き木 g と辺値 v[0..n) = 0 で初期化する．
-	Imos_tree_edge_arbitrary_path(const Graph& g, int rt) : n(sz(g)), g(g), rt(rt),
-		in(n), out(n), pos(2 * n - 1), dep(n), v_anc(n), v_dsc(n), v_add(n)
-	{
-		dfs();
-
-		vector<pii> ini(2 * n - 1);
-		rep(t, 2 * n - 1) ini[t] = { dep[pos[t]], pos[t] };
-		seg = SEG(ini);
-	}
-	Imos_tree_edge_arbitrary_path() : n(0), rt(-1) {}
-
-	// 根から頂点 s へのパス上の辺全てに val を加算する準備を行う．
-	void set_path(int s, T val) {
-		Assert(0 <= s && s < n);
-
-		v_anc[s] += val;
-	}
-
-	// 頂点 s, t の最小共通祖先を返す．
-	int lca(int s, int t) const {
-		// 初めて s または t に訪れたとき
-		int l = min(in[s], in[t]);
-
-		// 最後に s または t から離れたとき
-		int r = max(out[s], out[t]);
-
-		// その途中で訪れたことのある最も浅い頂点が最小共通祖先
-		return seg.prod(l, r).second;
-	}
-
-	// パス s-t 上の辺全てに val を加算する準備を行う．
-	void set_path(int s, int t, T val) {
-		Assert(0 <= s && s < n && 0 <= t && t < n);
-
-		int p = lca(s, t);
-
-		v_anc[s] += val;
-		v_anc[t] += val;
-		v_anc[p] -= 2 * val;
-	}
-
-	// 部分木 s 内の辺全てに val を加算する準備を行う．
-	void set_subtree(int s, T val) {
-		Assert(0 <= s && s < n);
-
-		v_dsc[s] += val;
-		v_add[s] -= val;
-	}
-
-	// 実際の加算を行う．
-	void sum() {
-		sum_sub(rt, -1, 0);
-	}
-
-	// 加算後の頂点 s に入る辺の値を得る．
-	T get(int s) const {
-		Assert(0 <= s && s < n);
-
-		return v_anc[s] + v_dsc[s] + v_add[s];
-	}
-
-	inline int get_in(int s) const {
-		return in[s];
-	}
-
-	inline int get_out(int s) const {
-		return out[s];
-	}
-
-	inline int get_pos(int t) const {
-		return pos[t];
-	}
-
-	inline int get_dep(int s) const {
-		return dep[s];
-	}
 };
 
 

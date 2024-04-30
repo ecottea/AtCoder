@@ -70,6 +70,10 @@ public:
 		//	A[7] = a[1]                                    + a[7]
 		//	A[8] = a[1] + a[2]        + a[4]                      + a[8]
 
+		//【備考】
+		// a[1..n] のディリクレ母関数を α(s) = Σ_i a[i] i^(-s) とすると，
+		// α(s) にゼータ関数 ζ(s) = Σ_i i^(-s) を掛けることに対応する．
+
 		int n = sz(a) - 1;
 
 		// 各素因数ごとに下からの累積和をとる
@@ -123,6 +127,10 @@ public:
 		//	A[7] =                                           a[7]       
 		//	A[8] =                                                  a[8]
 
+		//【備考】
+		// a[1..n] のディリクレ母関数を α(s) = Σ_i a[i] i^(-s) とすると，
+		// α(s) にゼータ関数の変種 ζ(-s) = Σ_i i^s を掛けることに対応する．
+
 		int n = sz(a) - 1;
 
 		// 各素因数ごとに上からの累積和をとる
@@ -166,9 +174,8 @@ public:
 
 //【約数倍数変換（添字約数制限）】
 /*
-* Limited_div_mul_transform<T>(vl ps, vl divs) : O(1)
-*   定数 n を定め，n の素因数の昇順列を ps，約数の昇順列を divs とする．
-*	添字集合を n の約数集合として初期化する．
+* Limited_div_mul_transform<T>(ll n) : O(√n)
+*   添字集合を n の約数集合として初期化する．
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * divisor_zeta(umap<ll, T>& a) : O(σ(n) ω(n))
@@ -190,23 +197,56 @@ public:
 *   c[k] = Σ_(GCD(i, j) = k) a[i] b[j] なる c を返す．
 */
 template <typename T>
-class Limited_div_mul_transform {
-	vl ps; // ps : n の素因数の昇順リスト
-	vl divs; // divs : n の約数の昇順リスト
+struct Limited_div_mul_transform {
+	vl ps;   // n の素因数の昇順リスト
+	vl divs; // n の約数の昇順リスト
+	unordered_set<ll> divs_s;
 
 public:
 	// 添字集合を n の約数集合として初期化する．
-	Limited_div_mul_transform(const vl& ps_, const vl& divs_) : ps(ps_), divs(divs_) {
-		// verify : https://atcoder.jp/contests/arc064/tasks/arc064_d
+	Limited_div_mul_transform(ll n) : divs{ 1 } {
+		for (ll p = 2; p * p <= n; p++) {
+			int d = 0;
+			while (n % p == 0) {
+				d++;
+				n /= p;
+			}
+			if (d == 0) continue;
+
+			ps.push_back(p);
+
+			vl powp(d);
+			powp[0] = p;
+			rep(i, d - 1) powp[i + 1] = powp[i] * p;
+
+			repir(j, sz(divs) - 1, 0) {
+				rep(i, d) {
+					divs.push_back(divs[j] * powp[i]);
+				}
+			}
+		}
+
+		if (n > 1) {
+			ps.push_back(n);
+
+			repir(j, sz(divs) - 1, 0) {
+				divs.push_back(divs[j] * n);
+			}
+		}
+		sort(all(divs));
+
+		divs_s = unordered_set<ll>(all(divs));
 	}
 	Limited_div_mul_transform() {}
 
 	// A[i] = Σ_(j | i) a[j] なる A に上書きする（約数からの寄与を足し込む）
 	void divisor_zeta(unordered_map<ll, T>& f) {
+		// verify : https://atcoder.jp/contests/abc335/tasks/abc335_g
+
 		// 各素因数ごとに下からの累積和をとる
 		repe(p, ps) {
 			repe(d, divs) {
-				if (!f.count(p * d)) continue;
+				if (!divs_s.count(p * d)) continue;
 				f[p * d] += f[d];
 			}
 		}
@@ -220,7 +260,7 @@ public:
 		repe(p, ps) {
 			for (auto it = divs.rbegin(); it != divs.rend(); it++) {
 				ll d = *it;
-				if (!f.count(p * d)) continue;
+				if (!divs_s.count(p * d)) continue;
 				f[p * d] -= f[d];
 			}
 		}
@@ -229,7 +269,8 @@ public:
 	// c[k] = Σ_(LCM(i, j) = k) a[i] b[j] なる c を返す．
 	unordered_map<ll, T> lcm_convolution(unordered_map<ll, T> a, unordered_map<ll, T> b) {
 		// 各素因数の max をとったものが LCM なので max 畳込みを行う．
-		divisor_zeta(a); divisor_zeta(b);
+		divisor_zeta(a);
+		divisor_zeta(b);
 		repe(d, divs) a[d] *= b[d];
 		divisor_mobius(a);
 		return a;
@@ -241,7 +282,7 @@ public:
 		repe(p, ps) {
 			for (auto it = divs.rbegin(); it != divs.rend(); it++) {
 				ll d = *it;
-				if (!f.count(p * d)) continue;
+				if (!divs_s.count(p * d)) continue;
 				f[d] += f[p * d];
 			}
 		}
@@ -254,7 +295,7 @@ public:
 		// 各素因数ごとに下からの差分をとる
 		repe(p, ps) {
 			repe(d, divs) {
-				if (!f.count(p * d)) continue;
+				if (!divs_s.count(p * d)) continue;
 				f[d] -= f[p * d];
 			}
 		}
@@ -263,7 +304,8 @@ public:
 	// c[k] = Σ_(GCD(i, j) = k) a[i] b[j] なる c を返す．
 	unordered_map<ll, T> gcd_convolution(unordered_map<ll, T> a, unordered_map<ll, T> b) {
 		// 各素因数の min をとったものが GCD なので min 畳込みを行う．
-		multiple_zeta(a); multiple_zeta(b);
+		multiple_zeta(a);
+		multiple_zeta(b);
 		repe(d, divs) a[d] *= b[d];
 		multiple_mobius(a);
 		return a;

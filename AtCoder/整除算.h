@@ -124,7 +124,7 @@ void exclusion_principle(ll n, vector<T>& al, vector<T>& ah) {
 
 	//【方法】
 	// a と A の関係式を変形すると，漸化式
-	//		A[i] = a[i] - Σd≧2 b[i/d]
+	//		A[i] = a[i] - Σd≧2 A[i/d]
 	// を得る．これを素朴に用いれば良い．
 	//		floor(floor(i / d) / e) = floor(i / (d e))
 	// に注意すれば，計算に必要な情報は足りていることが分かる．
@@ -400,6 +400,33 @@ T min_of_mod_of_linear(T n, T m, T a, T b) {
 }
 
 
+//【一次式の剰余の総和】O(log(n + m))（オーバーフロー注意）
+/*
+* Σi∈[0..n) ((a i + b) mod m) を返す．
+*
+* 利用：【一次式の切り捨て和】
+*/
+template <class T>
+T sum_of_mod_of_linear(T n, T m, T a, T b) {
+	//【方法】
+	// 剰余と切り捨て商との関係より
+	//		Σi∈[0..n) (a i + b) mod m
+	//		= Σi∈[0..n) (a i + b) - m Σi∈[0..n) floor((a i + b) / m)
+	//		= a n(n-1)/2 + b n - m Σi∈[0..n) floor((a i + b) / m)
+	// を得る．よって floor_sum を利用できる．
+
+	Assert(m > 0);
+	if (n <= 0) return 0;
+
+	a = smod(a, m); b = smod(b, m);
+
+	T res = a * n * (n - 1) / 2 + b * n;
+	res -= m * floor_sum_large(n, m, a, b);
+
+	return res;
+}
+
+
 //【切り捨て除算】O(1)
 /*
 * a, b の正負によらず，数学的な floor(a / b) を返す．
@@ -453,11 +480,10 @@ T ceil_div(T a, T b) {
 //【切り捨て（余り指定）】O(1)
 /*
 * x 以下の整数で mod m で k に等しい最大のものを返す．
-* 
-* verify : https://atcoder.jp/contests/abc334/tasks/abc334_b
 */
 template <class T>
 T floor_mod(T x, T m, T k) {
+	// verify: https://atcoder.jp/contests/abc334/tasks/abc334_b
 	Assert(m > 0);
 	return x - smod(x - k, m);
 }
@@ -466,11 +492,10 @@ T floor_mod(T x, T m, T k) {
 //【切り上げ（余り指定）】O(1)
 /*
 * x 以上の整数で mod m で k に等しい最小のものを返す．
-* 
-* verify : https://atcoder.jp/contests/abc334/tasks/abc334_b
 */
 template <class T>
 T ceil_mod(T x, T m, T k) {
+	// verify: https://atcoder.jp/contests/abc334/tasks/abc334_b
 	Assert(m > 0);
 	return x + smod(k - x, m);
 }
@@ -503,6 +528,123 @@ T count_by_reminder(T l, T r, T m, T k) {
 }
 
 
+//【等差数列区間】
+/*
+* Arithmetic_range<T>(l, r, m, k) : O(1)
+*	x∈[l..r) で x ≡ k (mod m) を満たすものからなる昇順列 a で初期化する．
+*
+* T sum() : O(1)
+*	Σa を返す．
+*
+* T size() : O(1)
+*	a の要素数を返す．
+*
+* T get(T i) : O(1)
+*	a[i] を返す．
+*
+* T front() : O(1)
+*	a の先頭の要素を返す．
+*
+* T back() : O(1)
+*	a の末尾の要素を返す．
+*
+* T count(T x) : O(1)
+*	a に含まれる x の個数 (∈{0,1}) を返す．
+*
+* T lower_bound(T x) : O(1)
+*	a に含まれる x 以上の最小の要素の位置を返す（なければ a.size() を返す)
+*
+* T upper_bound(T x) : O(1)
+*	a に含まれる x より大きいの最小の要素の位置を返す（なければ a.size() を返す)
+*/
+template <class T>
+class Arithmetic_range {
+	T li, ri, m, k;
+
+public:
+	// x∈[l..r) で x ≡ k (mod m) を満たすものからなる昇順列で初期化する．
+	Arithmetic_range(T l, T r, T m, T k_) : m(m), k(k_) {
+		// verify : https://mojacoder.app/users/shogo314/problems/range_query
+
+		Assert(m > 0);
+
+		k %= m;
+		if (k < 0) k += m;
+
+		l -= k;
+		r -= k;
+
+		li = (l >= 0 ? (l + m - 1) / m : -((-l) / m));
+		ri = (r >= 0 ? (r + m - 1) / m : -((-r) / m));
+	}
+	Arithmetic_range() : li(0), ri(0), m(1), k(0) {}
+
+	// Σa を返す．
+	inline T sum() const {
+		// verify : https://mojacoder.app/users/shogo314/problems/range_query
+
+		// Σi∈[li..ri) (mi+k)
+		return (li + ri - 1) * (ri - li) / 2 * m + (ri - li) * k;
+	}
+
+	// a の要素数を返す．
+	inline T size() const {
+		// verify : https://mojacoder.app/users/shogo314/problems/range_query
+		
+		return ri - li;
+	}
+
+	// a[i] を返す．
+	inline T get(T i) const {
+		// verify : https://mojacoder.app/users/shogo314/problems/range_query
+		
+		Assert(0 <= i && i < ri - li);
+		return m * (li + i) + k;
+	}
+
+	// a の先頭の要素を返す．
+	inline T front() const {
+		// verify : https://atcoder.jp/contests/arc176/tasks/arc176_b
+
+		Assert(ri - li > 0);
+		return m * li + k;
+	}
+
+	// a の末尾の要素を返す．
+	inline T back() const {
+		Assert(ri - li > 0);
+		return m * (ri - 1) + k;
+	}
+
+	// a に含まれる x の個数 (∈{0,1}) を返す．
+	inline T count(T x) const {
+		// verify : https://mojacoder.app/users/shogo314/problems/range_query
+		
+		if ((x - k) % m != 0) return 0;
+		T xi = (x - k) / m;
+		return li <= xi && xi < ri ? 1 : 0;
+	}
+
+	// a に含まれる x 以上の最小の要素の位置を返す（なければ a.size() を返す)
+	inline T lower_bound(T x) const {
+		// verify : https://mojacoder.app/users/shogo314/problems/range_query
+		
+		x -= k;
+		T xi = (x >= 0 ? (x + m - 1) / m : -((-x) / m));
+		return min(max(xi - li, T(0)), ri - li);
+	}
+
+	// a に含まれる x より大きいの最小の要素の位置を返す（なければ a.size() を返す)
+	inline T upper_bound(T x) const {
+		// verify : https://mojacoder.app/users/shogo314/problems/range_query
+		
+		x -= k;
+		T xi = (x >= -1 ? (x + m) / m : -((-x - 1) / m));
+		return min(max(xi - li, T(0)), ri - li);
+	}
+};
+
+
 //【余りの取れる値の範囲】
 /*
 * 非負整数 a を m(≦a) で割った余りは a/2 未満になる．
@@ -514,11 +656,11 @@ T count_by_reminder(T l, T r, T m, T k) {
 */
 
 
-//【整除順序集合の最大半鎖】
+//【整除順序集合の最大反鎖】
 /*
-* [1..2n] に整除関係を入れた順序集合における最大半鎖の大きさは n である．
+* [1..2n] に整除関係を入れた順序集合における最大反鎖の大きさは n である．
 * 
-*（証明）[n+1..2n] は大きさ n の半鎖なので，大きさが n より大きい半鎖がとれないことを示せば良い．
+*（証明）[n+1..2n] は大きさ n の反鎖なので，大きさが n より大きい反鎖がとれないことを示せば良い．
 * ディルワースの定理より，代わりに大きさ n のパス被覆がとれることを示せば良いが，
 * これは各奇数 k に対して k-2k-4k-8k-... をパスとして選べば実現できる．
 * 

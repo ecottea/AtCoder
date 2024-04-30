@@ -82,7 +82,7 @@ S geometric_series(S r, ll n) {
 		if (n & 1LL) res = add(mul(res, pow2), sumpow2);
 		sumpow2 = add(sumpow2, mul(sumpow2, pow2));
 		pow2 = mul(pow2, pow2);
-		n /= 2;
+		n >>= 1;
 	}
 
 	return res;
@@ -145,6 +145,8 @@ S geometric_series(F f, S x, ll n) {
 * —˜—pFy“™”ä”—ñ‚Ì˜az
 */
 mint arithmetic_geometric_series(mint r, ll n) {
+	// verify : https://mojacoder.app/users/OxOmiso/problems/bigpatternnumber
+	
 	//y•û–@z
 	// ‚¨‚È‚¶‚İ‚ÌŒö®‚Å‚Í r-1 ‚É‚æ‚éŠ„‚èZ‚ğ•K—v‚Æ‚µ‚Ä‚Ü‚¸‚¢‚Ì‚Åƒ_ƒuƒŠƒ“ƒO‚·‚éD
 
@@ -171,15 +173,15 @@ mint arithmetic_geometric_series(mint r, ll n) {
 	return res1;
 }
 mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
-	mint res = a * geometric_series(r, i0, i1);
-	res += b * (arithmetic_geometric_series(r, i1) - arithmetic_geometric_series(r, i0));
+	mint res = b * geometric_series(r, i0, i1);
+	res += a * (arithmetic_geometric_series(r, i1) - arithmetic_geometric_series(r, i0));
 	return res;
 }
 
 
-//y—İæŒ^”—ñ‚Ì˜azO(k log k)
+//y—İæŒ^”—ñ‚Ì˜azO(K log K)
 /*
-* ƒ°i¸[0..n) i^k ‚Í n ‚Ì k+1 Ÿ®‚É‚È‚é‚Ì‚ÅCƒ‰ƒOƒ‰ƒ“ƒWƒ…•âŠÔ‚Å’l‚ğ‹‚ß‚ç‚ê‚éD
+* ƒ°i¸[0..n) (i ‚Ì K Ÿ®) ‚Í n ‚Ì K+1 Ÿ®‚É‚È‚é‚Ì‚ÅCƒ‰ƒOƒ‰ƒ“ƒWƒ…•âŠÔ‚Å’l‚ğ‹‚ß‚ç‚ê‚éD
 * 
 * verify : https://codeforces.com/contest/622/problem/F
 */

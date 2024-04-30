@@ -171,7 +171,7 @@ void bomberman(const vector<vector<T>>& c, vvi& u, vvi& d, vvi& l, vvi& r, T wal
 }
 
 
-//【上三角 → 矩形集合】
+//【上三角 → 矩形集合】O(n log n)
 /*
 * n×n 格子の狭義上三角部分 S = {(i,j) | 0≦i<j<n} を矩形に分割し，矩形のリストを返す．
 * strict = false にすると広義上三角部分 S = {(i,j) | 0≦i≦j<n} を矩形に分割する．

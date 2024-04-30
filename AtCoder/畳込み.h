@@ -38,7 +38,12 @@ vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
 
 	// c[k] = Σ_(i+j=k) a[i] b[j]
 	vector<T> c(n + m - 1);
-	rep(i, n) rep(j, m) c[i + j] += a[i] * b[j];
+	if (n < m) {
+		rep(i, n) rep(j, m) c[i + j] += a[i] * b[j];
+	}
+	else {
+		rep(j, m) rep(i, n) c[i + j] += a[i] * b[j];
+	}
 
 	return c;
 }
@@ -53,6 +58,10 @@ vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
 template <class T>
 vector<T> naive_self_convolution(const vector<T>& a, ll k) {
 	// verify : https://atcoder.jp/contests/arc059/tasks/arc059_d
+
+	//【備考】
+	// a[0], [1..n) に逆元が存在するならば，FPS(スパース).h の【累乗（スパース）】のように
+	// 漸化式を用いて計算していくことで O(n^2) を実現できる．
 
 	int n = sz(a);
 	if (n == 0) return vector<T>();
@@ -119,6 +128,8 @@ vector<T> naive_multi_convoluion(vector<vector<T>> a) {
 */
 template <class T>
 vector<vector<T>> naive_convolution_2D(const vector<vector<T>>& a, const vector<vector<T>>& b) {
+	// verify : https://projecteuler.net/problem=181
+	
 	int h1 = sz(a), w1 = sz(a[0]), h2 = sz(b), w2 = sz(b[0]);
 
 	// c[k][k'] = Σ_(i+j=k) Σ_(i'+j'=k') a[i][i'] b[j][j']
@@ -129,6 +140,189 @@ vector<vector<T>> naive_convolution_2D(const vector<vector<T>>& a, const vector<
 
 	return c;
 }
+
+
+//【乗算畳込み（mod p）】
+/*
+* Multiplicative_convolution_prime_mod(int p) : O(√p)
+*	添字の法を p として初期化する．
+*	制約 : p は素数
+*
+* vm convolution(vm a, vm b) : O(p log p)
+*	与えられた a[0..p), b[0..p) に対し，
+*		c[k] = Σ_(i×j=k (mod p)) a[i] b[j]
+*	なる c[0..p) を返す．
+*/
+class Multiplicative_convolution_prime_mod {
+	// p : 法（素数）
+	int p;
+
+	// r_pow[i] : r^i（r は mod p での原始根）
+	vi r_pow;
+
+public:
+	// 添字の法を p として初期化する．
+	Multiplicative_convolution_prime_mod(int p) : p(p), r_pow(p - 1) {
+		// verify : https://judge.yosupo.jp/problem/mul_modp_convolution
+
+		// qs : p-1 の素因数
+		vi qs; int m = p - 1;
+		for (int i = 2; i * i <= m; i++) {
+			if (m % i == 0) qs.emplace_back(i);
+			while (m % i == 0) m /= i;
+		}
+		if (m > 1) qs.emplace_back(m);
+
+		mt19937_64 mt((int)time(NULL));
+		uniform_int_distribution<ll> rnd(1, p - 1);
+
+		using mint_p = dynamic_modint<8583928>;
+		mint_p::set_mod(p);
+
+		// r : mod p-1 での原始根
+		ll r = -1;
+		while (r == -1) {
+			// r : 原始根の候補をランダムに選ぶ
+			r = rnd(mt);
+
+			// p-1 の任意の素因数 q について r^((p-1)/q) が 1 でないことが
+			// r が原始根であるための必要十分条件となる．
+			repe(q, qs) {
+				if (mint_p(r).pow((p - 1) / q) == 1) {
+					r = -1;
+					break;
+				}
+			}
+		}
+
+		r_pow[0] = 1;
+		rep(i, p - 2) r_pow[i + 1] = (int)(r_pow[i] * r % p);
+	}
+
+	// 与えられた a[0..p), b[0..p) に対し，c[k] = Σ_(i×j=k (mod p)) a[i] b[j] なる c[0..p) を返す．
+	vm conv(const vm& a, const vm& b) {
+		// verify : https://judge.yosupo.jp/problem/mul_modp_convolution
+
+		vm a2(p - 1), b2(p - 1);
+		rep(i, p - 1) {
+			a2[i] = a[r_pow[i]];
+			b2[i] = b[r_pow[i]];
+		}
+
+		// 巡回畳込み（c[0] だけは例外処理）
+		vm c2 = convolution(a2, b2);
+
+		vm c(p);
+		rep(i, sz(c2)) c[r_pow[i % (p - 1)]] += c2[i];
+		rep(i, p) c[0] += a[0] * b[i];
+		repi(i, 1, p - 1) c[0] += a[i] * b[0];
+
+		return c;
+	}
+};
+
+
+//【乗算畳込み（mod 2^N）】
+/*
+* Multiplicative_convolution_prime_mod(int N) : O(2^N)
+*	添字の法を 2^N として初期化する．
+*
+* vm convolution(vm a, vm b) : O(2^N N)
+*	与えられた a[0..2^N), b[0..2^N) に対し，
+*		c[k] = Σ_(i×j=k (mod 2^N)) a[i] b[j]
+*	なる c[0..2^N) を返す．
+*/
+class Multiplicative_convolution_2power_mod {
+	int N;
+
+	// pow3[t][d][i] : (-1)^t 3^i 2^d mod 2^N
+	vvvi pow3;
+
+	// pow_inv2[d] : 2^(-d)
+	vm pow_inv2;
+
+public:
+	// 添字の法を 2^N として初期化する．
+	Multiplicative_convolution_2power_mod(int N) : N(N), pow3(2, vvi(N)), pow_inv2(N + 1) {
+		// verify : https://judge.yosupo.jp/problem/mul_mod2n_convolution
+
+		pow_inv2[0] = 1;
+		mint inv2 = mint(2).inv();
+		repi(i, 1, N) pow_inv2[i] = pow_inv2[i - 1] * inv2;
+
+		if (N == 0) return;
+		pow3[0][N - 1] = { 1 << (N - 1) };
+		pow3[1][N - 1] = { 1 << (N - 1) };
+
+		if (N == 1) return;
+		pow3[0][N - 2] = { 1 << (N - 2), 3 << (N - 2) };
+		pow3[1][N - 2] = { 3 << (N - 2), 1 << (N - 2) };
+
+		if (N == 2) return;
+		int W = 1 << (N - 2); int maskN = (1 << N) - 1;
+		pow3[0][0].resize(W);
+		pow3[0][0][0] = 1;
+		rep(i, W - 1) pow3[0][0][i + 1] = (pow3[0][0][i] * 3) & maskN;
+
+		repi(d, 1, N - 3) {
+			W >>= 1;
+			pow3[0][d].resize(W);
+			rep(i, W) pow3[0][d][i] = (pow3[0][d - 1][i] << 1) & maskN;
+		}
+
+		repi(d, 0, N - 3) {
+			int W = sz(pow3[0][d]);
+			pow3[1][d].resize(W);
+			rep(i, W) pow3[1][d][i] = (-pow3[0][d][i]) & maskN;
+		}
+	}
+
+	// 与えられた a[0..2^N), b[0..2^N) に対し，c[k] = Σ_(i×j=k (mod 2^N)) a[i] b[j] なる c[0..2^N) を返す．
+	vm conv(const vm& a, const vm& b) {
+		// verify : https://judge.yosupo.jp/problem/mul_mod2n_convolution
+
+		vm c(1LL << N);
+		rep(i, 1 << N) c[0] += a[0] * b[i];
+		repi(i, 1, (1 << N) - 1) c[0] += a[i] * b[0];
+
+		rep(da, N) rep(db, N) {
+			int d = da + db;
+
+			int ta_ub = (da >= N - 2 ? 1 : 2);
+			int tb_ub = (db >= N - 2 ? 1 : 2);
+
+			if (d >= N) {
+				mint a_sum, b_sum;
+				rep(ta, ta_ub) repe(i, pow3[ta][da]) a_sum += a[i];
+				rep(tb, tb_ub) repe(i, pow3[tb][db]) b_sum += b[i];
+				c[0] += a_sum * b_sum;
+				continue;
+			}
+
+			int W = sz(pow3[0][d]); int maskW = W - 1;
+
+			rep(ta, ta_ub) rep(tb, tb_ub) {
+				vm a2(W), b2(W);
+
+				int Wa = sz(pow3[ta][da]), Wb = sz(pow3[tb][db]);
+				rep(i, Wa) a2[i & maskW] += a[pow3[ta][da][i]];
+				rep(i, Wb) b2[i & maskW] += b[pow3[tb][db][i]];
+
+				internal::butterfly(a2);
+				internal::butterfly(b2);
+
+				rep(i, W) a2[i] *= b2[i];
+
+				internal::butterfly_inv(a2);
+
+				int t = ta ^ tb;
+				rep(i, W) c[pow3[t][d][i]] += a2[i] * pow_inv2[msb(W)];
+			}
+		}
+
+		return c;
+	}
+};
 
 
 //【整数商畳込み】O(m + n log n)

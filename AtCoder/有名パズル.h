@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "ビット行列.h"
+#include "bit行列.h"
 #include "最短路.h"
 // ■■■■■ 有名パズル ■■■■■
 
@@ -219,69 +219,87 @@ int solve_15puzzle(const vvi& a_, int max_step = 45) {
 //【こおりのぬけみち】O(n log n)
 /*
 * n 個の岩が (x[i], y[i]) ≧ 0 に配置されたこおりのぬけみちについて，
-* (sx, sy) から (tx, ty) で停止するまでの最小移動回数を返す（不可能なら INF を返す）
+* (sx, sy) ≧ 0 から (tx, ty) ≧ 0 で停止するまでの最小移動回数を返す（不可能なら INF を返す）
 *
-* 利用：【幅優先探索】
+*（幅優先探索）
 */
 int ice_path(const vl& x, const vl& y, ll sx, ll sy, ll tx, ll ty) {
 	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_f
 
-	int n = sz(x); ll w = *max_element(all(y)) + 1;
+	int n = sz(x);
 
-	unordered_set<ll> stone;
-	rep(i, n) stone.insert(x[i] * w + y[i]);
+	ll w = max({ *max_element(all(y)), sy, ty }) + 1;
 
+	ll sxy = sx * w + sy, txy = tx * w + ty;
+
+	// x_to_y[x] : x 座標が x である行にある岩の y 座標の昇順列
+	// y_to_x[y] : y 座標が y である列にある岩の x 座標の昇順列
 	unordered_map<ll, vl> x_to_y, y_to_x;
-	unordered_map<ll, int> xy_to_i; int id = 0;
-
-	xy_to_i[sx * w + sy] = id++;
 	rep(i, n) {
 		x_to_y[x[i]].push_back(y[i]);
 		y_to_x[y[i]].push_back(x[i]);
-
-		rep(k, 4) {
-			ll nx = x[i] + DX[k];
-			ll ny = y[i] + DY[k];
-
-			if (stone.count(nx * w + ny)) continue;
-			if (xy_to_i.count(nx * w + ny)) continue;
-
-			xy_to_i[nx * w + ny] = id++;
-		}
 	}
 	repea(p, x_to_y) sort(all(p.second));
 	repea(p, y_to_x) sort(all(p.second));
 
-	if (!xy_to_i.count(tx * w + ty)) return INF;
+	// dist[xy] : (sx, sy) から (x, y) への最小移動回数
+	unordered_map<ll, int> dist;
+	dist[sxy] = 0;
 
-	Graph g(id);
+	// 未探索の頂点を記録しておくキュー
+	queue<ll> que;
+	que.push(sxy);
 
-	repe(p, xy_to_i) {
-		ll xy, x, y; int id;
-		tie(xy, id) = p;
-		x = xy / w; y = xy % w;
+	// (x, y) から移動できる頂点 (nx, ny) のリストを返す．
+	auto get_next = [&](ll xy) {
+		ll x = xy / w, y = xy % w;
 
-		auto ity = lower_bound(all(x_to_y[x]), y);
-		if (ity != x_to_y[x].end()) {
-			g[id].push_back(xy_to_i[x * w + (*ity - 1)]);
+		vl res;
+
+		// 左右それぞれで最も近くにある岩を探し，その手前を移動先の候補とする．
+		auto it_y = x_to_y.find(x);
+		if (it_y != x_to_y.end()) {
+			auto& ys = it_y->second;
+			auto it = lower_bound(all(ys), y);
+			if (it != ys.end()) res.emplace_back(x * w + (*it - 1));
+			if (it != ys.begin()) res.emplace_back(x * w + (*prev(it) + 1));
 		}
-		ity = lower_bound(all(x_to_y[x]), y);
-		if (ity != x_to_y[x].begin()) {
-			g[id].push_back(xy_to_i[x * w + (*prev(ity) + 1)]);
+
+		// 上下それぞれで最も近くにある岩を探し，その手前を移動先の候補とする．
+		auto it_x = y_to_x.find(y);
+		if (it_x != y_to_x.end()) {
+			auto& xs = it_x->second;
+			auto it = lower_bound(all(xs), x);
+			if (it != xs.end()) res.emplace_back((*it - 1) * w + y);
+			if (it != xs.begin()) res.emplace_back((*prev(it) + 1) * w + y);
 		}
-		auto itx = lower_bound(all(y_to_x[y]), x);
-		if (itx != y_to_x[y].end()) {
-			g[id].push_back(xy_to_i[(*itx - 1) * w + y]);
-		}
-		itx = lower_bound(all(y_to_x[y]), x);
-		if (itx != y_to_x[y].begin()) {
-			g[id].push_back(xy_to_i[(*prev(itx) + 1) * w + y]);
+
+		return res;
+	};
+
+	// 幅優先探索で最短距離を決定する．
+	while (!que.empty()) {
+		// 未探索の頂点 (x, y) を得る．
+		auto xy = que.front(); que.pop();
+		int d = dist[xy];
+
+		// ゴール (tx, ty) に到達したなら最短距離を返す．
+		if (xy == txy) return d;
+
+		repe(nxy, get_next(xy)) {
+			// (nx, ny) が発見済みの頂点なら何もしない．
+			if (dist.count(nxy)) continue;
+
+			// スタート (sx, sy) からの最短距離を確定する．
+			dist[nxy] = d + 1;
+
+			// 未探索の頂点として (nx, ny) を追加する．
+			que.push(nxy);
 		}
 	}
 
-	vi dist = breadth_first_search(g, 0);
-
-	return dist[xy_to_i[tx * w + ty]];
+	// ゴール (tx, ty) に到達できなかった場合は INF を返す．
+	return INF;
 }
 
 

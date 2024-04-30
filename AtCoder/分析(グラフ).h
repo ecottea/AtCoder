@@ -309,11 +309,115 @@ vvi directed_cycles_detection(IGraph g) {
 }
 
 
-//【オイラー路】O(n + m) 
+//【オイラー路（無向グラフ，参照付き）】O(n + m) 
+/*
+* 参照付き無向グラフ g の ST から GL へのオイラー路を返す（なければ空リスト）
+* オイラー路は {頂点リスト, 辺番号リスト} の形で返す．
+*/
+pair<vi, vi> eulerian_trail(IGraph g, int ST, int GL) {
+	// verify : https://judge.yosupo.jp/problem/eulerian_trail_undirected
+
+	int n = sz(g);
+
+	int m = 0;
+	rep(s, n) repe(t, g[s]) chmax(m, t.id);
+	m++;
+
+	vb seen(m);
+
+	// まず ST から GL への何らかの小道 trail を見つける．
+	deque<int> trail_v, trail_e; int s = ST;
+	while (s != GL) {
+		// s を通ったことを記録する．
+		trail_v.push_back(s);
+
+		IEdge t;
+		while (true) {
+			// 行き止まりになったら失敗．
+			if (g[s].empty()) return { vi(), vi() };
+
+			// t : 次に訪れる頂点
+			t = g[s].back();
+
+			// 同じ辺を 2 度通らないように削除しておく．
+			g[s].pop_back();
+
+			// 逆走防止
+			if (!seen[t.id]) break;
+		}
+
+		// t へ移動する．
+		trail_e.push_back(t.id);
+		seen[t.id] = true;
+		s = t;
+	}
+	trail_v.push_back(GL);
+
+	// 訪れられなかった頂点をオイラー路の末尾や trail の先頭に付け加えながら trail をなぞる．
+	vi res_v, res_e;
+	while (true) {
+		int v = trail_v.front(); trail_v.pop_front();
+		res_v.push_back(v);
+
+		// 逆走防止
+		while (!g[v].empty() && seen[g[v].back().id]) g[v].pop_back();
+
+		// v から出る辺が残っている場合
+		if (!g[v].empty()) {
+			// v を通る回路 circuit を見つける．
+			stack<int> circuit_v, circuit_e; int s = v;
+			do {
+				IEdge t;
+				while (true) {
+					// 行き止まりになったら失敗．
+					if (g[s].empty()) return { vi(), vi() };
+
+					// t : 次に訪れる頂点
+					t = g[s].back();
+
+					// 同じ辺を 2 度通らないように削除しておく．
+					g[s].pop_back();
+
+					// 逆走防止
+					if (!seen[t.id]) break;
+				}
+
+				// t を通ることを記録する．
+				circuit_v.push(t);
+
+				// t へ移動する．
+				circuit_e.push(t.id);
+				seen[t.id] = true;
+				s = t;
+			} while (s != v);
+
+			// circuit を trail の先頭に追加する．
+			while (!circuit_v.empty()) {
+				trail_v.push_front(circuit_v.top()); circuit_v.pop();
+			}
+			while (!circuit_e.empty()) {
+				trail_e.push_front(circuit_e.top()); circuit_e.pop();
+			}
+		}
+
+		if (trail_v.empty()) break;
+
+		int id = trail_e.front(); trail_e.pop_front();
+		res_e.push_back(id);
+	}
+
+	// それでも訪れられなかった頂点が残っているなら非連結なので失敗．
+	rep(s, n) repe(t, g[s]) if (!seen[t.id]) return { vi(), vi() };
+
+	return { res_v, res_e };
+}
+
+
+//【オイラー路（有向グラフ）】O(n + m) 
 /*
 * 有向グラフ g の ST から GL へのオイラー路を返す（なければ空リスト）
 */
-vi eulerian_trail(Graph g, int ST, int GL) {
+vi directed_eulerian_trail(Graph g, int ST, int GL) {
 	// verify : https://atcoder.jp/contests/abc227/tasks/abc227_h
 
 	int n = sz(g);
@@ -344,7 +448,7 @@ vi eulerian_trail(Graph g, int ST, int GL) {
 		int v = trail.front(); trail.pop_front();
 		res.push_back(v);
 
-		// v に接続する辺がもうなければ次へ．
+		// v から出る辺がもうなければ次へ．
 		if (g[v].empty()) continue;
 
 		// v を通る回路 circuit を見つける．
@@ -376,6 +480,87 @@ vi eulerian_trail(Graph g, int ST, int GL) {
 	rep(s, n) if (!g[s].empty()) return vi();
 
 	return res;
+}
+
+
+//【オイラー路（有向グラフ，参照付き）】O(n + m) 
+/*
+* 参照付き有向グラフ g の ST から GL へのオイラー路を返す（なければ空リスト）
+* オイラー路は {頂点リスト, 辺番号リスト} の形で返す．
+*/
+pair<vi, vi> directed_eulerian_trail(IGraph g, int ST, int GL) {
+	// verify : https://judge.yosupo.jp/problem/eulerian_trail_directed
+
+	int n = sz(g);
+
+	// まず ST から GL への何らかの小道 trail を見つける．
+	deque<int> trail_v, trail_e; int s = ST;
+	while (s != GL) {
+		// s を通ったことを記録する．
+		trail_v.push_back(s);
+
+		// 行き止まりになったら失敗．
+		if (g[s].empty()) return { vi(), vi() };
+
+		// t : 次に訪れる頂点
+		auto t = g[s].back();
+
+		// 同じ辺を 2 度通らないように削除しておく．
+		g[s].pop_back();
+
+		// t へ移動する．
+		trail_e.push_back(t.id);
+		s = t;
+	}
+	trail_v.push_back(GL);
+
+	// 訪れられなかった頂点をオイラー路の末尾や trail の先頭に付け加えながら trail をなぞる．
+	vi res_v, res_e;
+	while (true) {
+		int v = trail_v.front(); trail_v.pop_front();
+		res_v.push_back(v);
+
+		// v から出る辺が残っている場合
+		if (!g[v].empty()) {
+			// v を通る回路 circuit を見つける．
+			stack<int> circuit_v, circuit_e; int s = v;
+			do {
+				// 行き止まりになったら失敗．
+				if (g[s].empty()) return { vi(), vi() };
+
+				// t : 次に訪れる頂点
+				auto t = g[s].back();
+
+				// 同じ辺を 2 度通らないように削除しておく．
+				g[s].pop_back();
+
+				// t を通ることを記録する．
+				circuit_v.push(t);
+
+				// t へ移動する．
+				circuit_e.push(t.id);
+				s = t;
+			} while (s != v);
+
+			// circuit を trail の先頭に追加する．
+			while (!circuit_v.empty()) {
+				trail_v.push_front(circuit_v.top()); circuit_v.pop();
+			}
+			while (!circuit_e.empty()) {
+				trail_e.push_front(circuit_e.top()); circuit_e.pop();
+			}
+		}
+
+		if (trail_v.empty()) break;
+
+		int id = trail_e.front(); trail_e.pop_front();
+		res_e.push_back(id);
+	}
+
+	// それでも訪れられなかった頂点が残っているなら非連結なので失敗．
+	rep(s, n) if (!g[s].empty()) return { vi(), vi() };
+
+	return { res_v, res_e };
 }
 
 
@@ -900,6 +1085,34 @@ vb reachability(const Graph& g, const vi& u, const vi& v) {
 * 
 * verify : https://atcoder.jp/contests/abc306/tasks/abc306_g
 */
+
+
+//【独立集合判定】O(2^N N)
+/*
+* グラフ g の頂点集合 set⊂[0..N) が独立集合かを格納したリストを返す．
+*/
+vb independent_setQ(const Graph& g) {
+	// verify : https://judge.yosupo.jp/problem/chromatic_number
+
+	int n = sz(g);
+
+	// ind[set] : set⊂[0..n) が独立集合か
+	vb ind(1LL << n, true);
+
+	// 辺の両端からなる 2 点集合 {s, t} は独立集合ではない．
+	rep(s, n) repe(t, g[s]) {
+		int set = (1 << s) + (1 << t);
+		ind[set] = false;
+	}
+
+	// 独立集合でない集合を部分集合にもつ集合は独立集合ではない．
+	repb(set, n) repis(i, set) {
+		int sub = set - (1 << i);
+		ind[set] = ind[set] && ind[sub];
+	}
+
+	return ind;
+}
 
 
 //【パスグラフ判定】

@@ -26,8 +26,8 @@
 *
 * c + f, f + c : O(1)	f + g : O(n)
 * f - c : O(1)			c - f, f - g, -f : O(n)
-* c * f, f * c : O(n)	f * g : O(n log n)		f * g_sp : O(n k)（k : g の項数）
-* f / c : O(n)			f / g : O(n log n)		f / g_sp : O(n k)（k : g の項数）
+* c * f, f * c : O(n)	f * g : O(n log n)		f * g_sp : O(n |g|)
+* f / c : O(n)			f / g : O(n log n)		f / g_sp : O(n |g|)
 *	形式的冪級数としての和，差，積，商の結果を返す．
 *	g_sp はスパース多項式であり，{次数, 係数} の次数昇順の組の vector で表す．
 *	制約 : 商では g(0) != 0
@@ -65,7 +65,7 @@
 *	最高次の係数として c を追加する．
 */
 struct MFPS {
-	using SMFPS = vector<pair<int, mint>>;
+	using SMFPS = vector<pim>;
 
 	int n; // 係数の個数（次数 + 1）
 	vm c; // 係数列
@@ -206,7 +206,7 @@ struct MFPS {
 		Assert(c[0] != 0);
 
 		MFPS g(c[0].inv());
-		for (int k = 1; k < d; k *= 2) {
+		for (int k = 1; k < d; k <<= 1) {
 			int len = max(min(2 * k, d), 1);
 			MFPS tmp(0, len);
 			rep(i, min(len, n)) tmp[i] = -c[i];	// -f
@@ -229,8 +229,8 @@ struct MFPS {
 
 		//【方法】
 		// f(x) = g(x) q(x) + r(x) となる q(x) を求める．
-		// f の次数は n - 1, g の次数は m - 1 とする．(n >= m)
-		// 従って q の次数は n - m，r の次数は m - 2 となる．
+		// f の次数は n-1, g の次数は m-1 とする．(n ≧ m)
+		// 従って q の次数は n-m，r の次数は m-2 となる．
 		// 
 		// f^R で f の係数列を逆順にした多項式を表す．すなわち
 		//		f^R(x) := f(1/x) x^(n-1)
@@ -246,7 +246,7 @@ struct MFPS {
 		// を得る．
 		// 	   
 		// これで q を mod x^(n-m+1) で正しく求めることができることになるが，
-		// q の次数は n - m であったから，q 自身を正しく求めることができた．
+		// q の次数は n-m であったから，q 自身を正しく求めることができた．
 
 		if (n < g.n) return MFPS();
 		return ((this->rev() / g.rev()).resize(n - g.n + 1)).rev();
@@ -480,7 +480,7 @@ MFPS exp_fps(const MFPS& f, int d, const Factorial_mint& fm) {
 
 	// ニュートン法で log g = f なる g を見つける．
 	MFPS g(1);
-	for (int k = 1; k < d; k *= 2) {
+	for (int k = 1; k < d; k <<= 1) {
 		int len = max(min(2 * k, d), 1);
 		auto tmp = log_fps(g, len, fm);							// log h
 		rep(i, len) tmp[i] = (i < sz(f) ? f[i] : 0) - tmp[i];	// f - log h
@@ -497,7 +497,7 @@ MFPS exp_fps(const MFPS& f, int d, const Factorial_mint& fm) {
 /*
 * f(z)^k mod z^d を返す．（0^0 = 1 とする）
 *
-* 制約 : fm は (2d)! まで計算可能
+* 制約 : k ≧ 0，fm は d! まで計算可能
 *
 * 利用：【指数関数】,【対数関数】
 */
@@ -537,6 +537,24 @@ MFPS pow_fps(const MFPS& f, ll k, int d, const Factorial_mint& fm) {
 }
 
 
+//【累乗（有理数）】O(n log n)
+/*
+* f(z)^(num/dnm) mod z^d を返す．
+*
+* 制約 : [z^0]f(z) = 1，fm は d! まで計算可能
+*
+* 利用：【指数関数】,【対数関数】
+*/
+MFPS rational_pow_fps(const MFPS& f, ll num, ll dnm, int d, const Factorial_mint& fm) {
+	// verify : https://judge.yosupo.jp/problem/compositional_inverse_of_formal_power_series_large
+
+	Assert(sz(f) > 0 && f[0] == 1);
+
+	// f^(num/dnm) = exp(num/dnm log f(x)) を用いて f^(num/dnm) を計算する．	
+	return exp_fps(log_fps(f, d, fm) * mint(num) / mint(dnm), d, fm);
+}
+
+
 //【累乗の剰余】O(m log m log d)　（m = deg g）
 /*
 * f(z)^d mod g(z) を返す．
@@ -556,7 +574,7 @@ MFPS power_mod(const MFPS& f, ll d, const MFPS& g) {
 
 	while (i >= 0) {
 		res = (res * res).reminder(g);
-		if (get(d, i)) res = (res * f).reminder(g);
+		if (getb(d, i)) res = (res * f).reminder(g);
 		--i;
 	}
 
@@ -604,14 +622,17 @@ MFPS monomial_power_mod(ll d, const MFPS& g) {
 	// MSB から順に繰り返し二乗法を適用すれば，必要なのは 2 乗と z 倍のみである．
 	// z 倍 (mod g(z)) は素朴に計算すれば O(m) で可能である．
 
-	int m = sz(g); mint gm_inv = g[m - 1].inv();
+	int m = sz(g); 
+	if (m == 1) return MFPS(); 
+	
+	mint gm_inv = g[m - 1].inv();
 
 	MFPS res(1); int i = msb(d);
 
 	while (i >= 0) {
 		res = (res * res).reminder(g);
 
-		if (get(d, i)) {
+		if (getb(d, i)) {
 			// res(z) *= z (mod g(z)) をベタ書きする
 			if (sz(res) == m - 1) {
 				mint c = -res[m - 2] * gm_inv;
@@ -699,88 +720,90 @@ MFPS sqrt_fps(const MFPS& f, int d, bool& exist) {
 }
 
 
-//【展開係数】O(n log n log d)
+//【展開係数】O(n log n log N)
 /*
-* [z^d] f(z)/g(z) を返す．
+* [z^N] f(z)/g(z) を返す．
 *
 * 制約 : deg f < deg g, g[0] != 0
 */
-mint bostan_mori(const MFPS& f, const MFPS& g, ll d) {
+mint bostan_mori(MFPS f, MFPS g, ll N) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
-	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_fibonacci
+	// verify : https://judge.yosupo.jp/problem/kth_term_of_linearly_recurrent_sequence
 
 	//【方法】
-	// 分母分子に g(-x) を掛けることにより
-	//		f(x) / g(x) = f(x) g(-x) / g(x) g(-x)
-	// を得る．ここで g(x) g(-x) は偶多項式なので
-	//		g(x) g(-x) = e(x^2)
+	// 分母分子に g(-z) を掛けることにより
+	//		f(z) / g(z) = f(z) g(-z) / g(z) g(-z)
+	// を得る．ここで g(z) g(-z) は偶多項式なので
+	//		g(z) g(-z) = e(z^2)
 	// と表すことができる．
 	// 
 	// 分子について
-	//		f(x) g(-x) = E(x^2) + x O(x^2)
-	// というように偶多項式部分と奇多項式部分に分けると，d が偶数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] E(x^2) / e(x^2)
-	//		= [x^(d/2)] E(x) / e(x)
-	// となり，d が奇数のときは
-	//		[x^d] f(x) g(-x) / g(x) g(-x)
-	//		= [x^d] x O(x^2) / e(x^2)
-	//		= [x^((d-1)/2)] O(x) / e(x)
+	//		f(z) g(-z) = E(z^2) + z O(z^2)
+	// というように偶多項式部分と奇多項式部分に分けると，N が偶数のときは
+	//		[z^N] f(z) g(-z) / g(z) g(-z)
+	//		= [z^N] E(z^2) / e(z^2)
+	//		= [z^(N/2)] E(z) / e(z)
+	// となり，N が奇数のときは
+	//		[z^N] f(z) g(-z) / g(z) g(-z)
+	//		= [z^N] z O(z^2) / e(z^2)
+	//		= [z^((N-1)/2)] O(z) / e(z)
 	// となる．
 	//
-	// これを繰り返せば d を半分ずつに減らしていくことができる．
+	// これを繰り返せば N を半分ずつに減らしていくことができる．
 
 	Assert(g.n >= 1 && g[0] != 0);
 
 	// f(z) = 0 のときは 0 を返す．
-	if (sz(f) == 0) return 0;
-	
-	// d = 0 のときは定数項を返す．
-	if (d == 0) return f[0] / g[0];
+	if (f.n == 0) return 0;
 
-	// f2(x) = f(x) g(-x), g2(x) = g(x) g(-x) を求める．
-	MFPS f2, g2 = g;
-	rep(i, g2.n) if (i % 2 == 1) g2[i] *= -1;
-	f2 = f * g2;
-	g2 *= g;
+	while (N > 0) {
+		// f2(z) = f(z) g(-z), g2(z) = g(z) g(-z) を求める．
+		MFPS f2, g2 = g;
+		rep(i, g2.n) if (i & 1) g2[i] *= -1;
+		f2 = f * g2;
+		g2 *= g;
 
-	// f3(x) = E(x) or O(x), g3(x) = e(x) を求める．
-	MFPS f3, g3;
-	if (d % 2 == 0) rep(i, (f2.n + 1) / 2) f3.c.push_back(f2[2 * i]);
-	else rep(i, f2.n / 2) f3.c.push_back(f2[2 * i + 1]);
-	f3.n = sz(f3.c);
-	rep(i, g.n) g3.c.push_back(g2[2 * i]);
-	g3.n = sz(g3.c);
+		// f3(z) = E(z) or O(z), g3(z) = e(z) を求める．
+		f.c.clear(); g.c.clear();
+		if (N & 1) rep(i, min<ll>(f2.n / 2, N / 2 + 1)) f.c.push_back(f2[2 * i + 1]);
+		else rep(i, min<ll>((f2.n + 1) / 2, N / 2 + 1)) f.c.push_back(f2[2 * i]);
+		f.n = sz(f.c);
+		rep(i, min<ll>((g2.n + 1) / 2, N / 2 + 1)) g.c.push_back(g2[2 * i]);
+		g.n = sz(g.c);
 
-	// d を半分にして再帰を回す．
-	return bostan_mori(f3, g3, d / 2);
+		// N を半分にして次のステップに進む．
+		N /= 2;
+	}
+
+	// N = 0 になったら定数項を返す．
+	return f[0] / g[0];
 }
 
 
-//【線形漸化式】O(d log d log n)
+//【線形漸化式】O(n log n log N)
 /*
-* 初項 a[0..d) と漸化式 a[i] = Σj=[0..d) c[j]a[i-1-j] で定義される
-* 数列 a について，a[n] の値を返す．
+* 初項 a[0..n) と漸化式 a[i] = Σj∈[0..n) c[j] a[i-1-j] で定義される
+* 数列 a について，a[N] の値を返す．
 *
 * 利用：【展開係数】
 */
-mint linearly_recurrent_sequence(const vm& a, const vm& c, ll n) {
+mint linearly_recurrent_sequence(const vm& a, const vm& c, ll N) {
 	// verify : https://judge.yosupo.jp/problem/kth_term_of_linearly_recurrent_sequence
 
-	int d = sz(c);
-	if (d == 0) return 0;
+	int n = sz(c);
+	if (n == 0) return 0;
 
 	MFPS A(a), C(c);
 	MFPS Dnm = 1 - (C >> 1);
-	MFPS Num = (Dnm * A).resize(d);
-	return bostan_mori(Num, Dnm, n);
+	MFPS Num = (Dnm * A).resize(n);
+	return bostan_mori(Num, Dnm, N);
 }
 
 
 //【線形漸化式の発見】O(n^2)
 /*
-* 与えられた数列 a[0..n) に対し，以下の等式を満たす c[0..d) で d を最小とするものを返す：
-*		a[i] = Σj=[0..d) c[j] a[i-1-j]  (∀i∈[d..n))
+* 与えられた数列 a[0..n) に対し，以下の等式を満たす c[0..m) で m を最小とするものを返す：
+*		a[i] = Σj∈[0..m) c[j] a[i-1-j]  (∀i∈[m..n))
 */
 vm berlekamp_massey(const vm& a) {
 	// 参考 : https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
@@ -813,20 +836,130 @@ vm berlekamp_massey(const vm& a) {
 }
 
 
-//【変数係数線形漸化式の発見】
+//【変数係数線形漸化式の発見】O(n L^2 D^2 + N (L D + log(mod)))
 /*
-* Mathematica で以下のプログラムを実行すればよい（整形は CForm[] で）：
+* 係数多項式の次数が D 次未満の L 項間漸化式
+*	Σi∈[0..L) Σj∈[0..D) c(i,j) (m+i)^j a[m+i] = 0
+* の存在を仮定して a[0..n) を延長し a[0..N] にする（失敗したら false を返す）
+*
+* 制約 : n ≧ L(D+1)-1（ランク落ちしてるとこれでも足りないかも）
+*
+* 利用：【行列】,【線形方程式】
+*/
+template <class DUMMY = int>
+bool p_recursive(int N, vm& a, int L, int D, vm* coef = nullptr) {
+	// verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
 
+	int n = sz(a);
+
+	// 既に十分な長さがある場合はそのままで良い．
+	if (N <= n - 1) {
+		a.resize(N + 1);
+		return true;
+	}
+
+	// 式が足りないといつでも非自明解をもってしまって意味がない．
+	if (n < L * (D + 1) - 1) return false;
+
+	// 行列方程式 A x = 0 を解いて一般解の基底 xs を求める．
+	Matrix<mint> A(n - L + 1, L * D);
+	repi(n0, 0, n - L) {
+		rep(i, L) rep(j, D) {
+			A[n0][i * D + j] = mint(n0 + i).pow(j) * a[n0 + i];
+		}
+	}
+	vvm xs;
+	gauss_jordan_elimination(A, vm(n - L + 1), &xs);
+
+	// 自明解 x = 0 しか存在しない場合は失敗．
+	if (xs.empty()) return false;
+
+	a.resize(N + 1);
+
+	// 得られた非自明解 xs.back() から漸化式を復元し，それに基づき a[0..n) を延長する．
+	auto& x = xs.back();
+	repi(n0, n - L + 1, N - L + 1) {
+		mint num = 0;
+		rep(i, L - 1) {
+			mint pow_n0i = 1;
+			rep(j, D) {
+				num += x[i * D + j] * pow_n0i * a[n0 + i];
+				pow_n0i *= n0 + i;
+			}
+		}
+
+		mint dnm = 0;
+		mint pow_n0L = 1;
+		rep(j, D) {
+			dnm += x[(L - 1) * D + j] * pow_n0L;
+			pow_n0L *= n0 + L - 1;
+		}
+
+		// num + dnm * a[n0 + L - 1] = 0
+		a[n0 + L - 1] = -num / dnm;
+	}
+
+	if (coef) *coef = move(x);
+
+	return true;
+}
+
+
+//【変数係数線形漸化式の発見（Mathematica）】
+/*
+* Mathematica で以下のプログラムを実行すればよい：
+
+Clear[c, nn, dpsub];
 seq = { 愚直に計算した a[1..] } (* 添字が 1 始まりなのに注意！ *);
-terms = 5 (* 何項間漸化式の存在を仮定するか *);
-degree = 5 (* 係数多項式の次数を何次と仮定するか *);
-eqs = Table[Sum[c[i, j] (n - i)^j seq[[n - i]], {i, 0, terms - 1}, {j, 0, degree}] == 0, {n, terms, Length@seq}];
-eqs = eqs~Join~{c[0, degree] == 1};
-sol = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree}], Modulus -> 998244353];
-Clear[dp];
-Solve[Sum[c[i, j] (n - i)^j dp[n - i], {i, 0, terms - 1}, {j, 0, degree}] == 0 /. sol[[1]], dp[n]][[1]]
+terms = 3 (* 何項間漸化式の存在を仮定するか *);
+degree = 2 (* 係数多項式の次数を何次未満と仮定するか *);
+eqs = Table[Sum[c[i, j] (nn - i)^j seq[[nn - i]], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0, {nn, terms, Length@seq}];
+fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}], Integers, 2][[1]]
+sol = Solve[Sum[c[i, j] (nn - i)^j dpsub[nn - i], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0 /. fi, dpsub[nn]][[1]]
+CForm@FullSimplify@sol[[1, 2]]
 
-* verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
+* 時間がかかりすぎるようなら，fi の 1 行を以下の 2 行に置き換える：
+
+eqs = eqs~Join~{c[0, degree-1] == 1} (* 1 に固定する係数の位置は適宜調整する *);
+fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}]][[1]]
+
+* コピペ後の整形では以下の関数を利用できる：
+
+auto dpsub = [&](const mint& x) { return dp[x.val()]; };
+auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; return res; };
+
+* あと積のオーバーフローや逆数にも要注意．
+*
+* verify : https://atcoder.jp/contests/arc174/tasks/arc174_c
+*/
+
+
+//【変数係数線形漸化式の発見（2 次元，Mathematica）】
+/*
+* Mathematica で以下のプログラムを実行すればよい（整形は FullSimplify[] からの CForm[] で）：
+
+Clear[c, nn1, nn2, dpsub];
+tbl = { 愚直に計算した a[1..][1..] } (* 添字が 1 始まりなのに注意！ *);
+terms = 2 (* 何項間漸化式の存在を仮定するか *);
+degree = 2 (* 係数多項式の次数を何次未満と仮定するか *);
+eqs = Flatten@Table[Sum[c[i1, j1, i2, j2] (n1 - i1)^j1 (n2 - i2)^j2 tbl[[n1 - i1]][[n2 - i2]], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}] == 0, {n1, terms, Length@tbl}, {n2, terms, Length[tbl[[1]]]}] (* 三角行列ならn2の上限はn1にする *);
+fi = FindInstance[eqs, Flatten@Table[c[i1, j1, i2, j2], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}], Integers, 2][[1]];
+sol = Solve[Sum[c[i1, j1, i2, j2] (nn1 - i1)^j1 (nn2 - i2)^j2 dpsub[nn1 - i1, nn2 - i2], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}] == 0 /. fi, dpsub[nn1, nn2]][[1]]
+CForm@FullSimplify@sol[[1, 2]]
+
+* 時間がかかりすぎるようなら，fi の 1 行を以下の 2 行に置き換える：
+
+eqs = eqs~Join~{c[0, 0, 0, 0] == 1} (* 1 に固定する係数の位置は適宜調整する *);
+fi = FindInstance[eqs, Flatten@Table[c[i1, j1, i2, j2], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}]][[1]];
+
+* コピペ後の整形では以下の関数を利用できる：
+
+auto dpsub = [&](const mint& x, const mint& y) { return dp[x.val()][y.val()]; };
+auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; return res; };
+
+* あと積のオーバーフローや逆数にも要注意．
+*
+* verify : https://atcoder.jp/contests/tupc2023/tasks/tupc2023_l
 */
 
 
@@ -838,7 +971,7 @@ Solve[Sum[c[i, j] (n - i)^j dp[n - i], {i, 0, terms - 1}, {j, 0, degree}] == 0 /
 *
 * 利用：【展開係数】
 */
-mint bostan_mori(const SPoly<mint>& f, const MFPS& g, ll d) {
+mint bostan_mori(const MFPS::SMFPS& f, const MFPS& g, ll d) {
 	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_h
 
 	//【方法】
@@ -847,34 +980,30 @@ mint bostan_mori(const SPoly<mint>& f, const MFPS& g, ll d) {
 	// である．これを分子の全ての項について足し合わせる．
 	mint res = 0;
 
-	repe(p, f.c) {
-		ll fd; mint fc;
-		tie(fd, fc) = p;
+	for (auto [deg, coef] : f) {
+		if (d - deg < 0) continue;
 
-		if (d - fd < 0) continue;
-
-		res += fc * bostan_mori(MFPS(1), g, d - fd);
+		res += coef * bostan_mori(MFPS(1), g, d - deg);
 	}
 
 	return res;
 }
 
 
-//【展開係数（分母が二項式の積）】O(deg(g) m log d)
+//【展開係数（分母が二項式の積）】O(deg(g) m log N)
 /*
-* f(z) = Σi∈[0..n) f[i] z^i，g(z) = Πj∈[0..m) (1 + c[j] z^d[j]) とし，
-* 有理式 f(z)/g(z) を形式的冪級数に展開したときの z^d の係数を返す．
+* f(z) = Σi∈[0..n) f[i] z^i，g(z) = Πj∈[0..m) (1 + c[j] z^d[j]) とし [z^N] f(z)/g(z) を返す．
 *
 * 制約 : deg f < deg g
 */
-mint bostan_mori(vm f, vector<pair<int, mint>> dcs, ll d) {
+mint bostan_mori(vm f, vector<pim> dcs, ll N) {
 	// verify : https://yukicoder.me/problems/no/137
 
 	// f(z) = 0 のときは 0 を返す．
 	if (sz(f) == 0) return 0;
 
-	// d = 0 のときは定数項を返す．
-	if (d == 0) return f[0];
+	// N = 0 のときは定数項を返す．
+	if (N == 0) return f[0];
 
 	int n = sz(f), m = sz(dcs);
 
@@ -887,11 +1016,11 @@ mint bostan_mori(vm f, vector<pair<int, mint>> dcs, ll d) {
 
 	// d の偶奇に応じて f の偶[奇]多項式部分を取り出す．
 	vm f2;
-	if (d % 2 == 0) rep(i, (sz(f) + 1) / 2) f2.push_back(f[2 * i]);
-	else rep(i, sz(f) / 2) f2.push_back(f[2 * i + 1]);
+	if (N & 1) rep(i, sz(f) / 2) f2.push_back(f[2 * i + 1]);
+	else rep(i, (sz(f) + 1) / 2) f2.push_back(f[2 * i]);
 
 	// d を半分にして再帰を回す．
-	return bostan_mori(f2, dcs, d / 2);
+	return bostan_mori(f2, dcs, N >> 1);
 }
 
 
@@ -1015,6 +1144,126 @@ mint thinning_sum(const MFPS& f, const MFPS& g, ll d, ll k) {
 }
 
 
+//【展開係数（一括）】O((m+R-L) log(m+R-L) log R)
+/*
+* [z^[L..R)] f(z)/g(z) を返す．
+*
+* 制約 : g[0] != 0
+*/
+vm bostan_mori_msb(vm f, const vm& g, ll L, ll R) {
+	// 参考 : https://qiita.com/ryuhe1/items/c18ddbb834eed724a42b
+	// verify : https://judge.yosupo.jp/problem/consecutive_terms_of_linear_recurrent_sequence
+
+	int n = sz(f), m = sz(g) - 1;
+
+	if (n == 0) return vm(R - L);
+	if (L == R) return vm();
+
+	Assert(m >= 0 && g[0] != 0);
+	mint g0_inv = g[0].inv();
+
+	if (n > R) {
+		n = (int)R;
+		f.resize(n);
+	}
+
+	if (m == 0) {
+		vm res(R - L);
+		rep(i, n - L) res[i] = f[i + L] * g0_inv;
+		return res;
+	}
+
+	// 2^K : R 以上の最小の 2 冪
+	int K = msb(R - 1) + 1;
+
+	vvm q(K, vm(m + 1));
+	repi(j, 0, m) q[0][j] = g[j] * g0_inv;
+
+	vl d_min(K + 1), d_max(K + 1);
+	d_min[0] = max(L - n + 1, 0LL); d_max[0] = R - 1;
+
+	repi(k, 1, K - 1) {
+		auto q_pos(q[k - 1]);
+		for (int i = 1; i <= m; i += 2) q[k - 1][i] *= -1;
+		auto qk_dbl = convolution(q_pos, q[k - 1]);
+		repi(i, 0, m) q[k][i] = qk_dbl[i * 2];
+
+		auto tmp = d_min[k - 1] - 1 - m;
+		d_min[k] = tmp >= 0 ? tmp / 2 + 1 : 0;
+		d_max[k] = d_max[k - 1] / 2;
+	}
+
+	for (int i = 1; i <= m; i += 2) q[K - 1][i] *= -1;
+	
+	const mint inv2 = mint(2).inv();
+	mint inv2_pow[31];
+	inv2_pow[0] = 1;
+	rep(i, 30) inv2_pow[i + 1] = inv2_pow[i] * inv2;
+
+	vm p{ 1 };
+
+	repir(k, K - 1, 0) {
+		// 持っている係数の範囲は
+		//	p     : z^[d_min[k+1]..d_max[k+1]]
+		//	p_dbl : z^[2 d_min[k+1] .. 2 d_max[k+1]]
+		//	q[k]  : z^[0..m]
+		// なので，p_dbl と q[k] を普通に畳み込むと 
+		//          z^[2 d_min[k+1] .. 2 d_max[k+1] + m]
+		// の範囲の係数が手に入る．でも欲しいのは
+		//	        z^[d_min[k]..d_max[k]]
+		// の範囲だけなので，端がエイリアシングっぽく壊れても問題ない．
+
+		// W = 2^B : 必要な部分が壊れずに残るギリギリの 2 冪の長さ
+		int B = msb(m + max(2 * d_max[k + 1] - d_min[k], 0LL)) + 1;
+		int W = 1 << B;
+
+		vm p_dbl(W);
+		rep(i, sz(p)) p_dbl[i * 2] = p[i];
+		
+		q[k].resize(W);
+		
+		internal::butterfly(p_dbl);
+		internal::butterfly(q[k]);
+		rep(i, W) p_dbl[i] *= q[k][i];
+		internal::butterfly_inv(p_dbl);
+		
+		p.resize(d_max[k] - d_min[k] + 1);
+		int i_min = (int)max(-(d_min[k] - 2 * d_min[k + 1]), 0LL);
+		int i_max = (int)min(d_max[k] - d_min[k], sz(p_dbl) - 1 - (d_min[k] - 2 * d_min[k + 1]));
+		repi(i, i_min, i_max) {
+			p[i] = p_dbl[i + d_min[k] - 2 * d_min[k + 1]] * inv2_pow[B];
+		}
+	}
+
+	// 持っている係数の範囲は
+	//	f : z^[0..n-1]
+	//	p : z^[d_min[0]..d_max[0]]
+	// なので，f と p を普通に畳み込むと 
+	//      z^[d_min[0] .. n-1+d_max[0]]
+	// の範囲の係数が手に入る．でも欲しいのは
+	//	    z^[L..R-1]
+	// の範囲だけなので，端がエイリアシングっぽく壊れても問題ない．
+
+	// W = 2^B : 必要な部分が壊れずに残るギリギリの 2 冪の長さ
+	int B = msb(n - 1 + d_max[0] - L) + 1;
+	int W = 1 << B;
+
+	f.resize(W);
+	p.resize(W);
+	
+	internal::butterfly(f);
+	internal::butterfly(p);
+	rep(i, W) f[i] *= p[i];
+	internal::butterfly_inv(f);
+	
+	g0_inv *= inv2_pow[B];
+	vm res(R - L);
+	rep(i, R - L) res[i] = f[i + L - d_min[0]] * g0_inv;
+
+	return res;
+}
+
+
 //【平行移動】O(n log n)
 /*
 * 与えられた多項式 f(z) に対し，f(z + c) を返す．
@@ -1062,6 +1311,31 @@ MFPS taylor_shift(const MFPS& f, mint c, const Factorial_mint& fm) {
 	rep(i, n) fs[i] *= fm.fact_inv(i);
 
 	return fs;
+}
+
+
+//【拡縮】O(n log n)
+/*
+* 与えられた f(z) に対し，f(a z) を返す．
+*/
+MFPS scaling(MFPS f, mint a) {
+	//【方法】
+	//		f(z) = Σi=[0..n) f[i] z^i
+	// と表されるとすると，
+	//		f(az) = Σi=[0..n) f[i] (az)^i
+	//		      = Σi=[0..n) a^i f[i] z^i
+	// である．よって a の累積積を計算しながらそれを係数に乗じていけば良い．
+
+	int n = sz(f);
+
+	mint a_pow = 1;
+
+	rep(i, n) {
+		f[i] *= a_pow;
+		a_pow *= a;
+	}
+
+	return f;
 }
 
 
@@ -1158,6 +1432,69 @@ MFPS expand(const vm& x) {
 	}
 
 	return f[0];
+}
+
+
+//【一次式の積の展開（等差数列）】O(n log n)
+/*
+* Πi∈[0..n) (z + a i + b) を返す．
+*
+* 制約 : fm は n! まで計算可能
+*
+* 利用：【平行移動】
+*/
+MFPS expand_arithmetic(int n, mint a, mint b, const Factorial_mint& fm) {
+	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind
+
+	//【方法】
+	// 累乗をダブリングで計算するのと同様．
+	// ただし同じものを掛けるのではなく平行移動したものを掛ける．
+
+	//【備考】
+	// a = -1, b = 0 なら係数は符号付き第 1 種スターリング数
+
+	MFPS f(vm({ b, 1 })), res(1);
+
+	while (n > 0) {
+		if (n & 1) res = taylor_shift(res, f.deg() * a, fm) * f;
+		f *= taylor_shift(f, f.deg() * a, fm);
+		n /= 2;
+	}
+
+	return res;
+}
+
+
+//【一次式の積の展開（等比数列）】O(n log n)
+/*
+* Πi∈[0..n) (z + a r^i) を返す．
+*
+* 利用：【拡縮】
+*/
+MFPS expand_geometric(int n, mint a, mint r) {
+	//【方法】
+	// 代わりに
+	//		Πi∈[0..n) (1 + a r^i z)
+	// を計算して係数を反転すれば良い．
+	//  
+	//		f(z) = (1 + a z)(1 + a r z)
+	// が計算できているとすると，
+	//		f(r^2 z) = (1 + a r^2 z)(1 + a r^3 z)
+	// なので，
+	//		f(z) f(r^2 z) = (1 + a z)(1 + a r z)(1 + a r^2 z)(1 + a r^3 z)
+	// が得られる．このようにダブリングを用いて計算していく．
+
+	MFPS f(vm({ 1, a })), res(1);
+
+	mint R = r;
+	while (n > 0) {
+		if (n & 1) res = scaling(res, R) * f;
+		f = scaling(f, R) * f;
+		R *= R;
+		n /= 2;
+	}
+
+	return res.rev();
 }
 
 
@@ -1468,7 +1805,7 @@ vm multipoint_evaluation(const MFPS& f, const vm& x) {
 
 	// sr の葉は (z - x[i]) で割った余りなので，因数定理よりこれが f(x[i]) に等しい．
 	vm y(m);
-	rep(i, m) y[i] = sr[m2 + i][0];
+	rep(i, m) y[i] = sz(sr[m2 + i]) ? sr[m2 + i][0] : 0;
 
 	return y;
 }
@@ -1558,7 +1895,10 @@ mint difference_product(const vm& a) {
 
 	// mods の葉は (z - x[i]) で割った余りなので，因数定理よりこれが Π(a[i] - a[0..i)) に等しい．
 	mint res = 1;
-	rep(i, n) res *= mods[N + i][0];
+	rep(i, n) {
+		if (sz(mods[N + i]) == 0) return 0;
+		res *= mods[N + i][0];
+	}
 
 	return res;
 }
@@ -1640,7 +1980,7 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 	// よって
 	//		a[i] = y[i] / g'(x[i])
 	// とおけば，後は
-	//		f(z) / g(z) = Σi=[0..n) a[i] / (x - x[i])
+	//		f(z) / g(z) = Σi=[0..n) a[i] / (z - x[i])
 	// を計算できればよく，これも分割統治で通分すれば O(n (log n)^2) で計算できる．
 
 	int n = sz(x);
@@ -1665,30 +2005,112 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 }
 
 
-//【下降階乗冪（符号付き第 1 種スターリング数）】O(n log n)
+//【ラグランジュ補間（多項式復元，等比数列）】O(n log n)
 /*
-* x(x-1)(x-2)...(x-(n-1)) を返す（係数は符号付き第 1 種スターリング数）
+* n 点での値 f(a r^i) = y[i] から定まる n-1 次多項式 f(x) を返す．
 *
-* 制約 : fm は n 以上の最小の 2 冪までの階乗計算が可能であること（2n で良い）
-*
-* 利用：【平行移動】
+* 利用：【一次式の積の展開（等比数列）】,【多点評価（等比数列）】
 */
-MFPS falling_factorial(int n, const Factorial_mint& fm) {
-	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind
+MFPS lagrange_interpolation(int n, mint a, mint r, const vm& y) {
+	// 参考 : https://37zigen.com/lagrange-interpolation/
+	// verify : https://judge.yosupo.jp/problem/polynomial_interpolation_on_geometric_sequence
 
 	//【方法】
-	// 累乗をダブリングで計算するのと同様．
-	// ただし同じものを掛けるのではなく平行移動したものを掛ける．
+	// 通常のラグランジュ補間による多項式復元と同じく，
+	//		一次式の積の展開 → 微分 → 多点評価 → 通分
+	// の順に計算する．
+	// 
+	// 微分の計算量は元々 O(n) なので問題ない．
+	// 一次式の積の展開と多点評価については O(n log n) の等比数列 ver があるのでそれを用いる．
+	// 通分については，これが多点評価と転置の関係にあることに注意すると，
+	// 対角行列をヴァンデルモンド行列の左右どちらから掛けるかの違いしかないので
+	// 多点評価の等比数列 ver を使い回すことができる．
 
-	MFPS f(vm({ 0, 1 })), res(1);
+	if (n == 0) return MFPS();
 
-	while (n > 0) {
-		if (n & 1) res = taylor_shift(res, -f.deg(), fm) * f;
-		f *= taylor_shift(f, -f.deg(), fm);
-		n /= 2;
+	MFPS g = expand_geometric(n, -a, r);
+
+	MFPS Dg(0, n);
+	repi(i, 1, n) Dg[i - 1] = g[i] * i;
+
+	vm b = chirp_Z_transform(Dg, n, a, r);
+
+	MFPS h(y);
+	rep(i, n) h[i] /= b[i];
+
+	vm fpg = chirp_Z_transform(h, n, 1, r);
+
+	mint a_pow = 1;
+	rep(i, n) {
+		fpg[i] *= a_pow;
+		a_pow *= a;
+	}
+	reverse(all(fpg));
+
+	auto f = MFPS(fpg) * g;
+	f <<= sz(f) - n;
+
+	return f;
+}
+
+
+//【標本点シフト】O((n + m) log(n + m))
+/*
+* f([0..n)) = y[0..n) なる n 次未満の多項式 f(z) について，f([z0..z0+m)) を返す．
+*
+* 制約 : fm は n! まで計算可能
+*
+* 利用：【順列の数（一括，r が固定で小さい）】,【逆数（一括）】
+*/
+vm sampling_points_shift(const vm& y, int m, ll z0, const Factorial_mint& fm) {
+	// verify : https://judge.yosupo.jp/problem/shift_of_sampling_points_of_polynomial
+
+	//【方法】
+	// 大体【ラグランジュ補間（一点評価）】と同じ．
+	// 分子が jPn/(j-i) と書けるので，畳込みで一括計算できる．
+
+	int n = sz(y);
+
+	vm a = inverse(z0 - n + 1, z0 + m);
+
+	vm b(n);
+	rep(i, n) b[i] = ((n - 1 - i) & 1 ? -1 : 1) * fm.fact_inv(i) * fm.fact_inv(n - 1 - i) * y[i];
+
+	// 持っている係数の範囲は
+	//	a : z^[0..n+m-2]
+	//	b : z^[0..n-1]
+	// なので，a と b を普通に畳み込むと 
+	//      z^[0..2n+m-3]
+	// の範囲の係数が手に入る．でも欲しいのは
+	//	    z^[n-1..n+m-2]
+	// の範囲だけなので，端がエイリアシングっぽく壊れても問題ない．
+
+	// W : 必要な部分が壊れずに残るギリギリの 2 冪の長さ
+	int W = 1 << (msb((n + m - 2) + (n - 1) - (n - 1)) + 1);
+
+	a.resize(W);
+	b.resize(W);
+
+	internal::butterfly(a);
+	internal::butterfly(b);
+	rep(i, W) a[i] *= b[i];
+	internal::butterfly_inv(a);
+
+	a.erase(a.begin(), a.begin() + (n - 1) - 0);
+	a.resize(m);
+
+	mint inv = mint(W).inv();
+
+	auto perm = perm_fixed_r(z0, z0 + m, n);
+
+	// 0 除算で壊れたところは答えが　y[0..n) の中にあるのでコピーする．
+	constexpr ll MOD = 998244353LL;
+	rep(j, m) {
+		if (perm[j] != 0) a[j] *= perm[j] * inv;
+		else a[j] = y[(j + z0) % MOD];
 	}
 
-	return res;
+	return a;
 }
 
 
@@ -1731,191 +2153,174 @@ vm newton_expand(const MFPS& f, const vm& p) {
 }
 
 
-//【逆元（スパース）】O(n K)（K : f の項数）
+//【ニュートン法】O(n log n)
 /*
-* {i, c}∈f で [z^i] f(z) = c を表すものとし，[z^[0..n]] 1/f(z) を返す．
-*
-* 制約 : {0, c}∈f
-*/
-vm inv_sparse(int n, const vector<pair<int, mint>>& f) {
-	// verify : https://judge.yosupo.jp/problem/inv_of_formal_power_series_sparse
-
-	vector<pair<int, mint>> f_sub;
-	mint f0_inv;
-
-	for (auto [k, c] : f) {
-		if (k == 0) f0_inv = c.inv();
-		else f_sub.emplace_back(k, c);
-	}
-
-	vm g(n + 1);
-	g[0] = 1;
-
-	// 前からインライン配る DP
-	repi(i, 0, n) {
-		if (g[i] == 0) continue;
-
-		// 定数項を最初に配る
-		g[i] *= f0_inv;
-
-		for (auto [j, c] : f_sub) {
-			if (i + j > n) continue;
-
-			g[i + j] -= g[i] * c;
-		}
-	}
-
-	return g;
-}
-
-
-//【指数関数（スパース）】O(n K)（K : f の項数）
-/*
-* {i, c}∈f で [z^i] f(z) = c を表すものとし，[z^[0..n]] exp f(z) を返す．
-*
-* 制約 : i != 0，fm は n! まで計算可能
-*/
-vm exp_sparse(int n, const vector<pair<int, mint>>& f, const Factorial_mint& fm) {
-	// verify : https://judge.yosupo.jp/problem/exp_of_formal_power_series_sparse
-
-	vm g(n + 1);
-	g[0] = 1;
-
-	repi(i, 1, n) {
-		for (auto [k, c] : f) {
-			if (i - k < 0) continue;
-			g[i] += k * c * g[i - k];
-		}
-		g[i] *= fm.inv(i);
-	}
-
-	return g;
-}
-
-
-//【対数関数（スパース）】O(n K)（K : f の項数）
-/*
-* {i, c}∈f で [z^i] f(z) = c を表すものとし，[z^[0..n]] log f(z) を返す．
-*
-* 制約 : {0, 1}∈f，fm は n! まで計算可能
-*/
-vm log_sparse(int n, const vector<pair<int, mint>>& f, const Factorial_mint& fm) {
-	// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series_sparse
-
-	vm g(n + 1);
-
-	repi(i, 1, n) {
-		for (auto [k, c] : f) {
-			if (k == 0 || i - k < 0) continue;
-
-			if (k == i) g[i] += k * c;
-			else g[i] -= (i - k) * c * g[i - k];
-		}
-		g[i] *= fm.inv(i);
-	}
-
-	return g;
-}
-
-
-//【累乗（スパース）】O(n K)（K : f の項数）
-/*
-* {i, c}∈f で [z^i] f(z) = c を表すものとし，[z^[0..n]] f(z)^m を返す．
-*
-* 制約 : fm は n! まで計算可能
-*/
-vm pow_sparse(int n, const vector<pair<int, mint>>& f, ll m, const Factorial_mint& fm) {
-	// verify : https://judge.yosupo.jp/problem/pow_of_formal_power_series_sparse
-
-	vm g(n + 1);
-
-	// i0 : f(z) の最低次数，f0 : その項の係数
-	int i0 = INF; mint f0;
-	for (auto [i, c] : f) if (chmin(i0, i)) f0 = c;
-
-	// f(z) = 0 のとき
-	if (i0 == INF) {
-		// 0^0 = 1 とする．
-		if (m == 0) g[0] = 1;
-
-		return g;
-	}
-
-	// i0 * m ≧ n + 1 なら結果は 0
-	if (i0 > 0 && m > n / i0) return g;
-
-	// k0 : g(z) = f(z)^m の最低次数
-	int k0 = (int)(i0 * m);
-
-	g[k0] = f0.pow(m);
-	mint f0_inv = f0.inv();
-	mint mint_m = m;
-
-	repi(k, 1, n - k0) {
-		for (auto [i, c] : f) {
-			i -= i0;
-			if (i == 0 || k - i < 0) continue;
-
-			if (i == k) g[k0 + k] += mint_m * k * c * g[k0];
-			else g[k0 + k] += (mint_m * i - k + i) * c * g[k0 + k - i];
-		}
-		g[k0 + k] *= fm.inv(k) * f0_inv;
-	}
-
-	return g;
-}
-
-
-//【平方根（スパース）】O(n K)（K : f の項数）
-/*
-* {i, c}∈f で [z^i] f(z) = c を表すものとし，[z^[0..n]] √f(z) を返す（存在しなければ空リスト）
-*
-* 制約 : fm は n! まで計算可能
+* 与えられた関数 G に対し，
+*	G(f(z)) = 0, [z^0]f(z) = f0
+* を満たす f(z) を求めるには，
+*	f_1(z) = f0  (mod z^(2^0))
+*	f_(t+1)(z) = f_t(z) - G(f_t(z)) / G'(f_t(z))  (mod z^(2^(t+1)))
+* なる反復式を用いて計算すれば良い．
 * 
-* 利用：【平方剰余】
+* verify : https://atcoder.jp/contests/abc345/tasks/abc345_g
 */
-vm sqrt_sparse(int n, const vector<pair<int, mint>>& f, const Factorial_mint& fm) {
-	// verify : https://judge.yosupo.jp/problem/sqrt_of_formal_power_series_sparse
 
-	vm g(n + 1);
 
-	// i0 : f(z) の最低次数，f0 : その項の係数
-	int i0 = INF; mint f0;
-	for (auto [i, c] : f) if (chmin(i0, i)) f0 = c;
+//【多項式 GCD】O(N (log N)^2)（N = max(deg f, deg g)）
+/*
+* f(z) u(z) + g(z) v(z) = gcd(f(z), g(z)) の解 (u(z), v(z)) を u, v に格納する．
+* またモニックな gcd(f(z), g(z)) を返す．
+*/
+MFPS half_GCD(MFPS f, MFPS g, MFPS& u, MFPS& v) {
+	// 参考 : https://scrapbox.io/37zigen-43465887/half-GCD
+	// verify : https://judge.yosupo.jp/problem/inv_of_polynomials
 
-	// f(z) = 0 なら √f(z) = 0 でよい．
-	if (i0 == INF) return g;
+	f.resize();
+	g.resize();
 
-	// f(z) の最低次数が奇数なら √f(z) は存在しない．
-	if (i0 & 1) return vm();
-
-	// k0 : g(z) = √f(z) の最低次数
-	int k0 = i0 / 2;
-
-	// f0 が平方剰余でないなら √f(z) は存在しない．
-	int g0 = cipolla(f0);
-	if (g0 == -1) return vm();
-
-	g[k0] = g0;
-	mint f0_inv = f0.inv();
-	mint inv2 = mint(2).inv();
-
-	repi(k, 1, n - k0) {
-		for (auto [i, c] : f) {
-			i -= i0;
-			if (i == 0 || k - i < 0) continue;
-
-			if (i == k) g[k0 + k] += inv2 * k * c * g[k0];
-			else g[k0 + k] += (inv2 * i - k + i) * c * g[k0 + k - i];
-		}
-		g[k0 + k] *= fm.inv(k) * f0_inv;
+	bool swap_flag = false;
+	if (sz(f) < sz(g)) {
+		swap(f, g);
+		swap_flag = true;
 	}
 
-	return g;
+	if (sz(f) == 0) {
+		u = MFPS();
+		v = MFPS();
+		return MFPS();
+	}
+
+	using MAT = array<array<MFPS, 2>, 2>;
+
+	MAT id;
+	id[0][0] = id[1][1] = MFPS(1);
+	id[0][1] = id[1][0] = MFPS();
+
+	function<MAT(MFPS&, MFPS&)> hgcd = [&](MFPS& f, MFPS& g) {
+		if (f.deg() >= 2 * g.deg()) return id;
+
+		int hn = sz(f) / 2;
+
+		MFPS f0(f), g0(g);
+		f0 <<= hn;
+		g0 <<= hn;
+
+		auto mat = hgcd(f0, g0);
+
+		MFPS nf = mat[0][0] * f + mat[0][1] * g;
+		MFPS ng = mat[1][0] * f + mat[1][1] * g;
+		nf.resize();
+		ng.resize();
+
+		if (nf.deg() >= 2 * ng.deg()) {
+			f = move(nf);
+			g = move(ng);
+			return mat;
+		}
+
+		auto [q, r] = nf.quotient_remainder(ng);
+		q.resize();
+		r.resize();
+		f = move(ng);
+		g = move(r);
+
+		mat[0][0] -= q * mat[1][0];
+		mat[0][1] -= q * mat[1][1];
+		mat[0][0].resize();
+		mat[0][1].resize();
+		swap(mat[0][0], mat[1][0]);
+		swap(mat[0][1], mat[1][1]);
+
+		if (f.deg() >= 2 * g.deg()) return mat;
+
+		f0 = f, g0 = g;
+		f0 <<= hn / 2;
+		g0 <<= hn / 2;
+
+		auto nmat = hgcd(f0, g0);
+
+		nf = nmat[0][0] * f + nmat[0][1] * g;
+		ng = nmat[1][0] * f + nmat[1][1] * g;
+		nf.resize();
+		ng.resize();
+		f = move(nf);
+		g = move(ng);
+
+		MAT ret;
+		ret[0][0] = nmat[0][0] * mat[0][0] + nmat[0][1] * mat[1][0];
+		ret[0][1] = nmat[0][0] * mat[0][1] + nmat[0][1] * mat[1][1];
+		ret[1][0] = nmat[1][0] * mat[0][0] + nmat[1][1] * mat[1][0];
+		ret[1][1] = nmat[1][0] * mat[0][1] + nmat[1][1] * mat[1][1];
+		ret[0][0].resize();
+		ret[0][1].resize();
+		ret[1][0].resize();
+		ret[1][1].resize();
+
+		return ret;
+	};
+
+	MAT mat(id);
+
+	while (1) {
+		auto mat2 = hgcd(f, g);
+
+		MAT nmat;
+		nmat[0][0] = mat2[0][0] * mat[0][0] + mat2[0][1] * mat[1][0];
+		nmat[0][1] = mat2[0][0] * mat[0][1] + mat2[0][1] * mat[1][1];
+		nmat[1][0] = mat2[1][0] * mat[0][0] + mat2[1][1] * mat[1][0];
+		nmat[1][1] = mat2[1][0] * mat[0][1] + mat2[1][1] * mat[1][1];
+		nmat[0][0].resize();
+		nmat[0][1].resize();
+		nmat[1][0].resize();
+		nmat[1][1].resize();
+
+		if (sz(g) == 0) {
+			mat = move(nmat);
+			break;
+		}
+
+		auto [q, r] = f.quotient_remainder(g);
+		q.resize();
+		r.resize();
+		f = move(g);
+		g = move(r);
+
+		mat[0][0] = nmat[1][0];
+		mat[0][1] = nmat[1][1];
+		mat[1][0] = nmat[0][0] - q * nmat[1][0];
+		mat[1][1] = nmat[0][1] - q * nmat[1][1];
+		mat[1][0].resize();
+		mat[1][1].resize();
+	}
+
+	u = move(mat[0][0]);
+	v = move(mat[0][1]);
+
+	mint c = f.back();
+	f /= c;
+	u /= c;
+	v /= c;
+
+	if (swap_flag) swap(u, v);
+
+	return f;
 }
 
 
-//【拡張ユークリッドの互除法】O(deg(a) deg(b))
+//【多項式逆元】O(deg(a) deg(b))
+/*
+* a(x) u(x) = 1 (mod b(x)) を満たす u(x) を格納する．（なければ false を返す）
+*
+* 利用：【拡張ユークリッドの互除法】
+*/
+bool polynomial_inverse(const MFPS& a, const MFPS& b, MFPS& u) {
+	MFPS v;
+	MFPS g = half_GCD(a, b, u, v);
+	return g == MFPS(1);
+}
+
+
+//【拡張ユークリッドの互除法】O(N^2)（N = min(deg f, deg g)）
 /*
 * a(x) u(x) + b(x) v(x) = g(x) の解 (u(x), v(x)) を u, v に格納する．
 * またモニックな g(x) = gcd(a(x), b(x)) を返す．
@@ -1973,18 +2378,79 @@ MFPS extended_gcd(MFPS a, MFPS b, MFPS& u, MFPS& v) {
 }
 
 
-//【多項式逆元】O(deg(a) deg(b))
+//【多項式の求根（一括，mod 998244353）】O(?)（n=4000 くらいまで動く）
 /*
-* a(x) u(x) = 1 (mod b(x)) を満たす u(x) を格納する．（なければ false を返す）
-*
-* 利用：【拡張ユークリッドの互除法】
+* 多項式 f(z) の根のリストを返す．
+* 
+* 利用：【単項式の剰余】,【拡張ユークリッドの互除法】
 */
-bool polynomial_inverse(const MFPS& a, const MFPS& b, MFPS& u) {
-	// verify : https://yukicoder.me/problems/no/2579
+vm find_all_root(MFPS f) {
+	f.resize();
 
-	MFPS v;
-	MFPS g = extended_gcd(a, b, u, v);
-	return g == MFPS(1);
+	// f = 0 のときは根なしとする．
+	if (sz(f) == 0) return vm();
+
+	vm res;
+
+	// z=0 は例外処理
+	if (f[0] == 0) {
+		res.push_back(0);
+
+		int d = 0;
+		while (d < sz(f) && f[d] == 0) d++;
+		f <<= d;
+	}
+
+	constexpr int p = 998244353; // p-1 = 7 * 17 * 2^23
+	mint r = 3; // mod p での原始根
+
+	// (z-1)(z-2)...(z-(p-1)) = z^(p-1)-1 との GCD をとって余計な因数を除去する．
+	MFPS tmp = monomial_power_mod(p - 1, f) - 1;
+	MFPS u, v;
+	f = extended_gcd(f, tmp, u, v);
+	
+	const mint R(470355006); // r^(2^23) : 1 の原始 7*17 乗根
+
+	// f(z) と z^((p-1)/2^b) - r^s との共通根を探す．
+	function<void(MFPS, int, int)> rf = [&](MFPS f, int b, int s) {
+		// 共通根が 0 個の場合は何もせず帰る．
+		if (f.deg() == 0) return;
+
+		// 共通根が 1 個の場合は検出して帰る．
+		if (f.deg() == 1) {
+			res.push_back(-f[0]);
+			return;
+		}
+
+		// これ以上平方根を取れなくなってしまったら諦めて 7*17 個全探索する．
+		if (b == 23) {
+			mint x = r.pow(s / (7 * 17));
+			rep(hoge, 7 * 17) {
+				if (f.assign(x) == 0) {
+					res.push_back(x);
+					f /= MFPS::SMFPS({ {0, -x}, {1, 1} });
+				}
+				x *= R;
+			}
+			return;
+		}
+
+		// z^((p-1)/2^b) - r^s を 2 つに分けて再帰する．
+		MFPS tmp = monomial_power_mod((p - 1) >> (b + 1), f);
+
+		int ns0 = s / 2;
+		MFPS tmp0 = tmp - r.pow(ns0);
+		MFPS f0 = extended_gcd(f, tmp0, u, v);
+		rf(f0, b + 1, ns0);
+
+		int ns1 = (s + p - 1) / 2;
+		MFPS tmp1 = tmp - r.pow(ns1);
+		MFPS f1 = extended_gcd(f, tmp1, u, v);
+		rf(f1, b + 1, ns1);
+	};
+	rf(f, 0, p - 1);
+
+	return res;
 }
 
 

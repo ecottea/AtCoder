@@ -75,20 +75,20 @@ S034 e034() { return { 0, 0, 0 }; }
 #define LinearWgtSum_monoid S034, op034, e034
 
 
-//【max 可換モノイド】
-/* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
-using S003 = ll;
-S003 op003(S003 a, S003 b) { return max(a, b); }
-S003 e003() { return -INFL; }
-#define Max_monoid S003, op003, e003
-
-
 //【min 可換モノイド】
 /* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
 using S004 = ll;
 S004 op004(S004 a, S004 b) { return min(a, b); }
 S004 e004() { return INFL; }
 #define Min_monoid S004, op004, e004
+
+
+//【max 可換モノイド】
+/* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
+using S003 = ll;
+S003 op003(S003 a, S003 b) { return max(a, b); }
+S003 e003() { return -INFL; }
+#define Max_monoid S003, op003, e003
 
 
 //【総積 可換モノイド】
@@ -114,7 +114,7 @@ constexpr int N020 = 2;
 using S020 = Fixed_matrix<mint, N020>;
 S020 op020(S020 a, S020 b) { return b * a; }
 S020 e020() { return S020(1); }
-#define InvMul_monoid S020, op020, e020
+#define MatrixInvMul_monoid S020, op020, e020
 
 
 //【XOR 可換モノイド】
@@ -125,20 +125,20 @@ S010 e010() { return 0; }
 #define XOR_monoid S010, op010, e010
 
 
-//【OR 可換モノイド】
-/* verify: https://atcoder.jp/contests/abc157/tasks/abc157_e */
-using S011 = int;
-S011 op011(S011 a, S011 b) { return a | b; }
-S011 e011() { return 0; }
-#define OR_monoid S011, op011, e011
-
-
 //【AND 可換モノイド】
 /* verify : https://atcoder.jp/contests/jsc2022-final/tasks/jsc2022_final_d */
 using S012 = int;
 S012 op012(S012 a, S012 b) { return a & b; }
 S012 e012() { return ~0; }
 #define AND_monoid S012, op012, e012
+
+
+//【OR 可換モノイド】
+/* verify: https://atcoder.jp/contests/abc157/tasks/abc157_e */
+using S011 = int;
+S011 op011(S011 a, S011 b) { return a | b; }
+S011 e011() { return 0; }
+#define OR_monoid S011, op011, e011
 
 
 //【GCD 可換モノイド】
@@ -194,7 +194,7 @@ S008 op008(S008 f, S008 g) {
 	return { a * c, a * d + b };
 }
 S008 e008() { return { 1, 0 }; } // e(x) = x = 1 x + 0
-#define AffineComposite_monoid S008, op008, e008
+#define Affine_monoid S008, op008, e008
 
 
 //【アフィン変換の逆合成 モノイド】
@@ -213,7 +213,7 @@ S009 op009(S009 f, S009 g) {
 	return { a * c, a * d + b };
 }
 S009 e009() { return { 1, 0 }; } // e(x) = x = 1 x + 0
-#define AffineInvcomposite_monoid S009, op009, e009
+#define InvAffine_monoid S009, op009, e009
 
 
 //【トロピカルアフィン変換の合成 モノイド】
@@ -223,17 +223,17 @@ S009 e009() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 *
 * トロピカル半環上の行列 (a, b; -∞, 0) の全体が積に関して作っているモノイドともみなせる．
 */
+// verify : https://www.codechef.com/problems/CSED
 using S013 = pair<ll, ll>;
 S013 op013(S013 f, S013 g) {
-	ll a, b, c, d;
-	tie(a, b) = f; // f(x) = max(a + x, b);
-	tie(c, d) = g; // g(x) = max(c + x, d);
+	auto [a, b] = f; // f(x) = max(a + x, b);
+	auto [c, d] = g; // g(x) = max(c + x, d);
 
 	// (f o g)(x) = max(a + max(c + x, d), b) = max((a + c) + x, max(a + d, b))
 	return { a + c, max(a + d, b) };
 }
 S013 e013() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
-#define TropicalAffineComposite_monoid S013, op013, e013
+#define TropicalAffine_monoid S013, op013, e013
 
 
 //【トロピカルアフィン変換の逆合成 モノイド】
@@ -244,15 +244,14 @@ S013 e013() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
 // verify : https://atcoder.jp/contests/yahoo-procon2017-qual/tasks/yahoo_procon2017_qual_d
 using S014 = pair<ll, ll>;
 S014 op014(S014 f, S014 g) {
-	ll a, b, c, d;
-	tie(a, b) = g; // g(x) = max(a + x, b);
-	tie(c, d) = f; // f(x) = max(c + x, d);
+	auto [a, b] = g; // g(x) = max(a + x, b);
+	auto [c, d] = f; // f(x) = max(c + x, d);
 
 	// (g o f)(x) = max(a + max(c + x, d), b) = max((a + c) + x, max(a + d, b))
 	return { a + c, max(a + d, b) };
 }
 S014 e014() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
-#define TropicalAffineInvcomposite_monoid S014, op014, e014
+#define TropicalInvAffine_monoid S014, op014, e014
 
 
 //【bitアフィン変換の合成 モノイド】
@@ -276,7 +275,7 @@ S035 op035(S035 f, S035 g) {
 	return { (a & c), (a & d) ^ b };
 }
 S035 e035() { return { ~0, 0 }; }
-#define BitAffineComposite_monoid S035, op035, e035
+#define BitAffine_monoid S035, op035, e035
 
 
 //【bitアフィン変換の逆合成 モノイド】
@@ -300,7 +299,7 @@ S036 op036(S036 f, S036 g) {
 	return { (a & c), (a & d) ^ b };
 }
 S036 e036() { return { ~0, 0 }; }
-#define BitAffineInvcomposite_monoid S036, op036, e036
+#define BitInvAffine_monoid S036, op036, e036
 
 
 //【ビット列上 転倒数 モノイド】
@@ -344,7 +343,7 @@ S018 op018(S018 a, S018 b) {
 	return res;
 }
 S018 e018() { return S018(); }
-#define MapComposite_monoid S018, op018, e018
+#define Map_monoid S018, op018, e018
 
 
 //【写像の逆合成 モノイド】（参照渡ししていないので遅い）
@@ -365,7 +364,24 @@ S019 e019() {
 	iota(all(f), 0);
 	return f;
 }
-#define MapInvcomposite_monoid S019, op019, e019
+#define InvMap_monoid S019, op019, e019
+
+
+//【第二最小値 可換モノイド】
+using T022 = ll;
+using S022 = pair<T022, T022>; // (最小値, 第二最小値)
+S022 op022(S022 a, S022 b) {
+	vector<T022> vals(4);
+	vals[0] = a.first;
+	vals[1] = a.second;
+	vals[2] = b.first;
+	vals[3] = b.second;
+	sort(all(vals));
+
+	return { vals[0], vals[1] };
+}
+S022 e022() { return { INFL, INFL }; }
+#define SecondMin_monoid S022, op022, e022
 
 
 //【第二最大値 可換モノイド】
@@ -386,21 +402,113 @@ S021 e021() { return { -INFL, -INFL }; }
 #define SecondMax_monoid S021, op021, e021
 
 
-//【第二最小値 可換モノイド】
-using T022 = ll;
-using S022 = pair<T022, T022>; // (最小値, 第二最小値)
-S022 op022(S022 a, S022 b) {
-	vector<T022> vals(4);
-	vals[0] = a.first;
-	vals[1] = a.second;
-	vals[2] = b.first;
-	vals[3] = b.second;
-	sort(all(vals));
+//【最小元の個数 可換モノイド】
+/*
+* S ∋ x = {v, c} : 最小値 v をもつ要素が c 個あることを表す．
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+using S037 = pair<ll, int>; // (v, c)
+S037 op037(S037 x, S037 y) {
+	auto [vx, cx] = x;
+	auto [vy, cy] = y;
 
-	return { vals[0], vals[1] };
+	if (vx < vy) return x;
+	if (vx > vy) return y;
+	return { vx, cx + cy };
 }
-S022 e022() { return { INFL, INFL }; }
-#define SecondMin_monoid S022, op022, e022
+S037 e037() { return { INFL, 0 }; }
+#define CntMin_monoid S037, op037, e037
+
+
+//【最大元の個数 可換モノイド】
+/*
+* S ∋ x = {v, c} : 最大値 v をもつ要素が c 個あることを表す．
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+using S038 = pair<ll, int>; // (v, c)
+S038 op038(S038 x, S038 y) {
+	auto [vx, cx] = x;
+	auto [vy, cy] = y;
+
+	if (vx > vy) return x;
+	if (vx < vy) return y;
+	return { vx, cx + cy };
+}
+S038 e038() { return { -INFL, 0 }; }
+#define CntMax_monoid S038, op038, e038
+
+
+//【第 n 最小元の個数 可換モノイド】
+/*
+* S ∋ x[0..n) : x[i] = {v, c} : 第 i 最小値 v をもつ要素が c 個あることを表す．
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+constexpr int N039 = 2; // 50 くらいまでいける
+using S039 = array<pli, N039>; // (v, c)
+S039 op039(S039 x, S039 y) {
+	S039 z;
+
+	int i = 0, j = 0;
+	rep(k, N039) {
+		if (x[i].first > y[j].first) {
+			z[k] = y[j];
+			++j;
+		}
+		else if (x[i].first < y[j].first) {
+			z[k] = x[i];
+			++i;
+		}
+		else {
+			z[k] = { x[i].first, x[i].second + y[j].second };
+			++i; ++j;
+		}
+	}
+
+	return z;
+}
+S039 e039() {
+	S039 x;
+	rep(i, N039) x[i] = { INFL, 0 };
+	return x;
+}
+#define CntNthMin_monoid S039, op039, e039
+
+
+//【第 n 最大元の個数 可換モノイド】
+/*
+* S ∋ x[0..n) : x[i] = {v, c} : 第 i 最大値 v をもつ要素が c 個あることを表す．
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+// verify : https://atcoder.jp/contests/abc343/tasks/abc343_f
+constexpr int N040 = 2; // 50 くらいまでいける
+using S040 = array<pli, N040>; // (v, c)
+S040 op040(S040 x, S040 y) {
+	S040 z;
+
+	int i = 0, j = 0;
+	rep(k, N040) {
+		if (x[i].first < y[j].first) {
+			z[k] = y[j];
+			++j;
+		}
+		else if (x[i].first > y[j].first) {
+			z[k] = x[i];
+			++i;
+		}
+		else {
+			z[k] = { x[i].first, x[i].second + y[j].second };
+			++i; ++j;
+		}
+	}
+
+	return z;
+}
+S040 e040() {
+	S040 x;
+	rep(i, N040) x[i] = { -INFL, 0 };
+	return x;
+}
+#define CntNthMax_monoid S040, op040, e040
 
 
 //【混合トロピカルアフィン変換の合成 モノイド】
@@ -439,7 +547,7 @@ S025 op025(S025 f, S025 g) {
 	return S025{ A, B, C };
 }
 S025 e025() { return S025{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ∞), -∞)
-#define MixedTropicalAffineComposite_monoid S025, op025, e025
+#define MixedTropicalAffine_monoid S025, op025, e025
 
 
 //【混合トロピカルアフィン変換の逆合成 モノイド】
@@ -460,7 +568,7 @@ S026 op026(S026 f, S026 g) {
 	return S026{ A, B, C };
 }
 S026 e026() { return S026{ 0, INFL, -INFL }; }
-#define MixedTropicalAffineInvcomposite_monoid S026, op026, e026
+#define MixedTropicalInvAffine_monoid S026, op026, e026
 
 
 //【スパース多項式の巡回畳込み モノイド】
@@ -528,6 +636,32 @@ S027 e027() {
 #define SPolyCconv_monoid S027, op027, e027
 
 
+//【区間和の最小値 モノイド】
+/*
+* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
+*	fl[fr] : 左[右]端を含む区間和の最小値
+*	fa : 任意の区間和の最小値
+*	fs : 総和
+* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
+*/
+// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
+using T029 = ll;
+using S029 = tuple<T029, T029, T029, T029>; // (左端を含む, 右端を含む, 任意, 総和)
+S029 op029(S029 f, S029 g) {
+	auto [fl, fr, fa, fs] = f;
+	auto [gl, gr, ga, gs] = g;
+
+	T029 hl = min(fl, fs + gl);
+	T029 hr = min(gr, fr + gs);
+	T029 ha = min({ fa, ga, fr + gl });
+	T029 hs = fs + gs;
+
+	return { hl, hr, ha, hs };
+}
+S029 e029() { return { INFL, INFL, INFL, 0 }; }
+#define RangeSumMin_monoid S029, op029, e029
+
+
 //【区間和の最大値 モノイド】
 /*
 * S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
@@ -553,32 +687,6 @@ S028 op028(S028 f, S028 g) {
 }
 S028 e028() { return { -INFL, -INFL, -INFL, 0 }; }
 #define RangeSumMax_monoid S028, op028, e028
-
-
-//【区間和の最小値 モノイド】
-/*
-* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
-*	fl[fr] : 左[右]端を含む区間和の最小値
-*	fa : 任意の区間和の最小値
-*	fs : 総和
-* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
-*/
-// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
-using T029 = ll;
-using S029 = tuple<T029, T029, T029, T029>; // (左端を含む, 右端を含む, 任意, 総和)
-S029 op029(S029 f, S029 g) {
-	auto [fl, fr, fa, fs] = f;
-	auto [gl, gr, ga, gs] = g;
-
-	T029 hl = min(fl, fs + gl);
-	T029 hr = min(gr, fr + gs);
-	T029 ha = min({ fa, ga, fr + gl });
-	T029 hs = fs + gs;
-
-	return { hl, hr, ha, hs };
-}
-S029 e029() { return { INFL, INFL, INFL, 0 }; }
-#define RangeSumMin_monoid S029, op029, e029
 
 
 //【F_2 線形空間上 和空間 モノイド】

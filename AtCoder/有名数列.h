@@ -29,7 +29,7 @@ vector<T> fibonacci(int n) {
 /*
 * n 番目のフィボナッチ数 fib[n] を返す（fib[0]=0, fib[1]=1 とする）
 *
-* 利用：【行列】
+* 利用：【正方行列（固定サイズ）】
 */
 mint fibonacci(ll n) {
 	// verify : https://atcoder.jp/contests/math-and-algorithm/tasks/math_and_algorithm_at
@@ -49,7 +49,7 @@ mint fibonacci(ll n) {
 	//		[a1[n]] = [1 0]   [1]
 	// と表示することができるので，行列の累乗を計算する問題に帰着する．
 
-	Matrix<mint> coef({ {1, 1}, {1, 0} });
+	Fixed_matrix<mint, 2> coef({ {1, 1}, {1, 0} });
 	return coef.pow(n).v[0][1];
 }
 
@@ -114,6 +114,20 @@ vector<T> k_nacci_imos(int n, int k) {
 
 	seq.resize(n);
 	return seq;
+}
+
+
+//【k-ナッチ数】O(k log k log n)
+/*
+* n 番目の k-ナッチ数 a[n] を返す（初項は a[0..k-1) = 0, a[k-1] = 1 とする）
+*
+* 利用：【形式的冪級数】,【線形漸化式】
+*/
+mint k_nacci_fps(ll n, int k) {
+	Assert(k > 0);
+	vm a(k), c(k, 1);
+	a[k - 1] = 1;
+	return linearly_recurrent_sequence(a, c, n);
 }
 
 
@@ -200,7 +214,7 @@ void delannoy_number_imos(int h, int w, int s, int t, vector<vector<T>>& seq) {
 *
 * 利用：【形式的冪級数】
 */
-vm bernoulli(int n, const Factorial_mint& fm) {
+vm bernoulli_all_n(int n, const Factorial_mint& fm) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%99%E3%83%AB%E3%83%8C%E3%83%BC%E3%82%A4%E6%95%B0
 	// verify : https://judge.yosupo.jp/problem/bernoulli_number
 
@@ -219,11 +233,108 @@ vm bernoulli(int n, const Factorial_mint& fm) {
 }
 
 
+//【ベルヌーイ数】O(n log(log(n)))
+/*
+* ベルヌーイ数 B(n) を返す．
+*/
+mint bernoulli(int n, const Factorial_mint& fm) {
+	// 参考 : https://atcoder.jp/contests/xmascon23/editorial/8975
+	// verify : https://atcoder.jp/contests/xmascon23/tasks/xmascon23_e
+
+	if (n == 0) return 1;
+	if (n == 1) return mint(-2).inv();
+
+	vm dp(n + 1);
+	dp[n] = (n & 1 ? -1 : 1) * fm.inv(n + 1);
+	dp[n - 1] = (n & 1 ? 1 : -1) * (fm.inv(n) + fm.inv(n + 1) * fm.bin(n, n - 1));
+	repir(i, n - 2, 0) {
+		dp[i] += (-2LL * i * i + (n - 5LL) * i + (n - 4)) * dp[i + 1];
+		dp[i] += (i + 2LL) * (i + 2) * dp[i + 2];
+		dp[i] *= fm.inv(n - i) * fm.inv(i + 1);
+	}
+
+	// d[i] : i を割り切る最大の素数
+	vi d(n + 1);
+	iota(all(d), 0);
+
+	for (int p = 2; p * p <= n; p++) {
+		if (d[p] != p) continue;
+		for (int i = p; i <= n; i += p) d[i] = p;
+	}
+
+	// pow_i[i] : i^n
+	vm pow_i(n + 1);
+	repi(i, 1, n) {
+		if (d[i] == i) pow_i[i] = mint(i).pow(n);
+		else pow_i[i] = pow_i[d[i]] * pow_i[i / d[i]];
+	}
+
+	mint res;
+	repi(i, 0, n) res += dp[i] * pow_i[i];
+
+	return res;
+}
+
+
 //【第 1 種スターリング数】
 /*
-* FPS(mint).h の【下降階乗冪（符号付き第 1 種スターリング数）】または
-* 数え上げ(順列).h の【j 個の巡回置換の積で表される順列の数え上げ】を利用すればいい．
+* FPS(mint).h の【一次式の積の展開（等差数列）】で a = -1, b = 0 とすれば良い．
+* 数え上げ(順列).h の【j 個の巡回置換の積で表される順列の数え上げ】を利用すれば良い．
 */
+
+
+//【第 1 種スターリング数（一括，k が固定，mod 998244353）】O((N-K) log(N-K))
+/*
+* 各 n∈[K..N] に対する符号付き第 1 種スターリング数 S(n,K) を格納したリストを返す．
+*
+* 制約 : fm は (N+1)! まで計算可能
+*
+* 利用：【指数関数】
+*/
+vm stirling_S1_fixed_K(int N, int K, const Factorial_mint& fm) {
+	// 参考 : https://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind_fixed_k
+
+	//【方法】
+	// 符号付き第 1 種スターリング数 S(n,K) の定義は
+	//		Σk∈[0..n] S(n,k) z^k = Πi∈[0..n) (z-i)
+	// であった．
+	// 
+	// 2 変数関数 (1+z)^w を 2 通りの方法で w についての形式的冪級数に展開する． 
+	// 一般化二項定理を用いると，
+	//		(1+z)^w
+	//		= Σn∈[0..∞) bin(w, n) z^n  (一般化二項定理)
+	//		= Σn∈[0..∞) ((Πi∈[0..n) (w-i)) / n!) z^n  (一般化二項係数の定義)
+	//		= Σn∈[0..∞) ((Σk∈[0..n] S(n,k) w^k) / n!) z^n  (S(n,k) の定義)
+	//		= Σk∈[0..∞) w^k Σn∈[k..∞) S(n,k) z^n / n!  (和の順序交換)
+	// となる．一方 exp-log テクを用いると，
+	//		(1+z)^w
+	//		= exp(log(1+z)^w)  (exp と log は互いに逆関数)
+	//		= exp(w log(1+z))  (log の性質)
+	//		= Σk∈[0..∞) 1/k! (w log(1+z))^k  (exp のマクローリン展開)
+	//		= Σk∈[0..∞) w^k (log(1+z)^k / k!)
+	// となる．両者の w^k の係数を比較して，
+	//		Σn∈[k..∞) S(n,k) z^n / n! = log(1+z)^k / k!
+	// を得る．これは K を固定したときの S(n,K) の指数型母関数が
+	//		log(1+z)^K / K!
+	// であることを意味している．
+	//
+	// 実際の計算では [z^0]log(1+z) = 0 なので，1 つシフトしてから累乗を計算する．
+
+	int W = N - K + 1;
+
+	// f : log(1+z)/z（[z^0]f(z) = 1）
+	MFPS f(0, W);
+	rep(i, W) f[i] = (i & 1 ? -1 : 1) * fm.inv(i + 1);
+
+	// f : log(1+z)^K / z^K
+	f = exp_fps(log_fps(f, W, fm) * K, W, fm);
+
+	vm res(W);
+	rep(i, W) res[i] = f[i] * fm.fact_inv(K) * fm.fact(K + i);
+
+	return res;
+}
 
 
 //【第 1 種スターリング数（法が小さな素数）】
@@ -231,8 +342,8 @@ vm bernoulli(int n, const Factorial_mint& fm) {
 * Stirling_S1_small_prime_mod(int p) : O(p^2)
 *	p を法として初期化する．
 *
-* int get(ll n, ll r) : O(log n)
-*	符号付き第 1 種スターリング数 S(n, r) mod p を返す．
+* int get(ll n, ll k) : O(log n)
+*	符号付き第 1 種スターリング数 S(n, k) mod p を返す．
 */
 ostream& operator<<(ostream& os, const dynamic_modint<82645>& x) { os << x.val(); return os; }
 class Stirling_S1_small_prime_mod {
@@ -309,6 +420,34 @@ public:
 /*
 * 写像12相.h の【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）】を利用すればいい．
 */
+
+
+//【第 2 種スターリング数（一括，k が固定，mod 998244353）】O((N-K) log(N-K))
+/*
+* 各 n∈[K..N] に対する第 2 種スターリング数 s(n,K) を格納したリストを返す．
+*
+* 制約 : fm は (N+1)! まで計算可能
+*
+* 利用：【指数関数】
+*/
+vm stirling_s2_fixed_K(int N, int K, const Factorial_mint& fm) {
+	// 参考 : https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_second_kind_fixed_k
+
+	int W = N - K + 1;
+
+	// f : (exp(z)-1)/z（[z^0]f(z) = 1）
+	MFPS f(0, W);
+	rep(i, W) f[i] = fm.fact_inv(i + 1);
+
+	// f : (exp(z)-1)^K / z^K
+	f = exp_fps(log_fps(f, W, fm) * K, W, fm);
+
+	vm res(W);
+	rep(i, W) res[i] = f[i] * fm.fact_inv(K) * fm.fact(K + i);
+
+	return res;
+}
 
 
 //【第 2 種スターリング数（法が小さな素数）】

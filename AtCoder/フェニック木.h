@@ -53,7 +53,9 @@ class Fenwick_tree {
 
 public:
 	// a[0..n) = o() で初期化する．
-	Fenwick_tree(int n_) : n(n_ + 1), v(n, o()) {}
+	Fenwick_tree(int n_) : n(n_ + 1), v(n, o()) {
+		// verify : https://judge.yosupo.jp/problem/range_kth_smallest
+	}
 
 	// 配列 a[0..n) で初期化する．
 	Fenwick_tree(const vector<S>& a) : n(sz(a) + 1), v(n) {
@@ -73,6 +75,8 @@ public:
 
 	// a[i] = x とする．（i : 0-indexed）
 	void set(int i, S x) {
+		Assert(0 <= i && i < n);
+
 		// 差分を求める．
 		S d = op(x, inv(get(i)));
 
@@ -81,6 +85,8 @@ public:
 
 	// a[i] を返す．（i : 0-indexed）
 	S get(int i) const {
+		Assert(0 <= i && i < n);
+
 		return sum(i, i + 1);
 	}
 
@@ -88,6 +94,7 @@ public:
 	S sum(int l, int r) const {
 		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
 
+		chmax(l, 0); chmin(r, n);
 		if (l >= r) return o();
 
 		// 0-indexed での半開区間 [l, r) は，
@@ -99,6 +106,8 @@ public:
 	// a[i] += x とする．（i : 0-indexed）
 	void add(int i, S x) {
 		// verify : https://judge.yosupo.jp/problem/point_add_range_sum
+
+		Assert(0 <= i && i < n);
 
 		// i を 1-indexed に直す．
 		i++;
@@ -146,7 +155,7 @@ public:
 /*
 * Fenwick_tree_range_add<S, op, o, inv, mul>(int n) : O(n)
 *	要素数 n かつ初期値 o() で初期化する．
-*	要素は Z 加群 (S, op, o, inv, mul) の元とする．
+*	要素は Z-加群 (S, op, o, inv, mul) の元とする．
 *
 * Fenwick_tree_range_add<S, op, o, inv, mul>(vS v) : O(n)
 *	v[0..n) で初期化する．
@@ -305,10 +314,10 @@ struct Fenwick_tree_range_add {
 * add_linear(int l, int r, S a, S b) : O(log n)
 *	i∈[l..r) について，v[i] += a i + b とする．
 *
-* add_linear_right(int l, int r, S w0, S w1) : O(log n)
+* add_linear_right(ll l, ll r, S w0, S w1) : O(log n)
 *	v[l..r) に昇順に等差数列 w0, w1, ... を加える．
 *
-* add_linear_left(int r, int l, S w0, S w1) : O(log n)
+* add_linear_left(ll r, ll l, S w0, S w1) : O(log n)
 *	v(l..r] に降順に等差数列 w0, w1, ... を加える．
 */
 template <class S>
@@ -357,7 +366,9 @@ class Fenwick_tree_range_linear_add {
 
 public:
 	// v[0..n) = 0 で初期化する．
-	Fenwick_tree_range_linear_add(int n_) : n(n_ + 1), v(3, vector<S>(n)) {}
+	Fenwick_tree_range_linear_add(int n_) : n(n_ + 1), v(3, vector<S>(n)) {
+		// verify : https://yukicoder.me/problems/no/2662
+	}
 
 	// v[0..n) で初期化する．
 	Fenwick_tree_range_linear_add(const vector<S>& v_) : n(sz(v_) + 1), v(3, vector<S>(n)) {
@@ -380,6 +391,8 @@ public:
 
 	// v[i] を返す．（i : 0-indexed）
 	S get(int i) const {
+		// verify : https://yukicoder.me/problems/no/2662
+
 		return sum(i, i + 1);
 	}
 
@@ -426,19 +439,23 @@ public:
 	}
 
 	// v[l..r) に昇順に等差数列 w0, w1, ... を加える．
-	void add_linear_right(int l, int r, S w0, S w1) {
+	void add_linear_right(ll l, ll r, S w0, S w1) {
+		// verify : https://yukicoder.me/problems/no/2662
+
 		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
 		ll a = w1 - w0;
 		ll b = w0 - a * l;
-		add_linear(l, r, a, b);
+		add_linear((int)max<ll>(l, 0), (int)min<ll>(r, n), a, b);
 	}
 
 	// v(l..r] に降順に等差数列 w0, w1, ... を加える．
-	void add_linear_left(int r, int l, S w0, S w1) {
+	void add_linear_left(ll r, ll l, S w0, S w1) {
+		// verify : https://yukicoder.me/problems/no/2662
+
 		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
 		ll a = w0 - w1;
 		ll b = w0 - a * r;
-		add_linear(l + 1, r + 1, a, b);
+		add_linear((int)max<ll>(l + 1, 0), (int)min<ll>(r + 1, n), a, b);
 	}
 
 #ifdef _MSC_VER

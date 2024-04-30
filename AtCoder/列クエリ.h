@@ -8,13 +8,11 @@
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
 * 制約：両端の要素の追加 & 削除が O(α) で可能
-* 
-*（クエリ平方分割）
 */
 template <class T, class S>
-vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
+void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, vector<S>& res) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
-	// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
+	// verify : https://judge.yosupo.jp/problem/static_range_count_distinct
 
 	//【方法】
 	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
@@ -24,16 +22,16 @@ vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
 	int n = sz(a), q = sz(l);
-	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	vector<S> res(q);
+	res.resize(q);
 
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
 	vector<tuple<int, int, int>> lb_sr_j(q);
 	rep(j, q) {
 		int b = l[j] / width;
-		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
+		lb_sr_j[j] = { b, (b & 1 ? -1 : 1) * r[j], j };
 	}
 	sort(all(lb_sr_j));
 
@@ -81,8 +79,6 @@ vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
 		// 区間 [l[j]..r[j]) に対する解を得る．
 		res[j] = get_sol(j);
 	}
-
-	return res;
 }
 
 
@@ -91,8 +87,6 @@ vector<S> mos_algorithm(const vector<T>& a, const vi& l, const vi& r) {
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
 * 制約：両端の要素の追加 & 削除が O(α) で可能
-*
-*（クエリ平方分割）
 */
 template <class T, class S>
 vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r) {
@@ -107,7 +101,7 @@ vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r)
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
 	int n = sz(a), q = sz(l);
-	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
 	vector<S> res(q);
 
@@ -116,7 +110,7 @@ vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r)
 	vector<tuple<int, int, int>> lb_sr_j(q);
 	rep(j, q) {
 		int b = l[j] / width;
-		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[j], j };
+		lb_sr_j[j] = { b, (b & 1 ? -1 : 1) * r[j], j };
 	}
 	sort(all(lb_sr_j));
 
@@ -186,11 +180,9 @@ vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r)
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
 * 制約：両端の要素の追加が O(α) で可能，snapshot と rollback が O(α) 程度で可能
-*
-*（クエリ平方分割）
 */
 template <class T, class S>
-vector<S> mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r) {
+void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector<S>& res) {
 	// 参考 : https://snuke.hatenablog.com/entry/2016/07/01/000000
 	// verify : https://codeforces.com/gym/100513/problem/A
 
@@ -202,9 +194,9 @@ vector<S> mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r) {
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
 	int n = sz(a), q = sz(l);
-	int sqrt_q = (int)(sqrt(q) + 1e-12);
-	int width = (n + sqrt_q - 1) / sqrt_q;
-	vector<S> res(q);
+	int sqrt_q = max((int)sqrt(q), 1);
+	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
+	res.resize(q);
 
 	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
 	vector<vector<pii>> lb_to_rj(sqrt_q);
@@ -298,8 +290,6 @@ vector<S> mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r) {
 *
 * 制約：右端の要素の追加が O(α) で可能，左右に分かれたデータ構造からの解の計算が O(√n) 程度で可能
 * 注意：データ構造そのもののマージが高速にできるのならセグメント木で十分．
-*
-*（クエリ平方分割）
 */
 template <class T, class S>
 vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
@@ -313,8 +303,8 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
 	int n = sz(a), q = sz(l);
-	int sqrt_q = (int)(sqrt(q) + 1e-12);
-	int width = (n + sqrt_q - 1) / sqrt_q;
+	int sqrt_q = max((int)sqrt(q), 1);
+	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
 	vector<S> res(q);
 
 	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
@@ -1341,6 +1331,9 @@ struct Quadratic_division_Mset {
 *
 * rollback() : O(1)
 *	直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
+*
+* erase_history() : O(1)
+*	全ての履歴を抹消する．
 */
 template <class T>
 class Rollback_array {
@@ -1350,7 +1343,9 @@ class Rollback_array {
 
 public:
 	// a[0..n) を T の初期値で初期化する．
-	Rollback_array(int n) : n(n), a(n) {}
+	Rollback_array(int n) : n(n), a(n) {
+		// verify : https://judge.yosupo.jp/problem/static_range_mode_query
+	}
 
 	// a[0..n) を x で初期化する．
 	Rollback_array(int n, T x) : n(n), a(n, x) {
@@ -1396,9 +1391,183 @@ public:
 		}
 	}
 
+	// 全ての履歴を抹消する．
+	void erase_history() {
+		stack<pair<int, T>> nh; swap(history, nh);
+	}
+
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Rollback_array RA) {
 		os << RA.a << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【rollback deque】
+/*
+* Rollback_deque<T>() : O(n)
+*	空の deque で初期化する．
+*
+* void set(int i, T x) : O(1)
+*	a[i] = x とする．
+*
+* T get(int i) : O(1)
+*	a[i] を返す．
+*
+* empty, size, push_back, pop_back, push_front, pop_front, back, front : O(1)
+*	std::deque と同様
+*
+* clear() : O(1)
+*	初期化する．
+*
+* void snapshot() : O(1)
+*	スナップショットを作成する．
+*
+* rollback() : O(1)
+*	直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
+*
+* erase_history() : O(1)
+*	全ての履歴を抹消する．
+*/
+template <class T>
+class Rollback_deque {
+	deque<T> a;
+	stack<pair<int, T>> history;
+
+	static constexpr int PUSH_BACK = (int)2e9 + 0;
+	static constexpr int POP_BACK = (int)2e9 + 1;
+	static constexpr int PUSH_FRONT = (int)2e9 + 2;
+	static constexpr int POP_FRONT = (int)2e9 + 3;
+	static constexpr int SNAPSHOT = (int)2e9 + 4;
+
+public:
+	// 空の deque で初期化する．
+	Rollback_deque() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+	}
+
+	bool empty() const {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		return a.empty();
+	}
+
+	int size() const {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		return sz(a);
+	}
+
+	// a[i] = x とする．
+	void set(int i, T x) {
+		Assert(0 <= i && i < sz(a));
+
+		history.emplace(i, a[i]);
+		a[i] = x;
+	}
+
+	// a[i] を返す．
+	T get(int i) const {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		return a[i];
+	}
+
+	// a の末尾に x を追加する．
+	void push_back(T x) {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		history.emplace(PUSH_BACK, 0);
+		a.push_back(x);
+	}
+
+	// a の末尾の要素を削除する．
+	void pop_back() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		Assert(!a.empty());
+
+		history.emplace(POP_BACK, a.back());
+		a.pop_back();
+	}
+
+	// a の先頭に x を追加する．
+	void push_front(T x) {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		history.emplace(PUSH_FRONT, 0);
+		a.push_front(x);
+	}
+
+	// a の先頭の要素を削除する．
+	void pop_front() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		Assert(!a.empty());
+
+		history.emplace(POP_FRONT, a.front());
+		a.pop_front();
+	}
+
+	// a の末尾の要素を返す．
+	T back() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		Assert(!a.empty());
+
+		return a.back();
+	}
+
+	// a の先頭の要素を返す．
+	T front() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		Assert(!a.empty());
+
+		return a.front();
+	}
+
+	// スナップショットを作成する．
+	void snapshot() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		history.emplace(SNAPSHOT, 0);
+	}
+
+	// 直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
+	void rollback() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		while (true) {
+			auto [tp, x] = history.top(); history.pop();
+			if (tp == SNAPSHOT) break;
+
+			if (tp == PUSH_BACK) a.pop_back();
+			else if (tp == POP_BACK) a.push_back(x);
+			else if (tp == PUSH_FRONT) a.pop_front();
+			else if (tp == POP_FRONT) a.push_front(x);
+			else a[tp] = x;
+		}
+	}
+
+	// 初期化する．
+	void clear() {
+		// verify : https://codeforces.com/contest/1900/problem/F
+
+		deque<T> na; swap(a, na);
+		stack<pair<int, T>> nh; swap(history, nh);
+	}
+
+	// 全ての履歴を抹消する．
+	void erase_history() {
+		stack<pair<int, T>> nh; swap(history, nh);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Rollback_deque Q) {
+		os << Q.a;
 		return os;
 	}
 #endif

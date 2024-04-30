@@ -570,93 +570,48 @@ ll knapsack_problem(const vi& v, const vl& w, ll W, vi& sel) {
 }
 
 
-//【重さ最小化ナップサック問題（価値が小）】時間 O(N V) / 空間 O(N V)
+//【重さ最小化ナップサック問題（価値が小）】O(n V)
 /*
-* 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V になるよう
-* 品物を選んだときの重さの最小値を返す（不可能なら INFL を返す．）
-* また可能なら各品物を何個選んだかの一例を sel に格納する．
-* 
+* 価値 v[i] と重さ w[i] の定まった n 個の品物から，価値がちょうど V になるよう
+* 重複を許して品物を選んだときの重さの最小値を返す（不可能なら INFL を返す．）
+* また可能なら各品物を何個選んだかを sel に格納する．
+*
 *（価値を状態とした状態 DP）
 */
-ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi& sel) {
-	int N = sz(v); // 品物の個数
+ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V, vi* sel = nullptr) {
+	// verify : https://mojacoder.app/users/ocv_contest/contests/ocv2024-sakumon1/tasks/2
 
-	// dp[i][j] : i 番目の品物までで価値ちょうど j を実現できる最小重さ
-	// v[i], w[i] は 0-indexed で dp[i] は 1-indexed なので注意．
-	vvl dp(N + 1, vl(V + 1, INFL));
+	int n = sz(v);
 
-	// 価値 0 を実現できる最小重さは 0 である．
-	repi(i, 0, N) dp[i][0] = 0;
-
-	// DP で重さ最小化ナップサック問題を解く．
-	repi(i, 1, N) {
-		repi(j, 1, V) {
-			// i 番目の品物を選ばない場合
-			dp[i][j] = dp[i - 1][j];
-
-			// i 番目の品物の価値が j を超えていれば選べない．
-			if (j - v[i - 1] < 0) continue;
-
-			// i 番目の品物を選ぶ方が重さを小さくできるなら更新する．
-			dp[i][j] = min(dp[i][j], dp[i - 1][j - v[i - 1]] + w[i - 1]);
-			dp[i][j] = min(dp[i][j], dp[i][j - v[i - 1]] + w[i - 1]);
-		}
-	}
-
-	// 不可能なら終了．
-	if (dp[N][V] == INFL) return INFL;
-
-	// 可能なら DP 復元を行う．
-	sel = vi(N);
-	int i = N;
-	ll j = V;
-	while (i >= 1) {
-		// i 番目の品物を選んだ場合と選ばなかった場合で重さの差があれば選んだ証拠．
-		if (dp[i][j] != dp[i - 1][j]) {
-			// 選んでいたなら 1 個分記録し，価値を減じておく．
-			sel[i - 1]++;
-			j -= v[i - 1];
-		}
-		else {
-			// 選んでいなかったなら 1 つ前の品物について調べに行く．
-			i--;
-		}
-	}
-
-	return dp[N][V];
-}
-
-
-//【重さ最小化ナップサック問題（価値が小）】時間 O(N V) / 空間 O(V)
-/*
-* 価値 v[i] と重さ w[i] の定まった N 個の品物から，価値がちょうど V になるよう
-* 品物を選んだときの重さの最小値を返す（不可能なら INFL を返す．）
-* 
-*（価値を状態としたインライン状態 DP）
-*/
-ll knapsack_problem_minimize_weight(const vi& v, const vl& w, int V) {
-	int N = sz(v); // 品物の個数
-
-	// dp[i] : 今まで見てきた品物の中で価値ちょうど i を実現できる最小重さ
-	// 何番目の品物まで見たかを添え字に持たないことでメモリを節約している．
-	// その代わり DP 復元はできなくなってしまった．
+	// dp_i[j] : 品物 [0..i) 内で価値ちょうど j を実現できる最小重さ
 	vl dp(V + 1, INFL);
-
-	// 価値 0 を実現できる最小重さは 0 である．
 	dp[0] = 0;
 
-	// 配る DP で重さ最小化ナップサック問題を解く．
-	rep(i, V) {
-		rep(j, N) {
-			// j 番目の品物の価値が高すぎれば選べない．
-			if (i + v[j] > V) continue;
+	// prv[j] : 価値をちょうど j にするために追加した品物の番号の最大値（なければ -1）
+	vi prv(V + 1, -1);
 
-			// j 番目の品物を選ぶ方が個数を少なくできるなら更新する．
-			chmin(dp[i + v[j]], dp[i] + w[j]);
+	// インライン配る DP
+	rep(i, n) {
+		repi(j, 0, V - v[i]) {
+			int nj = j + v[i];
+			if (chmin(dp[nj], dp[j] + w[i])) prv[nj] = i;
 		}
 	}
 
-	return dp[V];
+	// w_min : 価値ちょうど V を実現できた中で最小の重さ
+	ll w_min = dp[V];
+	if (w_min == INFL || !sel) return w_min;
+
+	// DP 復元を行う．
+	*sel = vi(n);
+	int j = V;
+	while (j > 0) {
+		int p = prv[j];
+		(*sel)[p]++;
+		j -= v[p];
+	}
+
+	return w_min;
 }
 
 

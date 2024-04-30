@@ -324,7 +324,7 @@ vb reachability_DAG(const Graph& g, const vi& u, const vi& v) {
 		// Œ‹‰Ê‚ÌŠi”[
 		rep(b2, b) {
 			int j2 = j - (b - b2);
-			res[j2] = get(dp[v[j2]], b2);
+			res[j2] = getb(dp[v[j2]], b2);
 		}
 	}
 

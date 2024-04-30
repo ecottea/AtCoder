@@ -205,7 +205,7 @@ double similarityQ(vector<Point<T>> s, vector<Point<T>> t) {
 
 //【点群の作る三角形の数え上げ】O(n^2 log n)　
 /*
-* 点群 p[0..n) から 3 点を選んで作れる鋭角[直角, 鈍角]三角形の個数を cp[c0, cn] とし，{cp,c0,cn} を返す．
+* 点群 p[0..n) から 3 点を選んで作れる鋭角[直角,鈍角]三角形の個数を cp[c0,cn] とし，{cp,c0,cn} を返す．
 *
 * 制約：どの 3 点も共線でない．
 *
@@ -349,8 +349,8 @@ int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>
 	//		⇔ 直線 PQ の傾き > 直線 PR の傾き
 	//		⇔ (Q[y] - P[y]) / (Q[x] - P[x]) > (R[y] - P[y]) / (R[x] - P[x])
 	//		⇔ (Q[y] - P[y]) (R[x] - P[x]) > (R[y] - P[y]) (Q[x] - P[x])
-	using PT = pair<T, T>;
-	function<bool(const PT&, const PT&, const PT&)> convexQ = [&](const PT& P, const PT& Q, const PT& R) {
+	using pTT = pair<T, T>;
+	auto convexQ = [&](const pTT& P, const pTT& Q, const pTT& R) {
 		T left = (Q.second - P.second) * (R.first - P.first);
 		T right = (R.second - P.second) * (Q.first - P.first);
 
@@ -384,7 +384,7 @@ int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>
 *
 * 制約：y1[i]≧0，線分は軸平行，互いに平行な線分同士は共有点をもたない．
 */
-tuple<ll, ll, ll> count_intersections(const vi& x1, const vi& y1, const vi& x2, const vi& y2) {
+tuple<ll, ll, ll> count_intersections_of_segments(const vi& x1, const vi& y1, const vi& x2, const vi& y2) {
 	// verify : https://yukicoder.me/problems/no/1920
 
 	int n = sz(x1);
@@ -449,18 +449,18 @@ tuple<ll, ll, ll> count_intersections(const vi& x1, const vi& y1, const vi& x2, 
 }
 
 
-//【線分群の連結成分数（軸平行）】O(n log w + w)
+//【線分群の連結性（軸平行）】O(n log w + w)
 /*
-* 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分について，連結成分数を返す．
+* 2 点 (x1[i], y1[i]), (x2[i], y2[i]) を結ぶ n 本の閉線分について，連結関係を表す Union-Find を返す．
 *
-* 制約：y1[i]≧0，線分は軸平行，互いに平行な線分同士は共有点をもたない．
+* 制約：y1[i]≧0，(線分の長さ)>0，線分は軸平行，互いに平行な線分同士は共有点をもたない．
 */
 int opccc(int a, int b) { return min(a, b); }
 int eccc() { return INF; }
 int opccc2(int a, int b) { return max(a, b); }
 int eccc2() { return -1; }
-int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const vi& y2) {
-	// verify : https://yukicoder.me/problems/no/1920
+dsu connectivity_of_segments(const vi& x1, const vi& y1, const vi& x2, const vi& y2) {
+	// verify : https://mojacoder.app/users/Tonegawac/problems/segment-connectivity
 
 	int n = sz(x1);
 
@@ -494,7 +494,7 @@ int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const v
 		else Assert(!"illegal segment!!");
 	}
 
-	// イベント混合ソート
+	// イベントソート
 	sort(all(ev));
 
 	// vid[y] : 位置 y にある縦方向の線分の番号（なければ -1）
@@ -503,7 +503,7 @@ int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const v
 	// 次に見るべき右の座標
 	lazy_segtree<int, opccc, eccc, int, opccc, opccc, eccc> rgt(w + 1);
 
-	dsu d(n); int res = n;
+	dsu d(n);
 
 	// 下方向に平面走査していく．
 	for (auto& [x, tp, yl, yr, id] : ev) {
@@ -531,7 +531,6 @@ int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const v
 			while (y <= yr) {
 				int id2 = vid.get(y);
 				if (id2 != -1) {
-					if (!d.same(id, id2)) res--;
 					d.merge(id, id2);
 					seen.push_back(y);
 				}
@@ -541,6 +540,78 @@ int count_connected_components(const vi& x1, const vi& y1, const vi& x2, const v
 			// 連結成分からは一気に右端までジャンプできる．
 			repe(y2, seen) rgt.set(y2, y);
 		}
+	}
+
+	return d;
+}
+
+
+//【長方形の和集合の面積】O(n log n)
+/*
+* n 個の長方形 [x1[i]..x2[i])×[y1[i]..y2[i]) の和集合の面積を返す．
+*
+*（平面走査）
+*/
+pil opRUA(pil x, pil y) {
+	auto [vx, cx] = x;
+	auto [vy, cy] = y;
+	if (vx < vy) return x;
+	if (vx > vy) return y;
+	return { vx, cx + cy };
+}
+pil eRUA() { return { INF, 0 }; } // (min, cnt)
+pil actRUA(int f, pil x) { auto [vx, cx] = x; return { vx + f, cx }; }
+int compRUA(int f, int g) { return f + g; }
+int idRUA() { return 0; } // add
+ll rectangle_union_area(const vl& x1, const vl& x2, const vl& y1, const vl& y2) {
+	// 参考 : https://www.mathenachia.blog/library-report-2022/#toc10
+	// verify : https://judge.yosupo.jp/problem/area_of_union_of_rectangles
+
+	int n = sz(x1);
+
+	// ys : y 座標のユニークな昇順列
+	vl ys(2 * n);
+	rep(i, n) {
+		ys[2 * i] = y1[i];
+		ys[2 * i + 1] = y2[i];
+	}
+	uniq(ys);
+
+	// (x 座標，クエリタイプ，左位置，右位置) の組
+	constexpr int UP = 1, DN = -1;
+	vector<tuple<ll, int, int, int>> ev;
+	rep(i, n) {
+		int y1_cp = lbpos(ys, y1[i]);
+		int y2_cp = lbpos(ys, y2[i]);
+		ev.push_back({ x1[i], UP, y1_cp, y2_cp });
+		ev.push_back({ x2[i], DN, y1_cp, y2_cp });
+	}
+
+	// イベントソート
+	sort(all(ev));
+
+	// seg : 区間の (m, c) = (最小値, 最小値をとる元の個数) を管理する遅延セグ木
+	int m = sz(ys) - 1;
+	vector<pil> ini(m);
+	rep(j, m) ini[j] = { 0, ys[j + 1] - ys[j] };
+	lazy_segtree<pil, opRUA, eRUA, int, actRUA, compRUA, idRUA> seg(ini);
+
+	// 下方向に平面走査していく．
+	ll res = 0; ll x_prv = get<0>(ev[0]);
+	for (auto [x, add, l, r] : ev) {
+		ll h = x - x_prv; // 高さ
+		ll w = ys[m] - ys[0]; // 幅
+
+		// 長方形の重なりが 0 である分だけ幅を小さくする．
+		auto [v_min, cnt] = seg.all_prod();
+		if (v_min == 0) w -= cnt;
+
+		// 長方形の面積を一括加算する．
+		res += h * w;
+
+		x_prv = x;
+
+		seg.apply(l, r, add);
 	}
 
 	return res;
@@ -1045,6 +1116,111 @@ vi minimum_manhattan_distance(const vector<T>& x, const vector<T>& y) {
 	}
 
 	return res;
+}
+
+
+//【マンハッタン最小全域木】O(n log n)
+/*
+* 点群 (x[0..n), y[0..n)) のマンハッタン距離に基づく最小全域木を g に格納し，総コストを返す．
+*/
+template <class T>
+ll manhattan_MST(const vector<T>& x0, const vector<T>& y0, Graph& g) {
+	// 参考 : https://www.topcoder.com/community/competitive-programming/tutorials/line-sweep-algorithms/
+	// verify : https://judge.yosupo.jp/problem/manhattanmst
+
+	int n = sz(x0);
+
+	vector<tuple<T, T, int>> xyi(n);
+	rep(i, n) xyi[i] = { x0[i], y0[i], i };
+
+	vector<pair<T, int>> sk(n), tmp(n);
+
+	priority_queue_rev<tuple<ll, int, int>> q;
+
+	auto execute = [&] {
+		// sk : y-x について昇順にマージソートしていく配列（k : x 座標昇順で何番目か）
+		rep(k, n) sk[k] = { get<1>(xyi[k]) - get<0>(xyi[k]), k };
+
+		// x 座標昇順で [l..r) 番目の点についての処理を行う．
+		function<void(int, int)> rf = [&](int l, int r) {
+			if (r - l <= 1) return;
+
+			// x[m] : 上半平面と下半平面の境界となる x 座標
+			int m = (l + r) / 2;
+
+			// 上下の半平面それぞれについて再帰的に処理を行う．
+			rf(l, m);
+			rf(m, r);
+
+			// 点群を y-x について昇順，次いで x について昇順にソートする．
+			merge(sk.begin() + l, sk.begin() + m, sk.begin() + m, sk.begin() + r, tmp.begin() + l);
+			repi(k, l, r - 1) sk[k] = tmp[k];
+
+			// s_max : 上半平面における x+y の最大値
+			T s_max = -T(INFL); int i_max = -1; T x_max = -1, y_max = -1;
+
+			repi(t, l, r - 1) {
+				int k = sk[t].second;
+				auto [x, y, i] = xyi[k];
+
+				// 注目点が上半平面に属している場合
+				if (k < m) {
+					// x+y が最大の点を記録しておく．
+					if (chmax(s_max, x + y)) {
+						i_max = i;
+						x_max = x;
+						y_max = y;
+					}
+				}
+				// 注目点が下半平面に属している場合
+				else {
+					// 上半平面の x+y が最大の点との間の辺が MST の候補となる．
+					if (i_max != -1) {
+						ll c = abs(x - x_max) + abs(y - y_max);
+						q.emplace(c, i, i_max);
+					}
+				}
+			}
+		};
+		rf(0, n);
+	};
+
+	// 8 通りの向きについて MST の辺の候補を洗い出す．
+	sort(all(xyi));
+	execute();
+	rep(k, n) get<1>(xyi[k]) *= -1;
+	execute();
+	rep(k, n) { get<0>(xyi[k]) *= -1; } reverse(all(xyi));
+	execute();
+	rep(k, n) get<1>(xyi[k]) *= -1;
+	execute();
+	rep(k, n) { swap(get<0>(xyi[k]), get<1>(xyi[k])); } sort(all(xyi));
+	execute();
+	rep(k, n) get<1>(xyi[k]) *= -1;
+	execute();
+	rep(k, n) { get<0>(xyi[k]) *= -1; } reverse(all(xyi));
+	execute();
+	rep(k, n) get<1>(xyi[k]) *= -1;
+	execute();
+
+	// クラスカル法で MST を求める．
+	g = Graph(n); ll cost = 0; dsu d(n); int cnt = 0;
+	while (cnt < n - 1) {
+		auto [c, s, t] = q.top(); q.pop();
+
+		// もし辺の両端が既に連結なら繋がない．
+		if (d.same(s, t)) continue;
+
+		// そうでないならコスト最小の辺なのでそれで繋ぐ．
+		cost += c;
+		d.merge(s, t);
+		cnt++;
+
+		g[s].push_back(t);
+		g[t].push_back(s);
+	}
+
+	return cost;
 }
 
 

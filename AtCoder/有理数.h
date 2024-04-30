@@ -416,7 +416,7 @@ pair<mint, mint> together(const vi& a, const vi& b) {
 		int e_del = min(integer_exponent(sum.val(), p), e);
 
 		// 分母に残る素因数 p の個数は e - e_del 個となる．
-		dnm *= pow(p, e - e_del);
+		dnm *= powi(p, e - e_del);
 	}
 
 	// 素朴に和を計算して dnm 倍すれば分子 num が求まる．
@@ -445,9 +445,9 @@ pair<mint, mint> together(const vi& a, const vi& b) {
 * tTTTT range(T n, T d) : O(log min(n, d))
 *	n/d の子孫が属する開区間を (nl/dl, nr/dr) とし，4 つ組 {nl, dl, nr, dr} を返す．
 *
-* pTT bin_search<T>(bool okQ(ll n, ll d), T v_max = INFL) : O(log v_max)
-*	okQ() の true と false の境界となる有理数を n/d とし，組 {n, d} を返す．
-*	制約：n/d は分子と分母が共に v_max 以下
+* tTTTT bin_search<T>(bool okQ(ll n, ll d), T v_max = INFL) : O(log v_max)
+*	分母分子がともに v_max 以下の有理数のうち，okQ() の true と false の境界の左右で
+*	最も深い位置にあるものを nl/dl < nr/dr とし，組 {nl, dl, nr, dr} を返す．
 *
 * pair<vector<tTTTTT>, vector<tTTTTT>> best_approximation_fraction(T n, T d) : O(log min(n, d))
 *	n/d の正の {下側最良近似分数の列の列, 上側最良近似分数の列の列} の組を返す．
@@ -705,8 +705,8 @@ namespace Stern_brocot_tree {
 
 	// okQ() の true と false の境界を返す．
 	template <class T = ll, class FUNC>
-	pair<T, T> bin_search(const FUNC& okQ, T v_max = T(INFL)) {
-		// verify : https://atcoder.jp/contests/abc294/tasks/abc294_f
+	tuple<T, T, T, T> bin_search(const FUNC& okQ, T v_max = T(INFL)) {
+		// verify : https://projecteuler.net/problem=192
 
 		T nl = 0, dl = 1; bool bl = okQ(nl, dl);
 		T nr = 1, dr = 0; bool br = okQ(nr, dr);
@@ -715,17 +715,22 @@ namespace Stern_brocot_tree {
 		while (1) {
 			// 右に移動
 			if (bl == bm) {
+				// k_max : nm, dm が v_max を超えない k の最大値
+				T k_max = T(INFL);
+				if (nr > 0) chmin(k_max, (v_max - nm) / nr);
+				if (dr > 0) chmin(k_max, (v_max - dm) / dr);
+
 				// k : okQ(nm/dm) が切り替わるまでの移動回数
 				T k_ng = 0, k_ok = 1;
 
-				// k の上限がわからないのでまず指数探索を行う．
+				// k の丁度いい上限がわからないのでまず指数探索を行う．
 				while (okQ(nm + k_ok * nr, dm + k_ok * dr) == bm) {
 					k_ng = k_ok;
 					k_ok *= 2;
 
 					// 十分深くまで探しても T/F が切り替わらなかったら，
 					// nm/dm の子孫は全て同じ T/F であると判断し開区間の右の境界を返す．
-					if (nm + k_ng * nr > v_max || dm + k_ng * dr > v_max) return { nr, dr };
+					if (k_ng > k_max) return { nm + k_max * nr, dm + k_max * dr, nr, dr };
 				}
 
 				// 判明した k の上下界を用いて二分探索を行う．
@@ -736,6 +741,8 @@ namespace Stern_brocot_tree {
 					else k_ng = k_mid;
 				}
 
+				if (k_ok > k_max) return { nm + k_max * nr, dm + k_max * dr, nr, dr };
+
 				bm = br;
 				nm += k_ok * nr;
 				dm += k_ok * dr;
@@ -744,17 +751,22 @@ namespace Stern_brocot_tree {
 			}
 			// 左に移動
 			else {
+				// k_max : nm, dm が v_max を超えない k の最大値
+				T k_max = T(INFL);
+				if (nl > 0) chmin(k_max, (v_max - nm) / nl);
+				if (dl > 0) chmin(k_max, (v_max - dm) / dl);
+
 				// k : okQ(nm/dm) が切り替わるまでの移動回数
 				T k_ng = 0, k_ok = 1;
 
-				// k の上限がわからないのでまず指数探索を行う．
+				// k の丁度いい上限がわからないのでまず指数探索を行う．
 				while (okQ(nm + k_ok * nl, dm + k_ok * dl) == bm) {
 					k_ng = k_ok;
 					k_ok *= 2;
 
 					// 十分深くまで探しても T/F が切り替わらなかったら，
 					// nm/dm の子孫は全て同じ T/F であると判断し開区間の左の境界を返す．
-					if (nm + k_ng * nl > v_max || dm + k_ng * dl > v_max) return { nl, dl };
+					if (k_ng > k_max) return { nl, dl, nm + k_max * nl, dm + k_max * dl };
 				}
 
 				// 判明した k の上下界を用いて二分探索を行う．
@@ -764,6 +776,8 @@ namespace Stern_brocot_tree {
 					if (okQ(nm + k_mid * nl, dm + k_mid * dl) != bm) k_ok = k_mid;
 					else k_ng = k_mid;
 				}
+
+				if (k_ok > k_max) return { nl, dl, nm + k_max * nl, dm + k_max * dl };
 
 				bm = bl;
 				nm += k_ok * nl;
@@ -836,6 +850,46 @@ namespace Stern_brocot_tree {
 };
 
 
+//【最良近似分数（有理数）】O(log(num + dnm + N))
+/*
+* 分母と分子がともに N 以下であるような num/dnm の正の下[上]側最良近似分数を pl/ql[ pu/qu ] とし，
+* 4 つ組 (pl, ql, pu, qu} を返す（存在しなければ pl/ql=0/1, pu/qu=1/0 を返す．）
+*
+* 制約 : num > 0, dnm > 0，N > 0
+*
+* 利用：【一次式の剰余の最小値】,【二元一次不定方程式】
+*/
+template <class T>
+tuple<T, T, T, T> best_rational_approximation(T num, T dnm, T N) {
+	// verify : https://judge.yosupo.jp/problem/rational_approximation
+
+	bool swap_flag = false;
+	if (num > dnm) {
+		swap(num, dnm);
+		swap_flag = true;
+	}
+
+	auto val_l = min_of_mod_of_linear<T>(N, dnm, num, num);
+	T ql, tmp2;
+	auto gl = bezout<T>(num, -dnm, val_l, ql, tmp2);
+	if (ql == 0) ql = dnm / gl;
+	auto pl = num * ql / dnm;
+
+	auto val_u = min_of_mod_of_linear<T>(N, dnm, -num, -num);
+	T qu, tmp3;
+	auto gu = bezout<T>(-num, -dnm, val_u, qu, tmp3);
+	if (qu == 0) qu = dnm / gu;
+	auto pu = (num * qu + dnm - 1) / dnm;
+
+	if (swap_flag) {
+		swap(pl, qu);
+		swap(pu, ql);
+	}
+
+	return { pl, ql, pu, qu };
+}
+
+
 //【正則連分数展開】O(log min(num, dnm))
 /*
 * 正の有理数 num/dnm の正則連分数展開を seq に格納し seq を返す．
@@ -871,41 +925,6 @@ pll from_continued_fraction(const vl& seq) {
 	}
 
 	return make_pair(num, dnm);
-}
-
-
-//【有理数近似】O(log dnm)（誤差注意）
-/*
-* 実数 x を分母が dnm_max 以下の既約分数 num / dnm で近似し，組 {num, dnm} を返す．
-* 結果は最良近似分数ではあるが，分母が dnm_max 以下の範囲での最良の近似であるとは限らないので注意．
-*/
-template <class T = ll>
-pair<T, T> rationalize(long double x, T dnm_max = T(INFL), long double EPS = 1e-17) {
-	// 参考 : https://ja.wikipedia.org/wiki/%E9%80%A3%E5%88%86%E6%95%B0
-	// verify : https://yukicoder.me/problems/no/2266
-
-	T sign = (x >= 0 ? 1 : -1);
-	x = abs(x);
-
-	vector<T> ps{ 1, (T)x };
-	vector<T> qs{ 0, 1 };
-
-	// x の正則連分数展開に基づく近似を行う．
-	repi(i, 2, INF) {
-		x -= floor(x);
-		if (x < EPS) break;
-		x = 1 / x; // 誤差やばい
-
-		T a = T(x);
-
-		// a * qs[i - 1] + qs[i - 2] > dnm_max となるなら打ち切り
-		if (a > (dnm_max - qs[i - 2]) / qs[i - 1]) break;
-
-		ps.push_back(a * ps[i - 1] + ps[i - 2]);
-		qs.push_back(a * qs[i - 1] + qs[i - 2]);
-	}
-
-	return { sign * ps.back(), qs.back() };
 }
 
 
@@ -1062,5 +1081,40 @@ int real_digit(int num, int dnm, ll n, int b = 10) {
 *
 * verify : https://atcoder.jp/contests/arc015/tasks/arc015_2
 */
+
+
+//【有理数近似】O(log dnm)（誤差注意）
+/*
+* 実数 x を分母が dnm_max 以下の既約分数 num / dnm で近似し，組 {num, dnm} を返す．
+* 結果は最良近似分数ではあるが，分母が dnm_max 以下の範囲での最良の近似であるとは限らないので注意．
+*/
+template <class T = ll>
+pair<T, T> rationalize(long double x, T dnm_max = T(INFL), long double EPS = 1e-17) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E9%80%A3%E5%88%86%E6%95%B0
+	// verify : https://yukicoder.me/problems/no/2266
+
+	T sign = (x >= 0 ? 1 : -1);
+	x = abs(x);
+
+	vector<T> ps{ 1, (T)x };
+	vector<T> qs{ 0, 1 };
+
+	// x の正則連分数展開に基づく近似を行う．
+	repi(i, 2, INF) {
+		x -= floor(x);
+		if (x < EPS) break;
+		x = 1 / x; // 誤差やばい
+
+		T a = T(x);
+
+		// a * qs[i - 1] + qs[i - 2] > dnm_max となるなら打ち切り
+		if (a > (dnm_max - qs[i - 2]) / qs[i - 1]) break;
+
+		ps.push_back(a * ps[i - 1] + ps[i - 2]);
+		qs.push_back(a * qs[i - 1] + qs[i - 2]);
+	}
+
+	return { sign * ps.back(), qs.back() };
+}
 
 

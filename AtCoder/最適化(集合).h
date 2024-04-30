@@ -28,7 +28,7 @@ T maximize_subset_XOR(vector<T> a) {
 		// a[i0] : 第 b ビットが 1 である要素（なければ i0 = -1）
 		int i0 = -1;
 		rep(i, n) {
-			if (get(a[i], b)) {
+			if (getb(a[i], b)) {
 				i0 = i;
 				break;
 			}
@@ -39,10 +39,10 @@ T maximize_subset_XOR(vector<T> a) {
 
 		// 暫定解の第 b ビットが 0 なら v = a[i0] と XOR をとって 1 にする．
 		T v = a[i0];
-		if (!get(res, b)) res ^= v;
+		if (!getb(res, b)) res ^= v;
 
 		// 残る要素の第 b ビットを全て 0 にするよう XOR をとる．
-		repi(i, i0, n - 1) if (get(a[i], b)) a[i] ^= v;
+		repi(i, i0, n - 1) if (getb(a[i], b)) a[i] ^= v;
 	}
 
 	return res;

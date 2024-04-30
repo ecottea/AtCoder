@@ -67,7 +67,7 @@ mint lcm(const vi& a) {
 	}
 
 	mint res = 1;
-	repe(pp, lpps) res *= pow(pp.first, pp.second);
+	repe(pp, lpps) res *= powi(pp.first, pp.second);
 
 	return res;
 }
@@ -78,62 +78,90 @@ mint lcm(const vi& a) {
 * g = GCD(a, b) ≧ 0 を返しつつ，a x + b y = g の解 (x, y) を求める．
 * |x| + |y| は最小になるよう選ばれる．
 */
-template <class T = ll>
+template <class T>
 T extended_gcd(T a, T b, T& x, T& y) {
-	// 参考：https://qiita.com/drken/items/b97ff231e43bce50199a
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/6/NTL/all/NTL_1_E
+	// 参考 : https://ashiato45.hatenablog.jp/entry/2018/11/04/172848
+	// verify : https://atcoder.jp/contests/abc340/tasks/abc340_f
 
 	//【方法】
-	// b = 0 の場合は，明らかに g = a で，(x, y) = (1, 0) が解である．
-	// 
-	// b ≠ 0 の場合を考える．a を b で割り
-	//		a = q b + r (0 ≦ r < b)
-	// なる q, r を得ておく．これを元の式に代入すると
-	//		(q b + r) x + b y = g
-	//		⇔ b (q x + y) + r x = g
-	// となるので，
-	//		b X + r Y = g
-	// の解 (X, Y) = (q x + y, x) を求めれば
-	//		(x, y) = (Y, X - q Y)
-	// として元の式の解が得られる．これを再帰的に繰り返す．
+	// 行列を用いた非再帰の解法を採用する．
+	//
+	// はじめは
+	//		[1 0] [a]   [a]
+	//		[0 1].[b] = [b]
+	// で初期化する．第 i ステップを終えて
+	//		[x_i     y_i    ] [a]  [a_i]
+	//		[x_(i+1) y_(i+1)].[b] = [b_i]
+	// が成り立っているとする．このとき
+	//		a_i = q b_i + r
+	// なる q, r をとると，
+	//		[0  1] [a_i] = [b_i]
+	//		[1 -q].[b_i] = [ r ]
+	// より
+	//		[0  1] [x_i     y_i    ] [a]   [b_i]
+	//		[1 -q].[x_(i+1) y_(i+1)].[b] = [ r ]
+	// が成り立つので左辺の行列積をまとめる．この更新を続けていくと，いずれ
+	//		[x y] [a]   [±1]
+	//		[* *].[b] = [ 0]
+	// の形になるので，1 行目から所望の等式が得られる．
 
-	// b = 0 になったら自明解を返す．
-	if (b == 0) {
-		x = (a > 0) - (a < 0); // x = sgn(a)
-		y = 0;
-		return a * x; // g ≧ 0 とする
+	if (a == 0 && b == 0) {
+		x = y = 0;
+		return 0;
 	}
 
-	// a を b で割った商 q と余り r を求めておく（負でも大丈夫）
-	T q = a / b, r = a % b;
+	x = 1, y = 0;
+	T nx = 0, ny = 1;
 
-	// a, b を更新し解 X, Y を得る．
-	T X, Y;
-	T d = extended_gcd(b, r, X, Y);
+	while (b != 0) {
+		T q = a / b;
+		T r = a % b;
 
-	// X, Y から x, y を得る．
-	x = Y;
-	y = X - q * Y;
+		x -= q * nx;
+		y -= q * ny;
+		swap(nx, x);
+		swap(ny, y);
 
-	return d;
+		a = b;
+		b = r;
+	}
+
+	if (a < 0) {
+		x = -x;
+		y = -y;
+		a = -a;
+	}
+
+	return a;
 }
 
 
 //【二元一次不定方程式】O(log max(|a|, |b|))
 /*
-* a x + b y = c の解 (x, y) のうち，x を非負最小にするものを格納する．
+* a x + b y = c の解 (x, y) のうち，x を非負最小にするものを格納する（無理なら負も許す）
 * 解があれば GCD(a, b) ≧ 0，なければ -1 を返す．
 *
 * 利用：【拡張ユークリッドの互除法】
 */
 template <class T = ll>
 T bezout(T a, T b, T c, T& x, T& y) {
-	// verify : https://atcoder.jp/contests/arc091/tasks/arc091_d
+	// verify : https://atcoder.jp/contests/abc340/tasks/abc340_f
 
-	if (a == 0 && b == 0) {
-		if (c == 0) {
-			x = y = 0;
-			return 0;
+	if (b == 0) {
+		if (a == 0) {
+			if (c == 0) {
+				x = y = 0;
+				return 0;
+			}
+			else {
+				return -1;
+			}
+		}
+
+		if (c % a == 0) {
+			x = c / a;
+			y = 0;
+			return abs(a);
 		}
 		else {
 			return -1;
@@ -154,7 +182,10 @@ T bezout(T a, T b, T c, T& x, T& y) {
 	b /= g;
 	c /= g;
 
-	x = smod(x * (c % b), b); // c が大きくてもオーバーフローしないようにする
+	x *= c % b; // c が大きくてもオーバーフローしないようにする
+	x %= b;
+	if (x < 0) x += b;
+
 	y = (c - a * x) / b;
 
 	return g;
@@ -257,7 +288,7 @@ T count_bezout(T a, T b, T c, T x1, T x2, T y1, T y2) {
 /*
 * L = LCM m[0..n) とする．各 i∈[0..n) についての合同式
 *	x ≡ r[i] (mod m[i])
-* を全て満たす x∈[0..L) を求め，組 {x, L} を返す．
+* を全て満たす x∈[0..L) を求め，組 {x, L} を返す（解がなければ {0, 0} を返す）
 *
 * 利用：【拡張ユークリッドの互除法】
 */
@@ -273,7 +304,7 @@ pair<T, T> CRT(const vector<T>& r, const vector<T>& m) {
 	// Contracts: 0 <= r0 < m0
 	T r0 = 0, m0 = 1;
 	rep(i, n) {
-		assert(m[i] >= 1);
+		Assert(m[i] >= 1);
 
 		T r1 = smod(r[i], m[i]), m1 = m[i];
 		if (m0 < m1) {
@@ -432,34 +463,49 @@ pll gcd_gaussian_integers(ll a1, ll b1, ll a2, ll b2) {
 }
 
 
-//【拡張ユークリッドの互除法（非再帰）】O(log max(|a|, |b|))（再帰より遅い）
+//【拡張ユークリッドの互除法（再帰）】O(log max(|a|, |b|))
 /*
 * g = GCD(a, b) ≧ 0 を返しつつ，a x + b y = g の解 (x, y) を求める．
 * |x| + |y| は最小になるよう選ばれる．
 */
-template <class T>
-T extended_gcd2(T a, T b, T& x, T& y) {
-	stack<T> qs;
+template <class T = ll>
+T extended_gcd_rec(T a, T b, T& x, T& y) {
+	// 参考：https://qiita.com/drken/items/b97ff231e43bce50199a
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/6/NTL/all/NTL_1_E
 
-	while (b != 0) {
-		qs.push(a / b);
-		T r = a % b;
+	//【方法】
+	// b = 0 の場合は，明らかに g = a で，(x, y) = (1, 0) が解である．
+	// 
+	// b ≠ 0 の場合を考える．a を b で割り
+	//		a = q b + r (0 ≦ r < b)
+	// なる q, r を得ておく．これを元の式に代入すると
+	//		(q b + r) x + b y = g
+	//		⇔ b (q x + y) + r x = g
+	// となるので，
+	//		b X + r Y = g
+	// の解 (X, Y) = (q x + y, x) を求めれば
+	//		(x, y) = (Y, X - q Y)
+	// として元の式の解が得られる．これを再帰的に繰り返す．
 
-		a = b;
-		b = r;
+	// b = 0 になったら自明解を返す．
+	if (b == 0) {
+		x = (a > 0) - (a < 0); // x = sgn(a)
+		y = 0;
+		return a * x; // g ≧ 0 とする
 	}
 
-	ll g = abs(a);
-	x = (a > 0) - (a < 0); // x = sgn(a)
-	y = 0;
+	// a を b で割った商 q と余り r を求めておく（負でも大丈夫）
+	T q = a / b, r = a % b;
 
-	while (!qs.empty()) {
-		swap(x, y);
-		y -= qs.top() * x;
-		qs.pop();
-	}
+	// a, b を更新し解 X, Y を得る．
+	T X, Y;
+	T d = extended_gcd_rec(b, r, X, Y);
 
-	return g;
+	// X, Y から x, y を得る．
+	x = Y;
+	y = X - q * Y;
+
+	return d;
 }
 
 

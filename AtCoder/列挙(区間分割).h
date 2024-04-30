@@ -18,7 +18,7 @@ vector<vector<vector<T>>> enumerate_interval_partitions(const vector<T>& a) {
 	repb(set, n - 1) {
 		vector<vector<T>> sep; vector<T> itval{ a[0] };
 		rep(i, n - 1) {
-			if (get(set, i)) {
+			if (getb(set, i)) {
 				sep.push_back(itval);
 				itval = vector<T>{ a[i + 1] };
 			}

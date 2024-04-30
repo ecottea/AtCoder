@@ -262,11 +262,11 @@ struct Fixed_matrix {
 
 //【対称行列（半環）】
 /*
-* SymMatrix<S, add, o, mul, e>(n) : O(n^2)
+* SymMatrix<S, add, o, mul, e>(int n) : O(n^2)
 *	n * n 零行列で初期化する．
 *	成分は半環 <S, add, o, mul, e> の元とする．
 *
-* SymMatrix<S, add, o, mul, e>(a) : O(n^2)
+* SymMatrix<S, add, o, mul, e>(vvS a) : O(n^2)
 *	配列 a の要素で初期化する．
 *
 * SymMatrix::identity(int n) : O(n^2)
@@ -284,7 +284,7 @@ struct Fixed_matrix {
 * A * B : O(n^3)
 *	行列 A と行列 B の積を返す．
 *
-* pow(d) : O(n^3 log d)
+* SymMatrix pow(d) : O(n^3 log d)
 *	自身を d 乗した行列を返す．
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
@@ -308,8 +308,8 @@ struct SymMatrix {
 	}
 
 	// アクセス
-	vector<S> const& operator[](int i) const { return v[i]; }
-	vector<S>& operator[](int i) { return v[i]; }
+	inline vector<S> const& operator[](int i) const { return v[i]; }
+	inline vector<S>& operator[](int i) { return v[i]; }
 
 	// 比較
 	bool operator==(const SymMatrix& b) const { return n == b.n && v == b.v; }

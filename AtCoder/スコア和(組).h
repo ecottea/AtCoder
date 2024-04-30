@@ -374,3 +374,52 @@ T pair_mod_sum(const vi& a, const vi& b) {
 }
 
 
+//【組の差の総積】O(n (log n)^2)
+/*
+* FPS(mint).h の【差積】を用いれば良い．
+*/
+
+
+//【組の和の総積】O(n (log n)^2)
+/*
+* 与えられた a[0..n) について Πi<j (a[i]+a[j]) を返す．
+*
+* 利用：【形式的冪級数】
+*/
+template <class T>
+mint pair_sum_product(const vector<T>& a) {
+	int n = sz(a);
+	int N = 1 << (msb(n - 1) + 1);
+
+	// muls : (z - a[i]) の連続する 2 冪個の積からなる完全二分木
+	vector<MFPS> muls(N * 2);
+	repi(i, N, N + n - 1) muls[i] = MFPS(vm({ -a[i - N], 1 }));
+	repi(i, N + n, 2 * N - 1) muls[i] = MFPS(1);
+	repir(i, N - 1, 1) muls[i] = muls[2 * i] * muls[2 * i + 1];
+
+	// muls2 : (z + a[i]) の連続する 2 冪個の積からなる完全二分木
+	vector<MFPS> muls2(muls);
+	repi(i, 1, N + n - 1) {
+		int K = sz(muls2[i]);
+		for (int k = K - 2; k >= 0; k -= 2) muls2[i][k] *= -1;
+	}
+
+	// mods : Π(z + a[m..r)) を Π(z - a[l..m)) で割った余りからなる完全二分木
+	vector<MFPS> mods(N * 2);
+	mods[1] = MFPS(1);
+	repi(i, 2, N + n - 1) {
+		if (i & 1) mods[i] = (mods[i / 2] * muls2[i - 1]).reminder(muls[i]);
+		else mods[i] = mods[i / 2].reminder(muls[i]);
+	}
+
+	// mods の葉は (z - x[i]) で割った余りなので，因数定理よりこれが Π(a[i] + a[0..i)) に等しい．
+	mint res = 1;
+	rep(i, n) {
+		if (sz(mods[N + i]) == 0) return 0;
+		res *= mods[N + i][0];
+	}
+
+	return res;
+}
+
+

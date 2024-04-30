@@ -170,8 +170,6 @@ int maximum_clique(const Graph& g, vi* vs = nullptr) {
 //【彩色数】O(2^n n)
 /*
 * 無向グラフ g の彩色数を返す．彩色数とは，独立集合への分割の最小個数である．
-*
-* 利用：【独立集合の数え上げ】
 */
 int chromatic_number(const Graph& g) {
 	// 参考 : https://drken1215.hatenablog.com/entry/2019/01/16/030000
@@ -205,17 +203,44 @@ int chromatic_number(const Graph& g) {
 	//		各 set ⊂ V について set の独立集合の数を求める．
 	//		→ f[set] = (set の独立集合の数)^k を求める．
 	//		→ f[set] に下位集合メビウス変換(最大元) を行い g[V] を求める．
-	//	を行い，始めて g[V] != 0 となった k を返せば良い．
+	//	を行い，初めて g[V] != 0 となった k を返せば良い．
+	//
+	// 実際には独立集合の数ではなく，頂点にランダムな重みを割り当て，
+	// 独立集合のスコアを重みの積と定めてのスコア和を考えれば失敗する確率は十分低くなる．
 
 	int n = sz(g);
 	if (n == 0) return 0;
 
-	// ind[set] : set の部分集合のうち，独立集合をなすものの個数
-	vm ind = count_independent_set(g);
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<int> rnd(0, 998244352);
+
+	// w[s] : 頂点 s に割り当てるランダムな重み
+	vm w(n);
+	rep(s, n) w[s] = rnd(mt);
+
+	// ind[set] : set の部分集合のうち，独立集合をなすもののスコア和
+	vm ind(1LL << n);
+	ind[0] = 1;
+
+	repi(set, 1, (1 << n) - 1) {
+		// s : set に含まれる頂点
+		int s = msb(set);
+
+		// s を含まない独立集合のスコアを加算する．
+		int sub = set - (1 << s);
+		ind[set] = ind[sub];
+
+		// s を含む独立集合のスコアを加算する．
+		repe(t, g[s]) {
+			// s と辺で結ばれた頂点は選ぶことができない．
+			sub &= ~(1 << t);
+		}
+		ind[set] += w[s] * ind[sub];
+	}
 
 	// pow_k[set] : (-1)^|V - set| ind[set]^k
 	vm pow(1LL << n);
-	repb(set, n) pow[set] = (n - popcount(set)) % 2 ? -1 : 1;
+	repb(set, n) pow[set] = (n - popcount(set)) & 1 ? -1 : 1;
 
 	repi(k, 1, n) {
 		mint sum = 0;
@@ -260,6 +285,8 @@ ll traveling_salesman_problem(const WGraph& g) {
 	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_cv
 
 	int n = sz(g);
+	if (n == 0) return INFL;
+	if (n == 1) return 0;
 
 	// dp[s][set] : 頂点 s から n-1 までの set を通る単純パスの最小コスト
 	vvl dp(n, vl(1LL << n, INFL));
@@ -268,14 +295,14 @@ ll traveling_salesman_problem(const WGraph& g) {
 	// 貰う DP
 	repb(set, n) rep(s, n) {
 		// s から出発するので s を通らないことはありえない．
-		if (!get(set, s)) continue;
+		if (!getb(set, s)) continue;
 
 		// s から出ている各辺 e について
 		repe(e, g[s]) {
 			int t = e.to; ll c = e.cost;
 
 			// e の行き先 t が set に含まれていなければ e は通れない．
-			if (!get(set, t)) continue;
+			if (!getb(set, t)) continue;
 
 			// e を通って s → t と進む方がコストが小さければ更新する．
 			chmin(dp[s][set], c + dp[t][set - (1 << s)]);
@@ -301,6 +328,8 @@ ll traveling_salesman_problem(const vvl& c) {
 	// verify : https://atcoder.jp/contests/abc180/tasks/abc180_e
 
 	int n = sz(c);
+	if (n == 0) return INFL;
+	if (n == 1) return 0;
 
 	// dp[s][set] : 頂点 s から n-1 までの set を通る単純パスの最小コスト
 	vvl dp(n, vl(1LL << n, INFL));
@@ -323,6 +352,44 @@ ll traveling_salesman_problem(const vvl& c) {
 }
 
 
+//【最小コストハミルトン閉路】O(2^n n^2)
+/*
+* 重み付き隣接行列 c[0..n)[0..n) が表す有向グラフ g に対し，各頂点集合 set について，
+* 誘導部分グラフ g[set] の最小コストハミルトン閉路のコストを並べたリストを返す．
+*
+*（bit DP）
+*/
+vl shortest_hamiltonian_cycle(const vvl& c) {
+	int n = sz(c);
+	if (n == 0) return vl{ INFL };
+	if (n == 1) return vl{ INFL, 0 };
+
+	vl res(1LL << n, INFL);
+
+	// v : set に含まれる番号最大の頂点
+	rep(v, n) {
+		// dp[s][set] : 頂点 s から頂点 v までの set⊂[0..v] を通る単純パスの最小コスト
+		vvl dp(v + 1, vl(1LL << (v + 1), INFL));
+		dp[v][1LL << v] = 0;
+
+		// 貰う DP
+		repi(set, 1 << v, (1 << (v + 1)) - 1) {
+			// s, t ∈ set なる辺 s→t をチェックする．
+			repis(s, set) repis(t, set - (1 << s)) {
+				chmin(dp[s][set], c[s][t] + dp[t][set - (1 << s)]);
+			}
+		}
+
+		// g[set] のハミルトン路 s→v に辺 v→s を追加して g[set] のハミルトン閉路を得る．
+		repi(set, 1 << v, (1 << (v + 1)) - 1) repis(s, set) {
+			chmin(res[set], dp[s][set] + c[v][s]);
+		}
+	}
+
+	return res;
+}
+
+
 //【最小コストハミルトンパス】O(2^n n^2)
 /*
 * 重み付き有向グラフ g の最小コストハミルトンパスのコストを返す（存在しなければ INFL）
@@ -340,7 +407,7 @@ ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
 
 	repb(set, n) rep(s, n) {
 		// s から出発するので s を通らないことはありえない．
-		if (!get(set, s)) continue;
+		if (!getb(set, s)) continue;
 
 		// set = {s} の場合は不動でいいのでコストは 0 である．
 		if (set == (1 << s)) {
@@ -353,7 +420,7 @@ ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
 			int t = e.to; ll c = e.cost;
 
 			// e の行き先 t が set に含まれていなければ e は通れない．
-			if (!get(set, t)) continue;
+			if (!getb(set, t)) continue;
 
 			// e を通って s → t と進む方がコストが小さければ更新する．
 			chmin(dp[s][set], c + dp[t][set - (1 << s)]);
@@ -367,14 +434,14 @@ ll shortest_hamiltonian_path(const WGraph& g, vvl& dp) {
 }
 
 
-//【最小コスト単純パス】O(2^n n^3)
+//【最小コストハミルトンパス】O(2^n n^3)
 /*
-* 与えられた重み付き有向グラフ g に対し，頂点 s から出発し set を通り頂点 t にたどり着く
-* 単純パスの最小コストを dp[s][t][set] に格納し dp を返す．
+* 与えられた重み付き有向グラフ g に対し，g[set] の s→t ハミルトンパス
+* の最小コストを dp[s][t][set] に格納し dp を返す．
 *
 *（bit DP）
 */
-vvvl shortest_simple_path(const WGraph& g) {
+vvvl shortest_hamiltonian_path(const WGraph& g) {
 	// verify : https://mojacoder.app/users/milkcoffee/contests/mr-contest-002/tasks/3
 
 	int n = sz(g);
@@ -385,7 +452,7 @@ vvvl shortest_simple_path(const WGraph& g) {
 	// 貰う DP
 	repb(set, n) rep(s, n) rep(t, n) {
 		// s→t パスなので s, t を通らないことはありえない．
-		if (!get(set, s) || !get(set, t)) continue;
+		if (!getb(set, s) || !getb(set, t)) continue;
 
 		// set = {s} = {t} の場合は不動でいいのでコストは 0 である．
 		if (s == t && set == (1 << s)) {
@@ -398,7 +465,7 @@ vvvl shortest_simple_path(const WGraph& g) {
 			int v = e.to; ll c = e.cost;
 
 			// e の行き先 v が set に含まれていなければ e は通れない．
-			if (!get(set, v)) continue;
+			if (!getb(set, v)) continue;
 
 			// v を通って s → t と進む方がコストが小さければ更新する．
 			chmin(dp[s][t][set], c + dp[v][t][set - (1 << s)]);

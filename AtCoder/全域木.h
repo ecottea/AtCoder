@@ -13,7 +13,7 @@
 * 最小全域森を msf に構成し，各最小全域木の代表元を rs に格納する．
 */
 ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
-	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bo
+	// verify : https://judge.yosupo.jp/problem/minimum_spanning_tree
 
 	int n = sz(g);
 	if (msf != nullptr)	*msf = WGraph(n);
@@ -57,7 +57,7 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 */
 ll prim(const WGraph& g, int r, WGraph* mst = nullptr) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95
-	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_en
+	// verify : https://judge.yosupo.jp/problem/minimum_spanning_tree
 
 	int n = sz(g);
 	if (mst) *mst = WGraph(n);
@@ -275,7 +275,7 @@ vi required_edge_for_MST(int n, const vi& u, const vi& v, const vl& c) {
 
 //【全域木の数え上げ】O(n^3)
 /*
-* 自己ループのない無向グラフ g（多重辺は可）の全域木の個数を返す．
+* 無向グラフ g（多重辺可）の全域木の個数を返す．
 *
 * 利用：【行列】,【行列式】
 */
@@ -287,20 +287,20 @@ mint matrix_tree_theorem(const Graph& g) {
 	if (n <= 1) return 1;
 
 	// mat : g のラプラシアン行列から最終行と最終列を除いたもの
-	//	mat[s][s] : 頂点 s の次数
+	//	mat[s][s] : 頂点 s の次数（自己ループは除く）
 	//	mat[s][t] : -(頂点 s, t を結ぶ辺の数)
 	Matrix<mint> mat(n - 1, n - 1);
 
 	rep(s, n - 1) {
-		mat[s][s] = sz(g[s]);
 		repe(t, g[s]) {
-			Assert(s != t); // 自己ループは許さない
+			if (t == s) continue; // 自己ループは無視
 
 			if (t < n - 1) mat[s][t]--;
+			mat[s][s]++;
 		}
 	}
 
-	// ラプラシアン行列の任意の余因子行列の行列式が全域木の個数を与える．
+	// ラプラシアン行列の任意の余因子が全域木の個数を与える．
 	return determinant(mat);
 }
 
@@ -418,6 +418,75 @@ pair<ll, mint> count_minimum_spanning_forest(const WGraph& g) {
 	}
 
 	return make_pair(cost, cnt);
+}
+
+
+//【有向全域木の数え上げ】O(n^3)
+/*
+* 有向グラフ g（多重辺可）の r を根とする有向全域木の個数を返す．
+*
+* 利用：【行列】,【行列式】
+*/
+mint directed_matrix_tree_theorem(const Graph& g, int r) {
+	// 参考 : https://atcoder.jp/contests/abc336/editorial/9060
+	
+	int n = sz(g);
+	if (n <= 1) return 1;
+
+	// mat : g の有向ラプラシアン行列から第 r 行と第 r 列を除いたもの
+	//	mat[s][s] : 頂点 s の入次数（自己ループは除く）
+	//	mat[s][t] : -(辺 t→s の数)
+	Matrix<mint> mat(n - 1, n - 1);
+
+	rep(s, n) {
+		int s2 = s < r ? s : s - 1;
+
+		repe(t, g[s]) {
+			if (t == s || t == r) continue; // 自己ループは無視
+			int t2 = t < r ? t : t - 1;
+
+			if (s != r) mat[t2][s2]--;
+			mat[t2][t2]++;
+		}
+	}
+
+	// 有向ラプラシアン行列の (r,r)-余因子が全域木の個数を与える．
+	return determinant(mat);
+}
+
+
+//【有向全域木の数え上げ（重み付き）】O(n^3)
+/*
+* 重み付き有向グラフ g の r を根とする有向全域木の個数を返す（辺の重みは辺の本数と解釈する．）
+*
+* 利用：【行列】,【行列式】
+*/
+mint directed_matrix_tree_theorem(const WGraph& g, int r) {
+	// 参考 : https://atcoder.jp/contests/abc336/editorial/9060
+	// verify : https://atcoder.jp/contests/abc336/tasks/abc336_g
+
+	int n = sz(g);
+	if (n <= 1) return 1;
+
+	// mat : g の有向ラプラシアン行列から第 r 行と第 r 列を除いたもの
+	//	mat[s][s] : 頂点 s の入次数
+	//	mat[s][t] : -(辺 t→s の数)
+	Matrix<mint> mat(n - 1, n - 1);
+
+	rep(s, n) {
+		int s2 = s < r ? s : s - 1;
+
+		repe(t, g[s]) {
+			if (t == s || t == r) continue; // 自己ループは無視
+			int t2 = t < r ? t : t - 1;
+
+			if (s != r) mat[t2][s2] -= t.cost;
+			mat[t2][t2] += t.cost;
+		}
+	}
+
+	// 有向ラプラシアン行列の (r,r)-余因子が全域木の個数を与える．
+	return determinant(mat);
 }
 
 
@@ -613,3 +682,7 @@ ll directed_minimum_spanning_tree(const WGraph& g, int r, WGraph* mst = nullptr)
 }
 
 
+//【全域木の列挙】
+/*
+* 列挙(グラフ).h の【有向木の列挙】で k=n とすればよい．
+*/

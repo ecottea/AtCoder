@@ -8,23 +8,23 @@
 * Nearest_element(vT a) : O(n)
 *	数列 a[0..n) で初期化する．
 *
-* set_prev_equal() : O(n)
+* build_prev_equal() : O(n)
 *	自身に等しい数の前の位置を一括計算する．
 *
-* set_prev_less(strict = true) : O(n)
-*	自身より小さい数の前の位置を一括計算する．strict = false にすると自身以下とする．
+* build_prev_less(eq = false) : O(n)
+*	自身より小さい数の前の位置を一括計算する．eq = true にすると自身以下とする．
 *
-* set_prev_greater(strict = true) : O(n)
-*	自身より大きい数の前の位置を一括計算する．strict = false にすると自身以上とする．
+* build_prev_greater(eq = false) : O(n)
+*	自身より大きい数の前の位置を一括計算する．eq = true にすると自身以上とする．
 *
-* set_next_equal() : O(n)
+* build_next_equal() : O(n)
 *	自身に等しい数の次の位置を一括計算する．
 *
-* set_next_less(strict = true) : O(n)
-*	自身より小さい数の次の位置を一括計算する．strict = false にすると自身以下とする．
+* build_next_less(eq = false) : O(n)
+*	自身より小さい数の次の位置を一括計算する．eq = true にすると自身以下とする．
 *
-* set_next_greater(strict = true) : O(n)
-*	自身より大きい数の次の位置を一括計算する．strict = false にすると自身以上とする．
+* build_next_greater(eq = false) : O(n)
+*	自身より大きい数の次の位置を一括計算する．eq = true にすると自身以上とする．
 *
 * int prev_equal(int i) : O(1)
 *	a[0..i) 内にある a[i] に等しい要素の最右位置を返す（なければ -1）
@@ -58,7 +58,7 @@ public:
 	Nearest_element() {}
 
 	// 自身に等しい数の前の位置を一括計算する．
-	void set_prev_equal() {
+	void build_prev_equal() {
 		pe.assign(n, -1);
 
 		// val_to_pos[x] : 値 x が最後に現れた位置（左から走査する）
@@ -74,15 +74,15 @@ public:
 		}
 	}
 
-	// 自身より小さい数の前の位置を一括計算する．strict = false にすると自身以下とする．
-	void set_prev_less(bool strict = true) {
+	// 自身より小さい数の前の位置を一括計算する．eq = true にすると自身以下とする．
+	void build_prev_less(bool eq = false) {
 		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
 
 		pl.assign(n, -1);
 		stack<pair<int, T>> st;
 		repir(i, n - 1, 0) {
 			while (!st.empty() && st.top().second >= a[i]) {
-				if (strict && st.top().second == a[i]) break;
+				if (!eq && st.top().second == a[i]) break;
 				pl[st.top().first] = i;
 				st.pop();
 			}
@@ -90,15 +90,15 @@ public:
 		}
 	}
 
-	// 自身より大きい数の前の位置を一括計算する．strict = false にすると自身以上とする．
-	void set_prev_greater(bool strict = true) {
+	// 自身より大きい数の前の位置を一括計算する．eq = true にすると自身以上とする．
+	void build_prev_greater(bool eq = false) {
 		// verify: https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bh
 
 		pg.assign(n, -1);
 		stack<pair<int, T>> st;
 		repir(i, n - 1, 0) {
 			while (!st.empty() && st.top().second <= a[i]) {
-				if (strict && st.top().second == a[i]) break;
+				if (!eq && st.top().second == a[i]) break;
 				pg[st.top().first] = i;
 				st.pop();
 			}
@@ -107,7 +107,7 @@ public:
 	}
 
 	// 自身に等しい数の次の位置を一括計算する．
-	void set_next_equal() {
+	void build_next_equal() {
 		// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
 
 		ne.assign(n, n);
@@ -125,15 +125,15 @@ public:
 		}
 	}
 
-	// 自身より小さい数の次の位置を一括計算する．strict = false にすると自身以下とする．
-	void set_next_less(bool strict = true) {
+	// 自身より小さい数の次の位置を一括計算する．eq = true にすると自身以下とする．
+	void build_next_less(bool eq = false) {
 		// verify : https://atcoder.jp/contests/ddcc2020-final/tasks/ddcc2020_final_c
 
 		nl.assign(n, n);
 		stack<pair<int, T>> st;
 		rep(i, n) {
 			while (!st.empty() && st.top().second >= a[i]) {
-				if (strict && st.top().second == a[i]) break;
+				if (!eq && st.top().second == a[i]) break;
 				nl[st.top().first] = i;
 				st.pop();
 			}
@@ -141,13 +141,13 @@ public:
 		}
 	}
 
-	// 自身より大きい数の次の位置を一括計算する．strict = false にすると自身以上とする．
-	void set_next_greater(bool strict = true) {
+	// 自身より大きい数の次の位置を一括計算する．eq = true にすると自身以上とする．
+	void build_next_greater(bool eq = false) {
 		ng.assign(n, n);
 		stack<pair<int, T>> st;
 		rep(i, n) {
 			while (!st.empty() && st.top().second <= a[i]) {
-				if (strict && st.top().second == a[i]) break;
+				if (!eq && st.top().second == a[i]) break;
 				ng[st.top().first] = i;
 				st.pop();
 			}
@@ -245,12 +245,41 @@ vvi next_greater_positions(const vector<T>& a, int k, bool eq = false) {
 }
 
 
-//【自身より 1 つ大きい数の次の位置】O(n)
+//【自身より 1 つ小さい数の前の位置】O(n)
 /*
-* a[0..n) で，i < j かつ a[i]+1 = a[j] なる最小の j（なければ n）を pos[i] に格納し pos を返す．
+* 与えられた a[0..n) に対し，各 i∈[0..n) について，
+* j < i かつ a[j] = a[i]-1 なる最大の j（なければ -1）を格納したリストを返す．
 */
 template <class T>
-vi next_greater1(const vector<T>& a, vi& nxt) {
+vi prev_less1(const vector<T>& a) {
+	// verify : https://mofecoder.com/contests/yurufuwa_onsite_06/tasks/yurufuwa_onsite_06_e
+
+	int n = sz(a);
+
+	// prv[i] : j < i かつ a[j] = a[i]-1 となる最小の j（なければ n）
+	vi prv(n, -1);
+
+	// num_to_pos[x] : 値 x が最後に現れた位置（左から走査する）
+	unordered_map<T, int> num_to_pos;
+
+	repi(i, 0, n - 1) {
+		if (num_to_pos.count(a[i] - 1)) {
+			prv[i] = num_to_pos[a[i] - 1];
+		}
+		num_to_pos[a[i]] = i;
+	}
+
+	return prv;
+}
+
+
+//【自身より 1 つ大きい数の次の位置】O(n)
+/*
+* 与えられた a[0..n) に対し，各 i∈[0..n) について，
+* i < j かつ a[j] = a[i]+1 なる最小の j（なければ n）を格納したリストを返す．
+*/
+template <class T>
+vi next_greater1(const vector<T>& a) {
 	int n = sz(a);
 
 	// nxt[i] : j > i かつ a[j] = a[i]+1 となる最小の j（なければ n）

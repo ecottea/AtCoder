@@ -124,12 +124,12 @@ int count_3select_sum(vector<T>& a, vector<T>& b, vector<T>& c, T sum) {
 
 	// tit が 3 進数表記されているものと考える．
 	// tit の i 桁目が a[i], b[i], c[i] のいずれを選択するかを表す．
-	rep(tit, pow(3, n)) {
+	rep(tit, powi(3, n)) {
 		// 選択されたものの和を計算する．
 		T v = 0;
 		rep(i, n) {
 			// tit の i 桁目を抜き出す．
-			switch ((tit / pow(3, i)) % 3) {
+			switch ((tit / powi(3, i)) % 3) {
 			case 0:
 				v += a[i];
 				break;

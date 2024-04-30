@@ -19,11 +19,14 @@
 * Substring_compare(sting s) : O(n log n)
 *	文字列 s[0..n) で初期化する．
 *
+* int lcp(int l1, int r1, int l2, int r2) : O(1)
+*	s[l1..r1) と s[l2..r2) の LCP の長さを返す．
+*
 * bool comp(int l1, int r1, int l2, int r2) : O(1)
 *	s[l1..r1) < s[l2..r2) かを返す．
 *
-* int lcp(int l1, int r1, int l2, int r2) : O(1)
-*	s[l1..r1) と s[l2..r2) の LCP の長さを返す．
+* bool equalQ(int l1, int r1, int l2, int r2) : O(1)
+*	s[l1..r1) = s[l2..r2) かを返す．
 */
 template <class STR>
 class Substring_compare {
@@ -33,6 +36,21 @@ class Substring_compare {
 
 	// LCP 配列用の min-Sparse Table
 	vvi lcp_min;
+
+	// l1, r1, l2, r2 を [0..n] の範囲に切り詰め，s[l1..r1) と s[l2..r2) の LCP の長さを返す．
+	int clamp_lcp(int& l1, int& r1, int& l2, int& r2) const {
+		chmax(l1, 0); chmax(l2, 0); chmin(r1, n); chmin(r2, n);
+
+		int w1 = r1 - l1, w2 = r2 - l2;
+		if (l1 == l2) return min(w1, w2);
+
+		int i1 = sa_inv[l1], i2 = sa_inv[l2];
+		if (i1 > i2) swap(i1, i2);
+		int k = msb(i2 - i1);
+		int lcp = min({ lcp_min[k][i1], lcp_min[k][i2 - (1 << k)], w1, w2 });
+
+		return lcp;
+	}
 
 public:
 	// 文字列 s[0..n) で初期化する．
@@ -57,48 +75,29 @@ public:
 		}
 	}
 
-	// s[l1..r1) < s[l2..r2) かを返す．
-	bool comp(int l1, int r1, int l2, int r2) const {
-		// verify : https://judge.yosupo.jp/problem/suffixarray
-
-		chmax(l1, 0); chmax(l2, 0); chmin(r1, n); chmin(r2, n);
-
-		if (l1 == l2) return r1 < r2;
-
-		int i1 = sa_inv[l1], i2 = sa_inv[l2];
-		int w1 = r1 - l1, w2 = r2 - l2;
-
-		bool swap_flag = false;
-		if (i1 > i2) {
-			swap(i1, i2);
-			swap(w1, w2);
-			swap_flag = true;
-		}
-
-		int k = msb(i2 - i1);
-		int lcp = min(lcp_min[k][i1], lcp_min[k][i2 - (1 << k)]);
-
-		if (w2 > lcp) return !swap_flag;
-		if (w1 > w2) return swap_flag;
-		if (w1 < w2) return !swap_flag;
-		return false;
-	}
-
 	// s[l1..r1) と s[l2..r2) の LCP の長さを返す．
 	int lcp(int l1, int r1, int l2, int r2) const {
 		// verify : https://atcoder.jp/contests/toyota2023spring-final/tasks/toyota2023spring_final_d
 
-		chmax(l1, 0); chmax(l2, 0); chmin(r1, n); chmin(r2, n);
+		return clamp_lcp(l1, r1, l2, r2);
+	}
 
-		int w1 = r1 - l1, w2 = r2 - l2;
-		if (l1 == l2) return min(w1, w2);
+	// s[l1..r1) < s[l2..r2) かを返す．
+	bool comp(int l1, int r1, int l2, int r2) const {
+		// verify : https://yukicoder.me/problems/no/2454
 
-		int i1 = sa_inv[l1], i2 = sa_inv[l2];
-		if (i1 > i2) swap(i1, i2);
-		int k = msb(i2 - i1);
-		int lcp = min(lcp_min[k][i1], lcp_min[k][i2 - (1 << k)]);
+		int lcp = clamp_lcp(l1, r1, l2, r2);
+		if (l2 + lcp == r2) return false;
+		if (l1 + lcp == r1) return true;
+		return sa_inv[l1] < sa_inv[l2];
+	}
 
-		return lcp;
+	// s[l1..r1) = s[l2..r2) かを返す．
+	bool equalQ(int l1, int r1, int l2, int r2) const {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bd
+
+		int lcp = clamp_lcp(l1, r1, l2, r2);
+		return l1 + lcp == r1 && l2 + lcp == r2;
 	}
 };
 

@@ -5,9 +5,9 @@
 // ■■■■■ 0-1 計画問題 ■■■■■
 
 
-//【二次 0-1 計画問題】
+//【燃やす埋める問題】
 /*
-* Binary_programming_BB(int n) : O(1)
+* Burn_bury_problem(int n) : O(n^2)
 *	n 個の論理変数 X[0..n) で初期化する．
 *
 * add_cost(ll c) : O(1)
@@ -19,6 +19,12 @@
 * add_cost1(int i, ll c) : O(1)
 *	X[i] = 1 のときコスト c がかかるようにする（c < 0 なら利益と解釈する）
 *
+* set0(int i, ll c) : O(1)
+*	制約 X[i] = 0 を追加する．
+*
+* set1(int i, ll c) : O(1)
+*	制約 X[i] = 1 を追加する．
+*
 * add_cost01(int i, int j, ll c) : O(1)
 *	X[i] = 0 かつ X[j] = 1 のとき非負コスト c がかかるようにする．
 *
@@ -28,14 +34,30 @@
 * add_profit11(int i, int j, ll p) : O(1)
 *	X[i] = 1 かつ X[j] = 1 のとき非負利益 p を得られるようにする．
 *
-* ll solve() : O(n^2 m)（m : 条件の数）
+* add_profit_all0(const vi& is, ll p) : O(n)
+*	∀i∈is, X[i] = 0 のとき非負利益 p を得られるようにする．
+*
+* add_profit_all1(const vi& is, ll p) : O(n)
+*	∀i∈is, X[i] = 1 のとき非負利益 p を得られるようにする．
+*
+* imply00(int i, int j) : O(1)
+*	制約 X[i] = 0 ⇒ X[j] = 0 を追加する．
+*
+* imply11(int i, int j) : O(1)
+*	制約 X[i] = 1 ⇒ X[j] = 1 を追加する．
+*
+* ll min_cost() : O(n^2 m)（m : 条件の数）
 *	適切に X[0..n) を定めた場合の最小コストを返す．
+*
+* vb solution() : O(n)
+*	最小コストを達成する X[0..n) を返す．
+*	制約 : min_cost() を呼び出し済であること
 */
-struct Binary_programming_BB {
+class Burn_bury_problem {
 	// 参考 : https://kanpurin.hatenablog.com/entry/moyasu-umeru
 
-	// n : 論理変数の数
-	int n;
+	// n : 論理変数の数, n2 : 追加分も含めた論理変数の数
+	int n, n2;
 
 	// pre_cost : 前払いしているコスト
 	ll pre_cost = 0;
@@ -47,10 +69,14 @@ struct Binary_programming_BB {
 	// cost01[i][j] : X[i] = 0 かつ X[j] = 1 のときにかかる非負コスト
 	vvl cost01;
 
+	mf_graph<ll> g;
+
+public:
 	// n 変数で初期化
-	Binary_programming_BB(int n_) : n(n_), cost0(n), cost1(n), cost01(n, vl(n)) {
+	Burn_bury_problem(int n) : n(n), n2(n), cost0(n), cost1(n), cost01(n, vl(n)) {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
 	}
+	Burn_bury_problem() : n(0), n2(0) {}
 
 	// 固定コスト c がかかるようにする（c < 0 なら利益と解釈する）
 	void add_cost(ll c) {
@@ -61,7 +87,7 @@ struct Binary_programming_BB {
 
 	// X[i] = 0 のときコスト c がかかるようにする（c < 0 なら利益と解釈する）
 	void add_cost0(int i, ll c) {
-		// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem003
+		// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem002
 
 		Assert(0 <= i && i < n);
 
@@ -79,7 +105,7 @@ struct Binary_programming_BB {
 
 	// X[i] = 1 のときコスト c がかかるようにする（c < 0 なら利益と解釈する）
 	void add_cost1(int i, ll c) {
-		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+		// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem002
 
 		Assert(0 <= i && i < n);
 
@@ -93,6 +119,26 @@ struct Binary_programming_BB {
 			pre_cost += c;
 			cost0[i] -= c;
 		}
+	}
+
+	// 制約 X[i] = 0 を追加する．
+	void set0(int i) {
+		// verify : https://atcoder.jp/contests/arc176/tasks/arc176_e
+
+		Assert(0 <= i && i < n);
+
+		// X[i] = 1 のときコスト ∞ がかかると言い換えればよい．
+		cost1[i] = INFL;
+	}
+
+	// 制約 X[i] = 1 を追加する．
+	void set1(int i) {
+		// verify : https://atcoder.jp/contests/abc326/tasks/abc326_g
+
+		Assert(0 <= i && i < n);
+
+		// X[i] = 0 のときコスト ∞ がかかると言い換えればよい．
+		cost0[i] = INFL;
 	}
 
 	// X[i] = 0 かつ X[j] = 1 のとき非負コスト c がかかるようにする．
@@ -140,16 +186,88 @@ struct Binary_programming_BB {
 		cost01[i][j] += p;
 	}
 
-	// 適切に X[0..n) を定めた場合の最小コストを返す．
-	ll solve() {
+	// 制約 X[i] = 0 ⇒ X[j] = 0 を追加する．
+	void imply00(int i, int j) {
+		// verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem002
+
+		Assert(0 <= i && i < n);
+		Assert(0 <= j && j < n);
+
+		// 論理式は !(X[i] = 0 かつ X[j] = 1) と書き換えられるので，
+		//		X[i] = 0 かつ X[j] = 1 のときコスト ∞ がかかる
+		// と言い換えれば良い．
+		cost01[i][j] = INFL;
+	}
+
+	// 制約 X[i] = 1 ⇒ X[j] = 1 を追加する．
+	void imply11(int i, int j) {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
 
-		// ST : 始点（恒等的に 0），GL : 終点（恒等的に 1）
-		// g の残余ネットワークで ST から到達可能な頂点は 0，それ以外は 1 にする．
-		int ST = n, GL = n + 1;
-		mf_graph<ll> g(n + 2);
+		Assert(0 <= i && i < n);
+		Assert(0 <= j && j < n);
 
-		rep(i, n) {
+		// 論理式は !(X[i] = 1 かつ X[j] = 0) と書き換えられるので，
+		//		X[j] = 0 かつ X[i] = 1 のときコスト ∞ がかかる
+		// と言い換えれば良い．
+		cost01[j][i] = INFL;
+	}
+
+	// ∀i∈is, X[i] = 0 のとき非負利益 p を得られるようにする．
+	void add_profit_all0(const vi& is, ll p) {
+		Assert(p >= 0);
+
+		// 利益 p を前借りする．また not all0 を意味する変数 Y を追加し，
+		//		Y = 1 のときコスト p がかかる
+		//		Y = 0 かつ X[i] = 1 のときコスト ∞ がかかる（∀i∈is）
+		// と言い換えればよい．
+		n2++;
+		cost0.resize(n2);
+		cost1.resize(n2);
+		cost01.resize(n2);
+		repea(tmp, cost01) tmp.resize(n2);
+
+		pre_cost -= p;
+		cost1[n2 - 1] = p;
+		repe(i, is) {
+			Assert(0 <= i && i < n);
+			cost01[n2 - 1][i] = INFL;
+		}
+	}
+
+	// ∀i∈is, X[i] = 1 のとき非負利益 p を得られるようにする．
+	void add_profit_all1(const vi& is, ll p) {
+		// verify : https://atcoder.jp/contests/abc326/tasks/abc326_g
+
+		Assert(p >= 0);
+
+		// 利益 p を前借りする．また all1 を意味する変数 Y を追加し，
+		//		Y = 0 のときコスト p がかかる
+		//		Y = 1 かつ X[i] = 0 のときコスト ∞ がかかる（∀i∈is）
+		// と言い換えればよい．
+		n2++;
+		cost0.resize(n2);
+		cost1.resize(n2);
+		cost01.resize(n2);
+		repea(tmp, cost01) tmp.resize(n2);
+
+		pre_cost -= p;
+		cost0[n2 - 1] = p;
+		repe(i, is) {
+			Assert(0 <= i && i < n);
+			cost01[i][n2 - 1] = INFL;
+		}
+	}
+
+	// 適切に X[0..n) を定めた場合の最小コストを返す．
+	ll min_cost() {
+		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_an
+
+		// ST : 始点（恒等的に 1），GL : 終点（恒等的に 0）
+		// g の残余ネットワークで ST から到達可能な頂点は 1，それ以外は 0 にする．
+		const int ST = n2, GL = ST + 1;
+		g = mf_graph<ll>(GL + 1);
+
+		rep(i, n2) {
 			// X[i] = 0 にコスト c0， X[i] = 1 にコスト c1 がかかるとき
 			//	c = min(c0, c1) として確定でコスト c がかかるとし，
 			//		c0 > c1 なら X[i] = 0 にコスト c0 - c がかかる
@@ -160,41 +278,37 @@ struct Binary_programming_BB {
 
 			if (cost0[i] > cost1[i]) {
 				// X[i] = 0 にコスト c0 - c がかかるとき
-				//	X[i] = 0 かつ X[GL] = 1 だとコスト c0 - c がかかると言い換えられる．
-				//	よって辺 i → GL をカットすることにコスト c0 - c を課せば良い．
-				g.add_edge(i, GL, cost0[i] - c);
+				//	X[ST] = 1 かつ X[i] = 0 だとコスト c0 - c がかかると言い換えられる．
+				//	よって辺 ST → i をカットすることにコスト c0 - c を課せば良い．
+				g.add_edge(ST, i, cost0[i] - c);
 			}
 			else if (cost0[i] < cost1[i]) {
 				// X[i] = 1 にコスト c1 - c がかかるとき
-				//	X[ST] = 0 かつ X[i] = 1 だとコスト c1 - c がかかると言い換えられる．
-				//	よって辺 ST → i をカットすることにコスト c1 - c を課せば良い．
-				g.add_edge(ST, i, cost1[i] - c);
+				//	X[i] = 1 かつ X[GL] = 0 だとコスト c1 - c がかかると言い換えられる．
+				//	よって辺 i → GL をカットすることにコスト c1 - c を課せば良い．
+				g.add_edge(i, GL, cost1[i] - c);
 			}
 		}
 
-		rep(i, n) rep(j, n) {
+		rep(i, n2) rep(j, n2) {
 			// X[i] = 0 かつ X[j] = 1 にコスト c がかかるとき
-			//	そのまま辺 i → j をカットすることにコスト c を課せば良い．
-			if (cost01[i][j] > 0) g.add_edge(i, j, cost01[i][j]);
+			//	辺 j → i をカットすることにコスト c を課せば良い．
+			if (cost01[i][j] > 0) g.add_edge(j, i, cost01[i][j]);
 		}
 
 		return pre_cost + g.flow(ST, GL);
 	}
+
+	// X[0..n) への真理値の割り当てを返す（min_cost() を呼び出し済であること）
+	vb solution() {
+		// verify : https://atcoder.jp/contests/abc347/tasks/abc347_g
+
+		auto res = g.min_cut(n2);
+		res.resize(n);
+
+		return res;
+	}
 };
-
-
-//【高次の利益】
-/*
-* X[i] = 0[1] かつ X[j] = 0[1] かつ X[k] = 0[1] のとき非負利益 p が得られることは，
-* 利益 p を前借りした上で変数 Y を追加し，
-*	Y = 1[0] のときコスト p
-*	Y = 0[1] かつ X[i] = 1[0] のときコスト ∞
-*	Y = 0[1] かつ X[j] = 1[0] のときコスト ∞
-*	Y = 0[1] かつ X[k] = 1[0] のときコスト ∞
-* とすることで二次の項のみで表現できる．
-* 
-* verify : https://atcoder.jp/contests/abc326/tasks/abc326_g
-*/
 
 
 //【二部グラフでの add_cost11】
@@ -346,7 +460,7 @@ int set_covering_problem(const vector<bitset<M>>& s, int m) {
 
 	repb(set, n) {
 		bitset<M> b;
-		rep(i, n) if (get(set, i)) b |= s[i];
+		rep(i, n) if (getb(set, i)) b |= s[i];
 
 		if (b == base) chmin(res, popcount(set));
 	}

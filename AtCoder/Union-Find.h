@@ -130,7 +130,7 @@ public:
 	friend ostream& operator<<(ostream& os, Union_find d) {
 		repe(g, d.groups()) {
 			repe(v, g) os << v << " ";
-			os << endl;
+			os << "/ ";
 		}
 		return os;
 	}
@@ -692,7 +692,7 @@ public:
 	friend ostream& operator<<(ostream& os, Rollback_Union_find d) {
 		repe(g, d.groups()) {
 			repe(v, g) os << v << " ";
-			os << endl;
+			os << "/ ";
 		}
 		return os;
 	}
@@ -700,13 +700,13 @@ public:
 };
 
 
-//【Union-Find（偶奇判定付き）】
+//【偶奇 Union-Find】
 /*
 * Parity_union_find(int n) : O(n)
 *	非連結な頂点 [0..n) で初期化する．
 *
 * merge_even(int a, int b) : O(α(n))
-*	頂点 a と頂点 b を長さ 2 の辺で結ぶ．（統合とみなせる）
+*	頂点 a と頂点 b を長さ 0 の辺で結ぶ．（統合とみなせる）
 *
 * merge_odd(int a, int b) : O(α(n))
 *	頂点 a と頂点 b を長さ 1 の辺で結ぶ．
@@ -716,14 +716,27 @@ public:
 *
 * bool same_odd(int a, int b) : O(α(n))
 *	頂点 a, b 間の距離が奇数かを返す．（非連結なら false を返す）
+*
+* int count_even(int a) : O(α(n))
+*	頂点 a の属する連結成分に含まれる a と偶数回の移動で行き来できる頂点の個数を返す．
+*
+* int count_odd(int a) : O(α(n))
+*	頂点 a の属する連結成分に含まれる a と奇数回の移動で行き来できる頂点の個数を返す．
 */
 class Parity_union_find {
 	int n;
 	dsu d;
 
+	// cnt[i] : 頂頂点 i を根とする連結成分内にある頂点 [0..n) の個数
+	vi cnt;
+
 public:
 	// 非連結な頂点 [0..n) で初期化する．
-	Parity_union_find(int n) : n(n), d(2 * n) {}
+	Parity_union_find(int n) : n(n), d(2 * n), cnt(2 * n) {
+		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
+
+		rep(i, n) cnt[i] = 1;
+	}
 	Parity_union_find() : n(0) {}
 
 	// 頂点 a と頂点 b を 1 つに統合する．
@@ -732,8 +745,15 @@ public:
 
 		Assert(0 <= a && a < n && 0 <= b && b < n);
 
+		if (d.same(a, b)) return;
+
+		int c = cnt[d.leader(a)] + cnt[d.leader(b)];
 		d.merge(a, b);
+		cnt[d.leader(a)] = c;
+
+		c = cnt[d.leader(a + n)] + cnt[d.leader(b + n)];
 		d.merge(a + n, b + n);
+		cnt[d.leader(a + n)] = c;
 	}
 
 	// 頂点 a と頂点 b を辺で結ぶ．
@@ -742,8 +762,15 @@ public:
 
 		Assert(0 <= a && a < n && 0 <= b && b < n);
 
+		if (d.same(a, b + n)) return;
+
+		int c = cnt[d.leader(a)] + cnt[d.leader(b + n)];
 		d.merge(a, b + n);
+		cnt[d.leader(a)] = c;
+
+		c = cnt[d.leader(a + n)] + cnt[d.leader(b)];
 		d.merge(a + n, b);
+		cnt[d.leader(a + n)] = c;
 	}
 
 	// 頂点 a, b 間を偶数回の移動で行き来できるかを返す．
@@ -762,6 +789,24 @@ public:
 		Assert(0 <= a && a < n && 0 <= b && b < n);
 
 		return d.same(a, b + n);
+	}
+
+	// 頂点 a の属する連結成分に含まれる a と偶数回の移動で行き来できる頂点の個数を返す．
+	int count_even(int a) {
+		// verify : https://www.codechef.com/problems/RANDCOLORING
+
+		Assert(0 <= a && a < n);
+
+		return cnt[d.leader(a)];
+	}
+
+	// 頂点 a の属する連結成分に含まれる a と奇数回の移動で行き来できる頂点の個数を返す．
+	int count_odd(int a) {
+		// verify : https://www.codechef.com/problems/RANDCOLORING
+
+		Assert(0 <= a && a < n);
+
+		return d.same(a, a + n) ? d.size(a) / 2 : d.size(a) - cnt[d.leader(a)];
 	}
 };
 
@@ -802,7 +847,7 @@ struct Union_find_sum {
 	//	根の場合は属する連結成分の大きさの -1 倍（負）を表す．
 	vi parent_or_size;
 
-	// val[i] : 頂点 i の属する集合の和
+	// val[i] : 頂点 i を根とする連結成分の和
 	vector<S> val;
 
 	// 値 a[0..n) をもった n 頂点からなる非連結の Union-Find を構築する．

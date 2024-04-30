@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "FPS(mint).h"
+#include "SPS.h"
 // ■■■■■ 行列 ■■■■■
 
 
@@ -149,7 +150,7 @@ struct Matrix {
 		while (d > 0) {
 			if (d & 1) res *= pow2;
 			pow2 *= pow2;
-			d /= 2;
+			d >>= 1;
 		}
 		return res;
 	}
@@ -309,6 +310,8 @@ struct Fixed_matrix {
 */
 template <class T>
 pii reduced_row_echelon_form(Matrix<T>& mat) {
+	// verify : https://judge.yosupo.jp/problem/matrix_rank
+
 	int n = mat.n, m = mat.m;
 	auto& v = mat.v;
 	
@@ -386,10 +389,7 @@ vector<T> gauss_jordan_elimination(const Matrix<T>& A, const vector<T>& b, vecto
 		while (i2 < n && v[i2][j] == 0) i2++;
 
 		// 見つからなかったら注目位置を右に移す．
-		if (i2 == n) {
-			j++;
-			continue;
-		}
+		if (i2 == n) { j++; continue; }
 
 		// 見つかったら第 i 行とその行を入れ替える．
 		if (i != i2) swap(v[i], v[i2]);
@@ -432,7 +432,7 @@ vector<T> gauss_jordan_elimination(const Matrix<T>& A, const vector<T>& b, vecto
 				continue;
 			}
 
-			vector<T> x(m, T(0));
+			vector<T> x(m);
 			x[j] = 1;
 			rep(i2, i) x[pivots[i2]] = -v[i2][j];
 			xs->emplace_back(move(x));
@@ -809,6 +809,61 @@ T parmanent(const Matrix<T>& mat) {
 	}
 
 	return dp[(1LL << n) - 1];
+}
+
+
+//【ハフニアン】O(2^(n/2) n^2)
+/*
+* n 次対称行列 a[0..n)[0..n) のハフニアンを返す．
+*
+* 制約 : n は偶数，対角成分は 0
+* 
+* 利用：【SPS 指数関数】
+*/
+mint hafnian(const vvm& a) {
+	// 参考 : https://maspypy.com/%e9%9b%86%e5%90%88%e3%81%b9%e3%81%8d%e7%b4%9a%e6%95%b0%e9%96%a2%e9%80%a3-4-%e5%95%8f%e9%a1%8c%e4%be%8b#toc6
+	// verify : https://judge.yosupo.jp/problem/hafnian_of_matrix
+
+	//【方法】
+	// a を重み付き隣接行列とする重み付き無向グラフ g について，
+	// そのマッチングのスコアをマッチングに使われた辺の重みの積と定め，
+	// 全てのマッチングをわたるスコアの和を求めれば良い．
+	//
+	// 仮の辺 e={2e, 2e+1},（e∈[0..n/2)） を追加すれば，
+	// g のマッチングと追加辺を合わせると [0..n) のサイクル分解を得る．
+	// 各 es⊂[0..n/2) ごとに es を利用して作れる単純サイクルのスコアが求まれば，
+	// これを集合冪級数とみなして exp をとることにより [0..n) のサイクル分解全てをわたるスコア和が求まる．
+
+	int n = sz(a);
+	int hn = n / 2;
+
+	vm cycle(1LL << hn);
+
+	// e : set に含まれる番号最大の辺
+	rep(e, hn) {
+		// dp[s][set] : 頂点 s から頂点 2e+1 までの辺集合 set⊂[0..e] を通る単純パスのスコア和
+		vvm dp(2 * e + 2, vm(1LL << (e + 1)));
+		dp[2 * e][1LL << e] = 1;
+
+		// 貰う DP
+		repi(set, 1 << e, (1 << (e + 1)) - 1) {
+			// es, et ∈ set なる辺 2es+{0,1} → 2et+{0,1} をチェックする．
+			repis(es, set) repis(et, set - (1 << es)) rep(bs, 2) rep(bt, 2) {
+				int s = es * 2 + bs, t = et * 2 + bt;
+				dp[s][set] += a[s ^ 1][t] * dp[t][set - (1 << es)];
+			}
+		}
+
+		// 辺集合 set を使う単純パス s→2e+1 に辺 2e+1→s を追加して単純閉路を得る．
+		repi(set, 1 << e, (1 << (e + 1)) - 1) repis(es, set) rep(bs, 2) {
+			int s = es * 2 + bs;
+			cycle[set] += dp[s][set] * a[2 * e + 1][s];
+		}
+	}
+
+	auto res = exp_sps(cycle);
+
+	return res.back();
 }
 
 

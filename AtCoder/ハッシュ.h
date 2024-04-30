@@ -62,7 +62,6 @@ class Rolling_hash {
 	//		= 9223372030412324866 < 9223372036854775808 = 2^63 << 2^64
 	// となるのでオーバーフローの心配はない．
 
-	using ull = ull;
 	static constexpr ull MASK30 = (1ULL << 30) - 1;
 	static constexpr ull MASK31 = (1ULL << 31) - 1;
 	static constexpr ull MOD = (1ULL << 61) - 1; // 法（素数）
