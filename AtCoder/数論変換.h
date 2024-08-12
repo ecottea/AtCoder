@@ -232,7 +232,7 @@ vm switch_convolution(const vm& a, const vm& b) {
 }
 
 
-//【畳込み（複数，mod 998244353）】O(n (log n)^2)
+//【複数畳込み（mod 998244353）】O(n (log n)^2)
 /*
 * 数列の集合 a の要素を全て畳込んだ結果（長さは n）を返す．
 */
@@ -296,8 +296,11 @@ vm self_convolution(const vm& a, ll k) {
 * Online_convolution(int n) : O(n)
 *	a[0..n) と b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
 *
-* void set(mint a, mint b) : ならし O((log n)^2)
+* set(mint a, mint b) : ならし O((log n)^2)
 *	t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+*
+* reset() : ならし O((log n)^2)
+*	直前の set() を取り消す．
 *
 * mint [](int i) : O(1)
 *	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
@@ -305,15 +308,13 @@ vm self_convolution(const vm& a, ll k) {
 *
 * mint back() : O(1)
 *	直前に決定された c[i] を返す．
-*
-* void update(int i, mint c) : O(1)
-*	c[i] を強制的に c に書き換える．
 */
 class Online_convolution {
 	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
 
 	int n, t; // t : 次が何回目の呼び出しか
 	vm as, bs, cs;
+	vector<pim> his;
 
 public:
 	// 長さ n の数列同士の畳込みを行えるよう初期化する．
@@ -350,7 +351,10 @@ public:
 			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
 
 			vm cs_sub = convolution(as_sub, bs_sub);
-			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+			repi(j, 0, j_max) {
+				cs[t + j] += cs_sub[j];
+				his.emplace_back(t + j, cs_sub[j]);
+			}
 		}
 
 		// 2^i : 正方形の一辺の長さ（対角線以上）
@@ -370,10 +374,44 @@ public:
 			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
 
 			vm cs_sub = convolution(as_sub, bs_sub);
-			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+			repi(j, 0, j_max) {
+				cs[t + j] += cs_sub[j];
+				his.emplace_back(t + j, cs_sub[j]);
+			}
 		}
 
 		t++;
+	}
+
+	// 直前の set() を取り消す．
+	void reset() {
+		// verify : https://yukicoder.me/problems/no/2801
+
+		t--;
+
+		int i1_max = lsb(t + 2), i2_max = i1_max;
+
+		if (popcount(t + 2) == 1) { i1_max -= 2; i2_max -= 1; }
+
+		repi(i, 0, i1_max) {
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			repi(j, 0, j_max) {
+				auto [pos, val] = his.back(); his.pop_back();
+				cs[pos] -= val;
+			}
+		}
+
+		repi(i, 0, i2_max) {
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			repi(j, 0, j_max) {
+				auto [pos, val] = his.back(); his.pop_back();
+				cs[pos] -= val;
+			}
+		}
+
+		as[t] = 0; bs[t] = 0;
 	}
 
 	// c[i] を返す．
@@ -392,11 +430,6 @@ public:
 		return cs[t - 1];
 	}
 
-	// c[i] を強制的に c に変更する．
-	void update(int i, mint c) {
-		cs[i] = c;
-	}
-
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Online_convolution& c) {
 		os << "a: " << c.as << endl;
@@ -413,7 +446,7 @@ public:
 * Semi_online_convolution(vm b) : O(n)
 *	a[0..n) と固定された b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
 *
-* void set(mint a) : ならし O((log n)^2)
+* set(mint a) : ならし O((log n)^2)
 *	t 回目に呼び出すときは，a=a[t] を与える．
 *
 * mint [](int i) : O(1)
@@ -423,8 +456,11 @@ public:
 * mint back() : O(1)
 *	直前に決定された c[i] を返す．
 *
-* void update(int i, mint c) : O(1)
+* update(int i, mint c) : O(1)
 *	c[i] を強制的に c に書き換える．
+*
+* init() : O(n)
+*	初期化する．
 */
 class Semi_online_convolution {
 	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
@@ -504,6 +540,12 @@ public:
 		cs[i] = c;
 	}
 
+	// 初期化する．
+	void init() {
+		t = 0;
+		cs.assign(n, 0);
+	}
+
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Semi_online_convolution& c) {
 		os << "a: " << c.as << endl;
@@ -520,7 +562,7 @@ public:
 *	exp(f(z)) を [z^n] まで計算できるよう初期化する．
 *	制約 : fm は n! まで計算可能
 *
-* void set(mint a) : ならし O((log n)^2)
+* set(mint a) : ならし O((log n)^2)
 *	t 回目に呼び出すときは，a = [z^t]f(z) を与える．
 *	制約 : 0 回目に呼び出すときは a = 0
 *
@@ -595,7 +637,7 @@ public:
 *	log(f(z)) を [z^n] まで計算できるよう初期化する．
 *	制約 : fm は n! まで計算可能
 *
-* void set(mint a) : ならし O((log n)^2)
+* set(mint a) : ならし O((log n)^2)
 *	t 回目に呼び出すときは，a = [z^t]f(z) を与える．
 *	制約 : 0 回目に呼び出すときは a = 1
 *
@@ -664,6 +706,167 @@ public:
 	friend ostream& operator<<(ostream& os, const Online_log& O) {
 		os << "a: " << O.as << endl;
 		os << "b: " << O.bs;
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン合成（二項式，mod 998244353）】
+/*
+* Online_composition(int n, mint g1, mint g2, Factorial_mint* fm) : O(n)
+*	g(z) = g1 z + g2 z^2 とし，f(g(z)) を [z^n] まで計算できるよう初期化する．
+*	制約 : fm は n! まで計算可能
+*
+* set(mint a) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a = [z^t]f(z) を与える．
+*
+* reset() : ならし O((log n)^2)
+*	直前の set() を取り消す．
+*
+* mint [](int i) : O(1)
+*	[z^i] f(g(z)) を返す．
+*	制約 : a[0..i] を指定済でなくてはならない．
+*
+* mint back() : O(1)
+*	直前に決定された f(g(z)) の係数を返す．
+*/
+class Online_composition {
+	int n, t; // t : 次が何回目の呼び出しか
+	vm as;
+	vm g1_pow, g2_pow; vvm g_pow;
+	vvm fen; // f(g(z)) の係数列を分けて格納しておくフェニック木（1-indexed）
+	vm cs;
+	vector<pim> his;
+	Factorial_mint* fm;
+
+public:
+	// g(z) = g1 z + g2 z^2 とし，f(g(z)) を [z^n] まで計算できるよう初期化する．
+	Online_composition(int n_, mint g1, mint g2, Factorial_mint* fm)
+		: n(1 << (msb(n_) + 1)), t(0), as(n), g1_pow(n), g2_pow(n), fen(n + 1), cs(n), fm(fm)
+	{
+		// verify : https://yukicoder.me/problems/no/2801
+
+		int K = msb(n);
+
+		g1_pow[0] = 1;
+		g2_pow[0] = 1;
+		repi(i, 1, n - 1) {
+			g1_pow[i] = g1_pow[i - 1] * g1;
+			g2_pow[i] = g2_pow[i - 1] * g2;
+		}
+
+		g_pow.resize(K);
+		g_pow[0] = vm{ 0, g1, g2 };
+		repi(k, 1, K - 1) {
+			g_pow[k] = convolution(g_pow[k - 1], g_pow[k - 1]);
+			if (sz(g_pow[k]) > n) g_pow[k].resize(n);
+		}
+	}
+	Online_composition() : n(0), t(0), fm(nullptr) {}
+
+	// t 回目に呼び出すときは，a = [z^t]f(z) を与える．
+	void set(mint a) {
+		// verify : https://yukicoder.me/problems/no/2801
+
+		as[t] = a;
+
+		cs[t] += a * g1_pow[t];
+
+		int i = t + 1;
+		fen[i] = vm{ a };
+
+		int K = lsb(i);
+		rep(k, K) {
+			fen[i] = convolution(fen[i], g_pow[k]);
+			if (sz(fen[i]) > n) fen[i].resize(n);
+
+			int i2 = i - (1 << k);
+			rep(j, sz(fen[i2])) fen[i][j] += fen[i2][j];
+		}
+
+		if (i != n) {
+			int w = 1 << K;
+			int l = i - w;
+
+			// fen[i] g(z)^l からの寄与を cs[t+1..t+w] に撒く．
+			//	fen[i] は z^[0..2(w-1)] の範囲の係数を持っているので，
+			//	g(z)^l は z^[t+1-2(w-1)..t+w] の範囲の係数だけあれば十分である．
+			int W = 1 << (msb((t + w) - (t + 1 - 2 * (w - 1)) + 1 - 1) + 1);
+			mint W_inv = mint(W).inv();
+
+			vm fe(fen[i]);
+			fe.resize(W);
+
+			vm gl(W);
+			repi(j, t + 1 - 2 * (w - 1), t + w) {
+				int e2 = j - l;
+				if (e2 < 0) continue;
+				int e1 = l - e2;
+				if (e1 < 0) continue;
+
+				// ここで [z^j]g(z)^l が O(1) で求まらないといけないので二項式でもないと厳しそう．
+				gl[j - (t + 1 - 2 * (w - 1))] = g1_pow[e1] * g2_pow[e2] * fm->bin(l, e1);
+			}
+
+			internal::butterfly(fe);
+			internal::butterfly(gl);
+			rep(i, W) fe[i] *= gl[i];
+			internal::butterfly_inv(fe);
+
+			rep(j, w) {
+				mint val = fe[2 * (w - 1) + j] * W_inv;
+				cs[t + 1 + j] += val;
+				his.emplace_back(t + 1 + j, val);
+			}
+		}
+
+		t++;
+	}
+
+	// 直前の set() を取り消す．
+	void reset() {
+		// verify : https://yukicoder.me/problems/no/2801
+
+		t--;
+
+		int i = t + 1;
+		int K = lsb(i);
+		if (i != n) {
+			int w = 1 << K;
+
+			rep(j, w) {
+				auto [pos, val] = his.back(); his.pop_back();
+				cs[pos] -= val;
+			}
+		}
+
+		fen[i].clear();
+
+		cs[t] -= as[t] * g1_pow[t];
+
+		as[t] = 0;
+	}
+
+	// [z^i] f(g(z)) を返す．（制約 : a[0..i] を指定済でなくてはならない．）
+	mint operator[](int i) const {
+		// verify : https://yukicoder.me/problems/no/2801
+
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// 直前に決定された f(g(z)) の係数を返す．
+	mint back() const {
+		return cs[t - 1];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_composition& O) {
+		os << "f: " << O.as << endl;
+		os << "g: " << O.g_pow[0] << endl;
+		os << "h: " << O.cs << endl;
 		return os;
 	}
 #endif
@@ -763,7 +966,7 @@ vm filtering(vm a, vm b) {
 /*
 * a と b の MOD を法とした畳込みを返す．
 *
-* 制約：n + m - 1 ≦ 8,388,608 = 2^23，コンパイラが gcc
+* 制約：n + m - 1 ≦ 8,388,608 = 2^23
 */
 vi convolution_arbitrary_mod(const vi& a, const vi& b, int MOD = (int)1e9 + 7) {
 	// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
@@ -826,7 +1029,7 @@ vi convolution_arbitrary_mod(const vi& a, const vi& b, int MOD = (int)1e9 + 7) {
 /*
 * a と b の MOD を法とした畳込みを返す．
 *
-* 制約：n + m - 1 ≦ 8,388,608 = 2^23，コンパイラが gcc
+* 制約：n + m - 1 ≦ 8,388,608 = 2^23
 */
 vm convolution_arbitrary_mod(const vm& a, const vm& b) {
 	// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
@@ -834,7 +1037,20 @@ vm convolution_arbitrary_mod(const vm& a, const vm& b) {
 	int n = sz(a), m = sz(b);
 	if (n == 0 || m == 0) return vm();
 
-	const int MOD = mint::mod();
+	if (min(n, m) <= 80) {
+		vm c(n + m - 1);
+
+		if (n < m) {
+			rep(i, n) rep(j, m) c[i + j] += a[i] * b[j];
+		}
+		else {
+			rep(j, m) rep(i, n) c[i + j] += a[i] * b[j];
+		}
+
+		return c;
+	}
+
+	constexpr int MOD = mint::mod();
 
 	constexpr int MOD1 = 998244353;
 	constexpr int MOD2 = 897581057;
@@ -880,52 +1096,10 @@ vm convolution_arbitrary_mod(const vm& a, const vm& b) {
 		__int128 val2 = c2[k].val() * MOD13 * MOD13_inv;
 		__int128 val3 = c3[k].val() * MOD12 * MOD12_inv;
 
-		res[k] = (val1 + val2 + val3) % MOD123;
+		res[k] = (int)(((val1 + val2 + val3) % MOD123) % MOD);
 	}
 
 	return res;
-}
-
-
-//【畳込み（法が任意）】O((n + m) log(n + m))（遅い）
-/*
-* a と b の mod を法とした畳込みを返す．
-*/
-vi convolution_arbitrary_mod_sep(const vi& a, const vi& b, int mod = (int)1e9 + 7) {
-	// verify : https://judge.yosupo.jp/problem/convolution_mod_1000000007
-
-	int n = sz(a), m = sz(b);
-	if (n == 0 || m == 0) return vi();
-
-	vl a0(n), a1(n), b0(m), b1(m); const int pow2 = 1 << 15;
-	rep(i, n) {
-		int ai = smod(a[i], mod);
-		a0[i] = ai % pow2;
-		a1[i] = ai / pow2;
-	}
-	rep(i, m) {
-		int bi = smod(b[i], mod);
-		b0[i] = bi % pow2;
-		b1[i] = bi / pow2;
-	}
-
-	vl c00 = convolution_ll(a0, b0);
-	vl c11 = convolution_ll(a1, b1);
-	rep(i, n) a0[i] += a1[i];
-	rep(i, m) b0[i] += b1[i];
-	vl c01 = convolution_ll(a0, b0);
-	rep(i, n + m - 1) {
-		c00[i] %= mod;
-		c11[i] %= mod;
-		c01[i] = (c01[i] - c00[i] - c11[i] + 2LL * mod) % mod;
-	}
-
-	vi c(n + m - 1);
-	rep(i, n + m - 1) {
-		c[i] = (int)((c00[i] + c01[i] * pow2 + c11[i] * pow2 * pow2) % mod);
-	}
-
-	return c;
 }
 
 

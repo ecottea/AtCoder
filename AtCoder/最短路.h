@@ -14,15 +14,15 @@ vi breadth_first_search(const G& g, int st) {
 
 	int n = sz(g);
 
-	vi dist(n, INF); // スタートからの最短距離を保持するテーブル : O(n)
+	vi dist(n, INF); // スタートからの最短距離を保持するテーブル : 初期化に O(n)
 	dist[st] = 0;
 
-	queue<int> que; // 次に探索する頂点を入れておくキュー
-	que.push(st);
+	queue<int> q; // 次に探索する頂点を入れておくキュー
+	q.push(st);
 
-	while (!que.empty()) {
+	while (!q.empty()) {
 		// 未探索の頂点を 1 つ得る．
-		auto s = que.front(); que.pop();
+		auto s = q.front(); q.pop();
 
 		repe(t, g[s]) {
 			// 発見済みの頂点なら何もしない．
@@ -33,7 +33,7 @@ vi breadth_first_search(const G& g, int st) {
 			dist[t] = dist[s] + 1;
 
 			// 未探索の頂点として t を追加する．
-			que.push(t);
+			q.push(t);
 		}
 	}
 
@@ -121,6 +121,66 @@ map<T, int> dynamic_BFS(T st, const FUNC& nxt) {
 		return res;
 	};
 	*/
+}
+
+
+//【幅優先探索（補グラフ）】O(n + m)
+/*
+* 無向グラフ g の補グラフに対し，ST から各頂点への最短距離（到達不能なら INF）を格納したリストを返す．
+*/
+vi complement_BFS(const Graph& g, int ST) {
+	// 参考 : https://atcoder.jp/contests/abc319/editorial/7120
+	// verify : https://atcoder.jp/contests/abc319/tasks/abc319_g
+
+	int n = sz(g);
+
+	// dist[s] : st から s までの距離
+	vi dist(n, INF);
+	dist[ST] = 0;
+
+	// rem : 未探索の頂点のリスト
+	list<int> rem;
+	rep(s, n) if (s != ST) rem.push_back(s);
+
+	// fb[s] : 注目頂点と s との間の移動が禁止されているか
+	vb fb(n);
+
+	// q : BFS 用のキュー
+	queue<int> q;
+	q.push(ST);
+
+	while (!q.empty()) {
+		// s : 注目頂点
+		auto s = q.front(); q.pop();
+
+		// s に隣接する頂点の移動禁止フラグを立てる．
+		repe(t, g[s]) fb[t] = true;
+
+		// t : 未探索の頂点
+		for (auto it = rem.begin(); it != rem.end(); ) {
+			int t = *it;
+
+			// t への移動が禁止されていれば何もしない
+			if (fb[t]) {
+				it++;
+				continue;
+			}
+
+			// ST からの最短距離を確定する．
+			dist[t] = dist[s] + 1;
+
+			// 探索待ちの頂点に t を追加する．
+			q.push(t);
+
+			// 未探索の頂点から t を削除する．
+			it = rem.erase(it);
+		}
+
+		// s に隣接する頂点の移動禁止フラグを折る．
+		repe(t, g[s]) fb[t] = false;
+	}
+
+	return dist;
 }
 
 
@@ -815,7 +875,7 @@ int shortest_directed_cycle(const Graph& g, int st, vi* path = nullptr) {
 }
 
 
-//【最短パス（重み付き）】O(n + m log n)
+//【最小コストパス】O(n + m log n)
 /*
 * 非負の重み付きグラフ g の始点 st から終点 gl までの最短パスの長さを返す．
 * 到達不能なら INFL を返す．必要なら path に最短パス上の頂点の列を格納する．
@@ -837,8 +897,7 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 	q.emplace(0, st);
 
 	while (!q.empty()) {
-		ll c; int s;
-		tie(c, s) = q.top(); q.pop();
+		auto [c, s] = q.top(); q.pop();
 
 		// ゴールに辿り着いたなら終了
 		if (s == gl) break;
@@ -848,8 +907,7 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 
 		repe(e, g[s]) {
 			// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
-			if (dist[s] + e.cost < dist[e.to]) {
-				dist[e.to] = dist[s] + e.cost;
+			if (chmin(dist[e.to], dist[s] + e.cost)) {
 				parent[e.to] = s;
 				q.emplace(dist[e.to], e.to);
 			}
@@ -857,8 +915,7 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 	}
 
 	// st から gl まで到達不能の場合
-	ll d = dist[gl];
-	if (d == INFL) return INFL;
+	if (dist[gl] == INFL) return INFL;
 
 	// 必要なら経路復元を行う．
 	if (path != nullptr) {
@@ -874,11 +931,11 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 		reverse(all(*path));
 	}
 
-	return d;
+	return dist[gl];
 }
 
 
-//【最短パス（重み付き，動的）】O(n + m)（遅い）
+//【最小コストパス（動的）】O(n + m)（遅い）
 /*
 * st から gl までの最短距離を返し（到達不能なら INFL），path に最短パス上の頂点の列を格納する．
 * nxt(s) は s の次に訪れることのできる {頂点, 移動コスト} の組のリストを返す．
@@ -948,7 +1005,7 @@ ll dynamic_minimum_cost_path(T st, T gl, const function<vector<pair<T, ll>>(T)>&
 }
 
 
-//【最短サイクル（有向，重み付き）】O(n + m log n)
+//【最小コストサイクル（有向）】O(n + m log n)
 /*
 * 非負の重み付き有向グラフ g の頂点 st を通る最短サイクルの長さを返す．
 * 存在しないなら INFL を返す．必要なら path に最短サイクル上の頂点の列を格納する．
@@ -1014,7 +1071,7 @@ ll minimum_cost_directed_cycle(const WGraph& g, int st, vi* path = nullptr) {
 }
 
 
-//【最短単純サイクル（無向，重み付き）】O(n + m log n)
+//【最小コスト単純サイクル（無向）】O(n + m log n)
 /*
 * 非負の重み付き無向グラフ g の頂点 ST を通る最短単純サイクルの長さを返す（なければ INFL）
 */
@@ -1132,7 +1189,7 @@ int shortest_path(const IGraph& g, int st, int gl, vi& path) {
 }
 
 
-//【最短パス（負コスト可）】O(m n)
+//【最小コストパス（負コスト可）】O(m n)
 /*
 * 重み付きグラフ g（負のコストも可）の始点 st から終点 gl までの最短パスの長さを返す．
 * 到達不能なら INFL，距離に下限がなければ -INFL を返す．
@@ -1376,13 +1433,8 @@ vl min_max_dijkstra(const WGraph& g, int st) {
 		// すでにより短い距離に更新されていたなら何もしない（忘れると O(n^2)）
 		if (dist[s] < c) continue;
 
-		repe(e, g[s]) {
-			// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
-			if (max(dist[s], e.cost) < dist[e.to]) {
-				dist[e.to] = max(dist[s], e.cost);
-				q.push({ dist[e.to], e.to });
-			}
-		}
+		// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
+		repe(e, g[s]) if (chmin(dist[e.to], max(dist[s], e.cost))) q.push({ dist[e.to], e.to });
 	}
 
 	return dist;

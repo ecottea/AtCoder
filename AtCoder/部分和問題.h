@@ -181,66 +181,29 @@ bitset<N> enumerate_pair_partial_sum(const vi& a, const vi& b) {
 
 //【部分和問題（個数最小化）】O(n v)
 /*
-* 長さ n の非負整数の列 a の部分和として v を作るために必要な要素の最小個数を返す．
-* a の部分和として v が作れないなら INF を返す．
-*
-*（和を状態にもつ状態 DP）
-*/
-int minimize_partial_sum(const vi& a, int v) {
-	// verify : https://algo-method.com/tasks/350
-
-	int n = sz(a);
-
-	// dp[i][j] : a[0..i) の中で和がちょうど j を実現できる最小個数
-	vvi dp(n + 1, vi(v + 1, INF));
-	dp[0][0] = 0; // 空和が 0 であることに対応
-
-	// 貰う DP
-	rep(i, n) {
-		repi(j, 0, v) {
-			// i 番目の数を選ばない場合
-			dp[i + 1][j] = dp[i][j];
-
-			// i 番目の数が j より大きいと選べない．
-			if (j < a[i]) continue;
-
-			// i 番目の数を選ぶ場合
-			chmin(dp[i + 1][j], dp[i][j - a[i]] + 1);
-		}
-	}
-
-	return dp[n][v];
-}
-
-
-//【部分和問題（個数最小化，無限個）】O(n v)
-/*
-* 長さ n の非負整数の列 a の部分和として v を作るために必要な要素の最小個数を返す．
-* a の部分和として v が作れないなら INF を返す．
+* 与えられた非負整数列 a[0..n) に対し，各 v∈[0..V] について，
+* a[0..n) の部分和として v を作るのに必要な最小個数のリストを返す（不可能なら INF）
 *
 *（和を状態にもつインライン状態 DP）
 */
-int minimize_unlimited_partial_sum(const vi& a, int v) {
-	// verify : https://yukicoder.me/problems/no/247
+vi minimize_partial_sum(const vi& a, int V) {
+	// verify : https://mojacoder.app/users/radix_sort/problems/wonder-wander
 
 	int n = sz(a);
 
-	// dp_i[j] : a[0..i) の中で和がちょうど j を実現できる最小個数
-	vi dp(v + 1, INF);
+	// dp_i[j] : a[0..i) の中で和が j となる最小個数
+	vi dp(V + 1, INF);
 	dp[0] = 0; // 空和が 0 であることに対応
 
-	// 貰う DP
-	rep(i, n) {
-		repi(j, 0, v) {
-			// i 番目の数が j より大きいと選べない．
-			if (j < a[i]) continue;
+	// 配る DP
+	rep(i, n) repir(j, V - a[i], 0) {
+		// a[i] を選ばない場合はそのまま
 
-			// i 番目の数を選ぶ場合
-			chmin(dp[j], dp[j - a[i]] + 1);
-		}
+		// a[i] を選ぶ場合
+		chmin(dp[j + a[i]], dp[j] + 1);
 	}
 
-	return dp[v];
+	return dp;
 }
 
 
@@ -440,7 +403,7 @@ bool construction_partial_sum_large(const vector<T>& a, T v, vi& is) {
 
 //【部分和問題（倍数，存在判定）】O(n m)
 /*
-* 長さ n の非負整数の列 a と正整数 m，r∈[0..m) について，
+* 非負整数列 a[0..n) と正整数 m，r∈[0..m) について，
 * a の部分列で和が m で割って r 余る数になるものが存在するかを返す．
 *
 *（mod m で和を状態にもつ状態 DP）
@@ -472,8 +435,7 @@ bool multiple_partial_sum(const vector<T>& a, int m, int r) {
 
 //【部分和問題（倍数，数え上げ）】O(n m)
 /*
-* 長さ n の非負整数の列 a と正整数 m について，
-* a の部分列で和が m の倍数になるものの個数を返す．
+* 非負整数列 a[0..n) と正整数 m について，a の部分列で和が m の倍数になるものの個数を返す．
 *
 *（mod m で和を状態にもつ状態 DP）
 */
@@ -596,39 +558,34 @@ mint count_unlimited_partial_sum(const vi& a, ll v) {
 }
 
 
-//【部分和問題（無限個，個数最小化）】O(n v)
+//【部分和問題（無限個，個数最小化）】O(n V)
 /*
-* 長さ n の正整数列 a の部分和として v を作るために必要な最小要素数を返す．
-* 各 a[i] は [0..∞) 個用いることができる．
+* 与えられた非負整数列 a[0..n) に対し，各 v∈[0..V] について，
+* a[0..n) の部分和（無限個使用可）として v を作るのに必要な最小個数のリストを返す（不可能なら INF）
 *
-* コイン両替問題としても知られる．
-*
-*（和を状態にもつ状態 DP）
+*（和を状態にもつインライン状態 DP）
 */
-int minimize_unlimited_partial_sum(const vi& a, int v) {
+vi minimize_unlimited_partial_sum(const vi& a, int V) {
+	// verify : https://atcoder.jp/contests/arc178/tasks/arc178_c
+
 	int n = sz(a);
 
-	// dp[i][j] : a[0..i) の中で和が j となる最小個数
-	vvi dp(n + 1, vi(v + 1, INF));
-	dp[0][0] = 0; // 空和が 0 であることに対応
+	//【備考】
+	// コイン両替問題と解釈できる．
 
-	// 貰う DP
-	rep(i, n) {
-		repi(j, 0, v) {
-			// i 番目の数を選ばない場合
-			dp[i + 1][j] = dp[i][j];
+	// dp_i[j] : a[0..i) の中で和が j となる最小個数
+	vi dp(V + 1, INF);
+	dp[0] = 0; // 空和が 0 であることに対応
 
-			// i 番目の数が j より大きいと選べない．
-			if (j < a[i]) {
-				continue;
-			}
+	// 配る DP
+	rep(i, n) repi(j, 0, V - a[i]) {
+		// a[i] を選ばない場合はそのまま
 
-			// i 番目の数を選ぶ場合
-			chmin(dp[i + 1][j], dp[i + 1][j - a[i]] + 1);
-		}
+		// a[i] を選ぶ場合
+		chmin(dp[j + a[i]], dp[j] + 1);
 	}
 
-	return dp[n][v];
+	return dp;
 }
 
 

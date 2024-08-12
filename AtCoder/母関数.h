@@ -256,3 +256,20 @@ vm multinomial_power_sum(int N, ll m, int d, const Factorial_mint& fm) {
 * verify : https://atcoder.jp/contests/agc051/tasks/agc051_d
 */
 
+
+//【z を含まない漸化式 → 関数方程式】
+/*
+* 以下の漸化式で定まる多項式列 {f_n(z)}, {g_n(z)} は等しい：
+*	f_0(z) = z, f_(n+1)(z) = φ(f_n(z))
+*	g_0(z) = z, g_(n+1)(z) = g_n(φ(z))
+* ここから f_n(z) についての以下の関数方程式が得られる：
+*	φ(f_n(z)) = f_n(φ(z))
+* 
+*（証明）f_n(z) = g_n(z) = (φ^n)(z) より明らか．
+* 
+*（注意）初項が z でないと {f_n(z)}, {g_n(z)} は一致しない．
+* 
+* verify : https://yukicoder.me/problems/no/2801
+*/
+
+

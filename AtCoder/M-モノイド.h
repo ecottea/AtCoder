@@ -93,7 +93,7 @@ using F134 = Fixed_matrix<T134, N134>;
 S134 act134(F134 f, S134 x) { return f * x; }
 F134 comp134(F134 f, F134 g) { return f * g; }
 F134 id134() { return 1; }
-#define Mul_Sum_mmonoid S134, op134, e134, F134, act134, comp134, id134
+#define MatrixMul_VectorSum_mmonoid S134, op134, e134, F134, act134, comp134, id134
 
 
 //【chmin 作用付き min 可換モノイド】
@@ -654,7 +654,7 @@ F121 comp121(F121 f, F121 g) {
 
 //【線形変更 作用付き min 可換モノイド】
 /*
-* S ∋ x = {v, l, r} : 区間 [l..r] の最小値が v であることを表す．
+* S ∋ x = {v, l, r} : 閉区間 [l..r] の最小値が v であることを表す．
 * F ∋ f = {a, b} : 一次関数 f(i) = a i + b を表す．
 * x op y : 区間を結合し {min(vx, vy), lx, ry} にする．
 * f act x : 位置 i の要素を a i + b に変更する．
@@ -692,7 +692,7 @@ F130 comp130(F130 f, F130 g) {
 
 //【線形変更 作用付き max 可換モノイド】
 /*
-* S ∋ x = {v, l, r} : 区間 [l..r] の最大値が v であることを表す．
+* S ∋ x = {v, l, r} : 閉区間 [l..r] の最大値が v であることを表す．
 * F ∋ f = {a, b} : 一次関数 f(i) = a i + b を表す．
 * x op y : 区間を結合し {max(vx, vy), lx, ry} にする．
 * f act x : 位置 i の要素を a i + b に変更する．

@@ -176,6 +176,9 @@ public:
 /*
 * Limited_div_mul_transform<T>(ll n) : O(√n)
 *   添字集合を n の約数集合として初期化する．
+*
+* Limited_div_mul_transform<T>(vl[vi] ps, vl[vi] divs) : O(σ(n) + ω(n))
+*   添字集合を n の約数集合として初期化する．ps は n の素因数の昇順列，divs は n の約数の昇順列とする．
 *  （σ(n) : n の約数の個数，ω(n) : n の素因数の種類数）
 *
 * divisor_zeta(umap<ll, T>& a) : O(σ(n) ω(n))
@@ -203,8 +206,9 @@ struct Limited_div_mul_transform {
 	unordered_set<ll> divs_s;
 
 public:
-	// 添字集合を n の約数集合として初期化する．
 	Limited_div_mul_transform(ll n) : divs{ 1 } {
+		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
+
 		for (ll p = 2; p * p <= n; p++) {
 			int d = 0;
 			while (n % p == 0) {
@@ -235,6 +239,18 @@ public:
 		}
 		sort(all(divs));
 
+		divs_s = unordered_set<ll>(all(divs));
+	}
+
+	// 添字集合を n の約数集合とする．ps は n の素因数の昇順列，divs は n の約数の昇順列とする．
+	Limited_div_mul_transform(const vl& ps, const vl divs) : ps(ps), divs(divs) {
+		divs_s = unordered_set<ll>(all(divs));
+	}
+
+	// 添字集合を n の約数集合とする．ps は n の素因数の昇順列，divs は n の約数の昇順列とする．
+	Limited_div_mul_transform(const vi& ps_, const vi divs_) {
+		repe(p, ps_) ps.emplace_back(p);
+		repe(d, divs_) divs.emplace_back(d);
 		divs_s = unordered_set<ll>(all(divs));
 	}
 	Limited_div_mul_transform() {}
@@ -311,5 +327,14 @@ public:
 		return a;
 	}
 };
+
+
+//【メビウス関数の和】
+/*
+* 約数系包除の式を導く際に，以下の恒等式はしばしば有用である：
+*	Σd|n μ(d) = Boole[n=1]
+* 
+* verify : https://projecteuler.net/problem=864
+*/
 
 

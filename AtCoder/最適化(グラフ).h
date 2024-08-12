@@ -514,3 +514,57 @@ ll chinese_postman_problem(const WGraph& g) {
 }
 
 
+//【最小コストシュタイナー木】O(n 3^K + (n + m) 2^K log n)（K = |vs|）
+/*
+* 与えられた重み付き無向グラフ g と頂点集合 tm について，
+* g の辺からなる木で tm を全て含むもののコストの最小値を返す．
+*/
+ll minimum_cost_steiner_tree(const WGraph& g, const vi& tm) {
+	// 参考 : https://kopricky.github.io/code/Academic/steiner_tree.html
+	// verify : https://atcoder.jp/contests/abc364/tasks/abc364_g
+
+	int n = sz(g), K = sz(tm);
+
+	// dp[set][v] : 頂点集合 set∪{v} を連結にする最小コスト
+	vvl dp(1LL << K, vl(n, INFL));
+	rep(k, K) dp[1LL << k][tm[k]] = 0;
+
+	repb(set, K) {
+		if (set == 0) continue;
+
+		// set = sub凵(set-sub) と分け，それぞれが v と連結になるパターン → SoS-bit 全探索
+		rep(v, n) {
+			for (int sub = set; sub > 0; sub = (sub - 1) & set) {
+				chmin(dp[set][v], dp[sub][v] + dp[set ^ sub][v]);
+			}
+		}
+
+		// set と u が連結になり，u と v を最短パスで結ぶパターン → 多始点ダイクストラ
+		priority_queue_rev<pli> q;
+		rep(v, n) q.push({ dp[set][v], v });
+
+		while (!q.empty()) {
+			auto [dpv, v] = q.top(); q.pop();
+			if (dp[set][v] < dpv) continue;
+
+			repe(t, g[v]) {
+				if (chmin(dp[set][t], dp[set][v] + t.cost)) {
+					q.push({ dp[set][t], t });
+				}
+			}
+		}
+	}
+
+	return dp[(1 << K) - 1][tm[0]];
+}
+
+
+//【Turan の定理】
+/*
+* n 頂点の単純無向グラフのうち，大きさ r+1 のクリークを含まない条件の下で辺数を最大にするものは
+* 頂点をほぼ r 等分した完全 r 部グラフであり，そのときの辺数は
+*	n(n-1)/2 - ( (n mod r)bin(ceil(n/r), 2) + (r - (n mod r))bin(floor(n/r), 2) )
+* である．
+* 
+* verify : https://projecteuler.net/problem=713
+*/

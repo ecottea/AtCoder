@@ -436,9 +436,7 @@ ll minimize_pair_digit_sum(string num, int b = 10) {
 
 		//dump(i);
 		//rep(f, 4) {
-		//	dumps("(carry, leq) =");
-		//	dump(bitset<2>(f));
-		//	dump(dp[i][f]);
+		//	dump("(carry, leq) =", bitset<2>(f), ":", dp[i][f]);
 		//}
 	}
 

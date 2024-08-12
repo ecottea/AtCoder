@@ -602,20 +602,27 @@ vi gale_shapley(const vvi& xc, const vvi& yc) {
 /*
 * 木 g の最大マッチングの大きさを返す．
 *
-* 利用：【貰う木 DP（頂点マージ）】
+* 利用：【貰う木 DP】
 */
-using T_tbm = int;
-void merge_tbm(T_tbm& x, const T_tbm& y, int s) { x += y; }
-T_tbm leaf_tbm(int s) { return 0; }
-T_tbm apply_tbm(const T_tbm& x, int s, int t) { return (T_tbm)(x == 0); }
+using T_tbm = int; // 0 を根と見たとき，その頂点をマッチングの根に近い側として使うか
+T_tbm leaf_tbm(int s) {
+	return 0;
+}
+T_tbm add_edge_tbm(const T_tbm& x, int p, int s) {
+	return x ^ 1;
+}
+void merge_tbm(T_tbm& x, const T_tbm& y, int s) {
+	x |= y;
+}
+void add_vertex_tbm(T_tbm& x, int s) {
+	;
+}
 int tree_maximum_matching(const Graph& g) {
 	// verify : https://atcoder.jp/contests/agc014/tasks/agc014_d
-	
-	auto dp = tree_getDP_vmerge<T_tbm, merge_tbm, leaf_tbm, apply_tbm>(g, 0);
-	
-	int res = 0;
-	rep(i, sz(g)) res += (int)(dp[i] > 0);
-	return res;
+
+	auto dp = tree_getDP<T_tbm, leaf_tbm, add_edge_tbm, merge_tbm, add_vertex_tbm>(g, 0);
+
+	return accumulate(all(dp), 0);
 }
 
 
@@ -626,14 +633,23 @@ int tree_maximum_matching(const Graph& g) {
 *
 * 利用：【全方位木 DP】
 */
-using T_mmi = bool; // 根を必ず使うか
-T_mmi merge_mmi(T_mmi x, T_mmi y, int s) { return x || y; }
-T_mmi leaf_mmi(int s) { return false; }
-T_mmi apply_mmi(T_mmi x, int p, int s) { return !x; }
-vb tree_maximum_matching_intersection(Graph& g) {
+using T_tmmi = bool; // その頂点をマッチングの根に近い側として使うか
+T_tmmi leaf_tmmi(int s) {
+	return false;
+}
+T_tmmi add_edge_tmmi(const T_tmmi& x, int p, int s) {
+	return !x;
+}
+T_tmmi merge_tmmi(const T_tmmi& x, const T_tmmi& y, int s) {
+	return x || y;
+}
+T_tmmi add_vertex_tmmi(const T_tmmi& x, int s) {
+	return x;
+}
+vb tree_maximum_matching_intersection(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc223/tasks/abc223_g
 
-	return rerooting<T_mmi, merge_mmi, leaf_mmi, apply_mmi>(g);
+	return rerooting<T_tmmi, leaf_tmmi, add_edge_tmmi, merge_tmmi, add_vertex_tmmi>(g);
 }
 
 

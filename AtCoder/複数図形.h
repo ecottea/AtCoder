@@ -268,55 +268,59 @@ tuple<ll, ll, ll> count_triangles(const vector<Point<T>>& p) {
 
 //【凸包】O(n log n)
 /*
-* 点群 p[0..n) の凸包の頂点を反時計回りに格納したリスト ch を返す．
+* 点群 p[0..n) の頂点数最小の凸包の頂点を反時計回りに格納したリスト ch を返す．
 * ch[0] は x 座標最小（同じものがあれば y 座標最小）の点とする．
 */
 template <class T>
 Polygon<T> convex_hull(vector<Point<T>> p) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
+	// verify : https://judge.yosupo.jp/problem/static_convex_hull
 
 	int n = sz(p);
 	if (n == 0) return Polygon<T>();
 
-	// x 座標を優先して昇順ソート（x 座標が同じなら y 座標昇順）
-	sort(all(p));
+	// 重複を除去し，x 座標を優先して昇順ソート（x 座標が同じなら y 座標昇順）
+	uniq(p);
+	n = sz(p);
 
-	// 凸包を成す頂点
-	Polygon<T> ch;
+	// 下側（および右側）凸包を成す頂点
+	Polygon<T> ch_l;
 
-	// まず x 座標昇順に見ていき，凸包の y 座標の小さい側を得る．
+	// まず x 座標昇順に見ていく．
 	int pt = 0;
 	rep(i, n) {
-		// 凸でない限り直前の点を除去することを繰り返す．
-		// 凸かどうかは外積を用いて判定できる．
-		while (pt >= 2 && (ch[pt - 1] - ch[pt - 2]).cross(p[i] - ch[pt - 2]) < 0) {
-			ch.pop_back();
+		// 凸でない限り直前の点を除去することを繰り返す．凸かどうかは外積を用いて判定できる．
+		while (pt >= 2 && (ch_l[pt - 1] - ch_l[pt - 2]).cross(p[i] - ch_l[pt - 2]) <= 0) {
+			ch_l.pop_back();
 			pt--;
 		}
 
 		// 今見ている点を暫定的に凸包に加える．
-		ch.push_back(p[i]);
+		ch_l.push_back(p[i]);
 		pt++;
 	}
 
-	// 次に x 座標降順に見ていき，凸包の y 座標の大きい側を得る．
-	repir(i, n - 2, 0) {
-		// 凸でない限り直前の点を除去することを繰り返す．
-		// 凸かどうかは外積を用いて判定できる．
-		while (pt >= 2 && (ch[pt - 1] - ch[pt - 2]).cross(p[i] - ch[pt - 2]) < 0) {
-			ch.pop_back();
+	// 上側（および左側）凸包を成す頂点
+	Polygon<T> ch_h;
+
+	// 次に x 座標降順に見ていく．
+	pt = 0;
+	repir(i, n - 1, 0) {
+		// 凸でない限り直前の点を除去することを繰り返す．凸かどうかは外積を用いて判定できる．
+		while (pt >= 2 && (ch_h[pt - 1] - ch_h[pt - 2]).cross(p[i] - ch_h[pt - 2]) <= 0) {
+			ch_h.pop_back();
 			pt--;
 		}
 
 		// 今見ている点を暫定的に凸包に加える．
-		ch.push_back(p[i]);
+		ch_h.push_back(p[i]);
 		pt++;
 	}
 
-	// p[0] が重複してしまっているので取り除く．
-	ch.pop_back();
+	// 重複を取り除きつつまとめる．
+	repi(i, 1, sz(ch_h) - 1) ch_l.push_back(ch_h[i]);
+	if (sz(ch_l) > 1) ch_l.pop_back();
 
-	return ch;
+	return ch_l;
 }
 
 
@@ -820,6 +824,54 @@ public:
 };
 
 
+//【最遠点対（ユークリッド距離）】O(n log n)
+/*
+* n 個の点 (x[i], y[i]) について，最も遠い 2 点の距離の 2 乗を返す．
+* またその点対が i 番目と j 番目であることを ps = {i, j} として格納する．
+*
+* 利用：【凸包】,【凸多角形の直径】
+*/
+template <class T = ll>
+T farthest_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullptr) {
+	// verify : https://judge.yosupo.jp/problem/furthest_pair
+
+	int n = sz(x);
+
+	ll sqd_max = -INFL; int id1 = -1, id2 = -1;
+
+	unordered_map<ll, int> xy_to_id; constexpr ll W = 2000100131;
+	rep(i, n) {
+		ll h = (x[i] + W / 2) * W + (y[i] + W / 2);
+		if (xy_to_id.count(h) && id1 == -1) {
+			id1 = xy_to_id[h];
+			id2 = i;
+			sqd_max = 0;
+		}
+		xy_to_id[h] = i;
+	}
+
+	vector<Point<T>> p(n);
+	rep(i, n) p[i] = Point<T>(x[i], y[i]);
+
+	auto ch = convex_hull(p);
+
+	pii k12;
+	if (chmax(sqd_max, caliper(ch, k12))) {
+		auto [k1, k2] = k12;
+
+		ll h = (ch[k1].x + W / 2) * W + (ch[k1].y + W / 2);
+		id1 = xy_to_id[h];
+
+		h = (ch[k2].x + W / 2) * W + (ch[k2].y + W / 2);
+		id2 = xy_to_id[h];
+	}
+
+	if (ps) *ps = { id1, id2 };
+
+	return sqd_max;
+}
+
+
 //【一定距離以内の点対の列挙（ユークリッド距離）】O(?)
 /*
 * n 個の点 (x[i], y[i]) からなる対で距離 d 以内にあるものを res に格納する．
@@ -900,26 +952,40 @@ void enumerate_point_pair(const vl& x, const vl& y, ll d, vector<pii>& res, ll l
 }
 
 
-//【最近点対（ユークリッド距離）】O(?)
+//【最近点対（ユークリッド距離）】O(n√n) ?
 /*
-* n 個の点 (x[i], y[i]) について，最も近い 2 点の距離を返す．
+* n 個の点 (x[i], y[i]) について，最も近い 2 点の距離の 2 乗を返す．
 * またその点対が i 番目と j 番目であることを ps = {i, j} として格納する．
-* 全探索できる点対の個数の上限を lim に与える．
+* 全探索できる点対の個数の上限を lim に与える（デフォルト値は 3/2 n√n）
 *
 * 利用：【回転】
 */
-template <class T>
-double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullptr, ll lim = (ll)1e8) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_5_A
-	
+template <class T = ll>
+T nearest_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullptr, ll lim = -1) {
+	// verify : https://judge.yosupo.jp/problem/closest_pair
+
 	int n = sz(x);
+
+	// 同一座標に 2 点以上存在する場合への対処
+	unordered_map<ll, int> xy_to_id; constexpr ll W = 2000100131;
+	rep(i, n) {
+		ll h = (x[i] + W / 2) * W + (y[i] + W / 2);
+		if (xy_to_id.count(h)) {
+			if (ps != nullptr) *ps = { xy_to_id[h], i };
+			return 0;
+		}
+		xy_to_id[h] = i;
+	}
+
+	// グリッド状のときを考えると少なくともこれくらいは必要になる．
+	if (lim == -1) lim = max((ll)(1.5 * pow(n, 1.5)), 100LL);
 
 	// 乱数生成器
 	static mt19937_64 mt64((int)time(NULL));
 	uniform_real_distribution<double> rnd(0., 2 * PI);
 
 	// x 座標の差が d 以内の点対に絞って精密に距離を求める．
-	double d = 1;
+	double d = pow(10, 4.5);
 
 	while (true) {
 		// 点群をランダムな角度で回転させ，x 座標昇順にソートする．
@@ -933,16 +999,14 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 		}
 		sort(all(pi));
 
-		int l, r;
-
-		// sum : x 座標の差が d 以内である点対の個数
-		ll sum = 0;
+		// cnt : x 座標の差が d 以内である点対の個数
+		ll cnt = 0;
 
 		// 尺取法で x 座標の差が d 以内である点対を数える．
-		l = 0, r = 0;
+		int l = 0, r = 0;
 		while (r < n) {
 			if (pi[r].first.x - pi[l].first.x <= d) {
-				sum += r - l;
+				cnt += r - l;
 				r++;
 			}
 			else {
@@ -951,20 +1015,20 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 		}
 
 		// 該当する点対が存在しないなら，d を大きくし，回転角をランダムに決め直す．
-		if (sum == 0) {
+		if (cnt == 0) {
 			d *= 2;
 			continue;
 		}
 
 		// 調べるべき点対が多すぎるなら，d を小さくし，回転角をランダムに決め直す．
-		if (sum > lim) {
+		if (cnt > lim) {
 			d /= 2;
 			continue;
 		}
 
 		// 尺取法で x 座標の差が d 以内である点対を列挙し，精密に距離を求める．
 		l = 0; r = 0;
-		double res = (double)INFL;
+		ll sqres = (ll)9e18; // INFL では (10^9 - (-10^9))^2 + (10^9 - (-10^9))^2 より小さい
 
 		while (r < n) {
 			if (pi[r].first.x - pi[l].first.x <= d) {
@@ -973,11 +1037,9 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 					int ji = pi[i].second;
 					if (ji > jr) swap(ji, jr);
 
-					Point<double> e((double)(x[ji] - x[jr]), (double)(y[ji] - y[jr]));
-					if (chmin(res, e.norm())) {
-						if (ps != nullptr) {
-							*ps = { ji, jr };
-						}
+					Point<ll> e((ll)(x[ji] - x[jr]), (ll)(y[ji] - y[jr]));
+					if (chmin(sqres, e.sqnorm())) {
+						if (ps != nullptr) *ps = { ji, jr };
 					}
 				}
 
@@ -989,12 +1051,12 @@ double recent_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullp
 		}
 
 		// 最短距離が d を超えていたなら，d を大きくし，回転角をランダムに決め直す．
-		if (res > d) {
+		if (sqres > d * d) {
 			d *= 2;
 			continue;
 		}
 
-		return res;
+		return sqres;
 	}
 }
 

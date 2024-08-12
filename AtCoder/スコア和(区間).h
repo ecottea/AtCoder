@@ -9,7 +9,7 @@
 
 //【区間の和の総和】O(n)
 /*
-* Σi<j Σa[i..j) の値を返す．
+* Σ_l<r Σa[l..r) の値を返す．
 */
 template <class T>
 T interval_sum_sum(const vector<T>& a) {
@@ -59,9 +59,9 @@ vector<T> interval_sum_every_length(const vector<T>& a) {
 
 //【区間の min の総和】O(n log n)
 /*
-* Σi<j min a[i..j) の値を返す．
+* Σ_l<r min a[l..r) の値を返す．
 *
-* 利用：【区間の数え上げ（最小値指定）】
+* 利用：【最小値ごとの区間の数え上げ】
 */
 template <class T>
 T interval_min_sum(const vector<T>& a) {
@@ -76,9 +76,17 @@ T interval_min_sum(const vector<T>& a) {
 }
 
 
+//【区間の XOR の総和】O(n log maxA)
+/*
+* a[0..n) の累積 XOR をとり【組の XOR の総和】を用いて 2 で割れば良い．
+* 
+* verify : https://atcoder.jp/contests/abc365/tasks/abc365_e
+*/
+
+
 //【区間の OR の総和】O(n log A)
 /*
-* Σi<j OR a[i..j) の値を返す．
+* Σ_l<r OR a[l..r) の値を返す．
 *
 * 利用：【ランレングス符号】
 */
@@ -116,7 +124,7 @@ ll interval_OR_sum(const vi& a) {
 
 //【区間の平均の総和】O(n)
 /*
-* Σi<j 1/(j-i) Σa[i..j) の値を返す．
+* Σ_l<r 1/(r-l) Σa[l..r) の値を返す．
 *
 * 利用：【線形加重累積和】
 */
@@ -166,7 +174,7 @@ mint interval_mean_sum(const vector<T>& a) {
 
 //【区間の転倒数の総和】O(n log n)
 /*
-* Σi<j (a[i..j) の転倒数) の値を返す．
+* Σ_l<r (a[l..r) の転倒数) の値を返す．
 *
 * 利用：【座標圧縮】
 */
@@ -196,6 +204,54 @@ mint interval_inversion_number_sum(const vector<T>& a) {
 		fen0.add(b[i], 1);
 		fen1.add(b[i], i);
 	}
+
+	return res;
+}
+
+
+//【区間の積の総和（長さ K 以下）】O(n log n)
+/*
+* Σ_1≦r-l≦K Πa[l..r) の値を返す．
+*
+*（分割統治法）
+*/
+template <class T>
+mint interval_product_sum(const vector<T>& a, int K) {
+	// verify : https://www.codechef.com/problems/KPRODSUM
+
+	int n = sz(a);
+
+	mint res = 0;
+
+	function<void(int, int)> rf = [&](int l, int r) {
+		// 区間の幅が 1 になったら終了．
+		if (l + 1 == r) {
+			res += a[l];
+			return;
+		}
+
+		int m = (l + r) / 2;
+
+		// mul_l[i] : [l..m) の右からの長さ i の区間の総積
+		vm mul_l(m - l + 1, 1);
+		repir(i, m - 1, l) mul_l[m - i] = mul_l[m - i - 1] * a[i];
+
+		// mul_r[i] : [m..r) の左からの長さ i の区間の総積
+		vm mul_r(r - m + 1, 1);
+		repi(i, m + 1, r) mul_r[i - m] = mul_r[i - m - 1] * a[i - 1];
+
+		// acc_r[i] : Σmul_r[1..i)
+		vm acc_r(r - m + 1 + 1);
+		repi(i, 1, r - m) acc_r[i + 1] = acc_r[i] + mul_r[i];
+
+		// [l..m) と [m..r) それぞれから長さ 1 以上の区間を選ぶパターンについての寄与を求める．
+		repi(i, 1, m - l) res += mul_l[i] * acc_r[max(min(K - i + 1, r - m + 1), 0)];
+
+		// 左右の区間について再帰的に処理する．
+		rf(l, m);
+		rf(m, r);
+	};
+	rf(0, n);
 
 	return res;
 }

@@ -220,10 +220,10 @@ template <class T>
 T pair_gcd_sum(const vi& a, const vi& b) {
 	//【方法】
 	// a, b の度数分布をそれぞれ u, v とすると，
-	//		Σi∈[0..n) Σj∈[0..m) f(GCD(a[i], b[j]))
-	//		= Σx Σy u[x] v[y] f(GCD(x, y))  （GCD 加重和の形）
-	//		= Σg Σ(GCD(x, y) = g) u[x] v[y] f(g)
-	//		= Σg f(g) Σ(GCD(x, y) = g) u[x] v[y]
+	//		Σi∈[0..n) Σj∈[0..m) GCD(a[i], b[j])
+	//		= Σx Σy u[x] v[y] GCD(x, y)  （GCD 加重和の形）
+	//		= Σg Σ(GCD(x, y) = g) u[x] v[y] g
+	//		= Σg g Σ(GCD(x, y) = g) u[x] v[y]
 	// と書き直せるので，GCD 畳込みを用いて高速化できる．
 
 	int n = sz(a), m = sz(b);
@@ -300,6 +300,8 @@ mint pair_lcm_sum(const vi& a, const vi& b) {
 */
 template <class T>
 T pair_floordiv_sum(const vi& a, const vi& b) {
+	// verify : https://atcoder.jp/contests/abc356/tasks/abc356_e
+
 	//【方法】
 	// a, b の度数分布をそれぞれ u, v とすると，
 	//		Σi∈[0..n) Σj∈[0..m) floor(a[i] / b[j])

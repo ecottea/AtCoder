@@ -103,11 +103,41 @@ inline Point<double> symmetrical_move(const Point<double>& p, const Line<double>
 
 //y2 ’¼ü‚ÌŒğ“_zO(1)
 /*
+* 2 ’¼ü l1, l2 ‚ÌŒğ“_‚ğ (x/d, y/d) ‚Æ‚µC3 ‚Â‘g {x, y, d} ‚ğ•Ô‚·D
+*
+* §–ñF8~(À•W)^3 ‚ªƒI[ƒo[ƒtƒ[‚µ‚È‚¢
+*/
+template <class T>
+tuple<T, T, T> intersection_L_L(const Line<T>& l1, const Line<T>& l2) {
+	// verify : https://atcoder.jp/contests/abc356/tasks/abc356_g
+
+	T x1 = l1.first.x;
+	T y1 = l1.first.y;
+	T x2 = l1.second.x;
+	T y2 = l1.second.y;
+	T x3 = l2.first.x;
+	T y3 = l2.first.y;
+	T x4 = l2.second.x;
+	T y4 = l2.second.y;
+
+	T x_num = x2 * x3 * y1 - x2 * x4 * y1 - x1 * x3 * y2 + x1 * x4 * y2
+		- x1 * x4 * y3 + x2 * x4 * y3 + x1 * x3 * y4 - x2 * x3 * y4;
+	T y_num = x2 * y1 * y3 - x4 * y1 * y3 - x1 * y2 * y3 + x4 * y2 * y3
+		- x2 * y1 * y4 + x3 * y1 * y4 + x1 * y2 * y4 - x3 * y2 * y4;
+	T dnm = x3 * y1 - x4 * y1 - x3 * y2 + x4 * y2
+		- x1 * y3 + x2 * y3 + x1 * y4 - x2 * y4;
+
+	return { x_num, y_num, dnm };
+}
+
+
+//y2 ’¼ü‚ÌŒğ“_iÀ”jzO(1)
+/*
 * 2 ’¼ü l1, l2 ‚ÌŒğ“_‚ğ•Ô‚·D
 */
 template <class T>
-Point<double> intersection_L_L(const Line<T>& l1, const Line<T>& l2) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_2_C
+Point<double> intersection_L_L_double(const Line<T>& l1, const Line<T>& l2) {
+	// verify : https://codeforces.com/contest/598/problem/F
 
 	double x1 = (double)l1.first.x;
 	double y1 = (double)l1.first.y;
@@ -213,7 +243,7 @@ int intersection_C_L(const Circle<double>& c, const Line<double>& l, Point<doubl
 }
 
 
-//y‰~‚Æ‰~‚ÌŒğ“_zO(1)
+//y2 ‰~‚ÌŒğ“_zO(1)
 /*
 * 2 ‰~ c1, c2 ‚Ì‹¤—L“_‚ÌŒÂ”‚ğ•Ô‚·D‚Ü‚½‹¤—L“_‚ª‚ ‚ê‚Î‚»‚ÌÀ•W‚ğ p1, p2 ‚ÉŠi”[‚·‚éD
 */
@@ -266,34 +296,35 @@ int intersection_C_C(const Circle<ll>& c1, const Circle<ll>& c2, Point<double>& 
 }
 
 
-//y‰~‚Æ‰~‚ÌŒğ“_iÀ”jzO(1)
+//y2 ‰~‚ÌŒğ“_iÀ”jzO(1)
 /*
 * 2 ‰~ c1, c2 ‚Ì‹¤—L“_‚ÌŒÂ”‚ğ•Ô‚·D‚Ü‚½‹¤—L“_‚ª‚ ‚ê‚Î‚»‚ÌÀ•W‚ğ p1, p2 ‚ÉŠi”[‚·‚éD
 */
-int intersection_C_C(const Circle<double>& c1, const Circle<double>& c2, Point<double>& p1, Point<double>& p2) {
+template <class D>
+int intersection_C_C(const Circle<D>& c1, const Circle<D>& c2, Point<D>& p1, Point<D>& p2) {
 	// verify : https://atcoder.jp/contests/abc157/tasks/abc157_f
 
 	// ‰~ c1, c2 ‚Ì’†S‚Æ”¼Œa
-	Point<double> o1 = c1.first, o2 = c2.first;
-	double r1 = c1.second, r2 = c2.second;
+	Point<D> o1 = c1.first, o2 = c2.first;
+	D r1 = c1.second, r2 = c2.second;
 
 	// o1 ‚©‚ç o2 ‚Ö‚ÌƒxƒNƒgƒ‹C”¼Œa‚Ì˜a‚Æ·
-	Point<double> d = o2 - o1;
-	double r_sum = r1 + r2, r_dif = abs(r1 - r2);
+	Point<D> d = o2 - o1;
+	D r_sum = r1 + r2, r_dif = abs(r1 - r2);
 
 	// ’†SŠÔ‹——£‚ª‰~‚Ì”¼Œa‚Ì˜a‚æ‚è‘å‚«‚¢ê‡ ¨ ‹¤—L“_ 0 ŒÂ
 	if (d.sqnorm() > r_sum * r_sum) return 0;
-	
+
 	// ’†SŠÔ‹——£‚ª‰~‚Ì”¼Œa‚Ì·‚æ‚è¬‚³‚¢ê‡ ¨ ‹¤—L“_ 0 ŒÂ
 	if (d.sqnorm() < r_dif * r_dif) return 0;
 
 	// ‚»‚Ì‘¼‚Ìê‡ ¨ Œğ“_ 2 ŒÂ
-	double x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
-	double h = sqrt(r1 * r1 - x * x);
-	Point<double> nd = Point<double>(d) * (x / d.norm());
-	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (h / d.norm());
-	p1 = Point<double>(o1) + nd + nn;
-	p2 = Point<double>(o1) + nd - nn;
+	D x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
+	D h = sqrt(r1 * r1 - x * x);
+	Point<D> nd = Point<D>(d) * (x / d.norm());
+	Point<D> nn = Point<D>(-(D)d.y, (D)d.x) * (h / d.norm());
+	p1 = Point<D>(o1) + nd + nn;
+	p2 = Point<D>(o1) + nd - nn;
 	return 2;
 }
 
@@ -331,7 +362,7 @@ int tangent_to_circle(const Point<ll>& p, const Circle<ll>& c, Point<double>& t1
 }
 
 
-//y“ñ‰~‚Ì‹¤’ÊÚüzO(1)
+//y2 ‰~‚Ì‹¤’ÊÚüzO(1)
 /*
 * 2 ‰~ c1, c2 ‚Ì‹¤’ÊÚü‚Ì–{”‚ğ•Ô‚·D‚Ü‚½ c1 ‚Æ‚ÌÚ“_‚ª‚ ‚ê‚Î‚»‚ÌÀ•W‚ğ ts ‚ÉŠi”[‚·‚éD
 * c1 = c2 ‚Ì‚Æ‚«‚Í -1 ‚ğ•Ô‚·D
@@ -448,17 +479,18 @@ Circle<double> circircle(const Point<T>& a, const Point<T>& b, const Point<T>& c
 
 //y“Ê‘½ŠpŒ`‚ÌØ’fzO(n)
 /*
-* “Ê n ŠpŒ` poly ‚ğ—LŒü’¼ü l ‚ÅØ’f‚µ‚½¶‘¤‚Ì“Ê‘½ŠpŒ`‚ğ lpoly ‚É•Ô‚·D
+* “Ê n ŠpŒ` poly ‚ğ—LŒü’¼ü l ‚ÅØ’f‚µ‚½¶‘¤‚Ì“Ê‘½ŠpŒ`‚ğ•Ô‚·D
 *
-* —˜—pFy2 ’¼ü‚ÌŒğ“_z
+* —˜—pFy2 ’¼ü‚ÌŒğ“_iÀ”jz
 */
 template <class T>
-void convex_cut(const Polygon<T>& poly, const Line<T>& l, Polygon<double>& lpoly) {
+Polygon<double> convex_cut(const Polygon<T>& poly, const Line<T>& l) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_C
 
 	int n = sz(poly);
 
-	lpoly.clear();
+	Polygon<double> lpoly;
+
 	rep(i, n) {
 		// ‘½ŠpŒ`‚Ì“_ poly[i] ‚ª—LŒü’¼ü l ‚Ì¶‘¤il ã‚àŠÜ‚Şj‚Å‚ ‚éê‡
 		T op1 = (l.second - l.first).cross(poly[i] - l.first);
@@ -470,9 +502,11 @@ void convex_cut(const Polygon<T>& poly, const Line<T>& l, Polygon<double>& lpoly
 		T op2 = (l.second - l.first).cross(poly[(i + 1) % n] - l.first);
 		if ((op1 > 0 && op2 < 0) || (op1 < 0 && op2 > 0)) {
 			Line<T> e{ poly[i], poly[(i + 1) % n] };
-			lpoly.push_back(intersection_L_L(l, e));
+			lpoly.push_back(intersection_L_L_double(l, e));
 		}
 	}
+
+	return lpoly;
 }
 
 

@@ -378,36 +378,6 @@ void count_maxlimited_integer_partitions(int n, int m, int d, vvvm& c) {
 }
 
 
-//【分割数】O(n)
-/*
-* 各 i∈[0..n] について自然数 i を分割する方法の数を p[i] に格納する．
-*/
-void partition_function(int n, vm& p) {
-	// 参考 : https://ja.wikipedia.org/wiki/%E5%88%86%E5%89%B2%E6%95%B0
-	// verify : https://judge.yosupo.jp/problem/partition_function
-
-	// pen : 一般五角数の昇順列
-	vi pen;
-	repi(i, 1, n) {
-		pen.push_back(i * (3 * i - 1) / 2);
-		pen.push_back(i * (3 * i + 1) / 2);
-		if (*pen.rbegin() > n) break;
-	}
-	int m = sz(pen);
-
-	// 漸化式により計算する．
-	p = vm(n + 1);
-	p[0] = 1;
-
-	repi(i, 1, n) rep(j, m) {
-		if (i - pen[j] < 0) break;
-
-		// 符号は 4 で割った余りで場合分けされる．
-		p[i] += (j & 2 ? -1 : 1) * p[i - pen[j]];
-	}
-}
-
-
 //【ボールの区別なし，箱の区別なし，箱の中身は 1 個以下】
 /*
 * ボールが n 個，箱が m 個の場合，ボールの入れ方は明らかに

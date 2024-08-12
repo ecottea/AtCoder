@@ -92,7 +92,7 @@ mint count_non0interval_bitsequences(int n, const vi& l, const vi& r) {
 
 //【連結で得られるビット列の数え上げ】O(4^m m k log n) （m = max(|s[i]|)）
 /*
-* 無限個ある n 種類のビット列 s[i] を自由に並べて得られる長さ k のビット列の個数を返す．
+* 無限個ずつある n 種類のビット列 s[i] を自由に繋げて得られる長さ k のビット列の個数を返す．
 * 
 *（スライド bit DP）
 */

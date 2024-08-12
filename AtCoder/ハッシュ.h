@@ -89,7 +89,7 @@ class Rolling_hash {
 		return term1 + term2 + term3; // < 2^63
 	}
 
-	static constexpr ull BASE = 1234567891011; // 適当な基数
+	static constexpr ull BASE = 1234567891011; // 適当な基数（本当は実行時に乱択すべき）
 	static constexpr ull SHIFT = 4295090752; // 適当なシフト
 
 	// 列の長さ
@@ -137,7 +137,7 @@ public:
 		if (l >= r) return 0;
 		Assert(!v_rev.empty());
 
-		// s[l, r) を反転した文字列は s_rev[n-r, n-l) に等しい．
+		// s[l..r) を反転した文字列は s_rev[n-r..n-l) に等しい．
 		return get_mod(v_rev[n - l] + 4 * MOD - mul(v_rev[n - r], powB[r - l]));
 	}
 
@@ -147,6 +147,23 @@ public:
 
 		Assert(len <= n);
 		return get_mod(ht + mul(hs, powB[len]));
+	}
+
+	// ハッシュ値 h をもつ s[0..len) を K 個連結した文字列のハッシュ値を返す．
+	ull repeat(ull h, int len, ll K) const {
+		// verify : https://mojacoder.app/users/bayashiko/problems/rps
+
+		Assert(len <= n);
+
+		ull res = 0, pow2 = h; ll len_pow2 = len;
+		while (K > 0) {
+			if (K & 1) res = join(res, pow2, len_pow2);
+			pow2 = join(pow2, pow2, len_pow2);
+			len_pow2 *= 2;
+			K /= 2;
+		}
+
+		return res;
 	}
 };
 
@@ -195,7 +212,7 @@ bool comp(const STR& s1, const Rolling_hash<STR>& rh1, int l1, int r1,
 
 //【動的ローリングハッシュ（列）】
 /*
-* Rolling_hash<STR>(STR s) : O(n)
+* Dynamic_rolling_hash<STR>(STR s) : O(n)
 *	列 s[0..n) で初期化する．
 *	制約：STR は string，vector<T> など．ll 範囲の負数は扱えない．
 *
@@ -587,10 +604,13 @@ struct Rolling_hash_XOR {
 *	S を空集合として初期化する．
 *
 * flip(X x) : O(1)
-*	S に対し要素 x の有無を反転する．
+*	集合 S に対し要素 x の有無を反転する．
 *
 * ll get() : O(1)
 *	現時点での集合 S のハッシュ値を返す．
+*
+* clear() : O(1)
+*	集合 S を空にする．
 */
 template <class X>
 class Zobrist_hash_set {
@@ -605,15 +625,15 @@ class Zobrist_hash_set {
 	uniform_int_distribution<ll> rnd;
 
 public:
-	// コンストラクタ（空集合で初期化）
+	// S を空集合として初期化する．
 	Zobrist_hash_set() : v(0) {
 		// verify : https://www.codechef.com/problems/COOK82D
-		
+
 		mt.seed((int)time(NULL));
 		rnd = uniform_int_distribution<ll>(-INFL, INFL);
 	}
 
-	// S に対し要素 x の有無を反転する．
+	// 集合 S に対し要素 x の有無を反転する．
 	void flip(const X& x) {
 		// verify : https://www.codechef.com/problems/COOK82D
 
@@ -627,8 +647,13 @@ public:
 	// 現時点での集合 S のハッシュ値を返す．
 	ll get() {
 		// verify : https://www.codechef.com/problems/COOK82D
-		
+
 		return v;
+	}
+
+	// 集合 S を空にする．
+	void clear() {
+		v = 0;
 	}
 
 #ifdef _MSC_VER

@@ -177,9 +177,9 @@ Graph complement_graph(const Graph& g) {
 /*
 * g の n 個の頂点に対応する頂点 [0..n) と m 本の辺に対応する頂点 [n..n+m) をもち，
 * 頂点 i が辺 j の端点であるときに限り辺 i-(n+j) をもつ二部グラフ gc を返す．
-* undirected = false とすると有向辺 i→(n+j) にする．
+* directed = true とすると有向辺 i→(n+j) にする．
 */
-Graph incidence_bipartite_graph(const IGraph& g, bool undirected = true) {
+Graph incidence_bipartite_graph(const IGraph& g, bool directed = false) {
 	// verify : https://atcoder.jp/contests/abc318/tasks/abc318_g
 
 	int n = sz(g);
@@ -191,7 +191,7 @@ Graph incidence_bipartite_graph(const IGraph& g, bool undirected = true) {
 	Graph g2(n + m);
 	rep(s, n) repe(t, g[s]) {
 		g2[s].push_back(n + t.id);
-		if (undirected) g2[n + t.id].push_back(s);
+		if (!directed) g2[n + t.id].push_back(s);
 	}
 
 	return g2;
@@ -326,9 +326,9 @@ G eliminate_edge(const G& g, const vector<pii>& e_el) {
 /*
 * 有向グラフ g とその頂点の分割 p について，成分 p[i] を 1 つの頂点 i として縮約したグラフを返す．
 * 自己ループや多重辺が生じた場合は除去され，結果は単純グラフとなる．
-* simple = false とすると自己ループや多重辺の除去を行わない．
+* not_simple = true とすると自己ループや多重辺の除去を行わない．
 */
-Graph vertex_contraction(const Graph& g, const vvi& p, bool simple = true) {
+Graph vertex_contraction(const Graph& g, const vvi& p, bool not_simple = false) {
 	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_3
 
 	int n = sz(g), m = sz(p);
@@ -337,7 +337,7 @@ Graph vertex_contraction(const Graph& g, const vvi& p, bool simple = true) {
 	vi id(n);
 	rep(i, m) repe(v, p[i]) id[v] = i;
 
-	if (simple) {
+	if (!not_simple) {
 		// 多重辺や自己ループを防ぐため一旦辺の集合を unordered_set でもつ．
 		vector<unordered_set<int>> gc_set(m);
 		rep(s, n) {
@@ -912,5 +912,57 @@ public:
 * 
 * verify : https://atcoder.jp/contests/abc232/tasks/abc232_g
 */
+
+
+//【無向 functional graph の分解】O(n)（未 verify）
+/*
+* 辺 i-f[i] をもつ n 頂点 n 辺の無向グラフを連結成分に分解し，連結成分の頂点のリストを ccs とする．
+* また各連結成分について，辺 v-f[v] を取り除くと連結成分が木になるような v のリストを es とする．
+* これらの組 {ccs, es} を返す．
+*/
+pair<vvi, vi> functional_graph_decomposition(const vi& f) {
+	int n = sz(f);
+
+	vvi ccs; vi es; int pt = 0;
+
+	// id[s] : 頂点 s が何番目の連結成分に属しているか
+	vi id(n, -1);
+
+	rep(st, n) {
+		// st が分類済の頂点なら何もしない．
+		if (id[st] != -1) continue;
+
+		vi cs;
+
+		int s = st;
+		cs.emplace_back(s);
+		id[s] = pt;
+
+		while (1) {
+			int t = f[s];
+
+			if (id[t] == pt) {
+				ccs.emplace_back(cs);
+				es.emplace_back(s);
+				pt++;
+				break;
+			}
+			else if (id[t] != -1) {
+				int i = id[t];
+				repe(v, cs) {
+					ccs[i].emplace_back(v);
+					id[v] = i;
+				}
+				break;
+			}
+
+			cs.emplace_back(t);
+			id[t] = pt;
+			s = t;
+		}
+	}
+
+	return { ccs, es };
+}
 
 

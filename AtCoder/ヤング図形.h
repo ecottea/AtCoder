@@ -106,10 +106,10 @@ mint hook_length_formula(const vi& a) {
 	// verify : https://yukicoder.me/problems/no/2149
 
 	//【方法】
-	// ヤング図形 a のあるマス (i, j) について，そのマスの右または下にあるマス（自身を含む）
-	// の個数をマス (i, j) のフック長といい h(i, j) で表す．
+	// ヤング図形 a のあるマス (i,j) について，そのマスの右または下にあるマス（自身を含む）
+	// の個数をマス (i,j) のフック長といい h(i,j) で表す．
 	// a に対応する標準タブローの個数は，以下の式で与えられる：
-	//		n! / (Π_(i,j) h(i, j))
+	//		n! / (Π_(i,j) h(i,j))
 
 	int n = sz(a);
 
@@ -130,42 +130,7 @@ mint hook_length_formula(const vi& a) {
 }
 
 
-//【ヤング図形の列挙（包含指定）】O(?)
-/*
-* ヤング図形 a[0..h) に包含されるヤング図形を格納したリストを返す（空のヤング図形も含む）
-*/
-vvi enumerate_young_diagrams(const vi& a) {
-	int n = sz(a);
-	vi yng; vvi yngs;
-
-	function<void(int)> rf = [&](int i) {
-		// 幅が n になったら完成とする．
-		if (i == n) {
-			yngs.push_back(yng);
-			return;
-		}
-
-		// h_max : i 列目に積める箱の数の最大値
-		int h_max = a[i];
-		if (i > 0) chmin(h_max, yng[i - 1]);
-
-		// i 列目に箱を積む場合
-		repir(h, h_max, 1) {
-			yng.push_back(h);
-			rf(i + 1);
-			yng.pop_back();
-		}
-
-		// i 列目に箱を積まない場合は打ち切って完成とする．
-		yngs.push_back(yng);
-	};
-	rf(0);
-
-	return yngs;
-}
-
-
-//【ヤング図形の数え上げ（包含指定）】O(N)
+//【ヤング図形の数え上げ（被包含指定）】O(N)
 /*
 * 大きさ N のヤング図形 a[0..h) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
 */
@@ -189,7 +154,7 @@ mint count_young_diagrams(const vi& a) {
 }
 
 
-//【ヤング図形の数え上げ（包含指定）】O(h^2)
+//【ヤング図形の数え上げ（被包含指定）】O(h^2)
 /*
 * ヤング図形 a[0..h) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
 *
@@ -240,6 +205,12 @@ mint count_young_diagrams_ll(vector<T> a) {
 }
 
 
+//【ヤング図形の数え上げ（被包含指定，包含指定）】O((h+w)log(h+w)^2)
+/*
+* 数え上げ(列).h の【広義単調増加列の数え上げ（上下限指定，mod 998244353）】を用いれば良い．
+*/
+
+
 //【ロビンソン・シェンステッド対応】
 /*
 * [0..N) の順列 p[0..N) に対し，以下の規則で同じ形の標準タブローの組 (P, Q) を対応させる：
@@ -251,9 +222,46 @@ mint count_young_diagrams_ll(vector<T> a) {
 *	[0..N) の順列 p[0..N)	：	大きさ N の標準タブローの組 (P, Q)
 *	p の最長増加部分列の長さ	：	P, Q の 1 行目の箱の個数
 *	p の最長減少部分列の長さ	：	P, Q の 1 列目の箱の個数
+*	p の逆順列 p_inv[0..N)	：	大きさ N の標準タブローの組 (Q, P)
 * なる対応をもつ．
 * 
 * 参考 : https://zenn.dev/koboshi/articles/306304c0381c1e
 * verify : https://yukicoder.me/problems/no/2048
 */
+
+
+//【ヤング図形の列挙（被包含指定）】O(?)
+/*
+* ヤング図形 a[0..h) に包含されるヤング図形を格納したリストを返す（空のヤング図形も含む）
+*/
+vvi enumerate_young_diagrams(const vi& a) {
+	int n = sz(a);
+	vi yng; vvi yngs;
+
+	function<void(int)> rf = [&](int i) {
+		// 幅が n になったら完成とする．
+		if (i == n) {
+			yngs.push_back(yng);
+			return;
+		}
+
+		// h_max : i 列目に積める箱の数の最大値
+		int h_max = a[i];
+		if (i > 0) chmin(h_max, yng[i - 1]);
+
+		// i 列目に箱を積む場合
+		repir(h, h_max, 1) {
+			yng.push_back(h);
+			rf(i + 1);
+			yng.pop_back();
+		}
+
+		// i 列目に箱を積まない場合は打ち切って完成とする．
+		yngs.push_back(yng);
+	};
+	rf(0);
+
+	return yngs;
+}
+
 

@@ -184,7 +184,7 @@ mint count_permutations_adjacent_relation_insertDP(const string& s) {
 
 	int n = sz(s) + 1;
 
-	// dp[i][j] : s[0..i) で指定される大小関係を満たす [0..i] の順列 p で，p[i] = j であるものの数
+	// dp[i][j] : s[0..i) を満たす [0..i] の順列 p で，p[i] = j であるものの数
 	vvm dp(n, vm(n));
 	dp[0][0] = 1;
 
@@ -209,10 +209,19 @@ mint count_permutations_adjacent_relation_insertDP(const string& s) {
 			repi(j, 0, i + 1) dp[i + 1][j] = acc[j];
 		}
 	}
-	dumpel(dp);
 
 	return accumulate(all(dp[n - 1]), mint(0));
 }
+
+
+//【123-avoiding な順列の数え上げ】
+/*
+* 最長増加部分列の長さが 2 以下である順列 p[0..n) を 123-avoiding であるという．
+* 隣接大小関係が '<' であると指定された箇所が K 個ある 123-avoiding な順列の個数は，
+* '<' が連続しなければ catalan(n-K) = bin(2(n-K), n-K)/(n-K+1) 個，さもなくば 0 個である．
+* 
+* verify : https://yukicoder.me/problems/9131
+*/
 
 
 //【2 つ以下の増加部分列に分割可能な順列の数え上げ】O(n^2)
@@ -501,6 +510,7 @@ void count_permutations_both_GIS(int n, vvm& cnt) {
 	vvm dp(n + 1, vm(n + 1));
 	dp[1][1] = 1;
 
+	// 値降順に挿入していく．
 	repi(i, 1, n - 1) {
 		vvm ndp(n + 1, vm(n + 1));
 

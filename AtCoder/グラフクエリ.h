@@ -118,7 +118,7 @@ public:
 
 //【隣接更新クエリ】
 /*
-* t 回目のクエリのとき {t, val} として【隣接加算クエリ】で max モノイドを使えば良い．
+* t 回目のクエリのとき {t, val} として【隣接頂点クエリ】で max モノイドを使えば良い．
 * 
 * verify : https://atcoder.jp/contests/typical90/tasks/typical90_ce
 */
@@ -236,12 +236,13 @@ public:
 *
 * solve(const function<void(int)>& f) : O(Q log Q log n)
 *	各クエリに対する答えを一括計算する．
-*	f(id) は識別番号 id のクエリが追加された時点でのグラフの状態に対する答えの計算を行う．
+*	f(id) は識別番号 id のクエリが追加された時点でのグラフの状態に対する処理を行う．
+* 
+* 利用：【rollback Union-Find】
 */
 class Offline_dynamic_connectivity {
 	// 参考 : https://ei1333.github.io/luzhiled/snippets/other/offline-dynamic-connectivity.html
-	// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
-
+	
 	int T = 1; // 現在時刻
 
 	vector<pii> es; // 管理すべき無向辺 e = u-v のリスト（u < v）
@@ -253,7 +254,7 @@ class Offline_dynamic_connectivity {
 
 	vvi qs; // 各時刻に処理すべきクエリのリスト
 
-	vvi seg; // 辺の存在区間を管理するセグメント木
+	vvi seg; // 辺の存在時刻を管理するセグメント木
 
 	// 時刻 [l..r) に辺 id が存在したことを記録する．
 	void add_interval(int l, int r, int id) {
@@ -297,14 +298,18 @@ class Offline_dynamic_connectivity {
 public:
 	int n; // 頂点数
 
-	Rollback_Union_find uf;
+	Rollback_union_find uf;
 
 	// n 頂点の空グラフで初期化する．
-	Offline_dynamic_connectivity(int n) : e_id(n), qs(1), n(n), uf(n) {}
+	Offline_dynamic_connectivity(int n) : e_id(n), qs(1), n(n), uf(n) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
+	}
 	Offline_dynamic_connectivity() : n(0) {}
 
 	// 辺 u-v を追加する．
 	void add_edge(int u, int v) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
+
 		if (u > v) swap(u, v);
 
 		auto it = e_id[u].find(v);
@@ -326,6 +331,8 @@ public:
 
 	// 辺 u-v を削除する．
 	void erase_edge(int u, int v) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
+
 		if (u > v) swap(u, v);
 
 		Assert(e_id[u].count(v));
@@ -341,11 +348,15 @@ public:
 
 	// 識別番号 id のクエリを追加する．
 	void add_query(int id) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
+
 		qs.back().emplace_back(id);
 	}
 
 	// 各クエリに対する答えを一括計算する．
 	void solve(const function<void(int)>& f) {
+		// verify : https://atcoder.jp/contests/abc301/tasks/abc301_h
+				
 		// 辺の存在区間を管理するセグメント木を構築する．
 		seg.resize(T * 2);
 		for (auto& [l, r, id] : ex) add_interval(l, r, id);
@@ -354,6 +365,12 @@ public:
 		// セグ木を再帰的になぞりながら各クエリに対する答えを計算する．
 		rf(1, f);
 	}
+
+	/* f の定義の雛形
+	auto f = [&](int id) {
+		return res[id] = G.uf.same(u[id], v[id]);
+	};
+	*/
 };
 
 

@@ -593,6 +593,94 @@ ll minimize_digit_sums(const vl& a, int D = 18, int B = 10) {
 }
 
 
+//【数の数え上げ（上限，種類数指定）】
+/*
+* B 進数で n 桁の数 num 以下の正整数で，K 種類の数字からなるものの個数を返す．
+*
+* 制約：fm は B! まで計算可能
+*/
+mint count_numbers_K_kind(const vi& num, int K, const Factorial_mint& fm, int B = 10) {
+	// verify : https://atcoder.jp/contests/abc194/tasks/abc194_f
+
+	if (K > B) return 0;
+
+	int n = sz(num);
+
+	// pows[k][i] : k^i
+	vvm pows(K + 1, vm(n));
+	repi(k, 0, K) {
+		pows[k][0] = 1;
+		repi(i, 1, n - 1) pows[k][i] = pows[k][i - 1] * k;
+	}
+
+	mint res = 0;
+
+	// step1. n 桁未満の数で K 種類の数字からなるものの個数を求める．
+
+	// i : 0 でない最上位桁
+	repir(i, n - 1, 1) {
+		// sum : 使う数字 K 種類を固定したときの数の個数
+		mint sum = 0;
+
+		// k : 使用可能な数字の種類数，として包除原理を適用する．
+		repir(k, K, 0) {
+			sum += ((K - k) & 1 ? -1 : 1) * fm.bin(K - 1, k - 1) * pows[k][n - i - 1];
+		}
+
+		// 第 i 桁の選び方が [1..B) の B-1 通り
+		// 桁の数字 K 種類の選び方が，使用が決定している第 i 桁の数字を除いて bin(B-1, K-1) 通り
+		res += (B - 1) * fm.bin(B - 1, K - 1) * sum;
+	}
+
+	// step2. n 桁の num 未満の数で K 種類の数字からなるものの個数を求める．
+
+	// used[d] : 数字 d が使用済か，used_cnt : 使用済の数字の種類数
+	vb used(B); int used_cnt = 0;
+
+	// i : num と一致しない最上位桁
+	rep(i, n) {
+		// c0 : num[i] 未満の数のうち，第 i 桁より上位で使用済でないものの種類数
+		// c1 : num[i] 未満の数のうち，第 i 桁より上位で使用済であるものの種類数
+		int c0 = 0, c1 = 0;
+
+		int d_min = (i == 0 ? 1 : 0);
+		repi(d, d_min, num[i] - 1) {
+			if (used[d]) c1++;
+			else c0++;
+		}
+
+		if (c0 > 0) {
+			// c : 第 i 桁以上で使用済である数字の種類数
+			int c = used_cnt + 1;
+			mint sum = 0;
+			repir(k, K, c) {
+				sum += ((K - k) & 1 ? -1 : 1) * fm.bin(K - c, k - c) * pows[k][n - i - 1];
+			}
+			res += c0 * fm.bin(B - c, K - c) * sum;
+		}
+
+		if (c1 > 0) {
+			// c : 第 i 桁以上で使用済である数字の種類数
+			int c = used_cnt;
+			mint sum = 0;
+			repir(k, K, c) {
+				sum += ((K - k) & 1 ? -1 : 1) * fm.bin(K - c, k - c) * pows[k][n - i - 1];
+			}
+			res += c1 * fm.bin(B - c, K - c) * sum;
+		}
+
+		// 以降で調べる数の第 i 桁は num[i] に確定する．
+		used_cnt += !used[num[i]];
+		used[num[i]] = true;
+	}
+
+	// step3. num が K 種類の数字からなるかを調べる．
+	res += (int)(used_cnt == K);
+
+	return res;
+}
+
+
 //【桁の数字の分布】O(n B)
 /*
 * B 進数で n 桁の数 num 以下の正の整数すべてについて，

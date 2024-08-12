@@ -299,6 +299,80 @@ public:
 };
 
 
+//【二次元間引きいもす法】
+/*
+* Thinning_imos_2D<T>(int h, int w, int mx, int my) : O((h + mx)(w + my))
+*	法を (mx, my) とし，a[0..h)[0..w) = 0 で初期化する．
+*
+* add(int x1, int x2, int y1, int y2, int kx, int ky, T val) : O(1)
+*	set = {(i,j)∈[x1..x2)×[y1..y2) | i=kx (mod mx), j=ky (mod my)} とし a[set] += val とする準備を行う．
+*
+* void execute() : O(n)
+*	実際の加算を行う．
+*
+* T [](int x, int y) : O(1)
+*	a[x][y] を返す．
+*	制約 : 先に execute() を呼び出すこと．
+*/
+template <class T>
+class Thinning_imos_2D {
+	int h, w;
+	int mx, my; // 法
+
+	using vT = vector<T>;
+	using vvT = vector<vT>;
+
+	vvT v;
+	bool ex = false;
+
+public:
+	// 法を (mx, my) とし，a[0..h)[0..w) = 0 で初期化する．
+	Thinning_imos_2D(int h, int w, int mx, int my) : h(h), w(w), mx(mx), my(my), v(h + mx, vT(w + my)) {
+		// verify : https://atcoder.jp/contests/arc178/tasks/arc178_d
+	}
+	Thinning_imos_2D() : h(0), w(0), mx(1), my(1) {}
+
+	// アクセス
+	inline vT const& operator[](int i) const { return v[i]; }
+	inline vT& operator[](int i) { return v[i]; }
+
+	// set = {(i,j)∈[x1..x2)×[y1..y2) | i=kx (mod mx), j=ky (mod my)} とし a[set] += val とする準備を行う．
+	void add(int x1, int x2, int y1, int y2, int kx, int ky, T val) {
+		// verify : https://atcoder.jp/contests/arc178/tasks/arc178_d
+
+		chmax(x1, 0); chmin(x2, h); chmax(y1, 0); chmin(y2, w);
+		if (x1 >= x2 || y1 >= y2) return;
+
+		x1 += smod(kx - x1, mx);
+		x2 += smod(kx - x2, mx);
+		y1 += smod(ky - y1, my);
+		y2 += smod(ky - y2, my);
+
+		v[x1][y1] += val;
+		v[x1][y2] -= val;
+		v[x2][y1] -= val;
+		v[x2][y2] += val;
+	}
+
+	// 実際の加算を行う．
+	void execute() {
+		// verify : https://atcoder.jp/contests/arc178/tasks/arc178_d
+
+		rep(i, h) rep(j, w + my) v[i + mx][j] += v[i][j];
+		rep(i, h + mx) rep(j, w) v[i][j + my] += v[i][j];
+		ex = true;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Thinning_imos_2D a) {
+		if (!a.ex) a.execute();
+		rep(i, a.n) os << a[i] << " ";
+		return os;
+	}
+#endif
+};
+
+
 //【三次元いもす法（直方体）】
 /*
 * Imos_3D(int h, int w, int d) : O(h w d)

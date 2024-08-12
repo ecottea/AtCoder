@@ -1,13 +1,13 @@
 #pragma once
 #include "header.h"
-// ■■■■■ 列の管理 ■■■■■
+// ■■■■■ 列に対するクエリ処理 ■■■■■
 
 
-//【Mo's algorithm】O(n√q α + q log q)
+//【Mo's algorithm】O(n√q β + q log q)
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
-* 制約：両端の要素の追加 & 削除が O(α) で可能
+* 制約：両端の要素の追加 & 削除が O(β) で可能
 */
 template <class T, class S>
 void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, vector<S>& res) {
@@ -82,14 +82,14 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, vector<S>& res)
 }
 
 
-//【Mo's algorithm（非対称）】O(n√q α + q log q)
+//【Mo's algorithm（非対称）】O(n√q β + q log q)
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
-* 制約：両端の要素の追加 & 削除が O(α) で可能
+* 制約：両端の要素の追加 & 削除が O(β) で可能
 */
 template <class T, class S>
-vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r) {
+void mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r, vector<S> &res) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://judge.yosupo.jp/problem/static_range_inversions_query
 
@@ -103,7 +103,7 @@ vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r)
 	int n = sz(a), q = sz(l);
 	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	vector<S> res(q);
+	res.resize(q);
 
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
@@ -170,16 +170,14 @@ vector<S> mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r)
 		// 区間 [l[j]..r[j]) に対する解を得る．
 		res[j] = get_sol(j);
 	}
-
-	return res;
 }
 
 
-//【Mo's algorithm（rollback）】O(n√q α + q log q)
+//【Mo's algorithm（rollback）】O(n√q β + q log q)
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
-* 制約：両端の要素の追加が O(α) で可能，snapshot と rollback が O(α) 程度で可能
+* 制約：両端の要素の追加が O(β) で可能，snapshot と rollback が O(β) 程度で可能
 */
 template <class T, class S>
 void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector<S>& res) {
@@ -211,12 +209,12 @@ void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector
 	// -------------- ここを実装する（auto の方が速い） ----------------
 
 	// 区間を管理するデータ構造を用意する．
-	Rollback_Union_find data;
+	Rollback_union_find data;
 	bool sol = true;
 
 	// データ構造を初期化する．
 	auto init = [&]() {
-		data = Rollback_Union_find((int)2e5 + 10);
+		data = Rollback_union_find((int)2e5 + 10);
 		sol = true;
 	};
 
@@ -284,15 +282,15 @@ void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector
 }
 
 
-//【Mo's algorithm（マージ）】O(n√q α + q log q)
+//【Mo's algorithm（マージ）】O(n√q β + q log q)
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
-* 制約：右端の要素の追加が O(α) で可能，左右に分かれたデータ構造からの解の計算が O(√n) 程度で可能
+* 制約：右端の要素の追加が O(β) で可能，左右に分かれたデータ構造からの解の計算が O(√n) 程度で可能
 * 注意：データ構造そのもののマージが高速にできるのならセグメント木で十分．
 */
 template <class T, class S>
-vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
+void mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r, vector<S>& res) {
 	// verify : https://atcoder.jp/contests/pakencamp-2022-day1/tasks/pakencamp_2022_day1_k
 
 	//【方法】
@@ -305,7 +303,7 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 	int n = sz(a), q = sz(l);
 	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	vector<S> res(q);
+	res.resize(q);
 
 	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
 	vector<vector<pii>> lb_to_rj(sqrt_q);
@@ -333,7 +331,7 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 		
 	};
 
-	// クエリ j に対し，左[右] 側のデータ構造 data_l[data_r] を参照して解を求める．
+	// クエリ j に対し，左右のデータ構造を参照して解を求める．
 	auto get_sol = [&](int j) {
 
 	};
@@ -365,9 +363,432 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 			res[j] = get_sol(j);
 		}
 	}
-
-	return res;
 }
+
+
+//【Implicit Treap（可換モノイド）】
+/*
+* Implicit_treap<S, op, e>() : O(1)
+*	空で初期化する．
+*	要素は可換モノイド (S, op, e) の元とする．
+*
+* Implicit_treap<S, op, e>(vS a) : O(n log n)
+*	配列 a[0..n) で初期化する．
+*
+* bool empty() : O(1)
+*	空かを返す．
+*
+* int size() : O(1)
+*	要素数を返す．
+*
+* set(int i, S x) : O(log n)
+*	a[i] = x とする（なければ何もしない）
+*
+* S get(int i) : O(log n)
+*	a[i] を返す（なければ e() を返す）
+*
+* S sum(int l, int r) : O(log n)
+*	Σa[l..r) を返す（空なら e() を返す）
+*
+* int max_right(int l, function<bool(S)> g) : O(log n)
+*	g( Σa[l..r) ) = true となる最大の r を返す．
+*   制約：g( e() ) = true かつ g は単調
+*
+* int min_left(int r, function<bool(S)> g) : O(log n)
+*	g( Σa[l..r) ) = true となる最小の l を返す．
+*	制約：g( e() ) = true かつ g は単調
+*
+* insert(int i, S x) : O(log n)
+*	a[i] = x を挿入する（元々あった要素は右に移動する）
+*
+* erase(int i) : O(log n)
+*	a[i] の要素を削除し左詰めする（なければ何もしない）
+*
+* reverse(int l, int r) : O(log n)
+*	a[l..r) を左右反転する．
+*
+* rotate(int l, int m, int r) : O(log n)
+*	a[l..r) を，a[m] が先頭にくるよう巡回シフトする．
+*	制約：0 ≦ l ≦ m < r ≦ n
+*
+* Implicit_treap split(int key) : O(log n)
+*	自身から位置 key 以上の要素を切り出し，切り出してできた木を返す．
+*
+* void merge(Implicit_treap IT) : O(log n)
+*	自身の右側に IT をマージする．
+*
+* vS get_all() : O(n)
+*	全要素のリストを返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Implicit_treap {
+	// 参考 : https://xuzijian629.hatenablog.com/entry/2018/12/08/000452
+
+	inline static bool first_call = true;
+	inline static mt19937 rnd;
+
+	struct Node {
+		S value;				// 頂点の値
+		S acc;					// 部分木のノードの総和
+		unsigned int priority;	// ランダムに決めた優先度
+		int cnt;				// 部分木のノード数
+		bool rev;				// 部分木が反転されているか
+		Node* l, * r;			// 左右の子へのポインタ
+		Node(S value, unsigned int priority) : value(value), acc(e()), priority(priority),
+			cnt(1), rev(false), l(nullptr), r(nullptr) {}
+	};
+
+	Node* root;
+
+	// 部分木 t のノード数を返す．
+	int cnt(Node* t) {
+		return t ? t->cnt : 0;
+	}
+
+	// Σ(部分木 t) を返す．
+	S acc(Node* t) {
+		return t ? t->acc : e();
+	}
+
+	// 部分木 t の cnt と acc を更新する（子は更新済であること）
+	void pushup(Node* t) {
+		if (t) {
+			t->cnt = cnt(t->l) + 1 + cnt(t->r);
+			t->acc = op(acc(t->l), op(t->value, acc(t->r)));
+		}
+	}
+
+	// 遅延評価を適用する．
+	void pushdown(Node* t) {
+		// 部分木 t の反転フラグが true なら，実際に反転させた上で反転フラグを false にする．
+		if (t && t->rev) {
+			t->rev = false;
+			swap(t->l, t->r);
+
+			// t の子については反転フラグを flip しておくだけにする．
+			if (t->l) t->l->rev ^= 1;
+			if (t->r) t->r->rev ^= 1;
+		}
+
+		// 部分木 t の cnt と acc を更新する．
+		pushup(t);
+	}
+
+	// 部分木 t を位置 key 未満[以上] に分割し，それぞれの根へのポインタを l[ r ] に格納する．
+	void split(Node* t, int key, Node*& l, Node*& r) {
+		// 空なら分割しなくていい．
+		if (!t) {
+			l = r = nullptr;
+			return;
+		}
+
+		// t の情報を更新する．
+		pushdown(t);
+
+		// 部分木 t 内の自身の位置を得る．
+		int implicit_key = cnt(t->l);
+
+		if (key <= implicit_key) {
+			// 左の木を分割しその左側を l に採用する．小さくなった右側は t->l に繋ぎ直す．
+			split(t->l, key, l, t->l);
+			r = t;
+		}
+		else {
+			// 右の木を分割しその右側を r に採用する．小さくなった左側は t->r に繋ぎ直す．
+			split(t->r, key - implicit_key - 1, t->r, r);
+			l = t;
+		}
+
+		// 繋ぎ変えで部分木 t の cnt と acc が壊れたので更新する．
+		pushup(t);
+	}
+
+	// 部分木 l, r をこの順にマージした部分木を t に格納する．
+	void merge(Node*& t, Node* l, Node* r) {
+		// l, r の情報を更新する．
+		pushdown(l);
+		pushdown(r);
+
+		// 片方が空ならもう一方を根とすればよい．
+		if (!l) t = r;
+		else if (!r) t = l;
+		// 優先度が高い方を根とし，もう一方をその子とマージする．
+		else if (l->priority > r->priority) {
+			merge(l->r, l->r, r);
+			t = l;
+		}
+		else {
+			merge(r->l, l, r->l);
+			t = r;
+		}
+
+		// 部分木 t の cnt と acc を更新する．
+		pushup(t);
+	}
+
+	int max_right(Node* t, S x, int offset, const function<bool(S)>& g) {
+		if (!t) return offset;
+
+		// t の情報を更新する．
+		pushdown(t);
+
+		// 左の子の中に答えがあるなら左の子へ
+		if (t->l) {
+			S nx = op(x, t->l->acc);
+			if (!g(nx)) return max_right(t->l, x, offset, g);
+			x = nx;
+		}
+
+		// 自身が答えならそれを返す．
+		S nx = op(x, t->value);
+		if (!g(nx)) return offset + cnt(t->l);
+		x = nx;
+
+		// 右の子の中に答えがあるなら右の子へ
+		if (t->r) {
+			S nx = op(x, t->r->acc);
+			if (!g(nx)) return max_right(t->r, x, offset + cnt(t->l) + 1, g);
+			x = nx;
+		}
+
+		// どこにもないなら右端を返す．
+		return offset + cnt(t->l) + 1 + cnt(t->r);
+	}
+
+	int min_left(Node* t, S x, int offset, const function<bool(S)>& g) {
+		if (!t) return offset;
+
+		// t の情報を更新する．
+		pushdown(t);
+
+		// 右の子の中に答えがあるなら右の子へ
+		if (t->r) {
+			S nx = op(t->r->acc, x);
+			if (!g(nx)) return min_left(t->r, x, offset + cnt(t->l) + 1, g);
+			x = nx;
+		}
+
+		// 自身が答えならそれを返す．
+		S nx = op(t->value, x);
+		if (!g(nx)) return offset + cnt(t->l) + 1;
+		x = nx;
+
+		// 左の子の中に答えがあるなら左の子へ
+		if (t->l) {
+			S nx = op(t->l->acc, x);
+			if (!g(nx)) return min_left(t->l, x, offset, g);
+			x = nx;
+		}
+
+		// どこにもないなら左端を返す．
+		return offset;
+	}
+
+	void get_all(Node* t, vector<S>& seq) {
+		if (!t) return;
+		pushdown(t);
+		get_all(t->l, seq);
+		seq.emplace_back(t->value);
+		get_all(t->r, seq);
+	}
+
+public:
+	// 空で初期化する．
+	Implicit_treap() : root(nullptr) {
+		if (Implicit_treap::first_call) {
+			rnd = mt19937((int)time(NULL));
+			Implicit_treap::first_call = false;
+		}
+	}
+
+	// 配列 a[0..n) で初期化する．
+	Implicit_treap(const vector<S>& a) : root(nullptr) {
+		// verify : https://atcoder.jp/contests/code-festival-2015-morning-hard/tasks/cf_2015_morning_hard_c
+
+		if (Implicit_treap::first_call) {
+			rnd = mt19937((int)time(NULL));
+			Implicit_treap::first_call = false;
+		}
+
+		rep(i, sz(a)) insert(i, a[i]);
+	}
+
+	// 要素が空かを返す．
+	bool empty() {
+		return !(bool)root;
+	}
+
+	// 要素数を返す．
+	int size() {
+		return cnt(root);
+	}
+
+	// Σa[l..r) を返す（空なら e() を返す）
+	S sum(int l, int r) {
+		// verify : https://atcoder.jp/contests/code-festival-2015-morning-hard/tasks/cf_2015_morning_hard_c
+
+		if (l >= r) return e();
+
+		Node* lt, * mt, * rt;
+
+		// [l..r) に対応する部分木 mt を切り出してくる．
+		split(root, l, lt, rt);
+		split(rt, r - l, mt, rt);
+
+		// 値は既に acc に格納されている．
+		S res = acc(mt);
+
+		// 木を元に戻しておく．
+		merge(rt, mt, rt);
+		merge(root, lt, rt);
+
+		return res;
+	}
+
+	// a[i] を返す（なければ e() を返す）
+	S get(int i) {
+		// verify : https://atcoder.jp/contests/code-festival-2015-morning-hard/tasks/cf_2015_morning_hard_c
+
+		return sum(i, i + 1);
+	}
+
+	// a[i] = x とする．
+	void set(int i, S x) {
+		Node* lt, * mt, * rt;
+
+		// [i] に対応する部分木 mt を切り出してくる．
+		split(root, i, lt, rt);
+		split(rt, 1, mt, rt);
+
+		// 値を x に更新する．
+		if (mt) {
+			mt->value = x;
+			mt->acc = x;
+		}
+
+		// 木を元に戻しておく．
+		merge(rt, mt, rt);
+		merge(root, lt, rt);
+	}
+
+	// g( Σa[l..r) ) = true となる最大の r を返す．
+	int max_right(int l, const function<bool(S)>& g) {
+		// verify : https://atcoder.jp/contests/code-festival-2015-morning-hard/tasks/cf_2015_morning_hard_c
+
+		Node* lt, * rt;
+
+		// [l..n) に対応する部分木 rt を切り出してくる．
+		split(root, l, lt, rt);
+
+		// 部分木 rt が空なら l を返す
+		if (!rt) return l;
+
+		S x = e();
+		int res = max_right(rt, x, l, g);
+
+		// 木を元に戻しておく．
+		merge(root, lt, rt);
+
+		return res;
+	}
+
+	// g( Σa[l..r) ) = true となる最小の l を返す．
+	int min_left(int r, const function<bool(S)>& g) {
+		Node* lt, * rt;
+
+		// [0..r) に対応する部分木 lt を切り出してくる．
+		split(root, r, lt, rt);
+
+		S x = e();
+		int res = min_left(lt, x, 0, g);
+
+		// 木を元に戻しておく．
+		merge(root, lt, rt);
+
+		return res;
+	}
+
+	// a[i] = x を挿入する（元々あった要素は右に移動する）
+	void insert(int i, S x) {
+		// verify : https://atcoder.jp/contests/code-festival-2015-morning-hard/tasks/cf_2015_morning_hard_c
+
+		Node* lt, * rt;
+
+		// 一旦 i で分割し，x を挟んでからマージする．
+		split(root, i, lt, rt);
+		merge(lt, lt, new Node(x, rnd()));
+		merge(root, lt, rt);
+	}
+
+	// a[i] の要素を削除し左詰めする（なければ何もしない）
+	void erase(int i) {
+		Node* lt, * mt, * rt;
+
+		// i の前後で分割し，i だけ除いてマージする．
+		split(root, i + 1, lt, rt);
+		split(lt, i, lt, mt);
+		merge(root, lt, rt);
+	}
+
+	// a[l..r) を左右反転する．
+	void reverse(int l, int r) {
+		if (l >= r) return;
+
+		Node* lt, * mt, * rt;
+
+		// [l..r) に対応する部分木 mt を切り出してくる．
+		split(root, l, lt, rt);
+		split(rt, r - l, mt, rt);
+
+		// 反転フラグを flip する．
+		if (mt) mt->rev ^= 1;
+
+		// 木を元に戻しておく．
+		merge(rt, mt, rt);
+		merge(root, lt, rt);
+	}
+
+	// a[l..r) を，a[m] が先頭にくるよう巡回シフトする．
+	void rotate(int l, int m, int r) {
+		// verify : https://atcoder.jp/contests/code-festival-2015-morning-hard/tasks/cf_2015_morning_hard_c
+
+		// 全体を反転
+		reverse(l, r);
+
+		// 左右それぞれを反転
+		reverse(l, l + r - m);
+		reverse(l + r - m, r);
+	}
+
+	// 自身から位置 key 以上の要素を切り出し，切り出して出来た木を返す．
+	Implicit_treap split(int key) {
+		Node* l, * r;
+		split(root, key, l, r);
+		root = l;
+		Implicit_treap ret;
+		ret.root = r;
+		return ret;
+	}
+
+	// 自身の右側に IT をマージする．
+	void merge(Implicit_treap& IT) {
+		merge(root, root, IT.root);
+	}
+
+	// 全要素のリストを返す．
+	vector<S> get_all() {
+		vector<S> seq;
+		get_all(root, seq);
+		return seq;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Implicit_treap& IT) {
+		os << IT.get_all();
+		return os;
+	}
+#endif
+};
 
 
 //【Implicit Treap（M-可換モノイド）】
@@ -385,10 +806,13 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 * int size() : O(1)
 *	要素数を返す．
 *
+* set(int i, S x) : O(log n)
+*	a[i] = x とする（なければ何もしない）
+*
 * S get(int i) : O(log n)
 *	a[i] を返す（なければ e() を返す）
 *
-* S prod(int l, int r) : O(log n)
+* S sum(int l, int r) : O(log n)
 *	Σa[l..r) を返す（空なら e() を返す）
 *
 * apply(int i, F f) : O(log n)
@@ -416,9 +840,10 @@ vector<S> mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r) {
 *
 * rotate(int l, int m, int r) : O(log n)
 *	a[l..r) を，a[m] が先頭にくるよう巡回シフトする．
+*	制約：0 ≦ l ≦ m < r ≦ n
 *
 * Implicit_treap split(int key) : O(log n)
-*	自身から位置 key 以上の要素を切り出し，切り出して出来た木を返す．
+*	自身から位置 key 以上の要素を切り出し，切り出してできた木を返す．
 *
 * void merge(Implicit_treap IT) : O(log n)
 *	自身の右側に IT をマージする．
@@ -601,7 +1026,7 @@ class Implicit_treap {
 
 		// 自身が答えならそれを返す．
 		S nx = op(t->value, x);
-		if (!g(nx)) return offset + cnt(t->l);
+		if (!g(nx)) return offset + cnt(t->l) + 1;
 		x = nx;
 
 		// 左の子の中に答えがあるなら左の子へ
@@ -658,6 +1083,26 @@ public:
 		return cnt(root);
 	}
 
+	// a[i] = x とする．
+	void set(int i, S x) {
+		Node* lt, * mt, * rt;
+
+		// [i] に対応する部分木 mt を切り出してくる．
+		split(root, i, lt, rt);
+		split(rt, 1, mt, rt);
+
+		// 値を x に更新する．
+		if (mt) {
+			mt->lazy = id();
+			mt->value = x;
+			mt->acc = x;
+		}
+
+		// 木を元に戻しておく．
+		merge(rt, mt, rt);
+		merge(root, lt, rt);
+	}
+
 	// a[l..r) = f( a[l..r) ) とする（空なら何もしない）
 	void apply(int l, int r, F f) {
 		// verify : https://judge.yosupo.jp/problem/dynamic_sequence_range_affine_range_sum
@@ -687,7 +1132,7 @@ public:
 	}
 
 	// Σa[l..r) を返す（空なら e() を返す）
-	S prod(int l, int r) {
+	S sum(int l, int r) {
 		// verify : https://judge.yosupo.jp/problem/dynamic_sequence_range_affine_range_sum
 
 		if (l >= r) return e();
@@ -712,7 +1157,7 @@ public:
 	S get(int i) {
 		// verify : https://www.spoj.com/problems/IITWPC4D/
 
-		return prod(i, i + 1);
+		return sum(i, i + 1);
 	}
 
 	// g( Σa[l..r) ) = true となる最大の r を返す．
@@ -723,6 +1168,9 @@ public:
 
 		// [l..n) に対応する部分木 rt を切り出してくる．
 		split(root, l, lt, rt);
+
+		// 部分木 rt が空なら l を返す
+		if (!rt) return l;
 
 		S x = e();
 		int res = max_right(rt, x, l, g);
@@ -786,7 +1234,7 @@ public:
 		split(rt, r - l, mt, rt);
 
 		// 反転フラグを flip する．
-		mt->rev ^= 1;
+		if (mt) mt->rev ^= 1;
 
 		// 木を元に戻しておく．
 		merge(rt, mt, rt);
@@ -1479,7 +1927,7 @@ public:
 	void push_back(T x) {
 		// verify : https://codeforces.com/contest/1900/problem/F
 
-		history.emplace(PUSH_BACK, 0);
+		history.emplace(PUSH_BACK, x); // 後ろの引数はダミー
 		a.push_back(x);
 	}
 
@@ -1497,7 +1945,7 @@ public:
 	void push_front(T x) {
 		// verify : https://codeforces.com/contest/1900/problem/F
 
-		history.emplace(PUSH_FRONT, 0);
+		history.emplace(PUSH_FRONT, x); // 後ろの引数はダミー
 		a.push_front(x);
 	}
 
@@ -1533,7 +1981,7 @@ public:
 	void snapshot() {
 		// verify : https://codeforces.com/contest/1900/problem/F
 
-		history.emplace(SNAPSHOT, 0);
+		history.emplace(SNAPSHOT, T()); // 後ろの引数はダミー
 	}
 
 	// 直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．

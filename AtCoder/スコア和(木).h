@@ -7,62 +7,150 @@
 //【2 点間距離の和】O(n)
 /*
 * 木 g の全ての 2 点の組についての距離の総和を返す．
-*
-* 利用：【貰う木 DP（頂点マージ）】
 */
-using T_ds = pll; // (距離への寄与の和, 頂点の数)
-int n_ds;
-void merge_ds(T_ds& x, const T_ds& y, int s) { x.first += y.first; x.second += y.second - 1; }
-T_ds leaf_ds(int s) { return { 0, 1 }; }
-T_ds apply_ds(const T_ds& x, int s, int t) {
-	return { x.first + x.second * (n_ds - x.second), x.second + 1 };
-}
 ll distance_sum(const Graph& g) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_am
 
-	n_ds = sz(g);
-	auto dp = tree_getDP_vmerge<T_ds, merge_ds, leaf_ds, apply_ds>(g, 0);
-	return dp[0].first;
+	int n = sz(g);
+	if (n == 0) return 0;
+
+	ll res = 0;
+
+	// g を頂点 0 を根とする根付き木とみなしたときの部分木 s の頂点数を返す．
+	function<int(int, int)> dfs = [&](int s, int p) {
+		int w = 1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			auto w2 = dfs(t, s);
+
+			// 辺 s-t の寄与は (s 側の頂点数)×(t 側の頂点数)
+			res += (ll)(n - w2) * w2;
+
+			w += w2;
+		}
+		return w;
+	};
+	dfs(0, -1);
+
+	return res;
 }
 
 
-//【2 点間距離の和（部分木内）】O(n)
+//【2 点間距離の和（重み付き）】O(n)
+/*
+* 木 g の全ての 2 点の組についての距離の総和を返す．
+*/
+template <class T>
+T distance_sum(const WGraph& g) {
+	// verify : https://yukicoder.me/problems/no/1207
+
+	int n = sz(g);
+	if (n == 0) return T(0);
+
+	T res = 0;
+
+	// g を頂点 0 を根とする根付き木とみなしたときの部分木 s の頂点数を返す．
+	function<int(int, int)> dfs = [&](int s, int p) {
+		int w = 1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			auto w2 = dfs(t, s);
+
+			// 辺 s-t の寄与は (s 側の頂点数)×(t 側の頂点数)
+			res += (T)t.cost * (n - w2) * w2;
+
+			w += w2;
+		}
+		return w;
+	};
+	dfs(0, -1);
+
+	return res;
+}
+
+
+//【2 点間距離の和（2 色）】O(n)
+/*
+* 木 g の col[s]=col[t]=1 である全ての 2 点の組 (s,t) についての距離の総和を返す．
+*/
+ll distance_sum(const Graph& g, const vi& col) {
+	// verify : https://atcoder.jp/contests/abc359/tasks/abc359_g
+
+	int n = sz(g);
+	if (n == 0) return 0;
+
+	int col_sum = 0;
+	rep(s, n) col_sum += (col[s] == 1);
+
+	ll res = 0;
+
+	// g を頂点 0 を根とする根付き木とみなしたときの部分木 s の頂点数を返す．
+	function<int(int, int)> dfs = [&](int s, int p) {
+		int w = col[s];
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			auto w2 = dfs(t, s);
+
+			// 辺 s-t の寄与は (s 側の頂点数)×(t 側の頂点数)
+			res += (ll)(col_sum - w2) * w2;
+
+			w += w2;
+		}
+		return w;
+	};
+	dfs(0, -1);
+
+	return res;
+}
+
+
+//【2 点間距離の和（色付き）】O(n log n)
+/*
+* 色毎に木を座標圧縮する，1/3 重心分解するなどすれば良い．
+* 
+* verify : https://atcoder.jp/contests/abc359/tasks/abc359_g
+*/
+
+
+//【2 点間距離の和（部分木）】O(n)
 /*
 * 与えられた r を根とする木 g に対し，各 s∈[0..n) について，
 * 部分木 s の全ての 2 点の組についての距離の総和を格納したリストを返す．
 *
-* 利用：【貰う木 DP（頂点マージ）】
+* 利用：【貰う木 DP】
 */
-using T_dss = tuple<ll, ll, ll>; // (距離の総和，根から子孫への距離の和, 頂点の数)
-void merge_dss(T_dss& x, const T_dss& y, int s) {
-	auto [ds_x, ds2_x, cnt_x] = x;
-	auto [ds_y, ds2_y, cnt_y] = y;
-
-	ll nds = ds_x + ds_y + ds2_x * (cnt_y - 1) + ds2_y * (cnt_x - 1);
-	ll nds2 = ds2_x + ds2_y;
-	ll ncnt = cnt_x + cnt_y - 1;
-
-	x = { nds, nds2, ncnt };
+struct T_dss {
+	ll s; // 距離の総和
+	ll r; // 根から子孫への距離の和
+	ll c; // 頂点の数
+};
+T_dss leaf_dss(int s) {
+	return { 0, 0, 1 };
 }
-T_dss leaf_dss(int s) { return { 0, 0, 1 }; }
-T_dss apply_dss(const T_dss& x, int s, int t) {
-	auto [ds, ds2, cnt] = x;
-
-	ll nds = ds + ds2 + cnt;
-	ll nds2 = ds2 + cnt;
-	ll ncnt = cnt + 1;
-
-	return { nds, nds2, ncnt };
+T_dss add_edge_dss(const T_dss& x, int p, int s) {
+	return T_dss{ x.s + x.r + x.c, x.r + x.c, x.c };
+}
+void merge_dss(T_dss& x, const T_dss& y, int s) {
+	x.s += y.s + x.r * y.c + y.r * x.c;
+	x.r += y.r;
+	x.c += y.c;
+}
+void add_vertex_dss(T_dss& x, int s) {
+	x.c += 1;
 }
 vl distance_sum_subtree(const Graph& g, int r) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_am
 
 	int n = sz(g);
+
 	vl res(n);
 
-	auto dp = tree_getDP_vmerge<T_dss, merge_dss, leaf_dss, apply_dss>(g, r);
+	auto dp = tree_getDP<T_dss, leaf_dss, add_edge_dss, merge_dss, add_vertex_dss>(g, r);
+	rep(s, n) res[s] = dp[s].s;
 
-	rep(s, n) res[s] = get<0>(dp[s]);
 	return res;
 }
 
@@ -74,44 +162,33 @@ vl distance_sum_subtree(const Graph& g, int r) {
 *
 * 利用：【全方位木 DP】
 */
-using T_ds = pll; // (根からの距離の和, 頂点の数)
-T_ds merge_ds(T_ds x, T_ds y, int s) { return { x.first + y.first, x.second + y.second - 1 }; }
-T_ds leaf_ds(int s) { return { 0, 1 }; }
-T_ds apply_ds(T_ds x, int s, int t) { return { x.first + x.second, x.second + 1 }; }
+struct T_dse {
+	ll r; // 根からの距離の和
+	ll c; // 頂点の数
+};
+T_dse leaf_dse(int s) {
+	return { 0, 1 };
+}
+T_dse add_edge_dse(const T_dse& x, int p, int s) {
+	return T_dse{ x.r + x.c, x.c };
+}
+T_dse merge_dse(const T_dse& x, const T_dse& y, int s) {
+	return T_dse{ x.r + y.r, x.c + y.c };
+}
+T_dse add_vertex_dse(const T_dse& x, int s) {
+	return T_dse{ x.r, x.c + 1 };
+}
 vl distance_sum_endpoint(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc220/tasks/abc220_f
 
 	int n = sz(g);
 
-	auto tmp = rerooting<T_ds, merge_ds, leaf_ds, apply_ds>(g);
-
 	vl res(n);
-	rep(i, n) res[i] = tmp[i].first;
+
+	auto dp = rerooting<T_dse, leaf_dse, add_edge_dse, merge_dse, add_vertex_dse>(g);
+	rep(s, n) res[s] = dp[s].r;
 
 	return res;
-}
-
-
-//【2 点間距離の和（重み付き）】O(n)
-/*
-* 重み付き木 g の全ての 2 点の組についての距離の総和を返す．
-*
-* 利用：【貰う木 DP（頂点マージ，重み付き）】
-*/
-using S_dsw = mint;
-using T_dsw = pair<S_dsw, int>; // (距離への寄与の和, 頂点の数)
-int n_dsw;
-void merge_dsw(T_dsw& x, const T_dsw& y, int s) { x.first += y.first; x.second += y.second - 1; }
-T_dsw leaf_dsw(int s) { return { 0, 1 }; }
-T_dsw apply_dsw(const T_dsw& x, int s, int t, ll c) {
-	return { x.first + S_dsw(c) * x.second * (n_dsw - x.second), x.second + 1 };
-}
-S_dsw distance_sum(const WGraph& g) {
-	// verify : https://yukicoder.me/problems/no/1207
-
-	n_dsw = sz(g);
-	auto dp = tree_getDP_vmerge<T_dsw, merge_dsw, leaf_dsw, apply_dsw>(g, 0);
-	return dp[0].first;
 }
 
 

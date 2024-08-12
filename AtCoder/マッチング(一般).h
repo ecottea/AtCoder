@@ -19,6 +19,126 @@
 */
 
 
+//【最大マッチング】O(2^n n)
+/*
+* 与えられた無向グラフ g の最大マッチングの大きさを返す．
+*
+*（bit DP）
+*/
+int maximum_matching(const Graph& g) {
+	int n = sz(g);
+
+	// adj[s][t] : g が辺 s-t をもつか
+	vvb adj(n, vb(n));
+	rep(s, n) repe(t, g[s]) if (s != t) adj[s][t] = true;
+
+	// dp[set] : 誘導部分グラフ g[set] に完全マッチングが存在するか
+	vb dp(1LL << n);
+	dp[0] = 1;
+
+	// 貰う DP
+	repb(set, n) {
+		if (set == 0) continue;
+
+		// s : set で最も番号の小さい頂点
+		int s = lsb(set);
+
+		// t : s とペアになる set の頂点
+		int set2 = set - (1 << s);
+		repis(t, set2) {
+			if (!adj[s][t]) continue;
+			dp[set] = dp[set] || dp[set2 - (1 << t)];
+		}
+	}
+
+	int res = 0;
+	repb(set, n) if (dp[set]) chmax(res, popcount(set));
+
+	return res / 2;
+}
+
+
+//【functional graph の最大マッチング】O(n)
+/*
+* 与えられた f[0..n) について，辺 i→f[i] をもつグラフの最大マッチングの大きさを返す．
+*/
+int functional_graph_maximum_matching(const vi& f) {
+	// verify : https://projecteuler.net/problem=871
+
+	int n = sz(f);
+
+	int res = 0;
+
+	vb seen(n);
+
+	// dp[s] : その頂点をマッチングに使うか
+	vb dp(n);
+
+	// in_deg[s] : 頂点 s の入次数
+	vi in_deg(n);
+	rep(s, n) in_deg[f[s]]++;
+
+	// 入次数 0 の頂点を入れておくキュー
+	queue<int> q;
+	rep(s, n) if (in_deg[s] == 0) q.push(s);
+
+	// 入次数 0 の頂点から順にマッチングに利用するか決めていく．
+	while (!q.empty()) {
+		int s = q.front(); q.pop();
+		seen[s] = true;
+
+		int t = f[s];
+
+		// s をマッチングに使用していない場合，貪欲に s-t をマッチして損はしない．
+		if (!dp[t] && !dp[s]) {
+			dp[s] = true;
+			dp[t] = true;
+			res++;
+		}
+
+		// 辺 s→t を除去し，t の入次数を更新する．
+		in_deg[t]--;
+		if (in_deg[t] == 0) q.push(t);
+	}
+
+	// 頂点 st を含むサイクルを調べる．
+	rep(st, n) {
+		// 非サイクルまたはチェック済のサイクルなら何もしない．
+		if (seen[st]) continue;
+
+		// 自己ループはマッチングに使えない．
+		if (f[st] == st) {
+			seen[st] = true;
+			continue;
+		}
+
+		// マッチングに使用できない頂点 s0 から調べ始める．
+		int s0 = st;
+		do {
+			if (dp[s0]) break;
+			s0 = f[s0];
+		} while (s0 != st);
+
+		int s = s0;
+		do {
+			seen[s] = true;
+			int t = f[s];
+
+			// サイクル内にマッチングに使用しない頂点が 2 つ連続している場合，貪欲にマッチさせる．
+			if (!dp[s] && !dp[t]) {
+				dp[s] = true;
+				dp[t] = true;
+				res++;
+			}
+
+			s = t;
+		} while (s != s0);
+	}
+
+	return res;
+}
+
+
 //【最小コスト完全マッチング（隣接行列）】O(1.618^n n)
 /*
 * 重み付き対称隣接行列 c[0..n)[0..n) が表す無向グラフ g の完全マッチングの最小コストを返す．
@@ -60,7 +180,7 @@ T minimum_cost_matching(const vector<vector<T>>& c) {
 
 //【最小コストマッチング】O(2^n n)
 /*
-* 与えられた重み付きグラフ g に対し，各頂点集合 set⊂[0..n) について，
+* 与えられた重み付き無向グラフ g に対し，各頂点集合 set⊂[0..n) について，
 * 誘導部分グラフ g[set] の完全マッチングの最小コストを格納したリストを返す．
 *
 *（bit DP）
@@ -281,7 +401,7 @@ vector<vector<pair<T, T>>> enumerate_perfect_matching(const vector<T>& v) {
 }
 
 
-//【マッチングの列挙（大きさ毎）】O(√perm(n, 2k) k)
+//【マッチングの列挙（大きさ指定）】O(√perm(n, 2k) k)
 /*
 * 無向グラフ g の大きさ k のマッチング全てのリストを返す．
 * マッチングは n 個の頂点対のリストとして表す．

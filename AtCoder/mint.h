@@ -146,7 +146,7 @@ struct mll {
 };
 
 
-//【乗除算（32 bit，法が任意）】
+//【除算可能 mint】
 /*
 * set_mod(ll m) : O(√m)
 *	法を m に設定する．
@@ -338,6 +338,171 @@ public:
 		return os;
 	}
 #endif
+};
+
+
+//【累乗可能 mint】
+/*
+* set_mod(int m) : O(√m log m)
+*	法を m に設定する．
+*	制約：m ≧ 2，インスタンスの生成前に呼び出すこと．
+*
+* Powerable_mint(ll x = 0) : O(log m)
+*	値 x で初期化する．
+*	制約：x ≧ 0
+*
+* x + y, x - y, x * y : O(log m)
+*	和，差，積を返す．複合代入演算子も使用可．
+*	制約：差では負数になってはいけない
+*
+* Powerable_mint pow(Powerable_mint b) : O((log m)^2)
+*	自身の b 乗を返す．
+*	制約：b ≧ 0
+*
+* int val() : O(1)
+*	m を法とした値を返す．
+*
+* 利用：【カーマイケル関数】
+*/
+class Powerable_mint {
+	static constexpr int lim = 31;
+
+	static inline int K;
+	static inline vl mods;
+
+	int sml;
+	vl vals;
+
+	// a^n (mod m) を返す．
+	static ll pow_mod(ll a, ll n, ll m) {
+		ll res = 1, pow_a = a;
+		while (n > 0) {
+			if (n & 1) res = (res * pow_a) % m;
+			pow_a = (pow_a * pow_a) % m;
+			n /= 2;
+		}
+		return res;
+	}
+
+	// min(a^n, lim) を返す．
+	static int truncated_pow(int a, int n) {
+		if (n == 0 || a == 1) return 1;
+		if (a == 0) return 0;
+
+		int val = 1;
+		rep(i, n) {
+			if (val * a >= lim) return lim;
+			val *= a;
+		}
+
+		return val;
+	}
+
+public:
+	// 法を m に設定する．
+	static void set_mod(int m) {
+		// verify : https://judge.yosupo.jp/problem/tetration_mod
+
+		mods.clear();
+
+		// 素因数分解した形のまま計算すれば高速
+		while (m >= 2) {
+			mods.push_back(m);
+			m = (int)carmichael_lambda(m);
+		}
+		K = sz(mods);
+	}
+
+	// 値 x で初期化する．
+	Powerable_mint(ll x) : sml((int)min<ll>(x, lim)), vals(K) {
+		// verify : https://judge.yosupo.jp/problem/tetration_mod
+
+		rep(k, K) vals[k] = x % mods[k];
+	}
+
+	// 値 0 で初期化する．
+	Powerable_mint() : sml(0), vals(K) {}
+
+	// 代入
+	Powerable_mint& operator=(const Powerable_mint& a) = default;
+
+	// 入力
+	friend istream& operator>>(istream& is, Powerable_mint& a) {
+		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_e
+
+		ll x;
+		is >> x;
+		a = Powerable_mint(x);
+		return is;
+	}
+
+	// 出力
+	friend ostream& operator<<(ostream& os, const Powerable_mint& a) {
+		// verify : https://atcoder.jp/contests/abc228/tasks/abc228_e
+
+		os << a.vals[0];
+		return os;
+	}
+
+	// 加算
+	Powerable_mint& operator+=(const Powerable_mint& b) {
+		// verify : https://projecteuler.net/problem=396
+
+		sml = min(sml + b.sml, lim);
+		rep(k, K) {
+			vals[k] += b.vals[k];
+			if (vals[k] >= mods[k]) vals[k] -= mods[k];
+		}
+		return *this;
+	}
+	friend Powerable_mint operator+(Powerable_mint a, const Powerable_mint& b) { a += b; return a; }
+
+	// 減算
+	Powerable_mint& operator-=(const Powerable_mint& b) {
+		// verify : https://projecteuler.net/problem=396
+
+		if (sml != lim && b.sml != lim) sml -= b.sml;
+		rep(k, K) {
+			vals[k] -= b.vals[k];
+			if (vals[k] < 0) vals[k] += mods[k];
+		}
+		return *this;
+	}
+	friend Powerable_mint operator-(Powerable_mint a, const Powerable_mint& b) { a -= b; return a; }
+
+	// 乗算
+	Powerable_mint& operator*=(const Powerable_mint& b) {
+		// verify : https://projecteuler.net/problem=396
+
+		sml = min(sml * b.sml, lim);
+		rep(k, K) {
+			vals[k] = vals[k] * b.vals[k] % mods[k];
+		}
+		return *this;
+	}
+	friend Powerable_mint operator*(Powerable_mint a, const Powerable_mint& b) { a *= b; return a; }
+
+	// 累乗
+	Powerable_mint pow(const Powerable_mint& b) const {
+		// verify : https://judge.yosupo.jp/problem/tetration_mod
+
+		if (b.sml == 0) return Powerable_mint(1);
+		if (sml <= 1) return *this;
+
+		Powerable_mint res(*this);
+		res.sml = Powerable_mint::truncated_pow(sml, b.sml);
+		rep(k, K - 1) {
+			ll e = b.sml != lim ? (ll)b.sml : (lim + smod(b.vals[k + 1] - lim, mods[k + 1]));
+			res.vals[k] = Powerable_mint::pow_mod(vals[k], e, mods[k]);
+		}
+
+		return res;
+	}
+
+	// 値の確認
+	int val() const {
+		return int(vals[0]);
+	}
 };
 
 

@@ -930,7 +930,7 @@ pll from_continued_fraction(const vl& seq) {
 
 //【真分数 → 循環小数】O(m)
 /*
-* 真分数 n / m の非循環部分の桁の数を noncycle に，
+* 真分数 n/m の非循環部分の桁の数を noncycle に，
 * 循環部分の桁の数を cycle にそれぞれ格納する．
 */
 void real_digits(int n, int m, vi& noncycle, vi& cycle, int base = 10) {
@@ -972,7 +972,7 @@ void real_digits(int n, int m, vi& noncycle, vi& cycle, int base = 10) {
 //【循環小数 → 真分数】O(m)
 /*
 * 非循環部分の桁の数が noncycle，循環部分の桁の数が cycle であるような
-* 既約真分数 frac = n / m を {n, m} の形式で返す．
+* 既約真分数 frac = n/m を {n, m} の形式で返す．
 */
 pll from_real_digits(const vi& noncycle, const vi& cycle, int base = 10) {
 	// n_nc, m_nc : 非循環部分の分子，分母
@@ -1012,8 +1012,8 @@ pll from_real_digits(const vi& noncycle, const vi& cycle, int base = 10) {
 
 //【[非]循環節の長さ】
 /*
-* 有理数 r を既約分数表示したものを n/m とするとき，r を 10 進小数表記したとき
-*	(r の非循環節の長さ) = max(ord_2(m), ord_5(m))（ord_p(m) は m のもつ素因数 p の個数）
+* 有理数 r を既約分数表示したものを n/m とするとき，r の 10 進小数表示において
+*	(r の非循環節の長さ) = max(ord_2(m), ord_5(m)) （ord_p(m) は m のもつ素因数 p の個数）
 * である．また
 *	m' = m / (2^ord_2(m) * 5^ord_5(m))
 * とおくと，
@@ -1052,15 +1052,15 @@ int real_digit(int num, int dnm, ll n, int b = 10) {
 	//		dnm x + r = num * b^n  (mod (dnm b))
 	// を得る．
 	//
-	// x は桁の数より 0 <= x < b ⇔ 0 <= x <= b - 1 である．
-	// また r は dnm で割った余りより 0 <= r < dnm である．
+	// x は桁の数より 0 ≦ x ≦ b - 1 である．
+	// また r は dnm で割った余りより 0 ≦ r < dnm である．
 	// 両者より左辺は
-	//		0 <= dnm x + r < dnm (b - 1) + dnm = dnm b
+	//		0 ≦ dnm x + r < dnm (b - 1) + dnm = dnm b
 	// と評価できるから，
-	//		y = num * b^n mod (dnm b)
+	//		y = (num * b^n) mod (dnm b)
 	// とおくと，
 	//		x = (y - r) / dnm = y / dnm - r / dnm
-	// である．0 <= r < dnm であったから，これはより簡潔に
+	// である．0 ≦ r < dnm であったから，これはより簡潔に
 	//		x = floor(y / dnm)
 	// と表される．
 

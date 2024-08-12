@@ -281,6 +281,116 @@ pii floyds_cycle_finding(const function<T(T)>& f, T a0) {
 }
 
 
+//【周期列の分割】
+/*
+* Periodic_sequence_split<T>(vT a0, vT a1) : O(n)
+*	A = a0[0..n0) + a1[0..n1)*∞ なる数列 A[0..∞) で初期化する．
+*
+* Periodic_sequence_split<T>(vT a, int n0) : O(n)
+*	A = a[0..n0) + a[n0..n)*∞ なる数列 A[0..∞) で初期化する．
+*
+* Periodic_sequence_split<T>(T A0, function<T(T)>& f) : O(n)
+*	A[0] = A0, A[i+1] = f(A[i]) なる数列 A[0..∞) で初期化する．
+*
+* tuple<vT, vT, ll, vT> split(ll l, ll r) : O(n)
+*	A[l..r) = A0 + A1×k + A2 なる (A0, A1, k, A2) を返す．
+*/
+template <class T>
+class Periodic_sequence_split {
+	// n0 : 非周期部分の長さ，n1 : 周期部分の長さ
+	int n0, n1;
+
+	// a0[i] : A[i], a1[i] : A[i - n0]
+	using vT = vector<T>;
+	vT a0, a1;
+
+public:
+	// A = a0[0..n0) + a1[0..n1)*∞ なる数列 A[0..∞) で初期化する．
+	Periodic_sequence_split(const vT& a0, const vT& a1) : n0(sz(a0)), n1(sz(a1)), a0(a0), a1(a1) {
+
+	}
+
+	// A[0..∞) = a[0..n0) + a[n0..n)*∞ なる無限数列 A で初期化する．
+	Periodic_sequence_split(const vT& a, int n0) : n0(n0), n1(sz(a) - n0) {
+		// verify : https://projecteuler.net/problem=888
+
+		a0 = vT(a.begin(), a.begin() + n0);
+		a1 = vT(a.begin() + n0, a.end());
+	}
+
+	// A[0] = A0, A[i+1] = f(A[i]) なる数列 A[0..∞) で初期化する．
+	Periodic_sequence_split(const T& A0, const function<T(T)>& f) {
+		T x = A0, y = A0;
+		do {
+			x = f(x);
+			y = f(f(y));
+		} while (x != y);
+
+		x = A0;
+		n0 = 0;
+		while (x != y) {
+			a0.emplace_back(x);
+			x = f(x);
+			y = f(y);
+			n0++;
+		}
+
+		n1 = 0;
+		do {
+			a1.emplace_back(x);
+			x = f(x);
+			y = f(f(y));
+			n1++;
+		} while (x != y);
+	}
+
+	// A[l..r) = A0 + A1×k + A2 なる (A0, A1, k, A2) を返す．
+	tuple<vT, vT, ll, vT> split(ll l, ll r) {
+		// verify : https://projecteuler.net/problem=888
+		
+		vT A0;
+		ll l_ub = min<ll>(n0, r);
+		for (; l < l_ub; l++) A0.emplace_back(a0[l]);
+
+		ll k = (r - l) / n1;
+		vT A1;
+		int i0 = (int)((l - n0) % n1), i = i0;
+		if (k > 0) {
+			do {
+				A1.emplace_back(a1[i]);
+				i++;
+				if (i == n1) i = 0;
+			} while (i != i0);
+		}
+
+		vT A2;
+		int i_end = (int)((r - l) % n1);
+		while (i != i_end) {
+			A2.emplace_back(a1[i]);
+			i++;
+			if (i == n1) i = 0;
+		}
+
+		return { A0, A1, k, A2 };
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Periodic_sequence_split& P) {
+		rep(i, P.n0) os << a0[i] << " "; os << "[";
+		rep(i, P.n1) os << a1[i] << " ]"[i == P.n1 - 1]; os << endl;
+		return os;
+	}
+#endif
+
+	/* f の定義の雛形
+	using T = int;
+	function<T(T)> f = [&](T x) {
+		return 0;
+	};
+	*/
+};
+
+
 //【列の周期の候補】O(n)
 /*
 * 与えられた列 a[0..n) に対し，a[n-2t..n-t) = a[n-t..n) を満たす t を

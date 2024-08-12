@@ -347,7 +347,7 @@ bool coefficient(BFPS<N> f, const BFPS<N>& g, const BFPS<N>& h, ll m, ll d) {
 }
 
 
-//yüŒ`‘Q‰»®zO(d log d log n / 64)
+//yüŒ`‘Q‰»®zO(d^2 log n / 64)
 /*
 * ‰€ a[0..d) ‚Æ‘Q‰»® a[i] = ƒ°j=[0..d) c[j]a[i-1-j] ‚Å’è‹`‚³‚ê‚é
 * ”—ñ a ‚É‚Â‚¢‚ÄCa[n] ‚Ì’l‚ğ•Ô‚·D
@@ -494,7 +494,7 @@ ll pow_exponent_XOR(BFPS<N> f, const BFPS<N>& g, ll m) {
 * §–ñFdeg f … deg g, 2 deg g < N
 */
 template <int N>
-ll count_pow_terms(const BFPS<N>& f, const BFPS<N>& g, ll m) {
+ll count_pow_terms(BFPS<N> f, const BFPS<N>& g, ll m) {
 	// verify : https://projecteuler.net/problem=588
 
 	//y•û–@z

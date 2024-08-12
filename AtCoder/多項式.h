@@ -5,14 +5,14 @@
 
 //【一次多項式】
 /*
-* Poly1<t>() : O(1)
-*	零多項式 f(x) = 0 で初期化する．
+* Poly1<T>() : O(1)
+*	零多項式 f(z) = 0 で初期化する．
 *
-* Poly1<t>(T b) : O(1)
-*	定数多項式 f(x) = b で初期化する．
+* Poly1<T>(T b) : O(1)
+*	定数多項式 f(z) = b で初期化する．
 *
-* Poly1<t>(T a, T b) : O(1)
-*	f(x) = a x + b で初期化する．
+* Poly1<T>(T a, T b) : O(1)
+*	f(z) = a z + b で初期化する．
 *
 * c + f, f + c, f + g : O(1)
 * f - c, c - f, f - g : O(1)
@@ -22,11 +22,14 @@
 * T f.assign(T c) : O(1)
 *	f(c) を返す．
 *
+* Poly1 f.assign(Poly1 g) : O(1)
+*	f(g(z)) を返す．
+*
 * double f.solve() : O(1)
-*	f(x) = 0 の解を返す．
+*	f(z) = 0 の解を返す．
 *
 * double f.solve(Poly1 g) : O(1)
-*	f(x) = g(x) の解を返す．
+*	f(z) = g(z) の解を返す．
 */
 template <class T>
 struct Poly1 {
@@ -72,7 +75,14 @@ struct Poly1 {
 	Poly1 operator-() const { return Poly1(*this) *= -1; }
 
 	// 不定元への代入
-	T assign(const T& x) const { return a * x + b; }
+	T assign(const T& c) const {
+		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
+	
+		return a * c + b;
+	}
+	Poly1 assign(const Poly1& g) const { 
+		return Poly1(a * g.a, a * g.b + b);
+	}
 
 	// 一次方程式を解く
 	double solve() const { return -(double)b / a; }
@@ -80,7 +90,7 @@ struct Poly1 {
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Poly1& f) {
-		os << f.a << " x + " << f.b; return os;
+		os << f.a << " z + " << f.b; return os;
 	}
 #endif
 };

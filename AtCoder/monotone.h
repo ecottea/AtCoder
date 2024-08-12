@@ -376,7 +376,7 @@ vector<T> lowest_cost_path_monge_DAG(int n, const FUNC& c, T T_INF = INFL) {
 * で与えられる DAG における 0 から n への長さ D のパスの最小コストを返す．
 * c_max は c(s,t) の最大値とする．
 *
-* 利用：【Monge コスト完全 DAG 最短路】,【三分探索（上に凸）】
+* 利用：【Monge コスト完全 DAG 最短路】,【三分探索（最大値）】
 */
 template <class T, class FUNC>
 T alien_DP(int n, int D, const FUNC& c, T c_max) {
@@ -397,7 +397,7 @@ T alien_DP(int n, int D, const FUNC& c, T c_max) {
 		return dist[n] - D * lambda;
 	};
 
-	auto lambda = ternary_search_uc(-3 * c_max - 1, 3 * c_max + 1, L);
+	auto lambda = ternary_search_max(-3 * c_max - 1, 3 * c_max + 1, L);
 	return L(lambda);
 
 	/* c の定義の雛形

@@ -4,6 +4,7 @@
 #include "最短路.h"
 #include "マッチング(二部).h"
 #include "フロー.h"
+#include "01計画問題.h"
 // ■■■■■ DAG（有向非巡回グラフ） ■■■■■
 
 
@@ -40,7 +41,7 @@
 */
 
 
-//【コスト最小パス】O(n + m)
+//【最小コストパス】O(n + m)
 /*
 * DAG g の各頂点から gl までのコスト最小パスのコストを格納したリストを返す．
 */
@@ -135,7 +136,7 @@ vi longest_path(const Graph& g) {
 }
 
 
-//【スコア最大パス】O(n + m)
+//【最大スコアパス】O(n + m)
 /*
 * 重み付き DAG g の各頂点からのパスの最大スコアを格納したリストを返す．
 */
@@ -166,7 +167,7 @@ vl highest_score_path(const WGraph& g) {
 }
 
 
-//【スコア最大パス（頂点スコア）】O(n + m)
+//【最大スコアパス（頂点スコア）】O(n + m)
 /*
 * 頂点 i にスコア w[i] の与えられた DAG g のパス（長さ 0 も可）で，
 * 各頂点からのパスの最大スコアを格納したリストを返す．
@@ -197,7 +198,7 @@ vl highest_score_path(const Graph& g, const vl& w) {
 }
 
 
-//【スコア最大パス（頂点スコア，復元）】O(n + m)
+//【最大スコアパス（頂点スコア，復元）】O(n + m)
 /*
 * 頂点 i にスコア w[i] の与えられた DAG g の r からのパス（長さ 0 も可）の
 * 最大スコアを返し，パスに属する頂点列を path に格納する．
@@ -235,7 +236,7 @@ ll highest_score_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
 }
 
 
-//【スコア最大パスの組（頂点スコア）】O(n^3)
+//【最大スコアパスの組（頂点スコア）】O(n^3)
 /*
 * 頂点 i に非負スコア w[i] の与えられた DAG g（トポロジカルソート済）の頂点 0 からのパスの組で，
 * いずれかのパスに属している頂点のスコアの和の最大値を返す．
@@ -414,6 +415,82 @@ int minimum_path_cover(const Graph& g) {
 	rep(s, n) repe(t, g[s]) mcf.add_cost_edge(2 * s + 1, 2 * t, INFL, 0);
 
 	return (int)mcf.flow().second;
+}
+
+
+//【最大スコア半鎖】O(n^2 m)
+/*
+* 頂点 s にスコア w[s] の与えられた DAG g のスコア最大半鎖のスコアを返す．
+*
+* 利用：【燃やす埋める問題】
+*/
+ll highest_score_antichain(const Graph& g, const vl w) {
+	// verify : https://atcoder.jp/contests/abc354/tasks/abc354_g
+
+	int n = sz(g);
+
+	// メビウス変換（上位要素）
+	//	A[0..n) を a[i] = Σj≧i a[j] なる a[0..n) に上書きする．
+	auto geq_mobius = [](vl& A) {
+		int n = sz(A);
+		repi(i, 0, n - 2) A[i] -= A[i + 1];
+	};
+
+	// 二次元メビウス変換（上位要素）
+	//	A[0..h)[0..w) を A[i][j] = Σx≧i Σy≧j a[x][y] なる a[0..h)[0..w) に上書きする．
+	auto geq_mobius_2D = [](vvl& A) {
+		int h = sz(A), w = sz(A[0]);
+		repi(i, 0, h - 2) repi(j, 0, w - 1) A[i][j] -= A[i + 1][j];
+		repi(i, 0, h - 1) repi(j, 0, w - 2) A[i][j] -= A[i][j + 1];
+	};
+
+	// K : 頂点の属性が何通りあるか
+	int K = 3;
+
+	Burn_bury_problem G(n * K);
+
+	// 頂点 i に依存するコストの設定
+	rep(i, n) {
+		// 頂点 i が上流, 選択, 下流
+		vl cost{ 0, -w[i], 0 };
+
+		geq_mobius(cost);
+
+		int BASE = i * K;
+		rep(k, K) G.add_cost1(BASE + k, cost[k]);
+		rep(k, K - 1) G.imply11(BASE + k, BASE + (k + 1));
+		G.set1(BASE + (K - 1));
+	}
+
+	// 頂点の組 (i, j) に依存するコストの設定
+	rep(i, n) repe(j, g[i]) {
+		// 頂点 i が 上流, 選択, 下流 / 頂点 j が 上流, 選択, 下流
+
+		// 任意の 2x2 部分行列
+		//		[a b]
+		//		[c d]
+		// について，
+		//		a + d ≦ b + c
+		// なら OK（Monge 性）
+		vvl cost{
+			{0, 0, 0},
+			{INFL, INFL, 0},
+			{INFL, INFL, 0}
+		};
+
+		geq_mobius_2D(cost);
+
+		int BASE1 = i * K;
+		int BASE2 = j * K;
+		rep(k1, K - 1) rep(k2, K - 1) {
+			G.add_profit11(BASE1 + k1, BASE2 + k2, -cost[k1][k2]);
+		}
+		rep(k1, K - 1) G.add_cost1(BASE1 + k1, cost[k1][K - 1]);
+		rep(k2, K - 1) G.add_cost1(BASE2 + k2, cost[K - 1][k2]);
+		G.add_cost(cost[K - 1][K - 1]);
+	}
+
+	return -G.min_cost();
 }
 
 

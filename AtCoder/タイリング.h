@@ -270,6 +270,8 @@ vvvi enumerate_Ttetromino_tiling(int h, int w) {
 //【トロミノのタイリングの数え上げ】O(h 4^w)
 /*
 * h×w の盤面にトロミノを敷き詰める方法が何通りあるかを返す．
+* 
+*（bit DP）
 */
 ll count_Tromino_tiling(int h, int w) {
 	// マスの数が 3 の倍数でなければ明らかに不可能．

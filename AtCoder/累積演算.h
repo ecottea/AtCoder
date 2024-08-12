@@ -43,10 +43,10 @@ public:
 //【巡回累積和】
 /*
 * Cyclic_cumulative_sum<T>(vT a) : O(n)
-*	配列 a[0..n) で初期化する．
+*	配列 a[0..n) が無限に繰り返された配列 A で初期化する（A[0] = a[0]）
 *
 * T sum(int l, int r) : O(1)
-*	Σi∈[l..r) a[i mod n] を返す．（空なら 0 を返す）
+*	ΣA[l..r) を返す．（空なら 0 を返す）
 */
 template <class T>
 class Cyclic_cumulative_sum {
@@ -425,7 +425,7 @@ public:
 	}
 	Cumulative_sum_2D() : h(0), w(0) {}
 
-	// Σa[x1..x2)[y1..y2) を返す．
+	// Σa[x1..x2)[y1..y2) を返す．（空なら 0 を返す）
 	inline T sum(int x1, int x2, int y1, int y2) {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_h
 
@@ -709,9 +709,88 @@ public:
 };
 
 
+//【二次元巡回累積和（長方形）】
+/*
+* Cyclic_cumulative_sum_2D<T>(vT a) : O(h w)
+*	二次元配列 a[0..h)[0..w) が無限に繰り返された二次元配列 A で初期化する（A[0][0] = a[0][0]）
+*
+* T sum(ll x1, ll x2, ll y1, ll y2) : O(1)
+*	ΣA[x1..x2)[y1..y2) を返す．（空なら 0 を返す）
+*/
+template <class T>
+class Cyclic_cumulative_sum_2D {
+	ll h, w;
+
+	using vT = vector<T>;
+	using vvT = vector<vT>;
+
+	// acc[i][j] : Σa[0..i)[0..j)
+	vvT acc;
+
+public:
+	// 配列 a[0..n) で初期化する．
+	Cyclic_cumulative_sum_2D(const vvT& a) : h(sz(a)), w(sz(a[0])), acc(h + 1, vT(w + 1)) {
+		// verify : https://atcoder.jp/contests/abc354/tasks/abc354_d
+
+		// 元データを仮格納する．
+		rep(i, h) rep(j, w) acc[i + 1][j + 1] = a[i][j];
+
+		// 縦方向に累積和をとる．
+		repi(i, 1, h) repi(j, 0, w) acc[i][j] += acc[i - 1][j];
+
+		// 横方向に累積和をとる．
+		repi(i, 0, h) repi(j, 1, w) acc[i][j] += acc[i][j - 1];
+	}
+	Cyclic_cumulative_sum_2D() : h(0), w(0) {}
+
+	// ΣA[x1..x2)[y1..y2) を返す．（空なら 0 を返す）
+	T sum(ll x1, ll x2, ll y1, ll y2) {
+		// verify : https://atcoder.jp/contests/abc354/tasks/abc354_d
+
+		if (x1 >= x2 || y1 >= y2) return 0;
+
+		ll x1_rem = smod(x1, h);
+		ll x1_quo = (x1 - x1_rem) / h;
+
+		ll x2_rem = smod(x2, h);
+		ll x2_quo = (x2 - x2_rem) / h;
+
+		ll y1_rem = smod(y1, w);
+		ll y1_quo = (y1 - y1_rem) / w;
+
+		ll y2_rem = smod(y2, w);
+		ll y2_quo = (y2 - y2_rem) / w;
+
+		T res = 0;
+
+		res += acc[h][w] * x2_quo * y2_quo;
+		res += acc[h][y2_rem] * x2_quo;
+		res += acc[x2_rem][w] * y2_quo;
+		res += acc[x2_rem][y2_rem];
+
+		res -= acc[h][w] * x2_quo * y1_quo;
+		res -= acc[h][y1_rem] * x2_quo;
+		res -= acc[x2_rem][w] * y1_quo;
+		res -= acc[x2_rem][y1_rem];
+
+		res -= acc[h][w] * x1_quo * y2_quo;
+		res -= acc[h][y2_rem] * x1_quo;
+		res -= acc[x1_rem][w] * y2_quo;
+		res -= acc[x1_rem][y2_rem];
+
+		res += acc[h][w] * x1_quo * y1_quo;
+		res += acc[h][y1_rem] * x1_quo;
+		res += acc[x1_rem][w] * y1_quo;
+		res += acc[x1_rem][y1_rem];
+
+		return res;
+	}
+};
+
+
 //【三次元累積和（直方体）】
 /*
-* Cumulative_sum_3D<T>(vvT a) : O(h w d)
+* Cumulative_sum_3D<T>(vvvT a) : O(h w d)
 *	三次元配列 a[0..h)[0..w)[0..d) で初期化する．
 *
 * T sum(int x1, int x2, int y1, int y2, int z1, int z2) : O(1)
@@ -731,7 +810,7 @@ class Cumulative_sum_3D {
 public:
 	// 三次元配列 a[0..h)[0..w)[0..d) で初期化する．
 	Cumulative_sum_3D(const vvvT& a) : h(sz(a)), w(sz(a[0])), d(sz(a[0][0])), acc(h + 1, vvT(w + 1, vT(d + 1))) {
-		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_g
+		// verify : https://atcoder.jp/contests/abc366/tasks/abc366_d
 
 		// 元データを仮格納する．
 		rep(i, h) rep(j, w) rep(k, d) acc[i + 1][j + 1][k + 1] = a[i][j][k];
@@ -749,7 +828,7 @@ public:
 
 	// Σa[x1..x2)[y1..y2)[z1..z2) を返す．
 	T sum(int x1,int x2, int y1, int y2, int z1, int z2) {
-		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_g
+		// verify : https://atcoder.jp/contests/abc366/tasks/abc366_d
 
 		chmax(x1, 0); chmax(y1, 0); chmax(z1, 0);
 		chmin(x2, h); chmin(y2, w); chmin(z2, d);
@@ -923,7 +1002,7 @@ void sliding_window_minimum_2D(vector<vector<T>> a, int dh, int dw,
 *	配列 a[0..n) で初期化する．max_flag = false[true] のときは最小値[最大値] を求める．
 *
 * T get(int l, int r) : O(1)
-*	min a[l..r) を返す．（空なら numeric_limits<T>::max() を返す）
+*	min a[l..r) を返す．（空なら INFL を返す）
 */
 template <class T>
 class Sparse_table {
@@ -963,8 +1042,8 @@ public:
 
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) {
-			if (!max_flag) return numeric_limits<T>::max();
-			else return numeric_limits<T>::lowest();
+			if (!max_flag) return T(INFL);
+			else return -T(INFL);
 		}
 
 		int j = msb(r - l);
@@ -989,7 +1068,7 @@ public:
 *	配列 a[0..n) で初期化する．max_flag = false[true] のときは最小値[最大値] を求める．
 *
 * pTi get(int l, int r) : O(1)
-*	min a[l..r) とそれを与える位置の組を返す．（空なら {numeric_limits<T>::max(), -1} を返す）
+*	min a[l..r) とそれを与える位置の組を返す．（空なら {INFL, -1} を返す）
 */
 template <class T>
 class Sparse_table_indexed {
@@ -1025,8 +1104,8 @@ public:
 
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) {
-			if (!max_flag) return make_pair(numeric_limits<T>::max(), -1);
-			else return make_pair(numeric_limits<T>::lowest(), -1);
+			if (!max_flag) return make_pair(T(INFL), -1);
+			else return make_pair(-T(INFL), -1);
 		}
 
 		int j = msb(r - l);

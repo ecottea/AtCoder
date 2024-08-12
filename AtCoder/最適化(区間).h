@@ -6,189 +6,13 @@
 // ■■■■■ 区間に関する最適化問題 ■■■■■
 
 
-//【尺取り法】O(n α)
-/*
-* 与えられた列 a[0..n) と連続部分列に対する判定関数 is_ok について，
-* 各 l∈[0..n] について is_ok(a[l..r)) = true となる最大の r≦n を max_right[l] に，
-* 各 r∈[0..n] について is_ok(a[l..r)) = true となる最小の l≧0 を min_left[r] にそれぞれ格納する．
-*
-* 制約：is_ok( a[i..i) ) = true，is_ok は単調，右[左]端の要素の追加[削除]が O(α) で可能
-*/
-template <class T>
-void two_pointers(const vector<T>& a, vi& max_right, vi& min_left) {
-	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ck
-
-	int n = sz(a);
-	max_right.resize(n + 1); min_left.resize(n + 1);
-
-	// -------------- ここを実装する（auto の方が速い） ---------------
-
-	// 必要なデータ構造を用意する．
-	int m = *max_element(all(a)) + 1;
-	fenwick_tree<int> ft(m);
-	ll inv = 0;
-
-	// 区間の右に a[i] を追加し，データ構造を更新する．
-	auto insert_right = [&](int i) {
-		inv += ft.sum(a[i] + 1, m);
-		ft.add(a[i], 1);
-	};
-
-	// 区間の左から a[i] を削除し，データ構造を更新する．
-	auto erase_left = [&](int i) {
-		inv -= ft.sum(0, a[i]);
-		ft.add(a[i], -1);
-	};
-
-	// データ構造を参照して ok かを返す．
-	auto is_ok = [&]() {
-		return inv <= 12345;
-	};
-
-	// --------------------------------------------------------------
-
-	// l, r : a[l..r) を走査中であることを表す．
-	int l = 0, r = 0;
-
-	while (true) {
-		// is_ok( a[l..r) ) = true の場合
-		if (is_ok()) {
-			// いまの l は固定された r に対して最小の l となっている．
-			min_left[r] = l;
-
-			// 走査完了
-			if (r == n) break;
-
-			// 右を 1 つ進める．
-			insert_right(r++);
-		}
-		// is_ok( a[l..r) ) = false の場合
-		else {
-			// いまの r は固定された l に対して最大の r より 1 だけ大きい．
-			max_right[l] = r - 1;
-
-			// 左を 1 つ進める．
-			erase_left(l++);
-		}
-	}
-
-	// いま is_ok( a[l..n) ) = true なので，l をより大きくしても true となる．
-	for (; l <= n; l++) max_right[l] = n;
-}
-
-
-//【尺取り法（群）】O(n)
-/*
-* 群 (S, op, e, inv) の元を要素とする与えられた列 a[0..n) について，
-* 各 l∈[0..n] について f(Πa[l..r)) = true となる最大の r≦n を max_right[l] に，
-* 各 r∈[0..n] について f(Πa[l..r)) = true となる最小の l≧0 を min_left[r] にそれぞれ格納する．
-*
-* 制約：f(e()) = true，f は単調
-*/
-template <class S, S(*op)(S, S), S(*e)(), S(*inv)(S)>
-void two_pointers(const vector<S>& a, const function<bool(S)>& f, vi& max_right, vi& min_left) {
-	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_d
-
-	int n = sz(a);
-	max_right.resize(n + 1); min_left.resize(n + 1);
-
-	// l, r : a[l..r) を走査中であることを表す．
-	int l = 0, r = 0;
-
-	// val : Πa[l..r)
-	S val = e();
-
-	while (true) {
-		// f( Πa[l..r) ) = true の場合
-		if (f(val)) {
-			// いまの l は固定された r に対して最小の l となっている．
-			min_left[r] = l;
-
-			// 走査完了
-			if (r == n) break;
-
-			// 右を 1 つ進める．
-			val = op(val, a[r++]);
-		}
-		// f( Πa[l..r) ) = false の場合
-		else {
-			// いまの r は固定された l に対して最大の r より 1 だけ大きい．
-			max_right[l] = r - 1;
-
-			// 左を 1 つ進める．
-			val = op(inv(a[l++]), val);
-		}
-	}
-
-	// いま f( Πa[l..n) ) = true なので，l をより大きくしても true となる．
-	for (; l <= n; l++) max_right[l] = n;
-}
-
-
-//【尺取り法（モノイド）】O(n)
-/*
-* モノイド (S, op, e) の元を要素とする与えられた列 a[0..n) について，
-* 各 l∈[0..n] について f(Πa[l..r)) = true となる最大の r≦n を max_right[l] に，
-* 各 r∈[0..n] について f(Πa[l..r)) = true となる最小の l≧0 を min_left[r] にそれぞれ格納する．
-*
-* 制約：f(e()) = true，f は単調
-*
-* 利用：【キュー（モノイド）】
-*/
-template <class S, S(*op)(S, S), S(*e)(), class FUNC>
-void two_pointers(const vector<S>& a, const FUNC& f, vi& max_right, vi& min_left) {
-	// verify : https://yukicoder.me/problems/no/1036
-
-	int n = sz(a);
-	max_right.resize(n + 1); min_left.resize(n + 1);
-
-	// l, r : a[l..r) を走査中であることを表す．
-	int l = 0, r = 0;
-
-	// a[l..r) の要素を入れるキュー
-	Queue_SWAG<S, op, e> q;
-
-	while (true) {
-		// f( Πa[l..r) ) = true の場合
-		if (f(q.prod())) {
-			// いまの l は固定された r に対して最小の l となっている．
-			min_left[r] = l;
-
-			// 走査完了
-			if (r == n) break;
-
-			// 右を 1 つ進める．
-			q.push(a[r++]);
-		}
-		// f( Πa[l..r) ) = false の場合
-		else {
-			// いまの r は固定された l に対して最大の r より 1 だけ大きい．
-			max_right[l] = r - 1;
-
-			// 左を 1 つ進める．
-			q.pop(); l++;
-		}
-	}
-
-	// いま f( Πa[l..n) ) = true なので，l をより大きくしても true となる．
-	for (; l <= n; l++) max_right[l] = n;
-
-	/* f の定義の雛形
-	using S = ll;
-	auto f = [&](S x) {
-		return true || false;
-	};
-	*/
-}
-
-
 //【区間スケジューリング問題】O(n log n)
 /*
 * 拘束期間が [l[i]..r[i]) である n 個の仕事を請け負える最大個数を返す．
 * また必要なら最大個数を実現する仕事の番号のリストを sel に格納する．
 */
 template <class T>
-int interval_scheduling(const vector<T>& l, const vector<T>& r, vi* sel) {
+int interval_scheduling(const vector<T>& l, const vector<T>& r, vi* sel = nulptr) {
 	// varify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_fm
 
 	int n = sz(l);
@@ -403,6 +227,12 @@ T floating_interval_scheduling(const vector<S>& r, const vector<T>& a) {
 
 	return res;
 }
+
+
+//【流動区間スケジューリング問題（重み付き，両端指定，1 日拘束）】
+/*
+* 区間に辺を張るテクで O(N log N) 辺の最小費用流になり，O(N^2 (log N)^2) だそう．
+*/
 
 
 //【巡回区間スケジューリング問題】O(n log n)

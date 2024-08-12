@@ -11,7 +11,10 @@
 *
 * 利用：【貰う木 DP】
 */
-struct T_mis { int v1, v0; }; // (根を選択，根を非選択)
+struct T_mis {
+	int v1; // 根を選択
+	int v0; // 根を非選択
+};
 T_mis leaf_mis(int s) {
 	return T_mis{ 1, 0 };
 }
@@ -28,7 +31,7 @@ void add_vertex_mis(T_mis& x, int s) {
 int maximum_independent_set(const Graph& g) {
 	// verify : https://yukicoder.me/problems/no/763
 
-	auto dp = tree_getDP_virtual<T_mis, leaf_mis, add_edge_mis, merge_mis, add_vertex_mis>(g, 0);
+	auto dp = tree_getDP<T_mis, leaf_mis, add_edge_mis, merge_mis, add_vertex_mis>(g, 0);
 	return max(dp[0].v1, dp[0].v0);
 }
 
@@ -68,7 +71,7 @@ vector<T_mcs> minimum_cost_subtree(const Graph& g, const vl& c, int r) {
 	// verify : https://atcoder.jp/contests/arc029/tasks/arc029_4
 
 	c_mcs = c;
-	return tree_getDP_virtual<T_mcs, leaf_mcs, add_edge_mcs, merge_mcs, add_vertex_mcs>(g, r);
+	return tree_getDP<T_mcs, leaf_mcs, add_edge_mcs, merge_mcs, add_vertex_mcs>(g, r);
 }
 
 

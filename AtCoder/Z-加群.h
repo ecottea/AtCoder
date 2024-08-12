@@ -13,22 +13,22 @@
 */
 
 
-//y‰ÁZ Z-‰ÁŒQz
+//y‘˜a Z-‰ÁŒQz
 /* verify : https://atcoder.jp/contests/abc253/tasks/abc253_f */
 using S301 = ll;
 S301 op301(S301 x, S301 y) { return x + y; }
 S301 o301() { return 0; }
 S301 inv301(S301 x) { return -x; }
 S301 mul301(ll a, S301 x) { return S301(a * x); }
-#define Add_Zmodule S301, op301, o301, inv301, mul301
+#define Sum_Zmodule S301, op301, o301, inv301, mul301
 
 
 //yæZ Z-‰ÁŒQz
 using S302 = mint;
 S302 op302(S302 x, S302 y) { return x * y; }
 S302 o302() { return 1; }
-S302 inv302(S302 x) { return x.inv(); }
-S302 mul302(ll a, S302 x) { return x.pow(a); }
+S302 inv302(S302 x) { return x.inv(); } // ’x‚¢
+S302 mul302(ll a, S302 x) { return x.pow(a); } // ’x‚¢
 #define Mul_Zmodule S302, op302, o302, inv302, mul302
 
 

@@ -42,7 +42,7 @@ vector<T> naive_dirichlet_invconvolution(const vector<T>& a, const vector<T>& c)
 	// verify : https://atcoder.jp/contests/yahoo-procon2018-final/tasks/yahoo_procon2018_final_a
 
 	//【方法】
-	// ディリクレ畳込みの式の総和を i=1 とその他に分解すると
+	// 除原理を用いる．ディリクレ畳込みの式の総和を i=1 とその他に分解すると
 	//		c[k] = a[1] b[k] + Σ_(i×j=k,i>1) a[i] b[j]
 	// となる．これを b[k] について解くと
 	//		b[k] = (c[k] - Σ_(i×j=k,i>1) a[i] b[j]) / a[1]
@@ -54,7 +54,7 @@ vector<T> naive_dirichlet_invconvolution(const vector<T>& a, const vector<T>& c)
 	// 配る DP
 	vector<T> b(c);
 	repi(j, 1, n) {
-		b[j] /= a[1];
+		b[j] /= a[1]; // mint だと遅いので注意
 		for (ll i = 2; i * j <= n; i++) b[i * j] -= a[i] * b[j];
 	}
 
@@ -90,25 +90,31 @@ vector<T> naive_dirichlet_invconvolution(const vector<T>& a, const vector<T>& c)
 //【乗法的数論関数のディリクレ母関数のオイラー積表示】
 /*
 * 乗法的数論関数 a[1..n] のディリクレ母関数 A(s) は
-*		A(s) = Π_p A_p(s)
-*		A_p(s) := Σ_d a[p^d] / (p^d)^s
-* なるオイラー積表示をもつ．
+*		A(s) = Πp A_p(s)
+*		A_p(s) := Σd a[p^d] / (p^d)^s
+* なるオイラー積表示をもつ．z = p^(-s) とおくと
+*		A_p(z) = Σd∈[0..∞) a[p^d] z^d
+* と表され，素因数ごとに FPS のように扱うことができる．
 */
 
 
 //【乗法的数論関数の例】
 /*
 * 乗法的数論関数 a[i] とそのディリクレ母関数 A(s) の例として以下のものが挙げられる：
-*	デルタ：		a[i] = (i = 1 ? 1 : 0)							A(s) = 1
-*	定数 1：		a[i] = 1										A(s) = ζ(s)
-*	累乗：		a[i] = i^d  (d は定数)							A(s) = ζ(s-d)
-*	約数和：		a[i] = i の約数の k 乗和  （k は定数）			A(s) = ζ(s)ζ(s-k)
-*	メビウス：	a[i] = (i が異なる d 個の素数の積 ? (-1)^d : 0)	A(s) = 1/ζ(s)
-*	オイラー：	a[i] = i と互いに素な i 以下の正整数の個数			A(s) = ζ(s-1)/ζ(s)
-*	平方数：		a[i] = (i が平方数 ? 1 : 0)						A(s) = ζ(2s)
-*	無平方数：	a[i] = (i が平方因子をもたない ? 1 : 0)			A(s) = ζ(s)/ζ(2s)
-*	GCD：		a[i] = GCD(n, i)  (n は定数)
-*	平方剰余：	a[i] = (a/p)  （ルジャンドル記号，p は定数）
+*	積：			a[i] = b[i] c[i] （b, c は乗法的数論関数）
+*	逆数：		a[i] = 1/b[i] （b は乗法的数論関数）
+*	デルタ：		a[i] = (i = 1 ? 1 : 0)							A(s) = 1			A_p(z) = 1
+*	定数 1：		a[i] = 1										A(s) = ζ(s)			A_p(z) = 1/(1-z)
+*	恒等：		a[i] = i										A(s) = ζ(s-1)		A_p(z) = 1/(1-pz)
+*	累乗：		a[i] = i^k  (k は定数)							A(s) = ζ(s-k)		A_p(z) = 1/(1-p^k z)
+*	約数和：		a[i] = i の約数の k 乗和  （k は定数）			A(s) = ζ(s)ζ(s-k)	A_p(z) = 1/(1-z)(1-p^k z)
+*	メビウス：	a[i] = (i が異なる d 個の素数の積 ? (-1)^d : 0)	A(s) = 1/ζ(s)		A_p(z) = 1-z
+*	オイラー：	a[i] = i と互いに素な i 以下の正整数の個数			A(s) = ζ(s-1)/ζ(s)	A_p(z) = (1-z)/(1-pz)
+*	平方数：		a[i] = (i が平方数 ? 1 : 0)						A(s) = ζ(2s)		A_p(z) = 1/(1-z^2)
+*	無平方数：	a[i] = (i が平方因子をもたない ? 1 : 0)			A(s) = ζ(s)/ζ(2s)	A_p(z) = 1+z
+*	GCD：		a[i] = GCD(n, i)  (n は定数)	
+*	LCM：		a[i] = LCM(n, i)  (n は定数)	
+*	平方剰余：	a[i] = (i/p)  （ルジャンドル記号，p は定数）
 */
 
 
@@ -378,9 +384,9 @@ void dirichlet_invconvolution_acc(ll n, const vector<T>& al, const vector<T>& Ah
 *	上記 al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
 *
 * 特に nl = (n / log(log n))^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log(log n))^(1/3)) になる．
-	int n_max = (int)1e8;
-	int nl = min((int)pow(n_max / log(log(n_max)), 2. / 3), (int)n);
-	int nh = min((int)n / nl + 1, nl);
+	constexpr ll n_max = (ll)1e11;
+	int nl = (int)min((ll)pow(n_max / log(log(n_max)), 2. / 3), n);
+	int nh = (int)min(n / nl + 1, (ll)nl);
 */
 template <class T>
 class Multiplicative_dirichlet_convolution_acc {
@@ -495,9 +501,9 @@ public:
 *	上記 al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
 *
 * 特に nl = (n / log(log n))^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log(log n))^(1/3)) になる．
-	int n_max = (int)1e8;
-	int nl = min((int)pow(n_max / log(log(n_max)), 2. / 3), (int)n);
-	int nh = min((int)n / nl + 1, nl);
+	constexpr ll n_max = (ll)1e11;
+	int nl = (int)min((ll)pow(n_max / log(log(n_max)), 2. / 3), n);
+	int nh = (int)min(n / nl + 1, (ll)nl);
 */
 class Multiplicative_dirichlet_convolution_acc_mint {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c

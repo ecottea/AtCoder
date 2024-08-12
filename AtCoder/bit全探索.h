@@ -9,7 +9,7 @@
 * A ⊂ set ⊂ Ω なる set を昇順に全探索する．
 */
 // verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/8/ITP2/all/ITP2_11_B
-#define repbu(set, A, d) for(int set = A; set < (1 << int(d)); set = (set + 1) | A)
+#define repbu(set, A, d) for(int set = int(A); set < (1 << int(d)); set = (set + 1) | int(A))
 
 
 //【下位集合の全探索】O(2^|A|)
@@ -18,7 +18,7 @@
 * set ⊂ A ⊂ Ω なる set を降順に全探索する．
 */
 // verify : https://atcoder.jp/contests/dp/tasks/dp_u
-#define repbs(set, A) for(int set = int(A), bset##A = 1; bset##A > 0; bset##A = set, set = (set - 1) & int(A)) 
+#define repbs(set, A) for(int set = int(A), bset##_set = 1; bset##_set > 0; bset##_set = set, set = (set - 1) & int(A)) 
 
 
 //【部分集合の全探索（大きさ固定）】O(nCr)
@@ -29,14 +29,6 @@
 */
 // verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/8/ITP2/all/ITP2_11_D
 #define repbc(set, n, r) for(int set = (1 << int(r)) - 1, lb, nx; set < (1 << int(n)); lb = set & -set, nx = set + lb, set = (((set & ~nx) / lb) >> 1) | nx)
-
-
-//【要素の全探索】O(|set|)
-/*
-* i ∈ set なる i を昇順に全探索する．
-*/
-// verify : https://atcoder.jp/contests/abc180/tasks/abc180_e
-#define repis(i, set) for(int i = lsb(set), bset##A = set; i >= 0; bset##A -= 1 << i, i = lsb(bset##A)) 
 
 
 //【差分更新でビット全探索から O(n) を消す】
@@ -59,11 +51,22 @@
 
 //【i 番目のグレイコード】
 /*
-* i 番目（0-indexed）のグレイコード c = g(i) は以下の式で得られる：
+* i 番目（0-indexed）のグレイコード c = g(i) は以下の式（上からの差分）で得られる：
 *	c = i XOR (i >> 1)
 * 
-* 逆に g(i) = c となるような i は以下の式で得られる：
+* 逆に g(i) = c となるような i は以下の式（上からの累積和）で得られる：
 *	i = c XOR (c >> 1) XOR (c >> 2) XOR ...
+* 
+* グレイコードの例（3 bit）
+*	 i		 c
+*	000		000
+*	001		001
+*	010		011
+*	011		010
+*	100		110
+*	101		111
+*	110		101
+*	111		100	
 * 
 * verify : https://atcoder.jp/contests/agc031/tasks/agc031_c
 */

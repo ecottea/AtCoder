@@ -129,7 +129,7 @@ T arithmetic_XOR(T n, T a, T b) {
 
 //【XOR 区間の分割】O(log max(r, c))
 /*
-* 集合 {x∈[0..∞) | l ≦ (x XOR c) < r} を O(log max(r, c)) 個の半開区間に分割し，そのリストを返す．
+* 集合 [l..r) XOR c を O(log max(r, c)) 個の半開区間に分割し，そのリストを返す．
 */
 template <class T>
 vector<pair<T, T>> XOR_interval_division(T l, T r, T c) {

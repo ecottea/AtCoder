@@ -809,7 +809,7 @@ vm berlekamp_massey(const vm& a) {
 	// 参考 : https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
 	// verify : https://judge.yosupo.jp/problem/find_linear_recurrence
 
-	MFPS S(a), C(1), B(1);
+	vm S(a), C{ 1 }, B{ 1 };
 	int N = sz(a), m = 1; mint b = 1;
 
 	rep(n, N) {
@@ -819,20 +819,30 @@ vm berlekamp_massey(const vm& a) {
 		if (d == 0) {
 			m++;
 		}
-		else if (2 * C.deg() <= n) {
-			MFPS T(C);
-			C -= d * b.inv() * (B >> m);
+		else if (2 * (sz(C) - 1) <= n) {
+			vm T(C);
+
+			mint coef = d * b.inv();
+			C.resize(max(sz(C), sz(B) + m));
+			rep(j, sz(B)) C[j + m] -= coef * B[j];
+
 			B = T;
 			b = d;
 			m = 1;
 		}
 		else {
-			C -= d * b.inv() * (B >> m);
+			mint coef = d * b.inv();
+			C.resize(max(sz(C), sz(B) + m));
+			rep(j, sz(B)) C[j + m] -= coef * B[j];
+
 			m++;
 		}
 	}
 
-	return (-C << 1).c;
+	C.erase(C.begin());
+	rep(i, sz(C)) C[i] *= -1;
+
+	return C;
 }
 
 
@@ -1158,6 +1168,7 @@ vm bostan_mori_msb(vm f, const vm& g, ll L, ll R) {
 
 	if (n == 0) return vm(R - L);
 	if (L == R) return vm();
+	if (R == 1) return vm{ f[0] }; // https://x.com/noya2ruler/status/1809661975456325879
 
 	Assert(m >= 0 && g[0] != 0);
 	mint g0_inv = g[0].inv();
@@ -1194,7 +1205,7 @@ vm bostan_mori_msb(vm f, const vm& g, ll L, ll R) {
 	}
 
 	for (int i = 1; i <= m; i += 2) q[K - 1][i] *= -1;
-	
+
 	const mint inv2 = mint(2).inv();
 	mint inv2_pow[31];
 	inv2_pow[0] = 1;
@@ -1219,14 +1230,14 @@ vm bostan_mori_msb(vm f, const vm& g, ll L, ll R) {
 
 		vm p_dbl(W);
 		rep(i, sz(p)) p_dbl[i * 2] = p[i];
-		
+
 		q[k].resize(W);
-		
+
 		internal::butterfly(p_dbl);
 		internal::butterfly(q[k]);
 		rep(i, W) p_dbl[i] *= q[k][i];
 		internal::butterfly_inv(p_dbl);
-		
+
 		p.resize(d_max[k] - d_min[k] + 1);
 		int i_min = (int)max(-(d_min[k] - 2 * d_min[k + 1]), 0LL);
 		int i_max = (int)min(d_max[k] - d_min[k], sz(p_dbl) - 1 - (d_min[k] - 2 * d_min[k + 1]));
@@ -1250,12 +1261,12 @@ vm bostan_mori_msb(vm f, const vm& g, ll L, ll R) {
 
 	f.resize(W);
 	p.resize(W);
-	
+
 	internal::butterfly(f);
 	internal::butterfly(p);
 	rep(i, W) f[i] *= p[i];
 	internal::butterfly_inv(f);
-	
+
 	g0_inv *= inv2_pow[B];
 	vm res(R - L);
 	rep(i, R - L) res[i] = f[i + L - d_min[0]] * g0_inv;
@@ -1283,8 +1294,8 @@ MFPS taylor_shift(const MFPS& f, mint c, const Factorial_mint& fm) {
 	//	= Σn=[0..N] Σr=[0..n] f[n] n! / ((n-r)! r!) c^(n-r) x^r
 	//	= Σr=[0..N] Σn=[r..N] f[n] n! / ((n-r)! r!) c^(n-r) x^r　（和の順序交換）
 	//	= Σr=[0..N] x^r / r! Σn=[r..N] (c^(n-r) / (n-r)!) n! f[n]
-	//	= Σr=[0..N] x^r / r! Σm=[0..N-r] (c^(N-m-r) / (N-m-r)!) (N-m)! f[N-m]　（m = N - n）
-	//	= Σj=[0..N] x^(N-j) / (N-j)! Σm=[0..j] (c^(j-m) / (j-m)!) (N-m)! f[N-m]　（j = N - r）
+	//	= Σr=[0..N] x^r / r! Σm=[0..N-r] (c^(N-m-r) / (N-m-r)!) (N-m)! f[N-m]　（m=N-n）
+	//	= Σj=[0..N] x^(N-j) / (N-j)! Σm=[0..j] (c^(j-m) / (j-m)!) (N-m)! f[N-m]　（j=N-r）
 	// と書き直せる．
 	//
 	// よって
@@ -1424,7 +1435,7 @@ MFPS expand(const vm& x) {
 	vector<MFPS> f(n);
 	rep(i, n) f[i] = MFPS(vm({ -x[i], 1 }));
 
-	// 2 冪個ずつ掛けていく（分割統治法）
+	// 2 冪個ずつ掛けていく（分割統治積）
 	for (int k = 1; k < n; k *= 2) {
 		for (int i = 0; i + k < n; i += 2 * k) {
 			f[i] *= f[i + k];
@@ -1617,6 +1628,9 @@ MFPS weighted_cumulative_product_sum(const vector<MFPS>& as, const vector<MFPS>&
 	// とすれば答えは
 	//		g1
 	// と表される．
+
+	//【備考】
+	// as が 0 次で，fs が全て同じであれば，これは多項式の合成 A(f(z)) の計算に他ならない．
 
 	int n = sz(fs);
 
@@ -2380,7 +2394,7 @@ MFPS extended_gcd(MFPS a, MFPS b, MFPS& u, MFPS& v) {
 
 //【多項式の求根（一括，mod 998244353）】O(?)（n=4000 くらいまで動く）
 /*
-* 多項式 f(z) の根のリストを返す．
+* 多項式 f(z) の根のリストを返す．重複度は無視する．
 * 
 * 利用：【単項式の剰余】,【拡張ユークリッドの互除法】
 */

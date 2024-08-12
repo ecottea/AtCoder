@@ -6,7 +6,7 @@
 
 //【部分列の数え上げ（左優先，貰う DP）】O(n)
 /*
-* 列 a[0..n) の部分列の個数を返す（空列含む）
+* 列 a[0..n) の部分列の種類数を返す（空列含む）
 *
 *（累積和で高速化した部分列 DP）
 */
@@ -49,7 +49,7 @@ mint count_unique_subsequences_Lpri_getDP(const vector<T>& a) {
 
 //【部分列の数え上げ（右優先，貰う DP）】O(n)
 /*
-* 列 a[0..n) の部分列の個数を返す（空列含む）
+* 列 a[0..n) の部分列の種類数を返す（空列含む）
 *
 *（総和で高速化したインライン部分列 DP）
 */
@@ -99,7 +99,7 @@ mint count_unique_subsequences_Rpri_getDP(const vector<T>& a) {
 
 //【部分列の数え上げ（左優先，配る DP）】O(26 n)
 /*
-* 英小文字からなる文字列 s[0..n) の部分列の個数を返す（空列含む）
+* 英小文字からなる文字列 s[0..n) の部分列の種類数を返す（空列含む）
 *
 *（前処理で高速化した部分列 DP）
 */
@@ -148,7 +148,7 @@ mint count_unique_subsequences_Lpri_giveDP(const string& s) {
 
 //【部分列の数え上げ（右優先，配る DP）】O(26 n)
 /*
-* 英小文字からなる文字列 s[0..n) の部分列の個数を返す（空列含む）
+* 英小文字からなる文字列 s[0..n) の部分列の種類数を返す（空列含む）
 */
 mint count_unique_subsequences_Rpri_giveDP(const string& s) {
 	int n = sz(s);
@@ -346,7 +346,7 @@ mint count_unique_common_subsequences_Rpri_giveDP(const string& s, const string&
 
 //【回文部分列の数え上げ】O(26 n^2)
 /*
-* 英小文字からなる文字列 s[0..n) の回文部分列の個数を返す（空列含む）
+* 英小文字からなる文字列 s[0..n) の回文部分列の種類数を返す（空列含む）
 *
 *（前処理で高速化した部分列 DP）
 */
@@ -504,7 +504,7 @@ pim count_LIS(const vector<T>& a) {
 	int n = sz(a);
 
 	// a[0..n) を座標圧縮した結果を b[0..n) に格納する（番兵 -INF 付き）
-	vector<T> a_uniqed(a); a_uniqed.push_back(numeric_limits<T>::lowest());
+	vector<T> a_uniqed(a); a_uniqed.push_back(-(T)INFL);
 	uniq(a_uniqed); int m = sz(a_uniqed);
 	vi b(n); rep(i, n) b[i] = lbpos(a_uniqed, a[i]);
 

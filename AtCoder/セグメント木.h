@@ -824,9 +824,9 @@ class Lazy_segtree {
 	int n; // 完全二分木の葉の数（必ず 2 冪）
 	int actual_n; // 実際の要素数
 
-	// 完全二分木を実現する大きさ 2 * n の配列（ v[0] は使用しない．）
-	// 根は v[1] で，v[i] の親は v[i / 2]，左右の子は v[2 * i], v[2 * i + 1] である．
-	// 0-indexed での i 番目のデータは，葉である v[i + n] に入っている．
+	// 完全二分木を実現する大きさ 2n の配列（ v[0] は使用しない．）
+	// 根は v[1] で，v[i] の親は v[i/2]，左右の子は v[2i], v[2i+1] である．
+	// 0-indexed での i 番目のデータは，葉である v[i+n] に入っている．
 	vector<S> v;
 
 	// 遅延評価用の完全二分木
@@ -2564,6 +2564,112 @@ public:
 		}
 
 		return { val_min, cnt };
+	}
+};
+
+
+//【ハリボテセグメント木】
+/*
+* pTT node_to_interval(T n, T i) : O(1)
+*	[0..n) を扱うセグメント木について，頂点 i に対応する区間 [l..r) を返す．
+*
+* T interval_to_node(T n, T l, T r) : O(1)
+*	[0..n) を扱うセグメント木について，区間 [l..r) に対応する頂点 i を返す（なければ -1）
+*
+* T split(T l, T r) : O(1)
+*	[l..r) = [l..m)凵[m..r) なる m を返す（[l..r) がセグ木の区間なら -1）
+*
+* vector<pTT> partiton(T l, T r) : O(log(r-l))
+*	[l..r) を昇順に区間分割した結果を返す．*
+*/
+namespace Haribote_segtree {
+	// [0..n) を扱うセグメント木について，頂点 i に対応する区間 [l..r) を返す．
+	template <class T>
+	pair<T, T> node_to_interval(T n, T i) {
+		// verify : https://atcoder.jp/contests/abc355/tasks/abc355_e
+
+		//【例】（n=8 のとき）
+		//	i=1 :  [l..r) = [0..8), w=2^3
+		//	i=2 :  [l..r) = [0..4), w=2^2
+		//	i=3 :  [l..r) = [4..8), w=2^2
+		//	i=4 :  [l..r) = [0..2), w=2^1
+		//	i=5 :  [l..r) = [2..4), w=2^1
+		//	i=6 :  [l..r) = [4..6), w=2^1
+		//	i=7 :  [l..r) = [6..8), w=2^1
+		//	i=8 :  [l..r) = [0..1), w=2^0
+		//	i=9 :  [l..r) = [1..2), w=2^0
+		//	i=10:  [l..r) = [2..3), w=2^0
+		//	i=11:  [l..r) = [3..4), w=2^0
+		//	i=12:  [l..r) = [4..5), w=2^0
+		//	i=13:  [l..r) = [5..6), w=2^0
+		//	i=14:  [l..r) = [6..7), w=2^0
+		//	i=15:  [l..r) = [7..8), w=2^0
+
+		Assert(n >= 1); Assert(i >= 1);
+
+		int K = msb(i);
+		T d = msb(n - 1) + 1 - K;
+		Assert(d >= 0);
+
+		T l = (i ^ (T(1) << K)) << d;
+		T r = l + (T(1) << d);
+
+		return { l, r };
+	}
+
+	// [0..n) を扱うセグメント木について，区間 [l..r) に対応する頂点 i を返す（なければ -1）
+	template <class T>
+	T interval_to_node(T n, T l, T r) {
+		// verify : https://atcoder.jp/contests/arc180/tasks/arc180_d
+
+		T w = r - l;
+		if (popcount(w) != 1) return T(-1);
+
+		if (l & (w - 1)) return T(-1);
+
+		int K = lsb(w);
+		T i = (T(1) << (msb(n - 1) + 1 - K)) + (l >> K);
+
+		return i;
+	}
+
+	// [l..r) = [l..m)凵[m..r) なる m を返す（[l..r) がセグ木の区間なら -1）
+	template <class T>
+	T split(T l, T r) {
+		// verify : https://atcoder.jp/contests/abc349/tasks/abc349_d
+
+		if (r - l <= 1) return T(-1);
+
+		int kl = lsb(l);
+		int km = msb(l ^ (r - 1));
+		int kr = lsb(r);
+		if (kl >= km && km <= kr) return T(-1);
+
+		T m = ((r - 1) >> km) << km;
+		return m;
+	}
+
+	// [l..r) を昇順に区間分割した結果を返す．
+	template <class T>
+	vector<pair<T, T>> partiton(T l, T r) {
+		// 参考 : https://atcoder.jp/contests/abc349/editorial/9797
+		// verify : https://atcoder.jp/contests/abc349/tasks/abc349_d
+
+		//【方法】
+		// K = lsb(l) とすると，l を左端とする区間は
+		//		[l..l+2^0), [l..l+2^1), ..., [l..l+2^K)
+		// である．これらの中で，右端が r を超えない最大のものを貪欲に選べば良い．
+		// 条件は
+		//		l + 2^k ≦ r ⇔ 2^k ≦ r-l
+		// と言い換えられるので，k = msb(r-l) と選べば良い．
+		vector<pair<T, T>> res;
+		while (l < r) {
+			int k = min(lsb(l), msb(r - l));
+			T nl = l + (T(1) << k);
+			res.emplace_back(l, nl);
+			l = nl;
+		}
+		return res;
 	}
 };
 

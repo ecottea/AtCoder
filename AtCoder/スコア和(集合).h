@@ -56,38 +56,30 @@ vm subset_sum_sum(const vector<T>& a) {
 * 与えられた a[0..n) について，各 k=[0..n] について
 *		Σ|set|=k Πi∈set a[i]
 * の値を格納したリストを返す．
-*
-* 利用：【形式的冪級数】,【一次式の積の展開（基本対称式）】
 */
 template <class T>
 vm subset_product_sum(const vector<T>& a) {
+	// verify : https://mojacoder.app/users/bayashiko/problems/multi-sum-hard
+
 	//【方法】
 	// 一次式の積
 	//		g(x) = Πi=[0..n) (1 + a[i] x)
 	// を計算したときの x^k の係数として求めることができる．
 
 	int n = sz(a);
-	vm res(n + 1);
+	if (n == 0) return vm{ 1 };
 
-	if (n == 0) {
-		res[0] = 1;
-		return res;
+	vvm f(n);
+	rep(i, n) f[i] = vm{ 1, a[i] };
+
+	// 2 冪個ずつ掛けていく（分割統治積）
+	for (int k = 1; k < n; k *= 2) {
+		for (int i = 0; i + k < n; i += 2 * k) {
+			f[i] = convolution(f[i], f[i + k]);
+		}
 	}
 
-	// 代わりに Πi=[0..n) (x + a[i]^(-1)) を求め，Πa[0..n) 倍する．
-	vm x(n); mint c = 1;
-	rep(i, n) {
-		if (a[i] == 0) continue;
-
-		x[i] = -mint(a[i]).inv();
-		c *= a[i];
-	}
-
-	MFPS g = c * expand(x);
-
-	repi(k, 0, n) res[k] = g[k];
-
-	return res;
+	return f[0];
 }
 
 

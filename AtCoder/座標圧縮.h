@@ -200,6 +200,7 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, const function<bool(T, 
 */
 template <class T>
 Graph lattice_DAG_compression(const vector<T>& x, const vector<T>& y) {
+	// Ql : https://x.com/maspy_stars/status/1704073907526090865
 	// verify : https://atcoder.jp/contests/arc165/tasks/arc165_f
 
 	int n = sz(x);
@@ -294,8 +295,8 @@ public:
 
 			// v ‚Éæ‘c‚ª‹‚ê‚Î‚»‚ê‚Í’¼‹ß‚Ìæ‘c‚Å‚ ‚é‚©‚ç•Ó‚ÅŒq‚®D
 			if (!stk.empty()) {
-				gc[stk.top()].push_back(si);
-				gc[si].push_back(stk.top());
+				gc[stk.top()].push_back(si); // ‰ºŒü‚«
+				gc[si].push_back(stk.top()); // ãŒü‚«
 			}
 
 			stk.push(si);

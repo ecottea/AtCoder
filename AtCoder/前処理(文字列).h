@@ -214,3 +214,27 @@ vi next_different_position(const string& s) {
 }
 
 
+//【異なる文字の前の位置】O(n)
+/*
+* s[0..n) で，j < i かつ s[j] != s[i] なる最大の j（なければ -1）を prv[i] に格納し prv を返す．
+*/
+vi prev_different_position(const string& s) {
+	int n = sz(s);
+	vi prv(n);
+
+	char c = s[0]; // 走査中の文字
+	int pos = -1; // 走査中の文字以外が最初に現れた位置
+
+	// 前から走査していく
+	rep(i, n) {
+		if (s[i] == c) prv[i] = pos;
+		else {
+			prv[i] = pos = i - 1;
+			c = s[i];
+		}
+	}
+
+	return prv;
+}
+
+

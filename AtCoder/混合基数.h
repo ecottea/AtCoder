@@ -4,44 +4,97 @@
 // ■■■■■ 混合基数 ■■■■■
 
 
-//【数 → 混合基数表示】
+//【混合基数表示】
 /*
-* 最下位を 0 桁目とし，[0..n) 桁目が b[0..n) 未満の非負整数で与えられる混合基数について，
-* 値 val を混合基数表示したときの i 桁目の数字を d[i] に格納し d[0..n) を返す．
+* Mixed_radix<T>() : O(1)
+*
+* set_base(vT b) : O(n)
+*	各桁の上界 b[0..n) を設定する．
+*	制約：b[n-1] = INFL（省略すると自動で追加される）
+*
+* set_weight(vl w) : O(n)
+*	各桁の重み w[0..n) を設定する．
+*	制約：w[0] = 1, w[i+1] は w[i] の倍数
+*
+* vT integer_digits(ll val) : O(n)
+*	val の混合基数表示を返す．
+*
+* ll from_digits(vT ds) : O(n)
+*	混合基数表示 ds が表す値を返す．（上位桁は省略可）
 */
 template <class T>
-vector<T> mixed_radix_form(const vector<T>& b, ll val) {
-	// verify : https://atcoder.jp/contests/abc231/tasks/abc231_e
+struct Mixed_radix {
+	// n : 桁数
+	int n;
 
-	int n = sz(b);
+	// w[i] : 第 i 桁の重み（w[0] = 1）
+	vl w;
 
-	vector<T> d(n);
-	rep(i, n) {
-		d[i] = (T)(val % b[i]);
-		val /= b[i];
+	// b[i] : 第 i 桁の数の範囲が [0..b[i]) であることを表す（b[n-1] = INFL）
+	vector<T> b;
+
+	Mixed_radix() : n(0) {};
+
+	// 混合基数 b[0..n) を設定する．（制約：b[n-1] = INFL（省略可））
+	void set_base(const vector<T>& b_) {
+		// verify : https://projecteuler.net/problem=774
+
+		n = sz(b_);
+		b = b_;
+
+		if (b.back() != (T)INFL) {
+			n++;
+			b.push_back((T)INFL);
+		}
+
+		w.resize(n);
+		w[0] = 1;
+		rep(i, n - 1) w[i + 1] = w[i] * b[i];
 	}
 
-	return d;
-}
+	// 各桁の重み w[0..n) を設定する．（制約：w[i+1] は w[i] の倍数，w[0] = 1）
+	void set_weight(const vl& w_) {
+		// verify : https://atcoder.jp/contests/abc231/tasks/abc231_e
 
+		n = sz(w_);
 
-//【混合基数表示 → 数】
-/*
-* 最下位を 0 桁目とし，[0..n) 桁目が b[0..n) 未満の非負整数で与えられる混合基数について，
-* i 桁目の数字が d[i] である混合基数表示 d[0..n) で表される値を返す．
-*/
-template <class T>
-ll from_mixed_radix_form(const vector<T>& b, const vector<T>& d) {
-	int n = sz(b);
+		Assert(w_[0] == 1);
+		w = w_;
 
-	ll val = 0; ll w = 1;
-	rep(i, n) {
-		val += w * d[i];
-		w *= b[i];
+		b.resize(n);
+		rep(i, n - 1) {
+			Assert(w[i + 1] % w[i] == 0);
+			b[i] = (T)(w[i + 1] / w[i]);
+		}
+		b[n - 1] = (T)INFL;
 	}
 
-	return val;
-}
+	// val の混合基数表示を返す．
+	vector<T> integer_digits(ll val) {
+		// verify : https://atcoder.jp/contests/abc231/tasks/abc231_e
+
+		vector<T> ds(n);
+		rep(i, n) ds[i] = (T)(val / w[i] % b[i]);
+		return ds;
+	};
+
+	// 混合基数表示 ds が表す値を返す．
+	ll from_digits(const vector<T>& ds) {
+		// verify : https://projecteuler.net/problem=774
+
+		ll val = 0;
+		rep(i, sz(ds)) val += w[i] * ds[i];
+		return val;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Mixed_radix& MR) {
+		os << "b: " << MR.b << endl;
+		os << "w: " << MR.w << endl;
+		return os;
+	}
+#endif
+};
 
 
 //【混合基数，下から桁 DP，桁上げフラグ，スコア最小化】O(n)
@@ -125,28 +178,29 @@ vvl enumerate_redundant_mixed_radix(const vl& a, ll val) {
 /*
 * 非負整数 val を混合基数 a[0..n) で冗長混合基数表示する方法の数は，以下の式で与えられる：
 *	[z^val] Πi 1/(1 - z^a[i])
+* これは部分和問題（無限個）と同じである．
 */
 
 
 //【フィボナッチ進法表示】
 /*
-* Fibonacci_representation(ll n) : O(log n)
+* Zeckendorf_representation(ll n) : O(log n)
 *	n 以下の整数のフィボナッチ進法表示を求められるよう初期化する．
 *
 * ll fibonacci(int i) : O(1)
-*	i 番目のフィボナッチ数 fib[i] を得る（fib[0] = 0, fib[1] = 1 とする．）
+*	i 番目のフィボナッチ数 fib[i] を得る（fib[0]=0, fib[1]=1 とする．）
 *
 * vi get_digits(ll n) : O(log n)
 *	n のフィボナッチ進法表示を返す．（下位から順）
 *	桁の数は {0, 1} であり，1 は連続せず，下 2 桁は常に "00" である．
 */
-class Fibonacci_representation {
+class Zeckendorf_representation {
 	int m;
 	vl fib;
 
 public:
 	// n 以下の整数のフィボナッチ進法表示を求められるよう初期化する．
-	Fibonacci_representation(ll n) {
+	Zeckendorf_representation(ll n) {
 		// verify : https://atcoder.jp/contests/arc122/tasks/arc122_c
 		
 		fib = vl{ 0, 1 }; m = 2;
@@ -156,15 +210,17 @@ public:
 		}
 	}
 
-	// i 番目のフィボナッチ数 fib[i] を得る（fib[0] = 0, fib[1] = 1 とする．）
-	ll fibonacci(int i) {
+	// i 番目のフィボナッチ数 fib[i] を得る（fib[0]=0, fib[1]=1 とする．）
+	ll fibonacci(int i) const {
+		// verify : https://projecteuler.net/problem=692
+
 		Assert(0 <= i && i < m);
 
 		return fib[i];
 	}
 
 	// n のフィボナッチ進法表示を返す（下位から順）
-	vi get_digits(ll n) {
+	vi get_digits(ll n) const {
 		// verify : https://atcoder.jp/contests/arc122/tasks/arc122_c
 		
 		if (n == 0) return vi{ 0 };

@@ -283,6 +283,9 @@ FB15 idB15() { return S0; }
 #define S3_012_mset SB15, FB15, actB15, compB15, idB15
 
 
+// ============================================================================
+
+
 //【可換モノイド作用付き生成集合の定義】
 /*
 * 可換モノイド作用付き生成集合 (S, F, act, id, E, comp) を表す．
@@ -296,7 +299,11 @@ FB15 idB15() { return S0; }
 
 
 //【要素の挿入&削除 作用付き 最大値 集合】
-/* verify : https://atcoder.jp/contests/abc342/tasks/abc342_g */
+/*
+* 利用【削除可能ヒープ】
+* 
+* verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
+*/
 using S201 = int;
 using F201 = Eraseable_heap<int>;
 using E201 = pii; // (val, tp) (tp=1:挿入, -1:削除)

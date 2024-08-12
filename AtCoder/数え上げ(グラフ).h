@@ -6,6 +6,7 @@
 #include "群論.h"
 #include "bit全探索.h"
 #include "全域木.h"
+#include "最短路.h"
 // ■■■■■ グラフ上の数え上げ問題 ■■■■■
 
 
@@ -124,6 +125,46 @@ vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {
 }
 
 
+//【最短経路の数え上げ（補グラフ）】O(n + m)
+/*
+* 与えられた無向グラフ g の補グラフに対し，始点 ST から各頂点 i への最短距離のリストと，
+* 最短距離を実現する経路の総数のリストの組を返す．（距離は到達不能なら INF）
+*
+* 利用：【幅優先探索（補グラフ）】
+*/
+pair<vi, vm> count_shortest_path_complement(const Graph& g, int ST) {
+	// verify : https://atcoder.jp/contests/abc319/tasks/abc319_g
+
+	int n = sz(g);
+
+	// dist[s] : ST から s までの最短距離（到達不能なら INF）
+	auto dist = complement_BFS(g, ST);
+
+	// d2s[d] : ST からの距離が d である頂点のリスト
+	vvi d2s(n);
+	rep(s, n) if (dist[s] != INF) d2s[dist[s]].push_back(s);
+
+	// cnt[s] : ST から s までの距離が dist[s] である経路の総数
+	vm cnt(n);
+	cnt[ST] = 1;
+
+	rep(d, n - 1) {
+		mint cnt_all;
+		repe(s, d2s[d]) cnt_all += cnt[s];
+
+		repe(t, d2s[d + 1]) {
+			// ひとまず全部足しておく．
+			cnt[t] = cnt_all;
+
+			// そこから禁止された辺を通る経路数を引く．
+			repe(s, g[t]) if (dist[s] == d) cnt[t] -= cnt[s];
+		}
+	}
+
+	return { dist, cnt };
+}
+
+
 //【独立集合の数え上げ】O(2^n n)
 /*
 * 与えられた無向グラフ g に対し，各頂点集合 set⊂[0..n) について，
@@ -237,6 +278,8 @@ vector<T> count_chromatic(const Graph& g) {
 * 利用：【独立集合判定】,【SPS 累乗の係数列挙】,【ラグランジュ補間（多項式復元）】
 */
 MFPS chromatic_polynomial(const Graph& g) {
+	// verify : https://judge.yosupo.jp/problem/chromatic_polynomial
+
 	int n = sz(g);
 
 	auto ind = independent_setQ(g);
@@ -522,11 +565,11 @@ vm count_connected_subgraph(const Graph& g) {
 *
 * 制約 : fm は m! まで計算可能
 *
-* 利用：【有向全域木の数え上げ】
+* 利用：【有向全域木の数え上げ（重み付き）】
 */
 mint best_theorem(const WGraph& g, Factorial_mint& fm) {
 	// 参考 : https://atcoder.jp/contests/abc336/editorial/9060
-	// verify : https://atcoder.jp/contests/abc336/tasks/abc336_g
+	// verify : https://judge.yosupo.jp/problem/counting_eulerian_circuits
 
 	int n = sz(g);
 
@@ -534,7 +577,7 @@ mint best_theorem(const WGraph& g, Factorial_mint& fm) {
 	vl in_deg(n), out_deg(n);
 	rep(s, n) repe(t, g[s]) {
 		in_deg[t] += t.cost;
-		out_deg[t] += t.cost;
+		out_deg[s] += t.cost;
 	}
 
 	// 入次数と出次数が異なる頂点があればオイラー閉路は存在しない．

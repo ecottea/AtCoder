@@ -392,6 +392,18 @@ void weighted_directed_graph_game(const WGraph& g, vl& sc_l, vl& sc_h) {
 */
 
 
+//【ハッケンブッシュ紐のゲーム値】
+/*
+* 左[右] が着手可能な辺の色を +1[-1] なる値で表す．根から順に
+*	(k 個の c0), -c0, c2, c3, c4, ...
+* と辺が繋がった局面のゲーム値は以下の式で与えられる 2 進有理数となる：
+*	c0 k - c0 2^(-1) + c2 2^(-2) + c3 2^(-3) + c4 2^(-4) + ...
+* 
+* 参考 :『Winning Ways for Your Mathematical Plays, Volume 1』p.78
+* verify : https://projecteuler.net/problem=895
+*/
+
+
 //【カードめくり】O(n^2 log n)
 /*
 * n 枚のカードからなる山札があり，上から i 枚目には a[i] が書かれている．

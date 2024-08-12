@@ -335,3 +335,46 @@ string div_bint_slow(string s, string t, int base = 10) {
 }
 
 
+//【多倍長整数 → 文字列】O(n (log n)^2) ?（遅い）
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/move/move.hpp>
+string to_string(boost::multiprecision::cpp_int x, int B = 10) {
+	using Bint = boost::multiprecision::cpp_int;
+
+	if (x == 0) return "0";
+
+	bool neg = false;
+	if (x < 0) {
+		x *= -1;
+		neg = true;
+	}
+
+	// powB[k] : B^(2^k)
+	vector<Bint> powB{ B }; // B^18 で始めても焼け石に水だった
+	while (powB.back() < x) powB.push_back(powB.back() * powB.back());
+	powB.pop_back();
+	int K = sz(powB), n = 1 << K;
+
+	// a : 完全二分木（左の子は商，右の子は余りをとった値をもつ）
+	vector<Bint> a(2 * n);
+	a[1] = boost::move(x);
+	repi(i, 1, n - 1) {
+		int k = K - 1 - msb(i);
+		a[2 * i + 0] = a[i] / powB[k]; // これが遅すぎる
+		a[2 * i + 1] = boost::move(a[i]);
+		a[2 * i + 1] %= powB[k];
+	}
+
+	string s; bool l0 = true;
+
+	if (neg) s += '-';
+
+	repi(i, n, 2 * n - 1) {
+		if (l0 && a[i] == 0) continue;
+		l0 = false;
+		s += a[i].str();
+	}
+
+	return s;
+}
+

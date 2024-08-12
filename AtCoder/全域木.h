@@ -281,7 +281,7 @@ vi required_edge_for_MST(int n, const vi& u, const vi& v, const vl& c) {
 */
 mint matrix_tree_theorem(const Graph& g) {
 	// 参考 : https://mizuwater0.hatenablog.com/entry/2018/11/25/233547
-	// verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_g
+	// verify : https://judge.yosupo.jp/problem/counting_spanning_tree_undirected
 
 	int n = sz(g);
 	if (n <= 1) return 1;
@@ -463,7 +463,7 @@ mint directed_matrix_tree_theorem(const Graph& g, int r) {
 */
 mint directed_matrix_tree_theorem(const WGraph& g, int r) {
 	// 参考 : https://atcoder.jp/contests/abc336/editorial/9060
-	// verify : https://atcoder.jp/contests/abc336/tasks/abc336_g
+	// verify : https://judge.yosupo.jp/problem/counting_eulerian_circuits
 
 	int n = sz(g);
 	if (n <= 1) return 1;

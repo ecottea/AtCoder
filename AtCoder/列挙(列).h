@@ -60,9 +60,36 @@ vector<vector<T>> enumerate_all_sequences(const vector<vector<T>>& a) {
 }
 
 
+//【任意数列の列挙（上限指定）】O(ub^n)
+/*
+* 数列 a[0..n) で，∀i, a[i]∈[0..ub) を満たすもの全てを格納したリストを返す．
+*/
+vvi enumerate_all_sequences(int n, int ub) {
+	vvi seqs;
+
+	vi seq(n); // 作成途中の列
+
+	function<void(int)> rf = [&](int i) {
+		// 完成していれば記録する．
+		if (i == n) {
+			seqs.push_back(seq);
+			return;
+		}
+
+		rep(x, ub) {
+			seq[i] = x;
+			rf(i + 1);
+		}
+	};
+	rf(0);
+
+	return seqs;
+}
+
+
 //【任意数列の列挙（要素ごと上限指定）】O(Πub[0..n))
 /*
-* 数列 a[0..n) で，∀i, a[i] ∈ [0..ub[i]) を満たすもの全てを格納したリストを返す．
+* 数列 a[0..n) で，∀i, a[i]∈[0..ub[i]) を満たすもの全てを格納したリストを返す．
 */
 vvi enumerate_all_sequences(const vi& ub) {
 	// verify : https://atcoder.jp/contests/arc104/tasks/arc104_e

@@ -137,7 +137,7 @@ struct Matrix {
 		// verify : https://judge.yosupo.jp/problem/matrix_product
 
 		Matrix res(n, b.m);
-		rep(i, res.n) rep(j, res.m) rep(k, m) res[i][j] += v[i][k] * b[k][j];
+		rep(i, res.n) rep(k, m) rep(j, res.m) res[i][j] += v[i][k] * b[k][j];
 		return res;
 	}
 	Matrix& operator*=(const Matrix& b) { *this = *this * b; return *this; }
@@ -274,13 +274,15 @@ struct Fixed_matrix {
 		// verify : https://yukicoder.me/problems/no/1000
 
 		Fixed_matrix res;
-		rep(i, n) rep(j, n) rep(k, n) res[i][j] += v[i][k] * b[k][j];
+		rep(i, n) rep(k, n) rep(j, n) res[i][j] += v[i][k] * b[k][j];
 		return res;
 	}
 	Fixed_matrix& operator*=(const Fixed_matrix& b) { *this = *this * b; return *this; }
 
 	// 累乗：O(n^3 log d)
 	Fixed_matrix pow(ll d) const {
+		// verify : https://yukicoder.me/problems/no/2810
+
 		Fixed_matrix res(true), pow2(*this);
 		while (d > 0) {
 			if (d & 1) res *= pow2;
@@ -571,6 +573,63 @@ vector<T> gauss_jordan_elimination_diagonal(vector<vector<T>> a, vector<T> b) {
 	}
 
 	return sol;
+}
+
+
+//【functional graph 上の線形方程式】
+/*
+* 与えられた V=[0..n) 上の functional graph i→f[i] に対し，線形方程式
+*	x[i] = a[i] x[f[i]] + b[i]  (i∈[0..n))
+* の解 x[0..n) を返す．
+*
+* 利用：【一次多項式】
+*/
+template <class T>
+vd functional_equation(const vi& f, const vector<T>& a, const vector<T>& b) {
+	// verify : https://projecteuler.net/problem=863
+
+	int n = sz(f);
+
+	vector<Poly1<T>> dp(n);
+
+	// id[s] : s を探索したときの探索開始地点
+	vi id(n, -1);
+	rep(s, n) {
+		if (id[s] != -1) continue;
+
+		int v = s;
+		while (id[v] == -1) {
+			id[v] = s;
+			v = f[v];
+		}
+
+		if (id[v] == s) {
+			id[v] = INF;
+			dp[v] = Poly1<T>(1, 0);
+		}
+	}
+
+	// id[s]=s なる頂点の値を z とおいて，他の頂点の値を z を用いて表す．
+	function<Poly1<T>(int)> rf = [&](int s) {
+		if (id[s] == INF) return dp[s];
+		id[s] = -1;
+
+		return dp[s] = a[s] * rf(f[s]) + b[s];
+	};
+	rep(s, n) if (id[s] != -1) rf(s);
+
+	vd res(n);
+
+	// d[s]=s なる頂点において一次方程式を解いて z の値を求め，他の頂点の値を特定する．
+	function<double(int)> rf2 = [&](int s) {
+		if (id[s] == INF) return res[s] = dp[s].solve(a[s] * dp[f[s]] + b[s]);
+		id[s] = -2;
+
+		return res[s] = a[s] * rf2(f[s]) + b[s];
+	};
+	rep(s, n) if (id[s] != -2) rf2(s);
+
+	return res;
 }
 
 

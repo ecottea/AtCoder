@@ -321,6 +321,15 @@ vvi next_greater_position(int m, const vi& a) {
 }
 
 
+//【等しい要素を同一視するクエリ → 矩形クエリ】
+/*
+* 各 a[i] に対し，自身と等しい数の次の位置を j として点 (i, j) を対応させる．
+* 各クエリ [l..r) では等しい要素のうち最右要素だけを考慮することにすると，
+*		l ≦ i < r かつ r ≦ j ≦ n
+* を満たす点群に対する矩形クエリを効率的に処理できればよい．
+*/
+
+
 //【index を足す前処理による swap への帰着】
 /*
 * 数列 a[0..n) に対する
@@ -350,10 +359,10 @@ vvi next_greater_position(int m, const vi& a) {
 
 //【デカルト木】
 /*
-* Cartesian_tree(vT a, smaller = true) : O(n)
+* Cartesian_tree(vT a, greater = false) : O(n)
 *	a[0..n) の最小要素の位置を根とするデカルト木を構築する．
 *	根から順に小さい要素での区間の分割を表す（同じ要素は左のものほど小さいとする．）
-*	smaller = false とすると，大小関係を逆転して木の構築を行う．
+*	greater = true とすると，大小関係を逆転して木の構築を行う．
 */
 template <class T>
 struct Cartesian_tree {
@@ -378,7 +387,7 @@ struct Cartesian_tree {
 	vector<Node> v; // 頂点
 
 	// 数列 a[0..n) で初期化する．
-	Cartesian_tree(const vector<T>& a, bool smaller = true) : n(sz(a)), rt(0), v(n) {
+	Cartesian_tree(const vector<T>& a, bool greater = false) : n(sz(a)), rt(0), v(n) {
 		// verify : https://judge.yosupo.jp/problem/cartesian_tree
 
 		if (n == 0) {
@@ -390,7 +399,7 @@ struct Cartesian_tree {
 		repi(i, 1, n - 1) {
 			// pt : i-1 の祖先で値が a[i] 以下であるもののうち最も深いもの（なければ -1）
 			int pt = i - 1;
-			while (pt != -1 && (smaller ? a[pt] > a[i] : a[pt] < a[i])) pt = v[pt].p;
+			while (pt != -1 && (!greater ? a[pt] > a[i] : a[pt] < a[i])) pt = v[pt].p;
 
 			// pt の右の子を i，i の左の子を pt の元の右の子とする．
 			if (pt != -1) {

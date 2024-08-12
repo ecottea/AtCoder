@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
+#include "列挙(数論).h"
 #include "mint.h"
 // ■■■■■ 合同式 ■■■■■
 
@@ -14,10 +15,10 @@
 int ord_p(const mint& a) {
 	const int p = mint::mod();
 
-	// p - 1 の約数が位数の候補となる．
+	// p-1 の約数が位数の候補となる．
 	vi divs = divisors(p - 1);
 
-	// p - 1 の約数を昇順に調べていく．
+	// p-1 の約数を昇順に調べていく．
 	repe(d, divs) if (a.pow(d) == 1) return d;
 
 	return -1;
@@ -408,7 +409,14 @@ int tonelli_shanks(const mint& a) {
 }
 
 
-//【累乗根】O(min(p, k)^(1/4))
+//【-1 の平方剰余】
+/*
+* 素数 p が 4n+1 型のときに限り -1 の平方剰余が存在する．
+* ランダムに r≠0 を選んで a = r^((p-1)/4) を計算し，a ≠ ±1 であれば a^2 = -1 (mod p) である．
+*/
+
+
+//【累乗根】O(min(p,k)^(1/4))
 /*
 * x^k ≡ a (mod p) の解 x の 1 つを返す．（なければ -1）
 *

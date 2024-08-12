@@ -7,7 +7,7 @@
 
 //【binary trie】
 /*
-* Binary_trie<T = ll>(int B = 63) : O(1)
+* Binary_trie<T = ll>(int B = 62) : O(1)
 *   型 T の B ビット非負整数を扱えるよう空で初期化する．
 *
 * ll size() : O(1)
@@ -170,7 +170,7 @@ class Binary_trie {
 
 public:
 	// 空で初期化する． : O(1)
-	Binary_trie(int B_ = 63) : root(nullptr), B(B_) {}
+	Binary_trie(int B_ = 62) : root(nullptr), B(B_) {}
 
 	// メモリを開放する．： O(n B)
 	~Binary_trie() {
@@ -225,7 +225,7 @@ public:
 
 	// mask[=0] との XOR をとったときの val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
 	ll lower_bound(T val, T mask = 0) const {
-		// verify : https://www.spoj.com/problems/SUBXOR/
+		// verify : https://judge.yosupo.jp/problem/point_set_range_frequency
 
 		if (val <= 0) return 0LL;
 		if (val >= (T(1) << B)) return size();
@@ -410,7 +410,7 @@ public:
 	}
 
 	// 全ての区間 [l..r) からなるリストを返す．
-	vector<pair<T, T>> get_all_intervals() {
+	vector<pair<T, T>> get_all_intervals() const {
 		// verify : https://atcoder.jp/contests/abc254/tasks/abc254_g
 		
 		vector<pair<T, T>> res;

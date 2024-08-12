@@ -124,7 +124,7 @@ struct Ushige {
 *	n 変数で初期化する．
 *
 * set_ub(a, b, d) : O(1)
-*	v[b] - v[a] ≦ d という制約を追加する．（d >= 0）
+*	v[b] - v[a] ≦ d という制約を追加する．（d ≧ 0）
 *
 * vl maximize_diff(a) : O(n + m log n)（m : 制約の数）
 *	各 b について v[b] - v[a] の最大値（無いなら INFL）を格納したリストを返す．
@@ -135,10 +135,14 @@ struct Ushige_ub_only {
 	int n;
 	WGraph g;
 
+	Ushige_ub_only(int n) : n(n), g(n) {
+		// verify : https://yukicoder.me/problems/no/2826
+	}
 	Ushige_ub_only() : n(0) {}
-	Ushige_ub_only(int n_) : n(n_), g(n_) {}
 
 	void set_ub(int a, int b, ll d) {
+		// verify : https://yukicoder.me/problems/no/2826
+
 		Assert(d >= 0);
 
 		// 差の上限に対応する重みを持つ辺を張る．
@@ -146,6 +150,8 @@ struct Ushige_ub_only {
 	}
 
 	vl maximize_diff(int a) {
+		// verify : https://yukicoder.me/problems/no/2826
+		
 		// a を始点とする最短経路問題を解く．
 		// b までの最短経路長がそのまま v[b] - v[a] の最大値になる．
 		return dijkstra(g, a);
@@ -474,19 +480,19 @@ class Generalized_dual_mcf {
 	// とおくと，一般化最小費用流問題は，f[s][t] を変数とする
 	//		minimize	Σe c[e] f[e]
 	//		subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = g[v] （∀v ∈ V）
-	//					0 <= f[e] <= u[e] （∀e ∈ E）
+	//					0 ≦ f[e] ≦ u[e] （∀e ∈ E）
 	// なる線形計画問題として定式化できる．
 	//
 	// これの双対を考えると，y[s][t], p[v] を変数とする
 	//		maximize	-ΣsΣt u[s][t] y[s][t] - Σv d[v] p[v]
-	//		subject to	-y[s][t] + p[t] - p[s] <= c[s][t] （∀s→t ∈ E）
-	//					y[s][t] >= 0 （∀s→t ∈ E）
+	//		subject to	-y[s][t] + p[t] - p[s] ≦ c[s][t] （∀s→t ∈ E）
+	//					y[s][t] ≧ 0 （∀s→t ∈ E）
 	// なる線形計画問題になる．
 	//
 	// y[s][t] に課された不等式制約は
-	//		y[s][t] >= p[t] - p[s] - c[s][t]
-	//		y[s][t] >= 0
-	// であり，u[s][t] >= 0 より目的関数の最大化のためには y[s][t] は小さくすべきなので，
+	//		y[s][t] ≧ p[t] - p[s] - c[s][t]
+	//		y[s][t] ≧ 0
+	// であり，u[s][t] ≧ 0 より目的関数の最大化のためには y[s][t] は小さくすべきなので，
 	//		y[s][t] = max(0, p[t] - p[s] - c[s][t])
 	// とするのが最善である．これを踏まえた上で目的関数を -1 倍すれば，p[v] を変数とする
 	//		minimize	Σv d[v] p[v] + ΣsΣt u[e] max(0, p[t] - p[s] - c[e])
@@ -582,8 +588,7 @@ public:
 		}
 
 		// 最小費用流を求める．
-		ll cap, cost;
-		tie(cap, cost) = g.flow(ST, GL);
+		auto [cap, cost] = g.flow(ST, GL);
 
 		return -(precost + cost);
 	}
@@ -592,7 +597,7 @@ public:
 	friend ostream& operator<<(ostream& os, const Generalized_dual_mcf& g) {
 		os << "cost: " << g.precost << endl;
 		os << "div: " << g.div << endl;
-		os << "graph:" << endl << g.g;
+//		os << "graph:" << endl << g.g;
 		return os;
 	}
 #endif

@@ -30,6 +30,8 @@ T euclid(T a, T b) {
 * GCD a[0..n) ‚ğ•Ô‚·Di‹ó—ñ‚Ì gcd ‚Í 0 ‚Æ‚·‚éj
 */
 ll gcd(const vl& a) {
+	// verify : https://mojacoder.app/users/radix_sort/problems/stilllight
+	
 	ll g = 0;
 	repe(x, a) g = gcd(g, x);
 	return g;

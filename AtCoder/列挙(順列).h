@@ -3,7 +3,7 @@
 // ■■■■■ 列挙（順列） ■■■■■
 
 
-//【順列の列挙（選択）】O(nPk)
+//【順列の列挙】O(nPk)
 /*
 * a[0..n) の k=n 個の要素からなる順列全てからなるリストを返す（要素の重複は検出しない）
 */
@@ -47,6 +47,23 @@ vector<vector<T>> enumerate_permutations(const vector<T>& a, int k = -1) {
 
 	return seqs;
 }
+
+
+//【順列の列挙（隣接 swap）】
+/*
+* 以下に示す再帰的方法により，隣接要素の swap のみで順列を列挙することができる：
+*	n=1 :	1*
+*	n=2 :	1 2*
+*			2* 1
+*	n=3 :	1 2 3* (n=2 の step0 において 3* を右から左へ移動する)
+*			1 3* 2
+*			3* 1 2
+*			3* 2 1 (n=2 の step1 において 3* を左から右へ移動する)
+*			2 3* 1
+*			2 1 3*
+* 
+* 参考 : https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+*/
 
 
 //【順列の列挙（置き換え）】O(k!)（k : -1の個数）

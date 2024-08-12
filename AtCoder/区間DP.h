@@ -40,15 +40,16 @@ ll matrix_chain_multiplication(vl& d) {
 
 //【スライム融合】O(n^3)
 /*
-* 大きさ c[i] のスライム n 匹が一列に並んでいる．
+* 大きさ c[i] のスライム n 匹が一列に並んでいる．隣り合うスライムは合体できる．
 * 合体時に大きさの和だけのコストを払うとき，全部を合体させるための最小コストを返す．
-* 
-* 最適二分探索木の最小コストを求める問題とも解釈できる（実は O(n log n) で解ける）
 * 
 *（区間 DP）
 */
 ll merge_slimes(const vl& c) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_n
+
+	//【備考】
+	// 最適二分探索木の最小コストを求める問題とも解釈できる（実は O(n log n) で解ける）
 
 	int n = sz(c);
 

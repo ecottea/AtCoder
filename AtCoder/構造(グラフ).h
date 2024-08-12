@@ -116,14 +116,14 @@ WGraph read_WGraph(int n, int m = -1, bool directed = false, bool zero_indexed =
 	WGraph g(n);
 	if (m == -1) m = n - 1;
 
-	rep(i, m) {
-		int a, b; ll c;
-		cin >> a >> b >> c;
+	rep(j, m) {
+		int u, v; ll c;
+		cin >> u >> v >> c;
 
-		if (!zero_indexed) { --a; --b; }
+		if (!zero_indexed) { --u; --v; }
 
-		g[a].push_back({ b, c });
-		if (!directed && a != b) g[b].push_back({ a, c });
+		g[u].push_back({ v, c });
+		if (!directed && u != v) g[v].push_back({ u, c });
 	}
 
 	return g;

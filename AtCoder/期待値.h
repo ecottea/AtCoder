@@ -598,6 +598,9 @@ double blurred_shooting(const vi& x) {
 * vT stationary_distribution() : O(n^3)
 *	定常分布を返す．
 *	制約：どの頂点からどの頂点へも移動可能
+* 
+* vT distribution(int ST, ll k) : O(n^3 log k)
+*	ST から出発して k 回移動した後の確率分布を返す．
 *
 * 利用：【行列】，【線形方程式】
 */
@@ -677,6 +680,19 @@ public:
 		vec[n - 1] = 1;
 
 		return gauss_jordan_elimination(mat, vec);
+	}
+
+	// ST から出発して k 回移動した後の確率分布を返す．
+	vector<T> distribution(int ST, ll k) {
+		// verify : https://yukicoder.me/problems/no/2832
+
+		Matrix<T> mat(n); vector<T> vec(n);
+		rep(i, n) rep(j, n) mat[i][j] = p[j][i];
+		vec[ST] = 1;
+
+		vec = mat.pow(k) * vec;
+
+		return vec;
 	}
 
 #ifdef _MSC_VER

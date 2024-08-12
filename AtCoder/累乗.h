@@ -110,7 +110,7 @@ ll truncated_pow(ll a, ll n, ll inf = INFL) {
 //yn ‚æ‚è‘å‚«‚¢Å¬‚Ì 2 ™pz
 /*
 * n ‚æ‚è‘å‚«‚¢Å¬‚Ì 2 ™p‚Í 1 << (msb(n) + 1) ‚Å“¾‚ç‚ê‚éD
-* n ˆÈã‚ÌÅ¬‚Ì 2 ™p‚Í 1 << (msb(n - 1) + 1) ‚Å“¾‚ç‚ê‚éi‚½‚¾‚µ n ‚ 0j
+* n ˆÈã‚ÌÅ¬‚Ì 2 ™p‚Í 1 << (msb(n - 1) + 1) ‚Å“¾‚ç‚ê‚éi‚½‚¾‚µ n > 0j
 */
 
 
@@ -132,7 +132,7 @@ T integer_root(T a, int n = 2) {
 			v *= x;
 		}
 		return v;
-		};
+	};
 
 	T ok = 1, ng = a + 1;
 
@@ -211,7 +211,7 @@ ll discrete_logarithm(const F& f, const S& s, const S& t, ll N) {
 
 //y—İæ‚Å—İæzO(ãm)
 /*
-* a ^ (b ^ c) mod m ‚ğ•Ô‚·D
+* a^(b^c) mod m ‚ğ•Ô‚·D
 *
 * —˜—pFyƒIƒCƒ‰[ŠÖ”z
 */
@@ -303,6 +303,12 @@ int tetration(ll a, ll b, int m) {
 *	(a + p^(n-1))^p ß a^p (mod p^n)
 *
 * verify : https://yukicoder.me/problems/no/2344
+*/
+
+
+//y—İæ˜az
+/*
+* FPS(mint).h ‚Ö
 */
 
 

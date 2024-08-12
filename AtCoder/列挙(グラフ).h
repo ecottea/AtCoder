@@ -441,6 +441,56 @@ vvi enumerate_clique(const Graph& g) {
 }
 
 
+//【三角形の列挙】O(m √m log n) ?
+/*
+* 無向グラフ g の三角形 {v1, v2, v3} のリストを返す．（v1 < v2 < v3）
+*/
+vector<tuple<int, int, int>> enumerate_triangles(const Graph& g) {
+	// verify : https://judge.yosupo.jp/problem/enumerate_triangles
+
+	int n = sz(g);
+
+	// gD : g の s → t (s < t) なる辺のみからなる DAG
+	Graph gD(n);
+	rep(s, n) repe(t, g[s]) if (s < t) gD[s].push_back(t);
+
+	// d[s] : gD の頂点 s の出次数
+	vi d(n);
+	rep(s, n) {
+		d[s] = sz(gD[s]);
+		sort(all(gD[s])); // 辺は行き先について昇順ソートしておく
+	}
+
+	vector<tuple<int, int, int>> res;
+
+	rep(s, n) repe(t, gD[s]) {
+		if (d[s] < d[t]) {
+			// 辺 s→u をもつ各 u について，辺 t→u が存在するかを二分探索で調べる．
+			repir(j, sz(gD[s]) - 1, 0) {
+				int u = gD[s][j];
+				if (u <= t) break;
+
+				auto it = lower_bound(all(gD[t]), u);
+				if (it != gD[t].end() && *it == u) {
+					res.emplace_back(s, t, u);
+				}
+			}
+		}
+		else {
+			// 辺 t→u をもつ各 u について，辺 s→u が存在するかを二分探索で調べる．
+			repe(u, gD[t]) {
+				auto it = lower_bound(all(gD[s]), u);
+				if (it != gD[s].end() && *it == u) {
+					res.emplace_back(s, t, u);
+				}
+			}
+		}
+	}
+
+	return res;
+}
+
+
 //【完全グラフの完全マッチングの列挙】
 /*
 * マッチング(一般).h へ

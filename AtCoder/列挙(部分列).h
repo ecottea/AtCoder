@@ -22,6 +22,24 @@ vector<vector<T>> enumerate_subsequences(const vector<T>& a) {
 }
 
 
+//【部分列の列挙（文字列）】O(2^n n)
+/*
+* s[0..n) の部分列全てを格納したリストを返す（重複含む，空列含む）
+*/
+vector<string> enumerate_subsequences(const string& s) {
+	int n = sz(s);
+	vector<string> seqs;
+
+	repb(set, n) {
+		string seq;
+		repis(i, set) seq.push_back(s[i]);
+		seqs.push_back(seq);
+	}
+
+	return seqs;
+}
+
+
 //【部分列の列挙（長さ指定）】O(bin(n, m) m) ?
 /*
 * a[0..n) の長さ m の部分列全てを格納したリストを返す（重複含む）

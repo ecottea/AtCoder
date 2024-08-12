@@ -17,8 +17,8 @@ int LIS_length_to_val(const vector<T>& a) {
 
 	// dp_i[j] : a[0..i) で，長さが j である増加部分列の右端の値の最小値
 	//	短い増加部分列はそれより長い増加部分列の部分列なので，広義単調増加性がある．
-	vector<T> dp(n + 1, numeric_limits<T>::max());
-	dp[0] = numeric_limits<T>::lowest();
+	vector<T> dp(n + 1, T(INFL));
+	dp[0] = -T(INFL);
 
 	//（例）a[0..5) = [4, 2, 3, 3, 1] のとき
 	//	dp_0[0..5] = [-INF, INF, INF, INF, INF, INF]
@@ -42,7 +42,7 @@ int LIS_length_to_val(const vector<T>& a) {
 	// 右端の値が設定できている長さの最大値を求める．
 	int res = 0;
 	repir(j, n, 1) {
-		if (dp[j] != numeric_limits<T>::max()) {
+		if (dp[j] != T(INFL)) {
 			res = j;
 			break;
 		}

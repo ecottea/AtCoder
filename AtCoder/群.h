@@ -17,7 +17,7 @@
 
 
 //y‘˜a ƒA[ƒxƒ‹ŒQz
-/* verify : https://atcoder.jp/contests/aising2019/tasks/aising2019_d */
+/* verify : https://judge.yosupo.jp/problem/point_add_range_sum */
 using S601 = ll;
 S601 op601(S601 a, S601 b) { return a + b; }
 S601 e601() { return 0; }

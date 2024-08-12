@@ -271,7 +271,7 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 //【長方形の扱い】
 /*
 * (x1, y1) を左上，(x2, y2) を右下にもつ長方形が存在する
-* ⇔ 第 x1 行と第 x2 行の両方に辺 (y1, y2) が存在する．
+* ⇔ 第 x1 行と第 x2 行の両方に辺 y1-y2 が存在する．
 * 
 * verify : https://atcoder.jp/contests/arc019/tasks/arc019_4
 */

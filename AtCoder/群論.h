@@ -61,6 +61,12 @@ mint count_permutation_type(const vi& p, const Factorial_mint& fm) {
 vector<pim> permutation_order_distribution(int n, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/abc226/tasks/abc226_f
 
+	//【備考】
+	// EGF からのメビウス変換を考えることで
+	//		c = Σ_i|d μ(d/i) [z^n] exp(Σ_j|d z^j/j)
+	// が得られるが，d の値域がクソ広いので微妙．
+	// 乗法的数論関数 f について Σd c f(d) を求めるくらいならできる．
+
 	auto ips = integer_partitions_val(n, n);
 
 	map<int, mint> d_to_c;
@@ -96,7 +102,7 @@ vector<pll> order_distribution(ll n) {
 	unordered_map<ll, ll> cnt;
 	repe(d, D.divs) cnt[d] = d;
 
-	D.multiple_mobius(cnt);
+	D.divisor_mobius(cnt);
 
 	vector<pll> res;
 	for (auto& [d, c] : cnt) res.emplace_back(d, c);

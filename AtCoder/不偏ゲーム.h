@@ -287,7 +287,7 @@ vi subtraction_nim(const vi& c, int n) {
 //【約数減算ニム】
 /*
 * 山から取り除ける石の個数が n の約数に限られるルールのニムについて，
-* n の約数でない最小の正整数を k とすると，i 個の石からなる山のニム値は i mod k である．
+* n の約数でない最小の正整数を p^e とすると，i 個の石からなる山のニム値は i mod p^e である．
 * 
 * verify : https://codeforces.com/contest/1844/problem/D
 */
@@ -315,6 +315,15 @@ vi subtraction_nim(const vi& c, int n) {
 * 
 * 参考 : https://fibonacci-freak.hatenablog.com/entry/2017/09/04/132443
 * verify : https://yukicoder.me/problems/no/2285
+*/
+
+
+//【staircase nim】
+/*
+* 石を取り除く代わりに左隣に移動するニムを staircase nim という．
+* staircase nim のニム値は a[1] XOR a[3] XOR ... になる．
+* 
+* verify : https://yukicoder.me/problems/no/2823
 */
 
 
@@ -474,17 +483,28 @@ vi directed_graph_game(const Graph& g) {
 
 //【木の辺の切断ゲーム】O(n)
 /*
-* r を根とする木 g について，交互に辺を切断して着手不能に陥ったほうが負けのゲームを行う．
+* r を根とする根付き木 g について，交互に辺を切断し部分木を削除し，着手不能に陥ったほうが負けのゲームを行う．
 * 各 s について部分木 s でゲームを開始した場合のニム値を格納したリストを返す．
 *
-* 利用：【貰う木 DP（頂点マージ）】
+* 利用：【貰う木 DP】
 */
-// verify : https://atcoder.jp/contests/agc017/tasks/agc017_d
-void merge_gct(int& x, const int& y, int s) { x ^= y; }
-int leaf_gct(int s) { return 0; }
-int apply_gct(const int& x, int s, int t) { return x + 1; }
-vi tree_cut_game(const Graph& g, int r) {
-	return tree_getDP_vmerge<int, merge_gct, leaf_gct, apply_gct>(g, r);
+using T_tecg = int; // ニム値
+T_tecg leaf_tecg(int s) {
+	return 0;
+}
+T_tecg add_edge_tecg(const T_tecg& x, int p, int s) {
+	return x + 1; // 実はこうなる（帰納法で証明できる）
+}
+void merge_tecg(T_tecg& x, const T_tecg& y, int s) {
+	x ^= y;
+}
+void add_vertex_tecg(T_tecg& x, int s) {
+	x;
+}
+vi tree_edge_cut_game(const Graph& g, int r) {
+	// verify : https://atcoder.jp/contests/agc017/tasks/agc017_d
+
+	return tree_getDP<T_tecg, leaf_tecg, add_edge_tecg, merge_tecg, add_vertex_tecg>(g, r);
 }
 
 
@@ -593,6 +613,8 @@ public:
 
 	// x のニム積逆元を返す．
 	ull inv(ull x) {
+		// verify : https://projecteuler.net/problem=459
+
 		Assert(x > 0);
 
 		if (x < (1ULL << 1)) return 1;

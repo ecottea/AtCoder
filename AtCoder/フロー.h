@@ -414,7 +414,7 @@ struct Generalized_min_cost_flow {
 	friend ostream& operator<<(ostream& os, const Generalized_min_cost_flow& g) {
 		os << "precost: " << g.precost << endl;
 		os << "div: " << g.div << endl;
-//		os << "graph:" << endl << g.g;
+		os << "graph:" << endl << g.g;
 		return os;
 	}
 #endif

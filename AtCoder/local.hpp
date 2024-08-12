@@ -26,13 +26,13 @@ inline int popcount(ll n) {
 
 // 最下位ビットの位置（0-indexed）
 inline int lsb(int n) {
-	if (n == 0) return -1;
+	if (n == 0) return 32;
 	unsigned long i;
 	_BitScanForward(&i, (unsigned int)n);
 	return i;
 } 
 inline int lsb(ll n) {
-	if (n == 0) return -1;
+	if (n == 0) return 64;
 	unsigned long i;
 	_BitScanForward64(&i, (ull)n);
 	return i;
@@ -97,6 +97,12 @@ inline ostream& operator<< (ostream& os, const multiset<Key, Compare, Allocator>
 
 template <class Key, class Hash, class Pred, class Allocator>
 inline ostream& operator<< (ostream& os, const unordered_set<Key, Hash, Pred, Allocator>& s) {
+	repe(x, s) os << x << " ";
+	return os;
+}
+
+template <class Key, class Hash, class Pred, class Allocator>
+inline ostream& operator<< (ostream& os, const unordered_multiset<Key, Hash, Pred, Allocator>& s) {
 	repe(x, s) os << x << " ";
 	return os;
 }

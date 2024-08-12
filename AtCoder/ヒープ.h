@@ -402,6 +402,9 @@ private:
 * void erase(T x) : O(log n)
 *	ヒープ内の要素 x を削除する．
 *	制約 : ヒープ内に要素 x が存在する．
+* 
+* void rebuild() : O(n log n)
+*	ヒープを再構築する．
 */
 template <class T, class comp = less<T>>
 class Eraseable_heap {
@@ -466,6 +469,20 @@ public:
 		// verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
 
 		qe.push(x);
+
+		// if (sz(q) < sz(qe)) rebuild(); // ヒープが肥大化しそうなときは使う
+	}
+
+	// 再構築する．
+	void rebuild() {
+		// verify : https://projecteuler.net/problem=870
+
+		vector<T> tmp;
+		tmp.reserve(size());
+		while (!empty()) {
+			tmp.push_back(top()); pop();
+		}
+		q = priority_queue<T, vector<T>, comp>(all(tmp));
 	}
 
 #ifdef _MSC_VER
@@ -609,7 +626,7 @@ public:
 };
 
 
-//【削除可能分離ヒープ（和）】
+//【削除可能分離ヒープ（総和）】
 /*
 * Eraseable_separated_heap_sum<T, comp = less<T>>() : O(1)
 *	空のヒープで初期化する．
@@ -636,7 +653,7 @@ public:
 *	制約 : ヒープは空でない
 *
 * void sum_l(), sum_r() : ならし O(1)
-*	ヒープ内の要素の和を返す．
+*	ヒープ内の要素の総和を返す．
 *
 * 利用：【削除可能ヒープ】
 */

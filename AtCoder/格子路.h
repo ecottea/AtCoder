@@ -299,15 +299,15 @@ ll maximize_score_path(const vl& x_, const vl& y_, const vl& c) {
 /*
 * (0, 0) から (h, w) までの最短格子路のうち，
 * n 個の禁止点 (x[i], y[i]) を 1 つも通らないものの個数を返す．
+* 
+* 制約：fm は (h+w)! まで計算可能
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-mint dummy_path_lemma(int h, int w, const vi& x, const vi& y) {
+mint dummy_path_lemma(int h, int w, const vi& x, const vi& y, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_y
 
 	int n = sz(x);
-
-	Factorial_mint fm(h + w);
 
 	// s, t : 対応する始点と終点の列
 	// 番号の小さい方へ戻るパスは存在してはいけない．
@@ -320,7 +320,7 @@ mint dummy_path_lemma(int h, int w, const vi& x, const vi& y) {
 	sort(next(s.begin()), s.end());
 	repi(i, 1, n) t.push_back(s[i]);
 
-	// DPL 用の行列を作成する．
+	// DPL 用の行列を作成する（第 0 列と上三角部分以外の値は 0）
 	vvm dpl(n + 1, vm(n + 1));
 	repi(i, 0, n) repi(j, 0, n) {
 		int h = t[j].first - s[i].first;
@@ -328,7 +328,7 @@ mint dummy_path_lemma(int h, int w, const vi& x, const vi& y) {
 		dpl[i][j] = fm.bin(h + w, h);
 	}
 
-	// 列基本変形で第 1 列の 2 行目以降を消去する．
+	// 列基本変形で第 0 列の 1 行目以降を消去する．
 	repir(j, n, 1) rep(i, j) dpl[i][0] -= dpl[j][0] * dpl[i][j];
 
 	// DPL 行列の行列式，すなわち (0,0) 成分が答え．
@@ -340,7 +340,7 @@ mint dummy_path_lemma(int h, int w, const vi& x, const vi& y) {
 /*
 * (0, 0) から (h, w) までの最短格子路のうち，常に -l < y-x < r を満たすものの個数を返す．
 *
-* 制約：fm は (h + w)! まで計算可能であること
+* 制約：fm は (h+w)! まで計算可能
 */
 mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint& fm) {
 	// verify : https://atcoder.jp/contests/agc013/tasks/agc013_d
@@ -377,6 +377,7 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 *	bin(2n,n) / (n+1) （カタラン数）
 * 
 * 参考 : https://oeis.org/A009766
+* verify : https://projecteuler.net/problem=739
 */
 
 

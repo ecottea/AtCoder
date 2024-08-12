@@ -225,7 +225,7 @@ int row_reduced_form(Bit_matrix<M>& A, vi* is = nullptr, vi* js = nullptr) {
 */
 template <int M>
 Bit_matrix<M> inverse_matrix(const Bit_matrix<M>& A) {
-	// verify : https://atcoder.jp/contests/jag2013summer-day4/tasks/icpc2013summer_day4_f
+	// verify : https://judge.yosupo.jp/problem/inverse_matrix_mod_2
 
 	int n = A.n;
 
@@ -277,7 +277,7 @@ template <int M>
 bool gauss_jordan_elimination(const Bit_matrix<M>& A, const vb& b,
 	bitset<M>* x0 = nullptr, vector<bitset<M>>* xs = nullptr)
 {
-	// verify : https://atcoder.jp/contests/arc173/tasks/arc173_e
+	// verify : https://atcoder.jp/contests/abc366/tasks/abc366_g
 
 	int n = A.n, m = A.m;
 
@@ -314,7 +314,7 @@ bool gauss_jordan_elimination(const Bit_matrix<M>& A, const vb& b,
 	}
 
 	// 最後に見つかったピボットの位置が第 m 列ならば解なし．
-	if (pivots.back() == m) return false;
+	if (!pivots.empty() && pivots.back() == m) return false;
 
 	// A x = b の特殊解 x0 の構成（任意定数は全て 0 にする）
 	if (x0 != nullptr) {

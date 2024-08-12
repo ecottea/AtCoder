@@ -13,11 +13,12 @@
 
 //【商列挙】O(√n)
 /*
-* i=[1..n] に対し，n/i = q（切り捨て）となる i の範囲が [il..ir) であることを
-* {il, ir, q} として il について昇順に格納したリストを返す．
-* 各範囲においては余りは公差 -q の等差数列を成す．
+* 区間 (0..n] を n/i = q（切り捨て）となる半開区間 i∈(il..ir] に分割し，
+* i について昇順にそれぞれに対して f(il, ir, q) を呼び出す．
+* なお各範囲においては n mod i は公差 -q の等差数列を成す．
 */
-vector<tuple<ll, ll, ll>> quotient_range(ll n) {
+template <class T, class FUNC>
+void quotient_range(T n, const FUNC& f) {
 	// 参考 : https://ei1333.github.io/luzhiled/snippets/math/quotient-range.html
 	// verify : https://judge.yosupo.jp/problem/enumerate_quotients
 
@@ -26,7 +27,7 @@ vector<tuple<ll, ll, ll>> quotient_range(ll n) {
 	//		q = floor(n/i)
 	//		⇔ q ≦ n/i < q+1
 	//		⇔ i q ≦ n < i(q+1)
-	//		⇔ n/(q+1) < i ≦ n/q
+	//		⇔ n/(q+1) < i ≦ n/q  (⇔ floor(n/(q+1)) < i ≦ floor(n/q))
 	// となる．
 	//
 	// この幅が 1 以下であれば，q に対応する i は高々 1 個である．その条件は
@@ -38,71 +39,79 @@ vector<tuple<ll, ll, ll>> quotient_range(ll n) {
 	// としてもオーダーに影響はない．
 
 	//（例）
-	// 例えば n = 15 のときは以下のように分類できる：
-	//		i の範囲		n/i		n mod i
-	//		[1..2)		15		[0]
-	//		[2..3)		7		[1]
-	//		[3..4)		5		[0]
-	//		[4..6)		3		[3, 0]
-	//		[6..8)		2		[3, 1]
-	//		[8..16)		1		[7, 6, 5, 4, 3, 2, 1, 0]
+	// 例えば n = 15 のときは (0..15] を以下のように分割できる：
+	//		i の範囲		q=n/i	n mod i
+	//		(0..1]		15		[0]
+	//		(1..2]		7		[1]
+	//		(2..3]		5		[0]
+	//		(3..5]		3		[3, 0]
+	//		(5..7]		2		[3, 1]
+	//		(7..15]		1		[7, 6, 5, 4, 3, 2, 1, 0]
 
-	ll m = (ll)(sqrt(n) + 1e-9);
-	vector<tuple<ll, ll, ll>> res;
-	res.reserve(n / (m + 1) + m);
+	T sqrt_n = (T)(sqrt(n) - 1e-9);
 
 	// q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
-	repi(i, 1, n / (m + 1)) res.emplace_back(i, i + 1, n / i);
+	T i_max = n / (sqrt_n + 1);
+	for (T i = 1; i <= i_max; ++i) f(i - 1, i, n / i);
 
 	// そうでない部分は q ごとにまとめて考える．
-	ll il, ir = n / (m + 1) + 1;
-	repir(q, m, 1) {
+	T il, ir = i_max;
+	for (T q = sqrt_n; q >= 1; --q) {
 		il = ir;
-		ir = n / q + 1;
-		res.emplace_back(il, ir, q);
+		ir = n / q;
+		f(il, ir, q);
 	}
 
-	return res;
+	/* f の定義の雛形
+	using T = ll;
+	auto f = [&](T il, T ir, T q) {
+
+	};
+	*/
 }
 
 
-//【商列挙（組）】O(√max(n1, n2))
+//【商列挙（組）】O(√max(n1,n2))
 /*
-* i=[1..max(n1,n2)] に対し，(n1/i, n2/i) = (q1, q2)（切り捨て）となる i の範囲が [il..ir) であることを
-* {il, ir, q1, q2} として il について昇順に格納したリストを返す．
-* 各範囲においては余りは公差 (-q1, -q2) の等差数列を成す．
+* 区間 (0..max(n1,n2)] を (n1/i, n2/i) = (q1, q2)（切り捨て）となる半開区間 i∈(il..ir] に分割し，
+* i について昇順にそれぞれに対して f(il, ir, q1, q2) を呼び出す．
+* なお各範囲においては (n1 mod i, n2 mod i) は公差 (-q1, -q2) の等差数列を成す．
 */
-template <class T>
-vector<tuple<T, T, T, T>> quotient_range(T n1, T n2) {
+template <class T, class FUNC>
+void quotient_range(T n1, T n2, const FUNC& f) {
 	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_i
 
-	T n_max = max(n1, n2);
+	T n = max(n1, n2);
 
-	T m = (T)(sqrt(n_max) + 1e-12);
-	vector<tuple<T, T, T, T>> res;
+	T sqrt_n = (T)(sqrt(n) - 1e-12);
 
 	// どちらかの q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
-	int i = 1;
-	for (; n_max / i > m; i++) res.emplace_back(i, i + 1, n1 / i, n2 / i);
+	T i_max = n / (sqrt_n + 1);
+	for (T i = 1; i <= i_max; ++i) f(i - 1, i, n1 / i, n2 / i);
 
 	// そうでない部分は (q1, q2) ごとにまとめて考える．
-	T q1 = n1 / i, q2 = n2 / i;
+	T q1 = n1 / (i_max + 1), q2 = n2 / (i_max + 1);
 	while (q1 > 0 || q2 > 0) {
-		// [il1..ir1) : n1/i = q1 となる i の範囲
-		T il1 = n1 / (q1 + 1) + 1, ir1 = (q1 > 0 ? n1 / q1 + 1 : (T)INFL);
+		// (il1..ir1] : n1/i = q1 となる i の範囲
+		T il1 = n1 / (q1 + 1), ir1 = (q1 > 0 ? n1 / q1 : (T)INFL);
 
-		// [il2..ir2) : n2/i = q2 となる i の範囲
-		T il2 = n2 / (q2 + 1) + 1, ir2 = (q2 > 0 ? n2 / q2 + 1 : (T)INFL);
+		// (il2..ir2] : n2/i = q2 となる i の範囲
+		T il2 = n2 / (q2 + 1), ir2 = (q2 > 0 ? n2 / q2 : (T)INFL);
 
-		// 両区間の共通部分を記録する．
+		// 両区間の共通部分を求める．
 		T il = max(il1, il2), ir = min(ir1, ir2);
-		if (il < ir) res.emplace_back(il, ir, q1, q2);
+		if (il < ir) f(il, ir, q1, q2);
 
 		if (ir1 < ir2) q1--;
 		else q2--;
 	}
 
-	return res;
+	/* f の定義の雛形
+	using T = ll;
+	auto f = [&](T il, T ir, T q1, T q2) {
+
+	};
+	*/
 }
 
 
@@ -131,26 +140,24 @@ void exclusion_principle(ll n, vector<T>& al, vector<T>& ah) {
 
 	int m = sz(al) - 1;
 
-	// Al を計算する：O(Σ_i∈[1..nl] √i) = O(nl√nl)
+	// Al を計算する：O(Σi∈[1..nl] √i) = O(nl√nl)
 	repi(i, 1, m) {
-		auto QR = quotient_range(i);
-
-		for (auto [i1, i2, q] : QR) {
-			if (i1 == 1) continue;
-			al[i] -= al[q] * (i2 - i1);
-		}
+		auto f = [&](ll il, ll ir, ll q) {
+			if (il == 0) return;
+			al[i] -= al[q] * (ir - il);
+		};
+		quotient_range(i, f);
 	}
 
 	auto get_ah = [&](ll i) { return i <= m ? ah[i] : al[n / i]; };
 
 	// Ah を計算する：O(Σ_i∈[1..nh] √(n/i)) = O(√(n nh)) = O(nh√nl)
 	repir(i, m, 1) {
-		auto QR = quotient_range(n / i);
-
-		for (auto [i1, i2, q] : QR) {
-			if (i1 == 1) continue;
-			ah[i] -= get_ah(i1 * i) * (i2 - i1);
-		}
+		auto f = [&](ll il, ll ir, ll q) {
+			if (il == 0) return;
+			ah[i] -= get_ah(il * i) * (ir - il);
+		};
+		quotient_range(n / i, f);
 	}
 }
 
@@ -242,12 +249,15 @@ T floor_sum_large(T n, T m, T a, T b) {
 }
 
 
-//【一次式の線形加重切り捨て和】O(log(n + m + a + b))
+//【一次式の線形加重 & 平方切り捨て和】O(log(n + m + a + b))
 /*
-* Σi∈[0..n) i floor((a i + b) / m) を返す．
+*	S1 = Σi∈[0..n) i floor((a i + b) / m)
+*	S2 = Σi∈[0..n) floor((a i + b) / m)^2
+*	S3 = Σi∈[0..n) floor((a i + b) / m)
+* とおき，3 つ組 (S1, S2, S3) を返す．
 */
 template <class T>
-T linear_floor_sum(T n, T m, T a, T b) {
+tuple<T, T, T> linear_square_floor_sum(T n, T m, T a, T b) {
 	// verify : https://yukicoder.me/problems/no/2362
 
 	//【方法】
@@ -259,19 +269,17 @@ T linear_floor_sum(T n, T m, T a, T b) {
 	// の 3 つを並行して計算していく．
 
 	Assert(m != 0);
-	if (n <= 0) return 0;
-
-	T res = 0;
+	if (n <= 0) return make_tuple(T(0), T(0), T(0));
 
 	// m < 0 の場合，分母分子を -1 倍して m > 0 とする．
 	if (m < 0) { a *= -1; b *= -1; m *= -1; }
 
 	// a を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ a < m とする．
-	res += (a / m - (T)(a % m < 0)) * (n * (n - 1) * (2 * n - 1) / 6);
+	T A = a / m - (T)(a % m < 0);
 	a = smod(a, m);
 
 	// b を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ b < m とする．
-	res += (b / m - (T)(b % m < 0)) * (n * (n - 1) / 2);
+	T B = b / m - (T)(b % m < 0);
 	b = smod(b, m);
 
 	function<tuple<T, T, T>(T, T, T, T)> rf1, rf2;
@@ -316,7 +324,22 @@ T linear_floor_sum(T n, T m, T a, T b) {
 
 	auto [s1, s2, s3] = rf2(n, m, a, b);
 
-	return res + s1;
+	T n2 = n * (n - 1) / 2;
+	T n3 = n * (n - 1) * (2 * n - 1) / 6;
+
+	s2 += 2 * A * s1;
+	s2 += 2 * B * s3;
+	s2 += A * A * n3;
+	s2 += 2 * A * B * n2;
+	s2 += B * B * n;
+
+	s1 += A * n3;
+	s1 += B * n2;
+
+	s3 += A * n2;
+	s3 += B * n;
+
+	return { s1, s2, s3 };
 }
 
 

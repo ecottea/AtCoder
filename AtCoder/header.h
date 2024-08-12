@@ -42,7 +42,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 #define repe(v, a) for(const auto& v : (a)) // a の全要素（変更不可能）
 #define repea(v, a) for(auto& v : (a)) // a の全要素（変更可能）
 #define repb(set, d) for(int set = 0, set##_ub = 1 << int(d); set < set##_ub; ++set) // d ビット全探索（昇順）
-#define repis(i, set) for(int i = lsb(set), bset##i = set; i >= 0; bset##i -= 1 << i, i = lsb(bset##i)) // set の全要素（昇順）
+#define repis(i, set) for(int i = lsb(set), bset##i = set; i < 32; bset##i -= 1 << i, i = lsb(bset##i)) // set の全要素（昇順）
 #define repp(a) sort(all(a)); for(bool a##_perm = true; a##_perm; a##_perm = next_permutation(all(a))) // a の順列全て（昇順）
 #define uniq(a) {sort(all(a)); (a).erase(unique(all(a)), (a).end());} // 重複除去
 #define EXIT(a) {cout << (a) << endl; exit(0);} // 強制終了
@@ -74,6 +74,7 @@ using namespace atcoder;
 
 //using mint = modint1000000007;
 using mint = modint998244353;
+//using mint = static_modint<1000000000>;
 //using mint = modint; // mint::set_mod(m);
 
 namespace atcoder {
@@ -100,7 +101,7 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump_mat(v)
 #define input_from_file(f)
 #define output_to_file(f)
-#define Assert(b) { if (!(b)) { string s; while (1) s += "MLE";} } // メモリ爆食いするが MLE ではなく TLE が出る．
+#define Assert(b) { if (!(b)) { vc MLE(1<<30); EXIT(MLE.back()); } } // RE の代わりに MLE を出す
 #endif
 
 
@@ -141,9 +142,9 @@ set_intersection(all(a), all(b), inserter(res, res.end()));
 set_union(all(a), all(b), inserter(res, res.end()));
 set_difference(all(a), all(b), inserter(res, res.end()));
 
-// x に [l..r] 上の一様乱数を代入する
+// x に [0..10^18] 上の一様乱数を代入する
 mt19937_64 mt((int)time(NULL));
-uniform_int_distribution<ll> rnd(l, r);
+uniform_int_distribution<ll> rnd(0, (ll)1e18);
 ll x = rnd(mt);
 
 // 配列 a をランダムにシャッフルする
@@ -167,10 +168,12 @@ using Bint = boost::multiprecision::cpp_int;
 Bint gcd(const Bint& x, const Bint& y) { return boost::math::gcd(x, y); }
 Bint lcm(const Bint& x, const Bint& y) { return boost::math::lcm(x, y); }
 boost::swap ?
-boost::move ?
+#include <boost/move/move.hpp>
+boost::move
 
-// bitset で MSB 位置取得（gcc 限定）
-bitset._Find_first();
+// 動的にサイズを変更できる bitset
+#include <boost/dynamic_bitset.hpp>
+boost::dynamic_bitset<> bs(n);
 
 // 時間計測して TLE 寸前に終了
 auto start = chrono::system_clock::now();
@@ -298,6 +301,7 @@ fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree -
 
 コピペ後の整形では以下の関数を利用できる：
 
+mint nn = i;
 auto dpsub = [&](const mint& x) { return dp[x.val()]; };
 auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; return res; };
 

@@ -10,73 +10,93 @@
 * Offline_rectangle_sum<T>() : O(1)
 *	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
 *
-* void point_add(ll x, int y, T val) : O(1)
+* void add(ll x, int y, T val) : O(1)
 *	v[x][y] += val とする．
 *
-* void add_query(ll x1, ll x2, int y1, int y2) : O(1)
+* void sum(ll x1, ll x2, int y1, int y2) : O(1)
 *	クエリ Σv[x1..x2)[y1..y2) を追加する．
 *
-* vT sum() : O(w + (n + q) log w)
+* vT solve() : O(w + (n + q) (log(n + q) + log w))
 *	現在の v[0..h)[0..w) への各クエリに対する答えを格納したリストを返す．
 *
 *（平面走査）
 */
 template <class T>
 class Offline_rectangle_sum {
-	int w, q;
-
-	// (x 座標，イベントタイプ，クエリ番号，左位置，右位置, 加算値) の組
-	vector<tuple<ll, int, int, int, int, T>> ev;
-	const int DE = 0; // 長方形の下辺
-	const int UE = 1; // 長方形の上辺
-	const int PT = 2; // 点
+	vl x_add, y_add; vector<T> w_add;
+	vl x1_sum, x2_sum, y1_sum, y2_sum;
 
 public:
 	// v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
-	Offline_rectangle_sum() : w(1), q(0) {
+	Offline_rectangle_sum() {
 		// verify : https://judge.yosupo.jp/problem/rectangle_sum
 	}
 
 	// v[x][y] += val とする．
-	void point_add(ll x, int y, T val) {
+	void add(ll x, ll y, T val) {
 		// verify : https://judge.yosupo.jp/problem/rectangle_sum
 
-		ev.emplace_back(x, PT, -1, y, -1, val);
-
-		chmax(w, y);
+		x_add.emplace_back(x);
+		y_add.emplace_back(y);
+		w_add.emplace_back(val);
 	}
 
 	// クエリ Σv[x1..x2)[y1..y2) を追加する．
-	void add_query(ll x1, ll x2, int y1, int y2) {
+	void sum(ll x1, ll x2, ll y1, ll y2) {
 		// verify : https://judge.yosupo.jp/problem/rectangle_sum
 
-		ev.emplace_back(x1, UE, q, y1, y2, -1);
-		ev.emplace_back(x2, DE, q, y1, y2, -1);
-
-		chmax(w, y2);
-		q++;
+		x1_sum.emplace_back(x1);
+		x2_sum.emplace_back(x2);
+		y1_sum.emplace_back(y1);
+		y2_sum.emplace_back(y2);
 	}
 
 	// 各クエリに対する答えを格納したリストを返す．
-	vector<T> sum() {
+	vector<T> solve() {
 		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+		// ys : y 座標のユニークな昇順列
+		vl ys(y_add);
+		uniq(ys);
+
+		// (x 座標, イベントタイプ, クエリ番号) の組
+		vector<tuple<ll, int, int>> ev;
+		const int DE = 0; // 長方形の下辺
+		const int UE = 1; // 長方形の上辺
+		const int PT = 2; // 点
+		rep(i, sz(x_add)) {
+			ev.emplace_back(x_add[i], PT, i);
+		}
+		int q = sz(x1_sum);
+		rep(t, q) {
+			ev.emplace_back(x1_sum[t], UE, t);
+			ev.emplace_back(x2_sum[t], DE, t);
+		}
 
 		// イベントソート
 		sort(all(ev));
 
-		fenwick_tree<T> fen(w + 1);
+		fenwick_tree<T> fen(sz(ys));
 		vector<T> res(q, 0);
 
 		// 下方向に平面走査していく．
-		for (auto& [x, tp, j, yl, yr, val] : ev) {
+		for (auto& [x, tp, id] : ev) {
+			// 点への加算の場合
 			if (tp == PT) {
-				fen.add(yl, val);
+				int y = lbpos(ys, y_add[id]);
+				fen.add(y, w_add[id]);
 			}
+			// 総和クエリの上辺の場合
 			else if (tp == UE) {
-				res[j] -= fen.sum(yl, yr);
+				int y1 = lbpos(ys, y1_sum[id]);
+				int y2 = lbpos(ys, y2_sum[id]);
+				res[id] -= fen.sum(y1, y2);
 			}
+			// 総和クエリの下辺の場合
 			else if (tp == DE) {
-				res[j] += fen.sum(yl, yr);
+				int y1 = lbpos(ys, y1_sum[id]);
+				int y2 = lbpos(ys, y2_sum[id]);
+				res[id] += fen.sum(y1, y2);
 			}
 		}
 
@@ -175,7 +195,190 @@ public:
 };
 
 
-//【1 点加算 → 矩形和（アーベル群）】
+//【ウェーブレット行列（点群）】
+/*
+* Wavelet_matrix_points<S, T>(vS x, vS y, vT v) : O(n log n)
+*	大きさ n の重み付き点群 ((x[i], y[i]), v[i]) で初期化する．
+*
+* S get(S x0, S x1, int i) : O(log n)
+*	x∈[x0..x1) なる点のうち，y 座標昇順で i 番目の点の y 座標を返す（なければ INFL）
+*
+* int count(S x0, S x1, S y0, S y1) : O(log n)
+*	[x0..x1)×[y0..y1) 内の点の個数を返す．
+*
+* T sum(S x0, S x1, S y0, S y1) : O(log n)
+*	[x0..x1)×[y0..y1) 内の点の重みの和を返す．
+*/
+template <class S, class T>
+class Wavelet_matrix_points {
+	// 参考 : https://miti-7.hatenablog.com/entry/2018/04/28/152259
+
+	int n; // 要素数
+	int m; // msb 以下の桁数
+	vi bs; // bs[i][j] : 第 j+1 ビットについての安定ソート後の y[i] の第 j ビット
+	array<vvi, 2> bs_acc; // bs_acc[b] : bs[*][b] のビット b=0,1 それぞれの個数の累積和
+	vi num_zeros; // num_zeros[j] : bs[j] の 0 の個数
+	vector<vector<T>> acc; // acc[j] : 第 j ビットについての安定ソート後の w の累積和
+	vector<S> x_sort; // x 座標の昇順列
+	vector<S> y_uniq; // y 座標のユニークな昇順列
+
+	// a[l..r) の中で [0..v) に値をもつ要素の個数を返す．
+	int count_rsub(int l, int r, int v) {
+		int cnt = 0;
+		repir(j, m - 1, 0) {
+			if (getb(v, j)) {
+				cnt += bs_acc[0][j][r] - bs_acc[0][j][l];
+				r = num_zeros[j] + bs_acc[1][j][r];
+				l = num_zeros[j] + bs_acc[1][j][l];
+			}
+			else {
+				r = bs_acc[0][j][r];
+				l = bs_acc[0][j][l];
+			}
+		}
+
+		return cnt;
+	}
+
+	// a[l..r) の中で [0..v) に値をもつ要素の和を返す．
+	T sum_rsub(int l, int r, int v) {
+		T res = 0;
+		repir(j, m - 1, 0) {
+			if (getb(v, j)) {
+				res += acc[j][bs_acc[0][j][r]] - acc[j][bs_acc[0][j][l]];
+				r = num_zeros[j] + bs_acc[1][j][r];
+				l = num_zeros[j] + bs_acc[1][j][l];
+			}
+			else {
+				r = bs_acc[0][j][r];
+				l = bs_acc[0][j][l];
+			}
+		}
+
+		return res;
+	}
+
+public:
+	// 大きさ n の重み付き点群 ((x[i], y[i]), v[i]) で初期化する．
+	Wavelet_matrix_points(const vector<S>& x, const vector<S>& y, const vector<T>& v) : n(sz(x)) {
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+		// 点群を x 座標昇順にソートする．
+		vector<pair<S, int>> xi(n);
+		rep(i, n) xi[i] = { x[i], i };
+		sort(all(xi));
+
+		// y_uniq : y 座標のユニークな昇順列
+		y_uniq = y;
+		uniq(y_uniq);
+		y_uniq.emplace_back((S)INFL + 1); // 番兵
+
+		// x_sort : x 座標の昇順列
+		x_sort.resize(n);
+
+		// ycp_v : 座圧後の y 座標と重みの組の列
+		vector<pair<int, T>> ycp_v(n);
+
+		rep(i, n) {
+			int id;
+			tie(x_sort[i], id) = xi[i];
+			ycp_v[i] = { lbpos(y_uniq, y[id]), v[id] };
+		}
+
+		// メモリ確保
+		m = msb(sz(y_uniq)) + 1;
+		bs.resize(n);
+		bs_acc[0] = bs_acc[1] = vvi(m, vi(n + 1));
+		num_zeros.resize(m);
+		acc.assign(m + 1, vector<T>(n + 1));
+
+		// j : 注目ビット位置（上位ビットから順に見ていく）
+		repir(j, m - 1, 0) {
+			rep(i, n) {
+				// bs[i][j] : 注目ビットが 1 か
+				bs[i] |= ycp_v[i].first & (1 << j);
+
+				// ビット 0, 1 それぞれの個数の累積和を求める．
+				rep(b, 2) bs_acc[b][j][i + 1] = bs_acc[b][j][i];
+				int b = getb(ycp_v[i].first, j);
+				bs_acc[b][j][i + 1]++;
+				num_zeros[j] += 1 - b;
+
+				// 重みの累積和を求める．
+				acc[j + 1][i + 1] = acc[j + 1][i] + ycp_v[i].second;
+			}
+
+			// 注目ビットが 0 のものを左，1 のものを右に寄せる安定ソートを行う．
+			vector<pair<int, T>> nycp_w0, nycp_w1;
+			nycp_w0.reserve(num_zeros[j]);
+			nycp_w1.reserve(n - num_zeros[j]);
+			rep(i, n) {
+				if (getb(ycp_v[i].first, j)) nycp_w1.push_back(ycp_v[i]);
+				else nycp_w0.push_back(ycp_v[i]);
+			}
+			ycp_v.clear();
+			repe(tmp, nycp_w0) ycp_v.push_back(tmp);
+			repe(tmp, nycp_w1) ycp_v.push_back(tmp);
+		}
+
+		// 重みの累積和を求める．
+		rep(i, n) acc[0][i + 1] = acc[0][i] + ycp_v[i].second;
+	}
+	Wavelet_matrix_points() : n(0), m(0) {}
+
+	// x∈[x0..x1) なる点のうち，y 座標昇順で i 番目の点の y 座標を返す（なければ INFL）
+	S get(S x0, S x1, int i) {
+		int x0_cp = lbpos(x_sort, x0);
+		int x1_cp = lbpos(x_sort, x1);
+		if (x0_cp >= x1_cp) return S(INFL);
+		int y_cp = 0;
+
+		repir(j, m - 1, 0) {
+			y_cp <<= 1;
+
+			int cnt0 = bs_acc[0][j][x1_cp] - bs_acc[0][j][x0_cp];
+			if (i >= cnt0) {
+				y_cp++;
+				x0_cp = num_zeros[j] + bs_acc[1][j][x0_cp];
+				x1_cp = num_zeros[j] + bs_acc[1][j][x1_cp];
+				i -= cnt0;
+			}
+			else {
+				x0_cp = bs_acc[0][j][x0_cp];
+				x1_cp = bs_acc[0][j][x1_cp];
+			}
+		}
+
+		return y_cp < sz(y_uniq) ? y_uniq[y_cp] : S(INFL);
+	}
+
+	// [x0..x1)×[y0..y1) 内の点の個数を返す．
+	int count(S x0, S x1, S y0, S y1) {
+		int x0_cp = lbpos(x_sort, x0);
+		int x1_cp = lbpos(x_sort, x1);
+		int y0_cp = lbpos(y_uniq, y0);
+		int y1_cp = lbpos(y_uniq, y1);
+		if (x0_cp >= x1_cp || y0_cp >= y1_cp) return 0;
+
+		return count_rsub(x0_cp, x1_cp, y1_cp) - count_rsub(x0_cp, x1_cp, y0_cp);
+	}
+
+	// [x0..x1)×[y0..y1) 内の点の重みの和を返す．
+	T sum(S x0, S x1, S y0, S y1) {
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+		int x0_cp = lbpos(x_sort, x0);
+		int x1_cp = lbpos(x_sort, x1);
+		int y0_cp = lbpos(y_uniq, y0);
+		int y1_cp = lbpos(y_uniq, y1);
+		if (x0_cp >= x1_cp || y0_cp >= y1_cp) return 0;
+
+		return sum_rsub(x0_cp, x1_cp, y1_cp) - sum_rsub(x0_cp, x1_cp, y0_cp);
+	}
+};
+
+
+//【1 点加算 → 矩形和（アーベル群）】（遅い）
 /*
 * Static_rectangle_sum<S, op, o, inv>(vl x, vl y, vS v) : O(n log n)
 *	値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
@@ -330,7 +533,7 @@ public:
 * Offline_rectangle_add<T>() : O(1)
 *	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
 *
-* void rectangle_add(ll x, int y, T val) : O(1)
+* void rectangle_add(ll x1, ll x2, ll y1, ll y2, T val) : O(1)
 *	v[x1..x2)[y1..y2) += val とする．
 *
 * void get(ll x, ll y) : O(1)

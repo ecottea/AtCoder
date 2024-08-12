@@ -8,7 +8,7 @@
 * 2 要素 x, y を swap したときのスコアの大小に関する不等式を同値変形して f(x) < f(y) の形に
 * できるとき，f を任意比較関数としてソートを行うことでスコアを最大化できる．
 * 
-* verify : https://yukicoder.me/problems/no/2008
+* verify : https://atcoder.jp/contests/abc366/tasks/abc366_f
 */
 
 

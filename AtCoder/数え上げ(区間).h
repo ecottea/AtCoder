@@ -6,9 +6,9 @@
 // ■■■■■ 数え上げ（区間） ■■■■■
 
 
-//【特定の要素を含む区間の数え上げ（長さごと）】
+//【特定の index を含む区間の数え上げ（長さごと）】
 /*
-* a[0..n) において a[i] を含む長さ w の区間の個数を c(i,w) とおくと，
+* [0..n) において i を含む長さ w の区間の個数を c(i,w) とおくと，
 *	c(i,w) = min(i, n-w) - max(i+1-w, 0) + 1
 * である．これは
 *	x = min(i+1, n-i)
@@ -24,7 +24,7 @@
 
 //【区間端範囲制約を満たす区間の数え上げ】O(n log n)
 /*
-* [0..n) の区間 [l..r] (l ≦ r) で，l_min[r] ≦ l ≦ l_max[r] かつ
+* [0..n) の閉区間 [l..r] で，l_min[r] ≦ l ≦ l_max[r] かつ
 * r_min[l] ≦ r ≦ r_max[l] を満たすものの個数を返す．
 */
 ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& r_max) {
@@ -33,17 +33,22 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 
 	int n = sz(l_min);
 
+	// r_min_to_ls[r] : r_min[l] = r となる l のリスト
+	// r_max_to_ls[r] : r_max[l] = r となる l のリスト
 	vvi r_min_to_ls(n), r_max_to_ls(n);
+
 	rep(l, n) {
-		// r_max[l] < l であるような条件は満たせないので無視する．
-		if (r_max[l] < l) continue;
+		int r_min2 = max(l, r_min[l]);
+
+		// 明らかに左端に選べない l は無視する．
+		if (r_max[l] < r_min2) continue;
 
 		// r_min[l] < l は r_min[l] = l だったことにして問題ない．
-		r_min_to_ls[max(r_min[l], l)].push_back(l);
+		r_min_to_ls[r_min2].push_back(l);
 		r_max_to_ls[r_max[l]].push_back(l);
 	}
 
-	// ft_r[l] : 区間 [l..r] が許せるか
+	// ft_r[l] : いまの r について，区間 [l..r] が許せるか
 	fenwick_tree<int> ft(n);
 
 	ll res = 0;
@@ -54,7 +59,8 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 		repe(l, r_min_to_ls[r]) ft.add(l, 1);
 
 		// r を右端とする区間の個数を加算する．
-		if (l_min[r] <= r) res += ft.sum(l_min[r], min(l_max[r], r) + 1);
+		int l_max2 = min(l_max[r], r);
+		if (l_min[r] <= l_max2) res += ft.sum(l_min[r], l_max2 + 1);
 
 		// 以降は r = r_max[l] なる l を許さない．
 		repe(l, r_max_to_ls[r]) ft.add(l, -1);

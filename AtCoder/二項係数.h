@@ -770,7 +770,7 @@ int bin2(T n, T r) {
 * §–ñFr < mint::mod
 */
 vm binomial_fixed_n(ll n, int r) {
-	// verify : https://atcoder.jp/contests/arc144/tasks/arc144_d
+	// verify : https://atcoder.jp/contests/abc352/tasks/abc352_g
 
 	Assert(n >= 0);
 
@@ -1522,7 +1522,7 @@ vm inverse(ll n1, ll n2) {
 }
 
 
-//yq-ŠKæ‚È‚Çz
+//yq-ŠKæ‚È‚Çi–@‚ª‘å‚«‚È‘f”jz
 /*
 * Q_Factorial_mint(int N, int q) : O(N)
 *	[N]_q ‚Ü‚ÅŒvZ‰Â”\‚Æ‚µ‚Ä‰Šú‰»‚·‚éD

@@ -45,62 +45,6 @@ map<T, int> factor_integer(T n) {
 }
 
 
-//【約数列挙】O(√n)
-/*
-* n の約数全てを昇順に格納したリストを返す．
-*/
-template <class T>
-vector<T> divisors(T n) {
-	// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_fb
-
-	vector<T> ds;
-
-	if (n == 1) {
-		ds.push_back(1);
-		return ds;
-	}
-
-	T i = 1;
-	for (; i * i < n; i++) {
-		if (n % i == 0) {
-			ds.push_back(i);
-			ds.push_back(n / i);
-		}
-	}
-	if (i * i == n) ds.push_back(i);
-
-	sort(all(ds));
-
-	return ds;
-}
-
-
-//【約数列挙（素因数分解済）】O(σ(n))
-/*
-* n の素因数分解結果 pps を利用して n の約数全てを昇順に格納したリストを返す．
-*/
-template <class T>
-vector<T> divisors(map<T, int>& pps) {
-	// verify : https://atcoder.jp/contests/arc068/tasks/arc068_c
-
-	vector<T> divs{ T(1) };
-	repe(pp, pps) {
-		T p; int d;
-		tie(p, d) = pp;
-
-		vector<T> powp(d);
-		powp[0] = p;
-		rep(i, d - 1) powp[i + 1] = powp[i] * p;
-
-		int m = sz(divs);
-		repir(j, m - 1, 0) rep(i, d) divs.push_back(divs[j] * powp[i]);
-	}
-	sort(all(divs));
-
-	return divs;
-}
-
-
 //【約数の個数】O(√n)
 /*
 * n の正の約数の個数を返す．
@@ -151,7 +95,7 @@ ll divisors_sum(ll n) {
 */
 
 
-//【最小の非約数】
+//【最小の非約数 = 素数冪】
 /*
 * 任意の自然数 N について，N の約数でない最小の正整数 x は x = p^e の形で表される．
 * 
@@ -188,6 +132,14 @@ ll divisors_sum(ll n) {
 */
 
 
+//【フェルマーの小定理】
+/*
+* p を素数とする．
+*	a が p の倍数でないとき，a^(p-1) ≡ 1 (mod p)
+*	a が無条件で a^p ≡ a (mod p)
+*/
+
+
 //【オイラー関数】O(√n)
 /*
 * オイラー関数の値 φ(n) を返す．
@@ -211,8 +163,11 @@ ll euler_phi(ll n) {
 
 //【オイラーの定理】
 /*
-* gcd(a, m) = 1 のとき，a^φ(m) = 1 (mod m)
-* 任意の a について a^(φ(m) + 1) = a (mod m)
+* gcd(a, m) = 1 のとき，a^φ(m) ≡ 1 (mod m)
+* 
+* 注意：
+* gcd(a, m) = 1 でないとき a^(φ(m) + 1) ≡ a (mod m) は一般には成り立たない．
+* 例えば (a, m) = (2, 8) のとき，φ(8) = 4 だが，2^(4+1) !≡ 2 (mod 8) である． 
 * 
 * verify : https://atcoder.jp/contests/arc113/tasks/arc113_b
 */
@@ -226,7 +181,7 @@ ll euler_phi(ll n) {
 * 利用：【素因数分解】
 */
 ll carmichael_lambda(ll n) {
-	// verify : https://atcoder.jp/contests/jag2015summer-day4/tasks/icpc2015summer_day4_d
+	// verify : https://judge.yosupo.jp/problem/tetration_mod
 
 	// n を素因数分解した結果を pps に受け取る．
 	auto pps = factor_integer(n);
@@ -274,10 +229,13 @@ int mobius_mu(ll n) {
 
 //【素因数の個数】O(log n)
 /*
-* n を割る p の最大べきを返す（n = 0 なら INF を返す）
+* n に含まれる素因数 p の個数を返す（n = 0 なら INF を返す）
 */
 int integer_exponent(ll n, ll p) {
 	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_a
+
+	//【備考】
+	// p は素数でなくても正しく動作する．
 
 	if (n == 0) return INF;
 
@@ -292,11 +250,13 @@ int integer_exponent(ll n, ll p) {
 
 //【ウィルソンの定理の一般化】
 /*
-* [1..n] 中の n と互いに素な数の総積を P(n) とする．
-* n = 4 であるか，ある奇素数 p と自然数 k を用いて n = p^k or 2 p^k と表されるとき
-*		P(n) = -1 (mod n)
+* [1..n] 中の n と互いに素な数の総積を g(n) とする．g(n) は以下の式で表される：
+*	g(n) := Π_d|n ((n/d)! d^(n/d))^μ(d)
+* 
+* n=4 であるか，ある奇素数 p と自然数 k を用いて n=p^k or 2 p^k と表されるとき
+*		g(n) = -1 (mod n)
 * その他のとき
-*		P(n) = 1  (mod n)
+*		g(n) = 1  (mod n)
 */
 
 

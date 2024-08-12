@@ -121,7 +121,7 @@
 *
 * 制約：c > 0, d > 0, e ≧ 0
 *
-*（平方分割）
+*（解法平方分割）
 */
 ll integer_programming_maximize(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
 	// verify : https://atcoder.jp/contests/arc139/tasks/arc139_b
@@ -199,9 +199,11 @@ ll integer_programming_maximize(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr,
 *
 * 制約：a > 0, b > 0, c > 0, d > 0, e ≧ 0
 *
-*（平方分割）
+*（解法平方分割）
 */
 ll integer_programming_minimize(ll a, ll b, ll c, ll d, ll e, ll* sx_ = nullptr, ll* sy_ = nullptr) {
+	// verify : https://atcoder.jp/contests/arc174/tasks/arc174_b
+	
 	Assert(a > 0 && b > 0 && c > 0 && d > 0 && e >= 0);
 
 	ll sx = -1, sy = -1, res = INFL;

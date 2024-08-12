@@ -7,7 +7,7 @@
 /*
 * n を b 進表記したときの桁の数字を上位桁から順に並べたリストを返す．
 *
-* 制約：|b| ≧ 2
+* 制約：b ≧ 2
 */
 vi integer_digits(ll n, ll b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
@@ -20,7 +20,8 @@ vi integer_digits(ll n, ll b = 10) {
 	// mod |b| を取れば最下位桁から順に決定していく．
 	vi ds;
 	while (n != 0) {
-		int d = (int)smod(n, abs(b));
+		int d = (int)(n % b);
+//		int d = (int)smod(n, abs(b)); // 負数の可能性があるならこっち
 		ds.push_back(d);
 		n = (n - d) / b;
 	}
@@ -36,7 +37,7 @@ vi integer_digits(ll n, ll b = 10) {
 /*
 * n を len 桁で b 進表記したときの桁の数字を上位桁から順に並べたリストを返す．
 *
-* 制約：|b| ≧ 2
+* 制約：b ≧ 2
 */
 vi integer_digits(ll n, int len, ll b = 10) {
 	// verify : https://yukicoder.me/problems/no/327
@@ -46,7 +47,8 @@ vi integer_digits(ll n, int len, ll b = 10) {
 	// mod |b| を取れば最下位桁から順に決定していく．
 	vi ds(len);
 	rep(i, len) {
-		int d = (int)smod(n, abs(b));
+		int d = (int)(n % b);
+//		int d = (int)smod(n, abs(b)); // 負数の可能性があるならこっち
 		ds[len - 1 - i] = d;
 		n = (n - d) / b;
 	}
@@ -116,8 +118,8 @@ ll digit_sum(ll n, ll B = 10) {
 
 //【数字和と繰り上がり】
 /*
-* B 進表記での数字和を s で表す．x + y の B 進での繰り上がりが k 回あるとき以下が成り立つ：
-*	s(x + y) = s(x) + s(y) - (B - 1)k
+* B 進表記での数字和を s で表す．x+y の B 進での繰り上がりが k 回あるとき以下が成り立つ：
+*	s(x+y) = s(x) + s(y) - (B-1)k
 * 
 * verify : https://atcoder.jp/contests/arc144/tasks/arc144_a
 */
@@ -128,7 +130,7 @@ ll digit_sum(ll n, ll B = 10) {
 * B 進表記された非負整数 n に対し，s(n) を
 *	s(n) := Σi∈[0..∞) floor(n / B^i)
 * と定める．このとき，x + y の B 進での繰り上がり回数は
-*	s(x + y) - (s(x) + s(y))
+*	s(x+y) - (s(x) + s(y))
 * で与えられる．
 * 
 *（証明）floor(n / B^i) は，n の B^[i..∞) の位のみを抜き出した数を表すので，
@@ -142,7 +144,7 @@ ll digit_sum(ll n, ll B = 10) {
 //【数字根】
 /*
 * 正の数 n を B 進表記したときの数字根は以下で与えられる：
-*	(n - 1) mod (B - 1) + 1
+*	(n-1) mod (B-1) + 1
 * 
 * verify : https://yukicoder.me/problems/no/1252
 */
@@ -228,5 +230,11 @@ mint count_restricted_multiplier(ll n, const vi& c, int b) {
 
 	return dp[m][0];
 }
+
+
+//【小数第 n 位の数】
+/*
+* 有理数.h へ
+*/
 
 

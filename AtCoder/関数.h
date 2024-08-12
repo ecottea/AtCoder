@@ -841,7 +841,7 @@ struct Slope_trick {
 
 //【狭義単調な点列】
 /*
-* Monotonous_points<T>(bool y_smaller = false, T inf = max(T)/2) : O(1)
+* Monotonous_points<T>(bool y_smaller = false) : O(1)
 *	空で初期化する．x 座標は狭義単調増加で，y 座標は y_smaller=false[true] なら狭義単調増加[減少]とする．
 *
 * void insert(T x, T y) : ならし O(log n)
@@ -861,16 +861,16 @@ struct Slope_trick {
 *	x' > x かつ y' > y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
 *
 * pTT lower_bound(T x) : O(log n)
-*	x' ≧ x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+*	x' ≧ x なる x 座標が最小の点 (x', y') を返す（なければ (INFL, INFL[-INFL])）
 *
 * pTT upper_bound(T x) : O(log n)
-*	x' > x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+*	x' > x なる x 座標が最小の点 (x', y') を返す（なければ (INFL, INFL[-INFL])）
 *
 * pTT lower_bound_rev(T x) : O(log n)
-*	x' ≦ x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+*	x' ≦ x なる x 座標が最大の点 (x', y') を返す（なければ (-INFL, -INFL[INFL])）
 *
 * pTT upper_bound_rev(T x) : O(log n)
-*	x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+*	x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-INFL, -INFL[INFL])）
 *
 * pTT get_all_points() : O(n)
 *	全ての点を x 座標昇順に並べたリストを返す．
@@ -880,28 +880,25 @@ struct Monotonous_points {
 	// 参考 : https://topcoder-g-hatena-ne-jp.jag-icpc.org/skyaozora/20141216.html
 
 	bool y_smaller; // y 座標について狭義単調減少か
-	T inf; // 無限大
-
+	
 	// x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少] な点列
 	// ただし番兵として (-inf, -inf[inf]) と (inf, inf[-inf]) を含む．
 	map<T, T> x_to_y;
 
 	// 空で初期化する．x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少]とする．
-	Monotonous_points(bool y_smaller = false, T inf_ = -1) : y_smaller(y_smaller) {
+	Monotonous_points(bool y_smaller = false) : y_smaller(y_smaller) {
 		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
 
-		inf = (inf_ == -1 ? numeric_limits<T>::max() / 2 : inf_);
-
 		// 番兵を挿入しておく．
-		if (!y_smaller) { x_to_y[-inf] = -inf; x_to_y[inf] = inf; }
-		else { x_to_y[-inf] = inf; x_to_y[inf] = -inf; }
+		if (!y_smaller) { x_to_y[INFL] = -inf; x_to_y[INFL] = INFL; }
+		else { x_to_y[-INFL] = INFL; x_to_y[INFL] = -INFL; }
 	}
 
 	// 点 (x, y) を挿入し，単調性に違反する点は全て削除する．
 	void insert(T x, T y) {
 		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
 
-		// x <= x' なる最小の x' を指すイテレータを得る．
+		// x ≦ x' なる最小の x' を指すイテレータを得る．
 		auto it = x_to_y.lower_bound(x);
 
 		// x' から昇順に，y' ≦ y[ y' ≧ y ] である限り要素を削除する．
@@ -944,11 +941,11 @@ struct Monotonous_points {
 
 		if (!eq) {
 			T y2 = prev(x_to_y.lower_bound(x))->second;
-			return y2 != -inf && y2 < y;
+			return y2 != -INFL && y2 < y;
 		}
 		else {
 			T y2 = prev(x_to_y.upper_bound(x))->second;
-			return y2 != -inf && y2 <= y;
+			return y2 != -INFL && y2 <= y;
 		}
 	}
 
@@ -956,11 +953,11 @@ struct Monotonous_points {
 	bool find_LG(T x, T y, bool eq = false) {
 		if (!eq) {
 			T y2 = prev(x_to_y.lower_bound(x))->second;
-			return y2 != inf && y2 > y;
+			return y2 != INFL && y2 > y;
 		}
 		else {
 			T y2 = prev(x_to_y.upper_bound(x))->second;
-			return y2 != inf && y2 >= y;
+			return y2 != INFL && y2 >= y;
 		}
 	}
 
@@ -968,11 +965,11 @@ struct Monotonous_points {
 	bool find_GL(T x, T y, bool eq = false) {
 		if (!eq) {
 			T y2 = x_to_y.upper_bound(x)->second;
-			return y2 != -inf && y2 < y;
+			return y2 != -INFL && y2 < y;
 		}
 		else {
 			T y2 = x_to_y.lower_bound(x)->second;
-			return y2 != -inf && y2 <= y;
+			return y2 != -INFL && y2 <= y;
 		}
 	}
 
@@ -980,11 +977,11 @@ struct Monotonous_points {
 	bool find_GG(T x, T y, bool eq = false) {
 		if (!eq) {
 			T y2 = x_to_y.upper_bound(x)->second;
-			return y2 != inf && y2 > y;
+			return y2 != INFL && y2 > y;
 		}
 		else {
 			T y2 = x_to_y.lower_bound(x)->second;
-			return y2 != inf && y2 >= y;
+			return y2 != INFL && y2 >= y;
 		}
 	}
 
@@ -1016,6 +1013,8 @@ struct Monotonous_points {
 
 	// 全ての点を x 座標昇順に並べたリストを返す．
 	vector<pair<T, T>> get_all_points() {
+		// verify : https://atcoder.jp/contests/abc354/tasks/abc354_c
+
 		vector<pair<T, T>> res;
 		res.reserve(sz(x_to_y));
 		repe(tmp, x_to_y) res.push_back(tmp);

@@ -8,7 +8,7 @@
 
 //【木の中心】
 /*
-* 木 g において，最も遠い点までの距離を最小にする頂点を g の中心という．
+* 木 g において，最も遠い点までの距離（すなわち高さ）を最小にする頂点を g の中心という．
 * g の中心は g の直径の中点（辺上なら辺の両端点）になる．
 * 
 * verify : https://www.codechef.com/problems/MIN_UGLY
@@ -258,13 +258,15 @@ struct Centroid_decomposition {
 		int dep = -1; // この頂点が何回目の操作で取り除かれたか
 		int p = -1; // 親（なければ -1）
 		vi cs; // 子のリスト
+		int id = -1; // 親にとって何番目の子か
 
 #ifdef _MSC_VER
 		friend ostream& operator<<(ostream& os, const Node& v) {
 			os << "size:" << v.size << ", ";
 			os << "dep:" << v.dep << ", ";
 			os << "p:" << v.p << ", ";
-			os << "cs:[" << v.cs << "]";
+			os << "cs:[" << v.cs << "], ";
+			os << "id:" << v.id << "";
 			return os;
 		}
 #endif
@@ -276,7 +278,7 @@ struct Centroid_decomposition {
 
 	// 木 g で初期化する．
 	Centroid_decomposition(const G& g) : n(sz(g)), rt(-1), v(n) {
-		// verify : https://codeforces.com/contest/342/problem/E
+		// verify : https://judge.yosupo.jp/problem/vertex_add_range_contour_sum_on_tree
 
 		// cnt[v] : 部分木 v の大きさ（使いまわす．根はその都度直前に取り除かれた重心に変わる）
 		vi cnt(n);
@@ -317,7 +319,10 @@ struct Centroid_decomposition {
 				v[s].size = r_size;
 				v[s].dep = dep;
 				v[s].p = bc;
-				if (bc != -1) v[bc].cs.push_back(s);
+				if (bc != -1) {
+					v[s].id = sz(v[bc].cs);
+					v[bc].cs.push_back(s);
+				}
 				else rt = s;
 
 				// s の親 p を含む部分木を重心分解する．
@@ -462,6 +467,33 @@ void one_third_centroid_decomposition(const Graph& g, const FUNC& f) {
 	auto f = [&](const Graph& gl, const vi& idl, const Graph& gr, const vi& idr) {
 		// dump("-----"); dumpel(gl); dump(idl); dumpel(gr); dump(idr);
 		int nl = sz(gl), nr = sz(gr);
+
+		function<void(int, int)> rfL = [&](int s, int p) {
+			if (p != -1) {
+				;
+			}
+
+			repe(t, gl[s]) {
+				if (t == p) continue;
+
+				rfL(t, s);
+			}
+		};
+		rfL(0, -1);
+
+		function<void(int, int)> rfR = [&](int s, int p) {
+			if (p != -1) {
+				;
+			}
+
+			repe(t, gr[s]) {
+				if (t == p) continue;
+
+				rfR(t, s);
+			}
+		};
+		rfR(0, -1);
+
 		return;
 	};
 	*/
@@ -508,7 +540,7 @@ vvi distance_from_centroid(const Graph& g, const Centroid_decomposition<Graph>& 
 }
 
 
-//【重心からの距離（重み付き木）】O(n log n)
+//【重心からの距離（重み付き）】O(n log n)
 /*
 * 重み付き木 g を重心分解して得られた根付き木 cd について，v の深さ i の先祖から v までの
 * g における距離（先祖がいなければ -1）を dist[i][v] に格納して dist を返す．
@@ -825,6 +857,28 @@ vi rooted_tree_classification(const Graph& g, int r) {
 }
 
 
+//【木の親】O(n)
+/*
+* 各 s∈[0..n) について，r を根とする木 g の頂点 s の親を格納したリストを返す（なければ -1）
+*/
+vi parent_of_tree(const Graph& g, int r) {
+	int n = sz(g);
+
+	vi p(n);
+	function<void(int)> dfs = [&](int s) {
+		repe(t, g[s]) {
+			if (t == p[s]) continue;
+			p[t] = s;
+			dfs(t);
+		}
+	};
+	p[r] = -1;
+	dfs(r);
+
+	return p;
+}
+
+
 //【木の深さ】O(n)
 /*
 * 各 s∈[0..n) について，r を根とする木 g の頂点 s の深さを格納したリストを返す．
@@ -843,7 +897,6 @@ vi depth_of_tree(const Graph& g, int r) {
 			d[t] = d[s] + 1;
 			dfs(t, s);
 		}
-		return d[s];
 	};
 	dfs(r, -1);
 
@@ -867,7 +920,6 @@ vl depth_of_tree(const WGraph& g, int r) {
 			d[t] = d[s] + t.cost;
 			dfs(t, s);
 		}
-		return d[s];
 	};
 	dfs(r, -1);
 
@@ -927,35 +979,53 @@ vi height_of_tree(const Graph& g, int r) {
 
 //【木の高さ】O(n)
 /*
-* 与えられた重み付き木 g に対し，各 s∈[0..n) について
-* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
+* 与えられた木 g に対し，各 s∈[0..n) について
+* 頂点 s を根にしたときの高さ（最も遠い葉までの距離）を格納したリストを返す．
 *
 * 利用：【全方位木 DP】
 */
-using T_hut = int;
-T_hut merge_hut(T_hut x, T_hut y, int s) { return max(x, y); }
-T_hut leaf_hut(int s) { return 0; }
-T_hut apply_hut(T_hut x, int p, int s) { return x + 1; }
-vi height_of_undirected_tree(Graph& g) {
-	return rerooting<T_hut, merge_hut, leaf_hut, apply_hut>(g);
+using T_hut = ll;
+T_hut leaf_hut(int s) {
+	return 0;
+}
+T_hut add_edge_hut(const T_hut& x, int p, int s) {
+	return x + 1;
+}
+T_hut merge_hut(const T_hut& x, const T_hut& y, int s) {
+	return max(x, y);
+}
+T_hut add_vertex_hut(const T_hut& x, int s) {
+	return x;
+}
+vl height_of_undirected_tree(const Graph& g) {
+	return rerooting<T_hut, leaf_hut, add_edge_hut, merge_hut, add_vertex_hut>(g);
 }
 
 
 //【木の高さ（重み付き）】O(n)
 /*
 * 与えられた重み付き木 g に対し，各 s∈[0..n) について
-* 頂点 s を根にしたときの高さ（最も遠い葉までのコスト）を格納したリストを返す．
+* 頂点 s を根にしたときの高さ（最も遠い葉までの距離）を格納したリストを返す．
 *
 * 利用：【全方位木 DP（重み付き）】
 */
-using T_hutc = ll;
-T_hutc merge_hutc(T_hutc x, T_hutc y, int s) { return max(x, y); }
-T_hutc leaf_hutc(int s) { return 0; }
-T_hutc apply_hutc(T_hutc x, int p, int s, ll c) { return x + c; }
+using T_hutw = ll;
+T_hutw leaf_hutw(int s) {
+	return 0;
+}
+T_hutw add_edge_hutw(const T_hutw& x, int p, int s, ll c) {
+	return x + c;
+}
+T_hutw merge_hutw(const T_hutw& x, const T_hutw& y, int s) {
+	return max(x, y);
+}
+T_hutw add_vertex_hutw(const T_hutw& x, int s) {
+	return x;
+}
 vl height_of_undirected_tree(const WGraph& g) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_B
 
-	return rerooting<T_hutc, merge_hutc, leaf_hutc, apply_hutc>(g);
+	return rerooting<T_hutw, leaf_hutw, add_edge_hutw, merge_hutw, add_vertex_hutw>(g);
 }
 
 
@@ -979,7 +1049,7 @@ T_ss merge_ss(const T_ss& x, const T_ss& y, int s) {
 T_ss add_vertex_ss(const T_ss& x, int s) {
 	return x + 1;
 }
-vvi subtree_size(Graph& g) {
+vvi subtree_size(const Graph& g) {
 	// verify : https://atcoder.jp/contests/abc149/tasks/abc149_f
 
 	vvi res;

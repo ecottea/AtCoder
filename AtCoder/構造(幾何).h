@@ -139,6 +139,7 @@ Line<T> standard_form(const Line<T>& l) {
 
 	// dx, dy ‚ğ gcd(dx, dy) ‚ÅŠ„‚èC•ûŒü‚ğ•Ï‚¦‚¸Å‚à’Z‚¢‚à‚Ì‚É‚·‚éD
 	T g = gcd(dx, dy);
+	Assert(g != 0);
 	dx /= g;
 	dy /= g;
 
@@ -159,7 +160,7 @@ Line<T> standard_form(const Line<T>& l) {
 	T x1 = x0 + dx;
 	T y1 = y0 + dy;
 
-	return Line<T>{{x0, x1}, { y0, y1 }};
+	return Line<T>{{x0, y0}, { x1, y1 }};
 }
 
 

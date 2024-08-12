@@ -3,70 +3,8 @@
 #include "数論.h"
 #include "整除.h"
 #include "ディリクレ畳込み.h"
+#include "列挙(数論).h"
 // ■■■■■ 一括で求めるための数論アルゴリズム ■■■■■
-
-
-//【素数の列挙】O(n log(log n))
-/*
-* n 以下の素数を昇順に列挙したリストを返す．
-*/
-vi eratosthenes(int n) {
-	// 参考 : https://37zigen.com/sieve-eratosthenes/
-	// verify : https://judge.yosupo.jp/problem/enumerate_primes
-
-	vi ps;
-
-	// is_prime[i] : i が素数か
-	vb is_prime(n + 1, true);
-	is_prime[0] = is_prime[1] = false;
-
-	int i = 2;
-
-	// √n 以下の i の処理
-	for (; i <= n / i; i++) {
-		if (is_prime[i]) {
-			ps.push_back(i);
-
-			// i*2, ..., i*(i-1) は既にふるい落とされているので i*i からで良い．
-			for (int j = i * i; j <= n; j += i) is_prime[j] = false;
-		}
-	}
-
-	// √n より大きい i の処理
-	for (; i <= n; i++) if (is_prime[i]) ps.push_back(i);
-
-	return ps;
-}
-
-
-//【素数の列挙（区間）】O((√r + (r-l)) log(log r))
-/*
-* [l..r) に含まれる素数を昇順に格納したリストを返す．
-*
-* 利用：【素数の列挙】
-*/
-vl eratosthenes_interval(ll l, ll r) {
-	// 参考 : https://37zigen.com/sieve-eratosthenes/
-	// verify : https://algo-method.com/tasks/332
-
-	vi ps_sub = eratosthenes((int)(sqrt(r) + 0.01));
-
-	// is_prime[i - l] : i が素数か
-	vb is_prime(r - l, true);
-	if (1 - l >= 0) is_prime[1 - l] = false;
-
-	repe(p, ps_sub) {
-		// j_min : [l..r) 内で p^2 以上の最小の p の倍数
-		ll j_min = max((l + p - 1) / p * p, (ll)p * p);
-
-		for (ll j = j_min; j < r; j += p) is_prime[j - l] = false;
-	}
-
-	vl ps;
-	rep(i, r - l) if (is_prime[i]) ps.push_back(l + i);
-
-	return ps;
-}
 
 
 //【素因数分解（複数）】
@@ -82,22 +20,33 @@ vl eratosthenes_interval(ll l, ll r) {
 *
 * vi divisors(int i) : O(σ(n))
 *	i の約数の昇順リストを返す．
+*
+* int euler_phi(int i) : O(log n)
+*	オイラーのトーシェント関数 φ(i) の値を返す．
+*
+* int radical(int i) : O(log n)
+*	i の根基（重複を除去した素因数の積）を返す．
+*
+* vi prime_power_decomposition(int i) : O(log n)
+*	i を素数冪の積に分解したリストを返す．
 */
 struct Osa_k {
 	int n;
 
-	// d[i] : i を割り切る最大の素数
-	vi d;
+	// gpf[i] : i を割り切る最大の素数
+	vi gpf;
 
 	// n 以下の自然数を高速に素因数分解する準備を行う．
-	Osa_k(int n_) : n(n_), d(n + 1) {
+	Osa_k(int n_) : n(n_), gpf(n + 1) {
 		// verify : https://yukicoder.me/problems/no/2207
 
-		iota(all(d), 0);
+		iota(all(gpf), 0);
 
 		for (int p = 2; p * p <= n; p++) {
-			if (d[p] != p) continue;
-			for (int i = p; i <= n; i += p) d[i] = p;
+			if (gpf[p] != p) continue;
+
+			// ここは d の最大性のため p^2 からにはできない．
+			for (int i = p; i <= n; i += p) gpf[i] = p;
 		}
 	}
 	Osa_k() : n(0) {}
@@ -108,7 +57,7 @@ struct Osa_k {
 
 		Assert(i <= n);
 
-		return d[i] == i;
+		return gpf[i] == i;
 	}
 
 	// i の素因数分解結果を返す．
@@ -119,8 +68,8 @@ struct Osa_k {
 
 		map<int, int> pps;
 		while (i > 1) {
-			pps[d[i]]++;
-			i /= d[i];
+			pps[gpf[i]]++;
+			i /= gpf[i];
 		}
 		return pps;
 	}
@@ -142,16 +91,68 @@ struct Osa_k {
 			int m = sz(divs);
 			repir(j, m - 1, 0) rep(i, d) divs.push_back(divs[j] * powp[i]);
 		}
-		sort(all(divs));
+		sort(all(divs)); // 不要なら削除可能
 
 		return divs;
+	}
+
+	// オイラーのトーシェント関数 φ(i) の値を返す．
+	int euler_phi(int i) {
+		// verify : 
+
+		Assert(i <= n);
+
+		int phi = 1; int pp = INF;
+		while (i > 1) {
+			int p = gpf[i];
+			phi *= (p == pp ? p : p - 1);
+
+			pp = p;
+			i /= p;
+		}
+		return phi;
+	}
+
+	// i の根基（重複を除去した素因数の積）を返す．
+	int radical(int i) const {
+		// verify : https://projecteuler.net/problem=518
+
+		Assert(i <= n);
+
+		int rad = 1; int pp = INF;
+		while (i > 1) {
+			int p = gpf[i];
+			if (p != pp) rad *= p;
+
+			pp = p;
+			i /= p;
+		}
+		return rad;
+	}
+
+	// i を素数冪の積に分解したリストを返す．
+	vi prime_power_decomposition(int i) const {
+		// verify : https://projecteuler.net/problem=407
+
+		Assert(i <= n);
+
+		vi res; int pp = INF;
+		while (i > 1) {
+			int p = gpf[i];
+			if (p != pp) res.push_back(p);
+			else res.back() *= p;
+
+			pp = p;
+			i /= p;
+		}
+		return res;
 	}
 };
 
 
 //【一括素因数分解】O(n log(log n))
 /*
-* n 以下の自然数 i の素因数分解を pps[i] に格納し pps を返す（pps[0] は使わない）
+* [1..n] の素因数分解結果のリストを返す．
 */
 vector<map<int, int>> factor_integer_all(int n) {
 	// verify : https://atcoder.jp/contests/abc052/tasks/arc067_a
@@ -320,7 +321,7 @@ vector<T> divisor_sigma(int k, int n) {
 
 	vector<T> a(n + 1);
 	a[0] = 0;
-	repi(i, 1, n) a[i] = T(pow(i, k));
+	repi(i, 1, n) a[i] = T(powi(i, k));
 
 	Div_mul_transform<T> dt(n);
 	dt.divisor_zeta(a);
@@ -340,10 +341,10 @@ vl euler_phi(int n) {
 	// verify : https://yukicoder.me/problems/no/2249
 
 	//【方法】
-	// 各 i の約数 d について，GCD(i, x) = d となる x∈[1..i] の個数は，
+	// i の各約数 d について，GCD(i, x) = d となる x∈[1..i] の個数は，
 	// x が GCD(i/d, y) = 1 なる y∈[1..i/d] を用いて x = y d と表されるので
 	// オイラー関数の定義より φ(i/d) に等しい．
-	// これらを全ての d にわたって足し合わせることで，等式
+	// これらを全ての d にわたって足し合わせることで，[1..i] を i との GCD で分類した等式
 	//		i = Σ_(d|i) φ(i/d)
 	//		⇔ i = Σ_(d|i) φ(d)
 	// を得る．これは φ を約数ゼータ変換したものが a[i] = i であることを意味する．
@@ -376,74 +377,6 @@ vi mobius_mu(int n) {
 	dt.divisor_mobius(a);
 
 	return a;
-}
-
-
-//【オイラー関数の累積和（一括）】O(n^(2/3) log(log n)^(1/3))
-/*
-* 各 i∈[1..nl] について bl[i] = φ(i) を，
-* 各 i∈[1..nh] について Bh[i] = Σj∈[1..n/i] φ(j) をそれぞれ格納する．
-*
-* 制約：nh ≦ nl ≦ n ≦ nl nh
-*
-* 利用：【ディリクレ畳込みの累積和（乗法的，mint，一括）】
-*/
-void euler_phi_sum(ll n, int nl, int nh, vm& bl, vm& Bh) {
-	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
-	// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
-
-	//【方法】
-	// オイラー関数 φ(i) と対応するディリクレ級数を Φ(s) とおくと，
-	//		ζ(s) Φ(s) = ζ(s-1)
-	// が成り立つ．
-	// ζ(s) は乗法的数論関数 a[i] = 1 に対応するディリクレ級数であり，
-	// ζ(s-1) は数論関数 c[i] = i に対応するディリクレ級数である．
-
-	if (nl <= 0 || nh <= 0) return;
-	Multiplicative_dirichlet_convolution_acc_mint M(nl);
-
-	vm al(nl + 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1); mint inv2 = mint(2).inv();
-	repi(i, 1, nl) {
-		al[i] = 1;
-		cl[i] = i;
-	}
-	repi(i, 1, nh) {
-		Ah[i] = n / i;
-		Ch[i] = mint(n / i) * (n / i + 1) * inv2;
-	}
-
-	M.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
-}
-
-
-//【メビウス関数の累積和（一括）】O(n^(2/3) log(log n)^(1/3))
-/*
-* 各 i∈[1..nl] について bl[i] = μ(i) を，
-* 各 i∈[1..nh] について Bh[i] = Σj∈[1..n/i] μ(j) をそれぞれ格納する．
-*
-* 制約：nh ≦ nl ≦ n ≦ nl nh
-*
-* 利用：【ディリクレ畳込みの累積和（乗法的，一括）】
-*/
-void mertens(ll n, int nl, int nh, vl& bl, vl& Bh) {
-	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
-	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_i
-
-	//【方法】
-	// メビウス関数 μ(i) と対応するディリクレ級数を M(s) とおくと，
-	//		ζ(s) M(s) = 1
-	// が成り立つ．
-	// ζ(s) は乗法的数論関数 a[i] = 1 に対応するディリクレ級数であり，
-	// 1 は数論関数 c[i] = (i = 1 ? 1 : 0) に対応するディリクレ級数である．
-
-	if (nl <= 0 || nh <= 0) return;
-	Multiplicative_dirichlet_convolution_acc<ll> M(nl);
-
-	vl al(nl + 1, 1), cl(nl + 1), Ah(nh + 1), Ch(nh + 1, 1);
-	cl[1] = 1;
-	repi(i, 1, nh) Ah[i] = n / i;
-
-	M.inv_conv_acc(n, al, Ah, cl, Ch, bl, Bh);
 }
 
 

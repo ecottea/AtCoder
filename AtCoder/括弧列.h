@@ -1,34 +1,7 @@
 #pragma once
 #include "header.h"
+#include "数え上げ(列).h"
 // ■■■■■ 括弧列 ■■■■■
-
-
-//【括弧列の数え上げ】
-/*
-* 長さ 2n の括弧列の総数はカタラン数 1/(n+1) bin(2n, n) である．
-* 
-* 証明：括弧列を通行禁止線をもった格子路に対応させ，反射原理を用いれば良い．
-*/
-
-
-//【括弧列の対応と偶奇】
-/*
-* 括弧列 s において，s[i]='(' と s[j]=')' が対応する括弧であるとき i と j の偶奇は異なる．
-*
-* 証明：s(i..j) もまた括弧列であり，これの長さが偶数であることから直ちに従う．
-*
-* verify : https://atcoder.jp/contests/agc048/tasks/agc048_b
-*/
-
-
-//【括弧列の重なり】
-/*
-* 括弧文字列 s+t+u について，
-*	s+t と t+u が共に括弧列 ⇒ s, t, u は全て括弧列
-*	s+t+u と t が共に括弧列 ⇒ s+u, t は共に括弧列
-* 
-* verify : https://yukicoder.me/problems/no/2133
-*/
 
 
 //【括弧列の正しさ判定】O(n)
@@ -90,6 +63,14 @@ vi corresponding_parentheses_pos(const string& s) {
 }
 
 
+//【括弧列の数え上げ】
+/*
+* 長さ 2n の括弧列の総数はカタラン数 1/(n+1) bin(2n, n) である．
+*
+* 証明：括弧列を通行禁止線をもった格子路に対応させ，反射原理を用いれば良い．
+*/
+
+
 //【括弧列の数え上げ（部分文字列）】O(n)
 /*
 * 括弧文字列 s[0..n) の部分文字列で正しい括弧列になっているものの個数を返す．
@@ -114,6 +95,99 @@ ll count_parenthesis_substrings(const string& s) {
 	}
 
 	return res;
+}
+
+
+//【括弧列の数え上げ（部分列，mod 998244353）】O(n (log n)^2)
+/*
+* 括弧文字列 s[0..n) の部分列である括弧列の個数を返す．
+*
+* 制約：fm は (2n)! まで計算可能
+*
+* 利用：【広義単調増加列の数え上げ（上限指定，mod 998244353）】
+*/
+mint count_parenthesis_subsequences(const string& s, const Factorial_mint& fm) {
+	int n = sz(s);
+	if (n == 0) return 1;
+
+	vi a_max{ 0 };
+
+	rep(i, n) {
+		if (s[i] == '(') {
+			a_max.back()++;
+		}
+		else {
+			a_max.push_back(a_max.back());
+		}
+	}
+
+	a_max.pop_back();
+
+	return count_increase_sequence(a_max, fm);
+}
+
+
+//【括弧列の数え上げ（置換，mod 998244353）】O(n + N (log N)^2) (N : s 内の '?' の数)
+/*
+* s[0..n) 内の '?' を '(' または ')' に置き換えて得られる括弧列の個数を返す．
+*
+* 制約：fm は (2n)! まで計算可能
+* 
+* 利用：【広義単調増加列の数え上げ（上限指定，mod 998244353）】
+*/
+mint count_parenthesis_replace(const string& s, const Factorial_mint& fm) {
+	// verify : https://noshi91.hatenablog.com/entry/2023/07/21/235339
+
+	int n = sz(s);
+
+	if (n & 1) return 0;
+
+	vi a_max(n, INF);
+
+	int cL = 0, cR = 0, cQ = 0;
+	int acc_min = 0, acc_max = 0; int d_prv = 0;
+	rep(i, n) {
+		if (s[i] == '(') {
+			cL++;
+			acc_min++;
+			acc_max++;
+		}
+		else if (s[i] == ')') {
+			cR++;
+			acc_min--;
+			acc_max--;
+
+			if (acc_min == -1) acc_min = 1;
+		}
+		else {
+			cQ++;
+			acc_min--;
+			acc_max++;
+
+			if (acc_min == -1) {
+				acc_min = 1;
+
+				int hd = (acc_max - acc_min) / 2;
+				int j = cQ - 1 - hd;
+				if (j >= 0) chmin(a_max[j], hd);
+			}
+			else {
+				int hd = (acc_max - acc_min) / 2;
+				int j = cQ - 1 - hd;
+				if (j >= 0) chmin(a_max[j], hd - 1);
+			}
+		}
+
+		if (acc_min > acc_max) return 0;
+	}
+	if (acc_min > 0) return 0;
+
+	repir(i, cQ - 2, 0) chmin(a_max[i], a_max[i + 1]);
+	repir(i, cQ - 1, 0) chmin(a_max[i], (cQ - 1) - i);
+
+	a_max.resize(cQ - ((n / 2) - cR));
+
+	return count_increase_sequence(a_max, fm);
 }
 
 
@@ -193,6 +267,26 @@ Graph parenthesis_tree(const string& s, vi* ls = nullptr, vi* rs = nullptr) {
 
 	return g;
 }
+
+
+//【括弧列の対応と偶奇】
+/*
+* 括弧列 s において，s[i]='(' と s[j]=')' が対応する括弧であるとき i と j の偶奇は異なる．
+*
+* 証明：s(i..j) もまた括弧列であり，これの長さが偶数であることから直ちに従う．
+*
+* verify : https://atcoder.jp/contests/agc048/tasks/agc048_b
+*/
+
+
+//【括弧列の重なり】
+/*
+* 括弧文字列 s+t+u について，
+*	s+t と t+u が共に括弧列 ⇒ s, t, u は全て括弧列
+*	s+t+u と t が共に括弧列 ⇒ s+u, t は共に括弧列
+*
+* verify : https://yukicoder.me/problems/no/2133
+*/
 
 
 //【色付き括弧列】
@@ -285,6 +379,47 @@ ll count_illegal_colored_parenthesis_pair(vi p) {
 	}
 
 	return res;
+}
+
+
+//【括弧列の列挙】O(Catalan(n) n)（n = 15 くらいまで OK）
+/*
+* 長さ 2n の括弧列全てを辞書順に格納したリストを返す．
+*/
+vector<string> enumerate_parenthesis_sequences(int n) {
+	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_b
+
+	string s = "";
+	vector<string> seqs;
+
+	// l, r : 左右の括弧をあといくつ使えるか
+	function<void(int, int)> rf = [&](int l, int r) {
+		// 左右の括弧を使い切っている場合
+		if (l == 0 && r == 0) {
+			// 長さ 2 n の括弧列が完成しているので格納する．
+			seqs.push_back(s);
+			return;
+		}
+
+		// 左括弧をまだ使える場合
+		if (l >= 1) {
+			s += '(';
+			rf(l - 1, r);
+			s.pop_back();
+		}
+
+		// 左括弧が十分あり右括弧を使える場合
+		if (r > l) {
+			s += ')';
+			rf(l, r - 1);
+			s.pop_back();
+		}
+
+		return;
+	};
+	rf(n, n);
+
+	return seqs;
 }
 
 

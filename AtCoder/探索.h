@@ -17,7 +17,7 @@ T meguru_search(T ok, T ng, const FUNC& okQ, bool debug_mode = false) {
 	Assert(ok != ng);
 
 #ifdef _MSC_VER	
-	// 単調かどうか自身がないとき用
+	// 単調かどうか自信がないとき用
 	if (debug_mode) {
 		T step = ok < ng ? 1 : -1; T res = ok; bool is_ok = true;
 		for (T i = ok; i != ng + step; i += step) {
@@ -97,26 +97,28 @@ T bin_search(T ok, T ng, const FUNC& okQ, double EPS = 1e-12) {
 * 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
 * debug_mode = true にして実行すると手元では単峰かどうかチェックしながら全探索する．
 */
-template <class FUNC>
-ll ternary_search_max(ll l, ll r, const FUNC& f, bool debug_mode = false) {
+template <class T, class FUNC>
+T ternary_search_max(T l, T r, const FUNC& f, bool debug_mode = false) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_f
 
 	Assert(r - l >= 2);
 
 #ifdef _MSC_VER	
-	// 単峰かどうか自身がないとき用
+	// 単峰かどうか自信がないとき用
 	if (debug_mode) {
-		auto p_val = f(l + 1); int p_sgn = 1;
-		auto val_max = p_val; ll i_max = l + 1;
+		if (r - l == 2) return l + 1;
 
-		for (ll i = l + 2; i < r; i++) {
+		auto p_val = f(l + 1); int p_sgn = 1;
+		auto val_max = p_val; T i_max = l + 1;
+
+		for (T i = l + 2; i < r; i++) {
 			auto val = f(i);
 			if (chmax(val_max, val)) i_max = i;
 
 			int sgn = (val > p_val) - (val < p_val);
 			if (p_sgn < sgn) {
 				cout << "not unimodal!" << endl;
-				for (ll i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
+				for (T i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
 				exit(1);
 			}
 			p_val = val;
@@ -128,9 +130,9 @@ ll ternary_search_max(ll l, ll r, const FUNC& f, bool debug_mode = false) {
 #endif
 
 	while (r - l > 2) {
-		ll s = l + r;
-		ll m1 = s / 2 - (s % 2 < 0);
-		ll m2 = m1 + 1;
+		T s = l + r;
+		T m1 = s / 2 - (s % 2 < 0);
+		T m2 = m1 + 1;
 
 		if (f(m1) < f(m2)) l = m1;
 		else r = m2;
@@ -138,7 +140,8 @@ ll ternary_search_max(ll l, ll r, const FUNC& f, bool debug_mode = false) {
 	return l + 1;
 
 	/* f の定義の雛形
-	auto f = [&](ll x) {
+	using T = ll;
+	auto f = [&](T x) {
 		return x;
 	};
 	*/
@@ -150,24 +153,26 @@ ll ternary_search_max(ll l, ll r, const FUNC& f, bool debug_mode = false) {
 * 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
 * debug_mode = true にして実行すると手元では単峰かどうかチェックしながら全探索する．
 */
-template <class FUNC>
-ll ternary_search_min(ll l, ll r, const FUNC& f, bool debug_mode = false) {
+template <class T, class FUNC>
+T ternary_search_min(T l, T r, const FUNC& f, bool debug_mode = false) {
 	// verify : https://atcoder.jp/contests/abc279/tasks/abc279_d
 
 #ifdef _MSC_VER	
-// 単峰かどうか自身がないとき用
+	// 単峰かどうか自信がないとき用
 	if (debug_mode) {
-		auto p_val = f(l + 1); int p_sgn = -1;
-		auto val_min = p_val; ll i_min = l + 1;
+		if (r - l == 2) return l + 1;
 
-		for (ll i = l + 2; i < r; i++) {
+		auto p_val = f(l + 1); int p_sgn = -1;
+		auto val_min = p_val; T i_min = l + 1;
+
+		for (T i = l + 2; i < r; i++) {
 			auto val = f(i);
 			if (chmin(val_min, val)) i_min = i;
 
 			int sgn = (val > p_val) - (val < p_val);
 			if (p_sgn > sgn) {
 				cout << "not unimodal!" << endl;
-				for (ll i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
+				for (T i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
 				exit(1);
 			}
 			p_val = val;
@@ -179,9 +184,9 @@ ll ternary_search_min(ll l, ll r, const FUNC& f, bool debug_mode = false) {
 #endif
 
 	while (r - l > 2) {
-		ll s = l + r;
-		ll m1 = s / 2 - (s % 2 < 0);
-		ll m2 = m1 + 1;
+		T s = l + r;
+		T m1 = s / 2 - (s % 2 < 0);
+		T m2 = m1 + 1;
 
 		if (f(m1) > f(m2)) l = m1;
 		else r = m2;
@@ -189,7 +194,8 @@ ll ternary_search_min(ll l, ll r, const FUNC& f, bool debug_mode = false) {
 	return l + 1;
 
 	/* f の定義の雛形
-	auto f = [&](ll x) {
+	using T = ll;
+	auto f = [&](T x) {
 		return x;
 	};
 	*/
@@ -595,14 +601,14 @@ void parallel_binary_search(vi& ok, vi& ng, const function<void(const vi&, vb&)>
 	/* okQ の定義の雛形
 	function<void(const vi&, vb&)> okQ = [&](const vi& mid, vb& res) {
 		// mid の値ごとに処理するため，mid → id を作る．
-		vvi mid_to_id(k);
+		vvi mid_to_id(T);
 		rep(id, q) mid_to_id[mid[id]].push_back(id);
 
 		// 必要なデータ構造の準備をここに書く：
 
 
 		// シミュレーションを行う
-		rep(t, k) {
+		rep(t, T) {
 			// 時刻 t での処理をここに書く：
 
 
@@ -614,10 +620,119 @@ void parallel_binary_search(vi& ok, vi& ng, const function<void(const vi&, vb&)>
 }
 
 
+//【二分探索（最小値固定）】O(n (log n)^2)
+/*
+* 与えられた列 a[0..n) に対し，各 m∈[0..n) について，m を含む区間 [l..r) で
+* argmin a[l..r) = m（最左優先）かつ is_ok(m, l, r) = true となるものの個数のリストを返す．
+* max_flag = true とすると最大値固定とする．
+*
+* 制約：is_ok(m,・,・) は単調
+*/
+template <class T, class FUNC>
+vl bin_search_fixed_min(const vector<T>& a, const FUNC& okQ, bool max_flag = false) {
+	// verify : https://atcoder.jp/contests/abc282/tasks/abc282_h
+
+	int n = sz(a);
+
+	// prv[M] : a[M] 以下の数の前の位置（なければ -1）
+	// nxt[M] : a[M] より真に大きい数の次の位置（なければ n）
+	vi prv(n, -1), nxt(n, n);
+
+	if (!max_flag) {
+		// 自身以下の数の前の位置を一括計算する．
+		stack<pair<int, T>> st;
+		repir(i, n - 1, 0) {
+			while (!st.empty() && st.top().second >= a[i]) {
+				prv[st.top().first] = i;
+				st.pop();
+			}
+			st.push({ i, a[i] });
+		}
+
+		// 自身より真に小さい数の次の位置を一括計算する．
+		stack<pair<int, T>> st2;
+		rep(i, n) {
+			while (!st2.empty() && st2.top().second > a[i]) {
+				nxt[st2.top().first] = i;
+				st2.pop();
+			}
+			st2.push({ i, a[i] });
+		}
+	}
+	else {
+		// 自身以上の数の前の位置を一括計算する．
+		stack<pair<int, T>> st;
+		repir(i, n - 1, 0) {
+			while (!st.empty() && st.top().second <= a[i]) {
+				prv[st.top().first] = i;
+				st.pop();
+			}
+			st.push({ i, a[i] });
+		}
+
+		// 自身より真に大きい数の次の位置を一括計算する．
+		stack<pair<int, T>> st2;
+		rep(i, n) {
+			while (!st2.empty() && st2.top().second < a[i]) {
+				nxt[st2.top().first] = i;
+				st2.pop();
+			}
+			st2.push({ i, a[i] });
+		}
+	}
+
+	vl res(n);
+
+	rep(M, n) {
+		// 最小値が a[M] である極大半開区間 [L..M..R) をとる．
+		int L = prv[M] + 1;
+		int R = nxt[M];
+
+		// M の左側と右側とで要素の少ない方を決め打ちする（マージテクと同じ計算量になる）
+		if (M - L + 1 < R - M) {
+			repi(l, L, M) {
+				int r_ok = M, r_ng = R;
+				if (okQ(M, l, r_ng)) swap(r_ok, r_ng); // これが誤りならどうせ答えは 0
+
+				while (abs(r_ok - r_ng) > 1) {
+					int r_mid = (r_ok + r_ng) / 2;
+
+					if (okQ(M, l, r_mid)) r_ok = r_mid;
+					else r_ng = r_mid;
+				}
+				res[M] += r_ok < r_ng ? r_ok - M : R - r_ok + 1;
+			}
+		}
+		else {
+			repi(r, M + 1, R) {
+				int l_ok = M + 1, l_ng = L;
+				if (okQ(M, l_ng, r)) swap(l_ok, l_ng); // これが誤りならどうせ答えは 0
+
+				while (abs(l_ok - l_ng) > 1) {
+					int l_mid = (l_ok + l_ng) / 2;
+
+					if (okQ(M, l_mid, r)) l_ok = l_mid;
+					else l_ng = l_mid;
+				}
+				res[M] += l_ok > l_ng ? M - l_ok + 1 : l_ok - L + 1;
+			}
+		}
+	}
+
+	return res;
+
+	/* okQ の定義の雛形
+	auto okQ = [&](int M, int L, int R) {
+		return true;
+	};
+	*/
+}
+
+
 //【幅優先探索（動的）】O(n + m)（遅い）
 /*
 * st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
-* 探索は lim ms だけ続ける．
+* 探索は lim [ms] だけ続ける．
 */
 template <class T>
 set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt, int lim = (int)1e9) {
@@ -668,7 +783,7 @@ set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt, int lim = (int
 /*
 * st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
 * HASH はハッシュ関数 size_t operator()(const T& p) の定義された関数オブジェクトとする．
-* 探索は lim ms だけ続ける．
+* 探索は lim [ms] だけ続ける．
 */
 template <class T, class HASH>
 unordered_set<T, HASH> get_reachable_set_hashed(T st, const function<vector<T>(T)>& nxt, int lim = (int)1e9) {

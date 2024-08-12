@@ -420,7 +420,7 @@ vi z_algorithm_suffix(STR s) {
 */
 vi wildcard_matching(const string& s, const string& p, char Q = '?') {
 	// Ql : https://ei1333.hateblo.jp/entry/2021/01/02/000716
-	// verify : https://atcoder.jp/contests/abc307/tasks/abc307_h
+	// verify : https://judge.yosupo.jp/problem/wildcard_pattern_matching
 
 	//y•û–@z
 	// •¶š—ñ s[0..n) ‚ğŒ³‚É”—ñ sa[0..n), sb[0..n) ‚ğ
@@ -502,7 +502,10 @@ vi wildcard_matching(const string& s, const string& p, char Q = '?') {
 *   •¶š—ñ s ‚É‘Î‚·‚éŒŸõ‚ª‚Å‚«‚é‚æ‚¤‚É‰Šú‰»‚·‚éD
 *
 * int search(string p) : O(|p| log |s|)
-*   s[i..i+m) = p[0..m) ‚È‚é i ‚ğ•Ô‚·i‘¶İ‚µ‚È‚¯‚ê‚Î -1j
+*   s[i..i+m) = p[0..m) ‚È‚é i ‚ğ 1 ‚Â•Ô‚·i‘¶İ‚µ‚È‚¯‚ê‚Î -1j
+* 
+* int count(string p) : O(|p| log |s|)
+*   s[i..i+m) = p[0..m) ‚È‚é i ‚ÌŒÂ”‚ğ•Ô‚·D
 */
 class String_search {
 	int n;
@@ -510,36 +513,46 @@ class String_search {
 	vi sa; // s ‚ÌÚ”ö«”z—ñ
 
 public:
-	String_search(const string& s_) : n(sz(s_)), s(s_) {
+	// •¶š—ñ s ‚É‘Î‚·‚éŒŸõ‚ª‚Å‚«‚é‚æ‚¤‚É‰Šú‰»‚·‚éD
+	String_search(const string& s) : n(sz(s)), s(s) {
 		sa = suffix_array(s);
 	}
 
+	// s[i..i+m) = p[0..m) ‚È‚é i ‚ğ•Ô‚·i‘¶İ‚µ‚È‚¯‚ê‚Î -1j
 	int search(const string& p) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_D
 
 		int m = sz(p);
 
+		// s[sa[ok]..sa[ok]+m) … p < s[sa[ng]..sa[ng]+m)
 		int ok = 0, ng = n;
+
+		// i_ok : p ‚Æ s[sa[ok]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+		// i_ng : p ‚Æ s[sa[ng]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
 		int i_ok = 0, i_ng = 0;
 		while (i_ok < m && sa[ok] + i_ok < n && s[sa[ok] + i_ok] == p[i_ok]) i_ok++;
 		if (i_ok == m) return sa[ok];
 
 		while (abs(ok - ng) > 1) {
 			int mid = (ok + ng) / 2;
-			int i_mid = min(i_ok, i_ng);
 
+			// i_mid : p ‚Æ s[sa[mid]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+			int i_mid = min(i_ok, i_ng);
 			while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
 
+			// s[sa[mid]..sa[mid]+m) = p ‚Ìê‡
 			if (i_mid == m) {
 				ok = mid;
 				i_ok = i_mid;
 				break;
 			}
 
+			// s[sa[mid]..sa[mid]+m) < p ‚Ìê‡
 			if (sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid]) {
 				ok = mid;
 				i_ok = i_mid;
 			}
+			// s[sa[mid]..sa[mid]+m) > p ‚Ìê‡
 			else {
 				ng = mid;
 				i_ng = i_mid;
@@ -548,6 +561,73 @@ public:
 
 		if (i_ok == m) return sa[ok];
 		else return -1;
+	}
+
+	// s[i..i+m) = p[0..m) ‚È‚é i ‚ÌŒÂ”‚ğ•Ô‚·D
+	int count(const string& p) {
+		// verify : https://atcoder.jp/contests/abc362/tasks/abc362_g
+
+		int m = sz(p);
+
+		int cnt = 0;
+
+		{
+			// s[sa[ok]..sa[ok]+m) … p < s[sa[ng]..sa[ng]+m)
+			int ok = -1, ng = n;
+
+			// i_ok : p ‚Æ s[sa[ok]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+			// i_ng : p ‚Æ s[sa[ng]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+			int i_ok = 0, i_ng = 0;
+
+			while (abs(ok - ng) > 1) {
+				int mid = (ok + ng) / 2;
+
+				// i_mid : p ‚Æ s[sa[mid]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+				int i_mid = min(i_ok, i_ng);
+				while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
+
+				if (i_mid == m || sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid]) {
+					ok = mid;
+					i_ok = i_mid;
+				}
+				else {
+					ng = mid;
+					i_ng = i_mid;
+				}
+			}
+
+			cnt += ng;
+		}
+
+		{
+			// s[sa[ok]..sa[ok]+m) < p … s[sa[ng]..sa[ng]+m)
+			int ok = -1, ng = n;
+
+			// i_ok : p ‚Æ s[sa[ok]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+			// i_ng : p ‚Æ s[sa[ng]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+			int i_ok = 0, i_ng = 0;
+
+			while (abs(ok - ng) > 1) {
+				int mid = (ok + ng) / 2;
+
+				// i_mid : p ‚Æ s[sa[mid]] ‚ÌÚ“ª«‚ªÅ’·‰½•¶šˆê’v‚µ‚Ä‚¢‚é‚©
+				int i_mid = min(i_ok, i_ng);
+				while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
+
+				if (i_mid != m && (sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid])) {
+					ok = mid;
+					i_ok = i_mid;
+				}
+				else {
+					ng = mid;
+					i_ng = i_mid;
+				}
+			}
+
+			cnt -= ng;
+		}
+
+		return cnt;
 	}
 };
 

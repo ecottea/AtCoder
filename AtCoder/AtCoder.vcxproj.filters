@@ -650,6 +650,15 @@
     <ClInclude Include="SPS.h">
       <Filter>ヘッダー ファイル\代数</Filter>
     </ClInclude>
+    <ClInclude Include="列挙%28数論%29.h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ%28数論%29.h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和%28数論%29.h">
+      <Filter>ヘッダー ファイル\数論</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">

@@ -3,23 +3,24 @@
 #include "行列.h"
 #include "二項係数.h"
 #include "FPS(mint).h"
+#include "FPS(スパース).h"
 #include "数論変換.h"
 // ■■■■■ 有名数列 ■■■■■
 
 
 //【フィボナッチ数】O(n)
 /*
-* フィボナッチ数のリスト fib[0..n) を返す（fib[0]=0, fib[1]=1 とする）
+* フィボナッチ数のリスト fib[0..n] を返す（fib[0]=0, fib[1]=1 とする）
 */
 template <class T>
 vector<T> fibonacci(int n) {
 	// verify : https://atcoder.jp/contests/tessoku-book/tasks/math_and_algorithm_ap
 
-	vector<T> fib(n);
+	vector<T> fib(n + 1);
 	fib[0] = 0;
 	fib[1] = 1;
 
-	repi(i, 2, n - 1) fib[i] = fib[i - 1] + fib[i - 2];
+	repi(i, 2, n) fib[i] = fib[i - 1] + fib[i - 2];
 
 	return fib;
 }
@@ -586,9 +587,4 @@ vm weierstrass_p(int n, mint g2, mint g3) {
 * verify : https://atcoder.jp/contests/xmascon22/tasks/xmascon22_d
 */
 
-
-//【分割数】
-/*
-* 写像12相.h へ
-*/
 

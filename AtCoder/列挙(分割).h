@@ -261,6 +261,8 @@ vvi integer_partitions_val(int n, int k = INF) {
 * 自然数 n を d 個以下の自然数（広義降順）に分割する方法のリストを返す．
 */
 vvi integer_partitions_len(int n, int d = INF) {
+	// verify : https://yukicoder.me/problems/no/2788
+
 	//【具体例】
 	// (n, d) = (6, 3) のとき：
 	//	0 : 6
@@ -350,12 +352,12 @@ vvi integer_partitions_val(int n, const vi& a) {
 }
 
 
-//【自然数の順序付き分割の列挙（d 個以下）】O(bin(n+d-1, d-1))
+//【非負整数の順序付き分割の列挙（d 個）】O(bin(n+d-1, d-1))
 /*
-* 自然数 n を d 個の非負整数に順序付きで分割する方法のリストを返す．
+* 非負整数 n を d 個の非負整数に順序付きで分割する方法のリストを返す．
 */
 vvi ordered_integer_partitions_len(int n, int d) {
-	// verify : https://projecteuler.net/problem=862
+	// verify : https://yukicoder.me/problems/no/2788
 
 	//【具体例】
 	// (n, d) = (3, 3) のとき：
@@ -385,6 +387,54 @@ vvi ordered_integer_partitions_len(int n, int d) {
 		}
 	};
 	rf(n, 0);
+
+	return ips;
+}
+
+
+//【非負整数の組の分割の列挙（d 個）】O(?)
+/*
+* 自然数の組 (n1, n2) を d 個の非負整数の組（昇順）に分割する方法のリストを返す．
+*/
+vector<vector<pii>> integer_pair_partitions_len(int n1, int n2, int d) {
+	// verify : https://yukicoder.me/problems/no/2788
+
+	//【具体例】
+	// ((n1, n2), d) = ((2, 2), 3) のとき：
+	//	0: (0,0) (0,0) (2,2)
+	//	1: (0,0) (0,1) (2,1)
+	//	2: (0,0) (0,2) (2,0)
+	//	3: (0,0) (1,0) (1,2)
+	//	4: (0,0) (1,1) (1,1)
+	//	5: (0,1) (0,1) (2,0)
+	//	6: (0,1) (1,0) (1,0)
+	//	7: (0,2) (1,0) (1,0)
+
+	vector<vector<pii>> ips; vector<pii> ip;
+
+	// 組 (n1, n2) を辞書順で (j1, j2) 以上の組で分割する．
+	function<void(int, int, int, int)> rf = [&](int n1, int n2, int j1, int j2) {
+		// 分割しきった場合
+		if (sz(ip) == d) {
+			if (n1 == 0 && n2 == 0) ips.push_back(ip);
+			return;
+		}
+
+		// n1 の分割が不可能になった場合は終了．
+		if (n1 < j1 * (d - sz(ip))) return;
+
+		// (n1, n2) の分割に (j1, j2) を使用する場合
+		if (n2 >= j2) {
+			ip.emplace_back(j1, j2);
+			rf(n1 - j1, n2 - j2, j1, j2);
+			ip.pop_back();
+		}
+
+		// (n1, n2) の分割に (j1, j2) を使用しない場合
+		if (n2 >= j2 + 1) rf(n1, n2, j1, j2 + 1);
+		else rf(n1, n2, j1 + 1, 0);
+	};
+	rf(n1, n2, 0, 0);
 
 	return ips;
 }

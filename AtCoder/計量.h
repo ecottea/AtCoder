@@ -148,7 +148,7 @@ void argument_sort(vector<Point<T>>& p, Point<T> e = Point<T>{ 1, 0 }, Point<T> 
 /*
 * 開三角形 t と直線 l との共通部分の長さを返す．
 *
-* 利用：【共有判定（直線と閉線分）】，【2 直線の交点】
+* 利用：【共有判定（直線と閉線分）】，【2 直線の交点（実数）】
 */
 template <class T>
 double length_intersection_OTri_L(const Polygon<T>& t, const Line<T>& l) {
@@ -156,7 +156,7 @@ double length_intersection_OTri_L(const Polygon<T>& t, const Line<T>& l) {
 
 	Assert(sz(t) == 3);
 
-	// 三角形　t の辺が直線 l に含まれる場合の例外処理
+	// 三角形 t の辺が直線 l に含まれる場合の例外処理
 	rep(i, 3) {
 		bool b1 = (l.second - l.first).cross(t[i] - l.first) == 0;
 		bool b2 = (l.second - l.first).cross(t[(i + 1) % 3] - l.first) == 0;
@@ -169,7 +169,7 @@ double length_intersection_OTri_L(const Polygon<T>& t, const Line<T>& l) {
 		if (t[i] == t[(i + 1) % 3]) continue;
 		if (!intersectQ_L_HS(l, { t[i], t[(i + 1) % 3] })) continue;
 
-		p.emplace_back(intersection_L_L(l, { t[i], t[(i + 1) % 3] }));
+		p.emplace_back(intersection_L_L_double(l, { t[i], t[(i + 1) % 3] }));
 	}
 
 	return sz(p) < 2 ? 0 : (p[0] - p[1]).norm();
@@ -196,9 +196,8 @@ double length_intersection_CPoly_L(const Polygon<T>& p, const Line<T>& l, Point<
 
 	rep(i, n) {
 		int sign = ((p[i] - o).cross((p[(i + 1) % n] - o)) > 0 ? 1 : -1);
-		double len = length_intersection_Tri_L({ o, p[i], p[(i + 1) % n] }, l);
-		dump(sign, len);
-
+		double len = length_intersection_OTri_L({ o, p[i], p[(i + 1) % n] }, l);
+		
 		// 辺 p[i]-p[i+1] が l に含まれる場合の例外処理
 		bool b1 = (l.second - l.first).cross(p[i] - l.first) == 0;
 		bool b2 = (l.second - l.first).cross(p[(i + 1) % n] - l.first) == 0;
@@ -361,18 +360,23 @@ double area_intersection_C_C(Circle<T> c1, Circle<T> c2) {
 
 //【凸多角形の直径】O(n)
 /*
-* 凸 n 角形 poly の直径を求める．
-*
-* 凸 n 角形は頂点を反時計回りに並べた列として表す．
-*
-* 戻り値：poly の直径
-* id = {i, j} : 直径の両端の頂点の番号が {i, j} であることを表す．
+* 凸 n 角形 poly の直径の 2 乗を返す．また直径の両端の頂点番号の組を id に格納する．
 */
-template <class T> 
-double caliper(const Polygon<T>& poly, pii& id) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_B
+template <class T>
+T caliper(const Polygon<T>& poly, pii& id) {
+	// verify : https://judge.yosupo.jp/problem/furthest_pair
 
 	int n = sz(poly);
+
+	if (n == 1) {
+		id = { 0, 0 };
+		return 0;
+	}
+
+	if (n == 2) {
+		id = { 0, 1 };
+		return (poly[0] - poly[1]).sqnorm();
+	}
 
 	// x 座標が最小[最大]の頂点の番号 i0[j0] を得る．
 	int i0 = 0, j0 = 0;
@@ -403,7 +407,7 @@ double caliper(const Polygon<T>& poly, pii& id) {
 		}
 	}
 
-	return sqrt(sqres);
+	return sqres;
 }
 
 

@@ -10,20 +10,14 @@
 * Wavelet_matrix<T>(vT a) : O(n log n)
 *	整数列 a[0..n) で初期化する．
 *
-* T get(int i) : O(log n)
-*	昇順で i 番目の要素を返す．
-*
 * T get(int l, int r, int i) : O(log n)
-*	a[l..r) の中で昇順で i 番目の要素を返す．
+*	a[l..r) の中で昇順で i 番目の要素を返す（なければ INFL）
 *
 * int count(int l, int r, T v) : O(log n)
 *	a[l..r) に v が何個あるかを返す．
 *
 * int count(int l, int r, T v0, T v1) : O(log n)
 *	a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
-*
-* int position(T v, int c) : O((log n)^2)
-*	昇順で c 番目の v の位置を返す．
 *
 * ll sum(int l, int r) : O(1)
 *	a[l..r) の和を返す．
@@ -39,38 +33,18 @@ class Wavelet_matrix {
 	// 参考 : https://miti-7.hatenablog.com/entry/2018/04/28/152259
 
 	int n; // 要素数
-	int k; // msb 以下の桁数
+	int m; // msb 以下の桁数
 	vi bs; // bs[i][j] : 第 j+1 ビットについての安定ソート後の a[i] の第 j ビット
 	array<vvi, 2> bs_acc; // bs_acc[b] : bs[*][b] のビット b=0,1 それぞれの個数の累積和
 	vi num_zeros; // num_zeros[j] : bs[j] の 0 の個数
-	vi id; // 値 → 安定ソートが終わったときの最左位置
 	vector<vector<T>> acc; // acc[j] : 第 j ビットについての安定ソート後の a の累積和
 	vector<T> val; // 座圧前の値のユニークな昇順列
-
-	// a[0..r) に v が何個あるかを返す．
-	int count_sub(int r, int v) {
-		// 一つも無ければすぐに 0 を返す．
-		if (!id[v]) return 0;
-
-		// 最上位ビットから順に見ていく
-		repir(j, k - 1, 0) {
-			// 注目ビットに応じて次の位置を求めていく．
-			if (v >> j & 1) {
-				r = num_zeros[j] + bs_acc[1][j][r];
-			}
-			else {
-				r = bs_acc[0][j][r];
-			}
-		}
-
-		return r - id[v];
-	}
 
 	// a[l..r) の中で [0..v) に値をもつ要素の個数を返す．
 	int count_rsub(int l, int r, int v) {
 		int cnt = 0;
-		repir(j, k - 1, 0) {
-			if (v >> j & 1) {
+		repir(j, m - 1, 0) {
+			if (getb(v, j)) {
 				cnt += bs_acc[0][j][r] - bs_acc[0][j][l];
 				r = num_zeros[j] + bs_acc[1][j][r];
 				l = num_zeros[j] + bs_acc[1][j][l];
@@ -87,8 +61,8 @@ class Wavelet_matrix {
 	// a[l..r) の中で [0..v) に値をもつ要素の和を返す．
 	T sum_rsub(int l, int r, int v) {
 		T res = 0;
-		repir(j, k - 1, 0) {
-			if (v >> j & 1) {
+		repir(j, m - 1, 0) {
+			if (getb(v, j)) {
 				res += acc[j][bs_acc[0][j][r]] - acc[j][bs_acc[0][j][l]];
 				r = num_zeros[j] + bs_acc[1][j][r];
 				l = num_zeros[j] + bs_acc[1][j][l];
@@ -103,7 +77,7 @@ class Wavelet_matrix {
 	}
 
 public:
-	// 整数列 t で初期化する．
+	// 整数列 a[0..n) で初期化する．
 	Wavelet_matrix(const vector<T>& a) : n(sz(a)) {
 		// verify : https://judge.yosupo.jp/problem/static_range_frequency
 
@@ -114,28 +88,23 @@ public:
 		vi t(n);
 		rep(i, n) t[i] = lbpos(val, a[i]);
 
-		k = msb(sz(val)) + 1;
-		bs = vi(n);
-		bs_acc[0] = bs_acc[1] = vvi(k, vi(n + 1));
-		num_zeros = vi(k);
-		id = vi(sz(val), -1);
-		acc = vector<vector<T>>(k + 1, vector<T>(n + 1));
+		m = msb(sz(val)) + 1;
+		bs.resize(n);
+		bs_acc[0] = bs_acc[1] = vvi(m, vi(n + 1));
+		num_zeros.resize(m);
+		acc.assign(m + 1, vector<T>(n + 1));
 
 		// j : 注目ビット位置（上位ビットから順に見ていく）
-		repir(j, k - 1, 0) {
+		repir(j, m - 1, 0) {
 			rep(i, n) {
 				// 注目ビットが 1 か
-				bs[i] += t[i] & T(1) << j;
+				bs[i] |= t[i] & (1 << j);
 
 				// ビット 0, 1 それぞれの個数の累積和を求めておく．
 				rep(b, 2) bs_acc[b][j][i + 1] = bs_acc[b][j][i];
-				if (t[i] >> j & 1) {
-					bs_acc[1][j][i + 1]++;
-				}
-				else {
-					bs_acc[0][j][i + 1]++;
-					num_zeros[j]++;
-				}
+				int b = getb(t[i], j);
+				bs_acc[b][j][i + 1]++;
+				num_zeros[j] += 1 - b;
 
 				// 要素の累積和の計算
 				acc[j + 1][i + 1] = acc[j + 1][i] + val[t[i]];
@@ -143,8 +112,11 @@ public:
 
 			// 注目ビットが 0 のものを左，1 のものを右に寄せる安定ソートを行う．
 			vi nt0, nt1;
+			nt0.reserve(num_zeros[j]);
+			nt1.reserve(n - num_zeros[j]);
+
 			rep(i, n) {
-				if (t[i] >> j & 1) nt1.push_back(t[i]);
+				if (getb(t[i], j)) nt1.push_back(t[i]);
 				else nt0.push_back(t[i]);
 			}
 			t.clear();
@@ -152,65 +124,20 @@ public:
 			repe(x, nt1) t.push_back(x);
 		}
 
-		rep(i, n) {
-			// 値 → 安定ソートが終わったときの最左位置
-			if (id[t[i]] != -1) id[t[i]] = i;
-
-			// 要素の累積和の計算
-			acc[0][i + 1] = acc[0][i] + val[t[i]];
-		}
+		// 要素の累積和の計算
+		rep(i, n) acc[0][i + 1] = acc[0][i] + val[t[i]];
 	}
-	Wavelet_matrix() : n(0), k(0) {}
-
-	// 昇順で c 番目の v の位置を返す．
-	int position(T v, int c) {
-		int ord = lbpos(val, v);
-		if (val[ord] != v) return -1;
-
-		int i = id[ord] + c;
-		rep(j, k) {
-			if (ord >> j & 1) {
-				i = ubpos(bs_acc[1][j], i - num_zeros[j]) - 1;
-			}
-			else {
-				i = ubpos(bs_acc[0][j], i - num_zeros[j]) - 1;
-			}
-		}
-
-		return i;
-	}
-
-	// 昇順で i 番目の要素を返す．
-	T get(int i) {
-		Assert(0 <= i && i < n);
-		int ord = 0;
-
-		// 最上位ビットから順に見ていく
-		repir(j, k - 1, 0) {
-			ord <<= 1;
-
-			// 注目ビットに応じて次の位置を求めつつ，値を更新していく．
-			if (bs[i] >> j & 1) {
-				ord++;
-				i = num_zeros[j] + bs_acc[1][j][i];
-			}
-			else {
-				i = bs_acc[0][j][i];
-			}
-		}
-
-		return val[ord];
-	}
+	Wavelet_matrix() : n(0), m(0) {}
 
 	// a[l..r) のうち昇順で i 番目の要素を返す．
 	T get(int l, int r, int i) {
 		// verify : https://judge.yosupo.jp/problem/range_kth_smallest
 
 		chmax(l, 0); chmin(r, n);
-		Assert(0 <= i && i < r - l);
+		if (i >= r - l) return T(INFL);
 		int ord = 0;
 
-		repir(j, k - 1, 0) {
+		repir(j, m - 1, 0) {
 			ord <<= 1;
 
 			int cnt0 = bs_acc[0][j][r] - bs_acc[0][j][l];
@@ -227,19 +154,6 @@ public:
 		}
 
 		return val[ord];
-	}
-
-	// a[l..r) に v が何個あるかを返す．
-	int count(int l, int r, T v) {
-		// verify : https://judge.yosupo.jp/problem/static_range_frequency
-
-		chmax(l, 0); chmin(r, n);
-		if (l >= r) return 0;
-
-		int ord = lbpos(val, v);
-		if (val[ord] != v) return 0;
-
-		return count_sub(r, ord) - count_sub(l, ord);
 	}
 
 	// a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．
@@ -262,7 +176,7 @@ public:
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
-		return acc[k][r] - acc[k][l];
+		return acc[m][r] - acc[m][l];
 	}
 
 	// a[l..r) の中で [v0..v1) に値をもつ要素の和を返す．
@@ -287,7 +201,7 @@ public:
 
 		int ord = lbpos(val, v);
 
-		T res = sum_rsub(l, r, (1 << k) - 1);
+		T res = sum_rsub(l, r, (1 << m) - 1);
 		res -= (r - l) * v;
 		res -= 2 * sum_rsub(l, r, ord);
 		res += 2 * count_rsub(l, r, ord) * v;
@@ -302,20 +216,11 @@ public:
 * Thinning_wavelet_matrix(vl a, int m) : O(n log n)
 *	配列 a[0..n) と法 m で初期化する．
 *
-* ll get(int i, int k) : O(log n)
-*	昇順で i 番目の要素を返す．添字は ≡ k (mod n) の部分だけ見る．
-*
 * ll get(int l, int r, int i, int k) : O(log n)
 *	a[l..r) の中で昇順で i 番目の要素を返す．添字は ≡ k (mod m) の部分だけ見る．
 *
-* int count(int l, int r, ll v, int k) : O(log n)
-*	a[l..r) に v が何個あるかを返す．添字は ≡ k (mod m) の部分だけ見る．
-*
 * int count(int l, int r, ll v0, ll v1, int k) : O(log n)
 *	a[l..r) の中で [v0..v1) に値をもつ要素の個数を返す．添字は ≡ k (mod m) の部分だけ見る．
-*
-* int position(ll v, int c, int k) : O((log n)^2)
-*	昇順で c 番目の v の位置を返す．添字は ≡ k (mod m) の部分だけ見る．
 *
 * ll sum(int l, int r, int k) : O(1)
 *	a[l..r) の和を返す．添字は ≡ k (mod m) の部分だけ見る．
@@ -325,6 +230,8 @@ public:
 *
 * ll abs_sum(int l, int r, ll v, int k) : O(log n)
 *	Σi∈[l..r) |a[i] - v| を返す．添字は ≡ k (mod m) の部分だけ見る．
+* 
+* 利用：【ウェーブレット行列】
 */
 template <class T>
 struct Thinning_wavelet_matrix {
@@ -341,22 +248,6 @@ public:
 		rep(j, m) if (sz(a2[j]) > 0) wms[j] = Wavelet_matrix(a2[j]);
 	}
 	Thinning_wavelet_matrix() : m(1) {} // ダミー
-
-	// 昇順で i 番目の要素を返す．
-	T get(int i, int k) {
-		return wms[k].get((i - k + m - 1) / m);
-	}
-
-	// a[l..r) に v が何個あるかを返す．
-	int count(int l, int r, T v, int k) {
-		return wms[k].count((l - k + m - 1) / m, (r - k + m - 1) / m, v);
-	}
-
-	// 昇順で c 番目の v の位置を返す．
-	int position(T v, int c, int k) {
-		int i = wms[k].position(v, c);
-		return k + i * m;
-	}
 
 	// a[l..r) のうち昇順で i 番目の要素を返す．
 	T get(int l, int r, int i, int k) {

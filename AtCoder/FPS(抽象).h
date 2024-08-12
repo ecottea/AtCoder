@@ -76,6 +76,10 @@ struct FPS {
 	FPS& operator=(const FPS& f) = default;
 	FPS& operator=(const S& c0) { n = 1; c = { c0 }; return *this; }
 
+	// 比較
+	[[nodiscard]] bool operator==(const FPS& g) const { return c == g.c; }
+	[[nodiscard]] bool operator!=(const FPS& g) const { return c != g.c; }
+
 	// アクセス
 	S const& operator[](int i) const { return c[i]; }
 	S& operator[](int i) { return c[i]; }

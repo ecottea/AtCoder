@@ -75,22 +75,6 @@ S034 e034() { return { 0, 0, 0 }; }
 #define LinearWgtSum_monoid S034, op034, e034
 
 
-//【min 可換モノイド】
-/* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
-using S004 = ll;
-S004 op004(S004 a, S004 b) { return min(a, b); }
-S004 e004() { return INFL; }
-#define Min_monoid S004, op004, e004
-
-
-//【max 可換モノイド】
-/* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
-using S003 = ll;
-S003 op003(S003 a, S003 b) { return max(a, b); }
-S003 e003() { return -INFL; }
-#define Max_monoid S003, op003, e003
-
-
 //【総積 可換モノイド】
 /* verify : https://codeforces.com/contest/1748/problem/D */
 using S024 = mint;
@@ -115,6 +99,22 @@ using S020 = Fixed_matrix<mint, N020>;
 S020 op020(S020 a, S020 b) { return b * a; }
 S020 e020() { return S020(1); }
 #define MatrixInvMul_monoid S020, op020, e020
+
+
+//【min 可換モノイド】
+/* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
+using S004 = ll;
+S004 op004(S004 a, S004 b) { return min(a, b); }
+S004 e004() { return INFL; }
+#define Min_monoid S004, op004, e004
+
+
+//【max 可換モノイド】
+/* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
+using S003 = ll;
+S003 op003(S003 a, S003 b) { return max(a, b); }
+S003 e003() { return -INFL; }
+#define Max_monoid S003, op003, e003
 
 
 //【XOR 可換モノイド】
@@ -302,71 +302,6 @@ S036 e036() { return { ~0, 0 }; }
 #define BitInvAffine_monoid S036, op036, e036
 
 
-//【ビット列上 転倒数 モノイド】
-/*
-* S ∋ x = {inv, c0, c1} : 列 x の転倒数，0 の個数，1 の個数の組
-* x op y : 列 x, y を連結した列
-*/
-using S017 = tuple<ll, ll, ll>;
-S017 op017(S017 x, S017 y) {
-	ll x_inv, y_inv, x_c0, x_c1, y_c0, y_c1;
-	tie(x_inv, x_c0, x_c1) = x;
-	tie(y_inv, y_c0, y_c1) = y;
-
-	// まず x, y それぞれをソートするのに x_inv + y_inv 回の隣接互換が必要．
-	// その後 x の右側に寄った x_c1 個の 1 と y の左側に寄った y_c0 個の 0 を
-	// 交換するのに x_c1 * y_c0 回の隣接互換が必要．
-	ll inv = x_inv + y_inv + x_c1 * y_c0;
-	ll c0 = x_c0 + y_c0, c1 = x_c1 + y_c1;
-
-	return { inv, c0, c1 };
-}
-S017 e017() { return { 0LL, 0, 0 }; }
-#define Inversion_monoid S017, op017, e017
-
-
-//【写像の合成 モノイド】（参照渡ししていないので遅い）
-/*
-* S ∋ f[0..n) : 写像 i → f[i] を表す．
-* f op g : 合成写像 f o g を返す．
-*/
-// verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
-using S018 = vi;
-S018 op018(S018 a, S018 b) {
-	if (sz(a) == 0) return b;
-	if (sz(b) == 0) return a;
-
-	int n = sz(a);
-	S018 res(n);
-	rep(i, n) res[i] = a[b[i]];
-
-	return res;
-}
-S018 e018() { return S018(); }
-#define Map_monoid S018, op018, e018
-
-
-//【写像の逆合成 モノイド】（参照渡ししていないので遅い）
-/*
-* S ∋ f[0..n) : 写像 i → f[i] を表す．
-* f op g : 合成写像 g o f を返す．
-*/
-// verify : https://mojacoder.app/users/first_vil/contests/Iamsorry2/tasks/5
-constexpr int N019 = 2;
-using S019 = array<int, N019>;
-S019 op019(S019 f, S019 g) {
-	S019 h;
-	rep(i, N019) h[i] = g[f[i]];
-	return h;
-}
-S019 e019() {
-	S019 f;
-	iota(all(f), 0);
-	return f;
-}
-#define InvMap_monoid S019, op019, e019
-
-
 //【第二最小値 可換モノイド】
 using T022 = ll;
 using S022 = pair<T022, T022>; // (最小値, 第二最小値)
@@ -511,6 +446,59 @@ S040 e040() {
 #define CntNthMax_monoid S040, op040, e040
 
 
+//【区間和の最小値 モノイド】
+/*
+* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
+*	fl[fr] : 左[右]端を含む区間和の最小値
+*	fa : 任意の区間和の最小値
+*	fs : 総和
+* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
+*/
+// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
+using T029 = ll;
+using S029 = tuple<T029, T029, T029, T029>; // (左端を含む, 右端を含む, 任意, 総和)
+S029 op029(S029 f, S029 g) {
+	auto [fl, fr, fa, fs] = f;
+	auto [gl, gr, ga, gs] = g;
+
+	T029 hl = min(fl, fs + gl);
+	T029 hr = min(gr, fr + gs);
+	T029 ha = min({ fa, ga, fr + gl });
+	T029 hs = fs + gs;
+
+	return { hl, hr, ha, hs };
+}
+S029 e029() { return { INFL, INFL, INFL, 0 }; }
+#define RangeSumMin_monoid S029, op029, e029
+
+
+//【区間和の最大値 モノイド】
+/*
+* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
+*	fl[fr] : 左[右]端を含む区間和の最大値
+*	fa : 任意の区間和の最大値
+*	fs : 総和
+* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
+*/
+// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
+// verify : https://yukicoder.me/problems/no/2223
+using T028 = ll;
+using S028 = tuple<T028, T028, T028, T028>; // (左端を含む, 右端を含む, 任意, 総和)
+S028 op028(S028 f, S028 g) {
+	auto [fl, fr, fa, fs] = f;
+	auto [gl, gr, ga, gs] = g;
+
+	T028 hl = max(fl, fs + gl);
+	T028 hr = max(gr, fr + gs);
+	T028 ha = max({ fa, ga, fr + gl });
+	T028 hs = fs + gs;
+
+	return { hl, hr, ha, hs };
+}
+S028 e028() { return { -INFL, -INFL, -INFL, 0 }; }
+#define RangeSumMax_monoid S028, op028, e028
+
+
 //【混合トロピカルアフィン変換の合成 モノイド】
 /*
 * S ∋ f = {a, b, c} : 混合トロピカル一次関数 f(x) = max(min(a + x, b), c) を表す．
@@ -567,149 +555,181 @@ S026 op026(S026 f, S026 g) {
 	ll C = max(min(fa + gc, fb), fc);
 	return S026{ A, B, C };
 }
-S026 e026() { return S026{ 0, INFL, -INFL }; }
+S026 e026() { return S026{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ∞), -∞)
 #define MixedTropicalInvAffine_monoid S026, op026, e026
 
 
-//【スパース多項式の巡回畳込み モノイド】
+//【clamp移動 モノイド】
 /*
-* S ∋ f = {fs, fd} : fs はスパースな場合，fd は密な場合に多項式を表すのに用いる．
-*	fs ∋ {i, v} : v x^i の項を表す．
-*	fd[0..k) : 多項式の係数列を表す．
-* f op g : f と g の長さ d の巡回畳込みを返す．
+* S ∋ f = {l, r, x0, c} :
+*	l,r : 座標を [l..r] 内に収める移動を表す．
+*	x0  : 初めて l=r となったときの l(=r) の値（l<r なら l）
+*	c   : 初めて l=r となってからの追加コスト
+* f op g : f, g の順に続けて移動することを表す．
+*
+* pTT apply_to(T x) : O(1)
+*	x から clamp 移動を始めたときの {終点位置, 総コスト} を返す．
 */
-// verify : https://yukicoder.me/problems/no/2215
-int d027;
-using T027 = mint;
-using S027 = pair<vector<pair<int, T027>>, vector<T027>>; // (スパース, 密)
-S027 op027(S027 a, S027 b) {
-	// b がスパースな場合は a と交換する．
-	if (b.second.empty()) swap(a, b);
+// verify : https://atcoder.jp/contests/abc365/tasks/abc365_f
+using T042 = ll;
+struct S042 {
+	T042 l; // 下限
+	T042 r; // 上限
+	T042 x0; // 初めて l=r となったときの l(=r) の値
+	T042 c; // l=r となった後の追加コスト
 
-	// a がスパース，b がスパースの場合
-	if (a.second.empty() && b.second.empty()) {
-		// 積が密になる場合
-		if (sz(a.first) * sz(b.first) >= d027) {
-			vector<T027> res_d(d027);
-			for (auto& [ia, va] : a.first) for (auto& [ib, vb] : b.first) {
-				res_d[(ia + ib) % d027] += va * vb;
+	// x から clamp 移動を始めたときの {終点位置, 総コスト} を返す．
+	pair<T042, T042> apply_to(T042 x) const {
+		T042 pos = clamp(x, l, r);
+		T042 cost = l < r ? abs(x - pos) : abs(x - x0) + c;
+		return { pos, cost };
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const S042& x) {
+		os << "(" << x.l << "," << x.r << "," << x.x0 << "," << x.c << ")";
+		return os;
+	}
+#endif
+};
+S042 op042(S042 f, S042 g) {
+	S042 h;
+
+	// f が潰れていない場合
+	if (f.l < f.r) {
+		// g が潰れていない場合
+		if (g.l < g.r) {
+			// f より g が右にある場合
+			if (f.r <= g.l) {
+				// f は f.r に潰れ，終点は g.l に潰れる
+				h.l = h.r = g.l;
+				h.x0 = f.r;
+				h.c = abs(f.r - g.l);
 			}
-			return { vector<pair<int, T027>>(), res_d };
+			// f より g が左にある場合
+			else if (f.l >= g.r) {
+				// f は f.l に潰れ，終点は g.r に潰れる
+				h.l = h.r = g.r;
+				h.x0 = f.l;
+				h.c = abs(f.l - g.r);
+			}
+			// f と g が正の重なりをもつ場合
+			else {
+				// 区間は潰れない
+				h.l = max(f.l, g.l);
+				h.r = min(f.r, g.r);
+				h.x0 = h.l;
+				h.c = 0;
+			}
 		}
-		// 積もスパースの場合
+		// g が潰れている場合
 		else {
-			vector<pair<int, T027>> res_s;
-			for (auto& [ia, va] : a.first) for (auto& [ib, vb] : b.first) {
-				res_s.emplace_back((ia + ib) % d027, va * vb);
+			// f より g.x0 が右にある場合
+			if (f.r <= g.x0) {
+				// f は f.r に潰れ，終点は g.l(=g.r) に潰れる
+				h.l = h.r = g.l;
+				h.x0 = f.r;
+				h.c = abs(f.r - g.x0) + g.c;
 			}
-			return { res_s, vector<T027>() };
+			// f より g.x0 が左にある場合
+			else if (f.l >= g.x0) {
+				// f は f.l に潰れ，終点は g.l(=g.r) に潰れる
+				h.l = h.r = g.l;
+				h.x0 = f.l;
+				h.c = abs(f.l - g.x0) + g.c;
+			}
+			// g.x0 が f に含まれる場合
+			else {
+				// f は g.x0 に潰れ，終点は g.l(= g.r) に潰れる
+				h.l = h.r = g.l;
+				h.x0 = g.x0;
+				h.c = g.c;
+			}
 		}
 	}
-	// a がスパース，b が密の場合
-	else if (a.second.empty() && b.first.empty()) {
-		vector<T027> res_d(d027);
-		for (auto& [ia, va] : a.first) rep(ib, d027) {
-			T027 vb(b.second[ib]);
-			res_d[(ia + ib) % d027] += va * vb;
-		}
-		return { vector<pair<int, T027>>(), res_d };
-	}
-	// a が密，b が密の場合
+	// f が潰れている場合
 	else {
-		vector<T027> res_d(d027);
-		rep(ia, d027) rep(ib, d027) {
-			T027 va(a.second[ia]), vb(b.second[ib]);
-			res_d[(ia + ib) % d027] += va * vb;
-		}
+		// f の終点は f.l(=f.r) で確定しているので，そこから g で移動してみればいい．
+		auto [pos, cost] = g.apply_to(f.l);
 
-		//// mod 998244353 ならこちらを使える．
-		//auto res_d = convolution(a.second, b.second);
-		//rep(i, d027 - 1) res_d[i] += res_d[i + d027];
-		//res_d.resize(d027);
-
-		return { vector<pair<int, T027>>(), res_d };
-	}
-}
-S027 e027() {
-	return { vector<pair<int, T027>>{ {0, 1} }, vector<T027>() };
-}
-#define SPolyCconv_monoid S027, op027, e027
-
-
-//【区間和の最小値 モノイド】
-/*
-* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
-*	fl[fr] : 左[右]端を含む区間和の最小値
-*	fa : 任意の区間和の最小値
-*	fs : 総和
-* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
-*/
-// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
-using T029 = ll;
-using S029 = tuple<T029, T029, T029, T029>; // (左端を含む, 右端を含む, 任意, 総和)
-S029 op029(S029 f, S029 g) {
-	auto [fl, fr, fa, fs] = f;
-	auto [gl, gr, ga, gs] = g;
-
-	T029 hl = min(fl, fs + gl);
-	T029 hr = min(gr, fr + gs);
-	T029 ha = min({ fa, ga, fr + gl });
-	T029 hs = fs + gs;
-
-	return { hl, hr, ha, hs };
-}
-S029 e029() { return { INFL, INFL, INFL, 0 }; }
-#define RangeSumMin_monoid S029, op029, e029
-
-
-//【区間和の最大値 モノイド】
-/*
-* S ∋ f = {fl, fr, fa, fs} : f に対応する区間についての以下の値を表す：
-*	fl[fr] : 左[右]端を含む区間和の最大値
-*	fa : 任意の区間和の最大値
-*	fs : 総和
-* f op g : f, g に対応する区間をこの順に繋げた区間を表す．
-*/
-// 参考 : https://hotman78.hatenablog.com/entry/2020/06/17/102519
-// verify : https://yukicoder.me/problems/no/2223
-using T028 = ll;
-using S028 = tuple<T028, T028, T028, T028>; // (左端を含む, 右端を含む, 任意, 総和)
-S028 op028(S028 f, S028 g) {
-	auto [fl, fr, fa, fs] = f;
-	auto [gl, gr, ga, gs] = g;
-
-	T028 hl = max(fl, fs + gl);
-	T028 hr = max(gr, fr + gs);
-	T028 ha = max({ fa, ga, fr + gl });
-	T028 hs = fs + gs;
-
-	return { hl, hr, ha, hs };
-}
-S028 e028() { return { -INFL, -INFL, -INFL, 0 }; }
-#define RangeSumMax_monoid S028, op028, e028
-
-
-//【F_2 線形空間上 和空間 モノイド】
-/*
-* S ∋ f : 部分空間の基底
-* f op g : f, g の張る部分空間の和空間の基底を返す．
-*/
-// verify : https://atcoder.jp/contests/abc223/tasks/abc223_h
-using S030 = vl;
-S030 op030(S030 x, S030 y) {
-	// 次元の小さい部分空間を次元の大きい部分空間にマージする．
-	if (sz(x) < sz(y)) swap(x, y);
-
-	// 和空間の noshi 基底を得る．
-	for (auto v : y) {
-		repe(b, x) chmin(v, v ^ b);
-		if (v) x.push_back(v);
+		h.l = h.r = pos;
+		h.x0 = f.x0;
+		h.c = f.c + cost;
 	}
 
-	return x;
+	return h;
 }
-S030 e030() { return S030(); }
-#define XorBaseSum_monoid S030, op030, e030
+S042 e042() { return S042{ -INFL, INFL, -INFL, 0 }; } // 十分広い区間
+#define ClampMove_monoid S042, op042, e042
+
+
+//【ビット列上 転倒数 モノイド】
+/*
+* S ∋ x = {inv, c0, c1} : 列 x の転倒数，0 の個数，1 の個数
+* x op y : 列 x, y を連結した列
+*/
+using S017 = tuple<ll, ll, ll>;
+S017 op017(S017 x, S017 y) {
+	ll x_inv, y_inv, x_c0, x_c1, y_c0, y_c1;
+	tie(x_inv, x_c0, x_c1) = x;
+	tie(y_inv, y_c0, y_c1) = y;
+
+	// まず x, y それぞれをソートするのに x_inv + y_inv 回の隣接互換が必要．
+	// その後 x の右側に寄った x_c1 個の 1 と y の左側に寄った y_c0 個の 0 を
+	// 交換するのに x_c1 * y_c0 回の隣接互換が必要．
+	ll inv = x_inv + y_inv + x_c1 * y_c0;
+	ll c0 = x_c0 + y_c0, c1 = x_c1 + y_c1;
+
+	return { inv, c0, c1 };
+}
+S017 e017() { return { 0LL, 0, 0 }; }
+#define Inversion_monoid S017, op017, e017
+
+
+//【ビット列上 部分列の種類数 モノイド】
+/*
+* S ∋ x = {a00, a01, c0, a10, a11, c1} :
+*	ci  : i で終わる部分列の種類数
+*	aij : j で終わる各部分列に対し，それに繋げて i で終わる部分列を何種類作れるか
+* x op y : 列 x, y を連結した列
+*/
+// verify : https://atcoder.jp/contests/abc246/tasks/abc246_h
+struct S041 {
+	// 遷移行列	[a00, a01, c0] を表す．
+	//			[a10, a11, c1]
+	//			[  0,   0,  1]
+	mint a00, a01, c0, a10, a11, c1;
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const S041& x) {
+		os << "(" << x.a00 << "," << x.a01 << "," << x.c0 << ";";
+		os << x.a10 << "," << x.a11 << "," << x.c1 << ")";
+		return os;
+	}
+#endif
+};
+const S041 mat0{ 1, 1, 1, 0, 1, 0 }; // 要素 '0' に対応
+const S041 mat1{ 1, 0, 0, 1, 1, 1 }; // 要素 '1' に対応
+const S041 matQ{ 1, 1, 1, 1, 1, 1 }; // ワイルドカード要素に対応（和ではないので注意！）
+S041 op041(S041 x, S041 y) {
+	// 部分列の要素は右優先で選ぶものとする．
+	// i で終わる部分列に対しては，右優先の規則より i を選ばなければならない．
+	// i 以外で終わる部分列に対しては，i は選んでも選ばなくてもよい．
+	// また，i のみからなる長さ 1 の部分列が新たに追加される．
+
+	// 行列積 z = y x のベタ書き
+	S041 z;
+	z.a00 = y.a00 * x.a00 + y.a01 * x.a10;
+	z.a01 = y.a00 * x.a01 + y.a01 * x.a11;
+	z.c0 = y.c0 + y.a00 * x.c0 + y.a01 * x.c1;
+	z.a10 = y.a10 * x.a00 + y.a11 * x.a10;
+	z.a11 = y.a10 * x.a01 + y.a11 * x.a11;
+	z.c1 = y.c1 + y.a10 * x.c0 + y.a11 * x.c1;
+
+	return z;
+}
+S041 e041() { return S041{ 1, 0, 0, 0, 1, 0 }; } // 単位行列
+#define SubseqCnt_monoid S041, op041, e041
 
 
 //【数字列の値 モノイド】
@@ -782,6 +802,136 @@ S031 op031(S031 f, S031 g) {
 }
 S031 e031() { return { 0, 1, 1 }; }
 #define NumSubseqSum_monoid S031, op031, e031
+
+
+//【F_2 線形空間上 和空間 モノイド】
+/*
+* S ∋ f : 部分空間の基底
+* f op g : f, g の張る部分空間の和空間の基底を返す．
+*/
+// verify : https://atcoder.jp/contests/abc223/tasks/abc223_h
+using S030 = vl;
+S030 op030(S030 x, S030 y) {
+	// 次元の小さい部分空間を次元の大きい部分空間にマージする．
+	if (sz(x) < sz(y)) swap(x, y);
+
+	// 和空間の noshi 基底を得る．
+	for (auto v : y) {
+		repe(b, x) chmin(v, v ^ b);
+		if (v) x.push_back(v);
+	}
+
+	return x;
+}
+S030 e030() { return S030(); }
+#define XorBaseSum_monoid S030, op030, e030
+
+
+//【スパース多項式の巡回畳込み モノイド】
+/*
+* S ∋ f = {fs, fd} : fs はスパースな場合，fd は密な場合に多項式を表すのに用いる．
+*	fs ∋ {i, v} : v x^i の項を表す．
+*	fd[0..k) : 多項式の係数列を表す．
+* f op g : f と g の長さ d の巡回畳込みを返す．
+*/
+// verify : https://yukicoder.me/problems/no/2215
+int d027; // 粗密の閾値
+using T027 = mint;
+using S027 = pair<vector<pair<int, T027>>, vector<T027>>; // (スパース, 密)
+S027 op027(S027 a, S027 b) {
+	// b がスパースな場合は a と交換する．
+	if (b.second.empty()) swap(a, b);
+
+	// a がスパース，b がスパースの場合
+	if (a.second.empty() && b.second.empty()) {
+		// 積が密になる場合
+		if (sz(a.first) * sz(b.first) >= d027) {
+			vector<T027> res_d(d027);
+			for (auto& [ia, va] : a.first) for (auto& [ib, vb] : b.first) {
+				res_d[(ia + ib) % d027] += va * vb;
+			}
+			return { vector<pair<int, T027>>(), res_d };
+		}
+		// 積もスパースの場合
+		else {
+			vector<pair<int, T027>> res_s;
+			for (auto& [ia, va] : a.first) for (auto& [ib, vb] : b.first) {
+				res_s.emplace_back((ia + ib) % d027, va * vb);
+			}
+			return { res_s, vector<T027>() };
+		}
+	}
+	// a がスパース，b が密の場合
+	else if (a.second.empty() && b.first.empty()) {
+		vector<T027> res_d(d027);
+		for (auto& [ia, va] : a.first) rep(ib, d027) {
+			T027 vb(b.second[ib]);
+			res_d[(ia + ib) % d027] += va * vb;
+		}
+		return { vector<pair<int, T027>>(), res_d };
+	}
+	// a が密，b が密の場合
+	else {
+		vector<T027> res_d(d027);
+		rep(ia, d027) rep(ib, d027) {
+			T027 va(a.second[ia]), vb(b.second[ib]);
+			res_d[(ia + ib) % d027] += va * vb;
+		}
+
+		//// mod 998244353 ならこちらを使える．
+		//auto res_d = convolution(a.second, b.second);
+		//rep(i, d027 - 1) res_d[i] += res_d[i + d027];
+		//res_d.resize(d027);
+
+		return { vector<pair<int, T027>>(), res_d };
+	}
+}
+S027 e027() {
+	return { vector<pair<int, T027>>{ {0, 1} }, vector<T027>() };
+}
+#define SPolyCconv_monoid S027, op027, e027
+
+
+//【写像の合成 モノイド】（参照渡ししていないので遅い）
+/*
+* S ∋ f[0..n) : 写像 i → f[i] を表す．
+* f op g : 合成写像 f o g を返す．
+*/
+// verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
+using S018 = vi;
+S018 op018(S018 a, S018 b) {
+	if (sz(a) == 0) return b;
+	if (sz(b) == 0) return a;
+
+	int n = sz(a);
+	S018 res(n);
+	rep(i, n) res[i] = a[b[i]];
+
+	return res;
+}
+S018 e018() { return S018(); }
+#define Map_monoid S018, op018, e018
+
+
+//【写像の逆合成 モノイド】（参照渡ししていないので遅い）
+/*
+* S ∋ f[0..n) : 写像 i → f[i] を表す．
+* f op g : 合成写像 g o f を返す．
+*/
+// verify : https://mojacoder.app/users/first_vil/contests/Iamsorry2/tasks/5
+constexpr int N019 = 2;
+using S019 = array<int, N019>;
+S019 op019(S019 f, S019 g) {
+	S019 h;
+	rep(i, N019) h[i] = g[f[i]];
+	return h;
+}
+S019 e019() {
+	S019 f;
+	iota(all(f), 0);
+	return f;
+}
+#define InvMap_monoid S019, op019, e019
 
 
 // ======================================================
