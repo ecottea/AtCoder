@@ -16,7 +16,7 @@
 * void sum(ll x1, ll x2, int y1, int y2) : O(1)
 *	クエリ Σv[x1..x2)[y1..y2) を追加する．
 *
-* vT solve() : O(w + (n + q) (log(n + q) + log w))
+* vT solve() : O((n + q) log(n + q))
 *	現在の v[0..h)[0..w) への各クエリに対する答えを格納したリストを返す．
 *
 *（平面走査）
@@ -452,9 +452,9 @@ public:
 */
 
 
-//【1 点加算 → 開放矩形和（可換モノイド，一括）】
+//【1 点加算 → 上開放矩形和（可換モノイド，一括）】
 /*
-* Offline_rectangle_sum<S, op, o>() : O(1)
+* Offline_rectangle_Uopen_sum<S, op, o>() : O(1)
 *	v[0..h)[0..w) = o() で初期化する（h, w は自動で調整される）
 *	要素は可換モノイド <S, op, o> の元とする．
 *
@@ -470,7 +470,7 @@ public:
 *（平面走査）
 */
 template <class S, S(*op)(S, S), S(*o)()>
-class Offline_rectangle_open_sum {
+class Offline_rectangle_Uopen_sum {
 	int w, q;
 
 	// (x 座標，イベントタイプ，クエリ番号，左位置，右位置, 加算値) の組
@@ -480,7 +480,7 @@ class Offline_rectangle_open_sum {
 
 public:
 	// v[0..h)[0..w) = o() で初期化する（h, w は自動で調整される）
-	Offline_rectangle_open_sum() : w(1), q(0) {
+	Offline_rectangle_Uopen_sum() : w(1), q(0) {
 		// verify : https://www.codechef.com/problems/PIARQ
 	}
 
@@ -520,6 +520,88 @@ public:
 			}
 			else if (tp == DE) {
 				res[j] = seg.prod(yl, yr);
+			}
+		}
+
+		return res;
+	}
+};
+
+
+//【1 点加算 → 左上開放矩形和（一括）】
+/*
+* Offline_rectangle_ULopen_sum<T>() : O(1)
+*	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
+*
+* void add(ll x, int y, T val) : O(1)
+*	v[x][y] += val とする．
+*
+* void sum(ll x2, int y2) : O(1)
+*	クエリ Σv[0..x2)[0..y2) を追加する．
+*
+* vT solve() : O((n + q) log(n + q))
+*	現在の v[0..h)[0..w) への各クエリに対する答えを格納したリストを返す．
+*
+*（平面走査）
+*/
+template <class T>
+class Offline_rectangle_ULopen_sum {
+	vl x_add, y_add; vector<T> w_add;
+	vl x2_sum, y2_sum;
+
+public:
+	// v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
+	Offline_rectangle_ULopen_sum() {
+	}
+
+	// v[x][y] += val とする．
+	void add(ll x, ll y, T val) {
+		x_add.emplace_back(x);
+		y_add.emplace_back(y);
+		w_add.emplace_back(val);
+	}
+
+	// クエリ Σv[0..x2)[0..y2) を追加する．
+	void sum(ll x2, ll y2) {
+		x2_sum.emplace_back(x2);
+		y2_sum.emplace_back(y2);
+	}
+
+	// 各クエリに対する答えを格納したリストを返す．
+	vector<T> solve() {
+		// ys : y 座標のユニークな昇順列
+		vl ys(y_add);
+		uniq(ys);
+
+		// (x 座標, イベントタイプ, クエリ番号) の組
+		vector<tuple<ll, int, int>> ev;
+		const int DE = 0; // 長方形の下辺
+		const int PT = 2; // 点
+		rep(i, sz(x_add)) {
+			ev.emplace_back(x_add[i], PT, i);
+		}
+		int q = sz(x2_sum);
+		rep(t, q) {
+			ev.emplace_back(x2_sum[t], DE, t);
+		}
+
+		// イベントソート
+		sort(all(ev));
+
+		fenwick_tree<T> fen(sz(ys));
+		vector<T> res(q, 0);
+
+		// 下方向に平面走査していく．
+		for (auto& [x, tp, id] : ev) {
+			// 点への加算の場合
+			if (tp == PT) {
+				int y = lbpos(ys, y_add[id]);
+				fen.add(y, w_add[id]);
+			}
+			// 総和クエリの下辺の場合
+			else if (tp == DE) {
+				int y2 = lbpos(ys, y2_sum[id]);
+				res[id] += fen.sum(0, y2);
 			}
 		}
 

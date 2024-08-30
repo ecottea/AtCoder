@@ -11,7 +11,7 @@
 using namespace std;
 
 // å^ñºÇÃíZèk
-using ll = long long; using ull = unsigned long long; // -2^63 Å` 2^63 = 9 * 10^18Åiint ÇÕ -2^31 Å` 2^31 = 2 * 10^9Åj
+using ll = long long; using ull = unsigned long long; // -2^63 Å` 2^63 = 9e18Åiint ÇÕ -2^31 Å` 2^31 = 2e9Åj
 using pii = pair<int, int>;	using pll = pair<ll, ll>;	using pil = pair<int, ll>;	using pli = pair<ll, int>;
 using vi = vector<int>;		using vvi = vector<vi>;		using vvvi = vector<vvi>;	using vvvvi = vector<vvvi>;
 using vl = vector<ll>;		using vvl = vector<vl>;		using vvvl = vector<vvl>;	using vvvvl = vector<vvvl>;

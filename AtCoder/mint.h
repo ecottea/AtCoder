@@ -69,7 +69,7 @@ template <ll MOD> struct Static_modint {
 };
 //using mint = Static_modint<1000000007>;
 //using mint = Static_modint<998244353>;
-using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>;  using vvvvm = vector<vvvm>; using pim = pair<int, mint>;
+using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using vvvvm = vector<vvvm>; using pim = pair<int, mint>;
 
 
 //y—LŒÀ‘Ì F_p ã‚ÌŒvZi64 bitjz

@@ -118,6 +118,15 @@ struct Ushige {
 };
 
 
+//【牛ゲー（逆グラフ）】
+/*
+* 固定された b に対し，各 a について v[b] - v[a] の最大値を求めたい場合は，
+* 元のグラフの代わりに逆グラフを用いて最短路問題を解けば良い．
+* 
+* verify : https://atcoder.jp/contests/abc368/tasks/abc368_e
+*/
+
+
 //【牛ゲー（上界指定のみ）】
 /*
 * Ushige_ub_only(n) : O(1)

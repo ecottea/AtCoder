@@ -766,13 +766,11 @@ int bin2(T n, T r) {
 //【二項係数（一括，n が固定，r が小さい，法が大きな素数）】O(r)
 /*
 * 各 i∈[0..r] について bin(n, i) を格納したリストを返す．
-* 
+*
 * 制約：r < mint::mod
 */
-vm binomial_fixed_n(ll n, int r) {
+vm binomial_fixed_n(mint n, int r) {
 	// verify : https://atcoder.jp/contests/abc352/tasks/abc352_g
-
-	Assert(n >= 0);
 
 	// perm[i] : nPi
 	vm perm(r + 1);
@@ -888,7 +886,7 @@ vm binomial_fixed_r(ll n1, ll n2, int r) {
 /*
 * 各 i∈[0..r) について bin(n+i, i) を順に格納したリストを返す．
 */
-vm binomial_fixed_diff(ll n, int r) {
+vm binomial_fixed_diff(mint n, int r) {
 	// verify : https://yukicoder.me/problems/no/1489
 
 	//【方法】

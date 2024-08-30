@@ -305,6 +305,15 @@ vi subtraction_nim(const vi& c, int n) {
 */
 
 
+//【約数置換ニム】
+/*
+* 石数が i の山に着手したとき着手後の山の石数を i の真の約数に限るルールのニムについて，
+* i の重複度込みの素因数の個数を e とすると，石数が i の山のニム値は e である．
+* 
+* verify : https://atcoder.jp/contests/abc368/tasks/abc368_f
+*/
+
+
 //【Octal game】
 /*
 * 山に対して行える操作が以下のように定められるニムを Octal game という：

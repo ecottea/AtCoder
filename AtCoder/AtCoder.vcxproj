@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClInclude Include="DP.h" />
     <ClInclude Include="2変数FPS.h" />
+    <ClInclude Include="数え上げ%28数の表示%29.h" />
     <ClInclude Include="スコア和%28数論%29.h" />
     <ClInclude Include="数え上げ%28数論%29.h" />
     <ClInclude Include="列挙%28数論%29.h" />

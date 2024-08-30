@@ -43,6 +43,83 @@ vvi connected_component(const Graph& g) {
 }
 
 
+//【連結成分分解（補グラフ）】O(n + m)
+/*
+* 無向グラフ g の補グラフを連結成分分解し，連結成分のリストを返す．
+*/
+vvi connected_component_complement(const Graph& g) {
+	// 参考 : https://atcoder.jp/contests/abc319/editorial/7120
+	// verify : https://judge.yosupo.jp/problem/connected_components_of_complement_graph
+
+	int n = sz(g);
+
+	// rem : 未探索の頂点のリスト
+	list<int> rem;
+	rep(s, n) rem.push_back(s);
+
+	// fb[s] : 注目頂点と s との間の移動が禁止されているか
+	vb fb(n);
+
+	// q : BFS 用のキュー
+	queue<int> q;
+
+	// ccs : 連結成分のリスト
+	vvi ccs;
+
+	// 未探索の頂点が残っている限り連結成分の抽出を続ける．
+	while (!rem.empty()) {
+		auto it = rem.begin();
+
+		// ST : 連結成分抽出の始点
+		int ST = *it;
+
+		// cc : 抽出中の連結成分
+		vi cc{ ST };
+
+		// 探索待ちの頂点に ST を追加する．
+		q.push(ST);
+
+		// 未探索の頂点から ST を削除する．
+		rem.erase(it);
+
+		while (!q.empty()) {
+			// s : 注目頂点
+			auto s = q.front(); q.pop();
+
+			// s に隣接する頂点の移動禁止フラグを立てる．
+			repe(t, g[s]) fb[t] = true;
+
+			// t : 未探索の頂点
+			for (auto it = rem.begin(); it != rem.end(); ) {
+				int t = *it;
+
+				// t への移動が禁止されていれば何もしない
+				if (fb[t]) {
+					it++;
+					continue;
+				}
+
+				// 連結成分に t を追加する．
+				cc.push_back(t);
+
+				// 探索待ちの頂点に t を追加する．
+				q.push(t);
+
+				// 未探索の頂点から t を削除する．
+				it = rem.erase(it);
+			}
+
+			// s に隣接する頂点の移動禁止フラグを折る．
+			repe(t, g[s]) fb[t] = false;
+		}
+
+		ccs.push_back(move(cc));
+	}
+
+	return ccs;
+}
+
+
 //【トポロジカルソート】O(n + m)
 /*
 * DAG g をトポロジカルソートした結果の i 番目の頂点を seq[i] に格納し seq を返す．
@@ -646,6 +723,96 @@ void bipartite_graphQ(const G& g, vvi& cc, vb& b, vi& col) {
 }
 
 
+//【二部グラフ判定（補グラフ，非連結）】O(n + m)
+/*
+* 無向グラフ g の補グラフが二部グラフかどうか判定し彩色例を返す（色は 0, 1 で表す）
+* g が二部グラフでないときは空リストを返す．
+*/
+vi bipartite_graphQ_complement(const Graph& g) {
+	// verify : https://atcoder.jp/contests/agc067/tasks/agc067_a
+
+	int n = sz(g);
+
+	// rem : 未探索の頂点のリスト
+	list<int> rem;
+	rep(s, n) rem.push_back(s);
+
+	// fb[s] : 注目頂点と s との間の移動が禁止されているか
+	vb fb(n);
+
+	// q : BFS 用のキュー
+	queue<int> q;
+
+	// col : g の頂点の彩色
+	vi col(n, -1);
+
+	// 未探索の頂点が残っている限り連結成分の抽出を続ける．
+	while (!rem.empty()) {
+		auto it = rem.begin();
+
+		// ST : 連結成分内の探索の始点
+		int ST = *it;
+		col[ST] = 0;
+
+		// 探索待ちの頂点に ST を追加する．
+		q.push(ST);
+
+		// 未探索の頂点から ST を削除する．
+		rem.erase(it);
+
+		while (!q.empty()) {
+			// s : 注目頂点
+			auto s = q.front(); q.pop();
+
+			// s に隣接する頂点の移動禁止フラグを立てる．
+			repe(t, g[s]) fb[t] = true;
+
+			// t : 未探索の頂点
+			for (auto it = rem.begin(); it != rem.end(); ) {
+				int t = *it;
+				
+				// t への移動が禁止されていれば何もしない
+				if (fb[t]) {
+					it++;
+					continue;
+				}
+
+				// ST から t までの距離 (mod 2) が確定する．
+				col[t] = col[s] ^ 1;
+
+				// 探索待ちの頂点に t を追加する．
+				q.push(t);
+
+				// 未探索の頂点から t を削除する．
+				it = rem.erase(it);
+			}
+
+			// s に隣接する頂点の移動禁止フラグを折る．
+			repe(t, g[s]) fb[t] = false;
+		}
+	}
+
+	// cnt_v[c] : 色 c の頂点数
+	vl cnt_v(2);
+	rep(i, n) cnt_v[col[i]]++;
+
+	// cnt_e2[c] : 色 c の頂点どうしを結ぶ辺の数 * 2
+	vl cnt_e(2);
+	rep(s, n) repe(t, g[s]) {
+		if (col[s] == col[t]) cnt_e[col[s]]++;
+	}
+
+	// 同色頂点間を結ぶ辺全てが g に存在すれば OK
+	rep(c, 2) {
+		if (cnt_e[c] != cnt_v[c] * (cnt_v[c] - 1)) {
+			col.clear();
+		}
+	}
+
+	return col;
+}
+
+
 //【lowlink】
 /*
 * Lowlink(IGraph g) : O(n + m)
@@ -893,6 +1060,15 @@ public:
 };
 
 
+//【向き付けによる強連結化】
+/*
+* 橋をもたない連結無向グラフ g に対し，DFS 木の辺に下向き，後退辺に上向きに向き付けることで，
+* g を強連結な有向グラフにすることができる．
+* 
+* verify : https://atcoder.jp/contests/arc143/tasks/arc143_d
+*/
+
+
 //【DFS 木の性質】
 /*
 * 無向グラフ g の DFS 木 t に含まれない全ての辺 u-v について，
@@ -1107,7 +1283,7 @@ vb independent_setQ(const Graph& g) {
 
 //【パスグラフ判定】O(n + m)
 /*
-* 無向グラフ g がパスグラフかを返す．
+* 無向グラフ g がパスグラフかを返す（空グラフ，1 点 0 辺のグラフもパスグラフと認める）
 */
 template <class G>
 bool path_graphQ(const G& g) {

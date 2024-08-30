@@ -18,10 +18,10 @@
 *		Σ|set|=k Σi∈set a[i]
 * の値を格納したリストを返す．
 *
-* 利用：【階乗など（法が大きな素数）】
+* 制約：fm は (n-1)! まで計算可能
 */
 template <class T>
-vm subset_sum_sum(const vector<T>& a) {
+vm subset_sum_sum(const vector<T>& a, const Factorial_mint& fm) {
 	//【方法】
 	// a[i] が res[k] に何回寄与するかを考えると，
 	// i を含む大きさ k の部分集合の個数 bin(n-1, k-1) 回と分かる．
@@ -42,7 +42,6 @@ vm subset_sum_sum(const vector<T>& a) {
 
 	if (n == 0) return;
 
-	Factorial_mint fm(n);
 	mint a_sum = accumulate(all(a), mint(0));
 
 	repi(k, 0, n) res[k] = a_sum * fm.bin(n - 1, k - 1);
@@ -103,11 +102,8 @@ vm subset_XOR_sum(const vector<T>& a, const Factorial_mint& fm) {
 
 	int B = msb(*max_element(all(a))) + 1;
 	rep(b, B) {
-		dump("b:", b);
-
 		array<int, 2> cnt{ 0, 0 };
 		rep(i, n) cnt[getb(a[i], b)]++;
-		dump(cnt);
 
 		vm c1(cnt[1] + 1);
 		repi(i, 0, cnt[1]) if (i & 1) c1[i] = fm.bin(cnt[1], i);

@@ -117,6 +117,15 @@ S003 e003() { return -INFL; }
 #define Max_monoid S003, op003, e003
 
 
+//ymax,min ‰ÂŠ·ƒ‚ƒmƒCƒhz
+/* verify : https://codeforces.com/contest/2001/problem/D */
+using T043 = ll;
+using S043 = pair<T043, T043>;
+S043 op043(S043 a, S043 b) { return { max(a.first, b.first), min(a.second, b.second) }; }
+S043 e043() { return { -INFL, INFL }; }
+#define MaxMin_monoid S043, op043, e043
+
+
 //yXOR ‰ÂŠ·ƒ‚ƒmƒCƒhz
 /* verify : https://mojacoder.app/users/shinnshinn/contests/ochacon01/tasks/4 */
 using S010 = int;
@@ -897,7 +906,7 @@ S027 e027() {
 * S ¹ f[0..n) : Ê‘œ i ¨ f[i] ‚ğ•\‚·D
 * f op g : ‡¬Ê‘œ f o g ‚ğ•Ô‚·D
 */
-// verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
+// verify : https://atcoder.jp/contests/abc367/tasks/abc367_e
 using S018 = vi;
 S018 op018(S018 a, S018 b) {
 	if (sz(a) == 0) return b;

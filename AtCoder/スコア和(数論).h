@@ -15,7 +15,25 @@
 */
 template <class T, class FUNC1, class FUNC2, class FUNC3>
 T gpf_tree_DP(ll n, const FUNC1& mul, const FUNC2& sum_l, const FUNC3& sum_h) {
-	// verify : https://projecteuler.net/problem=715
+	// verify : https://atcoder.jp/contests/jsc2024-final/tasks/jsc2024_final_b
+
+	//【方法】
+	// 自然数 i の最大素因数を gpf(i) と表す．
+	// 頂点 [1..n] をもち，i の親が i / gpf(i) である木 T を考える．（根は 1） 
+	// 求める和は次の形に書き直せる：
+	//		f(1) + Σ_i:葉でない頂点 Σ_j:iの子 f(j)
+	//
+	// 例えば n=60 のときの i=3 を考えると，その子は
+	//		9, 15, 21, 33, 39, 51, 57
+	// である．これらに f を施した値の総和は，f の乗法性より
+	//		Σ_j:iの子 f(j)
+	//		= f(9) + f(3) (f(5) + f(7) + f(11) + f(13) + f(17) + f(19))
+	//		= f(3*3) + f(3) Σ_p∈(3..n/3] f(p)
+	//		= f(i g) + f(g) (Σ_p∈[1..n/g] f(p) - Σ_p∈[1..g] f(p))  (g := gpf(i))
+	// として求められる．
+	//
+	// またこの場合 i * 5^2 > n となるので，3*5 以上の子は全て葉であることが探索しなくても分かる．
+	// T はほとんどが葉なので，葉のみの枝刈りとはいえ真に計算量が改善する．
 
 	if (n <= 0) return 0;
 	if (n == 1) return 1;
@@ -56,10 +74,10 @@ T gpf_tree_DP(ll n, const FUNC1& mul, const FUNC2& sum_l, const FUNC3& sum_h) {
 
 	/* mul, sum_l, sum_h の定義の雛形
 	using T = mint;
-	int sqrt_N = (int)(sqrt(N) + 1e-6);
+	int sqrt_n = (int)(sqrt(n) + 1e-9);
 	auto mul = [&](T val, ll p, int cnt) {
 		if (cnt == 0) {
-			retrun val;
+			return val;
 		}
 		else {
 			return val;
@@ -69,14 +87,14 @@ T gpf_tree_DP(ll n, const FUNC1& mul, const FUNC2& sum_l, const FUNC3& sum_h) {
 		return dp_l[p];
 	};
 	auto sum_h = [&](ll i) {
-		if (i <= sqrt_N) {
+		if (i <= sqrt_n) {
 			return dp_h[i];
 		}
 		else {
-			return dp_l[N / i];
+			return dp_l[n / i];
 		}
 	};
-	T res = gpf_tree_DP<T>(N, mul, sum_l, sum_h);
+	T res = gpf_tree_DP<T>(n, mul, sum_l, sum_h);
 	*/
 }
 

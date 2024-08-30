@@ -320,13 +320,29 @@ public:
 */
 
 
-//【多値変数】
+//【多値変数 → 論理変数】
 /*
-* X[i] ∈ [0..K) の場合，新たに論理変数を Y[i][k] = Boole[X[i] ≦ k] と定めれば，
-* cost11(s, t) に Monge 性があれば上位要素メビウス変換を用いて【二次 0-1 計画問題】に帰着できる．
+* X[i] ∈ [0..K) の場合，新たに論理変数を
+* 	Y[i][k] = Boole[X[i] ≦ k]
+* と定めれば，cost11(s, t) に Monge 性があれば
+* 上位要素メビウス変換を用いて【二次 0-1 計画問題】に帰着できる．
 * 
 * 参考 : https://noshi91.hatenablog.com/entry/2021/06/29/044225
 * verify : https://mojacoder.app/users/_kanpurin_/problems/project_selection_problem003
+*/
+
+
+//【大小関係 → 論理変数】
+/*
+* 変数 X の k との大小関係に注目したい場合，新たに論理変数を
+*	Y1 = Boole[X < k], Y2 = Boole[X ≦ k]
+* と定めれば，恒等的に Y1 ⇒ Y2 で，
+*	X < k ⇔  Y1 AND  Y2
+*	X = k ⇔ !Y1 AND  Y2
+*	X > k ⇔ !Y1 AND !Y2
+* として大小関係を論理変数で表現することができる．
+* 
+* verify : https://atcoder.jp/contests/arc146/tasks/arc146_d
 */
 
 

@@ -875,7 +875,7 @@ struct Zobrist_hash_pfunc {
 *	f(x) += y とする．
 *
 * ll get() : O(1)
-*	現時点での部分写像 f のハッシュ値を返す．
+*	現時点での関数 f のハッシュ値を返す．
 */
 template <class X>
 struct Zobrist_hash_func {
@@ -1007,6 +1007,89 @@ struct Zobrist_hash_func_mod {
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Zobrist_hash_func_mod z) {
 		os << z.x_to_y << endl << "v: " << z.v << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【Zobrist Hash（[0..n) からの関数）】
+/*
+* Zobrist_hash_func(int n) : O(1)
+*	f : [0..n) → Z を零関数として初期化する．
+*
+* set(int i, ll v) : O(1)
+*	f(i) = v とする．
+*
+* add(int x, ll v) : O(1)
+*	f(i) += v とする．
+*
+* ull get() : O(1)
+*	現時点での関数 f のハッシュ値を返す．
+*/
+class Zobrist_hash_Nfunc {
+	// 乱数生成器
+	static inline mt19937_64 mt;
+	static inline uniform_int_distribution<ull> rnd;
+
+	// 各 i∈[0..n) に対するハッシュの割り当て
+	static inline vector<ull> i_to_hash;
+
+	static inline bool first_call = true;
+
+	// ハッシュ値
+	ull h;
+
+	// 各 i∈[0..n) に対する v ∈ Z の割り当て
+	vl i_to_v;
+
+public:
+	// コンストラクタ（零関数で初期化）
+	Zobrist_hash_Nfunc(int n) : h(0) {
+		// verify : https://atcoder.jp/contests/abc367/tasks/abc367_f
+
+		if (first_call) {
+			first_call = false;
+			mt.seed((int)time(NULL));
+			rnd = uniform_int_distribution<ull>(0ULL, ~0ULL);
+		}
+
+		int L = sz(i_to_hash);
+		if (L < n) {
+			i_to_hash.resize(n);
+			repi(i, L, n - 1) i_to_hash[i] = rnd(mt);
+		}
+
+		i_to_v.resize(n);
+	}
+
+	// f(i) += v とする．
+	void add(int i, ll v) {
+		// verify : https://atcoder.jp/contests/abc367/tasks/abc367_f
+
+		// ハッシュ値の更新
+		h += i_to_hash[i] * (ull)v;
+
+		// 関数の更新
+		i_to_v[i] += v;
+	}
+
+	// f(i) = v とする．
+	void set(int i, ll v) {
+		add(i, v - i_to_v[i]);
+		i_to_v[i] = v;
+	}
+
+	// 現時点での関数 f のハッシュ値を返す．
+	ull get() {
+		// verify : https://atcoder.jp/contests/abc367/tasks/abc367_f
+
+		return h;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Zobrist_hash_Nfunc Z) {
+		os << "hash: " << Z.h << endl;
 		return os;
 	}
 #endif

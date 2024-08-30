@@ -239,6 +239,15 @@ int tree_centroid(const G& g, int* c2 = nullptr) {
 */
 
 
+//【距離スコアの最大マッチング → 重心経由】
+/*
+* 木 g の 2 頂点 u, v をペアにするとスコア dist(u,v) が得られるとする．
+* この条件で，最大スコアマッチングは，全ての点のペアを結ぶパスが g の重心を通るものに限る．
+* 
+* verify : https://atcoder.jp/contests/abc362/editorial/10400
+*/
+
+
 //【木の重心分解】
 /*
 * Centroid_decomposition<G>(G g) : O(n log n)
@@ -586,7 +595,7 @@ vvl distance_from_centroid(const WGraph& g, const Centroid_decomposition<WGraph>
 * また st の頂点 i が g のどの頂点と対応するかを id[i] に格納する．
 */
 int steiner_tree(const Graph& g, const vi& v, Graph& st, vi& id) {
-	// verify : https://atcoder.jp/contests/arc030/tasks/arc030_2
+	// verify : https://atcoder.jp/contests/abc368/tasks/abc368_d
 
 	if (v.empty()) {
 		st.clear();
@@ -862,6 +871,8 @@ vi rooted_tree_classification(const Graph& g, int r) {
 * 各 s∈[0..n) について，r を根とする木 g の頂点 s の親を格納したリストを返す（なければ -1）
 */
 vi parent_of_tree(const Graph& g, int r) {
+	// verify : https://yukicoder.me/problems/no/2861
+
 	int n = sz(g);
 
 	vi p(n);

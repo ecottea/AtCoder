@@ -92,7 +92,7 @@ vvi enumerate_all_sequences(int n, int ub) {
 * 数列 a[0..n) で，∀i, a[i]∈[0..ub[i]) を満たすもの全てを格納したリストを返す．
 */
 vvi enumerate_all_sequences(const vi& ub) {
-	// verify : https://atcoder.jp/contests/arc104/tasks/arc104_e
+	// verify : https://atcoder.jp/contests/abc367/tasks/abc367_c
 
 	int n = sz(ub);
 	vvi seqs;

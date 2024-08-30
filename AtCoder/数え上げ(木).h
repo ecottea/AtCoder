@@ -7,7 +7,7 @@
 // ■■■■■ 木（数え上げ） ■■■■■
 
 
-//【根付き木の独立集合の数え上げ】O(n)
+//【木の独立集合の数え上げ】O(n)
 /*
 * 木 g の独立集合（辺を共有しない頂点の集合）の個数を返す．
 *
@@ -306,6 +306,50 @@ vvm count_induced_subtree(const Graph& g, int r) {
 }
 
 
+//【点素パス分割の数え上げ】O(n)
+/*
+* 木 g の頂点を非空な点素パスに分割する方法の数を返す（長さ 0 のパスも認める）
+* 
+* 利用：【貰う木 DP】
+*/
+struct T_cpp {
+	mint c0; // 点素パス分割において根の次数が 0
+	mint c1; // 点素パス分割において根の次数が 1
+	mint c2; // 点素パス分割において根の次数が 2
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const T_cpp& x) {
+		os << '(' << x.c0 << ',' << x.c1 << ',' << x.c2 << ')';
+		return os;
+	}
+#endif
+};
+T_cpp leaf_cpp(int s) {
+	return T_cpp{ 1, 0, 0 };
+}
+T_cpp add_edge_cpp(const T_cpp& x, int p, int s) {
+	T_cpp z;
+	z.c0 = x.c0 + x.c1 + x.c2;
+	z.c1 = x.c0 + x.c1;
+	z.c2 = 0;
+	return z;
+}
+void merge_cpp(T_cpp& x, const T_cpp& y, int s) {
+	T_cpp z;
+	z.c0 = x.c0 * y.c0;
+	z.c1 = x.c1 * y.c0 + x.c0 * y.c1;
+	z.c2 = x.c2 * y.c0 + x.c1 * y.c1 + x.c0 * y.c2;
+	x = move(z);
+}
+void add_vertex_cpp(T_cpp& x, int s) {
+	;
+}
+mint count_path_partitions(const Graph& g) {
+	auto dp = tree_getDP<T_cpp, leaf_cpp, add_edge_cpp, merge_cpp, add_vertex_cpp>(g, 0);
+	return dp[0].c0 + dp[0].c1 + dp[0].c2;
+}
+
+
 //【根付き木の点素なパスの数え上げ（辺の数毎）】O(n^2)
 /*
 * 与えられた r を根とする根付き木 g に対し，
@@ -532,7 +576,7 @@ ll count_tree_distance(const Graph& g, int k) {
 }
 
 
-//【パスの数え上げ（長さごと）】O(n (log n)^2)
+//【パスの数え上げ（長さ毎）】O(n (log n)^2)
 /*
 * 各 d∈[0..n) について，木 g の異なる 2 点の組で距離が d であるものの個数のリストを返す．
 *
@@ -653,7 +697,7 @@ vl tree_distance_frequency(const Graph& g) {
 * n 頂点のラベル付き木の個数は n^(n-2) である．（Cayley の定理）
 * 
 * 証明：n^(n-2) 通りのプリューファーコードと 1:1 対応があることから明らか．
-* あるいは【ラベル付き根付き木の数え上げ】の結果を，どれを根としているかの n で割り引けばよい．
+* あるいは【ラベル付き根付き木の数え上げ】の結果を，どれを根としているかの n で割ればよい．
 */
 
 

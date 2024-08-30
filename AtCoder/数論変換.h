@@ -1111,6 +1111,18 @@ vm convolution_arbitrary_mod(const vm& a, const vm& b) {
 */
 
 
+//y“ñŸŒ³ô‚İz
+/*
+* 2•Ï”FPS.h ‚Ö
+*/
+
+
+//y‘½ŸŒ³ô‚İz
+/*
+* 2•Ï”FPS.h ‚Ö
+*/
+
+
 //y”˜_•ÏŠ·imod 998244353jz
 /*
 * NTT(int n) : O(n)

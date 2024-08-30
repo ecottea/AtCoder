@@ -420,7 +420,7 @@ MFPS integral_fps(const MFPS& f, const Factorial_mint& fm) {
 /*
 * log f(z) mod z^d を返す．
 *
-* 制約 : f(0) = 1，fm は d! まで計算可能
+* 制約 : [z^0]f(z) = 1，fm は d! まで計算可能
 */
 MFPS log_fps(const MFPS& f, int d, const Factorial_mint& fm) {
 	// 参考 : https://qiita.com/hotman78/items/f0e6d2265badd84d429a
@@ -450,7 +450,7 @@ MFPS log_fps(const MFPS& f, int d, const Factorial_mint& fm) {
 /*
 * exp f(z) mod z^d を返す．
 *
-* 制約 : f(0) = 0，fm は d! まで計算可能
+* 制約 : [z^0]f(z) = 0，fm は d! まで計算可能
 *
 * 利用：【対数関数】
 */

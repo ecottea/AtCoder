@@ -659,6 +659,9 @@
     <ClInclude Include="スコア和%28数論%29.h">
       <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
+    <ClInclude Include="数え上げ%28数の表示%29.h">
+      <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">

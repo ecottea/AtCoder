@@ -849,6 +849,12 @@ public:
 };
 
 
+//【多次元累積和】
+/*
+* 代数(束) の 大小.h へ．ただしクエリあたり O(2^D) かかるので注意．
+*/
+
+
 //【スライド最小値】O(n)
 /*
 * 配列 a[0..n) に対し min a(i-w..i] を a_min[i] に格納する．
@@ -1098,7 +1104,7 @@ public:
 	}
 	Sparse_table_indexed() : n(0), m(0), max_flag(false) {}
 
-	// min a[l..r) を返す．
+	// min a[l..r) とそれを与える位置の組を返す．（空なら {INFL, -1} を返す）
 	pair<T, int> get(int l, int r) const{
 		// verify : https://atcoder.jp/contests/agc026/tasks/agc026_d
 

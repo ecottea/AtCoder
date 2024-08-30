@@ -57,7 +57,7 @@ struct Osa_k {
 
 		Assert(i <= n);
 
-		return gpf[i] == i;
+		return i >= 2 && gpf[i] == i;
 	}
 
 	// i の素因数分解結果を返す．
@@ -76,7 +76,7 @@ struct Osa_k {
 
 	// i の約数の昇順リストを返す．
 	vi divisors(int i) const {
-		// verify : https://yukicoder.me/problems/no/2718
+		// verify : https://atcoder.jp/contests/abc368/tasks/abc368_f
 
 		Assert(i <= n);
 
@@ -98,7 +98,7 @@ struct Osa_k {
 
 	// オイラーのトーシェント関数 φ(i) の値を返す．
 	int euler_phi(int i) {
-		// verify : 
+		// verify : https://yukicoder.me/problems/no/2849
 
 		Assert(i <= n);
 

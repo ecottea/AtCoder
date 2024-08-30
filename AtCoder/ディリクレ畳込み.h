@@ -23,7 +23,10 @@ vector<T> naive_dirichlet_convolution(const vector<T>& a, const vector<T>& b) {
 
 	// 配る DP
 	vector<T> c(n + 1);
-	repi(i, 1, n) for (ll j = 1; i * j <= n; j++) c[i * j] += a[i] * b[j];
+	repi(i, 1, n) {
+		int j_max = n / i;
+		repi(j, 1, j_max) c[i * j] += a[i] * b[j];
+	}
 
 	return c;
 }
@@ -55,7 +58,9 @@ vector<T> naive_dirichlet_invconvolution(const vector<T>& a, const vector<T>& c)
 	vector<T> b(c);
 	repi(j, 1, n) {
 		b[j] /= a[1]; // mint だと遅いので注意
-		for (ll i = 2; i * j <= n; i++) b[i * j] -= a[i] * b[j];
+
+		int i_max = n / j;
+		repi(i, 2, i_max) b[i * j] -= a[i] * b[j];
 	}
 
 	return b;
@@ -101,6 +106,7 @@ vector<T> naive_dirichlet_invconvolution(const vector<T>& a, const vector<T>& c)
 //【乗法的数論関数の例】
 /*
 * 乗法的数論関数 a[i] とそのディリクレ母関数 A(s) の例として以下のものが挙げられる：
+*	D畳込み：	a[i] = Σj×k=i b[j] c[k] （b, c は乗法的数論関数）	A(s) = B(s) C(s)	A_p(z) = B_p(z) C_p(z)
 *	積：			a[i] = b[i] c[i] （b, c は乗法的数論関数）
 *	逆数：		a[i] = 1/b[i] （b は乗法的数論関数）
 *	デルタ：		a[i] = (i = 1 ? 1 : 0)							A(s) = 1			A_p(z) = 1
@@ -147,7 +153,8 @@ public:
 		int i = 2;
 
 		// √n 以下の i の処理
-		for (; i <= n / i; i++) if (is_prime[i]) {
+		int i_max = n / i;
+		for (; i <= i_max; i++) if (is_prime[i]) {
 			ps.push_back(i);
 			for (int j = i * i; j <= n; j += i) is_prime[j] = false;
 		}
@@ -174,7 +181,8 @@ public:
 
 		// インライン配る DP
 		repe(p, ps) repir(j, n / p, 1) {
-			for (ll i = p; i * j <= n; i *= p) b[i * j] += a[i] * b[j];
+			ll i_max = n / j;
+			for (ll i = p; i <= i_max; i *= p) b[i * j] += a[i] * b[j];
 		}
 
 		return b;
@@ -191,15 +199,17 @@ public:
 		//		= (Σ_d a[p^d] / (p^d)^s) (Σ_j b[j] / j^s)
 		//		= Σ_d Σ_j a[p^d] b[j] / (p^d j)^s
 		// と表されるので，b[p^d j] について整理すると
-		//		b[p^d j] = (c[p^d j] - Σ_(d>1) a[p^d] b[j]) / a[1]
+		//		b[p^d j]
+		//		= (c[p^d j] - Σ_(d>1) a[p^d] b[j]) / a[1]
+		//		= c[p^d j] - Σ_(d>1) a[p^d] b[j]  (a : 乗法的より a[1] = 1)
 		// となる．これをインラインで行う．
 
 		int n = sz(a) - 1;
 
 		// インライン配る DP
 		repe(p, ps) repi(j, 1, n / p) {
-			c[j] /= a[1];
-			for (ll i = p; i * j <= n; i *= p) c[i * j] -= a[i] * c[j];
+			ll i_max = n / j;
+			for (ll i = p; i <= i_max; i *= p) c[i * j] -= a[i] * c[j];
 		}
 
 		return c;

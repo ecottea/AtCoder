@@ -13,7 +13,7 @@
 
 //【商列挙】O(√n)
 /*
-* 区間 (0..n] を n/i = q（切り捨て）となる半開区間 i∈(il..ir] に分割し，
+* 区間 [1..n] を n/i = q（切り捨て）となる半開区間 i∈(il..ir] に分割し，
 * i について昇順にそれぞれに対して f(il, ir, q) を呼び出す．
 * なお各範囲においては n mod i は公差 -q の等差数列を成す．
 */
@@ -115,6 +115,70 @@ void quotient_range(T n1, T n2, const FUNC& f) {
 }
 
 
+//【添字整数商 vector】
+/*
+* v[1], v[2], ..., v[nl], v[N/nh], ..., v[N/2], v[N/1] にのみアクセスできる疎な vector
+*
+* Vector_floor<T>(ll N) : O(1)
+*	nl = √N とし，v[N/d] にアクセスできるよう初期化する．
+*
+* Vector_floor<T>(ll N, int nl) : O(1)
+*	v[N/d] にアクセスできるよう初期化する．
+*
+* T [ll i] : O(1)
+*	v[i] にアクセスする．
+*
+* T get_floor(int d) : O(1)
+*	v[N/d] を返す．
+*
+* set_floor(int d, T x) : O(1)
+*	v[N/d] = x とする．
+*/
+template <class T>
+class Vector_floor {
+	// v : v[1], v[2], ..., v[nl], v[N/nh], ..., v[N/2], v[N/1] を並べたリスト
+	vector<T> v;
+	ll nlh;
+
+public:
+	ll N;
+	ll nl, nh;
+
+	// nl = √N とし，v[N/d] にアクセスできるよう初期化する．
+	Vector_floor(ll N) : N(N) {
+		nl = (ll)(sqrt(N) + 1e-9);
+		nh = ((N + nl - 1) / nl);
+		nlh = nl + nh;
+		v.resize(nlh);
+	}
+
+	// v[N/d] にアクセスできるよう初期化する．
+	Vector_floor(ll N, int nl) : N(N), nl(nl) {
+		nh = ((N + nl - 1) / nl);
+		nlh = nl + nh;
+		v.resize(nlh);
+	}
+
+	// v[i] を返す．
+	inline T const& operator[](ll i) const {
+		return i <= nl ? v[i - 1] : v[nlh - N / i];
+	}
+	inline T& operator[](ll i) {
+		return i <= nl ? v[i - 1] : v[nlh - N / i];
+	}
+
+	// v[N/d] を返す．
+	T get_floor(int d) const {
+		return d <= nh ? v[nlh - d] : v[N / d - 1];
+	}
+
+	// v[N/d] = x とする．
+	void set_floor(int d, T x) const {
+		return (d <= nh ? v[nlh - d] : v[N / d - 1]) = x;
+	}
+};
+
+
 //【除原理】O(n^(3/4))
 /*
 * a と A が関係式
@@ -179,7 +243,7 @@ void exclusion_principle(ll n, vector<T>& al, vector<T>& ah) {
 */
 
 
-//【一次式の切り捨て和】O(log(n + m + a + b))
+//【一次式の切り捨て和】O(log(n + m))
 /*
 * Σi∈[0..n) floor((a i + b) / m) を返す．
 */
@@ -249,7 +313,7 @@ T floor_sum_large(T n, T m, T a, T b) {
 }
 
 
-//【一次式の線形加重 & 平方切り捨て和】O(log(n + m + a + b))
+//【一次式の線形加重 & 平方切り捨て和】O(log(n + m))
 /*
 *	S1 = Σi∈[0..n) i floor((a i + b) / m)
 *	S2 = Σi∈[0..n) floor((a i + b) / m)^2
@@ -343,40 +407,43 @@ tuple<T, T, T> linear_square_floor_sum(T n, T m, T a, T b) {
 }
 
 
-//【一次式の剰余の数え上げ】O(log(n + m))
+//【一次式の積の切り捨て和】O(log(n + m))
 /*
-* 各 i∈[0..n) に対する (a i + b) mod m のうち，値が [l..r) に属するものの個数を返す．
+* Σi∈[0..n) floor((a i + b1) / m) floor((a i + b2) / m) を返す．
 *
-* 利用：【一次式の切り捨て和】
+* 利用：【一次式の線形加重 & 平方切り捨て和】
 */
 template <class T>
-T count_mod_of_linear(T n, T m, T a, T b, T l, T r) {
-	// 参考 : https://twitter.com/maspy_stars/status/1649421402573766656
-	// verify : https://yukicoder.me/problems/no/2280
+T multiple_floor_sum(T n, T m, T a, T b1, T b2) {
+	// verify : https://atcoder.jp/contests/arc182/tasks/arc182_e
 
 	//【方法】
-	// 条件を同値変形していくと，
-	//		l ≦ (ai+b) mod m < r
-	//		⇔ l ≦ (ai+b) - floor((ai+b)/m) * m < r
-	//		⇔ (ai+b-l)/m ≧ floor((ai+b)/m) > (ai+b-r)/m
-	// となる．中辺が整数であることと
-	//		(左辺) - (右辺) = (r-l)/m ≦ 1
-	// であることに注意すると，
-	//		(ai+b) mod m ∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 1
-	//		(ai+b) mod m !∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 0
-	// が分かる．よって floor_sum の差を取れば良い．
+	// 0 ≦ b1 ≦ b2 < m とすれば，恒等式
+	//		y(y+1) = 1/2 (y^2 + (y+1)^2 + y - (y+1))
+	//		y y = 1/2 (y^2 + y^2 + y - y)
+	// を用いて積を分離できる．
 
-	Assert(m > 0);
+	Assert(m != 0);
+	if (n <= 0) return T(0);
 
-	if (n <= 0) return 0;
+	// m < 0 の場合，分母分子を -1 倍して m > 0 とする．
+	if (m < 0) { a *= -1; b1 *= -1; b2 *= -1; m *= -1; }
 
-	chmax(l, T(0)); chmin(r, m);
-	if (l >= r) return 0;
+	// b を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ b < m とする．
+	T B1 = b1 / m - (T)(b1 % m < 0); b1 = smod(b1, m);
+	T B2 = b2 / m - (T)(b2 % m < 0); b2 = smod(b2, m);
 
-	a = smod(a, m); b = smod(b, m);
+	// 0 ≦ b1 ≦ b2 < m とする．
+	if (b1 > b2) { swap(b1, b2); swap(B1, B2); }
 
-	T res = floor_sum_large(n, m, a, b - l);
-	res -= floor_sum_large(n, m, a, b - r);
+	auto [s1_ln, s1_sq, s1] = linear_square_floor_sum(n, m, a, b1);
+	auto [s2_ln, s2_sq, s2] = linear_square_floor_sum(n, m, a, b2);
+
+	T res = 0;
+	res += (s1_sq + s2_sq + s1 - s2) / 2;
+	res += B1 * s2;
+	res += B2 * s1;
+	res += B1 * B2 * n;
 
 	return res;
 }
@@ -445,6 +512,89 @@ T sum_of_mod_of_linear(T n, T m, T a, T b) {
 
 	T res = a * n * (n - 1) / 2 + b * n;
 	res -= m * floor_sum_large(n, m, a, b);
+
+	return res;
+}
+
+
+//【一次式の剰余の数え上げ（範囲指定）】O(log(n + m))
+/*
+* 各 i∈[0..n) に対する (a i + b) mod m のうち，値が [l..r) に属するものの個数を返す．
+*
+* 利用：【一次式の切り捨て和】
+*/
+template <class T>
+T count_mod_of_linear(T n, T m, T a, T b, T l, T r) {
+	// 参考 : https://twitter.com/maspy_stars/status/1649421402573766656
+	// verify : https://yukicoder.me/problems/no/2280
+
+	//【方法】
+	// 条件を同値変形していくと，
+	//		l ≦ (ai+b) mod m < r
+	//		⇔ l ≦ (ai+b) - floor((ai+b)/m) * m < r
+	//		⇔ (ai+b-l)/m ≧ floor((ai+b)/m) > (ai+b-r)/m
+	// となる．中辺が整数であることと
+	//		(左辺) - (右辺) = (r-l)/m ≦ 1
+	// であることに注意すると，
+	//		(ai+b) mod m ∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 1
+	//		(ai+b) mod m !∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 0
+	// が分かる．よって floor_sum の差を取れば良い．
+
+	Assert(m > 0);
+
+	if (n <= 0) return 0;
+
+	chmax(l, T(0)); chmin(r, m);
+	if (l >= r) return 0;
+
+	a = smod(a, m); b = smod(b, m);
+
+	T res = floor_sum_large(n, m, a, b - l);
+	res -= floor_sum_large(n, m, a, b - r);
+
+	return res;
+}
+
+
+//【一次式の剰余の総和（範囲指定）】O(log(n + m))（オーバーフロー注意）
+/*
+* 各 i∈[0..n) に対する (a i + b) mod m のうち，値が [l..r) に属するものの総和を返す．
+*
+* 利用：【一次式の線形加重 & 平方切り捨て和】,【一次式の積の切り捨て和】
+*/
+template <class T>
+T sum_of_mod_of_linear(T n, T m, T a, T b, T l, T r) {
+	// verify : https://atcoder.jp/contests/arc182/tasks/arc182_e
+
+	//【方法】
+	// 条件を同値変形していくと，
+	//		l ≦ (ai+b) mod m < r
+	//		⇔ l ≦ (ai+b) - floor((ai+b)/m) * m < r
+	//		⇔ (ai+b-l)/m ≧ floor((ai+b)/m) > (ai+b-r)/m
+	// となる．中辺が整数であることと
+	//		(左辺) - (右辺) = (r-l)/m ≦ 1
+	// であることに注意すると，
+	//		(ai+b) mod m ∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 1
+	//		(ai+b) mod m !∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 0
+	// が分るので，これに重み (ai+b) mod m を付けて足し合わせれば良い．
+	//		((ai+b) mod m) floor((ai+b')/m)
+	//		= (ai+b - floor((ai+b)/m) m) floor((ai+b')/m)
+	// なので【一次式の線形加重切り捨て和】や【一次式の積の切り捨て和】が利用できる．
+
+	Assert(m > 0);
+
+	if (n <= 0) return 0;
+
+	chmax(l, T(0)); chmin(r, m);
+	if (l >= r) return 0;
+
+	T res = 0;
+
+	auto [l1, l2, l3] = linear_square_floor_sum(n, m, a, b - l);
+	res += a * l1 + b * l3 - m * multiple_floor_sum(n, m, a, b - l, b);
+
+	auto [r1, r2, r3] = linear_square_floor_sum(n, m, a, b - r);
+	res -= a * r1 + b * r3 - m * multiple_floor_sum(n, m, a, b - r, b);
 
 	return res;
 }
@@ -799,6 +949,8 @@ class Mod_sum_query {
 public:
 	// 配列 a[0..n) で初期化する．
 	Mod_sum_query(const vl& a_) : n(sz(a_)), a(a_), a_sum(0) {
+		// verify : https://atcoder.jp/contests/arc126/tasks/arc126_c
+		
 		sort(all(a));
 		rep(i, n) a_sum += a[i];
 	}
@@ -818,6 +970,8 @@ public:
 
 	// a[0..n) を m で割った不足の和を返す．
 	ll lack_sum(ll m) {
+		// verify : https://atcoder.jp/contests/arc126/tasks/arc126_c
+
 		// sum : 1-indexed での a[0..n) mod m の和
 		ll sum = a_sum;
 

@@ -576,7 +576,7 @@ vector<T> gauss_jordan_elimination_diagonal(vector<vector<T>> a, vector<T> b) {
 }
 
 
-//yfunctional graph ã‚ÌüŒ`•û’ö®z
+//yfunctional graph ã‚ÌüŒ`•û’ö®zO(n)
 /*
 * —^‚¦‚ç‚ê‚½ V=[0..n) ã‚Ì functional graph i¨f[i] ‚É‘Î‚µCüŒ`•û’ö®
 *	x[i] = a[i] x[f[i]] + b[i]  (i¸[0..n))

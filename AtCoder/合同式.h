@@ -409,11 +409,43 @@ int tonelli_shanks(const mint& a) {
 }
 
 
-//【-1 の平方剰余】
+//【-1 の平方剰余】O(log p)
 /*
-* 素数 p が 4n+1 型のときに限り -1 の平方剰余が存在する．
-* ランダムに r≠0 を選んで a = r^((p-1)/4) を計算し，a ≠ ±1 であれば a^2 = -1 (mod p) である．
+* x^2 = -1 (mod p) なる x∈[0..p) を返す．（なければ -1 を返す．）
+*
+* 制約 : p は素数
 */
+int quadratic_residue_m1(int p) {
+	// verify : https://mojacoder.app/users/YSatUT/problems/fermats_4nplus1_theorem
+
+	//【方法】
+	// p=2 なら 1^2 = 1 = -1 (mod 2) なので 1 を返せば良い．
+	// p が 4n+3 型素数なら条件を満たす x は存在しない（平方剰余の第一補充法則）
+	// 以下では p が 4n+1 型素数であるとする．
+	// 
+	// r∈[2..p-2] をランダムに選ぶ．フェルマーの小定理より
+	//		r^(p-1) = 1 (mod p)
+	// であり，確率 1/2 で
+	//		r^((p-1)/2) = -1 (mod p)
+	// となる．このような r を選ぶことができれば，
+	//		( r^((p-1)/4) )^2 = -1 (mod p)
+	// なので x = r^((p-1)/4) mod p を返せば良い．
+
+	if (p == 2) return 1;
+	if (p % 4 == 3) return -1;
+
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<ll> rnd(2, p - 2);
+
+	while (1) {
+		ll r = rnd(mt);
+		ll a = pow_mod(r, (p - 1) / 4, p);
+		if (a != 1 && a != p - 1) return a;
+	}
+
+	// ここには来ない
+	return -1;
+}
 
 
 //【累乗根】O(min(p,k)^(1/4))

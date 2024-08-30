@@ -61,6 +61,33 @@ public:
 };
 
 
+//【累乗の剰余（64 bit）】
+/*
+* x^n (mod m) を返す．
+*/
+ll pow_mod_large(ll x, ll n, ll m) {
+	// verify : https://mojacoder.app/users/YSatUT/problems/fermats_4nplus1_theorem
+	
+	assert(n >= 0 && m >= 1);
+	if (m == 1) return 0;
+
+	__int128 res = 1, pow2 = x;
+	while (n > 0) {
+		if (n & 1) {
+			res = res *= pow2;
+			res %= m;
+		}
+
+		pow2 *= pow2;
+		pow2 %= m;
+
+		n /= 2;
+	}
+
+	return (ll)res;
+}
+
+
 //【累乗（モノイド）】O(log n)
 /*
 * モノイド (S, op, e) の元 x の n 乗を返す．
@@ -69,7 +96,7 @@ public:
 */
 template <class S, S(*op)(S, S), S(*e)()>
 S pow(const S& x, ll n) {
-	// verify : https://atcoder.jp/contests/abc013/tasks/abc013_4
+	// verify : https://atcoder.jp/contests/abc367/tasks/abc367_e
 
 	S res(e()), pow2 = x;
 	while (n > 0) {

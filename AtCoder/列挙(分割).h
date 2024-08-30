@@ -392,6 +392,37 @@ vvi ordered_integer_partitions_len(int n, int d) {
 }
 
 
+//【非負整数の順序付き分割の列挙（d 個，値指定）】O(bin(n+d-1, d-1))
+/*
+* 非負整数 n を非負整数列 a[0..m) の要素 d 個に順序付きで分割する方法のリストを返す．
+*/
+vvi ordered_integer_partitions_val_len(int n, int d, vi a) {
+	// verify : https://projecteuler.net/problem=698
+
+	uniq(a);
+
+	vvi ips;
+	vi ip(d);
+
+	function<void(int, int)> rf = [&](int s, int i) {
+		if (i == d) {
+			if (s == 0) ips.push_back(ip);
+			return;
+		}
+
+		repe(x, a) {
+			if (x > s) break;
+
+			ip[i] = x;
+			rf(s - x, i + 1);
+		}
+	};
+	rf(n, 0);
+
+	return ips;
+}
+
+
 //【非負整数の組の分割の列挙（d 個）】O(?)
 /*
 * 自然数の組 (n1, n2) を d 個の非負整数の組（昇順）に分割する方法のリストを返す．

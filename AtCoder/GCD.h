@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "数論.h"
+#include "合同式.h"
 // ■■■■■ GCD, LCM 等 ■■■■■
 
 
@@ -430,9 +431,11 @@ pair<T, T> CRT(const vector<T>& r, const vector<T>& m) {
 */
 
 
-//【ガウス整数の最大公約数】
+//【ガウス整数の最大公約数】O(log(|a1|+|b1|+|a2|+|b2|))
 /*
 * GCD(a1 + b1 i, a2 + b2 i) を返す．
+* 
+* 制約：|a1|, |b1|, |a2|, |b2| < 2^31
 */
 pll gcd_gaussian_integers(ll a1, ll b1, ll a2, ll b2) {
 	// verify : https://judge.yosupo.jp/problem/gcd_of_gaussian_integers
@@ -462,6 +465,50 @@ pll gcd_gaussian_integers(ll a1, ll b1, ll a2, ll b2) {
 	}
 
 	return { a1, b1 };
+}
+
+
+//【フェルマーの二平方和定理】
+/*
+* x^2 + y^2 = p なる (x,y) (0<x≦y) を返す．（なければ (-1,-1) を返す）
+*
+* 制約 : p は素数
+*
+* 利用：【-1 の平方剰余】,【ガウス整数の最大公約数】
+*/
+pii fermats_4n_plus_1(int p) {
+	// 参考 : https://maspypy.com/library-checker-gcd-of-gaussian-integers
+	// verify : https://mojacoder.app/users/YSatUT/problems/fermats_4nplus1_theorem
+
+	//【方法】
+	// p=2 なら (x,y)=(1,1) を返せば良い．
+	// p が 4n+3 型素数なら条件を満たす (x,y) は存在しない（mod 4 を考えれば明らか）
+	// 以下では p が 4n+1 型素数であるとする．
+	//
+	// (x,y) が条件を満たすことをガウス整数の言葉で言い換えると，|x+iy| = p となる． 
+	// -1 は mod p で平方剰余なので，
+	//		a^2 = -1 (mod p) ⇔ (a+i)(a-i) = k p  (∃k∈[1..p-1])
+	// なる a を取ることができ，
+	//		|a+i| = k p
+	// となる．また明らかに
+	//		|p| = p^2
+	// である．両者より，
+	//		x+iy = gcd(a+i, p)
+	// と選べば，k∈[1..p-1] より
+	//		|x+iy| | gcd(kp, p^2) = p
+	// とできる．(a+i)|p より |x+iy| != 1 なので，|x+iy| = p である．
+
+	if (p == 2) return { 1, 1 };
+	if (p % 4 == 3) return { -1, -1 };
+
+	int a = quadratic_residue_m1(p);
+
+	auto [x, y] = gcd_gaussian_integers(a, 1, p, 0);
+	x = abs(x);
+	y = abs(y);
+	if (x > y) swap(x, y);
+
+	return { x, y };
 }
 
 

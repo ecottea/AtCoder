@@ -5,7 +5,9 @@
 
 //【アダマール変換】: O(2^n n)
 /*
-* a[0..2^n) をアダマール変換したものに上書きする．
+* a[0..2^n) を
+*       A[set] = Σset2 (-1)^popcount(set ∩ set2) a[set2]
+* なる A[0..2^n) に上書きする．
 */
 template <class T>
 void hadamard(vector<T>& a) {
@@ -37,7 +39,9 @@ void hadamard(vector<T>& a) {
 
 //【逆アダマール変換】: O(2^n n)
 /*
-* A[0..2^n) を逆アダマール変換したものに上書きする．
+* A[0..2^n) を
+*       A[set] = Σset2 (-1)^popcount(set ∩ set2) a[set2]
+* なる a[0..2^n) に上書きする．
 * 
 * 制約：A の要素は 2 で割れる．
 */
@@ -62,7 +66,9 @@ void hadamard_inv(vector<T>& A) {
 
 //【逆アダマール変換（mint）】: O(2^n n + log(mod))
 /*
-* A[0..2^n) を逆アダマール変換したものに上書きする．
+* A[0..2^n) を
+*       A[set] = Σset2 (-1)^popcount(set ∩ set2) a[set2]
+* なる a[0..2^n) に上書きする．
 * 
 * 制約：mint の法は 2 の倍数でない
 *

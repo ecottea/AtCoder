@@ -75,7 +75,7 @@ T bin_search(T ok, T ng, const FUNC& okQ, double EPS = 1e-12) {
 		// 区間の中間
 		T mid = (ok + ng) * 0.5;
 
-		// 相対誤差を小さくしたい場合はこちらを使う．
+		// 相対誤差を小さくしたい場合はこちらを使う（ただし ok, ng > 0）
 		//T mid = sqrt(ok * ng);
 
 		// 中間が OK かどうかに応じて区間を縮小する．
