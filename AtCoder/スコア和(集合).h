@@ -120,7 +120,7 @@ vm subset_XOR_sum(const vector<T>& a, const Factorial_mint& fm) {
 }
 
 
-//yx ‚Æ‚Ì XOR ‚Ì˜az
+//yx ‚Æ‚Ì XOR ‚Ì‘˜az
 /*
 * XOR_sum<T>(vT a) : O(n log max(a))
 *	a[0..n) ‚Å‰Šú‰»‚·‚éD

@@ -3,6 +3,51 @@
 // ■■■■■ 最適化（列） ■■■■■
 
 
+//【一次式の剰余の最小値】O(log(n + m))
+/*
+* Min_i∈[0..n) (a i + b) mod m を返す．
+*/
+template <class T>
+T arithmetic_mod_min(T n, T m, T a, T b) {
+	// verify : https://judge.yosupo.jp/problem/min_of_mod_of_linear
+
+	Assert(m > 0);
+	if (n <= 0) return T(INFL);
+
+	a = smod(a, m);
+	b = smod(b, m);
+
+	T res = b;
+
+	while (a > 0) {
+		// 単調増加な部分に分解し，その初項だけを並べた新たな列を考えると，
+		// その最小値もまた min i∈[0..nn) (na i + nb) mod nm の形で表される．
+		T nm = a;
+		T nn = (a * (n - 1) + b) / m;
+		T nb = a * (((m - b) / a) + 1) + b - m;
+		T na = (a * (((2 * m - b) / a) + 1) + b - 2 * m) - nb;
+
+		n = nn;
+		m = nm;
+		a = smod(na, nm);
+		b = nb % nm;
+
+		if (n == 0) break;
+
+		// a が大きいときはむしろ単調減少していると捉え，
+		// 左右反転して単調増加とみなすことで毎回大きさを半分以下にしていける．
+		if (2 * a > m) {
+			b = (a * (n - 1) + b) % m;
+			a = (m - a) % m;
+		}
+
+		chmin(res, b);
+	}
+
+	return res;
+}
+
+
 //【内積の最大化（広義単調非負実数列）】O(n)
 /*
 * 与えられた非負数列 a[0..n) に対し，和が s である広義単調減少非負実数列 x[0..n) で

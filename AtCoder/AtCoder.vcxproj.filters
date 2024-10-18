@@ -539,9 +539,6 @@
     <ClInclude Include="累積演算.h">
       <Filter>ヘッダー ファイル\データ構造</Filter>
     </ClInclude>
-    <ClInclude Include="累積演算%28抽象%29.h">
-      <Filter>ヘッダー ファイル\データ構造</Filter>
-    </ClInclude>
     <ClInclude Include="尺取り法.h">
       <Filter>ヘッダー ファイル\典型問題</Filter>
     </ClInclude>

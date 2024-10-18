@@ -294,7 +294,6 @@
     <ClInclude Include="混合基数.h" />
     <ClInclude Include="確率.h" />
     <ClInclude Include="確率分布.h" />
-    <ClInclude Include="累積演算%28抽象%29.h" />
     <ClInclude Include="最適化%28組%29.h" />
     <ClInclude Include="不偏ゲーム.h" />
     <ClInclude Include="統計量.h" />

@@ -62,6 +62,18 @@
 /*
 * popcount(x) = x - Σk∈[1..∞) floor(x / 2^k)
 * 
+*（証明）x の第 k ビットを x[k] と表すと，
+*	x[k] = floor(x / 2^k) mod 2
+*		 = floor(x / 2^k) - floor(floor(x / 2^k) / 2) * 2
+*		 = floor(x / 2^k) - 2 floor(x / 2^(k+1))
+* と書き直せる．これを全てのビットについて足し合わせて
+*	popcount(x)
+*	= Σk∈[0..∞) floor(x / 2^k) - 2 Σk∈[0..∞) floor(x / 2^(k+1))
+*	= Σk∈[0..∞) floor(x / 2^k) - 2 Σk∈[1..∞) floor(x / 2^k)
+*	= floor(x / 2^0) - Σk∈[1..∞) floor(x / 2^k)
+*	= x - Σk∈[1..∞) floor(x / 2^k)
+* となる．
+*
 * verify : https://atcoder.jp/contests/abc283/tasks/abc283_h
 */
 
@@ -87,10 +99,22 @@ T get_carry(T x, T y) {
 }
 
 
-//【最上位ビット】
+//【最上位ビット（__int128）】
 /*
 * n の最上位ビットの位置を返す．
 */
 inline int msb(__int128 n) { return (n >> 64) != 0 ? (127 - __builtin_clzll((ll)(n >> 64))) : n != 0 ? (63 - __builtin_clzll((ll)(n))) : -1; }
+
+
+//【最下位ビット（bitset）】
+#ifdef _MSC_VER
+template <size_t N>
+inline int lsb(const bitset<N>& b) {
+	rep(i, N) if (b[i]) return i;
+	return N;
+}
+#else
+template <size_t N> inline int lsb(const bitset<N>& b) { return b._Find_first(); }
+#endif
 
 

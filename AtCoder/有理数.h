@@ -894,13 +894,13 @@ tuple<T, T, T, T> best_rational_approximation(T num, T dnm, T N) {
 		swap_flag = true;
 	}
 
-	auto val_l = min_of_mod_of_linear<T>(N, dnm, num, num);
+	auto val_l = arithmetic_mod_min<T>(N, dnm, num, num);
 	T ql, tmp2;
 	auto gl = bezout<T>(num, -dnm, val_l, ql, tmp2);
 	if (ql == 0) ql = dnm / gl;
 	auto pl = num * ql / dnm;
 
-	auto val_u = min_of_mod_of_linear<T>(N, dnm, -num, -num);
+	auto val_u = arithmetic_mod_min<T>(N, dnm, -num, -num);
 	T qu, tmp3;
 	auto gu = bezout<T>(-num, -dnm, val_u, qu, tmp3);
 	if (qu == 0) qu = dnm / gu;

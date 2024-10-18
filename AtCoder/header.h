@@ -91,7 +91,6 @@ inline int popcount(int n) { return __builtin_popcount(n); }
 inline int popcount(ll n) { return __builtin_popcountll(n); }
 inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
 inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : -1; }
-template <size_t N> inline int lsb(const bitset<N>& b) { return b._Find_first(); }
 inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
 inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump(...)

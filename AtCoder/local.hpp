@@ -37,11 +37,7 @@ inline int lsb(ll n) {
 	_BitScanForward64(&i, (ull)n);
 	return i;
 }
-template <size_t N>
-inline int lsb(const bitset<N>& b) {
-	rep(i, N) if (b[i]) return i;
-	return N;
-}
+
 
 // 最上位ビットの位置（0-indexed）
 inline int msb(int n) {

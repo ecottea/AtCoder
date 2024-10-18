@@ -1,3 +1,9 @@
+// QCFium 法
+#pragma GCC target("avx2")
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
+
+
 #ifndef HIDDEN_IN_VS // 折りたたみ用
 
 // 警告の抑制
@@ -88,7 +94,6 @@ inline int popcount(int n) { return __builtin_popcount(n); }
 inline int popcount(ll n) { return __builtin_popcountll(n); }
 inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : 32; }
 inline int lsb(ll n) { return n != 0 ? __builtin_ctzll(n) : 64; }
-template <size_t N> inline int lsb(const bitset<N>& b) { return b._Find_first(); }
 inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
 inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump(...)
@@ -101,57 +106,101 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #endif
 
 
-//【一次式の popcount の和】O((log(an+b))^2)
+void TLE() {
+	ll n;
+	cin >> n;
+
+	mint res = 0;
+
+	repi(k, 1, n) {
+		ll q = (n + 1 - k) / k;
+		ll r = (n + 1 - k) % k;
+
+		res += mint(q * (q + 1) / 2) * k + (q + 1) * r;
+	}
+
+	EXIT(res);
+}
+
+
+//【商列挙】O(√n)
 /*
-* Σi∈[0..n) popcount(ai+b) を返す．
-* 
-* 利用：【一次式の切り捨て和】
+* 区間 [1..n] を n/i = q（切り捨て）となる半開区間 i∈(il..ir] に分割し，
+* i について昇順にそれぞれに対して f(il, ir, q) を呼び出す．
+* なお各範囲においては n mod i は公差 -q の等差数列を成す．
 */
-template <class T>
-T arithmetic_popcount_sum(ll n, ll a, ll b) {
-	
+template <class T, class FUNC>
+void quotient_range(T n, const FUNC& f) {
+	// 参考 : https://ei1333.github.io/luzhiled/snippets/math/quotient-range.html
+	// verify : https://judge.yosupo.jp/problem/enumerate_quotients
+
 	//【方法】
-	// popcount(x) は
-	//		popcount(x) = x - Σk∈[1..∞) floor(x / 2^k)
-	// と表すことができる．これを用いて変形すると，
-	//		Σi∈[0..n) popcount(ai+b)
-	//		= Σi∈[0..n) ((ai+b) - Σk∈[1..∞) floor((ai+b) / 2^k))
-	//		= Σi∈[0..n) (ai+b) - Σk∈[1..∞) Σi∈[0..n) floor((ai+b) / 2^k)
-	// となる．第一項は等差数列の和の公式より
-	//		Σi∈[0..n) (ai+b) = a n(n-1)/2 + b n
-	// となり，第二項は k 毎に floor_sum を用いれば良い．
+	// n/i の商が q となるような i の範囲を考える．条件を i について整理すると
+	//		q = floor(n/i)
+	//		⇔ q ≦ n/i < q+1
+	//		⇔ i q ≦ n < i(q+1)
+	//		⇔ n/(q+1) < i ≦ n/q  (⇔ floor(n/(q+1)) < i ≦ floor(n/q))
+	// となる．
+	//
+	// この幅が 1 以下であれば，q に対応する i は高々 1 個である．その条件は
+	//		n/q - n/(q+1) ≦ 1
+	//		⇔ (q+1)n - q n ≦ q(q+1)
+	//		⇔ n ≦ q(q+1)
+	// である．条件をやや弱めて
+	//		n ≦ q^2 ⇔ √n ≦ q
+	// としてもオーダーに影響はない．
 
-	T res = a * (n & 1 ? (T((n - 1) / 2) * n) : T(n / 2) * (n - 1));
-	res += T(b) * n;
+	//（例）
+	// 例えば n = 15 のときは (0..15] を以下のように分割できる：
+	//		i の範囲		q=n/i	n mod i
+	//		(0..1]		15		[0]
+	//		(1..2]		7		[1]
+	//		(2..3]		5		[0]
+	//		(3..5]		3		[3, 0]
+	//		(5..7]		2		[3, 1]
+	//		(7..15]		1		[7, 6, 5, 4, 3, 2, 1, 0]
 
-	ll res = arithmetic_series(m, r, 0, k);
-	repi(i, 1, 30) res -= floor_sum(k, 1LL << i, m, r);
+	T sqrt_n = (T)(sqrt(n) - 1e-9);
 
-	return res;
+	// q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
+	T i_max = n / (sqrt_n + 1);
+	for (T i = 1; i <= i_max; ++i) f(i - 1, i, n / i);
+
+	// そうでない部分は q ごとにまとめて考える．
+	T il, ir = i_max;
+	for (T q = sqrt_n; q >= 1; --q) {
+		il = ir;
+		ir = n / q;
+		f(il, ir, q);
+	}
+
+	/* f の定義の雛形
+	using T = ll;
+	auto f = [&](T il, T ir, T q) {
+
+	};
+	*/
 }
 
-
-void Main() {
-	ll n, m, r;
-	cin >> n >> m >> r;
-
-	// m i + r <= n
-	// ⇔ i <= (n - r) / m;
-
-	ll N = (n - r) / m + 1;
-
-	cout << arithmetic_popcount_sum<ll>(N, m, r) << "\n";
-}
 
 int main() {
 //	input_from_file("input.txt");
 //	output_to_file("output.txt");
 
-	int t = 1;
-	cin >> t; // マルチテストケースの場合
+	ll N;
+	cin >> N;
 
-	while (t--) {
-		dump("------------------------------");
-		Main();
-	}
+	N++;
+
+	mint res = 0; mint inv2 = mint(2).inv();
+
+	using T = ll;
+	auto f = [&](T il, T ir, T q) {
+		res += inv2 * (q - 1) * q * (ir - il) * (ir + il + 1) * inv2;
+		res -= q * q * (ir - il) * (ir + il + 1) * inv2;
+		res += q * N;
+	};
+	quotient_range(N, f);
+
+	EXIT(res);
 }

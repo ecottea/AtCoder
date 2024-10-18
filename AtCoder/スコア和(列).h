@@ -3,7 +3,284 @@
 // ■■■■■ スコア和（列） ■■■■■
 
 
-//【連続自然数の popcount の和】O(log N)
+//【一次式の切り捨て和】O(log(n + m))
+/*
+* Σi∈[0..n) floor((a i + b) / m) を返す．
+*/
+template <class T>
+T arithmetic_floor_sum(T n, T m, T a, T b) {
+	// 参考 : https://twitter.com/kyopro_friends/status/1304063876019793921?ref_src=twsrc%5Etfw
+	// verify : https://judge.yosupo.jp/problem/sum_of_floor_of_linear
+
+	//【方法】
+	// m < 0 なら a, b, m をそれぞれ -1 倍して m > 0 とする．
+	//		a = aq m + ar, b = bq m + br (0 ≦ ar, br < m)
+	// と表すと，
+	//		Σi∈[0..n) floor((a i + b) / m)
+	//		= Σi∈[0..n) (floor((ar i + br) / m) + (aq i + bq))
+	//		= Σi∈[0..n) floor((ar i + br) / m) + (aq n(n-1)/2 + bq n)
+	// となるので 0 ≦ a < m, 0 ≦ b < m として一般性を失わない．
+	// 
+	// 求めるべき値は，領域
+	//		{(x, y) | 0 ≦ x < n かつ 0 < y ≦ (a x + b) / m}
+	// に含まれる格子点の個数である．u1 = floor((a x + b) / m) とおき，変数変換
+	//		v = n - x, u = u1 - y
+	// を施すと，直線 y = (a x + b) / m の式は
+	//		u1 - u = (a (n - v) + b) / m
+	//		⇔ m u1 - m u = a n - a v + b
+	//		⇔ a v = m u + a n + b - m u1
+	//		⇔ v = (m u + (a n + b - m u1)) / a
+	// と書き換えられるので，先の領域は
+	//		{(u, v) | 0 ≦ u < u1 かつ 0 < v ≦ (m u + (a n + b - m u1)) / a}
+	// となる．ここに含まれる格子点の個数は
+	//		Σi∈[0..u1) floor((m i + (a n + b - m u1)) / a)
+	// であり，分母を m からより小さい a に書き換えられた．
+	//
+	// 次のステップに進む前に m ← m mod a とするので，収束の速さはユークリッドの互除法と同じである．
+
+	Assert(m != 0);
+	if (n <= 0) return 0;
+
+	T res = 0;
+
+	// m < 0 の場合，分母分子を -1 倍して m > 0 とする．
+	if (m < 0) { a *= -1; b *= -1; m *= -1; }
+
+	// a を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ a < m とする．
+	res += (a / m - (T)(a % m < 0)) * (n * (n - 1) / 2);
+	a = smod(a, m);
+
+	// b を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ b < m とする．
+	res += (b / m - (T)(b % m < 0)) * n;
+	b = smod(b, m);
+
+	while (a > 0) {
+		T nn = (a * n + b) / m;
+		T nm = a;
+		T na = m;
+		T nb = a * n + b - m * nn;
+
+		res += (na / nm) * (nn * (nn - 1) / 2);
+		na %= nm;
+
+		res += (nb / nm) * nn;
+		nb %= nm;
+
+		n = nn; m = nm; a = na; b = nb;
+	}
+
+	return res;
+}
+
+
+//【一次式の線形加重 & 平方切り捨て和】O(log(n + m))
+/*
+*	S1 = Σi∈[0..n) i floor((a i + b) / m)
+*	S2 = Σi∈[0..n) floor((a i + b) / m)^2
+*	S3 = Σi∈[0..n) floor((a i + b) / m)
+* とおき，3 つ組 (S1, S2, S3) を返す．
+*/
+template <class T>
+tuple<T, T, T> arithmetic_linear_square_floor_sum(T n, T m, T a, T b) {
+	// verify : https://yukicoder.me/problems/no/2362
+
+	//【方法】
+	//【一次式の切り捨て和】と同じように分母がより小さい問題への帰着を目指す．
+	// ただし同じ形に帰着できるわけではないので，
+	//		S1 = Σi∈[0..n) i floor((a i + b) / m)
+	//		S2 = Σi∈[0..n) floor((a i + b) / m)^2
+	//		S3 = Σi∈[0..n) floor((a i + b) / m) （通常の FloorSum）
+	// の 3 つを並行して計算していく．
+
+	Assert(m != 0);
+	if (n <= 0) return make_tuple(T(0), T(0), T(0));
+
+	// m < 0 の場合，分母分子を -1 倍して m > 0 とする．
+	if (m < 0) { a *= -1; b *= -1; m *= -1; }
+
+	// a を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ a < m とする．
+	T A = a / m - (T)(a % m < 0);
+	a = smod(a, m);
+
+	// b を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ b < m とする．
+	T B = b / m - (T)(b % m < 0);
+	b = smod(b, m);
+
+	function<tuple<T, T, T>(T, T, T, T)> rf1, rf2;
+
+	// a ≧ m, b ≧ 0 用
+	rf1 = [&](T n, T m, T a, T b) {
+		if (n == 0) return make_tuple(T(0), T(0), T(0));
+
+		T A = a / m, B = b / m;
+		T n3 = n * (n - 1) * (2 * n - 1) / 6, n2 = n * (n - 1) / 2;
+
+		T s1 = A * n3 + B * n2;
+		T s2 = A * A * n3 + 2 * A * B * n2 + B * B * n;
+		T s3 = A * n2 + B * n;
+
+		a %= m; b %= m;
+		auto [ns1, ns2, ns3] = rf2(n, m, a, b);
+
+		s1 += ns1;
+		s2 += ns2 + 2 * A * ns1 + 2 * B * ns3;
+		s3 += ns3;
+
+		return make_tuple(s1, s2, s3);
+	};
+
+	// 0 ≦ a < m, 0 ≦ b < m 用
+	rf2 = [&](T n, T m, T a, T b) {
+		if (a == 0) return make_tuple(T(0), T(0), T(0));
+
+		T nn = (a * n + b) / m;
+		T nm = a;
+		T na = m;
+		T nb = a * n + b - m * nn;
+		auto [ns1, ns2, ns3] = rf1(nn, nm, na, nb);
+
+		T s1 = ((2 * n - 1) * ns3 - ns2) / 2;
+		T s2 = (2 * nn - 1) * ns3 - 2 * ns1;
+		T s3 = ns3;
+
+		return make_tuple(s1, s2, s3);
+	};
+
+	auto [s1, s2, s3] = rf2(n, m, a, b);
+
+	T n2 = n * (n - 1) / 2;
+	T n3 = n * (n - 1) * (2 * n - 1) / 6;
+
+	s2 += 2 * A * s1;
+	s2 += 2 * B * s3;
+	s2 += A * A * n3;
+	s2 += 2 * A * B * n2;
+	s2 += B * B * n;
+
+	s1 += A * n3;
+	s1 += B * n2;
+
+	s3 += A * n2;
+	s3 += B * n;
+
+	return { s1, s2, s3 };
+}
+
+
+//【一次式の積の切り捨て和】O(log(n + m))
+/*
+* Σi∈[0..n) floor((a i + b1) / m) floor((a i + b2) / m) を返す．
+*
+* 利用：【一次式の線形加重 & 平方切り捨て和】
+*/
+template <class T>
+T arithmetic_multiple_floor_sum(T n, T m, T a, T b1, T b2) {
+	// verify : https://atcoder.jp/contests/arc182/tasks/arc182_e
+
+	//【方法】
+	// 0 ≦ b1 ≦ b2 < m とすれば，恒等式
+	//		y(y+1) = 1/2 (y^2 + (y+1)^2 + y - (y+1))
+	//		y y = 1/2 (y^2 + y^2 + y - y)
+	// を用いて積を分離できる．
+
+	Assert(m != 0);
+	if (n <= 0) return T(0);
+
+	// m < 0 の場合，分母分子を -1 倍して m > 0 とする．
+	if (m < 0) { a *= -1; b1 *= -1; b2 *= -1; m *= -1; }
+
+	// b を m だけ増減させた場合の影響は floor なしの和で計算できるので，0 ≦ b < m とする．
+	T B1 = b1 / m - (T)(b1 % m < 0); b1 = smod(b1, m);
+	T B2 = b2 / m - (T)(b2 % m < 0); b2 = smod(b2, m);
+
+	// 0 ≦ b1 ≦ b2 < m とする．
+	if (b1 > b2) { swap(b1, b2); swap(B1, B2); }
+
+	auto [s1_ln, s1_sq, s1] = arithmetic_linear_square_floor_sum(n, m, a, b1);
+	auto [s2_ln, s2_sq, s2] = arithmetic_linear_square_floor_sum(n, m, a, b2);
+
+	T res = 0;
+	res += (s1_sq + s2_sq + s1 - s2) / 2;
+	res += B1 * s2;
+	res += B2 * s1;
+	res += B1 * B2 * n;
+
+	return res;
+}
+
+
+//【一次式の剰余の総和】O(log(n + m))（オーバーフロー注意）
+/*
+* Σi∈[0..n) ((a i + b) mod m) を返す．
+*
+* 利用：【一次式の切り捨て和】
+*/
+template <class T>
+T arithmetic_mod_sum(T n, T m, T a, T b) {
+	//【方法】
+	// 剰余と切り捨て商との関係より
+	//		Σi∈[0..n) (a i + b) mod m
+	//		= Σi∈[0..n) (a i + b) - m Σi∈[0..n) floor((a i + b) / m)
+	//		= a n(n-1)/2 + b n - m Σi∈[0..n) floor((a i + b) / m)
+	// を得る．よって floor_sum を利用できる．
+
+	Assert(m > 0);
+	if (n <= 0) return 0;
+
+	a = smod(a, m); b = smod(b, m);
+
+	T res = a * n * (n - 1) / 2 + b * n;
+	res -= m * arithmetic_floor_sum(n, m, a, b);
+
+	return res;
+}
+
+
+//【一次式の剰余の総和（範囲指定）】O(log(n + m))（オーバーフロー注意）
+/*
+* 各 i∈[0..n) に対する (a i + b) mod m のうち，値が [l..r) に属するものの総和を返す．
+*
+* 利用：【一次式の線形加重 & 平方切り捨て和】,【一次式の積の切り捨て和】
+*/
+template <class T>
+T arithmetic_mod_sum(T n, T m, T a, T b, T l, T r) {
+	// verify : https://atcoder.jp/contests/arc182/tasks/arc182_e
+
+	//【方法】
+	// 条件を同値変形していくと，
+	//		l ≦ (ai+b) mod m < r
+	//		⇔ l ≦ (ai+b) - floor((ai+b)/m) * m < r
+	//		⇔ (ai+b-l)/m ≧ floor((ai+b)/m) > (ai+b-r)/m
+	// となる．中辺が整数であることと
+	//		(左辺) - (右辺) = (r-l)/m ≦ 1
+	// であることに注意すると，
+	//		(ai+b) mod m ∈ [l..r)  ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 1
+	//		(ai+b) mod m !∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 0
+	// が分るので，これに重み (ai+b) mod m を付けて足し合わせれば良い．
+	//		((ai+b) mod m) floor((ai+b')/m)
+	//		= (ai+b - floor((ai+b)/m) m) floor((ai+b')/m)
+	// なので【一次式の線形加重切り捨て和】や【一次式の積の切り捨て和】が利用できる．
+
+	Assert(m > 0);
+
+	if (n <= 0) return 0;
+
+	chmax(l, T(0)); chmin(r, m);
+	if (l >= r) return 0;
+
+	T res = 0;
+
+	auto [l1, l2, l3] = arithmetic_linear_square_floor_sum(n, m, a, b - l);
+	res += a * l1 + b * l3 - m * arithmetic_multiple_floor_sum(n, m, a, b - l, b);
+
+	auto [r1, r2, r3] = arithmetic_linear_square_floor_sum(n, m, a, b - r);
+	res -= a * r1 + b * r3 - m * arithmetic_multiple_floor_sum(n, m, a, b - r, b);
+
+	return res;
+}
+
+
+//【連続自然数の popcount の総和】O(log N)
 /*
 * Σi∈[0..N) popcount(i) を返す．
 */
@@ -33,7 +310,38 @@ T continuous_popcount_sum(ll N) {
 }
 
 
-//【連続自然数の XOR】O(1)
+//【一次式の popcount の総和】O(log(an+b) log n)
+/*
+* Σi∈[0..n) popcount(a i + b) を返す．
+*
+* 利用：【一次式の切り捨て和】
+*/
+template <class T>
+T arithmetic_popcount_sum(ll n, ll a, ll b) {
+	// verify : https://atcoder.jp/contests/abc283/tasks/abc283_h
+
+	//【方法】
+	// popcount(x) は
+	//		popcount(x) = x - Σk∈[1..∞) floor(x / 2^k)
+	// と表すことができる．これを用いて変形すると，
+	//		Σi∈[0..n) popcount(ai+b)
+	//		= Σi∈[0..n) ((ai+b) - Σk∈[1..∞) floor((ai+b) / 2^k))
+	//		= Σi∈[0..n) (ai+b) - Σk∈[1..∞) Σi∈[0..n) floor((ai+b) / 2^k)
+	// となる．第一項は等差数列の和の公式より
+	//		Σi∈[0..n) (ai+b) = a n(n-1)/2 + b n
+	// となり，第二項は k 毎に floor_sum を用いれば良い．
+
+	T res = a * (n & 1 ? (T((n - 1) / 2) * n) : T(n / 2) * (n - 1));
+	res += T(b) * n;
+
+	int K = msb(a * (n - 1) + b);
+	repi(k, 1, K) res -= arithmetic_floor_sum<T>(n, 1LL << k, a, b);
+
+	return res;
+}
+
+
+//【連続自然数の総 XOR】O(1)
 /*
 * XOR[0..n) を返す．
 */
@@ -63,7 +371,7 @@ T continuous_XOR(T n) {
 }
 
 
-//【一次式の総 XOR】O((log(an+b))^2)
+//【一次式の総 XOR】O(log(an+b) log n)
 /*
 * XOR_i∈[0..n) (ai+b) を返す．
 *
@@ -81,7 +389,7 @@ T arithmetic_XOR(T n, T a, T b) {
 
 	T res = 0;
 	repi(k, 0, K) {
-		ll val = floor_sum_large(n, 1LL << k, a, b);
+		ll val = arithmetic_floor_sum(n, 1LL << k, a, b);
 		if (val & 1LL) res |= T(1) << k;
 	}
 

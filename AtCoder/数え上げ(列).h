@@ -5,6 +5,72 @@
 // ■■■■■ 数え上げ（列） ■■■■■
 
 
+//【整数の数え上げ（余り指定）】O(1)
+/*
+* x∈[l..r) で x ≡ k (mod m) を満たすものの個数を返す．
+*/
+template <class T>
+T count_by_reminder(T l, T r, T m, T k) {
+	// verify : https://atcoder.jp/contests/abc334/tasks/abc334_b
+
+	//【方法】
+	// l = k (mod m) になるように l を増加させても答えは変わらない．
+	// こうすれば個数は [0..n) 内の m の倍数の数え上げと同様に考えて
+	//		(r - l + m - 1) / m
+	// で求められる．
+
+	Assert(m > 0);
+	if (l >= r) return 0;
+
+	k = smod(k, m);
+
+	l -= k;
+	T l2 = l + smod(-l, m);
+	l2 += k;
+
+	return (r - l2 + m - 1) / m;
+}
+
+
+//【一次式の剰余の数え上げ（範囲指定）】O(log(n + m))
+/*
+* 各 i∈[0..n) に対する (a i + b) mod m のうち，値が [l..r) に属するものの個数を返す．
+*
+* 利用：【一次式の切り捨て和】
+*/
+template <class T>
+T count_arithmetic_mod(T n, T m, T a, T b, T l, T r) {
+	// 参考 : https://twitter.com/maspy_stars/status/1649421402573766656
+	// verify : https://yukicoder.me/problems/no/2280
+
+	//【方法】
+	// 条件を同値変形していくと，
+	//		l ≦ (ai+b) mod m < r
+	//		⇔ l ≦ (ai+b) - floor((ai+b)/m) * m < r
+	//		⇔ (ai+b-l)/m ≧ floor((ai+b)/m) > (ai+b-r)/m
+	// となる．中辺が整数であることと
+	//		(左辺) - (右辺) = (r-l)/m ≦ 1
+	// であることに注意すると，
+	//		(ai+b) mod m ∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 1
+	//		(ai+b) mod m !∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 0
+	// が分かる．よって floor_sum の差を取れば良い．
+
+	Assert(m > 0);
+
+	if (n <= 0) return 0;
+
+	chmax(l, T(0)); chmin(r, m);
+	if (l >= r) return 0;
+
+	a = smod(a, m); b = smod(b, m);
+
+	T res = arithmetic_floor_sum(n, m, a, b - l);
+	res -= arithmetic_floor_sum(n, m, a, b - r);
+
+	return res;
+}
+
+
 //【広義単調増加列の数え上げ（上限指定，mod 998244353）】O((n+m)log(n+m)^2) (m = a_max[n-1])
 /*
 * 各 i について 0 ≦ a[i] ≦ a_max[i] を満たす広義単調増加列 a[0..n) の個数を返す．
