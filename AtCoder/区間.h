@@ -179,6 +179,45 @@ void two_pointers(const vector<S>& a, const FUNC& f, vi& max_right, vi& min_left
 }
 
 
+//【XOR 区間の分割】O(log max(r, c))
+/*
+* 集合 [l..r) XOR c を O(log max(r, c)) 個の半開区間に分割し，そのリストを返す．
+*/
+template <class T>
+vector<pair<T, T>> XOR_interval_division(T l, T r, T c) {
+	// verify : https://yukicoder.me/problems/no/2505
+
+	chmax(l, T(0));
+	if (l >= r) return vector<pair<T, T>>();
+
+	int n = max(msb(r), msb(c));
+
+	vector<pair<T, T>> lrs; T val_l = 0, val_r = 0; bool eq = true;
+	repir(i, n, 0) {
+		T lb = getb(l, i), rb = getb(r, i), cb = getb(c, i);
+
+		if (eq) {
+			if (lb != rb) eq = false;
+		}
+		else {
+			if (!lb) {
+				T val_l2 = val_l + ((1 ^ cb) << i);
+				lrs.emplace_back(val_l2, val_l2 + (T(1) << i));
+			}
+			if (rb) {
+				T val_r2 = val_r + ((0 ^ cb) << i);
+				lrs.emplace_back(val_r2, val_r2 + (T(1) << i));
+			}
+		}
+		val_l += (lb ^ cb) << i;
+		val_r += (rb ^ cb) << i;
+	}
+	lrs.emplace_back(val_l, val_l + 1);
+
+	return lrs;
+}
+
+
 //【区間の線形スコア → 差】
 /*
 * 区間のスコアに線形性があるとき，

@@ -173,6 +173,8 @@ vl highest_score_path(const WGraph& g) {
 * 各頂点からのパスの最大スコアを格納したリストを返す．
 */
 vl highest_score_path(const Graph& g, const vl& w) {
+	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_target
+
 	int n = sz(g);
 
 	// sc[s] : 頂点 s からのパスの最大スコア
@@ -204,6 +206,8 @@ vl highest_score_path(const Graph& g, const vl& w) {
 * 最大スコアを返し，パスに属する頂点列を path に格納する．
 */
 ll highest_score_path(const Graph& g, const vl& w, int r, vi* path = nullptr) {
+	// verify : https://judge.yosupo.jp/problem/longest_increasing_subsequence
+
 	int n = sz(g);
 
 	// dp[s] : 頂点 s からの最大スコア
@@ -333,9 +337,9 @@ vb reachability_DAG(const Graph& g, const vi& u, const vi& v) {
 }
 
 
-//【到達可能な頂点数】
+//【到達可能な頂点数 → 無理】
 /*
-* DAG g の各頂点から到達可能な頂点の個数を一括で求める問題を効率良く解く方法は知られていない．
+* DAG g の各頂点から到達可能な頂点の個数を一括で求める問題を O(m^(2-ε)) で解く方法は知られていない．
 * 
 * 参考 : https://twitter.com/noshi91/status/1633031948938645505
 */
@@ -351,13 +355,78 @@ vb reachability_DAG(const Graph& g, const vi& u, const vi& v) {
 */
 
 
-//【最小パス被覆（点素）】O( min(n^(2/3) (n + m), (n + m)^(3/2)) )（m : 辺の数）
+//【最小パス被覆（辺）】O(n (n + m) log n) ?（m : 辺の数）
 /*
-* DAG g の点素なパス被覆で最小のものの大きさを返す． 
+* DAG g の辺集合 E の，パスによる被覆で最小のものの大きさを返す．
+*
+* 利用：【一般化最小費用流】
+*/
+int minimum_path_edge_cover(const Graph& g) {
+	// verify : https://atcoder.jp/contests/abc374/tasks/abc374_g
+
+	int n = sz(g);
+
+	// 超頂点 ST を導入する．
+	int ST = n;
+	Generalized_min_cost_flow mcf(ST + 1);
+
+	rep(v, n) {
+		// ST から各頂点 v にコスト 1 の辺を張る（新たなパスを引く度にコスト 1）
+		mcf.add_cost_edge(ST, v, INFL, 1);
+
+		// 各頂点 v から ST に辺を張る．
+		mcf.add_cost_edge(v, ST, INFL, 0);
+	}
+
+	// g の各辺 s→t に対し，s から t に最小流量 1 の辺を張る（全ての辺を被覆しなければならない）
+	rep(s, n) repe(t, g[s]) {
+		mcf.add_cost_edge(s, t, 1, INFL, 0);
+	}
+
+	return (int)mcf.flow().second;
+}
+
+
+//【最小パス被覆（頂点）】O(n (n + m) log n) ?（m : 辺の数）
+/*
+* DAG g の頂点集合 V の，パスによる被覆で最小のものの大きさを返す．
+*
+* 利用：【一般化最小費用流】
+*/
+int minimum_path_vertex_cover(const Graph& g) {
+	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
+
+	int n = sz(g);
+
+	// 頂点 v を (v_in=2v, v_out=2v+1) と倍化し，超頂点 ST を導入する．
+	int ST = n * 2;
+	Generalized_min_cost_flow mcf(ST + 1);
+
+	rep(i, n) {
+		// ST から各頂点 v_in にコスト 1 の辺を張る（新たなパスを引く度にコスト 1）
+		mcf.add_cost_edge(ST, 2 * i, INFL, 1);
+
+		// 各頂点の v_in から v_out に最小流量 1 の辺を張る（全ての頂点を被覆しなければならない）
+		mcf.add_cost_edge(2 * i, 2 * i + 1, 1, INFL, 0);
+
+		// 各頂点から ST に辺を張る．
+		mcf.add_cost_edge(2 * i + 1, ST, INFL, 0);
+	}
+
+	// g に辺 s→t が存在するときに限り辺 s_out → t_in を張る（パスがここを通ることを許す）
+	rep(s, n) repe(t, g[s]) mcf.add_cost_edge(2 * s + 1, 2 * t, INFL, 0);
+
+	return (int)mcf.flow().second;
+}
+
+
+//【最小パス分割（頂点）】O( min(n^(2/3) (n + m), (n + m)^(3/2)) )（m : 辺の数）
+/*
+* DAG g の頂点集合 V の，パスによる分割で最小のものの大きさを返す．
 *
 * 利用：【二部グラフの最大マッチング】
 */
-int minimum_disjoint_path_cover(const Graph& g, vvi* paths = nullptr) {
+int minimum_path_vertex_partition(const Graph& g, vvi* paths = nullptr) {
 	// 参考 : https://kyopro.hateblo.jp/entry/2018/06/04/000659
 	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
 
@@ -367,7 +436,7 @@ int minimum_disjoint_path_cover(const Graph& g, vvi* paths = nullptr) {
 	Bipartite_matching bm(n, n);
 	rep(s, n) repe(t, g[s]) bm.add_edge(s, t);
 
-	// G の最大マッチングの大きさは，g の点素なパス被覆で最小のものの大きさに等しい．
+	// G の最大マッチングの大きさは，g のパス分割で最小のものの大きさに等しい．
 	int res = n - bm.solve();
 	if (paths == nullptr) return res;
 
@@ -385,42 +454,9 @@ int minimum_disjoint_path_cover(const Graph& g, vvi* paths = nullptr) {
 }
 
 
-//【最小パス被覆】O(n (n + m) log n) ?（m : 辺の数）
-/*
-* DAG g のパス被覆で最小のものの大きさを返す．
-*
-* 利用：【一般化最小費用流】
-*/
-int minimum_path_cover(const Graph& g) {
-	// verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
-
-	int n = sz(g);
-
-	// 頂点 v を (v_in=2v, v_out=2v+1) と倍化し，始点 ST を導入する．
-	int ST = n * 2;
-	Generalized_min_cost_flow mcf(ST + 1);
-
-	rep(i, n) {
-		// ST から各頂点 v_in にコスト 1 の辺を張る（パスを引く度にコスト 1）
-		mcf.add_cost_edge(ST, 2 * i, INFL, 1);
-
-		// 各頂点の v_in から v_out に最小流量 1 の辺を張る（全ての頂点を被覆しなければならない）
-		mcf.add_cost_edge(2 * i, 2 * i + 1, 1, INFL, 0);
-
-		// 各頂点から ST に辺を張る（流量は任意）
-		mcf.add_cost_edge(2 * i + 1, ST, INFL, 0);
-	}
-
-	// g に辺 s→t が存在するときに限り辺 s_out → t_in を張る（パスがここを通ることを許す）
-	rep(s, n) repe(t, g[s]) mcf.add_cost_edge(2 * s + 1, 2 * t, INFL, 0);
-
-	return (int)mcf.flow().second;
-}
-
-
 //【最大スコア半鎖】O(n^2 m)
 /*
-* 頂点 s にスコア w[s] の与えられた DAG g のスコア最大半鎖のスコアを返す．
+* 頂点 s にスコア w[s] の与えられた DAG g の最大スコア半鎖のスコアを返す．
 *
 * 利用：【燃やす埋める問題】
 */
@@ -494,10 +530,10 @@ ll highest_score_antichain(const Graph& g, const vl w) {
 }
 
 
-//【推移的 DAG の最小パス被覆】
+//【推移的 DAG の最小パス頂点被覆】
 /*
 * DAG g が推移的（辺 s→t, t→u がある ⇒ 辺 s→u がある）ならば，
-* 点素な最小パス被覆の大きさと（点素とは限らない）最小パス被覆の大きさは等しい．
+* その頂点集合 V の最小パス分割の大きさと最小パス被覆の大きさは等しい．
 * 
 * verify : https://atcoder.jp/contests/abc237/tasks/abc237_h
 */

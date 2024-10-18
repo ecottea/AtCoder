@@ -220,9 +220,9 @@ vm bernoulli_all_n(int n, const Factorial_mint& fm) {
 	// verify : https://judge.yosupo.jp/problem/bernoulli_number
 
 	//【方法】
-	// ベルヌーイ数 B(n) はそもそも
-	//		z / (exp(z) - 1) = Σn=[0..∞) B(n) / n! z^n
-	// で定義される．
+	// ベルヌーイ数 B(n) はそもそも指数型母関数を用いて
+	//		z/(exp(z)-1) = Σn=[0..∞) B(n) z^n/n!
+	// と定義される．これを計算すれば良い．
 
 	MFPS b(0, n);
 	rep(i, n) b[i] = fm.fact_inv(i + 1);

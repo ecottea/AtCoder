@@ -42,6 +42,7 @@ class Substring_compare {
 		chmax(l1, 0); chmax(l2, 0); chmin(r1, n); chmin(r2, n);
 
 		int w1 = r1 - l1, w2 = r2 - l2;
+		if (w1 == 0 || w2 == 0) return 0;
 		if (l1 == l2) return min(w1, w2);
 
 		int i1 = sa_inv[l1], i2 = sa_inv[l2];
@@ -55,7 +56,7 @@ class Substring_compare {
 public:
 	// 文字列 s[0..n) で初期化する．
 	Substring_compare(const STR& s) : n(sz(s)), sa_inv(n) {
-		// verify : https://atcoder.jp/contests/toyota2023spring-final/tasks/toyota2023spring_final_d
+		// verify : https://judge.yosupo.jp/problem/runenumerate
 
 		if (n == 1) return;
 
@@ -77,7 +78,7 @@ public:
 
 	// s[l1..r1) と s[l2..r2) の LCP の長さを返す．
 	int lcp(int l1, int r1, int l2, int r2) const {
-		// verify : https://atcoder.jp/contests/toyota2023spring-final/tasks/toyota2023spring_final_d
+		// verify : https://judge.yosupo.jp/problem/runenumerate
 
 		return clamp_lcp(l1, r1, l2, r2);
 	}
@@ -216,7 +217,7 @@ vi lex_order_allseq(int k, int n, ll d) {
 * s[0..n) に対し k 回以下の隣接互換を適用して得られる辞書順最小文字列を返す．
 */
 template <class T> pair<T, int> opsba(pair<T, int> a, pair<T, int> b) { return min(a, b); }
-template <class T> pair<T, int> esba() { return { numeric_limits<T>::max(), -1 }; }
+template <class T> pair<T, int> esba() { return { T(INFL), -1 }; }
 int opsba2(int a, int b) { return a + b; }
 int esba2() { return 0; }
 template <class T>
@@ -228,26 +229,22 @@ vector<T> smallest_by_adjswap(const vector<T>& s, ll k) {
 	vector<pair<T, int>> ini(n);
 	rep(i, n) ini[i] = { s[i], i };
 	segtree<pair<T, int>, opsba<T>, esba<T>> S(ini);
-	dump(S);
-
+	
 	// rem[i] : s[i] が未使用か
 	vi ini2(n, 1);
 	segtree<int, opsba2, esba2> rem(ini2);
-	dump(rem);
-
+	
 	vector<T> res(n);
 
 	// 位置 l に移動できる範囲の文字のうち最小次いで最左のものを貪欲に移動する．
 	rep(l, n) {
 		int r = rem.max_right(0, [&](int cnt) { return cnt <= k + 1; });
 		auto [x, i] = S.prod(0, r);
-		dump(r, x, i);
-
+		
 		res[l] = x;
-		S.set(i, { numeric_limits<T>::max(), -1 });
+		S.set(i, { T(INFL), -1 });
 		rem.set(i, 0);
 		k -= rem.prod(0, i);
-		dump(S); dump(rem); dump(k);
 	}
 
 	return res;

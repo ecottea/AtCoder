@@ -31,7 +31,7 @@
 * A * x : O(n m)
 *	n×m 行列 A と n 次元列ベクトル x の積を返す．
 *
-* x * A : O(n m)
+* x * A : O(n m)（やや遅い）
 *	m 次元行ベクトル x と n×m 行列 A の積を返す．
 *
 * A * B : O(n m l)
@@ -191,7 +191,7 @@ struct Matrix {
 * A * x : O(n^2)
 *	n×n 行列 A と n 次元列ベクトル array<T, n> x の積を返す．
 *
-* x * A : O(n^2)
+* x * A : O(n^2)（やや遅い）
 *	n 次元行ベクトル array<T, n> x と n×n 行列 A の積を返す．
 *
 * A * B : O(n^3)
@@ -388,7 +388,7 @@ vector<T> gauss_jordan_elimination(const Matrix<T>& A, const vector<T>& b, vecto
 	while (i < n && j <= m) {
 		// 注目列の下方の行から非 0 成分を見つける．
 		int i2 = i;
-		while (i2 < n && v[i2][j] == 0) i2++;
+		while (i2 < n && v[i2][j] == T(0)) i2++;
 
 		// 見つからなかったら注目位置を右に移す．
 		if (i2 == n) { j++; continue; }
@@ -435,7 +435,7 @@ vector<T> gauss_jordan_elimination(const Matrix<T>& A, const vector<T>& b, vecto
 			}
 
 			vector<T> x(m);
-			x[j] = 1;
+			x[j] = T(1);
 			rep(i2, i) x[pivots[i2]] = -v[i2][j];
 			xs->emplace_back(move(x));
 		}
@@ -504,6 +504,20 @@ vector<T> gauss_jordan_elimination_Lhessenberg(const Matrix<T>& L, const vector<
 
 	return sol;
 }
+
+
+//【線形方程式（下ヘッセンベルグ行列，スパース）】O(n + m)
+/*
+* 与えられた n 次スパース下ヘッセンベルグ行列 L と n 次元ベクトル b に対し，
+* 線形方程式 L x = b の一意解 x（n 次元ベクトル）を返すには次のようにすれば良い：
+*	x[0] = z とおく．
+*	第 0 行より，L[0][0] x[0] + L[0][1] x[1] = b[0] を得るので x[1] を z で表す．
+*	[1..n-2] 行目も同様にし，x[1..n-1] 全てを z で表す．
+*	第 n-1 行より得られる関係式を用いて z = x[0] を決定する．
+*	x[1..n-1] を z で表した式に先の値を代入する．
+* 
+* verify : https://yukicoder.me/problems/no/2905
+*/
 
 
 //【線形方程式（多重対角行列）】O(n k^2)

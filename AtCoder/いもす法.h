@@ -488,6 +488,8 @@ public:
 
 	// v[l..r) ‚É v[i] += a i + b ‚Æ‚·‚é€”õ‚ğs‚¤D
 	void add(int l, int r, T a, T b) {
+		// verify : https://judge.yosupo.jp/problem/range_linear_add_range_min
+
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return;
 

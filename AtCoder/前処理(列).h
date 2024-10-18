@@ -127,7 +127,7 @@ public:
 
 	// 自身より小さい数の次の位置を一括計算する．eq = true にすると自身以下とする．
 	void build_next_less(bool eq = false) {
-		// verify : https://atcoder.jp/contests/ddcc2020-final/tasks/ddcc2020_final_c
+		// verify : https://judge.yosupo.jp/problem/lyndon_factorization
 
 		nl.assign(n, n);
 		stack<pair<int, T>> st;
@@ -157,6 +157,8 @@ public:
 
 	// a[0..i) 内にある a[i] に等しい要素の最右位置を返す（なければ -1）
 	int prev_equal(int i) {
+		// verify : https://atcoder.jp/contests/abc371/tasks/abc371_e
+
 		Assert(0 <= i && i < n);
 		return pe[i];
 	}
@@ -187,7 +189,7 @@ public:
 
 	// a(i..n) 内にある a[i] より小さい[以下の] 要素の最左位置を返す（なければ n）
 	int next_less(int i) {
-		// verify : https://atcoder.jp/contests/ddcc2020-final/tasks/ddcc2020_final_c
+		// verify : https://judge.yosupo.jp/problem/lyndon_factorization
 
 		Assert(0 <= i && i < n);
 		return nl[i];

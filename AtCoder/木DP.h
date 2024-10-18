@@ -695,7 +695,7 @@ class Static_top_tree {
 	vector<Node*> st;
 
 public:
-	// r を根とする根付き木 g で初期化する．
+	// rt を根とする根付き木 g で初期化する．
 	Static_top_tree(const Graph& g, int rt) {
 		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
 
@@ -882,6 +882,610 @@ public:
 		return f.a * x + f.b;
 	}
 	Static_top_tree<S, F, get_val, get_fnc, add_edge, merge, add_vtx, comp, act> G(g, 0);
+	*/
+};
+
+
+//【static top tree（全方位）】
+/*
+* Static_top_tree_rerooting<H, L, H2, L2, ...略>(Graph g) : O(n (log n)^2)
+*	木 g で初期化する．
+*
+* update(int s) : O((log n)^2)
+*	頂点 s の情報の更新を反映する．
+*
+* H2 get(int r) : O((log n)^2)
+*	r を根とした根付き木全体に対応する 2 変数関数を返す．
+*
+* テンプレート引数が表す関数の意味の説明は多すぎるのでマニュアルへ．
+*/
+template <class H, class L, class H2, class L2, H(*get_H)(int), H(*L_to_H)(const L&, int), L(*H_to_L)(const H&), H2(*H_to_H2)(const H&), H2(*L2_to_H2)(const L2&, int), L2(*H2_to_L2)(const H2&), H(*comp_H)(const H&, const H&), L(*comp_L)(const L&, const L&), H2(*comp_H2u)(const H2&, const H&), H2(*comp_H2d)(const H2&, const H&), L2(*comp_L2)(const L2&, const L&)>
+class Static_top_tree_rerooting {
+	struct Node {
+		// tp : ノードのタイプ
+		//	H: heavy path, L: light child
+		char tp = '?';
+
+		// id : heavy path ならその根，light child ならその親
+		//	ただし二分木の構築後は不要になるので，使い回して参照すべき頂点番号を表す．
+		int id = -1;
+
+		// [l..r) : heavy path, light child 共にどの範囲を見ているか
+		int l = -1, r = -1;
+
+		// pp : 親ノードへのポインタ，lp[rp] : 左[右]の子ノードへのポインタ
+		//	ただし子が 1 つの場合は lp のみを使用する．
+		Node* pp = nullptr, * lp = nullptr, * rp = nullptr;
+
+		// f : H 上の 1 変数関数
+		H f, fR;
+
+		// g : L 上の 1 変数関数
+		L g;
+	};
+
+	// root : static top tree の根（根付き木全体に対応する）
+	Node* root;
+
+	// st[s] : 頂点 s の変更があったとき，どのノードから更新を始めればいいか
+	vector<Node*> st;
+
+public:
+	// 木 g で初期化する．
+	Static_top_tree_rerooting(const Graph& g) {
+		// verify : https://judge.yosupo.jp/problem/point_set_tree_path_composite_sum
+
+		int n = sz(g);
+
+		// j_max[s] : s の重さ最大の部分木が何番目か
+		vi j_max(n, -1);
+
+		// 部分木の重さを調べる．
+		function<int(int, int)> dfs_wgt = [&](int s, int p) {
+			int ws = 0; int wt_max = -INF;
+
+			rep(j, sz(g[s])) {
+				auto t = g[s][j];
+				if (t == p) continue;
+
+				int wt = dfs_wgt(t, s);
+				ws += wt + 1;
+				if (chmax(wt_max, wt)) j_max[s] = j;
+			}
+			return ws;
+		};
+		dfs_wgt(0, -1);
+
+		// hp[s] : 根を s とする heavy path を成す頂点の列（深さ降順）
+		vvi hp(n);
+
+		// lc[s] : 頂点 s の light child のリスト
+		vvi lc(n);
+
+		// HL 分解を行う．
+		function<void(int, int, int)> dfs_hld = [&](int s, int p, int r) {
+			hp[r].push_back(s);
+
+			if (j_max[s] != -1) {
+				int t = g[s][j_max[s]];
+				dfs_hld(t, s, r);
+			}
+
+			rep(j, sz(g[s])) {
+				int t = g[s][j];
+				if (t == p || j == j_max[s]) continue;
+
+				lc[s].push_back(t);
+
+				dfs_hld(t, s, t);
+			}
+		};
+		dfs_hld(0, -1, 0);
+
+		root = new Node{ 'H', 0, 0, sz(hp[0]) };
+		st.resize(n);
+
+		// トップダウンに二分木を構築する．
+		function<void(Node*)> dfs_btree = [&](Node* p) {
+			if (p->tp == 'H') {
+				if (p->r - p->l > 1) {
+					int m = (p->l + p->r) / 2;
+
+					p->lp = new Node{ 'H', p->id, p->l, m, p };
+					dfs_btree(p->lp);
+
+					p->rp = new Node{ 'H', p->id, m, p->r, p };
+					dfs_btree(p->rp);
+
+					p->f = comp_H(p->lp->f, p->rp->f);
+					p->fR = comp_H(p->rp->fR, p->lp->fR);
+				}
+				else {
+					p->id = hp[p->id][p->l]; // 使い回して頂点番号を入れておく
+					st[p->id] = p;
+
+					int r = sz(lc[p->id]);
+					if (r > 0) {
+						p->lp = new Node{ 'L', p->id, 0, r, p };
+						dfs_btree(p->lp);
+
+						p->f = p->fR = L_to_H(p->lp->g, p->id);
+					}
+					else {
+						p->f = p->fR = get_H(p->id);
+					}
+				}
+			}
+			else if (p->tp == 'L') {
+				if (p->r - p->l > 1) {
+					int m = (p->l + p->r) / 2;
+
+					p->lp = new Node{ 'L', p->id, p->l, m, p };
+					dfs_btree(p->lp);
+
+					p->rp = new Node{ 'L', p->id, m, p->r, p };
+					dfs_btree(p->rp);
+
+					p->g = comp_L(p->lp->g, p->rp->g);
+				}
+				else {
+					p->id = lc[p->id][p->l]; // 使い回して頂点番号を入れておく
+					int r = sz(hp[p->id]);
+
+					p->lp = new Node{ 'H', p->id, 0, r, p };
+					dfs_btree(p->lp);
+
+					p->g = H_to_L(p->lp->f); // この向きでダメなときはどうせ再計算している
+				}
+			}
+		};
+		dfs_btree(root);
+	}
+
+	// 頂点 s の情報の更新を反映する．
+	void update(int s) {
+		// verify : https://judge.yosupo.jp/problem/point_set_tree_path_composite_sum
+
+		Node* p = st[s];
+
+		// ボトムアップに必要な箇所のみ更新する．
+		while (p) {
+			if (p->tp == 'H') {
+				// 子が居ない場合
+				if (!p->lp) {
+					p->f = p->fR = get_H(p->id);
+				}
+				// 子が L 1 つの場合
+				else if (!p->rp) {
+					p->f = p->fR = L_to_H(p->lp->g, p->id);
+				}
+				// 子が H 2 つの場合
+				else {
+					p->f = comp_H(p->lp->f, p->rp->f);
+					p->fR = comp_H(p->rp->fR, p->lp->fR);
+				}
+			}
+			else if (p->tp == 'L') {
+				// 子が H 1 つの場合
+				if (!p->rp) {
+					p->g = H_to_L(p->lp->f); // この向きでダメなときはどうせ再計算している
+				}
+				// 子が L 2 つの場合
+				else {
+					p->g = comp_L(p->lp->g, p->rp->g);
+				}
+			}
+
+			p = p->pp;
+		}
+	}
+
+	// rt を根とみたときの根付き木全体の値を返す．
+	H2 get(int rt) {
+		// verify : https://judge.yosupo.jp/problem/point_set_tree_path_composite_sum
+
+		Node* p = st[rt];
+
+		H2 f2 = H_to_H2(p->f);
+		L2 g2;
+
+		// ボトムアップに計算する．
+		while (true) {
+			Node* pp = p->pp;
+			if (!pp) break;
+
+			if (pp->tp == 'H') {
+				if (p->tp == 'L') {
+					f2 = L2_to_H2(g2, pp->id);
+				}
+				else if (pp->lp == p) {
+					f2 = comp_H2d(f2, pp->rp->f);
+				}
+				else if (pp->rp == p) {
+					f2 = comp_H2u(f2, pp->lp->fR);
+				}
+			}
+			else {
+				if (p->tp == 'H') {
+					g2 = H2_to_L2(f2);
+				}
+				else if (pp->lp == p) {
+					g2 = comp_L2(g2, pp->rp->g);
+				}
+				else if (pp->rp == p) {
+					g2 = comp_L2(g2, pp->lp->g);
+				}
+			}
+
+			p = pp;
+		}
+
+		return f2;
+	}
+
+	/* 雛形
+	vm A, B, C; int n;
+	struct H {
+		mint a, b, v, c;
+	#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const H& x) {
+			os << '(' << x.a << "," << x.b << "," << x.v << "," << x.c << ')';
+			return os;
+		}
+	#endif
+	};
+	struct L {
+		mint v, c;
+	#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const L& x) {
+			os << '(' << x.v << "," << x.c << ')';
+			return os;
+		}
+	#endif
+	};
+	struct H2 {
+		mint al, bl, ah, bh, v, c;
+	#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const H2& x) {
+			os << '(' << x.al << "," << x.bl << "," << x.ah << "," << x.bh << "," << x.v << "," << x.c << ')';
+			return os;
+		}
+	#endif
+	};
+	struct L2 {
+		mint a, b, vl, cl, vh, ch;
+	#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const L2& x) {
+			os << '(' << x.a << "," << x.b << "," << x.vl << "," << x.cl << "," << x.vh << "," << x.ch << ')';
+			return os;
+		}
+	#endif
+	};
+	H get_H(int i) {
+		H h;
+
+		if (i < n) {
+			h.a = 1;
+			h.b = 0;
+			h.v = A[i];
+			h.c = 1;
+		}
+		else {
+			i -= n;
+			h.a = B[i];
+			h.b = C[i];
+			h.v = 0;
+			h.c = 0;
+		}
+
+		return h;
+	}
+	H L_to_H(const L& f, int i) {
+		H h;
+
+		if (i < n) {
+			h.a = 1;
+			h.b = 0;
+			h.v = 1 * (f.v + A[i]) + 0 * (f.c + 1);
+			h.c = f.c + 1;
+		}
+		else {
+			i -= n;
+			h.a = B[i];
+			h.b = C[i];
+			h.v = B[i] * (f.v + 0) + C[i] * (f.c + 1);
+			h.c = f.c + 0;
+		}
+
+		return h;
+	}
+	L H_to_L(const H& f) {
+		L h;
+
+		h.v = f.v;
+		h.c = f.c;
+
+		return h;
+	}
+	H2 H_to_H2(const H& f) {
+		H2 h;
+
+		h.al = h.ah = f.a;
+		h.bl = h.bh = f.b;
+		h.v = f.v;
+		h.c = f.c;
+
+		return h;
+	}
+	H2 L2_to_H2(const L2& f, int i) {
+		H2 h;
+
+		if (i < n) {
+			h.al = h.ah = f.a * 1;
+			h.bl = h.bh = f.a * 0 + f.b;
+			h.v = (h.al * f.vl + h.bl * f.cl) + (f.a * A[i] + f.b) + f.vh;
+			h.c = 1 + f.cl + f.ch;
+		}
+		else {
+			i -= n;
+			h.al = h.ah = f.a * B[i];
+			h.bl = h.bh = f.a * C[i] + f.b;
+			h.v = (h.al * f.vl + h.bl * f.cl) + (f.a * 0 + f.b) + f.vh;
+			h.c = 0 + f.cl + f.ch;
+		}
+
+		return h;
+	}
+	L2 H2_to_L2(const H2& f) {
+		L2 h;
+
+		h.a = f.ah;
+		h.b = f.bh;
+		h.vh = f.v;
+		h.ch = f.c;
+		h.vl = 0;
+		h.cl = 0;
+
+		return h;
+	}
+	H comp_H(const H& f, const H& g) {
+		H h;
+
+		h.a = f.a * g.a;
+		h.b = f.a * g.b + f.b;
+		h.v = f.a * g.v + f.b * g.c + f.v;
+		h.c = f.c + g.c;
+
+		return h;
+	}
+	L comp_L(const L& f, const L& g) {
+		L h;
+
+		h.v = f.v + g.v;
+		h.c = f.c + g.c;
+
+		return h;
+	}
+	H2 comp_H2u(const H2& f, const H& g) {
+		H2 h;
+
+		h.ah = f.ah * g.a;
+		h.bh = f.ah * g.b + f.bh;
+		h.al = f.al;
+		h.bl = f.bl;
+		h.v = f.ah * g.v + f.bh * g.c + f.v;
+		h.c = f.c + g.c;
+
+		return h;
+	}
+	H2 comp_H2d(const H2& f, const H& g) {
+		H2 h;
+
+		h.al = f.al * g.a;
+		h.bl = f.al * g.b + f.bl;
+		h.ah = f.ah;
+		h.bh = f.bh;
+		h.v = f.al * g.v + f.bl * g.c + f.v;
+		h.c = f.c + g.c;
+
+		return h;
+	}
+	L2 comp_L2(const L2& f, const L& g) {
+		L2 h;
+
+		h.a = f.a;
+		h.b = f.b;
+		h.vh = f.vh;
+		h.ch = f.ch;
+		h.vl = f.vl + g.v;
+		h.cl = f.cl + g.c;
+
+		return h;
+	}
+	Static_top_tree_rerooting<H, L, H2, L2, get_H, L_to_H, H_to_L, H_to_H2, L2_to_H2, H2_to_L2, comp_H, comp_L, comp_H2u, comp_H2d, comp_L2> G(g);
+	*/
+};
+
+
+//【動的全方位木 DP（直径短，次数小）】
+/*
+* Dynamic_rerooting<T, leaf, add_edge, merge, add_vertex>(Graph g, int r = 0) : O(n)
+*	r を根とする木 g で初期化する．
+*
+* set_root(int r) : O(diam deg)（diam : 木の直径，deg : 頂点の最大次数）
+*	根を r に変更する．
+*
+* update(int v) : O(diam deg)
+*	頂点 v の情報の更新を反映する．
+*
+* T get(int s) : O(1)
+*	頂点 s における木 DP の結果を返す．
+*
+* なおテンプレート引数が表す関数は以下の通りとする：
+*
+* T leaf(int s) :
+*   葉 s のみからなる部分木についての答えを返す．
+*
+* T add_edge(T x, int p, int s) :
+*   部分木 s についての暫定の答えが x のとき，
+*   辺 p'→s を追加した部分木 p' についての答えを返す（記号 ' は仮の頂点を表す）
+*
+* void merge(T& x, T y, int s) :
+*   仮の根 s' を共有する部分木 2 つに対する答えがそれぞれ x, y のとき，
+*   x 側に y 側をマージして部分木 s' についての答えを x に上書きする．
+*
+* void add_vertex(T& x, int s) :
+*	仮の根 s' をもつ部分木 s' に対する答えが x のとき，
+*	根 s を追加した部分木 s についての答えを x に上書きする．
+*/
+template <class T, T(*leaf)(int), T(*add_edge)(const T&, int, int), void(*merge)(T&, const T&, int), void(*add_vertex)(T&, int)>
+class Dynamic_rerooting {
+	int n; // 頂点数
+	Graph g; // 木
+	int r; // 根
+
+	vector<T> dp; // 木 DP の値
+
+	vi dep; // 初期化時の r を根としたときの深さ
+	vi par; // 初期化時の r を根としたときの親
+
+	// 再帰的に木全体の情報を計算する．
+	void build(int s, int p) {
+		// is_leaf : s が葉か
+		bool is_leaf = true;
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+
+			// 部分木 t についての情報を計算する．
+			build(t, s);
+			dep[t] = dep[s] + 1;
+			par[t] = s;
+
+			// 部分木 t に対して辺 s'→t を追加した場合の部分木 s' についての情報を得る．
+			T sub = add_edge(dp[t], s, t);
+
+			// それを部分木 s' の暫定の情報とマージして情報を更新していく．
+			if (is_leaf) dp[s] = move(sub);
+			else merge(dp[s], sub, s);
+
+			is_leaf = false;
+		}
+
+		// s が葉の場合は専用の情報を代入しておく．
+		if (is_leaf) dp[s] = leaf(s);
+		// そうでない場合は根 s を追加する．
+		else add_vertex(dp[s], s);
+	}
+
+	// s から t までのパスを path に格納する．
+	void get_path(int s, int t, deque<int>& path) {
+		if (dep[s] > dep[t]) {
+			get_path(par[s], t, path);
+			path.push_front(s);
+		}
+		else if (dep[s] < dep[t]) {
+			get_path(s, par[t], path);
+			path.push_back(t);
+		}
+		else if (s != t) {
+			get_path(par[s], par[t], path);
+			path.push_front(s);
+			path.push_back(t);
+		}
+		else {
+			path.push_front(s);
+		}
+	}
+
+	// ST から GL（根）までの情報を更新する．
+	void update(int ST, int GL) {
+		deque<int> path;
+		get_path(ST, GL, path);
+		int L = sz(path);
+
+		rep(l, L) {
+			int s = path[l];
+			int p = (l < L - 1 ? path[l + 1] : -1);
+
+			// is_leaf : s が葉か
+			bool is_leaf = true;
+
+			repe(t, g[s]) {
+				if (t == p) continue;
+
+				// 部分木 t についての情報は全て計算済
+
+				// 部分木 t に対して辺 s'→t を追加した場合の部分木 s' についての情報を得る．
+				T sub = add_edge(dp[t], s, t);
+
+				// それを部分木 s' の暫定の情報とマージして情報を更新していく．
+				if (is_leaf) dp[s] = move(sub);
+				else merge(dp[s], sub, s);
+
+				is_leaf = false;
+			}
+
+			// s が葉の場合は専用の情報を代入しておく．
+			if (is_leaf) dp[s] = leaf(s);
+			// そうでない場合は根 s を追加する．
+			else add_vertex(dp[s], s);
+		}
+	}
+
+public:
+	// r を根とする木 g で初期化する．
+	Dynamic_rerooting(const Graph& g, int r = 0) : n(sz(g)), g(g), r(r), dp(n), dep(n), par(n, -1) {
+		// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tree
+
+		build(r, -1);
+	}
+	Dynamic_rerooting() : n(0), r(0) {}
+
+	// 根を r に変更する．
+	void set_root(int r) {
+		// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tree
+		
+		update(this->r, r);
+		this->r = r;
+	}
+
+	// 頂点 v の情報の更新を反映する．
+	void update(int v) {
+		update(v, r);
+	}
+
+	// 頂点 s における木 DP の結果を返す．
+	T get(int s) {
+		// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_tree
+		
+		return dp[s];
+	}
+
+	/* 雛形
+	vl wgt;
+	struct T {
+		ll v;
+	#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const T& x) {
+			os << '(' << x.v << ')';
+			return os;
+		}
+	#endif
+	};
+	T leaf(int s) {
+		return T{ wgt[s] };
+	}
+	T add_edge(const T& x, int p, int s) {
+		return x;
+	}
+	void merge(T& x, const T& y, int s) {
+		x.v += y.v;
+	}
+	void add_vertex(T& x, int s) {
+		x.v += wgt[s];
+	}
+	Dynamic_rerooting<T, leaf, add_edge, merge, add_vertex> G(g);
 	*/
 };
 

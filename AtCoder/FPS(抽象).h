@@ -140,6 +140,8 @@ struct FPS {
 
 		int n = sz(f), m = sz(g);
 
+		if (n == 0 || m == 0) return vector<S>();
+
 		// min(n, m) ‚ª¬‚³‚¢‚Æ‚«‚Í‹ğ’¼‚ÉÏ‚ğŒvZ‚·‚éD
 		if (n <= 60 || m <= 60) {
 			vector<S> h(n + m - 1, o());
@@ -147,7 +149,7 @@ struct FPS {
 			return h;
 		}
 
-		int L = min({ max(n, m) / 2, n, m });
+		int L = max(n, m) / 2;
 
 		int n0 = min(L, n), n1 = n - n0;
 		int m0 = min(L, m), m1 = m - m0;

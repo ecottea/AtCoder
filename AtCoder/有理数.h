@@ -8,6 +8,7 @@
 /*
 * Frac<T>() : O(1)
 *	0 で初期化する．
+*	制約：T は int, ll, __int128, boost::multiprecision::int256_t 等
 *
 * Frac<T>(T num) : O(1)
 *	num で初期化する．
@@ -28,16 +29,20 @@
 * together(Frac& a, Frac& b) : O(log min(a.dnm, b.dnm))
 *	a と b を通分する．
 *
+* together(vector<Frac>& as) : O(|as| log dnm)
+*	as を通分する．
+*
 * T floor() : O(1)
 *	自身の floor を返す．
 *
 * T ceil() : O(1)
 *	自身の ceil を返す．
+*
+* bool integerQ() : O(1)
+*	自身が整数かを返す．
 */
 template <class T = ll>
 struct Frac {
-	// verify : https://atcoder.jp/contests/abc057/tasks/abc057_d
-
 	// 分子，分母
 	T num, dnm;
 
@@ -158,6 +163,19 @@ struct Frac {
 		b.num *= dnm / b.dnm; b.dnm = dnm;
 	}
 
+	// as を通分する．
+	friend void together(vector<Frac>& as) {
+		// verify : https://yukicoder.me/problems/617
+
+		T dnm = 1;
+		repe(a, as) dnm = lcm(dnm, a.dnm);
+
+		repea(a, as) {
+			a.num *= dnm / a.dnm;
+			a.dnm = dnm;
+		}
+	}
+
 	// 自身の floor を返す．
 	T floor() const {
 		// verify : https://www.codechef.com/problems/LINEFIT?tab=statement
@@ -172,6 +190,13 @@ struct Frac {
 
 		if (num >= 0) return (num + dnm - 1) / dnm;
 		else return -((-num) / dnm);
+	}
+
+	// 自身が整数かを返す．
+	bool integerQ() const {
+		// verify : https://atcoder.jp/contests/ttpc2022/tasks/ttpc2022_g
+
+		return num % dnm == 0;
 	}
 
 #ifdef _MSC_VER
@@ -1116,5 +1141,233 @@ pair<T, T> rationalize(long double x, T dnm_max = T(INFL), long double EPS = 1e-
 
 	return { sign * ps.back(), qs.back() };
 }
+
+
+//【既約分数】（激遅）
+/*
+* オーバーフローに気をつけて常に既約分数になるようにした結果実用性がなくなるほど遅くなった．
+*
+* IFrac<T>() : O(1)
+*	0 で初期化する．
+*
+* IFrac<T>(T num) : O(1)
+*	num で初期化する．
+*
+* IFrac<T>(T num, T dnm) : O(1)
+*	num / dnm で初期化する（分母は自動的に正にする）
+*
+* a == b, a != b, a < b, a > b, a <= b, a >= b : O(1)
+*	大小比較を行う（分母が共通の場合は積はとらない）
+*
+* a + b, a - b, a * b, a / b : O(1)
+*	加減乗除を行う（和と差については，分母が共通の場合は積はとらない）
+*	一方が整数でも構わない．複合代入演算子も使用可．
+*
+* reduction() : O(log min(num, dnm))
+*	自身の約分を行う．
+*
+* together(IFrac& a, IFrac& b) : O(log min(a.dnm, b.dnm))
+*	a と b を通分する．
+*
+* together(vector<IFrac>& as) : O(|as| log dnm)
+*	as を通分する．
+*
+* T floor() : O(1)
+*	自身の floor を返す．
+*
+* T ceil() : O(1)
+*	自身の ceil を返す．
+*/
+template <class T = ll>
+struct IFrac {
+	// 分子，分母
+	T num, dnm;
+
+	// コンストラクタ
+	IFrac() : num(0), dnm(1) {}
+	IFrac(T num) : num(num), dnm(1) {}
+	IFrac(T num_, T dnm_) : num(num_), dnm(dnm_) {
+		Assert(dnm != T(0));
+
+		auto g = gcd(num, dnm);
+		num /= g;
+		dnm /= g;
+
+		if (dnm < 0) { num *= -1; dnm *= -1; }
+	}
+
+	// 代入
+	IFrac(const IFrac& b) = default;
+	IFrac& operator=(const IFrac& b) = default;
+
+	// キャスト
+	operator double() const { return (double)num / (double)dnm; }
+
+	// 比較
+	bool operator==(const IFrac& b) const {
+		auto g_num = gcd(num, b.num);
+		if (g_num == 0) return true;
+
+		auto g_dnm = gcd(dnm, b.dnm);
+		return (num / g_num) * (b.dnm / g_dnm) == (b.num / g_num) * (dnm / g_dnm);
+	}
+	bool operator!=(const IFrac& b) const { return !(*this == b); }
+	bool operator<(const IFrac& b) const {
+		auto g_num = gcd(num, b.num);
+		if (g_num == 0) return false;
+
+		auto g_dnm = gcd(dnm, b.dnm);
+		return (num / g_num) * (b.dnm / g_dnm) < (b.num / g_num) * (dnm / g_dnm);
+	}
+	bool operator>=(const IFrac& b) const { return !(*this < b); }
+	bool operator>(const IFrac& b) const { return b < *this; }
+	bool operator<=(const IFrac& b) const { return !(*this > b); }
+
+	// 整数との比較
+	bool operator==(T b) const {
+		auto g_num = gcd(num, b);
+		if (g_num == 0) return true;
+
+		return (num / g_num) == (b / g_num) * dnm;
+	}
+	bool operator!=(T b) const { return !(*this == b); }
+	bool operator<(T b) const {
+		auto g_num = gcd(num, b);
+		if (g_num == 0) return false;
+
+		return (num / g_num) < (b / g_num) * dnm;
+	}
+	bool operator>=(T b) const { return !(*this < b); }
+	bool operator>(T b) const { return b < *this; }
+	bool operator<=(T b) const { return !(*this > b); }
+	friend bool operator==(T a, const IFrac& b) { return b == a; }
+	friend bool operator!=(T a, const IFrac& b) { return b != a; }
+	friend bool operator<(T a, const IFrac& b) { return b > a; }
+	friend bool operator>=(T a, const IFrac& b) { return b <= a; }
+	friend bool operator>(T a, const IFrac& b) { return b < a; }
+	friend bool operator<=(T a, const IFrac& b) { return b >= a; }
+
+	// 四則演算
+	IFrac& operator+=(const IFrac& b) {
+		T l_dnm = lcm(dnm, b.dnm);
+		num = num * (l_dnm / dnm) + b.num * (l_dnm / b.dnm);
+		dnm = l_dnm;
+
+		auto g = gcd(num, dnm);
+		num /= g;
+		dnm /= g;
+
+		return *this;
+	}
+	IFrac& operator-=(const IFrac& b) {
+		T l_dnm = lcm(dnm, b.dnm);
+		num = num * (l_dnm / dnm) - b.num * (l_dnm / b.dnm);
+		dnm = l_dnm;
+
+		auto g = gcd(num, dnm);
+		num /= g;
+		dnm /= g;
+
+		return *this;
+	}
+	IFrac& operator*=(const IFrac& b) {
+		auto g1 = gcd(num, b.dnm);
+		auto g2 = gcd(dnm, b.num);
+
+		num = (num / g1) * (b.num / g2);
+		dnm = (dnm / g2) * (b.dnm / g1);
+
+		return *this;
+	}
+	IFrac& operator/=(const IFrac& b) {
+		Assert(b.num != T(0));
+
+		auto g1 = gcd(num, b.num);
+		auto g2 = gcd(dnm, b.dnm);
+
+		num = (num / g1) * (b.dnm / g2);
+		dnm = (dnm / g2) * (b.num / g1);
+
+		if (dnm < 0) { num *= -1; dnm *= -1; }
+
+		return *this;
+	}
+	IFrac operator+(const IFrac& b) const { IFrac a = *this; return a += b; }
+	IFrac operator-(const IFrac& b) const { IFrac a = *this; return a -= b; }
+	IFrac operator*(const IFrac& b) const { IFrac a = *this; return a *= b; }
+	IFrac operator/(const IFrac& b) const { IFrac a = *this; return a /= b; }
+	IFrac operator-() const {
+		IFrac a = *this;
+		a.num *= -1;
+
+		return a;
+	}
+
+	// 整数との四則演算
+	IFrac& operator+=(T c) { num += dnm * c; return *this; }
+	IFrac& operator-=(T c) { num -= dnm * c; return *this; }
+	IFrac& operator*=(T c) {
+		auto g2 = gcd(dnm, c);
+
+		num = num * (c / g2);
+		dnm = (dnm / g2);
+
+		return *this;
+	}
+	IFrac& operator/=(T c) {
+		Assert(c != T(0));
+
+		auto g1 = gcd(num, c);
+
+		num = (num / g1);
+		dnm = dnm * (c / g1);
+
+		if (dnm < 0) { num *= -1; dnm *= -1; }
+
+		return *this;
+	}
+	IFrac operator+(T c) const { IFrac a = *this; return a += c; }
+	IFrac operator-(T c) const { IFrac a = *this; return a -= c; }
+	IFrac operator*(T c) const { IFrac a = *this; return a *= c; }
+	IFrac operator/(T c) const { IFrac a = *this; return a /= c; }
+	friend IFrac operator+(T c, const IFrac& a) { return a + c; }
+	friend IFrac operator-(T c, const IFrac& a) { return IFrac(c) - a; }
+	friend IFrac operator*(T c, const IFrac& a) { return a * c; }
+	friend IFrac operator/(T c, const IFrac& a) { return IFrac(c) / a; }
+
+	// a と b を通分する．
+	friend void together(IFrac& a, IFrac& b) {
+		T dnm = lcm(a.dnm, b.dnm);
+		a.num *= dnm / a.dnm; a.dnm = dnm;
+		b.num *= dnm / b.dnm; b.dnm = dnm;
+	}
+
+	// as を通分する．
+	friend void together(vector<IFrac>& as) {
+		T dnm = 1;
+		repe(a, as) dnm = lcm(dnm, a.dnm);
+
+		repea(a, as) {
+			a.num *= dnm / a.dnm;
+			a.dnm = dnm;
+		}
+	}
+
+	// 自身の floor を返す．
+	T floor() const {
+		if (num >= 0) return num / dnm;
+		else return -((-num + dnm - 1) / dnm);
+	}
+
+	// 自身の ceil を返す．
+	T ceil() const {
+		if (num >= 0) return (num + dnm - 1) / dnm;
+		else return -((-num) / dnm);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const IFrac& a) { os << a.num << '/' << a.dnm; return os; }
+#endif
+};
 
 

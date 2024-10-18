@@ -19,6 +19,9 @@
 *
 * ull join(ull hs, ull ht, int len) : O(1)
 *	ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
+* 
+* ull repeat(ull h, int len, ll K) : O(log K)
+*	ハッシュ値 h をもつ s[0..len) を K 個連結した文字列のハッシュ値を返す．
 */
 template <class STR>
 class Rolling_hash {
@@ -403,8 +406,8 @@ public:
 
 //【ローリングハッシュ（数値文字列，加減可能）】
 /*
-* Number_rolling_hash(string s, bool reversible = false) : O(n)
-*	数値文字列 s[0..n) で初期化する．reversible = true にすると逆順のハッシュも計算可能になる．
+* Number_rolling_hash(string s, ull B = 10, bool reversible = false) : O(n)
+*	B 進数値文字列 s[0..n) で初期化する．reversible = true にすると逆順のハッシュ値も計算可能になる．
 *
 * ull get(int l, int r) : O(1)
 *	部分数値文字列 s[l..r) のハッシュ値を返す（空なら 0）
@@ -416,10 +419,10 @@ public:
 *	ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
 *
 * ull add(ull hA, ull hB) : O(1)
-*	ハッシュ値 hA, hB が表す数値の和のハッシュを返す．
+*	ハッシュ値 hA, hB が表す数値の和のハッシュ値を返す．
 *
 * ull sub(ull hA, ull hB) : O(1)
-*	ハッシュ値 hA, hB が表す数値の差（hA 側 - hB 側）のハッシュを返す．
+*	ハッシュ値 hA, hB が表す数値の差（hA 側 - hB 側）のハッシュ値を返す．
 */
 class Number_rolling_hash {
 	static constexpr ull MASK30 = (1ULL << 30) - 1;
@@ -452,64 +455,67 @@ class Number_rolling_hash {
 	// 列の長さ
 	int n;
 
-	// pow10[i] : 10^i
-	vector<ull> pow10;
+	// 基数
+	ull B;
 
-	// v[i] : s[0..i) のハッシュ値 Σj∈[0..i) s[j] 10^(i-1-j)
+	// powB[i] : B^i
+	vector<ull> powB;
+
+	// v[i] : s[0..i) のハッシュ値 Σj∈[0..i) s[j] B^(i-1-j)
 	// v_rev[i] : s[n-i..n) を反転した文字列のハッシュ値
 	vector<ull> v, v_rev;
 
 public:
 	// 数値文字列 s[0..n) で初期化する．
-	Number_rolling_hash(const string& s, bool reversible = false) : n(sz(s)), pow10(n + 1), v(n + 1) {
+	Number_rolling_hash(const string& s, ull B = 10, bool reversible = false) : n(sz(s)), B(B), powB(n + 1), v(n + 1) {
 		// verify : https://codeforces.com/contest/898/problem/F
 
-		pow10[0] = 1;
-		rep(i, n) pow10[i + 1] = get_mod(mul(pow10[i], 10ULL));
+		powB[0] = 1;
+		rep(i, n) powB[i + 1] = get_mod(mul(powB[i], B));
 
-		rep(i, n) v[i + 1] = get_mod(mul(v[i], 10ULL) + (ull)(s[i] - '0'));
+		rep(i, n) v[i + 1] = get_mod(mul(v[i], B) + (ull)(s[i] - '0'));
 
 		if (reversible) {
 			v_rev.resize(n + 1);
-			rep(i, n) v_rev[i + 1] = get_mod(mul(v_rev[i], 10ULL) + (ull)(s[n - 1 - i] - '0'));
+			rep(i, n) v_rev[i + 1] = get_mod(mul(v_rev[i], B) + (ull)(s[n - 1 - i] - '0'));
 		}
 	}
-	Number_rolling_hash() : n(0) {}
+	Number_rolling_hash() : n(0), B(1) {}
 
-	// s[l..r) のハッシュ値の取得
+	// s[l..r) のハッシュ値を返す
 	ull get(int l, int r) const {
 		// verify : https://codeforces.com/contest/898/problem/F
 
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
-		return get_mod(v[r] + 4 * MOD - mul(v[l], pow10[r - l]));
+		return get_mod(v[r] + 4 * MOD - mul(v[l], powB[r - l]));
 	}
 
-	// s[l..r) を反転した文字列のハッシュ値の取得
+	// s[l..r) を反転した文字列のハッシュ値を返す
 	ull get_rev(int l, int r) {
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 		Assert(!v_rev.empty());
 
 		// s[l, r) を反転した文字列は s_rev[n-r, n-l) に等しい．
-		return get_mod(v_rev[n - l] + 4 * MOD - mul(v_rev[n - r], pow10[r - l]));
+		return get_mod(v_rev[n - l] + 4 * MOD - mul(v_rev[n - r], powB[r - l]));
 	}
 
 	// ハッシュ値 hs をもつ s とハッシュ値 ht をもつ t[0..len) を連結した s+t のハッシュ値を返す．
 	ull join(ull hs, ull ht, int len) const {
 		Assert(len <= n);
-		return get_mod(ht + mul(hs, pow10[len]));
+		return get_mod(ht + mul(hs, powB[len]));
 	}
 
-	// ハッシュ値 hA, hB が表す数値の和のハッシュを返す．
+	// ハッシュ値 hA, hB が表す数値の和のハッシュ値を返す．
 	ull add(ull hA, ull hB) {
 		// verify : https://codeforces.com/contest/898/problem/F
 
 		return get_mod(hA + hB);
 	}
 
-	// ハッシュ値 hA, hB が表す数値の差のハッシュを返す．
+	// ハッシュ値 hA, hB が表す数値の差のハッシュ値を返す．
 	ull sub(ull hA, ull hB) {
 		return get_mod(hA + MOD - hB);
 	}

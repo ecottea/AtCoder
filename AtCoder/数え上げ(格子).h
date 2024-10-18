@@ -4,6 +4,131 @@
 // ■■■■■ 数え上げ（格子） ■■■■■
 
 
+//【チェス盤距離 d 以内ジャンプ最短経路数】O(h w)
+/*
+* 通過の可否が c[i][j] = '.'['#'] で示された h×w 格子について，右下方向へのチェス盤距離 d 以下の
+* ジャンプを繰り返すとき，c[0][0] から c[i][j] までの経路の数を seq[i][j] に格納する．
+*
+*（二次元いもす法で高速化した格子 DP）
+*/
+void count_chebyshev_path(const vvc& c, int d, vvm& seq, char WALL = '#') {
+	int h = sz(c), w = sz(c[0]);
+
+	seq = vvm(h, vm(w));
+	seq[0][0] = 1;
+
+	// 配る DP
+	rep(i, h) rep(j, w) {
+		// v : dp[i][j] の正しい値
+		mint v = seq[i][j];
+
+		// (i, j) からの寄与の種を蒔く．
+		if (c[i][j] != WALL) {
+			if (true)							seq[i][j] += v;					// 注目地点
+			if (j + d + 1 < w)					seq[i][j + d + 1] -= v;			// 右
+			if (i + d + 1 < h)					seq[i + d + 1][j] -= v;			// 下
+			if (i + d + 1 < h && j + d + 1 < w)	seq[i + d + 1][j + d + 1] += v;	// 右下
+		}
+
+		// v2 : 以降のマスに seq[i][j] が与える影響
+		mint v2 = (i == 0 && j == 0 ? 1 : seq[i][j]);
+
+		// 累積和をとる（種蒔きの範囲を d = 0 に縮小して符号反転する）
+		if (true)					seq[i][j] -= v2;			// 注目地点
+		if (j + 1 < w)				seq[i][j + 1] += v2;		// 右
+		if (i + 1 < h)				seq[i + 1][j] += v2;		// 下
+		if (i + 1 < h && j + 1 < w)	seq[i + 1][j + 1] -= v2;	// 右下
+
+		// seq[i][j] を正しい値に戻しておく．
+		seq[i][j] = v;
+	}
+}
+
+
+//【マンハッタン距離 d 以内ジャンプ最短経路数】O(h w)
+/*
+* 通過の可否が c[i][j] = '.'['#'] で示された h×w 格子について，右下方向へのマンハッタン距離 d 以下の
+* ジャンプを繰り返すとき，c[0][0] から c[i][j] までの経路の数を seq[i][j] に格納する．
+*
+*（二次元いもす法で高速化した格子 DP）
+*/
+void count_manhattan_path(const vvc& c_, int d, vvm& seq, char WALL = '#') {
+	// verify : https://yukicoder.me/problems/no/2003
+
+	int h = sz(c_), w = sz(c_[0]);
+
+	// 左右に番兵を付けておく．
+	// 番兵が O(h w) 個に収まるよう，必要ならば h <= w になるよう転置する．
+	vvc c; bool swap_flag = false;
+	if (h <= w) {
+		c = vvc(h, vc(h + w + h, WALL));
+		rep(i, h) rep(j, w) c[i][h + j] = c_[i][j];
+	}
+	else {
+		swap(h, w);
+		c = vvc(h, vc(h + w + h, WALL));
+		rep(i, h) rep(j, w) c[i][h + j] = c_[j][i];
+		swap_flag = true;
+	}
+	w += 2 * h;
+
+	vvm dp(h, vm(w));
+	dp[0][h] = 1;
+
+	// 配る DP
+	rep(i, h) rep(j, w) {
+		// v : dp[i][j] の正しい値
+		mint v = dp[i][j];
+
+		// (i, j) からの寄与の種を蒔く．
+		if (c[i][j] != WALL) {
+			// 注目地点
+			if (true)							dp[i][j] += v;
+			if (i + 1 < h && j - 1 >= 0)		dp[i + 1][j - 1] -= v;
+
+			// 右
+			if (i + 1 < h && j + d + 1 < w)		dp[i + 1][j + d + 1] += v;
+			if (j + d + 1 < w)					dp[i][j + d + 1] -= v;
+
+			// 下
+			if (i + d + 2 < h && j - 1 >= 0)	dp[i + d + 2][j - 1] += v;
+			if (i + d + 2 < h)					dp[i + d + 2][j] -= v;
+		}
+
+		// v2 : 以降のマスに dp[i][j] が与える影響
+		mint v2 = (i == 0 && j == h ? 1 : dp[i][j]);
+
+		// 累積和をとる（種蒔きの範囲を d = 0 に縮小して符号反転する）
+		// 注目地点
+		if (true)						dp[i][j] -= v2;
+		if (i + 1 < h && j - 1 >= 0)	dp[i + 1][j - 1] += v2;
+
+		// 右
+		if (i + 1 < h && j + 1 < w)		dp[i + 1][j + 1] -= v2;
+		if (j + 1 < w)					dp[i][j + 1] += v2;
+
+		// 下
+		if (i + 2 < h && j - 1 >= 0)	dp[i + 2][j - 1] -= v2;
+		if (i + 2 < h)					dp[i + 2][j] += v2;
+
+		// dp[i][j] を正しい値に戻しておく．
+		dp[i][j] = v;
+	}
+
+	// 結果を格納する．
+	w -= 2 * h;
+	if (swap_flag) {
+		swap(h, w);
+		seq = vvm(h, vm(w));
+		rep(i, h) rep(j, w) seq[i][j] = dp[j][w + i];
+	}
+	else {
+		seq = vvm(h, vm(w));
+		rep(i, h) rep(j, w) seq[i][j] = dp[i][h + j];
+	}
+}
+
+
 //【互いの効きに入らないキング配置の数え上げ】O(1.618^w h w + 2^w)
 /*
 * c[0..h)[0..w) 上に互いの効きに入らないようにキングを配置する方法が何通りあるかを返す．

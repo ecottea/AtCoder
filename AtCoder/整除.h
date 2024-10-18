@@ -15,8 +15,7 @@
 *   A[i] = Σ_(j | i) a[j] なる a に上書きする（約数からの寄与を取り除く）
 *
 * vT lcm_convolution(vT a, vT b) : O(n log(log n))
-*   c[k] = Σ_(LCM(i, j) = k) a[i] b[j] なる c を返す．
-*   ただし c[n] を含めそれ以降は切り捨てる．
+*   c[k] = Σ_(LCM(i, j) = k) a[i] b[j] なる c を返す．ただし c(n..∞) は切り捨てる．
 *
 * multiple_zeta(vT& a) : O(n log(log n))
 *   A[i] = Σ_(i | j) a[j] なる A に上書きする（倍数からの寄与を足し込む）
@@ -94,6 +93,10 @@ public:
 		//	a[7] = -A[1]                                    + A[7]
 		//	a[8] =                     - A[4]                      + A[8]
 
+		//【備考】
+		// A[1..n] のディリクレ母関数を α(s) = Σ_i A[i] i^(-s) とすると，
+		// α(s) にゼータ関数 ζ(s) = Σ_i i^(-s) の逆数を掛けることに対応する．
+
 		int n = sz(A) - 1;
 
 		// 各素因数ごとに上からの差分をとる
@@ -107,9 +110,13 @@ public:
 		int n = sz(a) - 1;
 
 		// 各素因数の max をとったものが LCM なので max 畳込みを行う．
-		divisor_zeta(a); divisor_zeta(b);
+		divisor_zeta(a);
+		divisor_zeta(b);
+
 		repi(i, 1, n) a[i] *= b[i];
+
 		divisor_mobius(a);
+
 		return a;
 	}
 
@@ -151,6 +158,10 @@ public:
 		//	a[7] =                                           A[7]       
 		//	a[8] =                                                  A[8]
 
+		//【備考】
+		// A[1..n] のディリクレ母関数を α(s) = Σ_i a[i] i^(-s) とすると，
+		// α(s) にゼータ関数の変種 ζ(-s) = Σ_i i^s の逆数を掛けることに対応する．
+
 		int n = sz(A) - 1;
 
 		// 各素因数ごとに下からの差分をとる
@@ -164,9 +175,13 @@ public:
 		int n = sz(a) - 1;
 
 		// 各素因数の min をとったものが GCD なので min 畳込みを行う．
-		multiple_zeta(a); multiple_zeta(b);
+		multiple_zeta(a);
+		multiple_zeta(b);
+
 		repi(i, 1, n) a[i] *= b[i];
+
 		multiple_mobius(a);
+
 		return a;
 	}
 };

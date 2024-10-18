@@ -141,32 +141,49 @@ ll truncated_pow(ll a, ll n, ll inf = INFL) {
 */
 
 
-//【整数累乗根】O(n log a)
+//【整数平方根】O(1)
 /*
-* 非負の数 a の n 乗根（a^(1/n)）の切り捨て値を返す．
+* 非負の数 a の平方根の切り捨て値を返す．
+*
+* 制約：コンパイラが gcc
 */
 template <class T>
-T integer_root(T a, int n = 2) {
-	// verify : https://atcoder.jp/contests/abc166/tasks/abc166_d
+T integer_sqrt(T a) {
+	//【備考】
+	// double 精度だと，N = 622046740405562316 で
+	//		(int)sqrt(N) = 788699398 != 788699397 = floor(√N)
+	// となってしまった．
 
-	if (a <= 1 || n == 1) return a;
+	return (T)sqrtl((long double)a);
+}
 
-	// x^k を返す．ただし a を超えた場合は a + 1 を返す．
-	auto pow_lim = [&](T x, int k) {
+
+//【整数累乗根】O(K log N)
+/*
+* 非負整数 N の K 乗根（N^(1/K)）の切り捨て値を返す．
+*/
+template <class T>
+T integer_root(T N, int K = 2) {
+	// verify : https://judge.yosupo.jp/problem/kth_root_integer
+
+	if (N <= 1 || K == 1) return N;
+
+	// x^K を返す．ただし N を超えた場合は N + 1 を返す．
+	auto pow_lim = [&](T x) {
 		T v = 1;
-		rep(i, k) {
-			if (v > a / x) return a + 1;
+		rep(hoge, K) {
+			if (v > N / x) return N + 1; // オーバーフロー注意
 			v *= x;
 		}
 		return v;
 	};
 
-	T ok = 1, ng = a + 1;
+	T ok = 1, ng = N + 1;
 
-	while (abs(ok - ng) > 1) {
+	while (ng - ok > 1) {
 		T mid = (ok + ng) / 2;
 
-		if (pow_lim(mid, n) <= a) ok = mid;
+		if (pow_lim(mid) <= N) ok = mid;
 		else ng = mid;
 	}
 

@@ -124,6 +124,8 @@ public:
 
 	// S[0..r) 内の文字 c の右から k 番目（0-indexed）の位置を返す（なければ -1 を返す）
 	ll prev(ll r, char c, ll k = 0) {
+		// verify : https://atcoder.jp/contests/ttpc2022/tasks/ttpc2022_e
+
 		c -= a;
 		Assert(0 <= c && c < C);
 
@@ -174,7 +176,10 @@ public:
 * int c : O(1)
 *	数列 a の周期部分の長さ．
 *
-* T sum(ll n)
+* T get(ll i) : O(1)
+*	a[i] を返す．
+*
+* T sum(ll n) : O(1)
 *	Σi=[0..n) a[i] を返す．
 *
 *（フロイドの循環検出法）
@@ -188,9 +193,9 @@ struct Periodic_sequence_sum {
 	vector<T> nc_acc, c_acc;
 
 	// a[i+1] = f(a[i]), a[0] = a0 なる数列で初期化する．
-	Periodic_sequence_sum(const function<T(T)>& f, T a0) : nc(0), c(0), nc_acc({ 0 }), c_acc({ 0 }) {
+	Periodic_sequence_sum(const function<T(T)>& f, T a0) : nc(0), c(0), nc_acc({ T(0) }), c_acc({ T(0) }) {
 		// verify : https://atcoder.jp/contests/abc179/tasks/abc179_e
-		
+
 		T x = a0, y = a0;
 		do {
 			x = f(x);
@@ -218,7 +223,8 @@ struct Periodic_sequence_sum {
 	// Σi = [0..n) a[i] を返す．
 	T sum(ll n) {
 		// verify : https://atcoder.jp/contests/abc179/tasks/abc179_e
-		
+
+		if (n <= 0) return T(0);
 		if (n <= nc) return nc_acc[n];
 
 		T res = nc_acc[nc];
@@ -229,6 +235,11 @@ struct Periodic_sequence_sum {
 		return res;
 	}
 
+	// a[i] を返す
+	T get(ll i) {
+		return sum(i + 1) - sum(i);
+	}
+
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Periodic_sequence_sum& pss) {
 		os << "nc: " << pss.nc_acc << "(" << pss.nc << ")" << endl;
@@ -236,6 +247,13 @@ struct Periodic_sequence_sum {
 		return os;
 	}
 #endif
+
+	/* f の定義の雛形
+	using T = ll;
+	auto f = [&](T x) {
+		return x;
+	};
+	*/
 };
 
 

@@ -74,51 +74,50 @@ vm count_shortest_path(const Graph& g, int st, vi* dist = nullptr) {
 /*
 * 正の重み付き有向グラフ g に対し，始点 st から各頂点 i への最短経路数を格納したリストを返す．
 * また必要ならそのときの最短距離（到達不能なら INFL）を dist[i] に格納する．
-* 
+*
 *（ダイクストラ法）
 */
 vm count_shortest_path(const WGraph& g, int st, vl* dist = nullptr) {
 	// verify : https://atcoder.jp/contests/arc090/tasks/arc090_c
 
 	//【注意】
-	// 重み 0 の辺のみでできた閉路があると，そこを通る最短経路数は無限個になる．
-	// 閉路さえなければ重み 0 の辺があっても大丈夫？
+	// コスト 0 の辺のみでできた閉路があると，そこを通る最短経路数は無限個になる．
+	// 閉路さえなければコスト 0 の辺があっても大丈夫？
 
 	int n = sz(g);
-
-	// cnt[i] : st から i までの最短経路の総数
-	vm cnt(n);
 
 	// dist[i] : st から i までの最短距離
 	if (dist == nullptr) dist = new vl;
 	*dist = vl(n, INFL);
+	(*dist)[st] = 0;
 
-	// 組 (st からの距離, 注目頂点, 直前の頂点) を入れる優先度付きキューを用意する．
-	// st からの距離がより小さいものを優先的に取り出す．
-	priority_queue_rev<tuple<ll, int, int>> que;
-	que.push({ 0, st, -1 });
+	// cnt[i] : st から i までの最短経路の総数
+	vm cnt(n);
+	cnt[st] = 1;
 
-	while (!que.empty()) {
+	// 組 (st からの距離, 頂点番号) を入れる優先度付きキュー
+	priority_queue_rev<pli> q;
+	q.push({ 0, st });
+
+	while (!q.empty()) {
 		// 未探索の頂点 s を 1 つ得る．
-		auto [d, s, p] = que.top(); que.pop();
-		mint c = (p == -1 ? 1 : cnt[p]);
+		auto [c, s] = q.top(); q.pop();
 
-		// 既に最短距離が求まっている場合
-		if (d >= (*dist)[s]) {
-			// 現時点での最短距離と同じなら個数を加算する．
-			if (d == (*dist)[s]) cnt[s] += c;
+		// すでにより短い距離に更新されていたなら何もしない（忘れると O(n^2)）
+		if ((*dist)[s] < c) continue;
 
-			continue;
+		// より短い距離で辿り着けるなら距離を更新し，その先も探索する．
+		repe(e, g[s]) {
+			ll ndist = (*dist)[s] + e.cost;
+			if (ndist == (*dist)[e.to]) {
+				cnt[e.to] += cnt[s];
+			}
+			else if (ndist < (*dist)[e.to]) {
+				(*dist)[e.to] = ndist;
+				cnt[e.to] = cnt[s];
+				q.push({ (*dist)[e.to], e.to });
+			}
 		}
-
-		// 最短距離の決定
-		// 優先度付きキューで距離の小さい順に取り出しており，
-		// かつコストが非負より三角不等式が成立するので最短の保証がある．
-		(*dist)[s] = d;
-		cnt[s] = c;
-
-		// そこから移動できるノードについての情報をキューに追加する．
-		repe(e, g[s]) que.push({ d + e.cost, e.to, s });
 	}
 
 	return cnt;
@@ -170,11 +169,12 @@ pair<vi, vm> count_shortest_path_complement(const Graph& g, int ST) {
 * 与えられた無向グラフ g に対し，各頂点集合 set⊂[0..n) について，
 * set の部分集合のうち g の独立集合を成すものの個数を格納したリストを返す．
 */
-vm count_independent_set(const Graph& g) {
+template <class T>
+vector<T> count_independent_set(const Graph& g) {
 	// verify : https://judge.yosupo.jp/problem/chromatic_number
 
 	int n = sz(g);
-	vm cnt(1LL << n);
+	vector<T> cnt(1LL << n);
 
 	repb(set, n) {
 		if (set == 0) {
@@ -629,6 +629,12 @@ mint best_theorem(const WGraph& g, Factorial_mint& fm) {
 * 有向グラフに変換することで O(m^k n^3) を達成できる．
 * 
 * verify : https://atcoder.jp/contests/agc051/tasks/agc051_d
+*/
+
+
+//【入力定数個のグラフ数え上げ】
+/*
+* 参考 : https://maspypy.com/%E3%82%B0%E3%83%A9%E3%83%95%E6%95%B0%E3%81%88%E4%B8%8A%E3%81%92
 */
 
 

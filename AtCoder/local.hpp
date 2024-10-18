@@ -8,7 +8,7 @@ using namespace std;
 
 #define __int128 ll
 //#include <boost/multiprecision/cpp_int.hpp> // warning STL4038 ‚ª‚¤‚´‚¢
-//#define __int128 boost::multiprecision::int128_t
+//#define __int128 boost::multiprecision::int128_t // gcc ‚Ì 10 ”{‚­‚ç‚¢ŽžŠÔ‚ª‚©‚©‚é
 
 
 #define Assert assert
@@ -222,9 +222,11 @@ template <class T> void dumpel(T a) {
 
 	int i = 0; 
 	cerr << "\033[1;32m";
+
 	repe(x, a) {
 		cerr << right << setw(2) << i++ << ": " << x << endl;
 	}
+
 	cerr << "\033[0m";
 }
 

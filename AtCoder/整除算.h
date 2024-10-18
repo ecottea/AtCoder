@@ -6,8 +6,17 @@
 //【剰余 と 切り捨て商 の関係】
 /*
 * a mod m = a - floor(a / m) m
-* 
+*
 * verify : https://yukicoder.me/problems/no/2362
+*/
+
+
+//【剰余の範囲内判定 → 切り捨て商の差】
+/*
+* l ≦ (a mod m) < r    ⇔ floor((a-l)/m) - floor((a-r)/m) = 1
+* !(l ≦ (a mod m) < r) ⇔ floor((a-l)/m) - floor((a-r)/m) = 0
+*
+* verify : https://yukicoder.me/problems/no/2280
 */
 
 
@@ -73,7 +82,7 @@ void quotient_range(T n, const FUNC& f) {
 
 //【商列挙（組）】O(√max(n1,n2))
 /*
-* 区間 (0..max(n1,n2)] を (n1/i, n2/i) = (q1, q2)（切り捨て）となる半開区間 i∈(il..ir] に分割し，
+* 区間 [1..max(n1,n2)] を (n1/i, n2/i) = (q1, q2)（切り捨て）となる半開区間 i∈(il..ir] に分割し，
 * i について昇順にそれぞれに対して f(il, ir, q1, q2) を呼び出す．
 * なお各範囲においては (n1 mod i, n2 mod i) は公差 (-q1, -q2) の等差数列を成す．
 */
@@ -113,70 +122,6 @@ void quotient_range(T n1, T n2, const FUNC& f) {
 	};
 	*/
 }
-
-
-//【添字整数商 vector】
-/*
-* v[1], v[2], ..., v[nl], v[N/nh], ..., v[N/2], v[N/1] にのみアクセスできる疎な vector
-*
-* Vector_floor<T>(ll N) : O(1)
-*	nl = √N とし，v[N/d] にアクセスできるよう初期化する．
-*
-* Vector_floor<T>(ll N, int nl) : O(1)
-*	v[N/d] にアクセスできるよう初期化する．
-*
-* T [ll i] : O(1)
-*	v[i] にアクセスする．
-*
-* T get_floor(int d) : O(1)
-*	v[N/d] を返す．
-*
-* set_floor(int d, T x) : O(1)
-*	v[N/d] = x とする．
-*/
-template <class T>
-class Vector_floor {
-	// v : v[1], v[2], ..., v[nl], v[N/nh], ..., v[N/2], v[N/1] を並べたリスト
-	vector<T> v;
-	ll nlh;
-
-public:
-	ll N;
-	ll nl, nh;
-
-	// nl = √N とし，v[N/d] にアクセスできるよう初期化する．
-	Vector_floor(ll N) : N(N) {
-		nl = (ll)(sqrt(N) + 1e-9);
-		nh = ((N + nl - 1) / nl);
-		nlh = nl + nh;
-		v.resize(nlh);
-	}
-
-	// v[N/d] にアクセスできるよう初期化する．
-	Vector_floor(ll N, int nl) : N(N), nl(nl) {
-		nh = ((N + nl - 1) / nl);
-		nlh = nl + nh;
-		v.resize(nlh);
-	}
-
-	// v[i] を返す．
-	inline T const& operator[](ll i) const {
-		return i <= nl ? v[i - 1] : v[nlh - N / i];
-	}
-	inline T& operator[](ll i) {
-		return i <= nl ? v[i - 1] : v[nlh - N / i];
-	}
-
-	// v[N/d] を返す．
-	T get_floor(int d) const {
-		return d <= nh ? v[nlh - d] : v[N / d - 1];
-	}
-
-	// v[N/d] = x とする．
-	void set_floor(int d, T x) const {
-		return (d <= nh ? v[nlh - d] : v[N / d - 1]) = x;
-	}
-};
 
 
 //【除原理】O(n^(3/4))
@@ -460,7 +405,8 @@ T min_of_mod_of_linear(T n, T m, T a, T b) {
 	Assert(m > 0);
 	if (n <= 0) return INFL;
 
-	a = smod(a, m); b = smod(b, m);
+	a = smod(a, m);
+	b = smod(b, m);
 
 	T res = b;
 
@@ -472,7 +418,10 @@ T min_of_mod_of_linear(T n, T m, T a, T b) {
 		T nb = a * (((m - b) / a) + 1) + b - m;
 		T na = (a * (((2 * m - b) / a) + 1) + b - 2 * m) - nb;
 
-		n = nn; m = nm; a = smod(na, nm); b = nb % nm;
+		n = nn;
+		m = nm;
+		a = smod(na, nm);
+		b = nb % nm;
 
 		if (n == 0) break;
 

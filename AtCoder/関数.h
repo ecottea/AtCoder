@@ -216,7 +216,84 @@ public:
 };
 
 
-//【Convex-Hull Trick（挿入単調，クエリ単調）】（オーバーフロー注意）
+//【全単射の合成】
+/*
+* Bijection_composite(vi p) : O(n)
+*	[0..n) 上の全単射 p : i → p[i] で初期化する．
+*
+* int apply(int x, ll m) : O(1)
+*	p^m(x) を返す．
+* 
+*（周期性）
+*/
+class Bijection_composite {
+	int n;
+
+	// cs : f のサイクル分解
+	vvi cs;
+
+	// id[i] : i が属するサイクルの番号
+	// len[i] : i が属するサイクルの長さ
+	// pos[i] : i が属するサイクルにおいて i が何番目に現れるか
+	vi id, len, pos;
+
+public:
+	// [0..n) 上の全単射 i → f[i] で初期化する．
+	Bijection_composite(const vi& p) : n(sz(p)), id(n, -1), len(n), pos(n) {
+		// verify : https://atcoder.jp/contests/abc371/tasks/abc371_g
+
+		rep(i, n) {
+			// 抽出済のサイクルに含まれるなら次へ
+			if (id[i] != -1) continue;
+
+			// 新しいサイクルを発見
+			vi c;
+
+			// サイクルを構築する．
+			int s = i;
+			do {
+				c.push_back(s);
+				s = p[s];
+			} while (s != i);
+
+			// サイクルに属する要素についての情報を記録する．
+			int T = sz(c);
+			rep(t, T) {
+				id[c[t]] = sz(cs);
+				len[c[t]] = T;
+				pos[c[t]] = t;
+			}
+
+			cs.emplace_back(move(c));
+		}
+	}
+	Bijection_composite() : n(0) {}
+
+	// f^m(x) を返す．
+	int apply(int x, ll m) const {
+		// verify : https://atcoder.jp/contests/abc371/tasks/abc371_g
+
+		Assert(0 <= x && x < n);
+
+		return cs[id[x]][(int)((pos[x] + m) % len[x])];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Bijection_composite& b) {
+		os << "cs:" << endl;
+		rep(k, sz(b.cs)) {
+			os << k << ": " << b.cs[k] << endl;
+		}
+		os << "id: " << b.id << endl;
+		os << "len: " << b.len << endl;
+		os << "pos: " << b.pos << endl;
+		return os;
+	}
+#endif
+};
+
+
+//【Convex-Hull Trick（挿入狭義単調，クエリ狭義単調）】（オーバーフロー注意）
 /*
 * Convex_hull_trick_monotonous<T>(bool max_flag = false) : O(1)
 *	空で初期化する．max_flag = false[true] なら最小値[最大値] クエリに対応する．
@@ -228,6 +305,9 @@ public:
 * T get(T x) : ならし O(1)
 *	a x + b の最小値[最大値] を返す（直線がなければ INFL[-INFL]）
 *	制約：呼び出す際の x 座標は狭義昇順でなくてはならない．
+*
+* vpTT get_lines() : O(n)
+*	y=Min[Max]_x(ax+b) を成す折れ線を {y=ax+b} とし，(a,b) の降順[昇順] リストを返す．
 */
 template <class T = ll>
 class Convex_hull_trick_monotonous {
@@ -283,6 +363,46 @@ public:
 		if (max_flag) val *= -1;
 		return val;
 	}
+
+	// y=Min[Max]_x(ax+b) を成す折れ線を {y=ax+b} とし，(a,b) の降順[昇順] リストを返す．
+	vector<pair<T, T>> get_lines() const {
+		// verify : https://atcoder.jp/contests/ttpc2022/tasks/ttpc2022_g
+
+		vector<pair<T, T>> res;
+		repe(l, lines) {
+			auto [a, b] = l;
+
+			if (!max_flag) res.emplace_back(a, b);
+			else res.emplace_back(-a, -b);
+		}
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Convex_hull_trick_monotonous& cht) {
+		for (auto it = cht.lines.begin(); it != cht.lines.end(); it++) {
+			auto [a, b] = *it;
+
+			if (cht.max_flag) {
+				a *= T(-1);
+				b *= T(-1);
+			}
+
+			os << "y=";
+
+			if (a == T(1)) os << "x";
+			else if (a == T(0));
+			else if (a == T(-1)) os << "-x";
+			else os << a << "x";
+
+			if (a == T(0) || b < T(0)) os << b;
+			else if (b > T(0)) os << "+" << b;
+
+			os << (next(it) != cht.lines.end() ? "," : "");
+		}
+		return os;
+	}
+#endif
 };
 
 
@@ -296,7 +416,9 @@ public:
 *
 * T get(T x) : O(log n)
 *	a x + b の最小値[最大値] を返す．
-*	制約：直線集合は空でない
+*
+* vpTT get_lines() : O(n)
+*	y=Min[Max]_x(ax+b) を成す折れ線を {y=ax+b} とし，(a,b) の降順[昇順] リストを返す．
 */
 template <class T = ll>
 class Convex_hull_trick {
@@ -455,12 +577,27 @@ public:
 	T get(T x) {
 		// verify : https://judge.yosupo.jp/problem/line_add_get_min
 
-		Assert(!lines.empty());
+		if (lines.empty()) {
+			if (!max_flag) return (T)INFL;
+			else return -(T)INFL;
+		}
 
 		auto it = lines.lower_bound(Line{ x, x, false });
 
 		if (!max_flag) return it->a * x + it->b;
 		else return -(it->a * x + it->b); // 最大値クエリの場合は -1 倍していたので元に戻す．
+	}
+
+	// y=Min[Max]_x(ax+b) を成す折れ線を {y=ax+b} とし，(a,b) の降順[昇順] リストを返す．
+	vector<pair<T, T>> get_lines() const {
+		// verify : https://atcoder.jp/contests/abc372/tasks/abc372_g
+
+		vector<pair<T, T>> res;
+		repe(l, lines) {
+			if (!max_flag) res.emplace_back(l.a, l.b);
+			else res.emplace_back(-l.a, -l.b);
+		}
+		return res;
 	}
 
 #ifdef _MSC_VER
@@ -842,7 +979,11 @@ struct Slope_trick {
 //【狭義単調な点列】
 /*
 * Monotonous_points<T>(bool y_smaller = false) : O(1)
-*	空で初期化する．x 座標は狭義単調増加で，y 座標は y_smaller=false[true] なら狭義単調増加[減少]とする．
+*	空で初期化する．
+*	x 座標は狭義単調増加で，y 座標は y_smaller=false[true] なら狭義単調増加[減少]とする．
+*
+* int size() : O(1)
+*	点の個数を返す．
 *
 * void insert(T x, T y) : ならし O(log n)
 *	点 (x, y) を挿入し，それにより単調性に違反する点は全て削除する．
@@ -880,7 +1021,7 @@ struct Monotonous_points {
 	// 参考 : https://topcoder-g-hatena-ne-jp.jag-icpc.org/skyaozora/20141216.html
 
 	bool y_smaller; // y 座標について狭義単調減少か
-	
+
 	// x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少] な点列
 	// ただし番兵として (-inf, -inf[inf]) と (inf, inf[-inf]) を含む．
 	map<T, T> x_to_y;
@@ -890,8 +1031,22 @@ struct Monotonous_points {
 		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
 
 		// 番兵を挿入しておく．
-		if (!y_smaller) { x_to_y[INFL] = -inf; x_to_y[INFL] = INFL; }
-		else { x_to_y[-INFL] = INFL; x_to_y[INFL] = -INFL; }
+		if (!y_smaller) {
+			x_to_y[-T(INFL)] = -T(INFL);
+			x_to_y[T(INFL)] = T(INFL);
+		}
+		else {
+			x_to_y[-T(INFL)] = T(INFL);
+			x_to_y[T(INFL)] = -T(INFL);
+		}
+	}
+
+	// 点の個数を返す．
+	int size() const {
+		// verify : https://atcoder.jp/contests/abc372/tasks/abc372_d
+
+		// 両端の番兵の分を引く．
+		return sz(x_to_y) - 2;
 	}
 
 	// 点 (x, y) を挿入し，単調性に違反する点は全て削除する．

@@ -73,6 +73,7 @@ void add_vertex_cs(T_cs& x, int s) {
 }
 vector<T_cs> count_subtree(const Graph& g, int r) {
 	// 参考 : https://snuke.hatenablog.com/entry/2019/01/15/211812
+	// verify : https://yukicoder.me/problems/no/2917
 
 	return tree_getDP<T_cs, leaf_cs, add_edge_cs, merge_cs, add_vertex_cs>(g, r);
 }
@@ -236,8 +237,7 @@ vm count_connected_induced_subtree_by_leaf_color(const Graph& g, int r, vi col) 
 	int n = sz(g);
 	c_cislc = move(col);
 	auto dp = tree_getDP<T_cislc, leaf_cislc, add_edge_cislc, merge_cislc, add_vertex_cislc>(g, r);
-	dump(dp);
-
+	
 	vm res(n);
 	rep(s, n) res[s] = dp[s].c0 + dp[s].c2 + (c_cislc[s] ? dp[s].c1 : 0);
 	return res;
@@ -703,11 +703,22 @@ vl tree_distance_frequency(const Graph& g) {
 
 //【ラベル付き木の数え上げ（次数制約付き）】
 /*
-* n 頂点のラベル付き木で頂点 i の次数が d[i] であるものの個数は以下の多項係数で与えられる：
+* n 頂点のラベル付き木で，頂点 i の次数が d[i] であるものの個数は以下の多項係数で与えられる：
 *	mul(n-2, d-1) = (n-2)! / (Πi (d[i]-1)!)
 *
 * 参考 : https://drken1215.hatenablog.com/entry/2020/10/25/132900
 * verify : https://atcoder.jp/contests/NYC2015/tasks/nyc2015_5
+*/
+
+
+//【ラベル付き木の数え上げ（辺指定）】
+/*
+* n 頂点のラベル付き木で，指定された辺集合 E を含むものの個数は以下の式で与えられる：
+*	E に閉路があれば 0
+*	E が森なら，辺数を m，各連結成分の大きさを c_i とすると n^(n-m-2) Π_i c_i
+* 
+* 参考 : https://37zigen.com/prufer-code/
+* verify : https://yukicoder.me/problems/no/2917
 */
 
 

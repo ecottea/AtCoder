@@ -84,7 +84,7 @@ struct WEdge {
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const WEdge& e) {
-		os << '(' << e.to << ',' << e.cost << ')';
+		os << "(" << e.to << "," << e.cost << ")";
 		return os;
 	}
 #endif
@@ -349,6 +349,76 @@ WGraph create_random_WGraph(int n, ll c_min, ll c_max, int p, bool self_loop = f
 		if (rnd_edge(mt) >= p) continue;
 
 		g[s].emplace_back(t, rnd_cost(mt));
+	}
+
+	return g;
+}
+
+
+//【参照 & 重み付きグラフの辺】
+/*
+* int from : 始点
+* int to : 終点
+* ll cost : 重み
+* int id : 辺番号
+* bool dir : 順方向か
+*/
+struct IWEdge {
+	int from; // 始点
+	int to; // 終点
+	ll cost; // 重み
+	int id; // 辺番号
+	bool dir; // 順方向か
+
+	IWEdge() : from(-1), to(-1), cost(0), id(-1), dir(true) {}
+	IWEdge(int from, int to, ll cost, int id, bool dir = true) : from(from), to(to), cost(cost), id(id), dir(dir) {}
+
+	// プレーングラフで呼ばれたとき用
+	operator int() const { return to; }
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const IWEdge& e) {
+		os << '(' << e.from << "→" << e.to << ',' << "cost:" << e.cost
+			<< "id:" << e.id << ',' << (e.dir ? "fwd" : "rev") << ')';
+		return os;
+	}
+#endif
+};
+
+
+//【参照 & 重み付きグラフ】
+/*
+* IWGraph g
+* g[v] : 頂点 v から出る辺を並べたリスト
+*/
+using IWGraph = vector<vector<IWEdge>>;
+
+
+//【参照 & 重み付きグラフの入力】O(n + m)
+/*
+* (始点, 終点, 重み) の組からなる入力を受け取り，n 頂点 m 辺の参照 & 重み付きグラフを構築して返す．
+* また必要なら j 番目の辺が u→v で重み c であることを es[j] = {u, v, c} として格納する．
+*
+* n : グラフの頂点の数
+* m : グラフの辺の数（省略すれば n-1）
+* directed : 有向グラフか（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
+*/
+IWGraph read_IGraph(int n, int m = -1, bool directed = false, bool zero_indexed = false, vector<tuple<int, int, ll>>* es = nullptr) {
+	IWGraph g(n);
+	if (m == -1) m = n - 1;
+	if (es != nullptr) es->resize(m);
+
+	rep(j, m) {
+		int a, b; ll c;
+		cin >> a >> b >> c;
+
+		if (!zero_indexed) { --a; --b; }
+
+		g[a].push_back({ a, b, c, j, true });
+		if (!directed && a != b) g[b].push_back({ b, a, c, j, false });
+
+		if (es != nullptr) (*es)[j] = { a, b, c };
 	}
 
 	return g;

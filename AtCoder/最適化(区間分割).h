@@ -9,7 +9,17 @@
 */
 
 
-//【和が x 以上の区間数の最大化】O(n log n)
+//【区間和の最小値の最大化（非負，区間数指定）】
+/*
+* 判定問題
+*	和が x 以上の K 個の区間に分割できるか？
+* は貪欲に解けるので，答えで二分探索すれば良い．
+* 
+* verify : https://atcoder.jp/contests/typical90/tasks/typical90_a
+*/
+
+
+//【和が x 以上の区間数の最大化（負値可）】O(n log n)
 /*
 * 数列 a[0..n)（負値も可）に対して
 *	a[l..r) のスコア：Σa[l..r) ≧ x ? 1 : -INF
@@ -60,12 +70,12 @@ int maximize_greater_count(const vector<T>& a, T x) {
 }
 
 
-//【区間最大値の和の最小化】O(n log n)
+//【区間最大値の和の最小化（負値可）】O(n log n)
 /*
-* 数列 a[0..n) に対して
-*	a[l..r) のスコア：max a[l..r)
-*	a[0..n) の区間分割のスコア：各区間スコアの和
-* と定め，2^(n-1) 通り全ての区間分割をわたるスコアの最小値を返す．
+* 数列 a[0..n)（負値可）に対して
+*	a[l..r) のコスト：max a[l..r)
+*	a[0..n) の区間分割のコスト：各区間コストの和
+* と定め，2^(n-1) 通り全ての区間分割をわたるコストの最小値を返す．
 *
 * 利用：【最近傍要素】，【min 可換モノイド】
 */
@@ -111,9 +121,47 @@ T minimize_max_sum(const vector<T>& a) {
 }
 
 
-//【区間最小値の和の最小化】O(1)
+//【区間レンジの和の最大化（負値可）】O(n)
 /*
-* 明らかに全体を 1 つの区間にするのが最善である．
+* 数列 a[0..n)（負値可）に対して
+*	a[l..r) のスコア：max a[l..r) - min a[l..r)
+*	a[0..n) の区間分割のスコア：各区間スコアの和
+* と定め，2^(n-1) 通り全ての区間分割をわたるスコアの最大値を返す．
+* 
+*（耳 DP）
 */
+template <class T>
+T maximize_range_sum(const vector<T>& a) {
+	// 参考 : https://drken1215.hatenablog.com/entry/2023/09/04/214120
+	// verify : https://atcoder.jp/contests/codequeen2023-final-open/tasks/codequeen2023_final_e
+
+	//【方法】
+	// 区間 [l..r) を固定したとき，a[l..r) のレンジはどんな差よりも大きいかまたは等しい．すなわち
+	//		max a[l..r) - min a[l..r) = max_l≦i,j<r (a[i] - a[j])
+	// が成り立つ．
+	// 右辺は ±1 を丁度 1 つずつ含む {0,±1} の列の集合 S のある要素との内積とみなせる．
+	// 最大値をまとめてとることにすれば，元の問題は a[0..n) と S* との内積の最大化とみなせる．
+
+	int n = sz(a);
+
+	// dp[i][j] : a[0..i) で，次に選ぶのが 0:+1, 1:-1, 2:任意 である場合のスコアの最大値
+	vector<vector<T>> dp(n + 1, vector<T>(3, -(T)INFL));
+	dp[0][2] = 0;
+
+	rep(i, n) {
+		chmax(dp[i + 1][0], dp[i][0]);
+		chmax(dp[i + 1][2], dp[i][0] + a[i]);
+
+		chmax(dp[i + 1][1], dp[i][1]);
+		chmax(dp[i + 1][2], dp[i][1] - a[i]);
+
+		chmax(dp[i + 1][0], dp[i][2] - a[i]);
+		chmax(dp[i + 1][1], dp[i][2] + a[i]);
+		chmax(dp[i + 1][2], dp[i][2]);
+	}
+	dumpel(dp);
+
+	return dp[n][2];
+}
 
 

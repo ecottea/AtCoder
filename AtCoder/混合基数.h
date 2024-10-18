@@ -281,7 +281,7 @@ vi bigint_to_factorial_base(boost::multiprecision::cpp_int x, int n = -1) {
 * 階乗進法表記で上位桁から順に ds[0..n) が並んだ数を num とする．
 * [0..n) の順列で辞書順で num 番目（0-indexed）の順列を返す．
 *
-* 利用：【多重集合】
+* 利用：【index 付き多重集合】
 */
 vi factorial_base_to_permutation(const vi& ds) {
 	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_h
@@ -325,7 +325,7 @@ vi factorial_base_to_permutation(const vi& ds) {
 /*
 * [0..n) の順列 p が何番目（0-indexed）かを階乗進法表示したものを返す．
 *
-* 利用：【多重集合】
+* 利用：【index 付き多重集合】
 */
 vi permutation_to_factorial_base(const vi& p) {
 	// verify : https://atcoder.jp/contests/tupc2022/tasks/tupc2022_h

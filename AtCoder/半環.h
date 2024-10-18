@@ -245,9 +245,6 @@ S812 e812() { return 0; }
 #define LCM_GCD_semiring S812, add812, o812, mul812, e812
 
 
-//yƒjƒ€˜a - ƒjƒ€Ï ‰ÂŠÂ”¼ŠÂz
-
-
 //y”¼ŠÂ‚Å‚È‚¢‚à‚Ìz
 /*
 * min - OR ‚Í”¼ŠÂ‚Å‚È‚¢D

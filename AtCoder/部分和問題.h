@@ -60,7 +60,7 @@ vector<T> count_partial_sum(const vi& a, int v) {
 
 //【部分和問題（数え上げ，mod 998244353）】O(n + v log v)
 /*
-* 非負整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
+* 正整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 *
 * 制約：fm は 2(v+1)! まで計算可能
 * 
@@ -102,7 +102,7 @@ vm count_partial_sum_fps(const vi& a, int v, const Factorial_mint& fm) {
 * 非負整数列 a[0..n) について，Σi∈S a[i] = v なる添字集合 S を is に格納する．
 * S が存在しなければ false を返す．
 *
-* 制約：N は v + 1 以上の定数．
+* 制約：N は v + 1 以上の定数
 */
 template <size_t N>
 bool construction_partial_sum_fast(const vi& a, int v, vi& is) {
@@ -976,4 +976,12 @@ mint count_greedy_partial_sum(vi a, int v) {
 	return res;
 }
 
+
+//【3-SUM】O(n^2)
+/*
+* 数列 a[0..n) から 3 つの要素を選んで和を 0 にできるか？という問題を
+* O(n^(2-ε)) で解くアルゴリズムは見つかっていない．
+* 
+* 参考 : https://en.wikipedia.org/wiki/3SUM
+*/
 

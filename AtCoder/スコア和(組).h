@@ -85,7 +85,7 @@ mint pair_difference_sum(vector<T> a) {
 }
 
 
-//【組の XOR の総和】O((n + m) log A)（A = max(a[i], b[j])）
+//【組の XOR の総和】O((n + m) log A)（A = max(a, b)）
 /*
 * Σi∈[0..n) Σj∈[0..m) (a[i] XOR b[j]) の値を返す．
 */
@@ -113,7 +113,7 @@ T pair_xor_sum(const vl& a, const vl& b) {
 }
 
 
-//【組の XOR の総和】O(n + m + A log A)（A = max(a[i], b[j])）
+//【組の XOR の総和】O(n + m + A log A)（A = max(a, b)）
 /*
 * Σi∈[0..n) Σj∈[0..m) (a[i] XOR b[j]) の値を返す．
 *

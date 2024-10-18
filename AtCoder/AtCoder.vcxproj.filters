@@ -200,7 +200,7 @@
     <ClInclude Include="構造(木).h">
       <Filter>ヘッダー ファイル\グラフ%28木%29</Filter>
     </ClInclude>
-    <ClInclude Include="mint.h">
+    <ClInclude Include="構造%28数論%29.h">
       <Filter>ヘッダー ファイル\数論</Filter>
     </ClInclude>
     <ClInclude Include="最短路.h">
@@ -661,6 +661,15 @@
     </ClInclude>
     <ClInclude Include="数え上げ%28数の表示%29.h">
       <Filter>ヘッダー ファイル\数の表示</Filter>
+    </ClInclude>
+    <ClInclude Include="数え上げ%28組%29.h">
+      <Filter>ヘッダー ファイル\集合%28組%29</Filter>
+    </ClInclude>
+    <ClInclude Include="体.h">
+      <Filter>ヘッダー ファイル\データ構造%28抽象代数%29</Filter>
+    </ClInclude>
+    <ClInclude Include="スコア和%28列%29.h">
+      <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "構造(数論).h"
 // ■■■■■ 添字積畳込み（ディリクレ積） ■■■■■
 
 
@@ -80,7 +81,7 @@ vector<T> naive_dirichlet_invconvolution(const vector<T>& a, const vector<T>& c)
 //【ディリクレ母関数とディリクレ畳込み】
 /*
 * 数論関数 a[1..n] のディリクレ母関数を A(s) = Σi a[i] / i^s などとおくと，
-* 数論関数 a, b のディリクレ畳込み c に対応するディリクレ母関数は C(s) となる．
+* 数論関数 a, b のディリクレ畳込み c に対応するディリクレ母関数は C(s) = A(s) B(s) となる．
 */
 
 
@@ -217,12 +218,12 @@ public:
 };
 
 
-//【ディリクレ畳込みの累積和（素朴）】O(n)
+//【ディリクレ畳込みの総和（素朴）】O(n)
 /*
 * 数論関数 a[1..n] と b[1..n] のディリクレ畳込みを c とし，Σc[1..n] を返す．
 */
 template <class T>
-T naive_dirichlet_convolution_acc(const vector<T>& a, const vector<T>& b) {
+T naive_dirichlet_convolution_sum(const vector<T>& a, const vector<T>& b) {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
 
 	//【方法】
@@ -256,356 +257,299 @@ T naive_dirichlet_convolution_acc(const vector<T>& a, const vector<T>& b) {
 }
 
 
-//【ディリクレ畳込みの累積和】O(√n)
+//【ディリクレ畳込みの総和】O(√N)
 /*
-* 数論関数 a と b のディリクレ畳込みを c とし，Σc[1..n] を返す．
-* m = √n（切り捨て）とし，al[1..m], bl[1..m], Ah[1..m], Bh[1..m] は以下の通りとする：
-*	al[i] = a[i],		bl[j] = b[j]
-*	Ah[i] = Σa[1..n/i],	Bh[j] = Σb[1..n/j]
+* 数論関数 a[1..N] と b[1..N] のディリクレ畳込みを c[1..N] とする．
+* 与えられた a, b の累積和 A, B に対し，Σc[1..N] を返す．
+*
+* 制約：nl = (int)(sqrt(N) + 1e-9)
 */
 template <class T>
-T dirichlet_convolution_acc(const vector<T>& al, const vector<T>& Ah, const vector<T>& bl, const vector<T>& Bh) {
+T dirichlet_convolution_sum(const Floor_vector<T>& A, const Floor_vector<T>& B) {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
+	// verify : https://projecteuler.net/problem=401
 
 	//【方法】
-	// a[1..n] の累積和を A[i] = Σa[1..i] などとおく．求めたい C[n] は
-	//		C[n]
-	//		= Σ_k∈[1..n] Σ_(i×j=k) a[i] b[j]
-	//		= Σ_(i×j≦n) a[i] b[j]
+	// m=√N，a[1..N] の累積和を A[i] = Σa[1..i] などとおく．求めたい C[N] は
+	//		C[N]
+	//		= Σ_k∈[1..N] Σ_(i×j=k) a[i] b[j]
+	//		= Σ_(i×j≦N) a[i] b[j]
 	// と表される．i ≦ m の範囲からの寄与は
-	//		Σ_(i≦m) Σ_(j≦n/i) a[i] b[j] = Σ_(i≦m) a[i] B[n/i]
+	//		Σ_(i≦m) Σ_(j≦N/i) a[i] b[j] = Σ_(i≦m) a[i] B[N/i]
 	// となる．i > m の範囲からの寄与は，j ≦ m であることに注意すると，
-	//		Σ_(j≦m) Σ_(m<i≦n/j) a[i] b[j] = Σ_(j≦m) b[j] (A[n/j] - A[m])
+	//		Σ_(j≦m) Σ_(m<i≦N/j) a[i] b[j] = Σ_(j≦m) b[j] (A[N/j] - A[m])
 	// となる．
 
-	int m = sz(al) - 1;
+	int nl = A.nl;
 
-	// Am : Σa[1..m]
-	T Am = accumulate(all(al), T(0));
+	T c_sum = 0;
 
-	T Cn = 0;
-	repi(i, 1, m) Cn += al[i] * Bh[i];
-	repi(j, 1, m) Cn += bl[j] * (Ah[j] - Am);
+	// i ≦ √N からの寄与を加える．
+	c_sum += A.get_l(1) * B.get_h(1);
+	repi(i, 2, nl) c_sum += (A.get_l(i) - A.get_l(i - 1)) * B.get_h(i);
 
-	return Cn;
+	// i > √N からの寄与を加える．
+	c_sum += B.get_l(1) * (A.get_h(1) - A.get_l(nl));
+	repi(j, 2, nl) c_sum += (B.get_l(j) - B.get_l(j - 1)) * (A.get_h(j) - A.get_l(nl));
+
+	return c_sum;
 }
 
 
-//【ディリクレ畳込みの累積和（一括）】O(nl log nl + √(n nh))
+//【ディリクレ畳込みの累積和（一括）】O(n^(2/3) (log n)^(1/3))
 /*
-* 数論関数 a と b のディリクレ畳込みを c とし，以下で定まる cl, Ch を格納する．
-* nl, nh は nh ≦ nl ≦ n ≦ nl nh を満たすとし，al, bl, cl, Ah, Bh, Ch は以下の通りとする：
-*	al[i] = a[i]		(i∈[1..nl]),  bl, cl も同様
-*	Ah[i] = Σa[1..n/i]	(i∈[1..nh]),  Bh, Ch も同様
+* 数論関数 a[1..N] と b[1..N] のディリクレ畳込みを c[1..N] とする．
+* 与えられた a, b の累積和 A, B に対し，c の累積和 C を返す．
 *
-* 特に nl = (n / log n)^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log n)^(1/3)) になる．
+* 制約：nl = (N <= 2 ? 1 : (int)max(pow(N / log(N), 2. / 3), sqrt(N) + 1e-9))
 */
 template <class T>
-void dirichlet_convolution_acc(ll n, const vector<T>& al, const vector<T>& Ah,
-	const vector<T>& bl, const vector<T>& Bh, vector<T>& cl, vector<T>& Ch)
-{
+Floor_vector<T> dirichlet_convolution_acc(const Floor_vector<T>& A, const Floor_vector<T>& B) {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
 
-	int nl = sz(al) - 1, nh = sz(Ah) - 1;
-	cl.assign(nl + 1, 0), Ch.assign(nh + 1, 0);
+	ll N = A.N; int nl = A.nl, nh = A.nh;
+	Floor_vector<T> C(N, nl);
 
-	// cl[1..nl] を素朴に計算する．
-	repi(i, 1, nl) for (ll j = 1; i * j <= nl; j++) cl[i * j] += al[i] * bl[j];
-
-	// Al[i] = Σa[1..i], Bl[i] = Σb[1..i]
-	vector<T> Al(nl + 1), Bl(nl + 1);
+	// a[1..nl], b[1..nl] を計算する．
+	vector<T> al(nl + 1), bl(nl + 1);
 	repi(i, 1, nl) {
-		Al[i] = Al[i - 1] + al[i];
-		Bl[i] = Bl[i - 1] + bl[i];
+		al[i] = A.get_l(i);
+		bl[i] = B.get_l(i);
+	}
+	repir(i, nl, 1) {
+		al[i] -= al[i - 1];
+		bl[i] -= bl[i - 1];
 	}
 
-	auto get_Ah = [&](ll i) { return i <= nh ? Ah[i] : Al[n / i]; };
-	auto get_Bh = [&](ll i) { return i <= nh ? Bh[i] : Bl[n / i]; };
-
-	// 各 Ch[k] を平方分割で計算する．
-	repi(k, 1, nh) {
-		int m = (int)(sqrt(n / k) + 1e-12);
-		repi(i, 1, m) Ch[k] += al[i] * get_Bh((ll)k * i);
-		repi(j, 1, m) Ch[k] += bl[j] * (get_Ah((ll)k * j) - Al[m]);
+	// c[1..nl] を素朴に計算する．
+	vector<T> cl(nl + 1);
+	repi(i, 1, nl) {
+		int j_max = nl / i;
+		repi(j, 1, j_max) cl[i * j] += al[i] * bl[j];
 	}
+
+	// c[1..nl] の累積和を素朴に計算する．
+	repi(i, 1, nl) {
+		cl[i] += cl[i - 1];
+		C.set_l(i, cl[i]);
+	}
+
+	// 各 C[N/d] を平方分割で計算する．
+	repi(d, 1, nh) {
+		T Cd = 0;
+
+		int mid = (int)(sqrt(N / d) + 1e-12);
+		repi(i, 1, mid) Cd += al[i] * B.get_h(d * i);
+		repi(j, 1, mid) Cd += bl[j] * (A.get_h(d * j) - A.get_l(mid));
+
+		C.set_h(d, Cd);
+	}
+
+	return C;
 }
 
 
-//【ディリクレ逆畳込みの累積和（一括）】O(nl log nl + √(n nh))
+//【ディリクレ逆畳込みの累積和（一括）】O(n^(2/3) (log n)^(1/3))
 /*
-* 数論関数 a と b のディリクレ畳込みを c とし，以下で定まる bl, Bh を格納する．
-* nl, nh は nh ≦ nl ≦ n ≦ nl nh を満たすとし，al, bl, cl, Ah, Bh, Ch は以下の通りとする：
-*	al[i] = a[i]		(i∈[1..nl]),  bl, cl も同様
-*	Ah[i] = Σa[1..n/i]	(i∈[1..nh]),  Bh, Ch も同様
+* 数論関数 a[1..N] と b[1..N] のディリクレ畳込みを c[1..N] とする．
+* 与えられた a, c の累積和 A, C に対し，b の累積和 B を返す．
 *
-* 特に nl = (n / log n)^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log n)^(1/3)) になる．
-*
-* 制約：a[1] ≠ 0
+* 制約：a[1] != 0, nl = (N <= 2 ? 1 : (int)max(pow(N / log(N), 2. / 3), sqrt(N) + 1e-9))
 */
 template <class T>
-void dirichlet_invconvolution_acc(ll n, const vector<T>& al, const vector<T>& Ah,
-	const vector<T>& cl, const vector<T>& Ch, vector<T>& bl, vector<T>& Bh)
-{
+Floor_vector<T> dirichlet_invconvolution_acc(const Floor_vector<T>& A, const Floor_vector<T>& C) {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
 
-	Assert(al[1] != 0);
-	int nl = sz(al) - 1, nh = sz(Ah) - 1;
-	bl = cl, Bh = Ch;
+	Assert(A.get_l(1) != 0);
 
-	// bl[1..nl] を素朴に計算する（a が乗法的なら高速化できる）
+	ll N = A.N; int nl = A.nl, nh = A.nh;
+	Floor_vector<T> B(N, nl);
+
+	// a[1..nl], c[1..nl] を計算する．
+	vector<T> al(nl + 1), cl(nl + 1);
+	repi(i, 1, nl) {
+		al[i] = A.get_l(i);
+		cl[i] = C.get_l(i);
+	}
+	repir(i, nl, 1) {
+		al[i] -= al[i - 1];
+		cl[i] -= cl[i - 1];
+	}
+
+	// b[1..nl] を素朴に計算する
+	vector<T> bl(cl);
 	repi(j, 1, nl) {
-		bl[j] /= al[1];
-		for (ll i = 2; i * j <= nl; i++) bl[i * j] -= al[i] * bl[j];
+		bl[j] /= al[1]; // mint だと遅くなるので注意
+
+		int i_max = nl / j;
+		repi(i, 2, i_max) bl[i * j] -= al[i] * bl[j];
 	}
 
-	// Al[i] = Σa[1..i], Bl[i] = Σb[1..i]
-	vector<T> Al(nl + 1), Bl(nl + 1);
+	// b[1..nl] の累積和を素朴に計算する．
+	vector<T> Bl(nl + 1);
 	repi(i, 1, nl) {
-		Al[i] = Al[i - 1] + al[i];
 		Bl[i] = Bl[i - 1] + bl[i];
+		B.set_l(i, Bl[i]);
 	}
 
-	auto get_Ah = [&](ll i) { return i <= nh ? Ah[i] : Al[n / i]; };
-	auto get_Bh = [&](ll i) { return i <= nh ? Bh[i] : Bl[n / i]; };
+	// 各 B[N/d] を平方分割で計算する．
+	repir(d, nh, 1) {
+		T Bd = C.get_h(d);
 
-	// 各 Bh[k] を平方分割で計算する．
-	repir(k, nh, 1) {
-		int m = (int)(sqrt(n / k) + 1e-12);
-		repi(i, 2, m) Bh[k] -= al[i] * get_Bh((ll)k * i);
-		repi(j, 1, m) Bh[k] -= bl[j] * (get_Ah((ll)k * j) - Al[m]);
-		Bh[k] /= al[1];
+		int mid = (int)(sqrt(N / d) + 1e-12);
+		repi(i, 2, mid) Bd -= al[i] * B.get_h(d * i);
+		repi(j, 1, mid) Bd -= bl[j] * (A.get_h(d * j) - A.get_l(mid));
+		Bd /= al[1]; // mint だと遅くなるので注意
+
+		B.set_h(d, Bd);
 	}
+
+	return B;
 }
 
 
 //【ディリクレ畳込みの累積和（乗法的，一括）】
 /*
-* Multiplicative_dirichlet_convolution_acc<T>(int p_max) : O(p_max log(log p_max))
-*	p_max ≧ nl 以下の素数を持って初期化する．
-*	乗法的数論関数 a[1..n] と数論関数 b[1..n] のディリクレ畳込みを c[1..n] とする．
-*	nl, nh は nh ≦ nl ≦ n ≦ nl nh を満たすとし，al, bl, cl, Ah, Bh, Ch は以下の通りとする：
-*		al[i] = a[i]		(i∈[1..nl]),  bl, cl も同様
-*		Ah[i] = Σa[1..n/i]	(i∈[1..nh]),  Bh, Ch も同様
+* Multiplicative_dirichlet_convolution_acc<T>(ll N) : O(N^(2/3))
+*	[1..N] 上の数論関数を扱えるよう初期化する．
 *
-* conv_acc(ll n, vT al, vT Ah, vT bl, vT Bh, vT& cl, vT& Ch) : O(nl log(log nl) + √(n nh))
-*	上記 al, Ah, bl, Bh をもとに cl, Ch を計算し格納する．
+* fvT conv_acc(fvT A, fvT B) : O(n^(2/3) (log(log n))^(1/3))
+*	乗法的数論関数 a[1..N] と数論関数 b[1..N] のディリクレ畳込みを c[1..N] とする．
+*	与えられた a, b の累積和 A, B に対し，c の累積和 C を返す．
 *
-* inv_conv_acc(ll n, vT al, vT Ah, vT cl, vT Ch, vT& bl, vT& Bh) : O(nl log(log nl) + √(n nh))
-*	上記 al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
+* fvT inv_conv_acc(fvT A, fvT C) : O(n^(2/3) (log(log n))^(1/3))
+*	乗法的数論関数 a[1..N] と数論関数 b[1..N] のディリクレ畳込みを c[1..N] とする．
+*	与えられた a, c の累積和 A, C に対し，b の累積和 B を返す．
 *
-* 特に nl = (n / log(log n))^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log(log n))^(1/3)) になる．
-	constexpr ll n_max = (ll)1e11;
-	int nl = (int)min((ll)pow(n_max / log(log(n_max)), 2. / 3), n);
-	int nh = (int)min(n / nl + 1, (ll)nl);
+* 制約：nl = (int)max(N <= 30 ? 1. : pow(N / log(log(N)), 2. / 3), sqrt(N) + 1e-9)
+* 
+* 利用：【添字整数商 vector】
 */
 template <class T>
 class Multiplicative_dirichlet_convolution_acc {
 	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
 
-	int p_max;
-	vi ps; // 素数のリスト
+	vi ps; // 素数の昇順リスト
 
 public:
-	// nl 以下の素数を持って初期化する．
-	Multiplicative_dirichlet_convolution_acc(int p_max) : p_max(p_max) {
+	// [1..N] 上の数論関数を扱えるよう初期化する．
+	Multiplicative_dirichlet_convolution_acc(ll N) {
 		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
+
+		int nl_max = (int)max(N <= 30 ? 1. : pow(N / log(log(N)), 2. / 3), sqrt(N) + 1e-9);
 
 		// is_prime[i] : i が素数か
-		vb is_prime(p_max + 1, true);
+		vb is_prime(nl_max + 1, true);
 		is_prime[0] = is_prime[1] = false;
+
 		int i = 2;
 
-		// √p_max 以下の i の処理
-		for (; i <= p_max / i; i++) if (is_prime[i]) {
+		// nl_max 以下の i の処理
+		for (; i * i <= nl_max; i++) if (is_prime[i]) {
 			ps.push_back(i);
-			for (int j = i * i; j <= p_max; j += i) is_prime[j] = false;
+			for (int j = i * i; j <= nl_max; j += i) is_prime[j] = false;
 		}
 
-		// √p_max より大きい i の処理
-		for (; i <= p_max; i++) if (is_prime[i]) ps.push_back(i);
+		// nl_max より大きい i の処理
+		for (; i <= nl_max; i++) if (is_prime[i]) ps.push_back(i);
 	}
 
-	// al, Ah, bl, Bh をもとに cl, Ch を計算し格納する．
-	void conv_acc(ll n, const vector<T>& al, const vector<T>& Ah,
-		const vector<T>& bl, const vector<T>& Bh, vector<T>& cl, vector<T>& Ch)
-	{
-		int nl = sz(al) - 1, nh = sz(Ah) - 1;
-		Assert(nl <= p_max); Assert(nh <= nl); Assert(nl <= n); Assert(n <= (ll)nl * nh);
+	// 与えられた a, b の累積和 A, B に対し，c の累積和 C を返す．
+	Floor_vector<T> conv_acc(const Floor_vector<T>& A, const Floor_vector<T>& B) {
+		ll N = A.N; int nl = A.nl, nh = A.nh;
+		Floor_vector<T> C(N, nl);
 
-		cl = bl, Ch.assign(nh + 1, 0);
-
-		// cl[1..nl] を計算する．
-		repe(p, ps) repir(j, nl / p, 1) {
-			for (ll i = p; i * j <= nl; i *= p) cl[i * j] += al[i] * cl[j];
-		}
-
-		// Al[i] = Σa[1..i], Bl[i] = Σb[1..i]
-		vector<T> Al(nl + 1), Bl(nl + 1);
+		// a[1..nl], b[1..nl] を計算する．
+		vector<T> al(nl + 1), bl(nl + 1);
 		repi(i, 1, nl) {
-			Al[i] = Al[i - 1] + al[i];
-			Bl[i] = Bl[i - 1] + bl[i];
+			al[i] = A.get_l(i);
+			bl[i] = B.get_l(i);
+		}
+		repir(i, nl, 1) {
+			al[i] -= al[i - 1];
+			bl[i] -= bl[i - 1];
 		}
 
-		auto get_Ah = [&](ll i) { return i <= nh ? Ah[i] : Al[n / i]; };
-		auto get_Bh = [&](ll i) { return i <= nh ? Bh[i] : Bl[n / i]; };
+		// c[1..nl] をインライン配る DP で計算する．
+		vector<T> cl(bl);
+		repe(p, ps) {
+			int j_max = nl / p;
+			if (j_max == 0) break;
 
-		// 各 Ch[k] を平方分割で計算する．
-		repi(k, 1, nh) {
-			int m = (int)(sqrt(n / k) + 1e-12);
-			repi(i, 1, m) Ch[k] += al[i] * get_Bh((ll)k * i);
-			repi(j, 1, m) Ch[k] += bl[j] * (get_Ah((ll)k * j) - Al[m]);
+			repir(j, j_max, 1) {
+				ll i_max = nl / j;
+				for (ll i = p; i <= i_max; i *= p) cl[i * j] += al[i] * cl[j];
+			}
 		}
+
+		// c[1..nl] の累積和を素朴に計算する．
+		repi(i, 1, nl) {
+			cl[i] += cl[i - 1];
+			C.set_l(i, cl[i]);
+		}
+
+		// 各 C[N/d] を平方分割で計算する．
+		repi(d, 1, nh) {
+			T Cd = 0;
+
+			int mid = (int)(sqrt(N / d) + 1e-12);
+			repi(i, 1, mid) Cd += al[i] * B.get_h(d * i);
+			repi(j, 1, mid) Cd += bl[j] * (A.get_h(d * j) - A.get_l(mid));
+
+			C.set_h(d, Cd);
+		}
+
+		return C;
 	}
 
-	// al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
-	void inv_conv_acc(ll n, const vector<T>& al, const vector<T>& Ah,
-		const vector<T>& cl, const vector<T>& Ch, vector<T>& bl, vector<T>& Bh)
-	{
+	// 与えられた a, c の累積和 A, C に対し，b の累積和 B を返す．
+	Floor_vector<T> inv_conv_acc(const Floor_vector<T>& A, const Floor_vector<T>& C) {
 		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
 
-		Assert(al[1] != 0);
-		int nl = sz(al) - 1, nh = sz(Ah) - 1;
-		Assert(nl <= p_max); Assert(nh <= nl); Assert(nl <= n); Assert(n <= (ll)nl * nh);
-		bl = cl, Bh = Ch;
+		ll N = A.N; int nl = A.nl, nh = A.nh;
+		Floor_vector<T> B(N, nl);
 
-		// bl[1..nl] を計算する．
-		repe(p, ps) repi(j, 1, nl / p) {
-			bl[j] /= al[1];
-			for (ll i = p; i * j <= nl; i *= p) bl[i * j] -= al[i] * bl[j];
-		}
-
-		// Al[i] = Σa[1..i], Bl[i] = Σb[1..i]
-		vector<T> Al(nl + 1), Bl(nl + 1);
+		// a[1..nl], c[1..nl] を計算する．
+		vector<T> al(nl + 1), cl(nl + 1);
 		repi(i, 1, nl) {
-			Al[i] = Al[i - 1] + al[i];
+			al[i] = A.get_l(i);
+			cl[i] = C.get_l(i);
+		}
+		repir(i, nl, 1) {
+			al[i] -= al[i - 1];
+			cl[i] -= cl[i - 1];
+		}
+
+		// b[1..nl] をインライン配る DP で計算する．
+		vector<T> bl(cl);
+		repe(p, ps) {
+			int j_max = nl / p;
+			if (j_max == 0) break;
+
+			repi(j, 1, j_max) {
+				ll i_max = nl / j;
+				for (ll i = p; i <= i_max; i *= p) bl[i * j] -= al[i] * bl[j];
+			}
+		}
+
+		// b[1..nl] の累積和を素朴に計算する．
+		vector<T> Bl(nl + 1);
+		repi(i, 1, nl) {
 			Bl[i] = Bl[i - 1] + bl[i];
+			B.set_l(i, Bl[i]);
 		}
 
-		auto get_Ah = [&](ll i) { return i <= nh ? Ah[i] : Al[n / i]; };
-		auto get_Bh = [&](ll i) { return i <= nh ? Bh[i] : Bl[n / i]; };
+		// 各 B[N/d] を平方分割で計算する．
+		repir(d, nh, 1) {
+			T Bd = C.get_h(d);
 
-		// 各 Bh[k] を平方分割で計算する．
-		repir(k, nh, 1) {
-			int m = (int)(sqrt(n / k) + 1e-12);
-			repi(i, 2, m) Bh[k] -= al[i] * get_Bh((ll)k * i);
-			repi(j, 1, m) Bh[k] -= bl[j] * (get_Ah((ll)k * j) - Al[m]);
-			Bh[k] /= al[1];
+			int mid = (int)(sqrt(N / d) + 1e-12);
+			repi(i, 2, mid) Bd -= al[i] * B.get_h(d * i);
+			repi(j, 1, mid) Bd -= bl[j] * (A.get_h(d * j) - A.get_l(mid));
+
+			B.set_h(d, Bd);
 		}
+
+		return B;
 	}
 };
-
-
-//【ディリクレ畳込みの累積和（乗法的，mint，一括）】
-/*
-* Multiplicative_dirichlet_invconvolution_acc_mint(int p_max) : O(p_max log(log p_max))
-*	p_max ≧ nl 以下の素数を持って初期化する．
-*	乗法的数論関数 a[1..n] と数論関数 b[1..n] のディリクレ畳込みを c[1..n] とする．
-*	nl, nh は nh ≦ nl ≦ n ≦ nl nh を満たすとし，al, bl, cl, Ah, Bh, Ch は以下の通りとする：
-*		al[i] = a[i]		(i∈[1..nl]),  bl, cl も同様
-*		Ah[i] = Σa[1..n/i]	(i∈[1..nh]),  Bh, Ch も同様
-*
-* conv_acc(ll n, vm al, vm Ah, vm bl, vm Bh, vm& cl, vm& Ch) : O(nl log(log nl) + √(n nh))
-*	上記 al, Ah, bl, Bh をもとに cl, Ch を計算し格納する．
-*
-* inv_conv_acc(ll n, vm al, vm Ah, vm cl, vm Ch, vm& bl, vm& Bh) : O(nl log(log nl) + √(n nh))
-*	上記 al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
-*
-* 特に nl = (n / log(log n))^(2/3) と選ぶと全体の計算量は O(n^(2/3) (log(log n))^(1/3)) になる．
-	constexpr ll n_max = (ll)1e11;
-	int nl = (int)min((ll)pow(n_max / log(log(n_max)), 2. / 3), n);
-	int nh = (int)min(n / nl + 1, (ll)nl);
-*/
-class Multiplicative_dirichlet_convolution_acc_mint {
-	// 参考 : https://maspypy.com/dirichlet-%e7%a9%8d%e3%81%a8%e3%80%81%e6%95%b0%e8%ab%96%e9%96%a2%e6%95%b0%e3%81%ae%e7%b4%af%e7%a9%8d%e5%92%8c
-
-	int p_max;
-	vi ps; // 素数のリスト
-
-public:
-	// nl 以下の素数を持って初期化する．
-	Multiplicative_dirichlet_convolution_acc_mint(int p_max) : p_max(p_max) {
-		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
-
-		// is_prime[i] : i が素数か
-		vb is_prime(p_max + 1, true);
-		is_prime[0] = is_prime[1] = false;
-		int i = 2;
-
-		// √p_max 以下の i の処理
-		for (; i <= p_max / i; i++) if (is_prime[i]) {
-			ps.push_back(i);
-			for (int j = i * i; j <= p_max; j += i) is_prime[j] = false;
-		}
-
-		// √p_max より大きい i の処理
-		for (; i <= p_max; i++) if (is_prime[i]) ps.push_back(i);
-	}
-
-	// al, Ah, bl, Bh をもとに cl, Ch を計算し格納する．
-	void conv_acc(ll n, const vm& al, const vm& Ah, const vm& bl, const vm& Bh, vm& cl, vm& Ch) {
-		int nl = sz(al) - 1, nh = sz(Ah) - 1;
-		Assert(nl <= p_max); Assert(nh <= nl); Assert(nl <= n); Assert(n <= (ll)nl * nh);
-
-		cl = bl, Ch.assign(nh + 1, 0);
-
-		// cl[1..nl] を計算する．
-		repe(p, ps) repir(j, nl / p, 1) {
-			for (ll i = p; i * j <= nl; i *= p) cl[i * j] += al[i] * cl[j];
-		}
-
-		// Al[i] = Σa[1..i], Bl[i] = Σb[1..i]
-		vm Al(nl + 1), Bl(nl + 1);
-		repi(i, 1, nl) {
-			Al[i] = Al[i - 1] + al[i];
-			Bl[i] = Bl[i - 1] + bl[i];
-		}
-
-		auto get_Ah = [&](ll i) { return i <= nh ? Ah[i] : Al[n / i]; };
-		auto get_Bh = [&](ll i) { return i <= nh ? Bh[i] : Bl[n / i]; };
-
-		// 各 Ch[k] を平方分割で計算する．
-		repi(k, 1, nh) {
-			int m = (int)(sqrt(n / k) + 1e-12);
-			repi(i, 1, m) Ch[k] += al[i] * get_Bh((ll)k * i);
-			repi(j, 1, m) Ch[k] += bl[j] * (get_Ah((ll)k * j) - Al[m]);
-		}
-	}
-
-	// al, Ah, cl, Ch をもとに bl, Bh を計算し格納する．
-	void inv_conv_acc(ll n, const vm& al, const vm& Ah, const vm& cl, const vm& Ch, vm& bl, vm& Bh) {
-		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
-
-		Assert(al[1] != 0);
-		mint a1_inv = al[1].inv();
-
-		int nl = sz(al) - 1, nh = sz(Ah) - 1;
-		Assert(nl <= p_max); Assert(nh <= nl); Assert(nl <= n); Assert(n <= (ll)nl * nh);
-		bl = cl, Bh = Ch;
-
-		// bl[1..nl] を計算する．
-		repe(p, ps) repi(j, 1, nl / p) {
-			bl[j] *= a1_inv;
-			for (ll i = p; i * j <= nl; i *= p) bl[i * j] -= al[i] * bl[j];
-		}
-
-		// Al[i] = Σa[1..i], Bl[i] = Σb[1..i]
-		vm Al(nl + 1), Bl(nl + 1);
-		repi(i, 1, nl) {
-			Al[i] = Al[i - 1] + al[i];
-			Bl[i] = Bl[i - 1] + bl[i];
-		}
-
-		auto get_Ah = [&](ll i) { return i <= nh ? Ah[i] : Al[n / i]; };
-		auto get_Bh = [&](ll i) { return i <= nh ? Bh[i] : Bl[n / i]; };
-
-		// 各 Bh[k] を平方分割で計算する．
-		repir(k, nh, 1) {
-			int m = (int)(sqrt(n / k) + 1e-12);
-			repi(i, 2, m) Bh[k] -= al[i] * get_Bh((ll)k * i);
-			repi(j, 1, m) Bh[k] -= bl[j] * (get_Ah((ll)k * j) - Al[m]);
-			Bh[k] *= a1_inv;
-		}
-	}
-};
-
-

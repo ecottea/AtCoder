@@ -159,6 +159,9 @@
   <ItemGroup>
     <ClInclude Include="DP.h" />
     <ClInclude Include="2変数FPS.h" />
+    <ClInclude Include="スコア和%28列%29.h" />
+    <ClInclude Include="体.h" />
+    <ClInclude Include="数え上げ%28組%29.h" />
     <ClInclude Include="数え上げ%28数の表示%29.h" />
     <ClInclude Include="スコア和%28数論%29.h" />
     <ClInclude Include="数え上げ%28数論%29.h" />
@@ -211,7 +214,7 @@
     <ClInclude Include="FPS(bit).h" />
     <ClInclude Include="FPS(抽象).h" />
     <ClInclude Include="max.h" />
-    <ClInclude Include="mint.h" />
+    <ClInclude Include="構造%28数論%29.h" />
     <ClInclude Include="Z-加群.h" />
     <ClInclude Include="いもす法.h" />
     <ClInclude Include="Union-Find.h" />

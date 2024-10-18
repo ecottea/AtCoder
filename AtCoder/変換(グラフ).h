@@ -869,6 +869,36 @@ public:
 };
 
 
+//【推移閉包】O(n^3 / 64)
+/*
+* n 頂点の有向グラフ g の推移閉包を返す．
+*
+* 制約 : N ≧ n
+*/
+template <int N>
+Graph transitive_closure(const Graph& g) {
+	// verify : https://atcoder.jp/contests/abc374/tasks/abc374_g
+
+	int n = sz(g);
+
+	vector<bitset<N>> e(n);
+	rep(s, n) repe(t, g[s]) e[s][t] = true;
+
+	// bitset で高速化したワーシャルフロイド
+	rep(k, n) {
+		rep(i, n) {
+			if (!e[i][k]) continue;
+			e[i] |= e[k];
+		}
+	}
+
+	Graph gc(n);
+	rep(s, n) rep(t, n) if (e[s][t]) gc[s].emplace_back(t);
+
+	return gc;
+}
+
+
 //【大きい頂点への移動】
 /*
 * 頂点 V = s[0..n) ∪ t[0..n) をもち，O(n^2) 個の有向辺

@@ -277,7 +277,7 @@ template <int M>
 bool gauss_jordan_elimination(const Bit_matrix<M>& A, const vb& b,
 	bitset<M>* x0 = nullptr, vector<bitset<M>>* xs = nullptr)
 {
-	// verify : https://atcoder.jp/contests/abc366/tasks/abc366_g
+	// verify : https://judge.yosupo.jp/problem/system_of_linear_equations_mod_2
 
 	int n = A.n, m = A.m;
 

@@ -118,6 +118,9 @@ vector<pll> order_distribution(ll n) {
 *		|X/G| = 1/|G| Σg∈G |X^g|
 * が成り立つ．
 *
+* G = Z/nZ のとき
+* verify : https://yukicoder.me/problems/no/125
+* 
 * G = D_n のとき
 * verify : https://yukicoder.me/problems/no/1728
 * 
@@ -193,13 +196,28 @@ vector<pll> order_distribution(ll n) {
 * 
 * m = p1^d1 p2^d2 ... pn^dn と素因数分解されるとすると，中国剰余定理より
 *	C(m)* = C(p1^d1)* × C(p2^d2)* × ... × C(pn^dn)*
-* となる．それぞれの直積因子は，『代数学 2』p.226 命題 4.7.15 より
+* となる．それぞれの直積因子は
 *	C(2)* = {0}, U(C(4)) = C(2)
 *	C(2^d)* = C(2^(d-2)) × C(2)  (d ≧ 3)
 *	C(p^d)* = C(p^(d-1) (p-1))  (p : 奇素数)
 * となる．
 * 
+* 参考 :『代数学 2』p.226 命題 4.7.15
 * verify : https://yukicoder.me/problems/no/1881
 */
 
+
+//【Z[i] の剰余環の位数】
+/*
+* |Z[i]/(a+bi)| = N(a+bi) = a^2 + b^2
+* 
+*（証明）
+* a+bi で割るということは，複素平面上で a+bi と i(a+bi) で張られた正方形内の格子点を
+* 代表させることに相当する．正方形の 1 辺の長さは三平方の定理より √N(a+bi) なので，
+* 正方形の面積は N(a+bi) である．1 つの格子点が占める面積は 1 なので，
+* 正方形内の格子点の個数は N(a+bi) である（周上に格子点がこないよう適当にずらす）
+* 
+* 参考 : https://mathlog.info/articles/2088
+* verify : https://atcoder.jp/contests/ttpc2023/tasks/ttpc2023_e
+*/
 

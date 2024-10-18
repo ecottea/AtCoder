@@ -13,9 +13,12 @@
 ll matrix_chain_multiplication(vl& d) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_10_B
 
+	//【備考】
+	// Hu-Shing の方法で O(n log n) が達成できるらしい．
+
 	int n = sz(d) - 1;
 
-	// dp[i][j] : M[i..j] の積を計算する場合の最小乗算回数．
+	// dp[i][j] : M[i..j] の積を計算する場合の最小乗算回数
 	vvl dp(n, vl(n, INFL));
 	rep(i, n) {
 		dp[i][i] = 0;

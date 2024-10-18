@@ -183,13 +183,19 @@ mint count_replaced_strings_contain_substring(const string& s, const string& w, 
 * 文字列 s[0..n) の部分文字列の個数を返す（空文字列含む）
 */
 ll count_substring(const string& s) {
+	// verify : https://judge.yosupo.jp/problem/number_of_substrings
+
+	//【方法】
+	// s の部分文字列は，s のある接尾辞のある接頭辞になっている．
+	// s の接尾辞を昇順に見ていき，直前の接尾辞と共通しない接頭辞が何個あるかを数えれば良い．
+
 	int n = sz(s);
 
 	auto sa = suffix_array(s);
 	auto la = lcp_array(s, sa);
 
 	ll res = n - sa[0];
-	repi(i, 1, n - 1) res += n - sa[i] - la[i - 1];
+	repi(i, 1, n - 1) res += (n - sa[i]) - la[i - 1];
 
 	return res;
 }

@@ -162,7 +162,7 @@ struct Minimum_cost_bipartite_matching {
 
 	// |S|, |T| を渡して初期化する．
 	Minimum_cost_bipartite_matching(int n, int m) : n(n), m(m) {
-		// verify : https://atcoder.jp/contests/maximum-cup-2013/tasks/maximum_2013_f
+		// verify : https://judge.yosupo.jp/problem/assignment
 		
 		g = mcf_graph<int, ll>(n + m + 2);
 
@@ -175,20 +175,22 @@ struct Minimum_cost_bipartite_matching {
 
 	// s∈S と t∈T の間にコスト c の辺を張る． 
 	void add_edge(int s, int t, ll c) {
-		// verify : https://atcoder.jp/contests/maximum-cup-2013/tasks/maximum_2013_f
+		// verify : https://judge.yosupo.jp/problem/assignment
 
 		g.add_edge(s, n + t, 1, c);
 	}
 
 	// 最大マッチングの大きさと，そのうちの最小コストを返す．
 	pil solve() {
-		// verify : https://atcoder.jp/contests/maximum-cup-2013/tasks/maximum_2013_f
+		// verify : https://judge.yosupo.jp/problem/assignment
 
 		return g.flow(ST, GL);
 	}
 
 	// 実現例を具体的に求める．
 	vector<pii> minimul_cost_maximum_matching() {
+		// verify : https://judge.yosupo.jp/problem/assignment
+		
 		vector<pii> es;
 		repe(e, g.edges()) {
 			// フローが流れている S, T 間の辺がマッチングに対応する．
@@ -201,11 +203,21 @@ struct Minimum_cost_bipartite_matching {
 };
 
 
+//【二部グラフの最小コスト最大マッチング（負コストあり）】
+/*
+* コストの最小値を c_min として，各コストから c_min を引いて置き換えたグラフを作り，
+* 【二部グラフの最小コスト最大マッチング】を利用する．
+* 最後に求まった最小コストに (マッチングの大きさ) * c_min を足せば良い．
+* 
+* verify : https://judge.yosupo.jp/problem/assignment
+*/
+
+
 //【二部グラフの最大スコア最大マッチング】
 /*
-* 十分大きな定数を INF として，各スコアを INF から引いたコストに置き換えたグラフを作り，
+* スコアの最大値を s_max として，各スコアを s_max から引いたコストに置き換えたグラフを作り，
 * 【二部グラフの最小コスト最大マッチング】を利用する．
-* 最後に (マッチングの大きさ) * INF から求まった最小コストを引けば良い．
+* 最後に (マッチングの大きさ) * s_max から求まった最小コストを引けば良い．
 * 
 * verify : https://atcoder.jp/contests/abc247/tasks/abc247_g
 */
@@ -275,77 +287,6 @@ struct Minimum_cost_edge_cover {
 	}
 #endif
 };
-
-
-//【完全二部グラフの最小コスト完全マッチング】O(|S|^3 ?)
-/*
-* S[i], T[j] 間のコストが c[i][j] で与えられる重み付き完全二部グラフ (S, T) について，
-* 完全マッチングの最小コストを返す．
-* また S[i], T[j] がマッチングを成すことを p[i] = j として格納する．
-* 
-* 利用：【二部グラフの最大マッチング】
-*/
-ll hungarian(const vvl& c_, vi& p) {
-	// 参考 : http://www.bunkyo.ac.jp/~nemoto/lecture/network/2010/matching1_2010.pdf
-	// verify : https://judge.yosupo.jp/problem/assignment
-
-	vvl c = c_;
-	int n = sz(c);
-	p.resize(n);
-
-	while (true) {
-		// 各行について行の最小値を引く．
-		vl y_min(n, INFL);
-		rep(i, n) {
-			ll x_min = *min_element(all(c[i]));
-			rep(j, n) {
-				c[i][j] -= x_min;
-				chmin(y_min[j], c[i][j]);
-			}
-		}
-
-		// 各列について列の最小値を引く．
-		rep(i, n) rep(j, n) c[i][j] -= y_min[j];
-
-		// 各行各列に存在する 0 部分の最大マッチング（大きさ k）を求める．
-		Bipartite_matching bm(n, n);
-		rep(i, n) rep(j, n) if (c[i][j] == 0) bm.add_edge(i, j);
-		int k = bm.solve();
-
-		// 完全マッチングが得られたら終了．
-		if (k == n) {
-			vector<pii> es = bm.maximum_matching();
-
-			ll res = 0;
-			repe(e, es) {
-				p[e.first] = e.second;
-				res += c_[e.first][e.second];
-			}
-
-			return res;
-		}
-
-		// 最小点被覆を得る（k 本の縦線または横線で全ての 0 を被覆することに対応する．）
-		vvi vs = bm.minimum_vertex_covering();
-
-		// 直線が存在しない行および列を得る．
-		vvi vs_cp(2);
-		vi vs_all(n); iota(all(vs_all), 0);
-		rep(t, 2) set_difference(all(vs_all), all(vs[t]), inserter(vs_cp[t], vs_cp[t].end()));
-
-		// 直線で被覆されていない部分の最小値 v_min を求める．
-		ll v_min = INFL;
-		repe(x, vs_cp[0]) repe(y, vs_cp[1]) chmin(v_min, c[x][y]);
-
-		// 直線で被覆されていない部分から v_min を引く．
-		repe(x, vs_cp[0]) repe(y, vs_cp[1]) c[x][y] -= v_min;
-
-		// 両方向の直線で被覆されている部分に v_min を加える．
-		repe(x, vs[0]) repe(y, vs[1]) c[x][y] += v_min;
-	}
-
-	return -1;
-}
 
 
 //【二部グラフの最小コスト弾性マッチング】O(|S| |T|)
@@ -452,7 +393,7 @@ mint count_bipartite_perfect_matching(const vector<vector<T>>& e, T ex) {
 * 【二部グラフの完全マッチングの数え上げ】の戻り値は
 * 0,1 を成分にもつ二部隣接行列 e[0..n)[0..n) のパーマネント perm(e) とも解釈できる．
 *
-* mod 2 では perm(e) ≡ det(e) であり，det(e) は O(n^3) で計算できる．
+* mod 2 では perm(e) ≡ det(e) であり，det(e) は O(n^3 / 64) で計算できる．
 * verify : https://atcoder.jp/contests/arc054/tasks/arc054_c
 */
 
@@ -903,6 +844,77 @@ int bipartite_edge_chromatic(int ns, int nt, const vi& u, const vi& v, vi& col) 
 	}
 
 	return d_max;
+}
+
+
+//【完全二部グラフの最小コスト完全マッチング】O(|S|^4) ?（計算量壊れてる！！）
+/*
+* S[i], T[j] 間のコストが c[i][j] で与えられる重み付き完全二部グラフ (S, T) について，
+* 完全マッチングの最小コストを返す．
+* また S[i], T[j] がマッチングを成すことを p[i] = j として格納する．
+*
+* 利用：【二部グラフの最大マッチング】
+*/
+ll hungarian(const vvl& c_, vi& p) {
+	// 参考 : http://www.bunkyo.ac.jp/~nemoto/lecture/network/2010/matching1_2010.pdf
+	// verify : https://judge.yosupo.jp/problem/assignment
+
+	vvl c = c_;
+	int n = sz(c);
+	p.resize(n);
+
+	while (true) {
+		// 各行について行の最小値を引く．
+		vl y_min(n, INFL);
+		rep(i, n) {
+			ll x_min = *min_element(all(c[i]));
+			rep(j, n) {
+				c[i][j] -= x_min;
+				chmin(y_min[j], c[i][j]);
+			}
+		}
+
+		// 各列について列の最小値を引く．
+		rep(i, n) rep(j, n) c[i][j] -= y_min[j];
+
+		// 各行各列に存在する 0 部分の最大マッチング（大きさ k）を求める．
+		Bipartite_matching bm(n, n);
+		rep(i, n) rep(j, n) if (c[i][j] == 0) bm.add_edge(i, j); // double のときは誤差注意
+		int k = bm.solve();
+
+		// 完全マッチングが得られたら終了．
+		if (k == n) {
+			vector<pii> es = bm.maximum_matching();
+
+			ll res = 0;
+			repe(e, es) {
+				p[e.first] = e.second;
+				res += c_[e.first][e.second];
+			}
+
+			return res;
+		}
+
+		// 最小点被覆を得る（k 本の縦線または横線で全ての 0 を被覆することに対応する．）
+		vvi vs = bm.minimum_vertex_covering();
+
+		// 直線が存在しない行および列を得る．
+		vvi vs_cp(2);
+		vi vs_all(n); iota(all(vs_all), 0);
+		rep(t, 2) set_difference(all(vs_all), all(vs[t]), inserter(vs_cp[t], vs_cp[t].end()));
+
+		// 直線で被覆されていない部分の最小値 v_min を求める．
+		ll v_min = INFL;
+		repe(x, vs_cp[0]) repe(y, vs_cp[1]) chmin(v_min, c[x][y]);
+
+		// 直線で被覆されていない部分から v_min を引く．
+		repe(x, vs_cp[0]) repe(y, vs_cp[1]) c[x][y] -= v_min;
+
+		// 両方向の直線で被覆されている部分に v_min を加える．
+		repe(x, vs[0]) repe(y, vs[1]) c[x][y] += v_min;
+	}
+
+	return -1;
 }
 
 

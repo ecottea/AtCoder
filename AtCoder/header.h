@@ -72,9 +72,8 @@ using namespace atcoder;
 #include "localACL.hpp"
 #endif
 
-//using mint = modint1000000007;
 using mint = modint998244353;
-//using mint = static_modint<1000000000>;
+//using mint = static_modint<1000000007>;
 //using mint = modint; // mint::set_mod(m);
 
 namespace atcoder {
@@ -96,7 +95,7 @@ template <size_t N> inline int lsb(const bitset<N>& b) { return b._Find_first();
 inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
 inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump(...)
-#define dumpel(v)
+#define dumpel(...)
 #define dump_list(v)
 #define dump_mat(v)
 #define input_from_file(f)

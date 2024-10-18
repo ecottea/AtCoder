@@ -239,7 +239,8 @@ vvi strongly_connected_component(const Graph& g) {
 
 //【閉路抽出（無向グラフ）】O(n + m)
 /*
-* 無向グラフ g に単純閉路があれば頂点を順に vs に，辺を順に es に格納し，その長さを返す（無ければ -1）
+* 無向グラフ g に（長さ 3 以上の）単純閉路があれば，
+* 頂点を順に vs に，辺を順に es に格納し，その長さを返す（無ければ -1）
 * vs[0] から出て vs[1] に入る辺を es[0] とする．
 */
 template <class E>
@@ -317,6 +318,79 @@ int cycle_detection(const vector<vector<E>>& g, vi& vs, vector<E>* es = nullptr)
 
 
 //【閉路抽出（有向グラフ）】O(n + m)
+/*
+* 有向グラフ g から極大個数の単純閉路を抽出し，各閉路に含まれる頂点のリストを返す．
+*/
+template <class G>
+vvi directed_cycles_detection(G g) {
+	// verify : https://yukicoder.me/problems/no/1865
+
+	int n = sz(g);
+
+	vvi cycles;
+
+	// 0 : 未探索，1 : 探索済，2 : 閉路の端点
+	vi seen(n);
+
+	// 0 : 探索モード，2 : 閉路抽出モード
+	int tp = 0;
+
+	function<void(int)> dfs = [&](int s) {
+		seen[s] = 1;
+
+		while (!g[s].empty()) {
+			// 同じ辺を二度見ないように削除しておく．
+			auto t = g[s].back(); g[s].pop_back();
+
+			// 自己ループは単独の閉路として記録する．
+			if (t == s) {
+				cycles.push_back(vi{ t });
+				continue;
+			}
+
+			// 探索済の頂点にたどり着いたなら閉路を検出できた．
+			if (seen[t] == 1) {
+				// t が閉路の端点であることを覚えておく．
+				seen[t] = 2;
+
+				// 閉路抽出モードに移行する．
+				tp = 2;
+				cycles.push_back(vi());
+				cycles.back().push_back(t);
+				break;
+			}
+
+			dfs(t);
+
+			// 閉路抽出モードなら，探索は一休みして閉路を抽出する．
+			if (tp == 2) {
+				cycles.back().push_back(t);
+
+				// 閉路の端点まで抽出しきったのなら探索モードに移行する．
+				if (seen[s] == 2) {
+					reverse(all(cycles.back()));
+					seen[s] = 1;
+					tp = 0;
+					continue;
+				}
+				break;
+			}
+		}
+
+		// 頂点に関しては二度以上見る必要があるのでバックトラッキングする．
+		seen[s] = 0;
+	};
+
+	// 各頂点 s を通る閉路をできるかぎり抽出する．
+	rep(s, n) while (!g[s].empty()) dfs(s);
+
+	repea(c, cycles) c.push_back(c[0]);
+
+	return cycles;
+}
+
+
+//【閉路抽出（有向グラフ，参照付き）】O(n + m)
 /*
 * 有向グラフ g から極大個数の単純閉路を抽出し，各閉路に含まれる辺のリストを返す．
 */
@@ -960,6 +1034,8 @@ public:
 
 	// 辺 j が橋かを返す．
 	bool bridgeQ(int j) {
+		// verify : https://atcoder.jp/contests/abc375/tasks/abc375_g
+
 		return is_bg[j];
 	}
 

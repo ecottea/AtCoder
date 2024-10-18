@@ -42,7 +42,7 @@
 * c * x ／ x * c : O(n)
 *	n 次元ベクトル x とスカラー c の積を返す．*= も使用可．
 *
-* dot(x, y) : O(n)
+* T dot(x, y) : O(n)
 *	n 次元ベクトル x, y の内積を返す．
 */
 
@@ -93,6 +93,71 @@ template <class T> inline T dot(const vector<T>& x, const vector<T>& y) {
 }
 
 
+//【ベクトル（固定サイズ）】
+/*
+* STL の array<T, N> を利用すればよい．
+*
+* x + y, x - y, x * y : O(N)
+*	N 次元ベクトル x, y の和，差，成分積を返す．+=, -=, *= も使用可．
+*
+* c * x ／ x * c : O(N)
+*	N 次元ベクトル x とスカラー c の積を返す．*= も使用可．
+*
+* T dot(x, y) : O(N)
+*	N 次元ベクトル x, y の内積を返す．
+*/
+
+// ベクトルの加算 : O(N)
+template <class T, size_t N> inline array<T, N>& operator+=(array<T, N>& x, const  array<T, N>& y) {
+	rep(i, N) x[i] += y[i];
+	return x;
+}
+template <class T, size_t N> inline array<T, N> operator+(const array<T, N>& x, const array<T, N>& y) {
+	array<T, N> res = x; return res += y;
+}
+
+// ベクトルの減算 : O(n)
+template <class T, size_t N> inline array<T, N>& operator-=(array<T, N>& x, const array<T, N>& y) {
+	// verify : https://judge.yosupo.jp/problem/sum_of_multiplicative_function
+	rep(i, N) x[i] -= y[i];
+	return x;
+}
+template <class T, size_t N> inline array<T, N> operator-(const array<T, N>& x, const array<T, N>& y) {
+	// verify : https://judge.yosupo.jp/problem/sum_of_multiplicative_function
+	array<T, N> res = x; return res -= y;
+}
+
+// ベクトルの成分積 : O(n)
+template <class T, size_t N> inline array<T, N>& operator*=(array<T, N>& x, const array<T, N>& y) {
+	rep(i, N) x[i] *= y[i];
+	return x;
+}
+template <class T, size_t N> inline array<T, N> operator*(const array<T, N>& x, const array<T, N>& y) {
+	// verify : https://judge.yosupo.jp/problem/sum_of_multiplicative_function
+	array<T, N> res = x; return res *= y;
+}
+
+// スカラー倍 : O(n)
+template <class T, size_t N> inline array<T, N>& operator*=(array<T, N>& x, const T& c) {
+	rep(i, N) x[i] *= c;
+	return x;
+}
+template <class T, size_t N> inline array<T, N> operator*(const array<T, N>& x, const T& c) {
+	array<T, N> res = x; return res *= c;
+}
+template <class T, size_t N> inline array<T, N> operator*(const T& c, const array<T, N>& x) {
+	return x * c;
+}
+
+// ベクトルの内積 : O(n)
+template <class T, size_t N> inline T dot(const array<T, N>& x, const array<T, N>& y) {
+	// verify : https://judge.yosupo.jp/problem/sum_of_multiplicative_function
+	T res = 0;
+	rep(i, N) res += x[i] * y[i];
+	return res;
+}
+
+
 //【ベクトル（半環）】
 /*
 * 成分は半環 <S, add, o, mul, e> の元とする．
@@ -106,7 +171,7 @@ template <class T> inline T dot(const vector<T>& x, const vector<T>& y) {
 * c * x ／ x * c : O(n)
 *	n 次元ベクトル x とスカラー c の積を返す．
 *
-* dot(x, y) : O(n)
+* S dot(x, y) : O(n)
 *	n 次元ベクトル x, y の内積を返す．
 */
 

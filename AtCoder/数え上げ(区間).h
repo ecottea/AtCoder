@@ -70,39 +70,37 @@ ll count_intervals(const vi& l_min, const vi& l_max, const vi& r_min, const vi& 
 }
 
 
-//【和が 0 の区間の数え上げ】O(n)
+//【和が S の区間の数え上げ】O(n)
 /*
-* 数列 a[0..n) の空でない連続部分列で和が 0 であるものの個数を返す．
+* 数列 a[0..n)（負値可）の和が S である非空区間の個数を返す．
 */
 template <class T>
-ll count_zerosum_intervals(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/agc023/tasks/agc023_a
+ll count_intervals_sum(const vector<T>& a, T S) {
+	// verify : https://atcoder.jp/contests/abc233/tasks/abc233_d
 
 	//【方法】
-	// 累積和 A[i] = Σa[0..i) の値ごとに個数を数え上げる．
-	// Σa[l..r) = 0 ⇔ A[l] = A[r] なので求める個数は三角数の和になる．
+	// 累積和 A[i] = Σa[0..i) を導入すれば，
+	//		A[r] - A[l] = S
+	// となる組 (l, r)（l < r）の数え上げに帰着する．
+	// 累積和の値ごとにその個数を覚えつつ，右端を昇順に走査していけば良い．
 
 	int n = sz(a);
 
-	// acc[i] : Σa[0..i)
-	vector<T> acc(n + 1);
-	rep(i, n) acc[i + 1] = acc[i] + a[i];
-
-	// cnt[v] : Σa[0..i) = v となる i の個数（i = 0 を含む）
 	unordered_map<T, int> cnt;
-	repi(i, 0, n) cnt[acc[i]]++;
+	cnt[0] = 1;
 
-	ll res = 0;
-	repe(tmp, cnt) {
-		ll c = tmp.second;
-		res += c * (c - 1) / 2;
+	ll res = 0; T acc = 0;
+	rep(i, n) {
+		acc += a[i];
+		if (cnt.count(acc - S)) res += cnt[acc - S];
+		cnt[acc]++;
 	}
 
 	return res;
 }
 
 
-//【和が s 以下の区間の数え上げ（要素が非負）】
+//【和が s 以下の区間の数え上げ（非負）】
 /*
 * 尺取法.h へ
 */
@@ -110,11 +108,11 @@ ll count_zerosum_intervals(const vector<T>& a) {
 
 //【和が s 以上の区間の数え上げ】O(n log n)
 /*
-* 整数列 a[0..n)（負も可）で，Σa[l..r) ≧ s となる非空区間の個数を返す．
+* 整数列 a[0..n)（負値可）で，Σa[l..r) ≧ s となる非空区間の個数を返す．
 *
 * 利用：【binary trie】
 */
-ll count_sum_intervals_neg(const vl& a, ll s) {
+ll count_intervals_sum_gt(const vl& a, ll s) {
 	// verify : https://www.spoj.com/problems/MEANARR/
 
 	//【方法】
@@ -137,6 +135,44 @@ ll count_sum_intervals_neg(const vl& a, ll s) {
 	repi(r, 1, n) {
 		res += bt.upper_bound(A[r] - s);
 		bt.insert(A[r]);
+	}
+
+	return res;
+}
+
+
+//【等差数列区間の数え上げ】O(n)
+/*
+* 数列 a[0..n)（負値可）の空でない連続部分列で，等差数列を成すものの個数を返す．
+*/
+template <class T>
+ll count_arithmetic_intervals(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/abc369/tasks/abc369_c
+
+	int n = sz(a);
+
+	// d[i] : 階差 a[i+1] - a[i]
+	vl d(n - 1);
+	rep(i, n - 1) d[i] = a[i + 1] - a[i];
+
+	// 長さ 1 の連続部分列は自明な等差数列として先に数えておく．
+	ll res = n;
+
+	// val : 注目している階差の値
+	// cnt : 階差 val が何個並んでいるか
+	T val = T(INFL + 1); ll cnt = 0;
+
+	// 階差一定の区間が等差数列に対応する．
+	rep(i, n - 1) {
+		if (d[i] == val) {
+			cnt++;
+		}
+		else {
+			val = d[i];
+			cnt = 1;
+		}
+
+		res += cnt;
 	}
 
 	return res;

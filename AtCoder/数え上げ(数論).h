@@ -4,94 +4,175 @@
 // ■■■■■ 数え上げ（数論） ■■■■■
 
 
-//【素数計数関数】O(n^(3/4))
+//【素数計数関数】O(N^(3/4))
 /*
-* n 以下の素数の個数 π(n) を返す．
+* N 以下の素数の個数 π(N) を返す．
 *
 *（Lucy DP）
 */
-ll prime_pi(ll n) {
+ll prime_pi(ll N) {
 	// 参考 : https://rsk0315.hatenablog.com/entry/2021/05/18/015511
 	// verify : https://judge.yosupo.jp/problem/counting_primes
 
 	//【方法】
-	// S(v, p) = ([2..v] 内の "素数または p 以下の素因数をもたない合成数" の個数) とおく．
-	// これはエラトステネスの篩において，p 以下の素数で篩い終えた後残っている数の個数である．
-	//
-	// p が合成数であるときと p^2 > v であるときは，篩のアルゴリズムより明らかに
-	//		S(v, p) = S(v, p-1)
-	// である．よって p が p^2 ≦ v なる素数の場合の遷移のみを考えれば良い．
+	// j 番目（1-indexed）の素数を p[j](≦ √N) と表し，dp_j[i] を
+	//		dp_j[i]
+	//		= ([2..i] 内の "素数または p[j] 以下の素因数をもたない合成数" の個数)
+	//		= (エラトステネスの篩において，[2..i] 内の p[j] 以下の素数で篩い終えた後残っている数の個数)
+	// とおく．dp_j[i] の求め方を考える．
 	// 
-	// p の 1 つ前の素数で篩い終わったときに残っている数の個数は S(v, p-1) である．
-	// これらの数のうち p で篩われて消えるものの個数を考える．
-	// そのような数は，[2..v] 内の
-	//		(i) p より小さい素因数を持たない（まだ篩われていない）
-	//		(ii) p より大きい p の倍数（次に篩われる）
+	// p[j]^2 > i のときは，[2..i] 内には p[j] で新たに篩われる数は無いので
+	//		dp_j[i] = dp_(j-1)[i]
+	// である．
+	// 
+	// p[j]^2 ≦ i のときは，[2..i] 内の p[j] で新たに篩われる数は
+	//		(i) p[j-1] 以下の素因数を持たない（まだ篩われていない）
+	//		(ii) 2 p[j] 以上の p[j] の倍数（次に篩われる）
 	// という条件を共に満たす数である．
 	// 
-	// [2..v] に条件 (i), (ii) を課す代わりに，全体を p で割って，
-	//		[2..v/p] 内の p より小さい素因数を持たない数
-	// を数えても個数は変わらない．そのような数は，[2..v/p] 内の
-	//		(iii) p-1 以下の素因数で篩い終えた後残っている
-	//		(iv) p-1 以下の素数ではない
-	// という条件を共に満たす数である．
-	//
-	// いま p^2 ≦ v なる場合を考えているので，p ≦ v/p である．
-	// よって !(iv) ⇒ (iii) であるから，求める個数は
-	//		S(v/p, p-1) - S(p-1, p-1)
+	// [2..i] に条件 (i), (ii) を課す代わりに，全体を p[j] で割って，
+	//		[2..i/p[j]] 内の p[j-1] 以下の素因数を持たない数
+	// を数えても個数は変わらない．そのような数は，[2..i/p[j]] 内の
+	//		(iii) p[j-1] 以下の素数で篩い終えた後残っている
+	//		(iv) p[j-1] 以下の素数ではない
+	// という条件を共に満たす数であり，!(iv) ⇒ (iii) に注意するとその個数は
+	//		dp_(j-1)[i/p[j]] - dp_(j-1)[p[j-1]]
 	// と表される．
 	//
-	// 以上をまとめて，DP の遷移式
-	//		S(v, p) = S(v, p-1) （p が合成数または p^2 > v のとき）
-	//		S(v, p) = S(v, p-1) - (S(v/p, p-1) - S(p-1, p-1)) （その他の p のとき）
-	// を得る．初項は
-	//		S(v, 1) = v - 1
-	// であり，求めたいものは
-	//		π(n) = S(n, √n)
-	// である．
+	// 以上をまとめると，DP の初期化は
+	//		dp_0[i] = i - 1
+	// で行い，遷移式は
+	//		dp_j[i] = dp_(j-1)[i] （p[j]^2 > i のとき）
+	//		dp_j[i] = dp_(j-1)[i] - (dp_(j-1)[i/p[j]] - dp_(j-1)[p[j-1]]) （p[j]^2 ≦ i のとき）
+	// を用いれば良い．
 
 	//【備考】
-	// 途中で DP テーブルを参照すれば，k-rough number の数え上げにも対応できる．
+	// 途中で DP テーブルを参照すれば，K-rough number の数え上げにも対応できる．
 
-	if (n <= 1) return 0;
+	if (N <= 1) return 0;
 
-	int m = (int)(sqrt(n) + 1e-6);
+	int m = (int)(sqrt(N) + 1e-9);
 
-	// S(v, p) : [2..v] 内の p 以下の素数で篩い終えた後残っている数の個数
-	//	dp_p[0][v] : S(v, p)
-	//	dp_p[1][v] : S(n/v, p)
-	vvl dp(2, vl(m + 1));
-	repi(v, 1, m) {
-		dp[0][v] = v - 1;
-		dp[1][v] = n / v - 1;
+	// dp_j[i] : [2..i] 内の p[j] 以下の素数で篩い終えた後残っている数の個数
+	//	dp_l_j[i] : dp_j[i]
+	//	dp_h_j[d] : dp_j[N/d]
+	vl dp_l(m + 1), dp_h(m + 1);
+	repi(i, 1, m) {
+		dp_l[i] = i - 1;
+		dp_h[i] = N / i - 1;
 	}
 
 	repi(p, 2, m) {
-		// S(p - 1, p - 1)
-		ll s = dp[0][p - 1];
+		// cnt_p1 : p-1 以下の素数の個数
+		ll cnt_p1 = dp_l[p - 1];
 
 		// p が素数でなければ次の p へ
-		if (dp[0][p] == s) continue;
+		if (dp_l[p] == cnt_p1) continue;
 
-		// dp[1][v] = S(n/v, p) の更新
-		repi(v, 1, m) {
-			// p^2 > n/v なら更新不要
-			if (p > n / v / p) break;
+		repi(d, 1, m) {
+			// p^2 > N/d なら更新不要
+			if (p > (N / d) / p) break;
 
-			if (v <= m / p) dp[1][v] -= dp[1][v * p] - s;
-			else dp[1][v] -= dp[0][n / v / p] - s;
+			if (d <= m / p) dp_h[d] -= dp_h[d * p] - cnt_p1;
+			else dp_h[d] -= dp_l[(N / d) / p] - cnt_p1;
 		}
 
-		// dp[0][v] = S(v, p) の更新
-		repir(v, m, 1) {
-			// p^2 > v なら更新不要
-			if (p > v / p) break;
+		repir(i, m, 1) {
+			// p^2 > i なら更新不要
+			if (p > i / p) break;
 
-			dp[0][v] -= dp[0][v / p] - s;
+			dp_l[i] -= dp_l[i / p] - cnt_p1;
 		}
 	}
 
-	return dp[1][1];
+	return dp_h[1];
+}
+
+
+//【素数計数関数（一括）】O(N^(3/4))
+/*
+* i 以下の素数の個数を π(i) とし，π[N/d] のリストを返す．
+*
+*（Lucy DP）
+*/
+Floor_vector<ll> prime_pi_all(ll N) {
+	// 参考 : https://rsk0315.hatenablog.com/entry/2021/05/18/015511
+	// verify : https://atcoder.jp/contests/jsc2024-final/tasks/jsc2024_final_b
+
+	//【方法】
+	// j 番目（1-indexed）の素数を p[j](≦ √N) と表し，dp_j[i] を
+	//		dp_j[i]
+	//		= ([2..i] 内の "素数または p[j] 以下の素因数をもたない合成数" の個数)
+	//		= (エラトステネスの篩において，[2..i] 内の p[j] 以下の素数で篩い終えた後残っている数の個数)
+	// とおく．dp_j[i] の求め方を考える．
+	// 
+	// p[j]^2 > i のときは，[2..i] 内には p[j] で新たに篩われる数は無いので
+	//		dp_j[i] = dp_(j-1)[i]
+	// である．
+	// 
+	// p[j]^2 ≦ i のときは，[2..i] 内の p[j] で新たに篩われる数は
+	//		(i) p[j-1] 以下の素因数を持たない（まだ篩われていない）
+	//		(ii) 2 p[j] 以上の p[j] の倍数（次に篩われる）
+	// という条件を共に満たす数である．
+	// 
+	// [2..i] に条件 (i), (ii) を課す代わりに，全体を p[j] で割って，
+	//		[2..i/p[j]] 内の p[j-1] 以下の素因数を持たない数
+	// を数えても個数は変わらない．そのような数は，[2..i/p[j]] 内の
+	//		(iii) p[j-1] 以下の素数で篩い終えた後残っている
+	//		(iv) p[j-1] 以下の素数ではない
+	// という条件を共に満たす数であり，!(iv) ⇒ (iii) に注意するとその個数は
+	//		dp_(j-1)[i/p[j]] - dp_(j-1)[p[j-1]]
+	// と表される．
+	//
+	// 以上をまとめると，DP の初期化は
+	//		dp_0[i] = i - 1
+	// で行い，遷移式は
+	//		dp_j[i] = dp_(j-1)[i] （p[j]^2 > i のとき）
+	//		dp_j[i] = dp_(j-1)[i] - (dp_(j-1)[i/p[j]] - dp_(j-1)[p[j-1]]) （p[j]^2 ≦ i のとき）
+	// を用いれば良い．
+
+	//【備考】
+	// 途中で DP テーブルを参照すれば，K-rough number の数え上げにも対応できる．
+
+	int nl = (int)(sqrt(N) + 1e-9);
+
+	// dp_j[i] : [2..i] 内の p[j] 以下の素数で篩い終えた後残っている数の個数
+	Floor_vector<ll> dp(N, nl);
+	int nh = dp.nh;
+
+	repi(i, 1, nl) dp.set_l(i, i - 1);
+	repi(d, 1, nh) dp.set_h(d, N / d - 1);
+
+	// is_prime[i] : i が素数か
+	vb is_prime(nl + 1, true);
+	is_prime[0] = is_prime[1] = false;
+
+	repi(p, 2, nl) {
+		// p が素数でなければ次の p へ
+		if (!is_prime[p]) continue;
+
+		// p^2 以上の p の倍数は素数でないと確定する．
+		for (ll j = (ll)p * p; j <= nl; j += p) is_prime[j] = false;
+
+		// cnt_p1 : p-1 以下の素数の個数
+		ll cnt_p1 = dp.get_l(p - 1);
+
+		repi(d, 1, nh) {
+			// p^2 > N/d なら更新不要
+			if (p > (N / d) / p) break;
+
+			dp[N / d] -= dp.get_h(d * p) - cnt_p1;
+		}
+
+		repir(i, nl, 1) {
+			// p^2 > i なら更新不要
+			if (p > i / p) break;
+
+			dp[i] -= dp.get_l(i / p) - cnt_p1;
+		}
+	}
+
+	return dp;
 }
 
 
@@ -111,9 +192,16 @@ pll prime_pi_mod4(ll N) {
 	//	dp_h_p[t][v] : S_t(N/i, p)
 	vvl dp_l(2, vl(sqrt_N + 1)), dp_h(2, vl(sqrt_N + 1));
 	repi(i, 1, sqrt_N) {
+		// [2..i] 内の 4Z+1 型整数の個数
 		dp_l[0][i] = (i - 1) / 4;
+		
+		// [2..i] 内の 4Z+3 型整数の個数
 		dp_l[1][i] = (i + 1) / 4;
+		
+		// [2..N/i] 内の 4Z+1 型整数の個数
 		dp_h[0][i] = (N / i - 1) / 4;
+		
+		// [2..N/i] 内の 4Z+3 型整数の個数
 		dp_h[1][i] = (N / i + 1) / 4;
 	}
 
@@ -152,80 +240,142 @@ pll prime_pi_mod4(ll N) {
 }
 
 
-//【無平方数の数え上げ】O(n^0.45) ?
+//【素数の数え上げ（mod 4，一括）】O(N^(3/4))
 /*
-* n 以下の無平方数の個数を返す．
+* N 以下の 4Z+1 型素数の個数を π_1(i)，4Z+3 型素数の個数を π_3(i) とし，
+* π_1[N/d] のリストと π_3[N/d] のリストの組を返す．
+*
+*（Lucy DP）
 */
-constexpr ll W = 2000000;
-ll dp_l[W], dp_h[W];
-ll count_square_free(ll n) {
+pair<Floor_vector<ll>, Floor_vector<ll>> prime_pi_mod4_all(ll N) {
+	int nl = (int)(sqrt(N) + 1e-9);
+
+	// dp1_j[i] : [2..i] 内の p[j] 以下の素数で篩い終えた後残っている 4Z+1 型整数の個数
+	// dp3_j[i] : [2..i] 内の p[j] 以下の素数で篩い終えた後残っている 4Z+3 型整数の個数
+	Floor_vector<ll> dp1(N, nl), dp3(N, nl);
+	int nh = dp1.nh;
+
+	repi(i, 1, nl) {
+		dp1.set_l(i, (i - 1) / 4);
+		dp3.set_l(i, (i + 1) / 4);
+	}
+	repi(d, 1, nh) {
+		dp1.set_h(d, (N / d - 1) / 4);
+		dp3.set_h(d, (N / d + 1) / 4);
+	}
+
+	for (int p = 3; p <= nl; p += 2) {
+		// p が素数でなければ次の p へ
+		if (dp1.get_l(p) + dp3.get_l(p) == dp1.get_l(p - 1) + dp3.get_l(p - 1)) continue;
+
+		// cnt1 : p-1 以下の 4Z+1 型素数の個数
+		// cnt3 : p-1 以下の 4Z+3 型素数の個数
+		ll cnt1 = dp1.get_l(p - 1);
+		ll cnt3 = dp3.get_l(p - 1);
+
+		if (p % 4 == 1) {
+			repi(d, 1, nh) {
+				// p^2 > N/d なら更新不要
+				if ((ll)p * p > N / d) break;
+
+				dp1[N / d] -= dp1.get_h(d * p) - cnt1;
+				dp3[N / d] -= dp3.get_h(d * p) - cnt3;
+			}
+
+			repir(i, nl, 1) {
+				// p^2 > i なら更新不要
+				if ((ll)p * p > i) break;
+
+				dp1[i] -= dp1.get_l(i / p) - cnt1;
+				dp3[i] -= dp3.get_l(i / p) - cnt3;
+			}
+		}
+		else {
+			repi(d, 1, nh) {
+				// p^2 > N/d なら更新不要
+				if ((ll)p * p > N / d) break;
+
+				dp1[N / d] -= dp3.get_h(d * p) - cnt3;
+				dp3[N / d] -= dp1.get_h(d * p) - cnt1;
+			}
+
+			repir(i, nl, 1) {
+				// p^2 > i なら更新不要
+				if ((ll)p * p > i) break;
+
+				dp1[i] -= dp3.get_l(i / p) - cnt3;
+				dp3[i] -= dp1.get_l(i / p) - cnt1;
+			}
+		}
+	}
+
+	return { dp1, dp3 };
+}
+
+
+//【無平方数の数え上げ】O(N^(4/9))
+/*
+* N 以下の無平方数の個数を返す．
+*
+*（除原理）
+*/
+ll count_square_free(ll N) {
 	// verify : https://judge.yosupo.jp/problem/counting_squarefrees
 
-	//【注意】
-	// 境界の決め方がかなり雑なので信用してはいけない．
+	int nl = (int)(pow(2. * N, 1. / 3) + 1e-9);
+	int nh = (int)sqrt(N / (nl + 1) + 1);
 
-	rep(i, W) dp_l[i] = dp_h[i] = -1;
+	// isqrt[i] : floor(√i)
+	vi isqrt(nl + 1);
+	repi(i, 1, nl) isqrt[i] = (int)sqrtl((long double)i);
 
-	ll N = n;
+	// dp_l[i] : i 以下の無平方数の個数
+	// dp_h[d] : N/d 以下の無平方数の個数
+	vl dp_l(nl + 1), dp_h(nh + 1);
 
-	function<ll(int)> rf_l = [&](int n) {
-		if (dp_l[n] != -1) return dp_l[n];
+	// ちゃんとやれば O(nl log(log nl)) でできるが，全体の計算量は変わらない．
+	repi(i, 1, nl) {
+		dp_l[i] = i;
 
-		ll res = n;
+		int m = (int)(pow(2. * i, 2. / 3) + 1e-9);
 
-		int m = (int)(pow(n * 0.5, 1. / 3) + 1e-9);
+		int j_max = isqrt[m];
+		int k_max = i / (m + 1);
 
-		int i_max = (int)sqrt(1. * n / (m + 1));
-
-		// q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
-		for (int i = 2; i <= i_max; i++) res -= rf_l(n / (i * i));
-
-		// そうでない部分は q ごとにまとめて考える．
-		int il, ir = i_max + 1;
-		repir(q, m, 1) {
-			il = ir;
-			ir = (int)sqrt(1. * n / q) + 1;
-			if (il != ir) res -= rf_l(q) * (ir - il);
+		repi(j, 2, j_max) {
+			dp_l[i] -= dp_l[i / j / j];
 		}
 
-		return dp_l[n] = res;
-	};
-
-	function<ll(int)> rf_h = [&](int I) {
-		if (dp_h[I] != -1) return dp_h[I];
-
-		ll n = N / ((ll)I * I);
-
-		ll res = n;
-
-		ll m = (ll)(pow(n * 0.5, 1. / 3));
-
-		ll i_max = (ll)sqrtl(1.L * n / (m + 1));
-
-		// q に対応する i が高々 1 個の部分は i ごとに愚直に考える．
-		for (ll i = 2; i <= i_max; i++) {
-			ll q = n / (i * i);
-			if (q < W) res -= rf_l((int)q);
-			else res -= rf_h(i * I);
+		repi(k, 1, k_max) {
+			dp_l[i] -= (dp_l[k] - dp_l[k - 1]) * (isqrt[i / k] - j_max);
 		}
+	}
 
-		// そうでない部分は q ごとにまとめて考える．
-		ll il, ir = i_max + 1;
-		repir(q, m, 1) {
-			il = ir;
-			ir = (ll)sqrtl(1.L * n / q) + 1;
-			if (il != ir) {
-				if (q < W) res -= rf_l((int)q) * (ir - il);
-				else res -= rf_h(il * I) * (ir - il);
+	repir(d, nh, 1) {
+		ll i = N / d / d;
+
+		dp_h[d] = i;
+
+		ll m = (ll)(pow(2. * i, 2. / 3) + 1e-9);
+
+		int j_max = (int)sqrtl((long double)m);
+		int k_max = (int)(i / (m + 1));
+
+		repi(j, 2, j_max) {
+			if (i / j / j <= nl) {
+				dp_h[d] -= dp_l[i / j / j];
+			}
+			else {
+				dp_h[d] -= dp_h[d * j];
 			}
 		}
 
-		return dp_h[I] = res;
-	};
+		repi(k, 1, k_max) {
+			dp_h[d] -= (dp_l[k] - dp_l[k - 1]) * ((int)sqrtl((long double)(i / k)) - j_max);
+		}
+	}
 
-	ll res = (n < W ? rf_l(n) : rf_h(1));
-
-	return res;
+	return dp_h[1];
 }
 
 

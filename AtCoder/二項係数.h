@@ -104,7 +104,7 @@ public:
 		// verify : https://www.codechef.com/problems/RANDCOLORING
 
 		Assert(n <= n_max);
-		Assert(r >= 0 || n - r >= 0);
+		Assert(r >= 0 && n - r >= 0);
 		return fac_inv[n] * fac[r] * fac[n - r];
 	}
 
@@ -761,6 +761,25 @@ int bin2(T n, T r) {
 * 
 * verify : https://projecteuler.net/problem=154
 */
+
+
+//【二項係数（一括, n が小さい）】O(n^2)
+/*
+* 各 i∈[0..n], j∈[0..n] について bin(i,j) を格納した二次元リストを返す．
+*/
+vvm binomial_all(int n) {
+	// verify : https://atcoder.jp/contests/code-festival-2017-qualb/tasks/code_festival_2017_qualb_e
+
+	vvm res(n + 1, vm(n + 1));
+	res[0][0] = 1;
+
+	repi(i, 1, n) repi(j, 0, i) {
+		res[i][j] += res[i - 1][j];
+		if (j > 0) res[i][j] += res[i - 1][j - 1];
+	}
+
+	return res;
+}
 
 
 //【二項係数（一括，n が固定，r が小さい，法が大きな素数）】O(r)

@@ -1,6 +1,6 @@
 #pragma once
 #include "header.h"
-#include "mint.h"
+#include "構造(数論).h"
 #include "ディリクレ畳込み.h"
 // ■■■■■ 高速な数論アルゴリズム ■■■■■
 

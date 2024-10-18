@@ -1,5 +1,7 @@
 #pragma once
 #include "header.h"
+#include "合同式.h"
+#include "GCD.h"
 // ■■■■■ 列挙（数論） ■■■■■
 
 
@@ -199,6 +201,10 @@ vl enumerate_smooth_number(ll n, int B) {
 * 利用：【素数の列挙】
 */
 vl enumerate_powerful_number(ll n) {
+	//【方法】
+	// 多冪数は (整数)^2 * (無平方数)^3 の形で一意に表されるので，
+	// (無平方数)^3 の方をバックトラッキングで全列挙する．
+
 	auto ps = eratosthenes((int)(pow(n, 1. / 3) + 1e-6));
 	int K = sz(ps);
 
@@ -206,8 +212,6 @@ vl enumerate_powerful_number(ll n) {
 	res.reserve((int)(2.174 * sqrt(n)));
 
 	function<void(int, ll)> rf = [&](int k, ll val) {
-		if (val < 0) dump(val);
-
 		if (k == K) {
 			// ここでループを回すのをやめれば，数え上げや総和を O(n^(1/3)) で行える．
 			for (ll i = 1; i * i * val <= n; i++) {
@@ -225,7 +229,7 @@ vl enumerate_powerful_number(ll n) {
 	};
 	rf(0, 1);
 
-	sort(all(res)); // 必要ないならしなくていい
+	sort(all(res)); // 不要なら削除可
 
 	return res;
 }
@@ -370,6 +374,150 @@ vector<tuple<int, int, int>> enumerate_primitive_pythagorean_triples_60(int n) {
 			}
 
 			if (max({ a, b, c }) <= n) res.emplace_back(a, b, c);
+		}
+	}
+
+	return res;
+}
+
+
+//【フェルマーの二平方和定理（素数）】O(log p)
+/*
+* x^2 + y^2 = p なる (x,y) (0<x≦y，一意) を返す．（なければ (-1,-1) を返す）
+*
+* 制約 : p は素数
+*
+* 利用：【-1 の平方剰余】,【ガウス整数の最大公約数】
+*/
+pii fermats_4n_plus_1_prime(ll p) {
+	// 参考 : https://maspypy.com/library-checker-gcd-of-gaussian-integers
+	// verify : https://judge.yosupo.jp/problem/two_square_sum
+
+	//【方法】
+	// p=2 なら (x,y)=(1,1) を返せば良い．
+	// p が 4n+3 型素数なら条件を満たす (x,y) は存在しない（mod 4 を考えれば明らか）
+	// 以下では p が 4n+1 型素数であるとする．
+	//
+	// (x,y) が条件を満たすことをガウス整数の言葉で言い換えると，|x+iy| = p となる． 
+	// -1 は mod p で平方剰余なので，
+	//		a^2 = -1 (mod p) ⇔ (a+i)(a-i) = k p  (∃k∈[1..p-1])
+	// なる a を取ることができ，
+	//		|a+i| = k p
+	// となる．また明らかに
+	//		|p| = p^2
+	// である．両者より，
+	//		x+iy = gcd(a+i, p)
+	// と選べば，k∈[1..p-1] より
+	//		|x+iy| | gcd(kp, p^2) = p
+	// とできる．(a+i)|p より |x+iy| != 1 なので，|x+iy| = p である．
+
+	if (p == 2) return { 1, 1 };
+	if (p % 4 == 3) return { -1, -1 };
+
+	ll a = quadratic_residue_m1(p);
+
+	auto [x, y] = gcd_gaussian_integers(a, 1, p, 0);
+	x = abs(x);
+	y = abs(y);
+	if (x > y) swap(x, y);
+
+	return { (int)x, (int)y };
+}
+
+
+//【フェルマーの二平方和定理】O(n^(1/4))
+/*
+* x^2 + y^2 = n なる (x,y) (0≦x≦y) 全てのリストを返す．（なければ空）
+*
+* 利用：【素因数分解】,【フェルマーの二平方和定理（素数）】
+*/
+vector<pii> fermats_4n_plus_1(ll n) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E4%BA%8C%E5%80%8B%E3%81%AE%E5%B9%B3%E6%96%B9%E6%95%B0%E3%81%AE%E5%92%8C
+	// verify : https://judge.yosupo.jp/problem/two_square_sum
+
+	// n = 0 については例外処理
+	if (n == 0) return { {0, 0} };
+
+	auto pps = factor_integer(n);
+
+	// 0^2 + 1^2 = 1
+	vector<pii> res{ {0, 1} };
+
+	for (auto [p, e] : pps) {
+		if (p == 2) {
+			res.clear();
+			if (e & 1) {
+				// e = 2d+1 と表すと，
+				// (2^d)^2 + (2^d)^2 = 2^(2d+1) = 2^e
+				int x = 1 << (e / 2);
+				res.emplace_back(x, x);
+			}
+			else {
+				// e = 2d と表すと，
+				// 0^2 + (2^d)^2 = 2^(2d) = 2^e
+				res.emplace_back(0, 1 << (e / 2));
+			}
+		}
+		else if (p % 4 == 1) {
+			// xp^2 + yp^2 = p（一意）
+			auto [xp, yp] = fermats_4n_plus_1_prime(p);
+
+			// xyps : x^2 + y^2 = p^e となる (x, y) のリスト
+			vector<pii> xyps{ {xp, yp} };
+
+			rep(hoge, e - 1) {
+				vector<pii> nxyps;
+				for (auto [x, y] : xyps) {
+					// ブラーマグプタの二平方恒等式
+					// (x z - y w)^2 + (x w + y z)^2 = (x^2 + y^2)(z^2 + z^2)
+					int nx = abs(x * xp - y * yp);
+					int ny = x * yp + y * xp;
+					if (nx > ny) swap(nx, ny);
+					nxyps.emplace_back(nx, ny);
+
+					// (x z + y w)^2 + (x w - y z)^2 = (x^2 + y^2)(z^2 + z^2)
+					nx = abs(x * yp - y * xp);
+					ny = x * xp + y * yp;
+					if (nx > ny) swap(nx, ny);
+					nxyps.emplace_back(nx, ny);
+				}
+				xyps = move(nxyps);
+				uniq(xyps);
+			}
+
+			vector<pii> nres;
+			for (auto [x, y] : res) {
+				for (auto [xp, yp] : xyps) {
+					// ブラーマグプタの二平方恒等式
+					// (x z - y w)^2 + (x w + y z)^2 = (x^2 + y^2)(z^2 + z^2)
+					int nx = abs(x * xp - y * yp);
+					int ny = x * yp + y * xp;
+					if (nx > ny) swap(nx, ny);
+					nres.emplace_back(nx, ny);
+
+					// (x z + y w)^2 + (x w - y z)^2 = (x^2 + y^2)(z^2 + z^2)
+					nx = abs(x * yp - y * xp);
+					ny = x * xp + y * yp;
+					if (nx > ny) swap(nx, ny);
+					nres.emplace_back(nx, ny);
+				}
+			}
+			res = move(nres);
+			uniq(res);
+		}
+		else {
+			if (e & 1) {
+				// n が 4Z+3 型素因数を奇数個含んでいる場合は二平方和で表せない．
+				return {};
+			}
+			else {
+				// 全体を定数倍する形で消費するしかない．
+				int c = (int)powi(p, e / 2);
+				for (auto& [x, y] : res) {
+					x *= c;
+					y *= c;
+				}
+			}
 		}
 	}
 

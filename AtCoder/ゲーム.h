@@ -404,6 +404,17 @@ void weighted_directed_graph_game(const WGraph& g, vl& sc_l, vl& sc_h) {
 */
 
 
+//【賢者ゲーム】
+/*
+* 賢者ゲームにおいては，
+*	・各ターン i における賢者の思考（自分からみて候補が一意か）
+*	・インターバル i→i+1 における共通認識の更新（候補の削減）
+* に分けて考察すると良い．
+* 
+* verify : https://atcoder.jp/contests/wtf22-day2-open/tasks/wtf22_day2_a
+*/
+
+
 //【カードめくり】O(n^2 log n)
 /*
 * n 枚のカードからなる山札があり，上から i 枚目には a[i] が書かれている．

@@ -390,7 +390,7 @@ vl potentialed_dijkstra(const WGraph& g, const vl& u, int st) {
 
 	//【方法】
 	// g の各頂点 s にポテンシャル u[s] を導入し，辺 s→t のコスト c[s][t] が
-	//		c[s][t] = (u[t] - u[s]) + r[s][t]  (r[s][t] >= 0)
+	//		c[s][t] = (u[t] - u[s]) + r[s][t]  (r[s][t] ≧ 0)
 	// と表されるとする．
 	//（場所依存のコスト Δu と経路依存のコスト r に分けるイメージ）
 	// 
@@ -402,7 +402,14 @@ vl potentialed_dijkstra(const WGraph& g, const vl& u, int st) {
 	//		負の閉路に行ける → 無限ループ
 	//		負の閉路に行けない → 正しい答えは出るが，最悪計算量 O(2^n)
 	// となるのでどちらにせよだめ．
-	// 参考：https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
+	// 参考 : https://theory-and-me.hatenablog.com/entry/2019/09/08/182442
+
+	//【備考】
+	// st からの最短距離をベルマンフォード法で求めそれをポテンシャルとすることができる．
+	// st に依らず，コスト 0 の辺 S→i を追加したグラフにおける S からの最短距離を
+	// ベルマンフォード法で求め，それをポテンシャルとすることもできる．
+	// 参考 : https://noshi91.github.io/algorithm-encyclopedia/johnson-algorithm
+	// verify : https://yukicoder.me/problems/10650
 
 	int n = sz(g);
 	vl dist(n, INFL); // スタートからの最短距離
@@ -428,7 +435,7 @@ vl potentialed_dijkstra(const WGraph& g, const vl& u, int st) {
 	}
 
 	// 場所依存のコスト Δu を加算する．
-	rep(i, n) dist[i] += u[i] - u[st];
+	rep(i, n) if (dist[i] != INFL) dist[i] += u[i] - u[st];
 
 	return dist;
 }
@@ -437,14 +444,14 @@ vl potentialed_dijkstra(const WGraph& g, const vl& u, int st) {
 //【ダイクストラ法（任意コスト）】O(n + m log n)
 /*
 * 参照付きグラフ g に対し st から各頂点への最小コスト（到達不能なら INFL）を格納したリストを返す．
-* 初期コストは ini_cost で，コスト x の状態で辺 j を通ると，通過後のコストは f(j, x) になるとする．
+* 初期コストは ini_cost で，コスト x の状態で辺 e を通ると，通過後のコストは f(e, x) になるとする．
 *
 * 制約：
 *	f(x) は x について広義単調増加（途中であえてコストを増やすメリットがない）
 *	f(x) ≧ x（辺を通ることでコストが減ることがない）
 */
-template <class FUNC>
-vl dijkstra(const IGraph& g, int st, const FUNC& f, ll ini_cost) {
+template <class G, class FUNC>
+vl dijkstra(const G& g, int st, const FUNC& f, ll ini_cost) {
 	// 参考 : https://miscalc.hatenablog.com/entry/2022/10/10/115348
 	// verify : https://atcoder.jp/contests/abc342/tasks/abc342_e
 
@@ -464,12 +471,18 @@ vl dijkstra(const IGraph& g, int st, const FUNC& f, ll ini_cost) {
 
 		// より小さいコストで辿り着けるならコストを更新し，その先も探索する．
 		repe(e, g[s]) {
-			ll nc = f(e.id, c);
+			ll nc = f(e, c);
 			if (chmin(cost[e.to], nc)) q.push({ nc, e.to });
 		}
 	}
 
 	return cost;
+
+	/* f の定義の雛形
+	auto f = [&](const WEdge& e, ll cost) {
+		return cost + e.cost;
+	};
+	*/
 }
 
 

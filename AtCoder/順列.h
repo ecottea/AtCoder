@@ -161,47 +161,6 @@ ll inversion_number_cc(const vector<T>& a) {
 }
 
 
-//y“]“|”i•ªŠ„“¡jzO(n (log n)^2)
-/*
-* a[0..n) ‚Ì“]“|”‚ğ•Ô‚·D
-*
-* —˜—pFy’†‰›’l‚Å•”•ª—ñ‚É•ª‰ğz
-*/
-template <class T>
-ll inversion_number_01sep(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/chokudai_s001/tasks/chokudai_S001_j
-
-	//y•û–@z
-	// ’†‰›’l‚Å•ªŠ„‚µ‚Ä 01 —ñ‚É‚µC01 —ñ‚Æ‚µ‚Ä‚Ì“]“|”‚ğ”‚¦‚éD
-	// 0,1 ‚»‚ê‚¼‚ê‚Ì•”•ª—ñ‚Ì“]“|”‚ÍÄ‹A“I‚É‹‚ß‚éD
-
-	ll res = 0;
-
-	function<void(const vector<T>&)> rf = [&](const vector<T>& a) {
-		int n = sz(a);
-
-		vi la, ua, lp, up;
-		if (!median_separate(a, la, ua, lp, up)) return;
-
-		vi lu(n);
-		repe(x, up) lu[x] = 1;
-
-		ll cnt = 0;
-		rep(i, n) {
-			if (lu[i] == 1) cnt++;
-			else res += cnt;
-		}
-
-		rf(la);
-		rf(ua);
-	};
-
-	rf(a);
-
-	return res;
-}
-
-
 //yÅ¬ swap ‰ñ”zO(n log n)
 /*
 * ”—ñ a[0..n) ‚É‘Î‚µC—×Ú—v‘f‚Ì swap ‚ğŒJ‚è•Ô‚·‚±‚Æ‚Å b[0..n) ‚É•Ï‰»‚³‚¹‚é‚Æ‚«‚Ì
@@ -352,4 +311,46 @@ ll minimize_inc_dec_swap_cost(const vl& a, const vl& b, ll x, ll y) {
 /*
 * ¬‡Šî”.h ‚Ö
 */
+
+
+//y“]“|”i•ªŠ„“¡jzO(n (log n)^2)
+/*
+* a[0..n) ‚Ì“]“|”‚ğ•Ô‚·D
+*
+* —˜—pFy’†‰›’l‚Å•”•ª—ñ‚É•ª‰ğz
+*/
+template <class T>
+ll inversion_number_01sep(const vector<T>& a) {
+	// verify : https://atcoder.jp/contests/chokudai_s001/tasks/chokudai_S001_j
+
+	//y•û–@z
+	// ’†‰›’l‚Å•ªŠ„‚µ‚Ä 01 —ñ‚É‚µC01 —ñ‚Æ‚µ‚Ä‚Ì“]“|”‚ğ”‚¦‚éD
+	// 0,1 ‚»‚ê‚¼‚ê‚Ì•”•ª—ñ‚Ì“]“|”‚ÍÄ‹A“I‚É‹‚ß‚éD
+
+	ll res = 0;
+
+	function<void(const vector<T>&)> rf = [&](const vector<T>& a) {
+		int n = sz(a);
+
+		vi la, ua, lp, up;
+		if (!median_separate(a, la, ua, lp, up)) return;
+
+		vi lu(n);
+		repe(x, up) lu[x] = 1;
+
+		ll cnt = 0;
+		rep(i, n) {
+			if (lu[i] == 1) cnt++;
+			else res += cnt;
+		}
+
+		rf(la);
+		rf(ua);
+	};
+
+	rf(a);
+
+	return res;
+}
+
 

@@ -5,14 +5,21 @@
 
 //【Mo's algorithm】O(n√q β + q log q)
 /*
-* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
+* [0..n) 上の q 個の区間クエリ [l[j]..r[j]) を一括で処理する．
 *
-* 制約：両端の要素の追加 & 削除が O(β) で可能
+* insert(int i) : O(β)
+*	区間に a[i] を追加し，データ構造を更新する．
+*
+* erase(int i) : O(β)
+*	区間から a[i] を削除し，データ構造を更新する．
+*
+* get_sol(int j) : O(β)
+*	クエリ j に対し，データ構造を参照して解を求める．
 */
-template <class T, class S>
-void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, vector<S>& res) {
+template <class F1, class F2, class F3>
+void mos_algorithm(int n, const vi& l, const vi& r, const F1& insert, const F2& erase, const F3& get_sol) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
-	// verify : https://judge.yosupo.jp/problem/static_range_count_distinct
+	// verify : https://judge.yosupo.jp/problem/static_range_frequency
 
 	//【方法】
 	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
@@ -21,10 +28,9 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, vector<S>& res)
 	// これらが一致するような k を求めると k = √(2q+1) + 1 となる．
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
-	int n = sz(a), q = sz(l);
+	int q = sz(l);
 	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	res.resize(q);
 
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
@@ -35,34 +41,8 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, vector<S>& res)
 	}
 	sort(all(lb_sr_j));
 
-	// -------------- ここを実装する（auto の方が速い） ---------------
-
-	// 必要なデータ構造を用意する．
-	int m = *max_element(all(a)) + 1;
-	vi freq(m);
-	S kind = 0;
-
-	// 区間に a[i] を追加し，データ構造を更新する．
-	auto insert = [&](int i) {
-		if (freq[a[i]] == 0) kind++;
-		freq[a[i]]++;
-	};
-
-	// 区間から a[i] を削除し，データ構造を更新する．
-	auto erase = [&](int i) {
-		freq[a[i]]--;
-		if (freq[a[i]] == 0) kind--;
-	};
-
-	// クエリ j に対し，データ構造を参照して解を求める．
-	auto get_sol = [&](int j) {
-		return kind;
-	};
-
-	// --------------------------------------------------------------
-
 	// lpt[rpt] : 半開区間の左[右] 端の位置
-	int lpt = 0, rpt = 0; 
+	int lpt = 0, rpt = 0;
 
 	// クエリを順に処理していく．
 	rep(tmp, q) {
@@ -77,19 +57,51 @@ void mos_algorithm(const vector<T>& a, const vi& l, const vi& r, vector<S>& res)
 		while (rpt > r[j]) erase(--rpt);
 
 		// 区間 [l[j]..r[j]) に対する解を得る．
-		res[j] = get_sol(j);
+		get_sol(j);
 	}
+
+	/* 雛形
+	// 必要なデータ構造を用意する．
+	vi freq(m);
+
+	// 区間に a[i] を追加し，データ構造を更新する．
+	auto insert = [&](int i) {
+		freq[ax_cp[i]]++;
+	};
+
+	// 区間から a[i] を削除し，データ構造を更新する．
+	auto erase = [&](int i) {
+		freq[ax_cp[i]]--;
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	vi res(q);
+	auto get_sol = [&](int j) {
+		res[j] = freq[ax_cp[n + j]];
+	};
+	*/
 }
 
 
 //【Mo's algorithm（非対称）】O(n√q β + q log q)
 /*
-* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
+* insert_left(int i) : O(β)
+*	区間の左に a[i] を追加し，データ構造を更新する．
 *
-* 制約：両端の要素の追加 & 削除が O(β) で可能
+* insert_right(int i) : O(β)
+*	区間の右に a[i] を追加し，データ構造を更新する．
+*
+* erase_left(int i) : O(β)
+*	区間の左から a[i] を削除し，データ構造を更新する．
+*
+* erase_right(int i) : O(β)
+*	区間の右から a[i] を削除し，データ構造を更新する．
+*
+* get_sol(int j) : O(β)
+*	クエリ j に対し，データ構造を参照して解を求める．
 */
-template <class T, class S>
-void mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r, vector<S> &res) {
+template <class F1, class F2, class F3, class F4, class F5>
+void mos_algorithm_asymmetric(int n, const vi& l, const vi& r, const F1& insert_left, const F2& insert_right, const F3& erase_left, const F4& erase_right, const F5& get_sol) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://judge.yosupo.jp/problem/static_range_inversions_query
 
@@ -100,10 +112,9 @@ void mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r, vect
 	// これらが一致するような k を求めると k = √(2q+1) + 1 となる．
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
-	int n = sz(a), q = sz(l);
+	int q = sz(l);
 	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	res.resize(q);
 
 	// クエリを左端の位置するブロックについて昇順に，
 	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
@@ -113,44 +124,6 @@ void mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r, vect
 		lb_sr_j[j] = { b, (b & 1 ? -1 : 1) * r[j], j };
 	}
 	sort(all(lb_sr_j));
-
-	// -------------- ここを実装する（auto の方が速い） ---------------
-
-	// 必要なデータ構造を用意する．
-	int m = *max_element(all(a)) + 1;
-	fenwick_tree<int> ft(m);
-	ll inv = 0;
-
-	// 区間の右に a[i] を追加し，データ構造を更新する．
-	auto insert_right = [&](int i) {
-		inv += ft.sum(a[i] + 1, m);
-		ft.add(a[i], 1);
-	};
-
-	// 区間の左に a[i] を追加し，データ構造を更新する．
-	auto insert_left = [&](int i) {
-		inv += ft.sum(0, a[i]);
-		ft.add(a[i], 1);
-	};
-
-	// 区間の右から a[i] を削除し，データ構造を更新する．
-	auto erase_right = [&](int i) {
-		inv -= ft.sum(a[i] + 1, m);
-		ft.add(a[i], -1);
-	};
-
-	// 区間の左から a[i] を削除し，データ構造を更新する．
-	auto erase_left = [&](int i) {
-		inv -= ft.sum(0, a[i]);
-		ft.add(a[i], -1);
-	};
-
-	// クエリ j に対し，データ構造を参照して解を求める．
-	auto get_sol = [&](int j) {
-		return inv;
-	};
-
-	// --------------------------------------------------------------
 
 	// lpt[rpt] : 半開区間の左[右] 端の位置
 	int lpt = 0, rpt = 0;
@@ -168,21 +141,70 @@ void mos_algorithm_asymmetric(const vector<T>& a, const vi& l, const vi& r, vect
 		while (rpt > r[j]) erase_right(--rpt);
 
 		// 区間 [l[j]..r[j]) に対する解を得る．
-		res[j] = get_sol(j);
+		get_sol(j);
 	}
+
+	/* 雛形
+	// 必要なデータ構造を用意する．
+	fenwick_tree<int> ft(m);
+	ll inv = 0;
+
+	// 区間の左に a[i] を追加し，データ構造を更新する．
+	auto insert_left = [&](int i) {
+		inv += ft.sum(0, a_cp[i]);
+		ft.add(a_cp[i], 1);
+	};
+
+	// 区間の右に a[i] を追加し，データ構造を更新する．
+	auto insert_right = [&](int i) {
+		inv += ft.sum(a_cp[i] + 1, m);
+		ft.add(a_cp[i], 1);
+	};
+
+	// 区間の左から a[i] を削除し，データ構造を更新する．
+	auto erase_left = [&](int i) {
+		inv -= ft.sum(0, a_cp[i]);
+		ft.add(a_cp[i], -1);
+	};
+
+	// 区間の右から a[i] を削除し，データ構造を更新する．
+	auto erase_right = [&](int i) {
+		inv -= ft.sum(a_cp[i] + 1, m);
+		ft.add(a_cp[i], -1);
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	vl res(q);
+	auto get_sol = [&](int j) {
+		res[j] = inv;
+	};
+	*/
 }
 
 
 //【Mo's algorithm（rollback）】O(n√q β + q log q)
 /*
-* a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
+* [0..n) 上の q 個の区間クエリ [l[j]..r[j]) を一括で処理する．
 *
-* 制約：両端の要素の追加が O(β) で可能，snapshot と rollback が O(β) 程度で可能
+* init() : O(n)
+*	データ構造を初期化する．
+*
+* insert(int i) : O(β)
+*	区間に a[i] を追加し，データ構造を更新する．
+*
+* snapshot() : O(β)
+*	現在のデータ構造の状態を一時記憶しておく．
+*
+* rollback() : O(β)
+*	データ構造の状態を一時記憶してあったものに戻す．
+*
+* get_sol(int j) : O(β)
+*	クエリ j に対し，データ構造を参照して解を求める．
 */
-template <class T, class S>
-void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector<S>& res) {
+template <class F1, class F2, class F3, class F4, class F5>
+void mos_algorithm_rollback(int n, const vi& l, const vi& r, const F1& init, const F2& insert, const F3& snapshot, const F4& rollback, const F5& get_sol) {
 	// 参考 : https://snuke.hatenablog.com/entry/2016/07/01/000000
-	// verify : https://codeforces.com/gym/100513/problem/A
+	// verify : https://judge.yosupo.jp/problem/static_range_mode_query
 
 	//【方法】
 	// 区間 [0..n) を k 個のブロックに等分割する．ブロックの幅は n/k になる．
@@ -191,10 +213,9 @@ void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector
 	// これらが一致するような k を求めると k = √(2q) となる．
 	// ただ，前者は平均的には /2 くらい小さいはずなので，それに期待するなら k = √q がいい．
 
-	int n = sz(a), q = sz(l);
+	int q = sz(l);
 	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	res.resize(q);
 
 	// クエリを左端の位置するブロックごとに分け，右端について昇順ソートする．
 	vector<vector<pii>> lb_to_rj(sqrt_q);
@@ -205,48 +226,6 @@ void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector
 		chmax(l_max[b], l[j]);
 	}
 	rep(b, sqrt_q) sort(all(lb_to_rj[b]));
-
-	// -------------- ここを実装する（auto の方が速い） ----------------
-
-	// 区間を管理するデータ構造を用意する．
-	Rollback_union_find data;
-	bool sol = true;
-
-	// データ構造を初期化する．
-	auto init = [&]() {
-		data = Rollback_union_find((int)2e5 + 10);
-		sol = true;
-	};
-
-	// 区間に a[i] を追加し，データ構造 data を更新する．
-	auto insert = [&](int i) {
-		if (!sol) return;
-
-		auto [u, v] = a[i];
-		data.merge(u, v + n);
-		data.merge(u + n, v);
-		if (data.same(u, v)) sol = false;
-	};
-
-	// 現在のデータ構造の状態を一時記憶しておく．
-	bool sol_tmp;
-	auto snapshot = [&]() {
-		data.snapshot();
-		sol_tmp = sol;
-	};
-
-	// データ構造の状態を一時記憶してあったものに戻す．
-	auto rollback = [&]() {
-		data.rollback();
-		sol = sol_tmp;
-	};
-
-	// クエリ j に対し，データ構造を参照して解を求める．
-	auto get_sol = [&](int j) {
-		return sol;
-	};
-
-	// --------------------------------------------------------------
 
 	// b : 左から何番目のブロックか
 	rep(b, sqrt_q) {
@@ -271,14 +250,61 @@ void mos_algorithm_rollback(const vector<T>& a, const vi& l, const vi& r, vector
 			repir(i, min(l_max[b], r[j]) - 1, l[j]) insert(i);
 
 			// a[l[j]..r[j]) に対する解を得る．
-			res[j] = get_sol(j);
+			get_sol(j);
 
 			// データ構造の状態をスナップショット作成時まで戻す．
 			rollback();
 		}
 	}
 
-	return res;
+	/* 雛形
+	// 区間を管理するデータ構造を用意する．
+	Rollback_array<int> freq(C + 2);
+	freq.snapshot();
+	int freq_max = 0;
+	int col_max = -1;
+
+	// データ構造を初期化する．
+	auto init = [&]() {
+		freq.rollback();
+		freq.snapshot();
+		freq_max = 0;
+		col_max = -1;
+	};
+
+	// 区間に a[i] を追加し，データ構造を更新する．
+	auto insert = [&](int i) {
+		int col = a_cp[i];
+
+		int f = freq.get(col);
+		f++;
+		freq.set(col, f);
+
+		if (chmax(freq_max, f)) col_max = col;
+	};
+
+	// 現在のデータ構造の状態を一時記憶しておく．
+	int freq_max_tmp;
+	int col_max_tmp;
+	auto snapshot = [&]() {
+		freq.snapshot();
+		freq_max_tmp = freq_max;
+		col_max_tmp = col_max;
+	};
+
+	// データ構造の状態を一時記憶してあったものに戻す．
+	auto rollback = [&]() {
+		freq.rollback();
+		freq_max = freq_max_tmp;
+		col_max = col_max_tmp;
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	vector<pli> res(q);
+	auto get_sol = [&](int j) {
+		res[j] = { org[col_max], freq_max };
+	};
+	*/
 }
 
 
@@ -1597,8 +1623,8 @@ struct Quadratic_division {
 
 	// コンストラクタ（e() で初期化）
 	Quadratic_division(int n) : n(n) {
-		w = (int)(sqrt(n) + 1e-12);
-		m = (n + w - 1) / w;
+		w = (int)(sqrt(n) + 1e-12); // バケット幅
+		m = (n + w - 1) / w; // バケット数
 
 		v = vS(n, e());
 		v_mul = vS(m, e());

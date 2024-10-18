@@ -168,6 +168,74 @@ int LIS_val_to_length(const vector<T>& a, vi* lis = nullptr) {
 }
 
 
+//【最長増加部分列（広義，復元）】O(n log n)
+/*
+* 数列 a[0..n) の広義最長増加部分列の長さを返す．またその一例の添字列を ids に構成する．
+*
+*（セグメント木で高速化したインライン DP）
+*/
+pii op_lis(pii a, pii b) { return max(a, b); }
+pii e_lis() { return { 0, -1 }; } // max の単位元が -INF でなく 0 であることに注意
+template <class T>
+int weakly_LIS_val_to_length(const vector<T>& a, vi* ids = nullptr) {
+	// verify : https://atcoder.jp/contests/abc369/tasks/abc369_f
+
+	int n = sz(a);
+
+	// a を座標圧縮した結果を b に格納する．
+	vector<T> a_uniqed(a); uniq(a_uniqed); int m = sz(a_uniqed);
+	vi b(n); rep(i, n) b[i] = lbpos(a_uniqed, a[i]);
+
+	// dp_i[j] : b[0..i] で右端の値が j であるような最長増加部分列の長さとそのときの右端位置
+	segtree<pii, op_lis, e_lis> dp(m);
+
+	// prv[j] : 右端が b[i] の最長増加部分列について，右端の 1 つ前の要素の位置（DP 復元用）
+	//（インライン DP を行うので，これを持たずに DP テーブルから復元しようとすると失敗する．）
+	vi prv(n, -1);
+
+	//（例）b[0..5) = [3, 1, 2, 2, 0] のとき
+	//	dp_0[0..3) = [0, 0, 0, 0]
+	//	dp_1[0..3) = [0, 0, 0, 1] (max(0, 0, 0, 0) + 1 = 1)
+	//	dp_2[0..3) = [0, 1, 0, 1] (max(0, 0)       + 1 = 1)
+	//	dp_3[0..3) = [0, 1, 2, 1] (max(0, 1, 0)    + 1 = 2)
+	//	dp_4[0..3) = [0, 1, 3, 1] (max(0, 1, 2)    + 1 = 3)
+	//	dp_5[0..3) = [1, 1, 3, 1] (max()           + 1 = 1)
+
+	// j = b[i] を順に見ていく
+	rep(i, n) {
+		int j = b[i];
+
+		// j を右端にもてるのは，それまでの右端が j 以下のもののみ．
+		// よってその中での最長増加部分列の長さを求め，それに 1 を加える．
+		auto [len, pos] = dp.prod(0, j + 1);
+		len++;
+
+		// j を右端とするより長いものが作れれば更新する．
+		// dp[j] 以外は更新されることはないので，更新は O(log n) で終わる．
+		// この性質が dp テーブルのインライン化と相性が良い．
+		if (len > dp.get(j).first) {
+			dp.set(j, { len, i });
+			prv[i] = pos;
+		}
+	}
+
+	// 右端の値を任意としたときの最長増加部分列の長さを得る．
+	auto [len, pos] = dp.prod(0, m);
+
+	// DP 復元を行う．
+	if (ids != nullptr) {
+		ids->clear();
+		while (pos != -1) {
+			ids->emplace_back(pos);
+			pos = prv[pos];
+		}
+		reverse(all(*ids));
+	}
+
+	return len;
+}
+
+
 //【最長増加部分列（二次元）】O(n (log n)^2)
 /*
 * 数列 a[0..n), b[0..n) について，添字の増加列 t_0 < ... < t_(k-1) で，

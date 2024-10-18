@@ -1413,10 +1413,15 @@ public:
 
 	// a[i][j] = x とする．
 	void set(int i, ll j, S x) {
-		// verify : https://www.codechef.com/problems/VIDEOTAPES
+		// verify : https://atcoder.jp/contests/abc369/tasks/abc369_f
 
-		S px = get(i, j);
-		apply(i, j, x - px);
+		Assert(0 <= i && i < h && 0 <= j && j < w);
+
+		i += h;
+		while (i >= 1) {
+			v[i].set(j, x);
+			i /= 2;
+		}
 	}
 
 	// a[i][j] を返す（なければ o() を返す）
@@ -1464,99 +1469,7 @@ public:
 };
 
 
-//【二次元動的セグメント木（可換モノイド）】
-/*
-* Dynamic_segtree_2D<S, op, o>(int h, ll w) : O(h)
-*	a[0..h)[0..w) = o() で初期化する．
-*	要素は可換モノイド (S, op, o) の元とする．
-*
-* apply(int i, ll j, S x) : O(log h log w)
-*	a[i][j] += x とする．
-*
-* S get(int i, ll j) : O(log h log w)
-*	a[i][j] を返す（なければ o() を返す）
-*
-* S sum(int x1, ll y1, int x2, ll y2) : O(log h log w)
-*	Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
-*
-* S all_prod() : O(log w)
-*	Σa[0..h)[0..w) を返す．
-*
-* 利用：【動的セグメント木（モノイド）】
-*/
-template <class S, S(*op)(S, S), S(*o)()>
-class Dynamic_segtree_2D {
-	// 参考 : https://blog.hamayanhamayan.com/entry/2017/12/09/015937
-
-	int h; ll w;
-	vector<Dynamic_segtree<S, op, o>> v;
-
-public:
-	// a[0..h)[0..w) = o() で初期化する．
-	Dynamic_segtree_2D(int h, ll w) : h(h), w(w), v(2 * h, Dynamic_segtree<S, op, o>(w)) {
-		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
-	}
-	Dynamic_segtree_2D() : h(0), w(0) {}
-
-	// a[i][j] += x とする．
-	void apply(int i, ll j, S x) {
-		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
-
-		Assert(0 <= i && i < h && 0 <= j && j < w);
-
-		i += h;
-		while (i >= 1) {
-			v[i].apply_left(j, x);
-			i /= 2;
-		}
-	}
-
-	// a[i][j] を返す（なければ o() を返す）
-	S get(int i, ll j) const {
-		Assert(0 <= i && i < h && 0 <= j && j < w);
-
-		return v[i + h].get(j);
-	}
-
-	// Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
-	S sum(int x1, ll y1, int x2, ll y2) const {
-		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
-
-		chmax(x1, 0); chmax(y1, 0LL); chmin(x2, h); chmin(y2, w);
-		if (x1 >= x2 || y1 >= y2) return o();
-
-		x1 += h; x2 += h;
-		S res = o();
-
-		while (x1 < x2) {
-			if (x1 & 1) {
-				res = op(res, v[x1].prod(y1, y2));
-				x1++;
-			}
-			if (x2 & 1) {
-				res = op(res, v[x2 - 1].prod(y1, y2));
-			}
-			x1 /= 2; x2 /= 2;
-		}
-
-		return res;
-	}
-
-	// Σa[0..h)[0..w) を返す．
-	S all_sum() const {
-		return v[1].all_prod();
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, Dynamic_segtree_2D seg) {
-		rep(i, seg.h) rep(j, seg.w) os << seg.get(i, j) << " \n"[j == seg.w - 1];
-		return os;
-	}
-#endif
-};
-
-
-//【二次元遅延評価セグメント木】
+//【二次元遅延評価セグメント木 → 無理】
 /*
 * 行方向区間加算 & 列方向区間min ですら効率的な実現方法は知られていない．
 *

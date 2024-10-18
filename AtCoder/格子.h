@@ -171,35 +171,6 @@ void bomberman(const vector<vector<T>>& c, vvi& u, vvi& d, vvi& l, vvi& r, T wal
 }
 
 
-//【上三角 → 矩形集合】O(n log n)
-/*
-* n×n 格子の狭義上三角部分 S = {(i,j) | 0≦i<j<n} を矩形に分割し，矩形のリストを返す．
-* strict = false にすると広義上三角部分 S = {(i,j) | 0≦i≦j<n} を矩形に分割する．
-* 矩形 [i1..i2)×[j1..j2) は 4 つ組 {i1, i2, j1, j2} で表す．
-*
-*（分割統治法）
-*/
-vector<tuple<int, int, int, int>> trig_to_rects(int n, bool strict = true) {
-	vector<tuple<int, int, int, int>> rects;
-
-	// {(i,j) | l≦i<j<r} を矩形に分割する．
-	function<void(int, int)> rf = [&](int l, int r) {
-		if (r - l == 1) {
-			if (!strict) rects.emplace_back(l, l + 1, l, l + 1);
-			return;
-		}
-
-		int m = (l + r) / 2;
-		rects.emplace_back(l, m, m, r);
-		rf(l, m);
-		rf(m, r);
-	};
-	rf(0, n);
-
-	return rects;
-}
-
-
 //【単純多角形判定】O(h w)
 /*
 * 盤面 c[0..h)[0..w) で，外部が o，内部がそれ以外で表された多角形が単純であるかを返す．
@@ -274,14 +245,6 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 * ⇔ 第 x1 行と第 x2 行の両方に辺 y1-y2 が存在する．
 * 
 * verify : https://atcoder.jp/contests/arc019/tasks/arc019_4
-*/
-
-
-//【ユークリッド距離と二部グラフ】
-/*
-* 二次元の格子点を頂点とし，ユークリッド距離が √D である頂点間に辺を張ったグラフは二部グラフである．
-* 
-* verify : https://atcoder.jp/contests/agc025/tasks/agc025_d
 */
 
 

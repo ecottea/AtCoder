@@ -136,7 +136,7 @@ mint count_parenthesis_subsequences(const string& s, const Factorial_mint& fm) {
 * 利用：【広義単調増加列の数え上げ（上限指定，mod 998244353）】
 */
 mint count_parenthesis_replace(const string& s, const Factorial_mint& fm) {
-	// verify : https://noshi91.hatenablog.com/entry/2023/07/21/235339
+	// 参考 : https://noshi91.hatenablog.com/entry/2023/07/21/235339
 
 	int n = sz(s);
 

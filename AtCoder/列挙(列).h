@@ -65,6 +65,8 @@ vector<vector<T>> enumerate_all_sequences(const vector<vector<T>>& a) {
 * 数列 a[0..n) で，∀i, a[i]∈[0..ub) を満たすもの全てを格納したリストを返す．
 */
 vvi enumerate_all_sequences(int n, int ub) {
+	// verify : https://yukicoder.me/problems/no/2917
+
 	vvi seqs;
 
 	vi seq(n); // 作成途中の列

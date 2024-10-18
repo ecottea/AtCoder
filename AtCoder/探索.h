@@ -247,7 +247,7 @@ ll random_ternary_search_max(ll l, ll r, const FUNC& f) {
 */
 template <class FUNC>
 ll random_ternary_search_min(ll l, ll r, const FUNC& f) {
-	// verify : https://yukicoder.me/problems/no/2627
+	// verify : https://atcoder.jp/contests/abc374/tasks/abc374_e
 
 	static bool first_call = true;
 
@@ -265,7 +265,7 @@ ll random_ternary_search_min(ll l, ll r, const FUNC& f) {
 		if (m1 == m2) continue;
 		if (m1 > m2) swap(m1, m2);
 
-		if (f(m1) > f(m2)) l = m1; // 上に凸に対応したかったらここの不等号を逆にする．
+		if (f(m1) > f(m2)) l = m1;
 		else r = m2;
 	}
 	return l + 1;
@@ -283,10 +283,10 @@ ll random_ternary_search_min(ll l, ll r, const FUNC& f) {
 * Fibonacci_search(ll w) : O(log w)
 *	最大で幅 w の開区間まで扱えるよう初期化する．
 *
-* ll search_max(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
+* pll search_max(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
 *	開区間 (l..r) で上に単峰な関数 f の最大値が f(i) であるとし，組 {i, f(i)} を返す．
 *
-* ll search_min(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
+* pll search_min(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
 *	開区間 (l..r) で下に単峰な関数 f の最小値が f(i) であるとし，組 {i, f(i)} を返す．
 */
 class Fibonacci_search {
@@ -616,6 +616,7 @@ void parallel_binary_search(vi& ok, vi& ng, const function<void(const vi&, vb&)>
 			repe(id, mid_to_id[t]) res[id] = (seg.get(I[id]) >= x[id]);
 		}
 	};
+	parallel_binary_search(ok, ng, okQ);
 	*/
 }
 

@@ -1,6 +1,8 @@
 #pragma once
 #include "header.h"
 #include "構造(グラフ).h"
+#include "最短路.h"
+#include "変換(グラフ).h"
 // ■■■■■ グラフ上の列挙問題 ■■■■■
 
 
@@ -58,7 +60,7 @@ vvi enumerate_simple_path(const G& g, int ST, int GL) {
 	vvi paths;
 	vi seq; // 訪れた頂点の列
 
-	// 頂点を訪れたことを記録しておくテーブル．
+	// 頂点を訪れたことを記録しておくテーブル
 	vb seen(n);
 
 	// 再帰用の関数
@@ -488,6 +490,33 @@ vector<tuple<int, int, int>> enumerate_triangles(const Graph& g) {
 	}
 
 	return res;
+}
+
+
+//【最短路に使われる辺の列挙】O(n + m log n)
+/*
+* コスト付き有向グラフ g の ST から GL までの最短路として使われる可能性のある辺のみを残したグラフを返す．
+*
+* 利用：【単一始点最短路】,【逆グラフ（重み付き）】
+*/
+WGraph enumerate_edge_on_shortest_path(const WGraph& g, int ST, int GL) {
+	// verify : https://atcoder.jp/contests/abc375/tasks/abc375_g
+
+	int n = sz(g);
+
+	auto d = dijkstra(g, ST);
+
+	auto gR = reverse_graph(g);
+	auto dR = dijkstra(gR, GL);
+
+	ll c = d[GL];
+
+	WGraph g2(n);
+	rep(s, n) repe(e, g[s]) {
+		if (d[s] + e.cost + dR[e.to] == c) g2[s].push_back(e);
+	}
+
+	return g2;
 }
 
 

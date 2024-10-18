@@ -1,5 +1,6 @@
 #pragma once
 #include "header.h"
+#include "monotone.h"
 // ■■■■■ 広義の畳込み ■■■■■
 
 
@@ -13,10 +14,8 @@ vector<T> naive_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
 	int n = sz(a), m = sz(b);
 	if (min(n, m) == 0) return vector<T>();
 
-	T T_MIN = numeric_limits<T>::lowest();
-
 	// c[k] = MAX_(i+j=k) (a[i] + b[j])
-	vector<T> c(n + m - 1, T_MIN);
+	vector<T> c(n + m - 1, -T(INFL));
 	rep(i, n) rep(j, m) chmax(c[i + j], a[i] + b[j]);
 
 	return c;
@@ -98,7 +97,7 @@ vector<T> semiconcave_max_plus_convolution(const vector<T>& a, const vector<T>& 
 	//【方法】
 	// (n+m-1)×n 行列 M を
 	//		M[i][j] = a[j] + b[i-j]
-	// と定めると，これは anti-monotone なので monotone minima で行最小値が求まる．
+	// と定めると，これは anti-monotone なので monotone minima で行最大値が求まる．
 
 	//【例（n=4, m=3）】
 	// M は以下の通り．これの各行の行最大値を求めれば良い．
@@ -110,7 +109,8 @@ vector<T> semiconcave_max_plus_convolution(const vector<T>& a, const vector<T>& 
 	//	[                               a[3]+b[2] ]
 
 	//【備考】
-	// 実は M は anti-totally monotone なので，SMAWK Algorithm で O(log n) を落とせる．
+	// 実は M は anti-totally monotone なので，SMAWK Algorithm で O(log) を落とせる．
+	// とはいえ n = m = 5e5 程度ではほとんど差が出なかった．
 
 	int n = sz(a), m = sz(b);
 
@@ -127,7 +127,7 @@ vector<T> semiconcave_max_plus_convolution(const vector<T>& a, const vector<T>& 
 		int iM = (iL + iR) / 2;
 
 		// jM : 行 iM の中の最大要素のある列の番号
-		int jM = -1; T a_max = -2 * T(INFL);
+		int jM = -1; T a_max = -2 * T(INFL) - 10;
 		repi(j, max(jL, iM - m + 1), min(jR - 1, iM)) {
 			if (chmax(a_max, a[j] + b[iM - j])) jM = j;
 		}
@@ -238,6 +238,219 @@ public:
 	}
 #endif
 };
+
+
+//【min-plus 畳込み（素朴）】O(n m)
+/*
+* 数列 a[0..n) と b[0..m) を min-plus 代数にて畳み込んだ数列 c[0..n+m-1) を返す．
+* すなわち c[k] = MIN_(i+j=k) (a[i] + b[j]) である．
+*/
+template <class T>
+vector<T> naive_min_plus_convolution(const vector<T>& a, const vector<T>& b) {
+	int n = sz(a), m = sz(b);
+	if (min(n, m) == 0) return vector<T>();
+
+	// c[k] = MIN_(i+j=k) (a[i] + b[j])
+	vector<T> c(n + m - 1, T(INFL));
+	rep(i, n) rep(j, m) chmin(c[i + j], a[i] + b[j]);
+
+	return c;
+}
+
+
+//【min-plus 畳込み（下に凸）】O(n + m)
+/*
+* 下に凸な数列 a[0..n), b[0..m) を min-plus 代数にて畳み込んだ下に凸な数列 c[0..n+m-1) を返す．
+* 数列が下に凸であるとは，階差数列が広義単調増加であることをいう．
+*/
+template <class T>
+vector<T> convex_min_plus_convolution(const vector<T>& a, const vector<T>& b) {
+	// 参考 : https://twitter.com/maspy_stars/status/1396750434824450051
+	// verify : https://judge.yosupo.jp/problem/min_plus_convolution_convex_convex
+
+	int n = sz(a), m = sz(b);
+
+	// 一方が空数列だった場合は空数列を返す．
+	if (min(n, m) == 0) return vector<T>();
+
+	vector<T> c(n + m - 1);
+	c[0] = a[0] + b[0];
+
+	int i = 0, j = 0;
+	while (i + j < n + m - 2) {
+		if (i == n - 1 || (j != m - 1 && a[i + 1] - a[i] > b[j + 1] - b[j])) {
+			c[i + j + 1] = c[i + j] + (b[j + 1] - b[j]);
+			j++;
+		}
+		else {
+			c[i + j + 1] = c[i + j] + (a[i + 1] - a[i]);
+			i++;
+		}
+	}
+
+	return c;
+}
+
+
+//【min-plus 畳込み（片方が下に凸）】O(n log(n + m) + m)
+/*
+*（下に凸とは限らない）数列 a[0..n) と下に凸な数列 b[0..m) を
+* min-plus 代数にて畳み込んだ（下に凸とは限らない）数列 c[0..n+m-1) を返す．
+* 数列が下に凸であるとは，階差数列が広義単調増加であることをいう．
+*/
+template <class T>
+vector<T> semiconvex_min_plus_convolution(const vector<T>& a, const vector<T>& b) {
+	// 参考 : https://noshi91.github.io/Library/algorithm/concave_max_plus_convolution.cpp
+	// verify : https://judge.yosupo.jp/problem/min_plus_convolution_convex_arbitrary
+
+	//【方法】
+	// (n+m-1)×n 行列 M を
+	//		M[i][j] = a[j] + b[i-j]
+	// と定めると，これは monotone なので monotone minima で行最小値が求まる．
+
+	//【例（n=4, m=3）】
+	// M は以下の通り．これの各行の行最小値を求めれば良い．
+	//	[ a[0]+b[0]                               ]
+	//	[ a[0]+b[1] a[1]+b[0]                     ]
+	//	[ a[0]+b[2] a[1]+b[1] a[2]+b[0]           ]
+	//	[           a[1]+b[2] a[2]+b[1] a[3]+b[0] ]
+	//	[                     a[2]+b[2] a[3]+b[1] ]
+	//	[                               a[3]+b[2] ]
+
+	//【備考】
+	// 実は M は totally monotone なので，SMAWK Algorithm で O(log) を落とせる．
+	// とはいえ n = m = 5e5 程度ではほとんど差が出なかった．
+
+	int n = sz(a), m = sz(b);
+
+	// 一方が空数列だった場合は空数列を返す．
+	if (min(n, m) == 0) return vector<T>();
+
+	vector<T> c(n + m - 1);
+
+	// 行 [iL..iR) についての答えを求める（答えが列 [jL..jR) の範囲にあることはわかっている）
+	function<void(int, int, int, int)> rf = [&](int iL, int iR, int jL, int jR) {
+		if (iR - iL <= 0) return;
+
+		// iM : 行 [iL..iR) の真ん中の行の番号
+		int iM = (iL + iR) / 2;
+
+		// jM : 行 iM の中の最小要素のある列の番号
+		int jM = -1; T a_max = 2 * T(INFL) + 10;
+		repi(j, max(jL, iM - m + 1), min(jR - 1, iM)) {
+			if (chmin(a_max, a[j] + b[iM - j])) jM = j;
+		}
+
+		// 行 iM の行最小値の位置が jM であることがわかったので c[iM] が決定できる．
+		c[iM] = a[jM] + b[iM - jM];
+
+		// 左上と右下の部分を再帰的に調べていく．
+		rf(iL, iM, jL, jM + 1);
+		rf(iM + 1, iR, jM, jR);
+	};
+	rf(0, n + m - 1, 0, n);
+
+	return c;
+}
+
+
+//【min-plus 畳込み（片方が上に凸）】O((n + m) log(n + m)^2)
+/*
+*（上に凸とは限らない）数列 a[0..n) と上に凸な数列 b[0..m) を
+* min-plus 代数にて畳み込んだ（上に凸とは限らない）数列 c[0..n+m-1) を返す．
+* 数列が上に凸であるとは，階差数列が広義単調減少であることをいう．
+* 
+* 利用：【monotone minima】
+*/
+template <class T>
+vector<T> semiconcave_min_plus_convolution(const vector<T>& a, const vector<T>& b) {
+	//【方法】
+	// (n+m-1)×n 行列 M を
+	//		M[i][j] = a[j] + b[i-j]
+	// と定めると，これは anti-monotone なので，矩形分割すれば monotone minima で行最小値が求まる．
+
+	//【例（n=4, m=3）】
+	// M は以下の通り．これの各行の行最小値を求めれば良い．
+	//	[ a[0]+b[0]                               ]
+	//	[ a[0]+b[1] a[1]+b[0]                     ]
+	//	[ a[0]+b[2] a[1]+b[1] a[2]+b[0]           ]
+	//	[           a[1]+b[2] a[2]+b[1] a[3]+b[0] ]
+	//	[                     a[2]+b[2] a[3]+b[1] ]
+	//	[                               a[3]+b[2] ]
+
+	//【備考】
+	// 実は M は totally anti-monotone なので，SMAWK Algorithm で O(log) を落とせる．
+	// とはいえ n = m = 5e5 程度ではほとんど差が出ないだろう．
+
+	int n = sz(a), m = sz(b);
+
+	// 一方が空数列だった場合は空数列を返す．
+	if (min(n, m) == 0) return vector<T>();
+
+	int h = n + m - 1, w = n;
+
+	// y_min[x] : M の第 x 行の左端位置
+	// y_max[x] : M の第 x 行の右端位置
+	vi y_min(h, 0), y_max(h, w - 1);
+	repi(x, m, h - 1) y_min[x] = x - m + 1;
+	repi(x, 0, h - m) y_max[x] = x;
+
+	// x_min[y] : M の第 y 行の上端位置
+	// x_max[y] : M の第 y 行の下端位置
+	vi x_min(w), x_max(w);
+	iota(all(x_min), 0);
+	iota(all(x_max), m - 1);
+
+	vector<T> c(h, (T)INFL);
+
+	// M ∩ [x1..x2]×[y1..y2] を矩形に分割する．
+	function<void(int, int, int, int)> rf = [&](int x1, int x2, int y1, int y2) {
+		// 矩形になっていたら，monotone minima で行最小値を求める．
+		if (y_max[x1] >= y2 && y1 >= y_min[x2]) {
+			// 左右反転して monotone にする．
+			auto A = [&](int i, int j) {
+				return a[y2 - j] + b[(x1 + i) - (y2 - j)];
+			};
+
+			auto j_min = monotone_minima(x2 - x1 + 1, y2 - y1 + 1, A);
+
+			repi(i, x1, x2) chmin<T>(c[i], A(i - x1, j_min[i - x1]));
+
+			return;
+		}
+
+		// 十分小さい領域については愚直に処理する．
+		if ((ll)(x2 - x1) * (y2 - y1) < 1000) {
+			repi(x, x1, x2) repi(y, max(y_min[x], y1), min(y_max[x], y2)) {
+				chmin(c[x], a[y] + b[x - y]);
+			}
+			return;
+		}
+
+		// バウンディングボックスの長辺を半分にして再帰的に処理する．
+		if (x2 - x1 > y2 - y1) {
+			int xm = (x1 + x2) / 2;
+
+			int ny2 = min(y_max[xm], y2);
+			if (y1 <= ny2) rf(x1, xm, y1, ny2);
+
+			int ny1 = max(y_min[xm], y1);
+			if (ny1 <= y2) rf(xm + 1, x2, ny1, y2);
+		}
+		else {
+			int ym = (y1 + y2) / 2;
+
+			int nx2 = min(x_max[ym], x2);
+			if (x1 <= nx2) rf(x1, nx2, y1, ym);
+
+			int nx1 = max(x_min[ym], x1);
+			if (nx1 <= x2) rf(nx1, x2, ym + 1, y2);
+		}
+	};
+	rf(0, h - 1, 0, w - 1);
+
+	return c;
+}
 
 
 //【sum-AND 畳込み】O((n + m) log(n + m) log max(a, b))

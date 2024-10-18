@@ -30,6 +30,128 @@ Graph read_tree(int n, bool directed = false, bool zero_indexed = false) {
 }
 
 
+//【木の出力】O(n + m)
+/*
+* 木を【木の入力】で受け取る入力と同じ形式で出力する．
+*
+* directed : 有向木か（省略すれば false）
+* zero_indexed : 入力が 0-indexed か（省略すれば false）
+*/
+void write_Tree(const Graph& g, bool directed = false, bool zero_indexed = false) {
+	int n = sz(g);
+
+	cout << n << endl;
+	rep(s, n) repe(t, g[s]) {
+		if (!directed && s > t) continue;
+
+		int u = s + (!zero_indexed), v = t + (!zero_indexed);
+		cout << u << " " << v << " " << endl;
+	}
+}
+
+
+//【木のランダム生成】O(?)
+/*
+* n 頂点のランダムな木を返す．
+*/
+Graph create_random_tree(int n) {
+	Graph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	uniform_int_distribution<int> rnd(0, n - 1);
+
+	dsu d(n);
+	while (d.size(0) < n) {
+		int u = rnd(mt), v = rnd(mt);
+		if (d.same(u, v)) continue;
+
+		g[u].emplace_back(v);
+		g[v].emplace_back(u);
+		d.merge(u, v);
+	}
+
+	return g;
+}
+
+
+//【重み付き木のランダム生成】O(?)
+/*
+* n 頂点でコストが [c_min..c_max] 内の一様乱数で与えられるランダムな重み付き木を返す．
+*/
+WGraph create_random_Wtree(int n, ll c_min, ll c_max) {
+	WGraph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	vector<pii> es;
+	rep(i, n) repi(j, i + 1, n - 1) es.emplace_back(i, j);
+	shuffle(all(es), mt);
+
+	uniform_int_distribution<ll> rnd(c_min, c_max);
+
+	dsu d(n);
+	repe(e, es) {
+		int u, v;
+		tie(u, v) = e;
+		if (d.same(u, v)) continue;
+
+		ll c = rnd(mt);
+		g[u].emplace_back(v, c);
+		g[v].emplace_back(u, c);
+		d.merge(u, v);
+	}
+
+	return g;
+}
+
+
+//【根付き木のランダム生成】O(n)
+/*
+* 自身より小さい頂点を親とする n 頂点のランダムな有向根付き木を返す．（根は 0）
+* child_limit には子の個数の最大値を与える．
+*/
+Graph create_random_rooted_tree(int n, int child_limit = INF) {
+	// verify : https://atcoder.jp/contests/abc329/tasks/abc329_g
+
+	Graph g(n);
+
+	static mt19937_64 mt; static bool first_call = true;
+	if (first_call) {
+		mt = mt19937_64((int)time(NULL));
+		first_call = false;
+	}
+
+	uniform_int_distribution<int> rnd(0, 1 << 30);
+
+	vi ps{ 0 };
+
+	repi(i, 1, n - 1) {
+		int j = rnd(mt) % sz(ps);
+		int p = ps[j];
+
+		g[p].push_back(i);
+
+		if (sz(g[p]) == child_limit) {
+			swap(ps[j], ps.back());
+			ps.pop_back();
+		}
+
+		ps.push_back(i);
+	}
+
+	return g;
+}
+
+
 //【根付き木】
 /*
 * Rooted_tree() : O(1)
@@ -162,7 +284,7 @@ Rooted_tree read_rooted_tree(int n, bool zero_indexed = false, bool shuffled = f
 /*
 * Weighted_rooted_tree() : O(1)
 *	空で初期化する．
-* 
+*
 * Weighted_rooted_tree(WGraph g, int r) : O(n)
 *	重み付き木 g を r を根とみなした重み付き根付き木として受け取る．
 */
@@ -353,108 +475,6 @@ Binary_Tree read_binary_tree(int n, bool zero_indexed = false, int nval = -1) {
 	}
 
 	return Binary_Tree(s, l, r);
-}
-
-
-//【木のランダム生成】O(?)
-/*
-* n 頂点のランダムな木を返す．
-*/
-Graph create_random_tree(int n) {
-	Graph g(n);
-
-	static mt19937_64 mt; static bool first_call = true;
-	if (first_call) {
-		mt = mt19937_64((int)time(NULL));
-		first_call = false;
-	}
-
-	uniform_int_distribution<int> rnd(0, n - 1);
-
-	dsu d(n);
-	while (d.size(0) < n) {
-		int u = rnd(mt), v = rnd(mt);
-		if (d.same(u, v)) continue;
-
-		g[u].emplace_back(v);
-		g[v].emplace_back(u);
-		d.merge(u, v);
-	}
-
-	return g;
-}
-
-
-//【重み付き木のランダム生成】O(?)
-/*
-* n 頂点でコストが [c_min..c_max] 内の一様乱数で与えられるランダムな重み付き木を返す．
-*/
-WGraph create_random_Wtree(int n, ll c_min, ll c_max) {
-	WGraph g(n);
-
-	static mt19937_64 mt; static bool first_call = true;
-	if (first_call) {
-		mt = mt19937_64((int)time(NULL));
-		first_call = false;
-	}
-
-	vector<pii> es;
-	rep(i, n) repi(j, i + 1, n - 1) es.emplace_back(i, j);
-	shuffle(all(es), mt);
-
-	uniform_int_distribution<ll> rnd(c_min, c_max);
-
-	dsu d(n);
-	repe(e, es) {
-		int u, v;
-		tie(u, v) = e;
-		if (d.same(u, v)) continue;
-
-		ll c = rnd(mt);
-		g[u].emplace_back(v, c);
-		g[v].emplace_back(u, c);
-		d.merge(u, v);
-	}
-
-	return g;
-}
-
-
-//【根付き木のランダム生成】O(n)
-/*
-* 自身より小さい頂点を親とする n 頂点のランダムな有向根付き木を返す．（根は 0）
-* child_limit には子の個数の最大値を与える．
-*/
-Graph create_random_rooted_tree(int n, int child_limit = INF) {
-	// verify : https://atcoder.jp/contests/abc329/tasks/abc329_g
-
-	Graph g(n);
-
-	static mt19937_64 mt; static bool first_call = true;
-	if (first_call) {
-		mt = mt19937_64((int)time(NULL));
-		first_call = false;
-	}
-
-	uniform_int_distribution<int> rnd(0, 1 << 30);
-
-	vi ps{ 0 };
-
-	repi(i, 1, n - 1) {
-		int j = rnd(mt) % sz(ps);
-		int p = ps[j];
-
-		g[p].push_back(i);
-
-		if (sz(g[p]) == child_limit) {
-			swap(ps[j], ps.back());
-			ps.pop_back();
-		}
-
-		ps.push_back(i);
-	}
-
-	return g;
 }
 
 

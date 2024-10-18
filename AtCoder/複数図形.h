@@ -326,23 +326,21 @@ Polygon<T> convex_hull(vector<Point<T>> p) {
 
 //【上からの凸包】O(n log n)
 /*
-* n 個の点 (x[i], y[i]) の上からの凸包の x 座標について昇順で j 番目の頂点の座標を p[j] に格納する．
-* また p の大きさを返す．strict = false とすると広義凸包，upper = false とすると下からの凸包を格納する．
+* n 個の点 (x[i], y[i]) の上からの凸包を成す頂点を x 座標について昇順に格納したリストを返す．
+* lower = true とすると下からの凸包，eq = true とすると広義凸包を格納する．
 */
 template <class T>
-int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>& p,
-	bool strict = true, bool upper = true)
-{
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/4/CGL/all/CGL_4_A
+vector<pair<T, T>> upper_convex_hull(const vector<T>& x, const vector<T>& y, bool lower = false, bool eq = false) {
+	// verify : https://atcoder.jp/contests/ttpc2022/tasks/ttpc2022_f
 
 	int n = sz(x);
-	p.clear();
+	vector<pair<T, T>> p;
 
 	// x 座標について昇順に並べる．
 	map<T, T> x_to_y;
 	rep(i, n) {
 		if (x_to_y.count(x[i])) {
-			if (upper) chmax(x_to_y[x[i]], y[i]);
+			if (!lower) chmax(x_to_y[x[i]], y[i]);
 			else chmin(x_to_y[x[i]], y[i]);
 		}
 		else x_to_y[x[i]] = y[i];
@@ -358,9 +356,9 @@ int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>
 		T left = (Q.second - P.second) * (R.first - P.first);
 		T right = (R.second - P.second) * (Q.first - P.first);
 
-		if (!strict && left == right) return true;
+		if (eq && left == right) return true;
 
-		return upper ? left > right : left < right;
+		return !lower ? left > right : left < right;
 	};
 
 	int pt = 0;
@@ -377,7 +375,291 @@ int upper_convex_hull(const vector<T>& x, const vector<T>& y, vector<pair<T, T>>
 		pt++;
 	}
 
-	return pt;
+	return p;
+}
+
+
+//【凸集合の中の格子点の凸包（第一象限）】O(?)
+/*
+* 第一象限 [0..∞)×[0..∞) 内の凸集合 S で境界が y 軸から x 軸までを単調減少に結ぶものを考える．
+* S 内の格子点の上側凸包を成す点 {x, y} を x 座標昇順に並べたリストを返す．
+*
+* bool insideQ(T x, T y) :
+*	点 (x, y) が S に属するかを返す．
+*
+* bool crossQ(T x, T y, T dx, T dy) :
+*	点 (x, y) を通り (dx, dy) 方向に伸びる直線が S と共有点を持つかを返す．
+*
+* T next_in(T x, T y, T dx, T dy) :
+*	点 (x, y)∈S に対し，(x + k dx, y + k dy)∈S となる最大の k を返す．
+*
+* T next_out(T x, T y, T dx, T dy) :
+*	点 (x, y)!∈S に対し，閉線分 (x, y)-(x + k dx, y + kdy) が S と共有点をもつ最小の k を返す．
+*/
+template <class T, class F1, class F2, class F3, class F4>
+vector<pair<T, T>> convex_hull_in_convex_set(const F1& insideQ, const F2& crossQ, const F3& next_in, const F4& next_out) {
+	// 参考 : https://259-momone.hatenablog.com/entry/2021/07/25/025655
+	// verify : https://mojacoder.app/users/YSatUT/problems/fermats_4nplus1_theorem
+
+	//【備考】
+	// next_in() 等で二次方程式を解いて誤差死しがちなので注意．
+	// https://maspypy.github.io/library/nt/convex_floor_sum.hpp
+	// みたいに微分係数に注目する実装にする手もあるが，円みたいな陰関数だと困る．
+
+	vector<pair<T, T>> res;
+
+	T x = T(0);
+	T y = T(0) + T(1) * next_in(T(0), T(0), T(0), T(1));
+	res.emplace_back(x, y);
+
+	stack<tuple<T, T, T, T>> SBT;
+	SBT.emplace(T(0), T(-1), T(1), T(0));
+	SBT.emplace(T(1), T(0), T(1), T(0));
+
+	while (true) {
+		auto [dx_in, dy_in, dx_out, dy_out] = SBT.top(); SBT.pop();
+
+		auto k = next_in(x, y, dx_in, dy_in);
+		if (y + k * dy_in < 0) {
+			k = y / (-dy_in);
+			if (k > 0) {
+				x += k * dx_in;
+				y += k * dy_in;
+				res.emplace_back(x, y);
+			}
+			break;
+		}
+		x += k * dx_in;
+		y += k * dy_in;
+
+		if (x != T(0)) res.emplace_back(x, y);
+
+		while (!SBT.empty()) {
+			tie(dx_in, dy_in, dx_out, dy_out) = SBT.top();
+			if (insideQ(x + dx_in, y + dy_in)) break;
+			SBT.pop();
+		}
+		if (SBT.empty()) break;
+
+		while (y + dy_out >= T(0)) {
+			T dx_io = dx_in + dx_out;
+			T dy_io = dy_in + dy_out;
+
+			if (y + dy_io >= T(0) && insideQ(x + dx_io, y + dy_io)) {
+				T k = next_in(x + dx_io, y + dy_io, dx_out, dy_out);
+
+				T ndx_in = dx_io + k * dx_out;
+				T ndy_in = dy_io + k * dy_out;
+				T ndx_out = dx_io + (k + T(1)) * dx_out;
+				T ndy_out = dy_io + (k + T(1)) * dy_out;
+
+				dx_in = ndx_in;
+				dy_in = ndy_in;
+				dx_out = ndx_out;
+				dy_out = ndy_out;
+			}
+			else if (crossQ(x + dx_out, y + dy_out, dx_in, dy_in)) {
+				T k = next_out(x + dx_out, y + dy_out, dx_in, dy_in);
+				if (k <= 0) break;
+
+				T ndx_in = dx_in * k + dx_out;
+				T ndy_in = dy_in * k + dy_out;
+				if (y + ndy_in < T(0) || !insideQ(x + ndx_in, y + ndy_in)) break;
+
+				T ndx_out = dx_in * (k - T(1)) + dx_out;
+				T ndy_out = dy_in * (k - T(1)) + dy_out;
+
+				dx_in = ndx_in;
+				dy_in = ndy_in;
+				dx_out = ndx_out;
+				dy_out = ndy_out;
+			}
+			else break;
+
+			SBT.emplace(dx_in, dy_in, dx_out, dy_out);
+		}
+	}
+
+	if (y > 0) res.emplace_back(x, 0);
+
+	return res;
+
+	/* 関数の定義の雛形
+	using T = ll;
+
+	auto insideQ = [&](T x, T y) {
+		return x * x + y * y <= n;
+	};
+
+	auto crossQ = [&](T x, T y, T dx, T dy) {
+		return dy * dy * (n - x * x) + 2 * dx * dy * x * y + dx * dx * (n - y * y) >= 0;
+	};
+
+	auto next_in = [&](T x, T y, T dx, T dy) {
+		T D = dy * dy * (n - x * x) + 2 * dx * dy * x * y + dx * dx * (n - y * y);
+		T k = (T)floor((-dx * x - dy * y + sqrtl(D)) / (dx * dx + dy * dy));
+		return k;
+	};
+
+	auto next_out = [&](T x, T y, T dx, T dy) {
+		T D = dy * dy * (n - x * x) + 2 * dx * dy * x * y + dx * dx * (n - y * y);
+		T k = (T)ceil((-dx * x - dy * y - sqrtl(D)) / (dx * dx + dy * dy));
+		return k;
+	};
+	*/
+}
+
+
+//【凸集合の中の格子点の凸包】O(?)（始点選択バグってる）
+/*
+* (x0, y0) を含む凸集合 S 内の格子点の凸包の頂点 {x, y} を反時計回りに格納したリスト ps を返す．
+* ps[0] は x 座標最小（同じものがあれば y 座標最小）の点とする．
+*
+* bool insideQ(T x, T y) :
+*	点 (x, y) が S に属するかを返す．
+*
+* bool crossQ(T x, T y, T dx, T dy) :
+*	点 (x, y) を通り (dx, dy) 方向に伸びる直線が S と共有点を持つかを返す．
+*
+* T next_in(T x, T y, T dx, T dy) :
+*	点 (x, y)∈S に対し，(x + k dx, y + k dy)∈S となる最大の k を返す．
+*
+* T next_out(T x, T y, T dx, T dy) :
+*	点 (x, y)!∈S に対し，閉線分 (x, y)-(x + k dx, y + kdy) が S と共有点をもつ最小の k を返す．
+*/
+template <class T, class F1, class F2, class F3, class F4>
+vector<pair<T, T>> convex_hull_in_convex_set(T x0, T y0, const F1& insideQ, const F2& crossQ, const F3& next_in, const F4& next_out) {
+	// 参考 : https://259-momone.hatenablog.com/entry/2021/07/25/025655
+	// verify : https://atcoder.jp/contests/abc191/tasks/abc191_d
+
+	// dir % 4 : 進行方向（反時計回り，0:右下，1:右上，2:左上，3:左下）
+	int dir = 0;
+
+	// 初期位置は下端のどこかにする．（これがだめ）
+	T k = next_in(x0, y0, T(0), T(-1));
+	T x = x0;
+	T y = y0 - k;
+
+	k = next_in(x, y, T(-1), T(0));
+	if (k > T(0)) dir = 1;
+
+	bool first_call = true;
+
+	stack<tuple<T, T, T, T>> SBT;
+
+	vector<pair<T, T>> ps; pair<T, T> p_min{ x + T(1), y }; int i_min = -1;
+
+	auto build = [&]() {
+		while (true) {
+			auto [dx_in, dy_in, dx_out, dy_out] = SBT.top(); SBT.pop();
+
+			auto k = next_in(x, y, dx_in, dy_in);
+			x += k * dx_in;
+			y += k * dy_in;
+
+			// 最初に発見する点は凸包の頂点とは限らない（辺上の点かもしれない）
+			if (!first_call) {
+				if (chmin(p_min, make_pair(x, y))) i_min = sz(ps);
+
+				if (ps.empty() || x != ps.back().first || y != ps.back().second) {
+					// 1 周したら終了．
+					if (!ps.empty() && x == ps.front().first && y == ps.front().second) return true;
+
+					ps.emplace_back(x, y);
+				}
+			}
+			first_call = false;
+
+			while (!SBT.empty()) {
+				tie(dx_in, dy_in, dx_out, dy_out) = SBT.top();
+				if (insideQ(x + dx_in, y + dy_in)) break;
+				SBT.pop();
+			}
+			if (SBT.empty()) break;
+
+			while (1) {
+				T dx_io = dx_in + dx_out;
+				T dy_io = dy_in + dy_out;
+
+				if (insideQ(x + dx_io, y + dy_io)) {
+					T k = next_in(x + dx_io, y + dy_io, dx_out, dy_out);
+
+					T ndx_in = dx_io + k * dx_out;
+					T ndy_in = dy_io + k * dy_out;
+					T ndx_out = dx_io + (k + T(1)) * dx_out;
+					T ndy_out = dy_io + (k + T(1)) * dy_out;
+
+					dx_in = ndx_in;
+					dy_in = ndy_in;
+					dx_out = ndx_out;
+					dy_out = ndy_out;
+				}
+				else if (crossQ(x + dx_out, y + dy_out, dx_in, dy_in)) {
+					T k = next_out(x + dx_out, y + dy_out, dx_in, dy_in);
+					if (k <= 0) break;
+
+					T ndx_in = dx_in * k + dx_out;
+					T ndy_in = dy_in * k + dy_out;
+					if (!insideQ(x + ndx_in, y + ndy_in)) break;
+
+					T ndx_out = dx_in * (k - T(1)) + dx_out;
+					T ndy_out = dy_in * (k - T(1)) + dy_out;
+
+					dx_in = ndx_in;
+					dy_in = ndy_in;
+					dx_out = ndx_out;
+					dy_out = ndy_out;
+				}
+				else break;
+
+				SBT.emplace(dx_in, dy_in, dx_out, dy_out);
+			}
+		}
+
+		return false;
+	};
+
+	while (dir < 8) {
+		T x0_in = T(DX[dir % 4]);
+		T y0_in = T(DY[dir % 4]);
+		T x0_out = T(DX[(dir + 3) % 4]);
+		T y0_out = T(DY[(dir + 3) % 4]);
+
+		SBT.emplace(x0_in, y0_in, x0_out, y0_out);
+		SBT.emplace(x0_out, y0_out, x0_out, y0_out);
+
+		if (build()) break;
+
+		dir++;
+	}
+
+	rotate(ps.begin(), ps.begin() + i_min, ps.end());
+
+	return ps;
+
+	/* 関数の定義の雛形
+	using T = ll;
+
+	auto insideQ = [&](T x, T y) {
+		return x * x + y * y <= n;
+	};
+
+	auto crossQ = [&](T x, T y, T dx, T dy) {
+		return dy * dy * (n - x * x) + 2 * dx * dy * x * y + dx * dx * (n - y * y) >= 0;
+	};
+
+	auto next_in = [&](T x, T y, T dx, T dy) {
+		T D = dy * dy * (n - x * x) + 2 * dx * dy * x * y + dx * dx * (n - y * y);
+		T k = (T)floor((-dx * x - dy * y + sqrtl(D)) / (dx * dx + dy * dy));
+		return k;
+	};
+
+	auto next_out = [&](T x, T y, T dx, T dy) {
+		T D = dy * dy * (n - x * x) + 2 * dx * dy * x * y + dx * dx * (n - y * y);
+		T k = (T)ceil((-dx * x - dy * y - sqrtl(D)) / (dx * dx + dy * dy));
+		return k;
+	};
+	*/
 }
 
 
@@ -955,7 +1237,7 @@ void enumerate_point_pair(const vl& x, const vl& y, ll d, vector<pii>& res, ll l
 //【最近点対（ユークリッド距離）】O(n√n) ?
 /*
 * n 個の点 (x[i], y[i]) について，最も近い 2 点の距離の 2 乗を返す．
-* またその点対が i 番目と j 番目であることを ps = {i, j} として格納する．
+* またその点対が点 i と点 j であることを ps = {i, j} として格納する．
 * 全探索できる点対の個数の上限を lim に与える（デフォルト値は 3/2 n√n）
 *
 * 利用：【回転】
@@ -1430,5 +1712,16 @@ mint count_chebyshev_distance_clique_3D(const vector<T>& x, const vector<T>& y, 
 
 	return res;
 }
+
+
+//【ユークリッド距離と二部グラフ】
+/*
+* 無向グラフ g = (V, E) を
+*	V : Z^2
+*	e=(u,v) ∈ E ⇔ 点 u と点 v のユークリッド距離が √D 
+* と定めたとき，G は二部グラフになる．
+*
+* verify : https://atcoder.jp/contests/agc025/tasks/agc025_d
+*/
 
 

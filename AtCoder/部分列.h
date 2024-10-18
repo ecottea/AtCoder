@@ -28,6 +28,15 @@ bool subsequenceQ(const STR& s, const STR& t) {
 }
 
 
+//【部分列判定（複数）】O(m)
+/*
+* s[0..n) に対し 前処理(文字列).h の【文字の次[前]の位置】を利用すれば，
+* s[0..n) が部分列として t[0..m) を含むかを O(m) で判定できる．
+* 
+* verify : https://atcoder.jp/contests/ttpc2022/tasks/ttpc2022_e
+*/
+
+
 //【貪欲増加部分列】O(n)
 /*
 * 数列 a[0..n) の左から順に貪欲に選んだ増加部分列の長さを返す．

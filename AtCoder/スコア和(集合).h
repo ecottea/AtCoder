@@ -119,3 +119,45 @@ vm subset_XOR_sum(const vector<T>& a, const Factorial_mint& fm) {
 	return res;
 }
 
+
+//【x との XOR の和】
+/*
+* XOR_sum<T>(vT a) : O(n log max(a))
+*	a[0..n) で初期化する．
+*
+* ll sum(T x) : O(log max(a))
+*	Σi∈[0..n) a[i] XOR x の値を返す．
+*/
+template <class T>
+struct XOR_sum {
+	int d;
+	vvi cnt;
+
+	// a[0..n) で初期化する．
+	XOR_sum(const vector<T>& a) {
+		// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
+
+		T a_max = *max_element(all(a));
+		d = msb((ll)a_max) + 1;
+
+		cnt = vvi(d, vi(2));
+
+		repe(v, a) rep(j, d) cnt[j][(v >> j) & 1]++;
+	}
+	XOR_sum() : d(0) {}
+
+	// Σi=[0..n) a[i] XOR x の値を返す．
+	ll sum(T x) {
+		// verify : https://atcoder.jp/contests/arc135/tasks/arc135_c
+
+		// ビット毎に独立に寄与を計算し和をとればよい．
+		ll res = 0;
+		rep(j, d) {
+			// (0,1), (1,0) の組だけがビット位置に応じた寄与をもつ．
+			res += (ll)cnt[j][1 - ((x >> j) & 1)] << j;
+		}
+		return res;
+	}
+};
+
+

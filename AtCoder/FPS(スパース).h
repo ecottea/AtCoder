@@ -62,6 +62,7 @@ struct SMFPS {
 
 	// €”
 	[[nodiscard]] int size() const { return n; }
+	[[nodiscard]] bool empty() const { return n == 0; }
 
 	// ‰ÁZ
 	[[nodiscard]] SMFPS operator+(const SMFPS& g) const {
@@ -418,7 +419,7 @@ vm exp_sfps(int n, const SMFPS& f, const Factorial_mint& fm) {
 	//		Ì 1 g'(z) - f'(z) g(z) = 0
 	// ‚È‚é 1 ŠKüŒ`ÄŸí”÷•ª•û’ö®‚ğ“¾‚éD
 
-	Assert(f[0].first != 0);
+	Assert(f.empty() || f[0].first != 0);
 
 	return differential_equation(n, mint(1), -derivative(f), 1, fm);
 }
@@ -441,7 +442,7 @@ vm log_sfps(int n, const SMFPS& f, const Factorial_mint& fm) {
 	//		Ì f(z) g'(z) + 0 g(z) = f'(z)
 	// ‚È‚é 1 ŠKüŒ`”ñÄŸí”÷•ª•û’ö®‚ğ“¾‚éD
 
-	Assert(f[0].first == 0 && f[0].second == 1);
+	Assert(!f.empty() && f[0].first == 0 && f[0].second == 1);
 
 	vm c(n);
 	for (auto [deg, coef] : f.c) {

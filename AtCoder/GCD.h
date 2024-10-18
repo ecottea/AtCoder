@@ -350,6 +350,64 @@ pair<T, T> CRT(const vector<T>& r, const vector<T>& m) {
 }
 
 
+//【中国剰余定理（2 式，昇順 K 番目）】O((m1 + m2) log(m1 + m2))
+/*
+* 連立合同式
+*	x ∈ s1 (mod m1)
+*	x ∈ s2 (mod m2)
+* を満たす非負整数 x のうち昇順 K 番目のものを返す（なければ -1 を返す）
+*/
+ll Kth_CRT_2eq(const vi& s1, int m1, const vi& s2, int m2, ll K) {
+	// verify : https://atcoder.jp/contests/ttpc2023/tasks/ttpc2023_l
+
+	// f1R[i] : -i ∈ s1 (mod m1) か
+	vm f1R(m1);
+	repe(i, s1) f1R[smod(-i, m1)] = 1;
+
+	// f2[i] : i ∈ s2 (mod m2) か
+	vm f2(m2);
+	repe(i, s2) f2[smod(i, m2)] = 1;
+
+	vm f = convolution(f1R, f2); // 先に f2 を周期的に折り返しておけば速くなる．
+
+	// cnt[i] : #{(a1,a2)∈s1×s2 | a1-a2≡i (mod m1)}
+	vi cnt(m1);
+	rep(i, m1 + m2 - 1) cnt[smod(-i, m1)] += f[i].val();
+
+	// cnt_all : mod LCM(m1, m2) での連立方程式の解の総数
+	ll cnt_all = 0; ll t = 0;
+	do {
+		cnt_all += cnt[t % m1];
+		t += m2;
+	} while (t % m1 != 0);
+
+	// 解がなければ -1 を返す．
+	if (cnt_all == 0) return -1;
+
+	// cnt_all 個ずつの周期は一気に回す．
+	ll q = K / cnt_all;
+	t *= q;
+	K -= cnt_all * q;
+
+	// a1-a2 (mod m1) の値ごとにまとめて見ていく．
+	while (1) {
+		// 全部足すと超えるなら 1 つずつ順に見ていく．
+		if (K < cnt[t % m1]) {
+			while (1) {
+				K -= f1R[smod<ll>(-t, m1)] == 1 && f2[t % m2] == 1;
+				if (K == -1) return t;
+				t++;
+			}
+		}
+
+		K -= cnt[t % m1];
+		t += m2;
+	}
+
+	return -1; // ここにはこない
+}
+
+
 //【GCD-LCM 包除】
 /*
 * a[0..n) の LCM[GCD] は，その部分集合の GCD[LCM] を用いて次のように表される：
@@ -431,30 +489,28 @@ pair<T, T> CRT(const vector<T>& r, const vector<T>& m) {
 */
 
 
-//【ガウス整数の最大公約数】O(log(|a1|+|b1|+|a2|+|b2|))
+//【ガウス整数の最大公約数】O(log(a1+b1+a2+b2))
 /*
 * GCD(a1 + b1 i, a2 + b2 i) を返す．
-* 
-* 制約：|a1|, |b1|, |a2|, |b2| < 2^31
 */
-pll gcd_gaussian_integers(ll a1, ll b1, ll a2, ll b2) {
+pll gcd_gaussian_integers(__int128 a1, __int128 b1, __int128 a2, __int128 b2) {
 	// verify : https://judge.yosupo.jp/problem/gcd_of_gaussian_integers
 
 	// 整数 a, 正整数 b に対し floor(a / b) を返す．
-	auto floor_div = [](ll a, ll b) {
+	auto floor_div = [](__int128 a, __int128 b) {
 		return a / b - (a % b < 0);
 	};
 
 	while (a2 != 0 || b2 != 0) {
 		// x := a1 + b1 i, y := a2 + b2 i とおき，
 		// x/y = (x y*)/(y y*) の分子と分母を計算する．
-		ll a_num = a1 * a2 + b1 * b2;
-		ll b_num = -a1 * b2 + b1 * a2;
-		ll dnm = a2 * a2 + b2 * b2;
+		__int128 a_num = a1 * a2 + b1 * b2;
+		__int128 b_num = -a1 * b2 + b1 * a2;
+		__int128 dnm = a2 * a2 + b2 * b2;
 
 		// z := round(x/y) = a3 + b3 i
-		ll a3 = floor_div(2 * a_num + dnm, 2 * dnm);
-		ll b3 = floor_div(2 * b_num + dnm, 2 * dnm);
+		__int128 a3 = floor_div(2 * a_num + dnm, 2 * dnm);
+		__int128 b3 = floor_div(2 * b_num + dnm, 2 * dnm);
 
 		// x - y z は y よりノルムが真に小さい
 		a1 -= a2 * a3 - b2 * b3;
@@ -464,51 +520,7 @@ pll gcd_gaussian_integers(ll a1, ll b1, ll a2, ll b2) {
 		swap(b1, b2);
 	}
 
-	return { a1, b1 };
-}
-
-
-//【フェルマーの二平方和定理】
-/*
-* x^2 + y^2 = p なる (x,y) (0<x≦y) を返す．（なければ (-1,-1) を返す）
-*
-* 制約 : p は素数
-*
-* 利用：【-1 の平方剰余】,【ガウス整数の最大公約数】
-*/
-pii fermats_4n_plus_1(int p) {
-	// 参考 : https://maspypy.com/library-checker-gcd-of-gaussian-integers
-	// verify : https://mojacoder.app/users/YSatUT/problems/fermats_4nplus1_theorem
-
-	//【方法】
-	// p=2 なら (x,y)=(1,1) を返せば良い．
-	// p が 4n+3 型素数なら条件を満たす (x,y) は存在しない（mod 4 を考えれば明らか）
-	// 以下では p が 4n+1 型素数であるとする．
-	//
-	// (x,y) が条件を満たすことをガウス整数の言葉で言い換えると，|x+iy| = p となる． 
-	// -1 は mod p で平方剰余なので，
-	//		a^2 = -1 (mod p) ⇔ (a+i)(a-i) = k p  (∃k∈[1..p-1])
-	// なる a を取ることができ，
-	//		|a+i| = k p
-	// となる．また明らかに
-	//		|p| = p^2
-	// である．両者より，
-	//		x+iy = gcd(a+i, p)
-	// と選べば，k∈[1..p-1] より
-	//		|x+iy| | gcd(kp, p^2) = p
-	// とできる．(a+i)|p より |x+iy| != 1 なので，|x+iy| = p である．
-
-	if (p == 2) return { 1, 1 };
-	if (p % 4 == 3) return { -1, -1 };
-
-	int a = quadratic_residue_m1(p);
-
-	auto [x, y] = gcd_gaussian_integers(a, 1, p, 0);
-	x = abs(x);
-	y = abs(y);
-	if (x > y) swap(x, y);
-
-	return { x, y };
+	return { (ll)a1, (ll)b1 };
 }
 
 

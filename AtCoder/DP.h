@@ -340,7 +340,7 @@ vm acc_convolution_DP(const vm& f) {
 /*
 * DP の初項と漸化式が，dp0, a, b, x, {f_i} を用いて
 *	dp[0] = dp0
-*	dp[i] = f_i( MIN_j∈[0..i) (a(j) x(i) + b(j)) ) （i≧1）
+*	dp[i] = f_i( MIN_j∈[0..i) (a(dp; j) x(dp; i) + b(dp; j)) ) （i≧1）
 * で与えられるときの dp[0..n] を返す．
 * max_flag = true とすると代わりに max 遷移で計算する．
 *
@@ -371,7 +371,7 @@ vl linear_min_DP(int n, ll dp0, const function<ll(int j, const vl& dp)>& a,
 /*
 * DP の初項と漸化式が，dp0, 凸関数 g, p, q, x, {f_i} を用いて
 *	dp[0] = dp0
-*	dp[i] = f_i( MIN_j∈[0..i) (g(x(i) - p(j)) + q(j)) ) （i≧1）
+*	dp[i] = f_i( MIN_j∈[0..i) (g(x(dp; i) - p(dp; j)) + q(dp; j)) ) （i≧1）
 * で与えられるときの dp[0..n] を求めるには【Li Chao Tree（1 交差関数群）】が使える．
 */
 
@@ -381,7 +381,7 @@ vl linear_min_DP(int n, ll dp0, const function<ll(int j, const vl& dp)>& a,
 * DP の初項と漸化式が，dp0, (n+1) 次狭義上三角 Monge 行列 c を用いて
 *	dp[0] = dp0
 *	dp[i] = MIN_j∈[0..i) (dp[j] + c(j,i)) （i≧1）
-* で与えられるときの dp[0..n] を求めるには【Monge コスト完全 DAG 最短路】が使える．
+* で与えられるときの dp[0..n] を求めるには【Monge DAG 最短路】が使える．
 */
 
 
@@ -392,7 +392,7 @@ vl linear_min_DP(int n, ll dp0, const function<ll(int j, const vl& dp)>& a,
 *	dp[i] = MAX_j∈[0..i) (dp[j] + c(j,i)) （i≧1）
 * で与えられるときの dp[0..n] を返す．
 *
-* 利用：【Monge コスト完全 DAG 最短路】
+* 利用：【Monge DAG 最短路】
 */
 template <class T, class FUNC>
 vl max_plus_antimonde_DP(int n, T dp0, const FUNC& c) {

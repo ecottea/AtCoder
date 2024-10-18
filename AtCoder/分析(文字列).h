@@ -3,6 +3,253 @@
 // ■■■■■ 文字列の各種性質の分析 ■■■■■
 
 
+//【suffix tree】
+/*
+* Suffix_tree<STR>(STR s) : O(n)
+*	文字列 s[0..n) で初期化する．
+*
+* ll count_unique() : O(n)
+*	s に含まれる非空な部分文字列の種類数を返す．
+*
+* pii search(STR p) : O(m log σ) ?
+*   s[sa[i]..sa[i]+m) = p[0..m) なる i の範囲 i∈[il..ir) を返す（存在しなければ {-1, -1}）
+*
+* dfs_all(FUNC f) : O(n β)
+*	辞書順で昇順に全ブロック [x1..x2)×[y1..y2) に対し f(x1, x2, y1, y2) を呼び出す．
+*	ブロック [x1..x2)×[y1..y2) は sa[x1..x2) の [y1..y2) 文字目に対応する．
+*
+* build_dictionary() : O(n)
+*	辞書機能を有効にする．
+*
+* pii get(ll k) : O(log n)
+*	空文字列を除き辞書順で k 番目の部分文字列が s[l..r) であるとき {l, r} を返す．
+*	なければ {-1, -1} を返す．build_dictionary() を先に呼び出すこと．
+*
+* pii get_unique(ll k) : O(log n)
+*	空文字列を除き辞書順で k 番目のユニークな部分文字列が s[l..r) であるとき {l, r} を返す．
+*	なければ {-1, -1} を返す．build_dictionary() を先に呼び出すこと．
+*/
+template <class STR>
+class Suffix_tree {
+	struct Node {
+		int x1, x2; // sa[x1..x2) に対応するブロックであることを表す
+		int y1, y2; // [y1..y2) 文字目に対応するブロックであることを表す
+		vi ch; // 子の昇順リスト
+
+		Node(int x1, int x2, int y1, int y2) : x1(x1), x2(x2), y1(y1), y2(y2) {}
+		Node() : x1(-1), x2(-1), y1(-1), y2(-1) {};
+
+#ifdef _MSC_VER
+		friend ostream& operator<<(ostream& os, const Node& v) {
+			os << "x:[" << v.x1 << "," << v.x2 << ") "
+				<< "y:[" << v.y1 << "," << v.y2 << ") "
+				<< "ch:" << v.ch;
+			return os;
+		}
+#endif
+	};
+
+	// n : 文字列の長さ
+	int n;
+
+	// s : 元の文字列
+	STR s;
+
+	// g : s の接尾辞木（0 はダミーの根）
+	vector<Node> g;
+
+	// id[i] : 辞書順で昇順 i 番目（ダミー含む）の頂点
+	vi id;
+
+	// acc[i] : 頂点 id[0..i) に対応する部分文字列の個数
+	vl acc;
+
+	// acc_uniq[i] : 頂点 id[0..i) に対応する部分文字列の種類数
+	vl acc_uniq;
+
+	// 部分木 i から辞書データを構築する．
+	void build_dictionary_dfs(int i) {
+		id.emplace_back(i);
+
+		ll dx = g[i].x2 - g[i].x1;
+		ll dy = g[i].y2 - g[i].y1;
+		acc.emplace_back(acc.back() + dx * dy);
+		acc_uniq.emplace_back(acc_uniq.back() + dy);
+
+		repe(ni, g[i].ch) build_dictionary_dfs(ni);
+	}
+
+public:
+	// sa[x] : s の接尾辞のうち辞書順 x 番目のものの先頭位置
+	vi sa;
+
+	// 文字列 s[0..n) で初期化する．
+	Suffix_tree(const STR& s) : n(sz(s)), s(s) {
+		// verify : https://atcoder.jp/contests/abc362/tasks/abc362_g
+
+		// 自前で書くのは大変そうなので，ACL の SA と LCP を利用する．
+		sa = suffix_array(s);
+
+		auto lcp = lcp_array(s, sa);
+		lcp.insert(lcp.begin(), 0);
+		lcp.push_back(0);
+
+		// ダミーの根
+		g.emplace_back(0, n, 0, 0);
+
+		// stk : 未完成のノードを溜めておくスタック
+		stack<int> stk;
+		stk.push(0);
+
+		// デカルト木を組み上げるような感じで suffix tree を構築する．
+		repi(x, 0, n) {
+			int i = -1;
+			while (!stk.empty()) {
+				i = stk.top();
+
+				if (g[i].y2 <= lcp[x]) break;
+
+				if (g[i].y1 < lcp[x]) {
+					g.emplace_back(g[i].x1, x, lcp[x], g[i].y2);
+					g.back().ch = move(g[i].ch);
+					g[i].ch.push_back(sz(g) - 1);
+					g[i].y2 = lcp[x];
+				}
+				else {
+					stk.pop();
+					g[i].x2 = x;
+				}
+			}
+
+			if (x < n) {
+				g[i].ch.push_back(sz(g));
+				stk.push(sz(g));
+				g.emplace_back(x, -1, lcp[x], n - sa[x]);
+			}
+		}
+	}
+
+	// s に含まれる非空な部分文字列の種類数を返す．
+	ll count_unique() const {
+		// verify : https://judge.yosupo.jp/problem/number_of_substrings
+
+		ll res = 0;
+		repe(v, g) res += v.y2 - v.y1;
+		return res;
+	}
+
+	// s[sa[i]..sa[i]+m) = p[0..m) なる i の範囲 i∈[il..ir) を返す（存在しなければ {-1, -1}）
+	pii search(const STR& p) {
+		// verify : https://codeforces.com/contest/1202/problem/E
+
+		int m = sz(p);
+		Assert(m > 0);
+
+		int i = 0; int j = 0;
+
+		// どの子に進めばいいかを毎回二分探索する．
+		while (true) {
+			int ok = 0, ng = sz(g[i].ch);
+			if (ng == 0) return { -1, -1 };
+
+			while (ng - ok > 1) {
+				int mid = (ok + ng) / 2;
+
+				int ic = g[i].ch[mid];
+				if (p[j] >= s[sa[g[ic].x1] + g[ic].y1]) ok = mid;
+				else ng = mid;
+			}
+
+			i = g[i].ch[ok];
+
+			int ws = g[i].y2 - g[i].y1;
+			int wp = m - j;
+			rep(d, min(ws, wp)) if (s[sa[g[i].x1] + g[i].y1 + d] != p[j + d]) return { -1, -1 };
+
+			if (wp <= ws) return { g[i].x1, g[i].x2 };
+
+			j += ws;
+		}
+	}
+
+	// 辞書順で昇順に全ブロック [x1..x2)×[y1..y2) に対し f(x1, x2, y1, y2) を呼び出す．
+	template <class FUNC>
+	void dfs_all(const FUNC& f, int i = 0) const {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_h
+
+		if (i != 0) f(g[i].x1, g[i].x2, g[i].y1, g[i].y2);
+
+		repe(ni, g[i].ch) dfs_all(f, ni);
+	}
+
+	// 辞書機能を有効にする．
+	void build_dictionary() {
+		// verify : https://yukicoder.me/problems/no/2361
+
+		id.reserve(sz(g));
+
+		acc.reserve(sz(g) + 1);
+		acc.emplace_back(0);
+
+		acc_uniq.reserve(sz(g) + 1);
+		acc_uniq.emplace_back(0);
+
+		build_dictionary_dfs(0);
+	}
+
+	// 空文字列を除き辞書順で k 番目の部分文字列が s[l..r) であるとき {l, r} を返す（なければ {-1, -1} を返す）
+	pii get(ll k) const {
+		// verify : https://yukicoder.me/problems/no/2361
+
+		Assert(!acc.empty());
+
+		if (k < 0 || k >= acc.back()) return { -1, -1 };
+
+		int i = ubpos(acc, k) - 1;
+		int v = id[i];
+		k -= acc[i];
+		int dx = g[v].x2 - g[v].x1;
+		return { sa[g[v].x1], sa[g[v].x1] + g[v].y1 + (int)k / dx + 1 };
+	}
+
+	// 空文字列を除き辞書順で k 番目のユニークな部分文字列が s[l..r) であるとき {l, r} を返す．（なければ {-1, -1} を返す）
+	pii get_unique(ll k) const {
+		// verify : https://atcoder.jp/contests/arc097/tasks/arc097_a
+
+		Assert(!acc_uniq.empty());
+
+		if (k < 0 || k >= acc_uniq.back()) return { -1, -1 };
+
+		int i = ubpos(acc_uniq, k) - 1;
+		int v = id[i];
+		k -= acc_uniq[i];
+		int dx = g[v].x2 - g[v].x1;
+		return { sa[g[v].x1], sa[g[v].x1] + g[v].y1 + (int)k / dx + 1 };
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Suffix_tree& S) {
+		os << "[suffixes]:" << endl;
+		rep(i, S.n) {
+			os << right << setw(2) << S.sa[i] << ": ";
+			repi(j, S.sa[i], sz(S.s) - 1) os << S.s[j];
+			os << endl;
+		}
+
+		os << "[blocks]:" << endl;
+		auto f = [&](int x1, int x2, int y1, int y2) {
+			os << "x:[" << x1 << "," << x2 << ") ";
+			os << "y:[" << y1 << "," << y2 << ") ";
+			repi(j, S.sa[x1] + y1, S.sa[x1] + y2 - 1) os << S.s[j];
+			os << endl;
+		};
+		S.dfs_all(f);
+		return os;
+	}
+#endif
+};
+
+
 //【最長共通接頭尾辞】O(n)
 /*
 * 文字列 s[0..n) について，s[0..i) の接頭辞と接尾辞が
@@ -174,6 +421,71 @@ vi cycle_length(const STR& s) {
 	repi(i, 1, n) len[i] = i - len[i];
 
 	return len;
+}
+
+
+//【Lyndon 分解】O(n)
+/*
+* s[0..n) の Lyndon 分解が
+*	s[0..n) = s[x[0]..x[1]) + s[x[1]..x[2]) + ... + s[x[K-1]..x[K])
+* である，すなわち
+*	各 s[x[k]..x[k+1]) が Lyndon 文字列（任意の真の接尾辞より辞書順で小さい文字列）
+*	s[x[0]..x[1]) ≧ s[x[1]..x[2]) ≧ ... ≧ s[x[K-1]..x[K])
+* をみたすとし，区切り位置のリスト x[0..K] を返す．
+*/
+template <class STR>
+vi lyndon_factorization(const STR& s) {
+	// 参考 : https://qiita.com/nakashi18/items/66882bd6e0127174267a
+	// verify : https://judge.yosupo.jp/problem/lyndon_factorization
+
+	int n = sz(s);
+
+	vi res;
+
+	// s[l..r) : s[l..n) の最長 Lyndon 接頭辞
+	int l = 0, r = 1;
+
+	// s[i] : 次に見る文字
+	//	s[l..i) は s[l..r) を周期的に繰り返した文字列になっている（余りも許す）
+	int i = 1;
+
+	while (i <= n) {
+		dump(l, r);
+
+		// c : 比較対象の文字
+		auto c = s[l + (i - l) % (r - l)];
+
+		// まだ周期的である場合
+		if (i < n && s[i] == c) {
+			// 最長 Lyndon 接頭辞は変わらない．
+			i++;
+		}
+		// 辞書順で大きい文字によって周期的でなくなった場合
+		else if (i < n && s[i] > c) {
+			// s[l..i] が最長 Lyndon 接頭辞となる．
+			r = i + 1;
+			i++;
+		}
+		// 辞書順で小さい文字によって周期的でなくなった場合
+		else {
+			// s[l..n) の最長 Lyndon 接頭辞が s[l..r) に確定する．
+			// 周期的な部分もまとめて確定できる．
+			int w = r - l;
+			while (r <= i) {
+				res.push_back(l);
+				l += w;
+				r += w;
+			}
+
+			// 周期から漏れた部分は戻ってやり直し．
+			r = l + 1;
+			i = r;
+		}
+	}
+
+	res.push_back(n);
+
+	return res;
 }
 
 
@@ -398,7 +710,7 @@ vi z_algo(const STR& s) {
 
 //【Z アルゴリズム（接尾辞）】O(n)
 /*
-* 文字列 s[0..n) について，s[0..i] と s の最長共通接尾辞の長さを z[i] にまとめて z を返す．
+* 文字列 s[0..n) について，s[0..i] と s の最長共通接尾辞の長さを z[i] に格納し z を返す．
 */
 template <class STR>
 vi z_algorithm_suffix(STR s) {
@@ -496,149 +808,13 @@ vi wildcard_matching(const string& s, const string& p, char Q = '?') {
 }
 
 
-//【部分文字列判定（複数回）】
-/*
-* String_search(string s) : O(|s|)
-*   文字列 s に対する検索ができるように初期化する．
-*
-* int search(string p) : O(|p| log |s|)
-*   s[i..i+m) = p[0..m) なる i を 1 つ返す（存在しなければ -1）
-* 
-* int count(string p) : O(|p| log |s|)
-*   s[i..i+m) = p[0..m) なる i の個数を返す．
-*/
-class String_search {
-	int n;
-	string s;
-	vi sa; // s の接尾辞配列
-
-public:
-	// 文字列 s に対する検索ができるように初期化する．
-	String_search(const string& s) : n(sz(s)), s(s) {
-		sa = suffix_array(s);
-	}
-
-	// s[i..i+m) = p[0..m) なる i を返す（存在しなければ -1）
-	int search(const string& p) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_D
-
-		int m = sz(p);
-
-		// s[sa[ok]..sa[ok]+m) ≦ p < s[sa[ng]..sa[ng]+m)
-		int ok = 0, ng = n;
-
-		// i_ok : p と s[sa[ok]] の接頭辞が最長何文字一致しているか
-		// i_ng : p と s[sa[ng]] の接頭辞が最長何文字一致しているか
-		int i_ok = 0, i_ng = 0;
-		while (i_ok < m && sa[ok] + i_ok < n && s[sa[ok] + i_ok] == p[i_ok]) i_ok++;
-		if (i_ok == m) return sa[ok];
-
-		while (abs(ok - ng) > 1) {
-			int mid = (ok + ng) / 2;
-
-			// i_mid : p と s[sa[mid]] の接頭辞が最長何文字一致しているか
-			int i_mid = min(i_ok, i_ng);
-			while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
-
-			// s[sa[mid]..sa[mid]+m) = p の場合
-			if (i_mid == m) {
-				ok = mid;
-				i_ok = i_mid;
-				break;
-			}
-
-			// s[sa[mid]..sa[mid]+m) < p の場合
-			if (sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid]) {
-				ok = mid;
-				i_ok = i_mid;
-			}
-			// s[sa[mid]..sa[mid]+m) > p の場合
-			else {
-				ng = mid;
-				i_ng = i_mid;
-			}
-		}
-
-		if (i_ok == m) return sa[ok];
-		else return -1;
-	}
-
-	// s[i..i+m) = p[0..m) なる i の個数を返す．
-	int count(const string& p) {
-		// verify : https://atcoder.jp/contests/abc362/tasks/abc362_g
-
-		int m = sz(p);
-
-		int cnt = 0;
-
-		{
-			// s[sa[ok]..sa[ok]+m) ≦ p < s[sa[ng]..sa[ng]+m)
-			int ok = -1, ng = n;
-
-			// i_ok : p と s[sa[ok]] の接頭辞が最長何文字一致しているか
-			// i_ng : p と s[sa[ng]] の接頭辞が最長何文字一致しているか
-			int i_ok = 0, i_ng = 0;
-
-			while (abs(ok - ng) > 1) {
-				int mid = (ok + ng) / 2;
-
-				// i_mid : p と s[sa[mid]] の接頭辞が最長何文字一致しているか
-				int i_mid = min(i_ok, i_ng);
-				while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
-
-				if (i_mid == m || sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid]) {
-					ok = mid;
-					i_ok = i_mid;
-				}
-				else {
-					ng = mid;
-					i_ng = i_mid;
-				}
-			}
-
-			cnt += ng;
-		}
-
-		{
-			// s[sa[ok]..sa[ok]+m) < p ≦ s[sa[ng]..sa[ng]+m)
-			int ok = -1, ng = n;
-
-			// i_ok : p と s[sa[ok]] の接頭辞が最長何文字一致しているか
-			// i_ng : p と s[sa[ng]] の接頭辞が最長何文字一致しているか
-			int i_ok = 0, i_ng = 0;
-
-			while (abs(ok - ng) > 1) {
-				int mid = (ok + ng) / 2;
-
-				// i_mid : p と s[sa[mid]] の接頭辞が最長何文字一致しているか
-				int i_mid = min(i_ok, i_ng);
-				while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
-
-				if (i_mid != m && (sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid])) {
-					ok = mid;
-					i_ok = i_mid;
-				}
-				else {
-					ng = mid;
-					i_ng = i_mid;
-				}
-			}
-
-			cnt -= ng;
-		}
-
-		return cnt;
-	}
-};
-
-
 //【複数文字列検索】
 /*
 * Aho_corasick(vector<string> pats) : O(Σ|pats|)
 *	パターン文字列の集合 pats を検索できるよう初期化する．
 *
 * find(string s, vb& ex) : O(|s| + Σ|pats|)
-*	文字列 s 中に pats[i] が存在するかを ex[i] に格納する．
+*	文字列 s 中に各 pats[i] が存在するかを ex[i] に格納する．
 *	制約：1 度しか実行できない．
 */
 class Aho_corasick {
@@ -729,7 +905,7 @@ public:
 			// c 遷移が可能なら c で遷移した先に移る．
 			else p = p->childs[c - A];
 
-			// p 通過したことを記録しておく．
+			// p を通過したことを記録しておく．
 			q.push(p);
 		}
 
@@ -880,4 +1056,141 @@ public:
 * lcp[9]: 3---
 * sa[10]: "ssissippi"
 */
+
+
+//【部分文字列判定（複数回）】（旧）
+/*
+* String_search(string s) : O(|s|)
+*   文字列 s に対する検索ができるように初期化する．
+*
+* int search(string p) : O(|p| log |s|)
+*   s[i..i+m) = p[0..m) なる i を 1 つ返す（存在しなければ -1）
+*
+* int count(string p) : O(|p| log |s|)
+*   s[i..i+m) = p[0..m) なる i の個数を返す．
+*/
+class String_search {
+	int n;
+	string s;
+	vi sa; // s の接尾辞配列
+
+public:
+	// 文字列 s に対する検索ができるように初期化する．
+	String_search(const string& s) : n(sz(s)), s(s) {
+		sa = suffix_array(s);
+	}
+
+	// s[i..i+m) = p[0..m) なる i を返す（存在しなければ -1）
+	int search(const string& p) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_14_D
+
+		int m = sz(p);
+
+		// s[sa[ok]..sa[ok]+m) ≦ p < s[sa[ng]..sa[ng]+m)
+		int ok = 0, ng = n;
+
+		// i_ok : p と s[sa[ok]] の接頭辞が最長何文字一致しているか
+		// i_ng : p と s[sa[ng]] の接頭辞が最長何文字一致しているか
+		int i_ok = 0, i_ng = 0;
+		while (i_ok < m && sa[ok] + i_ok < n && s[sa[ok] + i_ok] == p[i_ok]) i_ok++;
+		if (i_ok == m) return sa[ok];
+
+		while (abs(ok - ng) > 1) {
+			int mid = (ok + ng) / 2;
+
+			// i_mid : p と s[sa[mid]] の接頭辞が最長何文字一致しているか
+			int i_mid = min(i_ok, i_ng);
+			while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
+
+			// s[sa[mid]..sa[mid]+m) = p の場合
+			if (i_mid == m) {
+				ok = mid;
+				i_ok = i_mid;
+				break;
+			}
+
+			// s[sa[mid]..sa[mid]+m) < p の場合
+			if (sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid]) {
+				ok = mid;
+				i_ok = i_mid;
+			}
+			// s[sa[mid]..sa[mid]+m) > p の場合
+			else {
+				ng = mid;
+				i_ng = i_mid;
+			}
+		}
+
+		if (i_ok == m) return sa[ok];
+		else return -1;
+	}
+
+	// s[i..i+m) = p[0..m) なる i の個数を返す．
+	int count(const string& p) {
+		// verify : https://atcoder.jp/contests/abc362/tasks/abc362_g
+
+		int m = sz(p);
+
+		int cnt = 0;
+
+		{
+			// s[sa[ok]..sa[ok]+m) ≦ p < s[sa[ng]..sa[ng]+m)
+			int ok = -1, ng = n;
+
+			// i_ok : p と s[sa[ok]] の接頭辞が最長何文字一致しているか
+			// i_ng : p と s[sa[ng]] の接頭辞が最長何文字一致しているか
+			int i_ok = 0, i_ng = 0;
+
+			while (abs(ok - ng) > 1) {
+				int mid = (ok + ng) / 2;
+
+				// i_mid : p と s[sa[mid]] の接頭辞が最長何文字一致しているか
+				int i_mid = min(i_ok, i_ng);
+				while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
+
+				if (i_mid == m || sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid]) {
+					ok = mid;
+					i_ok = i_mid;
+				}
+				else {
+					ng = mid;
+					i_ng = i_mid;
+				}
+			}
+
+			cnt += ng;
+		}
+
+		{
+			// s[sa[ok]..sa[ok]+m) < p ≦ s[sa[ng]..sa[ng]+m)
+			int ok = -1, ng = n;
+
+			// i_ok : p と s[sa[ok]] の接頭辞が最長何文字一致しているか
+			// i_ng : p と s[sa[ng]] の接頭辞が最長何文字一致しているか
+			int i_ok = 0, i_ng = 0;
+
+			while (abs(ok - ng) > 1) {
+				int mid = (ok + ng) / 2;
+
+				// i_mid : p と s[sa[mid]] の接頭辞が最長何文字一致しているか
+				int i_mid = min(i_ok, i_ng);
+				while (i_mid < m && sa[mid] + i_mid < n && s[sa[mid] + i_mid] == p[i_mid]) i_mid++;
+
+				if (i_mid != m && (sa[mid] + i_mid == n || s[sa[mid] + i_mid] < p[i_mid])) {
+					ok = mid;
+					i_ok = i_mid;
+				}
+				else {
+					ng = mid;
+					i_ng = i_mid;
+				}
+			}
+
+			cnt -= ng;
+		}
+
+		return cnt;
+	}
+};
+
 

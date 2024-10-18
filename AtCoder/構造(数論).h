@@ -3,6 +3,112 @@
 // ■■■■■ mint ■■■■■
 
 
+//【添字整数商 vector】
+/*
+* v[0], v[1], v[2], ..., v[nl], v[N/nh], ..., v[N/2], v[N/1] にのみアクセスできる疎な vector
+*
+* Floor_vector<T>(ll N) : O(1)
+*	nl = √N とし，v[N/d] にアクセスできるよう初期化する．
+*
+* Floor_vector<T>(ll N, int nl) : O(1)
+*	v[N/d] にアクセスできるよう初期化する．
+*	制約：nl ≧ √N
+*
+* T [ll i] : O(1)
+*	v[i] にアクセスする．
+*
+* T get_l(int i) : O(1)
+*	v[i] を返す．
+*
+* set_l(int i, T x) : O(1)
+*	v[i] = x とする．
+*
+* T get_h(ll d) : O(1)
+*	v[N/d] を返す．
+*
+* set_h(ll d, T x) : O(1)
+*	v[N/d] = x とする．
+*/
+template <class T>
+class Floor_vector {
+	// v : v[0], v[1], v[2], ..., v[nl], v[N/nh], ..., v[N/2], v[N/1] を並べたリスト
+	vector<T> v;
+	int nlh;
+
+public:
+	ll N;
+	int nl, nh;
+
+	// nl = √N とし，v[N/d] にアクセスできるよう初期化する．
+	Floor_vector(ll N) : N(N) {
+		nl = (int)(sqrt(N) + 1e-9);
+		nh = (int)(N / (nl + 1));
+		nlh = 1 + nl + nh;
+		v.resize(nlh);
+	}
+
+	// v[N/d] にアクセスできるよう初期化する．
+	Floor_vector(ll N, int nl) : N(N), nl(nl) {
+		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
+
+		nh = (int)(N / (nl + 1));
+		nlh = 1 + nl + nh;
+		v.resize(nlh);
+	}
+
+	// 比較
+	bool operator==(const Floor_vector& b) const {
+		return N == b.N && nl == b.nl && v == b.v;
+	}
+	bool operator!=(const Floor_vector& b) const { return !(*this == b); }
+
+	// v[i] にアクセスする．
+	inline T const& operator[](ll i) const {
+		return i <= nl ? v[i] : v[nlh - N / i];
+	}
+	inline T& operator[](ll i) {
+		return i <= nl ? v[i] : v[nlh - N / i];
+	}
+
+	// v[i] を返す．
+	T get_l(int i) const {
+		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
+
+		return v[i];
+	}
+
+	// v[i] = x とする．
+	void set_l(int i, T x) {
+		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
+
+		v[i] = x;
+	}
+
+	// v[N/d] を返す．
+	T get_h(ll d) const {
+		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
+
+		return N / d <= nl ? v[N / d] : v[nlh - d];
+	}
+
+	// v[N/d] = x とする．
+	void set_h(ll d, T x) {
+		// verify : https://judge.yosupo.jp/problem/sum_of_totient_function
+
+		(N / d <= nl ? v[N / d] : v[nlh - d]) = x;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Floor_vector& a) {
+		repi(i, 0, a.nl) os << a.v[i] << " ";
+		os << "|";
+		repir(i, a.nh, 1) os << " " << a.v[a.nlh - i];
+		return os;
+	}
+#endif
+};
+
+
 //【有限体 F_p 上の計算（32 bit）】
 template <ll MOD> struct Static_modint {
 	// verify : https://www.codechef.com/problems/MUSICAL
@@ -77,7 +183,7 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using
 * 有限体 F_p 上ので様々な計算を行う．
 * mll::set_mod(ll p) はあらゆる場所で使う法を書き換えてしまうので注意．
 *
-* 制約 : p は素数，コンパイラが gcc
+* 制約 : p は素数
 */
 struct mll {
 	// verify : https://judge.yosupo.jp/problem/factorize

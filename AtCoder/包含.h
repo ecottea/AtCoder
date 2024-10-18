@@ -22,6 +22,7 @@
 *	g(S) = 条件 (どの x[0..N) の要素にも違反がない) を
 *		   条件 (i∈S ⇒ x[i] に違反がある) に変更したときの対象の個数
 * と解釈できる．g(S) であれば i∈S でない i は無条件となり考えやすくなる．
+* これを【上位集合メビウス変換（最小元）】することで f(φ) を求めれば良い．
 */
 
 
@@ -189,6 +190,8 @@ mint set_supermobius_size_bottom(const vm& g, const Factorial_mint& fm) {
 *		f(φ) = Σk∈[0..N] (-1)^k G[k]
 * として計算できる．
 * 
+* 注意：最小元以外ではこの方法は適用できない．
+* 
 * verify : https://atcoder.jp/contests/abc214/tasks/abc214_g
 */
 
@@ -223,11 +226,13 @@ vector<T> and_convolution(vector<T> f, vector<T> g) {
 //【上位集合 max ゼータ変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の上位集合からの累積 max が
-*       g[S] = MAX_(T⊃S) f[T] （S : [0..N) の部分集合）
+*       g[S] = MAX_(T⊃S) f[T]
 * であるとし，与えられた f[0..2^N) を対応する g[0..2^N) に上書きする．
 */
 template <class T>
 void set_max_superzeta(vector<T>& f) {
+	// verify : https://atcoder.jp/contests/arc184/tasks/arc184_b
+
 	int N = msb(sz(f));
 
 	rep(i, N) repb(set, N) if (!(set & (1 << i))) chmax(f[set], f[set + (1 << i)]);

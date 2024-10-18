@@ -303,7 +303,7 @@ int minimize_interval_length_aa(const vi& a, int k) {
 			chmin(res, r - l);
 
 			// 左を 1 つ進める．
-			if (a[l] <= k) {
+			if (a[l] < k) {
 				cnt[a[l]]--;
 				if (cnt[a[l]] == 0) cnt.erase(a[l]);
 			}
@@ -316,7 +316,7 @@ int minimize_interval_length_aa(const vi& a, int k) {
 			if (r == n) break;
 
 			// 右を 1 つ進める．
-			if (a[r] <= k) {
+			if (a[r] < k) {
 				cnt[a[r]]++;
 			}
 			r++;

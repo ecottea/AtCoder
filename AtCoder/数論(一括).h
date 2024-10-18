@@ -24,6 +24,9 @@
 * int euler_phi(int i) : O(log n)
 *	オイラーのトーシェント関数 φ(i) の値を返す．
 *
+* vi unique_prime_factors(int i) : O(log n)
+*	i の重複を除去した素因数のリストを返す．
+*
 * int radical(int i) : O(log n)
 *	i の根基（重複を除去した素因数の積）を返す．
 *
@@ -111,6 +114,21 @@ struct Osa_k {
 			i /= p;
 		}
 		return phi;
+	}
+
+	// i の重複を除去した素因数のリストを返す．
+	vi unique_prime_factors(int i) const {
+		Assert(i <= n);
+
+		vi res; int pp = INF;
+		while (i > 1) {
+			int p = gpf[i];
+			if (p != pp) res.push_back(p);
+
+			pp = p;
+			i /= p;
+		}
+		return res;
 	}
 
 	// i の根基（重複を除去した素因数の積）を返す．
@@ -332,7 +350,7 @@ vector<T> divisor_sigma(int k, int n) {
 
 //【オイラー関数（一括）】O(n log(log n))
 /*
-* 各 i∈[1..n] についてオイラー関数 φ(i) の値を格納したリストを返す．
+* φ[1..n] を返す．
 *
 * 利用：【約数倍数変換】
 */
@@ -362,7 +380,7 @@ vl euler_phi(int n) {
 
 //【メビウス関数（一括）】O(n log(log n))
 /*
-* 各 i∈[1..n] についてメビウス関数 μ(i) の値を格納したリストを返す．
+* μ[1..n] を返す．
 *
 * 利用：【約数倍数変換】
 */

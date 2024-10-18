@@ -168,7 +168,7 @@ struct Negative_mcf_graph_DAG {
 		// DAG 上の DP で v から GL までの距離を求め，その -1 倍をポテンシャル pot[v] とする．
 		DAG_DP(GL);
 
-		// g_pos : 辺 s→t のコストが (元の辺のコスト) - (pot[t] - pot[s]) >= 0 であるようなグラフ
+		// g_pos : 辺 s→t のコストが (元の辺のコスト) - (pot[t] - pot[s]) ≧ 0 であるようなグラフ
 		rep(s, n) repe(e, g[s]) {
 			g_pos.add_edge(s, e.to, e.cap, e.cost - (pot[e.to] - pot[s]));
 		}
@@ -438,7 +438,7 @@ struct Generalized_min_cost_flow {
 */
 
 
-//【双対問題】
+//【フロー双対】
 /*
 * フロー双対.h へ
 */

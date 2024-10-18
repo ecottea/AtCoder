@@ -66,17 +66,17 @@ vector<vector<T>> enumerate_permutations(const vector<T>& a, int k = -1) {
 */
 
 
-//【順列の列挙（置き換え）】O(k!)（k : -1の個数）
+//【順列の列挙（置き換え）】O(k!)（k : Q の個数）
 /*
-* p[0..n) の各 -1 を [0..n) のいずれかに置き換えて得られる順列全てからなるリストを返す．
+* p[0..n) の各 Q を [0..n) のいずれかに置き換えて得られる順列全てからなるリストを返す．
 */
-vvi enumerate_permutations_replace(const vi& p) {
+vvi enumerate_permutations_replace(const vi& p, int Q = -1) {
 	// verify : https://atcoder.jp/contests/abc330/tasks/abc330_g
 
 	int n = sz(p);
 
 	vb used(n);
-	rep(i, n) if (p[i] != -1) used[p[i]] = true;
+	rep(i, n) if (p[i] != Q) used[p[i]] = true;
 
 	vi rem;
 	rep(i, n) if (!used[i]) rem.push_back(i);
@@ -85,7 +85,7 @@ vvi enumerate_permutations_replace(const vi& p) {
 	repp(rem) {
 		vi seq(n); int pt = 0;
 		rep(i, n) {
-			if (p[i] == -1) seq[i] = rem[pt++];
+			if (p[i] == Q) seq[i] = rem[pt++];
 			else seq[i] = p[i];
 		}
 		seqs.emplace_back(move(seq));

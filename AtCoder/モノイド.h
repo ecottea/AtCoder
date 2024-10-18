@@ -105,7 +105,7 @@ S020 e020() { return S020(1); }
 /* verify: https://atcoder.jp/contests/abc170/tasks/abc170_e */
 using S004 = ll;
 S004 op004(S004 a, S004 b) { return min(a, b); }
-S004 e004() { return INFL; }
+S004 e004() { return S004(INFL); }
 #define Min_monoid S004, op004, e004
 
 
@@ -113,7 +113,7 @@ S004 e004() { return INFL; }
 /* verify: https://atcoder.jp/contests/abl/tasks/abl_d */
 using S003 = ll;
 S003 op003(S003 a, S003 b) { return max(a, b); }
-S003 e003() { return -INFL; }
+S003 e003() { return -S003(INFL); }
 #define Max_monoid S003, op003, e003
 
 
@@ -122,7 +122,7 @@ S003 e003() { return -INFL; }
 using T043 = ll;
 using S043 = pair<T043, T043>;
 S043 op043(S043 a, S043 b) { return { max(a.first, b.first), min(a.second, b.second) }; }
-S043 e043() { return { -INFL, INFL }; }
+S043 e043() { return { -T043(INFL), T043(INFL) }; }
 #define MaxMin_monoid S043, op043, e043
 
 
@@ -138,7 +138,7 @@ S010 e010() { return 0; }
 /* verify : https://atcoder.jp/contests/jsc2022-final/tasks/jsc2022_final_d */
 using S012 = int;
 S012 op012(S012 a, S012 b) { return a & b; }
-S012 e012() { return ~0; }
+S012 e012() { return ~S012(0); }
 #define AND_monoid S012, op012, e012
 
 
@@ -167,14 +167,14 @@ S016 e016() { return 1; }
 
 //【左変更 モノイド】
 using S005 = int;
-S005 e005() { return INF + 1; } // 使わない値なら何でも OK
+S005 e005() { return S005(INFL) + 1; } // 使わない値なら何でも OK
 S005 op005(S005 a, S005 b) { return a == e005() ? b : a; }
 #define LUpdate_monoid S005, op005, e005
 
 
 //【右変更 モノイド】
 using S006 = int;
-S006 e006() { return INF + 1; } // 使わない値なら何でも OK
+S006 e006() { return S006(INFL) + 1; } // 使わない値なら何でも OK
 S006 op006(S006 a, S006 b) { return b == e006() ? a : b; }
 #define RUpdate_monoid S006, op006, e006
 
@@ -233,7 +233,8 @@ S009 e009() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 * トロピカル半環上の行列 (a, b; -∞, 0) の全体が積に関して作っているモノイドともみなせる．
 */
 // verify : https://www.codechef.com/problems/CSED
-using S013 = pair<ll, ll>;
+using T013 = ll;
+using S013 = pair<T013, T013>;
 S013 op013(S013 f, S013 g) {
 	auto [a, b] = f; // f(x) = max(a + x, b);
 	auto [c, d] = g; // g(x) = max(c + x, d);
@@ -241,7 +242,7 @@ S013 op013(S013 f, S013 g) {
 	// (f o g)(x) = max(a + max(c + x, d), b) = max((a + c) + x, max(a + d, b))
 	return { a + c, max(a + d, b) };
 }
-S013 e013() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
+S013 e013() { return { 0, -T013(INFL) }; } // e(x) = x = max(0 + x, -∞)
 #define TropicalAffine_monoid S013, op013, e013
 
 
@@ -251,7 +252,8 @@ S013 e013() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
 * f op g : 合成したトロピカル一次関数 g o f を返す．
 */
 // verify : https://atcoder.jp/contests/yahoo-procon2017-qual/tasks/yahoo_procon2017_qual_d
-using S014 = pair<ll, ll>;
+using T014 = ll;
+using S014 = pair<T014, T014>;
 S014 op014(S014 f, S014 g) {
 	auto [a, b] = g; // g(x) = max(a + x, b);
 	auto [c, d] = f; // f(x) = max(c + x, d);
@@ -259,7 +261,7 @@ S014 op014(S014 f, S014 g) {
 	// (g o f)(x) = max(a + max(c + x, d), b) = max((a + c) + x, max(a + d, b))
 	return { a + c, max(a + d, b) };
 }
-S014 e014() { return { 0, -INFL }; } // e(x) = x = max(0 + x, -∞)
+S014 e014() { return { 0, -T014(INFL) }; } // e(x) = x = max(0 + x, -∞)
 #define TropicalInvAffine_monoid S014, op014, e014
 
 
@@ -283,7 +285,7 @@ S035 op035(S035 f, S035 g) {
 	// [0, 1] [0, 1]   [ 0  ,    1    ]
 	return { (a & c), (a & d) ^ b };
 }
-S035 e035() { return { ~0, 0 }; }
+S035 e035() { return { ~T035(0), T035(0) }; }
 #define BitAffine_monoid S035, op035, e035
 
 
@@ -307,7 +309,7 @@ S036 op036(S036 f, S036 g) {
 	// [0, 1] [0, 1]   [ 0  ,    1    ]
 	return { (a & c), (a & d) ^ b };
 }
-S036 e036() { return { ~0, 0 }; }
+S036 e036() { return { ~T036(0), T036(0) }; }
 #define BitInvAffine_monoid S036, op036, e036
 
 
@@ -324,7 +326,7 @@ S022 op022(S022 a, S022 b) {
 
 	return { vals[0], vals[1] };
 }
-S022 e022() { return { INFL, INFL }; }
+S022 e022() { return { T022(INFL), T022(INFL) }; }
 #define SecondMin_monoid S022, op022, e022
 
 
@@ -342,8 +344,76 @@ S021 op021(S021 a, S021 b) {
 
 	return { vals[3], vals[2] };
 }
-S021 e021() { return { -INFL, -INFL }; }
+S021 e021() { return { -T021(INFL), -T021(INFL) }; }
 #define SecondMax_monoid S021, op021, e021
+
+
+//【第 K 最小値 可換モノイド】
+/*
+* S ∋ x[0..n) : 区間の値の昇順列
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+// verify : https://atcoder.jp/contests/abc372/tasks/abc372_e
+constexpr int K046 = 10; // 50 くらいまでいける
+using T046 = ll;
+using S046 = array<T046, K046>; // (v, c)
+S046 op046(S046 x, S046 y) {
+	S046 z;
+
+	int i = 0, j = 0;
+	rep(k, K046) {
+		if (x[i] > y[j]) {
+			z[k] = y[j];
+			++j;
+		}
+		else {
+			z[k] = x[i];
+			++i;
+		}
+	}
+
+	return z;
+}
+S046 e046() {
+	S046 x;
+	rep(i, K046) x[i] = T046(INFL);
+	return x;
+}
+#define KthMax_monoid S046, op046, e046
+
+
+//【第 K 最大値 可換モノイド】
+/*
+* S ∋ x[0..n) : 区間の値の降順列
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+// verify : https://atcoder.jp/contests/abc372/tasks/abc372_e
+constexpr int K045 = 10; // 50 くらいまでいける
+using T045 = ll;
+using S045 = array<T045, K045>; // (v, c)
+S045 op045(S045 x, S045 y) {
+	S045 z;
+
+	int i = 0, j = 0;
+	rep(k, K045) {
+		if (x[i] < y[j]) {
+			z[k] = y[j];
+			++j;
+		}
+		else {
+			z[k] = x[i];
+			++i;
+		}
+	}
+
+	return z;
+}
+S045 e045() {
+	S045 x;
+	rep(i, K045) x[i] = -T045(INFL);
+	return x;
+}
+#define KthMax_monoid S045, op045, e045
 
 
 //【最小元の個数 可換モノイド】
@@ -351,7 +421,8 @@ S021 e021() { return { -INFL, -INFL }; }
 * S ∋ x = {v, c} : 最小値 v をもつ要素が c 個あることを表す．
 * x op y : x, y に対応する区間を繋げた区間を表す．
 */
-using S037 = pair<ll, int>; // (v, c)
+using T037 = ll;
+using S037 = pair<T037, int>; // (v, c)
 S037 op037(S037 x, S037 y) {
 	auto [vx, cx] = x;
 	auto [vy, cy] = y;
@@ -360,7 +431,7 @@ S037 op037(S037 x, S037 y) {
 	if (vx > vy) return y;
 	return { vx, cx + cy };
 }
-S037 e037() { return { INFL, 0 }; }
+S037 e037() { return { T037(INFL), 0 }; }
 #define CntMin_monoid S037, op037, e037
 
 
@@ -369,7 +440,8 @@ S037 e037() { return { INFL, 0 }; }
 * S ∋ x = {v, c} : 最大値 v をもつ要素が c 個あることを表す．
 * x op y : x, y に対応する区間を繋げた区間を表す．
 */
-using S038 = pair<ll, int>; // (v, c)
+using T038 = ll;
+using S038 = pair<T038, int>; // (v, c)
 S038 op038(S038 x, S038 y) {
 	auto [vx, cx] = x;
 	auto [vy, cy] = y;
@@ -378,17 +450,18 @@ S038 op038(S038 x, S038 y) {
 	if (vx < vy) return y;
 	return { vx, cx + cy };
 }
-S038 e038() { return { -INFL, 0 }; }
+S038 e038() { return { -T038(INFL), 0 }; }
 #define CntMax_monoid S038, op038, e038
 
 
-//【第 n 最小元の個数 可換モノイド】
+//【第 K 最小元の個数 可換モノイド】
 /*
 * S ∋ x[0..n) : x[i] = {v, c} : 第 i 最小値 v をもつ要素が c 個あることを表す．
 * x op y : x, y に対応する区間を繋げた区間を表す．
 */
 constexpr int N039 = 2; // 50 くらいまでいける
-using S039 = array<pli, N039>; // (v, c)
+using T039 = ll;
+using S039 = array<pair<T039, int>, N039>; // (v, c)
 S039 op039(S039 x, S039 y) {
 	S039 z;
 
@@ -412,20 +485,21 @@ S039 op039(S039 x, S039 y) {
 }
 S039 e039() {
 	S039 x;
-	rep(i, N039) x[i] = { INFL, 0 };
+	rep(i, N039) x[i] = { T039(INFL), 0 };
 	return x;
 }
-#define CntNthMin_monoid S039, op039, e039
+#define CntKthMin_monoid S039, op039, e039
 
 
-//【第 n 最大元の個数 可換モノイド】
+//【第 K 最大元の個数 可換モノイド】
 /*
 * S ∋ x[0..n) : x[i] = {v, c} : 第 i 最大値 v をもつ要素が c 個あることを表す．
 * x op y : x, y に対応する区間を繋げた区間を表す．
 */
 // verify : https://atcoder.jp/contests/abc343/tasks/abc343_f
 constexpr int N040 = 2; // 50 くらいまでいける
-using S040 = array<pli, N040>; // (v, c)
+using T040 = ll;
+using S040 = array<pair<T040, int>, N040>; // (v, c)
 S040 op040(S040 x, S040 y) {
 	S040 z;
 
@@ -449,10 +523,10 @@ S040 op040(S040 x, S040 y) {
 }
 S040 e040() {
 	S040 x;
-	rep(i, N040) x[i] = { -INFL, 0 };
+	rep(i, N040) x[i] = { -T040(INFL), 0 };
 	return x;
 }
-#define CntNthMax_monoid S040, op040, e040
+#define CntKthMax_monoid S040, op040, e040
 
 
 //【区間和の最小値 モノイド】
@@ -477,7 +551,7 @@ S029 op029(S029 f, S029 g) {
 
 	return { hl, hr, ha, hs };
 }
-S029 e029() { return { INFL, INFL, INFL, 0 }; }
+S029 e029() { return { T029(INFL), T029(INFL), T029(INFL), 0 }; }
 #define RangeSumMin_monoid S029, op029, e029
 
 
@@ -504,8 +578,89 @@ S028 op028(S028 f, S028 g) {
 
 	return { hl, hr, ha, hs };
 }
-S028 e028() { return { -INFL, -INFL, -INFL, 0 }; }
+S028 e028() { return { -T028(INFL), -T028(INFL), -T028(INFL), 0 }; }
 #define RangeSumMax_monoid S028, op028, e028
+
+
+//【区間 AND が 0 になる長さの最小値 モノイド】
+/* verify : https://yukicoder.me/problems/no/2901 */
+struct S044 {
+	int len; // 区間に含まれる連続部分列で，総 AND が 0 になるものの最小長さ
+	vector<pii> ls; // 左端を含む (累積 AND, 最小長さ) の昇順列
+	vector<pii> rs; // 右端を含む (累積 AND, 最小長さ) の昇順列
+	int width; // 区間の幅
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const S044& x) {
+		os << "(" << x.len << "," << x.ls << "," << x.rs << "," << x.width << ")";
+		return os;
+	}
+#endif
+};
+S044 op044(S044 x, S044 y) {
+	S044 z;
+	z.len = min(x.len, y.len);
+	z.ls = move(x.ls);
+	z.rs = move(y.rs);
+	z.width = x.width + y.width;
+
+	int nx = sz(x.rs), ny = sz(y.ls);
+	int pt_x = 0, pt_y = ny - 1;
+	while (pt_x < nx && pt_y >= 0) {
+		auto [vx, wx] = x.rs[pt_x];
+		auto [vy, wy] = y.ls[pt_y];
+
+		if ((vx & vy) == 0) {
+			chmin(z.len, wx + wy);
+			pt_y--;
+		}
+		else {
+			pt_x++;
+		}
+	}
+
+	int val = z.ls.back().first, width = x.width;
+	for (auto [v, w] : y.ls) {
+		v &= val;
+		w += width;
+
+		if (v == 0) {
+			chmin(z.len, w);
+			break;
+		}
+
+		if (z.ls.back().first != v) {
+			z.ls.emplace_back(v, w);
+		}
+	}
+
+	val = z.rs.back().first, width = y.width;
+	for (auto [v, w] : x.rs) {
+		v &= val;
+		w += width;
+
+		if (v == 0) {
+			chmin(z.len, w);
+			break;
+		}
+
+		if (z.rs.back().first != v) {
+			z.rs.emplace_back(v, w);
+		}
+	}
+
+	return z;
+}
+S044 e044() {
+	S044 z;
+	z.len = INF;
+	z.ls = vector<pii>{ {~0, 0} };
+	z.rs = vector<pii>{ {~0, 0} };
+	z.width = 0;
+
+	return z;
+}
+#define RangeAnd0MinLen_monoid S044, op044, e044
 
 
 //【混合トロピカルアフィン変換の合成 モノイド】
@@ -513,7 +668,8 @@ S028 e028() { return { -INFL, -INFL, -INFL, 0 }; }
 * S ∋ f = {a, b, c} : 混合トロピカル一次関数 f(x) = max(min(a + x, b), c) を表す．
 * f op g : 合成した混合トロピカル一次関数 f o g を返す．
 */
-using S025 = tuple<ll, ll, ll>; // {add, min, max}
+using T025 = ll;
+using S025 = tuple<T025, T025, T025>; // {add, min, max}
 S025 op025(S025 f, S025 g) {
 	ll fa, fb, fc, ga, gb, gc;
 	tie(fa, fb, fc) = f; // f(x) = max(min(fa + x, fb), fc)
@@ -543,7 +699,7 @@ S025 op025(S025 f, S025 g) {
 	ll C = max(min(fa + gc, fb), fc);
 	return S025{ A, B, C };
 }
-S025 e025() { return S025{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ∞), -∞)
+S025 e025() { return S025{ 0, T025(INFL), -T025(INFL) }; } // e(x) = max(min(a + 0, ∞), -∞)
 #define MixedTropicalAffine_monoid S025, op025, e025
 
 
@@ -553,7 +709,8 @@ S025 e025() { return S025{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ∞), -∞
 * f op g : 合成した混合トロピカル一次関数 g o f を返す．
 */
 // verify : https://atcoder.jp/contests/arc082/tasks/arc082_d
-using S026 = tuple<ll, ll, ll>; // {add, min, max}
+using T026 = ll;
+using S026 = tuple<T026, T026, T026>; // {add, min, max}
 S026 op026(S026 f, S026 g) {
 	ll fa, fb, fc, ga, gb, gc;
 	tie(fa, fb, fc) = g;
@@ -564,7 +721,7 @@ S026 op026(S026 f, S026 g) {
 	ll C = max(min(fa + gc, fb), fc);
 	return S026{ A, B, C };
 }
-S026 e026() { return S026{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ∞), -∞)
+S026 e026() { return S026{ 0, T026(INFL), -T026(INFL) }; } // e(x) = max(min(a + 0, ∞), -∞)
 #define MixedTropicalInvAffine_monoid S026, op026, e026
 
 
@@ -668,7 +825,7 @@ S042 op042(S042 f, S042 g) {
 
 	return h;
 }
-S042 e042() { return S042{ -INFL, INFL, -INFL, 0 }; } // 十分広い区間
+S042 e042() { return S042{ -T042(INFL), T042(INFL), -T042(INFL), 0 }; } // 十分広い区間
 #define ClampMove_monoid S042, op042, e042
 
 

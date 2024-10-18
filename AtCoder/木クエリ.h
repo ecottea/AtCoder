@@ -2644,115 +2644,127 @@ public:
 };
 
 
-//【根付き木のユニークオイラーツアー】O(n)
+//【DSU on Tree】O(n log n β + Q)
 /*
-* 根付き木 rt のユニークオイラーツアーを求める．
+* 根を rt とする木 g について，各頂点を根とする部分木に対するクエリを一括で処理する．
 *
-* in[s] : DFS で頂点 s を何番目になぞるか（根なら 0）
-* out[s] : DFS で頂点 s から出て次になぞる頂点が何番目か（根なら n）
-* pos[i] : DFS で i 番目になぞる頂点番号（長さ n）
-*/
-template <class TREE>
-void unique_euler_tour(TREE& rt, vi& in, vi& out, vi& pos) {
-	// 参考：https://ei1333.hateblo.jp/entry/2017/09/11/211011
-	// verify : https://codeforces.com/contest/375/problem/D
-
-	int n = sz(rt);
-
-	int time = 0;
-	in.resize(n); out.resize(n); pos.resize(n);
-
-	// s : 注目している頂点
-	function<void(int)> dfs = [&](int s) {
-		in[s] = time;
-		pos[time++] = s;
-
-		repe(t, rt[s].child) dfs(t);
-
-		// s から最後に離れる
-		out[s] = time;
-	};
-
-	dfs(rt.r);
-}
-
-
-//【Mo's algorithm（部分木クエリ，頂点）】O(n√q α + q log q)
-/*
-* 頂点重み c[s] の与えられた n 頂点の根付き木 rt について，
-* st[0..q) を根とする部分木クエリに対する解を格納したリストを返す．
+* insert(int s) : O(β)
+*	部分木に頂点 s を追加し，データ構造を更新する．
 *
-* 制約：任意箇所の頂点の追加[削除] が O(α) で可能
-* 
-* 利用：【根付き木のユニークオイラーツアー】
+* erase(int s) : O(β)
+*	部分木から頂点 s を削除し，データ構造を更新する．
+*
+* get_sol(int s) : 計 O(Q)
+*	部分木 s に対し，データ構造を参照して解を求める．
 */
-template <class T, class S>
-vector<S> mos_algorithm_subtree(const Rooted_tree& rt, const vector<T>& c, const vi& st) {
-	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
-	// verify : https://codeforces.com/contest/375/problem/D
+template <class F_INS, class F_ERS, class F_SOL>
+void dsu_on_tree(const Graph& g, int rt, const F_INS& insert, const F_ERS& erase, const F_SOL& get_sol) {
+	// 参考 : https://nyaannyaan.github.io/library/tree/dsu-on-tree.hpp.html
 
-	int n = sz(rt), q = sz(st);
-	int sqrt_q = (int)(sqrt(q) + 1e-12);
-	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	vector<S> res(q);
+	int n = sz(g);
 
-	vi l, r, pos;
-	unique_euler_tour(rt, l, r, pos);
+	// hc[s] : 頂点 s の重さ最大の子
+	vi hc(n, -1);
 
-	// クエリを左端の位置するブロックについて昇順に，
-	// 次いで右端を偶数番目のブロックは昇順，奇数番目のブロックは降順でソートする．
-	vector<tuple<int, int, int>> lb_sr_j(q);
-	rep(j, q) {
-		int b = l[st[j]] / width;
-		lb_sr_j[j] = { b, (b % 2 == 0 ? 1 : -1) * r[st[j]], j };
-	}
-	sort(all(lb_sr_j));
+	// 各頂点の重さ最大の子を求める．
+	function<int(int, int)> dfs_wgt = [&](int s, int p) {
+		int ws = 0; int wt_max = -1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+			int wt = dfs_wgt(t, s);
+			if (chmax(wt_max, wt)) hc[s] = t;
+			ws += wt + 1;
+		}
+		return ws;
+	};
+	dfs_wgt(rt, -1);
 
-	// ----------------------- ここを実装する -----------------------
-	
-	// 必要なデータ構造を用意する．
-	vl freq((int)2e5 + 10);
-	S sol = 0;
-
-	// 区間に a[i] を追加し，データ構造を更新する．
-	auto insert = [&](int i) {
-		if (freq[a[i]] == 0) sol++;
-		freq[a[i]]++;
+	// 部分木 s 内の頂点を全て追加する．
+	function<void(int, int)> dfs_insert = [&](int s, int p) {
+		insert(s);
+		repe(t, g[s]) {
+			if (t == p) continue;
+			dfs_insert(t, s);
+		}
 	};
 
-	// 区間から a[i] を削除し，データ構造を更新する．
-	auto erase = [&](int i) {
-		freq[a[i]]--;
-		if (freq[a[i]] == 0) sol--;
+	// 部分木 s 内の頂点を全て削除する．
+	function<void(int, int)> dfs_erase = [&](int s, int p) {
+		erase(s);
+		repe(t, g[s]) {
+			if (t == p) continue;
+			dfs_erase(t, s);
+		}
 	};
 
-	// クエリ j に対し，データ構造を参照して解を求める．
-	auto get_sol = [&](int j) {
-		return sol;
+	// 部分木 s 内の頂点を全て追加し，部分木 s に対するクエリに答える．
+	// 必ず頂点集合が空の状態で呼ばれ，keep = false なら頂点集合を空に戻して関数を抜ける．
+	function<void(int, int, bool)> dfs = [&](int s, int p, bool keep) {
+		// light edge の先の部分木全てについての計算を行う．
+		// 計算後は頂点集合は，空である．
+		repe(t, g[s]) {
+			if (t == p || t == hc[s]) continue;
+			dfs(t, s, false);
+		}
+
+		// heavy edge の先の部分木についての計算を行う．
+		// 計算後の頂点集合は，部分木 hc[s] 内の頂点全てである．
+		if (hc[s] != -1) dfs(hc[s], s, true);
+
+		// light edge の先の頂点全てと s 自身を追加する．
+		// 計算後の頂点集合は，部分木 s 内の頂点全てである．
+		repe(t, g[s]) {
+			if (t == p || t == hc[s]) continue;
+			dfs_insert(t, s);
+		}
+		insert(s);
+
+		// 部分木 s に対するクエリに答える．
+		get_sol(s);
+
+		// keep フラグが false なら部分木 s 内の頂点を全て削除し，頂点集合を空にする．
+		if (!keep) dfs_erase(s, p);
+	};
+	dfs(rt, -1, true);
+
+	/* 雛形
+	// freq[c] : 色 c の頂点の個数
+	vi freq(n + 1);
+	int freq_max = 0;
+
+	// sum[f] : f 個ある色の色番号の和
+	vl sum(n + 1);
+	sum[0] = (ll)n * (n + 1) / 2;
+
+	auto insert = [&](int s) {
+		int col = c[s];
+		int f = freq[col], nf = f + 1;
+
+		sum[f] -= col;
+		sum[nf] += col;
+
+		freq[col] = nf;
+		chmax(freq_max, nf);
 	};
 
-	// --------------------------------------------------------------
+	auto erase = [&](int s) {
+		int col = c[s];
+		int f = freq[col], nf = f - 1;
 
-	// lpt[rpt] : 半開区間の左[右] 端の位置
-	int lpt = 0, rpt = 0;
+		sum[f] -= col;
+		sum[nf] += col;
 
-	// クエリを順に処理していく．
-	rep(tmp, q) {
-		int j = get<2>(lb_sr_j[tmp]);
+		freq[col] = nf;
+		if (sum[freq_max] == 0) freq_max = nf;
+	};
 
-		// 区間を広げる．
-		while (lpt > l[st[j]]) insert(pos[--lpt]);
-		while (rpt < r[st[j]]) insert(pos[rpt++]);
+	vl res(n);
+	auto get_sol = [&](int s) {
+		res[s] = sum[freq_max];
+	};
 
-		// 区間を狭める．
-		while (lpt < l[st[j]]) erase(pos[lpt++]);
-		while (rpt > r[st[j]]) erase(pos[--rpt]);
-
-		// クエリ j に対する解を得る．
-		res[j] = get_sol(j);
-	}
-
-	return res;
+	dsu_on_tree(g, 0, insert, erase, get_sol);
+	*/
 }
 
 

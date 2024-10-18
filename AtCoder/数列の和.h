@@ -191,7 +191,7 @@ mint arithmetic_geometric_series(mint a, mint b, mint r, ll i0, ll i1) {
 /*
 * Σi∈[0..∞) i^d r^i を返す．
 *
-* 制約：r != 1
+* 制約：r ≠ 1
 * 
 * 利用：【階乗など（法が大きな素数）】
 */

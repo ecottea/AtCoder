@@ -24,7 +24,7 @@
 */
 
 
-//【ターン数の期待値 → 確率の和】
+//【ターン数の期待値 → 停止確率の和】
 /*
 * すごろくにおいて，
 *	p[i] : マス i に止まる確率
@@ -736,10 +736,10 @@ public:
 
 		rep(i, n) mat[i][i] = 1;
 	}
-	Weighted_random_walk() : n(0)
+	Weighted_random_walk() : n(0) {}
 
-		// 有向辺 s→t を，重み w，選択確率 p で追加する．
-		void add_edge(int s, int t, T w, T p) {
+	// 有向辺 s→t を，重み w，選択確率 p で追加する．
+	void add_edge(int s, int t, T w, T p) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2171
 
 		mat[s][t] -= p;

@@ -192,7 +192,7 @@ int coordinate_compression(const vector<T>& a, vi& a_cp, const function<bool(T, 
 }
 
 
-//【格子 DAG の座標圧縮（真に増加）】O(n log n)
+//【格子 DAG の座標圧縮（狭義）】O(n log n)
 /*
 * DAG G = (V, E) を，V = [0..n)，E は以下の規則で定まるものとする：
 *	辺 i→j をもつ ⇔ x[i] < x[j] かつ y[i] < y[j]
@@ -242,6 +242,74 @@ Graph lattice_DAG_compression(const vector<T>& x, const vector<T>& y) {
 		rf(m, r);
 	};
 	rf(0, K);
+
+	return g;
+}
+
+
+//【格子 DAG の座標圧縮（広義）】O(n log n)
+/*
+* DAG G = (V, E) を，V = [0..n)，E は以下の規則で定まるものとする：
+*	辺 i→j をもつ ⇔ x[i] ≦ x[j] かつ y[i] ≦ y[j]
+* 各頂点間の移動可能性が G と等しい DAG を返す（頂点 [0..n) は G と対応する．）
+*
+* 制約：点に重複はない
+*/
+template <class T>
+Graph lattice_DAG_compression_eq(vector<T> x, vector<T> y) {
+	// 参考 : https://x.com/maspy_stars/status/1704073907526090865
+	// verify : https://judge.yosupo.jp/problem/longest_increasing_subsequence
+
+	int n = sz(x);
+
+	// 頂点を x 座標昇順に並べ替える．
+	vector<tuple<T, T, int>> xyi(n);
+	rep(i, n) xyi[i] = { x[i], y[i], i };
+	sort(all(xyi));
+
+	vi p(n);
+	rep(i, n) tie(x[i], y[i], p[i]) = xyi[i];
+
+	// g : 構築する DAG
+	// id : 次に使用する新規頂点の番号
+	Graph g(n); int id = n;
+
+	// [l..r) 間の辺をまとめて張る．
+	function<void(int, int)> rf = [&](int l, int r) {
+		if (r - l == 1) return;
+
+		int m = (l + r) / 2;
+
+		// is[k] : [l..r) のうち y 座標が昇順 k 番目の頂点の番号（等しいときは x 座標昇順）
+		vi is(r - l);
+		iota(all(is), l);
+		stable_sort(all(is), [&](int l, int r) { return y[l] < y[r]; });
+
+		// 中継線上に右向きの辺を張る．
+		g.resize(sz(g) + (r - l));
+		rep(k, r - l - 1) g[id + k].push_back(id + k + 1);
+
+		// 各頂点と中継線との間の辺を張る．
+		rep(k, r - l) {
+			// k 番目の頂点が上半分に属するとき
+			if (is[k] < m) {
+				// 中継線への下向きの辺を張る．
+				g[p[is[k]]].push_back(id);
+			}
+			// k 番目の頂点が下半分に属するとき
+			else {
+				// 中継線からの下向きの辺を張る．
+				g[id].push_back(p[is[k]]);
+			}
+
+			id++;
+		}
+
+		// 上半分，下半分のそれぞれについて同様の処理を行う．
+		rf(l, m);
+		rf(m, r);
+	};
+	rf(0, n);
 
 	return g;
 }

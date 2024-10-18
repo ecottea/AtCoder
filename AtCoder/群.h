@@ -96,13 +96,22 @@ S608 inv608(S608 f) {
 #define AffineInvComposite_group S608, op608, e608, inv608
 
 
-//y‹ts—ñ‘Ï ŒQz
+//y‹tˆê”ÊüŒ^ŒQz
 constexpr int N609 = 3;
 using S609 = Matrix<mint>;
 S609 op609(S609 a, S609 b) { return b * a; }
 S609 e609() { return S609(N609); }
 S609 inv609(S609 a) { return inverse_matrix(a); }
 #define MatrixInvMul_group S609, op609, e609, inv609
+
+
+//y‹t 2 Ÿ“ÁêüŒ^ŒQz
+/* verify : https://judge.yosupo.jp/problem/unionfind_with_potential_non_commutative_group */
+using S610 = Fixed_matrix<mint, 2>;
+S610 op610(S610 a, S610 b) { return b * a; }
+S610 e610() { return S610(1); }
+S610 inv610(S610 a) { swap(a[0][0], a[1][1]); a[0][1] *= -1; a[1][0] *= -1; return a; }
+#define Matrix2Mul_group S610, op610, e610, inv610
 
 
 //yƒrƒbƒg—ñã “]“|” ŒQz

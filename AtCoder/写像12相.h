@@ -225,11 +225,11 @@ mint stirling_S2(int n, int k) {
 
 //【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上，mod 998244353）】O(n log n)
 /*
-* 各 j∈[0..n] について，n 点集合をちょうど j 個に分割する方法の数 s(n, k) を格納したリストを返す．
+* 各 j∈[0..n] について，n 点集合をちょうど k 個に分割する方法の数 s(n, k) を格納したリストを返す．
 *
 * 利用：【階乗など（法が大きな素数）】
 */
-vm stirling_S2_all_K(int n) {
+vm stirling_S2_allK(int n) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%AA%E3%83%B3%E3%82%B0%E6%95%B0
 	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_second_kind
 

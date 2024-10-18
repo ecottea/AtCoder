@@ -48,7 +48,7 @@ bool compare_angle(const Point<T>& a, const Point<T>& b, const Point<T>& c, cons
 
 //【偏角の比較】O(1)
 /*
-* 点 a と点 b の点 c からの e 方向 θ を基準とした [θ,θ+2π) 範囲の偏角を比較する．
+* 点 a と点 b の点 c からの e 方向 θ を基準とした [θ..θ+2π) 範囲の偏角を比較する．
 * a の偏角より b の偏角が大きければ true，小さければ false を返す．
 * 同じ偏角のときは，a への距離より b への距離が大きければ true，さもなくば false を返す．
 * c 自身の偏角は未定義だが，便宜上 +∞ とする．
@@ -68,7 +68,7 @@ bool compare_argument(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0 }, Poi
 
 	// 以降は a, b は O と異なるものとして考えて良い．
 
-	// 偏角が [θ, θ+π) の範囲にあるか
+	// 偏角が [θ..θ+π) の範囲にあるか
 	T op_a = e.cross(a), op_b = e.cross(b);
 	T ip_a = e.dot(a), ip_b = e.dot(b);
 	bool la = op_a > 0 || (op_a == 0 && ip_a > 0);
@@ -108,7 +108,7 @@ bool compare_argument_weakly(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0
 
 	// 以降は a, b は O と異なるものとして考えて良い．
 
-	// 偏角が [θ, θ+π) の範囲にあるか
+	// 偏角が [θ..θ+π) の範囲にあるか
 	T op_a = e.cross(a), op_b = e.cross(b);
 	T ip_a = e.dot(a), ip_b = e.dot(b);
 	bool la = op_a > 0 || (op_a == 0 && ip_a > 0);
@@ -127,7 +127,7 @@ bool compare_argument_weakly(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0
 
 //【偏角ソート】O(n log n)
 /*
-* n 点のリスト p を点 c からの e 方向 θ を基準とした [θ,θ+2π) 範囲の偏角昇順にソートする．
+* 点群 p[0..n) を点 c からの e 方向 θ を基準とした [θ..θ+2π) 範囲の偏角昇順にソートする．
 * 同じ偏角だった場合は c からの距離昇順とする．
 * c 自身の偏角は未定義だが，便宜上 +∞ とする．
 *
@@ -414,15 +414,16 @@ T caliper(const Polygon<T>& poly, pii& id) {
 //【格子点の個数】O(log|x2 - x1|)
 /*
 * x 軸以上かつ (x1, y1) と (x2, y2) を結ぶ閉線分以下にある格子点の個数を返す．
-* 条件：x1 != x2, y1 ≧ 0, y2 ≧ 0
+* 条件：x1 ≠ x2, y1 ≧ 0, y2 ≧ 0
 */
-ll count_lattice_point_le(ll x1, ll y1, ll x2, ll y2) {
+template <class T>
+T count_lattice_point_leq(T x1, T x2, T y1, T y2) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ao
 
 	if (x1 > x2) swap(x1, x2);
 	if (y1 > y2) swap(y1, y2);
 
-	ll res = (x2 - x1 + 1) * (y2 - y1 + 1);
+	T res = (x2 - x1 + 1) * (y2 - y1 + 1);
 	res += gcd(x2 - x1, y2 - y1) + 1;
 	res /= 2;
 	res += (x2 - x1 + 1) * y1;
@@ -433,15 +434,16 @@ ll count_lattice_point_le(ll x1, ll y1, ll x2, ll y2) {
 //【格子点の個数】O(log|x2 - x1|)
 /*
 * x 軸以上かつ (x1, y1) と (x2, y2) を結ぶ閉線分より下にある格子点の個数を返す．
-* 条件：x1 != x2, y1 ≧ 0, y2 ≧ 0
+* 条件：x1 ≠ x2, y1 ≧ 0, y2 ≧ 0
 */
-ll count_lattice_point_l(ll x1, ll y1, ll x2, ll y2) {
+template <class T>
+T count_lattice_point_less(T x1, T x2, T y1, T y2) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ao
 
 	if (x1 > x2) swap(x1, x2);
 	if (y1 > y2) swap(y1, y2);
 
-	ll res = (x2 - x1 + 1) * (y2 - y1 + 1);
+	T res = (x2 - x1 + 1) * (y2 - y1 + 1);
 	res -= gcd(x2 - x1, y2 - y1) + 1;
 	res /= 2;
 	res += (x2 - x1 + 1) * y1;

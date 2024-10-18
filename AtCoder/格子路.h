@@ -130,131 +130,6 @@ mint count_lattice_path_no_continuous_turns(int h, int w) {
 }
 
 
-//【チェス盤距離 d 以内ジャンプ最短経路数】O(h w)
-/*
-* 通過の可否が c[i][j] = '.'['#'] で示された h×w 格子について，右下方向へのチェス盤距離 d 以下の
-* ジャンプを繰り返すとき，c[0][0] から c[i][j] までの経路の数を seq[i][j] に格納する．
-*
-*（二次元いもす法で高速化した格子 DP）
-*/
-void count_chebyshev_path(const vvc& c, int d, vvm& seq, char WALL = '#') {
-	int h = sz(c), w = sz(c[0]);
-
-	seq = vvm(h, vm(w));
-	seq[0][0] = 1;
-
-	// 配る DP
-	rep(i, h) rep(j, w) {
-		// v : dp[i][j] の正しい値
-		mint v = seq[i][j];
-
-		// (i, j) からの寄与の種を蒔く．
-		if (c[i][j] != WALL) {
-			if (true)							seq[i][j] += v;					// 注目地点
-			if (j + d + 1 < w)					seq[i][j + d + 1] -= v;			// 右
-			if (i + d + 1 < h)					seq[i + d + 1][j] -= v;			// 下
-			if (i + d + 1 < h && j + d + 1 < w)	seq[i + d + 1][j + d + 1] += v;	// 右下
-		}
-
-		// v2 : 以降のマスに seq[i][j] が与える影響
-		mint v2 = (i == 0 && j == 0 ? 1 : seq[i][j]);
-
-		// 累積和をとる（種蒔きの範囲を d = 0 に縮小して符号反転する）
-		if (true)					seq[i][j] -= v2;			// 注目地点
-		if (j + 1 < w)				seq[i][j + 1] += v2;		// 右
-		if (i + 1 < h)				seq[i + 1][j] += v2;		// 下
-		if (i + 1 < h && j + 1 < w)	seq[i + 1][j + 1] -= v2;	// 右下
-
-		// seq[i][j] を正しい値に戻しておく．
-		seq[i][j] = v;
-	}
-}
-
-
-//【マンハッタン距離 d 以内ジャンプ最短経路数】O(h w)
-/*
-* 通過の可否が c[i][j] = '.'['#'] で示された h×w 格子について，右下方向へのマンハッタン距離 d 以下の
-* ジャンプを繰り返すとき，c[0][0] から c[i][j] までの経路の数を seq[i][j] に格納する．
-*
-*（二次元いもす法で高速化した格子 DP）
-*/
-void count_manhattan_path(const vvc& c_, int d, vvm& seq, char WALL = '#') {
-	// verify : https://yukicoder.me/problems/no/2003
-
-	int h = sz(c_), w = sz(c_[0]);
-
-	// 左右に番兵を付けておく．
-	// 番兵が O(h w) 個に収まるよう，必要ならば h <= w になるよう転置する．
-	vvc c; bool swap_flag = false;
-	if (h <= w) {
-		c = vvc(h, vc(h + w + h, WALL));
-		rep(i, h) rep(j, w) c[i][h + j] = c_[i][j];
-	}
-	else {
-		swap(h, w);
-		c = vvc(h, vc(h + w + h, WALL));
-		rep(i, h) rep(j, w) c[i][h + j] = c_[j][i];
-		swap_flag = true;
-	}
-	w += 2 * h;
-
-	vvm dp(h, vm(w));
-	dp[0][h] = 1;
-
-	// 配る DP
-	rep(i, h) rep(j, w) {
-		// v : dp[i][j] の正しい値
-		mint v = dp[i][j];
-
-		// (i, j) からの寄与の種を蒔く．
-		if (c[i][j] != WALL) {
-			// 注目地点
-			if (true)							dp[i][j] += v;
-			if (i + 1 < h && j - 1 >= 0)		dp[i + 1][j - 1] -= v;
-
-			// 右
-			if (i + 1 < h && j + d + 1 < w)		dp[i + 1][j + d + 1] += v;
-			if (j + d + 1 < w)					dp[i][j + d + 1] -= v;
-
-			// 下
-			if (i + d + 2 < h && j - 1 >= 0)	dp[i + d + 2][j - 1] += v;
-			if (i + d + 2 < h)					dp[i + d + 2][j] -= v;
-		}
-
-		// v2 : 以降のマスに dp[i][j] が与える影響
-		mint v2 = (i == 0 && j == h ? 1 : dp[i][j]);
-
-		// 累積和をとる（種蒔きの範囲を d = 0 に縮小して符号反転する）
-		// 注目地点
-		if (true)						dp[i][j] -= v2;
-		if (i + 1 < h && j - 1 >= 0)	dp[i + 1][j - 1] += v2;
-
-		// 右
-		if (i + 1 < h && j + 1 < w)		dp[i + 1][j + 1] -= v2;
-		if (j + 1 < w)					dp[i][j + 1] += v2;
-
-		// 下
-		if (i + 2 < h && j - 1 >= 0)	dp[i + 2][j - 1] -= v2;
-		if (i + 2 < h)					dp[i + 2][j] += v2;
-
-		// dp[i][j] を正しい値に戻しておく．
-		dp[i][j] = v;
-	}
-
-	// 結果を格納する．
-	w -= 2 * h;
-	if (swap_flag) {
-		swap(h, w);
-		seq = vvm(h, vm(w));
-		rep(i, h) rep(j, w) seq[i][j] = dp[j][w + i];
-	}
-	else {
-		seq = vvm(h, vm(w));
-		rep(i, h) rep(j, w) seq[i][j] = dp[i][h + j];
-	}
-}
-
-
 //【スコア最大経路（スパーススコア指定）】O(n log n)
 /*
 * n 個の点 (x[i], y[i]) に非負スコア c[i] が与えられており，その他の点のスコアは 0 である．
@@ -268,6 +143,9 @@ ll op_mcp(ll a, ll b) { return max(a, b); }
 ll e_mcp() { return 0; }
 ll maximize_score_path(const vl& x_, const vl& y_, const vl& c) {
 	// verify : https://yukicoder.me/problems/no/1826
+
+	//【備考】
+	// (x, y) でソートして y だけ抜き出せば，重み付き広義最長増加部分列問題に等しい．
 
 	int n = sz(x_);
 
@@ -368,6 +246,12 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 }
 
 
+//【最短経路数（任意通路内）】
+/*
+* 数え上げ(列).h の【広義単調増加列の数え上げ（上下限指定，mod 998244353）】を利用すれば良い．
+*/
+
+
 //【最短経路数（x≧y 内）】
 /*
 * (0, 0) から (h, w) までの最短格子路のうち，常に x≧y を満たすものの総数は
@@ -378,6 +262,17 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 * 
 * 参考 : https://oeis.org/A009766
 * verify : https://projecteuler.net/problem=739
+*/
+
+
+//【最短経路数（x≧y 内，折れ曲がり回数指定）】
+/*
+* (0, 0) から (n, n) までの最短格子路のうち，常に x≧y を満たし，
+* 直線 x=y に向かって折れ曲がる回数が k 回のものの個数は，Narayana 数
+*	N(n, k) = (1/n) bin(n,k) bin(n,k-1)
+* で与えられる．
+* 
+* 参考 : https://en.wikipedia.org/wiki/Narayana_number
 */
 
 
@@ -428,6 +323,86 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 	if (x + y > n || (n - x - y) % 2) return 0;
 
 	return fm.bin(n, (n - x - y) / 2) * fm.bin(n, (n - x + y) / 2);
+}
+
+
+//【直線に沿った格子路上の積】O(log(n + m))
+/*
+* (0, 0) から (n, (an+b)//m) までの直線 y=(ax+b)/m 以下の上方向優先の最短格子路について，
+* 右に進むときは f，上に進むときは g を順に掛け合わせたモノイド (S, op, e) の元を返す．
+*
+* 制約：n≧0, m≧1, a≧0, b≧0
+*/
+template <class T, class S, S(*op)(S, S), S(*e)()>
+S multiple_along_line(T n, T m, T a, T b, S f, S g) {
+	// 参考 : https://github.com/hos-lyric/libra/blob/master/number/gojo.cpp
+	// verify : https://judge.yosupo.jp/problem/sum_of_floor_of_linear
+
+	Assert(n >= 0); Assert(m >= 1); Assert(a >= 0); Assert(b >= 0);
+
+	// x^n を返す
+	auto pow = [](const S& x, T n) {
+		S res(e()), pow2 = x;
+		while (n > 0) {
+			if (n & 1) res = op(res, pow2);
+			pow2 = op(pow2, pow2);
+			n /= 2;
+		}
+		return res;
+	};
+
+	S resL = e(), resR = e(); bool rev = false;
+
+	while (true) {
+		// 傾きを 1 未満，切片を 1 未満にする．
+		if (rev) {
+			resR = op(pow(g, b / m), resR);
+			f = op(pow(g, a / m), f);
+		}
+		else {
+			resL = op(resL, pow(g, b / m));
+			f = op(f, pow(g, a / m));
+		}
+
+		a %= m;
+		b %= m;
+		if (a == 0 || n == 0) break;
+
+		// 左側の中途半端に余っている部分を切り取る．
+		T l = (m - b + a - 1) / a;
+		if (l > n) {
+			if (rev) {
+				resR = op(pow(f, n), resR);
+			}
+			else {
+				resL = op(resL, pow(f, n));
+			}
+			n = 0;
+			break;
+		}
+
+		if (rev) {
+			resR = op(op(g, pow(f, l)), resR);
+		}
+		else {
+			resL = op(resL, op(pow(f, l), g));
+		}
+
+		b = a * l + b - m;
+		n -= l;
+		if (n == 0) break;
+
+		// 軸を取り直して傾きを 1 より大きくする．
+		T nn = (a * n + b) / m;
+		T nm = a;
+		T na = m;
+		T nb = a * n + b - m * nn;
+
+		n = nn; m = nm; a = na; b = nb; swap(f, g);
+		rev = !rev;
+	}
+
+	return op(resL, op(pow(f, n), resR));
 }
 
 
@@ -560,5 +535,11 @@ vector<pii> create_grid_hamilton_cycle(int h, int w) {
 
 	return res;
 }
+
+
+//【格子 DAG の座標圧縮】
+/*
+* 座標圧縮.h へ
+*/
 
 

@@ -2,7 +2,7 @@
 #include "header.h"
 #include "数論.h"
 #include "列挙(数論).h"
-#include "mint.h"
+#include "構造(数論).h"
 // ■■■■■ 合同式 ■■■■■
 
 
@@ -415,8 +415,8 @@ int tonelli_shanks(const mint& a) {
 *
 * 制約 : p は素数
 */
-int quadratic_residue_m1(int p) {
-	// verify : https://mojacoder.app/users/YSatUT/problems/fermats_4nplus1_theorem
+ll quadratic_residue_m1(ll p) {
+	// verify : https://judge.yosupo.jp/problem/two_square_sum
 
 	//【方法】
 	// p=2 なら 1^2 = 1 = -1 (mod 2) なので 1 を返せば良い．
@@ -437,9 +437,29 @@ int quadratic_residue_m1(int p) {
 	mt19937_64 mt((int)time(NULL));
 	uniform_int_distribution<ll> rnd(2, p - 2);
 
+	auto pow_mod_large = [](ll x, ll n, ll m) {
+		assert(n >= 0 && m >= 1);
+		if (m == 1) return 0LL;
+
+		__int128 res = 1, pow2 = x;
+		while (n > 0) {
+			if (n & 1) {
+				res = res *= pow2;
+				res %= m;
+			}
+
+			pow2 *= pow2;
+			pow2 %= m;
+
+			n /= 2;
+		}
+
+		return (ll)(res % m);
+	};
+
 	while (1) {
 		ll r = rnd(mt);
-		ll a = pow_mod(r, (p - 1) / 4, p);
+		ll a = pow_mod_large(r, (p - 1) / 4, p);
 		if (a != 1 && a != p - 1) return a;
 	}
 
