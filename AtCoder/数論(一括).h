@@ -58,7 +58,7 @@ struct Osa_k {
 	bool primeQ(int i) {
 		// verify : https://yukicoder.me/problems/no/1396
 
-		Assert(i <= n);
+		Assert(i >= 1); Assert(i <= n);
 
 		return i >= 2 && gpf[i] == i;
 	}
@@ -67,7 +67,7 @@ struct Osa_k {
 	map<int, int> factor_integer(int i) const {
 		// verify : https://yukicoder.me/problems/no/2207
 
-		Assert(i <= n);
+		Assert(i >= 1); Assert(i <= n);
 
 		map<int, int> pps;
 		while (i > 1) {
@@ -81,7 +81,7 @@ struct Osa_k {
 	vi divisors(int i) const {
 		// verify : https://atcoder.jp/contests/abc368/tasks/abc368_f
 
-		Assert(i <= n);
+		Assert(i >= 1); Assert(i <= n);
 
 		vi divs{ 1 };
 
@@ -103,7 +103,7 @@ struct Osa_k {
 	int euler_phi(int i) {
 		// verify : https://yukicoder.me/problems/no/2849
 
-		Assert(i <= n);
+		Assert(i >= 1); Assert(i <= n);
 
 		int phi = 1; int pp = INF;
 		while (i > 1) {
@@ -118,7 +118,7 @@ struct Osa_k {
 
 	// i の重複を除去した素因数のリストを返す．
 	vi unique_prime_factors(int i) const {
-		Assert(i <= n);
+		Assert(i >= 1); Assert(i <= n);
 
 		vi res; int pp = INF;
 		while (i > 1) {
@@ -135,7 +135,7 @@ struct Osa_k {
 	int radical(int i) const {
 		// verify : https://projecteuler.net/problem=518
 
-		Assert(i <= n);
+		Assert(i >= 1); Assert(i <= n);
 
 		int rad = 1; int pp = INF;
 		while (i > 1) {
@@ -152,7 +152,7 @@ struct Osa_k {
 	vi prime_power_decomposition(int i) const {
 		// verify : https://projecteuler.net/problem=407
 
-		Assert(i <= n);
+		Assert(i >= 1); Assert(i <= n);
 
 		vi res; int pp = INF;
 		while (i > 1) {
@@ -341,7 +341,7 @@ vector<T> divisor_sigma(int k, int n) {
 	a[0] = 0;
 	repi(i, 1, n) a[i] = T(powi(i, k));
 
-	Div_mul_transform<T> dt(n);
+	Div_mul_transform dt(n);
 	dt.divisor_zeta(a);
 
 	return a;
@@ -371,7 +371,7 @@ vl euler_phi(int n) {
 	repi(i, 1, n) a[i] = i;
 
 	// int にすると途中計算でオーバーフローするので注意
-	Div_mul_transform<ll> dt(n);
+	Div_mul_transform dt(n);
 	dt.divisor_mobius(a);
 
 	return a;
@@ -391,7 +391,7 @@ vi mobius_mu(int n) {
 	vi a(n + 1, 0);
 	a[1] = 1;
 
-	Div_mul_transform<int> dt(n);
+	Div_mul_transform dt(n);
 	dt.divisor_mobius(a);
 
 	return a;

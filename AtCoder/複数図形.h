@@ -1,14 +1,11 @@
 #pragma once
 #include "header.h"
 #include "構造(幾何).h"
-#include "分析(文字列).h"
-#include "順列.h"
-#include "探索.h"
-#include "作図.h"
-#include "有理数.h"
-#include "括弧列.h"
-#include "座標圧縮.h"
 #include "累積演算.h"
+#include "有理数.h"
+#include "順列.h"
+#include "作図.h"
+#include "括弧列.h"
 // ■■■■■ 点群，線分群，直線群など ■■■■■
 
 
@@ -745,7 +742,7 @@ int opccc(int a, int b) { return min(a, b); }
 int eccc() { return INF; }
 int opccc2(int a, int b) { return max(a, b); }
 int eccc2() { return -1; }
-dsu connectivity_of_segments(const vi& x1, const vi& y1, const vi& x2, const vi& y2) {
+dsu connectivity_of_segments(const vi& x1, const vi& x2, const vi& y1, const vi& y2) {
 	// verify : https://mojacoder.app/users/Tonegawac/problems/segment-connectivity
 
 	int n = sz(x1);
@@ -777,7 +774,10 @@ dsu connectivity_of_segments(const vi& x1, const vi& y1, const vi& x2, const vi&
 
 			chmax(w, yr);
 		}
-		else Assert(!"illegal segment!!");
+		else {
+			cerr << "segment[" << i << "] is (" << x1[i] << "," << x2[i] << "," << y1[i] << "," << y2[i] << ")\n";
+			Assert(!"diagonal segment!!");
+		}
 	}
 
 	// イベントソート
@@ -1341,6 +1341,12 @@ T nearest_point_pair(const vector<T>& x, const vector<T>& y, pii* ps = nullptr, 
 		return sqres;
 	}
 }
+
+
+//【2 次元 K-D 木】
+/*
+* 矩形クエリ.h へ
+*/
 
 
 //【最遠点（マンハッタン距離）】O(n)

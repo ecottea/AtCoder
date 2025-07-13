@@ -7,15 +7,15 @@
 
 //【局面の勝敗】O(?)（遅いので実験用）
 /*
-* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗を {{手番, 局面}, 勝敗} で表したリストを返す．
+* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗を {{手番, 局面}, 勝者} で表したリストを返す．
 * nxt(t, p, nps) を呼ぶと，t=1:先手番[t=0:後手番] での局面 p から遷移可能な局面のリストを nps に格納する．
 * ただし nps が空の場合は，先手勝ちなら 1，後手勝ちなら 0 を返すようにする．
 */
-template <class T>
-map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vector<T>&)>& nxt) {
-	// verify : https://atcoder.jp/contests/abc349/tasks/abc349_e
+template <class T, class FUNC>
+map<pair<int, T>, int> decide_WL(const T& p_ini, FUNC& nxt) {
+	// verify : https://atcoder.jp/contests/abc380/tasks/abc380_f
 
-	map<pair<int, T>, int> res;
+	map<pair<int, T>, int> res; // これをグローバル変数にすれば再利用可能
 
 	// t=1:先手番[t=0:後手番] で局面 p であるときの勝敗を返す．
 	function<int(int, const T&)> dfs = [&](int t, const T& p) {
@@ -39,6 +39,12 @@ map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vec
 		repe(np, nps) {
 			if (dfs(1 - t, np) == t) {
 				res[{t, p}] = t;
+
+				// 最善手も知りたい場合はこれを利用する．
+				//map<pair<int, T>, vector<T>> best_hands; // グローバルで宣言
+				//best_hands[{t, p}].push_back(np);
+	
+				break; // 初期局面から遷移可能な全局面を調べたいならコメントアウトする．
 			}
 		}
 
@@ -51,9 +57,8 @@ map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vec
 
 	/* nxt の定義の雛形
 	using T = tuple<ll, ll, vl>;
-	function<int(int, const T&, vector<T>&)> nxt = [&](int t, const T& p, vector<T>& nps) {
-		ll l, r; vl a;
-		tie(l, r, a) = p;
+	auto nxt = [&](int t, const T& p, vector<T>& nps) {
+		auto [l, r, a] = p;
 
 		return 0;
 	};
@@ -63,7 +68,7 @@ map<pair<int, T>, int> decide_WL(const T& p_ini, function<int(int, const T&, vec
 
 //【局面の勝敗（引き分けあり）】O(?)（遅いので実験用）
 /*
-* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗を {{手番, 局面}, 勝敗} で表したリストを返す．
+* 先手番での初期局面 p_ini から遷移可能な局面とその勝敗を {{手番, 局面}, 勝者} で表したリストを返す．
 * nxt(t, p, nps) を呼ぶと，t=1:先手番[t=0:後手番] での局面 p から遷移可能な局面のリストを nps に格納する．
 * ただし nps が空の場合は，先手勝ちなら 1，後手勝ちなら 0，引き分けなら -1 を返すようにする．
 */
@@ -110,8 +115,7 @@ map<pair<int, T>, int> decide_WLD(const T& p_ini, function<int(int, const T&, ve
 	/* nxt の定義の雛形
 	using T = tuple<ll, ll, vl>;
 	function<int(int, const T&, vector<T>&)> nxt = [&](int t, const T& p, vector<T>& nps) {
-		ll l, r; vl a;
-		tie(l, r, a) = p;
+		auto [l, r, a] = p;
 
 		return 0;
 	};
@@ -173,12 +177,14 @@ map<pair<bool, T>, ll> decide_final_score(const T& p_ini, function<ll(bool, cons
 }
 
 
-//【局面のゲーム値（数）】O(?)（遅いので実験用）
+//【局面のゲーム値（二進有理数）】O(?)（遅いので実験用）
 /*
 * 局面 p のゲーム値（分母分子の型が T の二進有理数）を返す．
 * nxt(p, lnps, rnps) を呼ぶと，局面 p から左[右] の手番で遷移可能な局面のリストを lnps[rnps] に格納する．
 *
 * 制約：p からはゲーム値が数でない局面に遷移しない．
+* 
+* 利用：【有理数】
 */
 template <class P, class T = ll>
 Frac<T> calc_advantage(const P& p, function<void(const P&, vector<P>&, vector<P>&)>& nxt) {

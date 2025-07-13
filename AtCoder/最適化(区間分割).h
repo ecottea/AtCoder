@@ -104,7 +104,7 @@ T minimize_max_sum(const vector<T>& a) {
 
 	int n = sz(a);
 
-	Nearest_element NE(a);
+	Jump_on_array NE(a);
 	NE.set_prev_greater();
 
 	Segtree<Min_monoid> dp(n + 1);

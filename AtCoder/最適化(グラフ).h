@@ -518,16 +518,21 @@ ll chinese_postman_problem(const WGraph& g) {
 /*
 * 与えられた重み付き無向グラフ g と頂点集合 tm について，
 * g の辺からなる木で tm を全て含むもののコストの最小値を返す．
+* 必要ならば es に選んだ辺の両端点の組からなるリストを格納する．
 */
-ll minimum_cost_steiner_tree(const WGraph& g, const vi& tm) {
+ll minimum_cost_steiner_tree(const WGraph& g, const vi& tm, vector<pii>* es = nullptr) {
 	// 参考 : https://kopricky.github.io/code/Academic/steiner_tree.html
-	// verify : https://atcoder.jp/contests/abc364/tasks/abc364_g
+	// verify : https://judge.yosupo.jp/problem/minimum_steiner_tree
 
 	int n = sz(g), K = sz(tm);
 
 	// dp[set][v] : 頂点集合 set∪{v} を連結にする最小コスト
 	vvl dp(1LL << K, vl(n, INFL));
+	rep(s, n) dp[0][s] = 0;
 	rep(k, K) dp[1LL << k][tm[k]] = 0;
+
+	using P = tuple<int, int, int>;
+	vector<vector<P>> prv(1LL << K, vector<P>(n, { -1, -1, -1 }));
 
 	repb(set, K) {
 		if (set == 0) continue;
@@ -535,7 +540,9 @@ ll minimum_cost_steiner_tree(const WGraph& g, const vi& tm) {
 		// set = sub凵(set-sub) と分け，それぞれが v と連結になるパターン → SoS-bit 全探索
 		rep(v, n) {
 			for (int sub = set; sub > 0; sub = (sub - 1) & set) {
-				chmin(dp[set][v], dp[sub][v] + dp[set ^ sub][v]);
+				if (chmin(dp[set][v], dp[sub][v] + dp[set ^ sub][v])) {
+					prv[set][v] = { sub, set ^ sub, v };
+				}
 			}
 		}
 
@@ -549,8 +556,32 @@ ll minimum_cost_steiner_tree(const WGraph& g, const vi& tm) {
 
 			repe(t, g[v]) {
 				if (chmin(dp[set][t], dp[set][v] + t.cost)) {
+					prv[set][t] = { set, -1, v };
 					q.push({ dp[set][t], t });
 				}
+			}
+		}
+	}
+
+	if (es) {
+		es->clear();
+
+		queue<pii> q;
+		q.emplace((1 << K) - 1, tm[0]);
+
+		while (!q.empty()) {
+			auto [set, v] = q.front(); q.pop();
+
+			auto [pset1, pset2, pv] = prv[set][v];
+			if (pset1 == -1) continue;
+
+			if (pset2 != -1) {
+				q.emplace(pset1, pv);
+				q.emplace(pset2, pv);
+			}
+			else {
+				es->emplace_back(pv, v);
+				q.emplace(pset1, pv);
 			}
 		}
 	}
@@ -568,3 +599,12 @@ ll minimum_cost_steiner_tree(const WGraph& g, const vi& tm) {
 * 
 * verify : https://projecteuler.net/problem=713
 */
+
+
+//【頂点除去による DAG 化 → 無理】
+/*
+* 与えられた有向グラフ g に対し，それを DAG にするために取り除かなければならない
+* 最小の頂点集合を求める問題は「フィードバック頂点集合問題」と呼ばれており，NP 困難である．
+*/
+
+

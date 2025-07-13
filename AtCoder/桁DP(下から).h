@@ -243,7 +243,7 @@ mint power_sum_digit_upward(const string& num, int m, int b = 10) {
 }
 
 
-//【下から状態桁 DP，以下フラグ，スコア和】O(n m b)
+//【下から状態桁 DP，以下フラグ，和】O(n m b)
 /*
 * b=10 進数で n 桁の数 num 以下の非負の整数で，数字和が m の倍数であるものの和を返す．
 */
@@ -286,7 +286,7 @@ mint sum_digit_sum(const string& num, int m, int b = 10) {
 }
 
 
-//【下から状態桁 DP，以下フラグ，前 0 フラグ，スコア和】O(n m b)
+//【下から状態桁 DP，以下フラグ，前 0 フラグ，和】O(n m b)
 /*
 * b=10 進数で n 桁の数 num 以下の非負の整数で，桁の数字に 0 を含まず，
 * 数字和が m の倍数であるものの和を返す．

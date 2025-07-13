@@ -259,6 +259,12 @@ vector<tuple<int, int, int>> enumerate_primitive_pythagorean_triples(int n) {
 	// なる正整数の組 (x, y) が 1:1 に対応する．
 	// よって x^2 + y^2 ≦ n の範囲の (x, y) を調べ上げれば良い．
 
+	//【備考】
+	// 面積 S，周長 L，内接円の半径 r はそれぞれ次のように表される：
+	//		S = ab/2  = xy(x+y)(x-y)
+	//		L = a+b+c = 2x(x+y)
+	//		r = 2S/L  = y(x-y)
+
 	vector<tuple<int, int, int>> res;
 
 	int x_max = (int)(sqrt(n - 1) + 1e-9);

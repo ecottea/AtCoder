@@ -3,7 +3,7 @@
 // ■■■■■ 文字列の各種性質の分析 ■■■■■
 
 
-//【suffix tree】
+//【接尾辞木】
 /*
 * Suffix_tree<STR>(STR s) : O(n)
 *	文字列 s[0..n) で初期化する．
@@ -22,11 +22,11 @@
 *	辞書機能を有効にする．
 *
 * pii get(ll k) : O(log n)
-*	空文字列を除き辞書順で k 番目の部分文字列が s[l..r) であるとき {l, r} を返す．
+*	空文字列を除き辞書順で k 番目（0-indexed）の部分文字列が s[l..r) であるとき {l, r} を返す．
 *	なければ {-1, -1} を返す．build_dictionary() を先に呼び出すこと．
 *
 * pii get_unique(ll k) : O(log n)
-*	空文字列を除き辞書順で k 番目のユニークな部分文字列が s[l..r) であるとき {l, r} を返す．
+*	空文字列を除き辞書順で k 番目（0-indexed）のユニークな部分文字列が s[l..r) であるとき {l, r} を返す．
 *	なければ {-1, -1} を返す．build_dictionary() を先に呼び出すこと．
 */
 template <class STR>
@@ -184,7 +184,7 @@ public:
 
 	// 辞書機能を有効にする．
 	void build_dictionary() {
-		// verify : https://yukicoder.me/problems/no/2361
+		// verify : https://yukicoder.me/problems/no/3188
 
 		id.reserve(sz(g));
 
@@ -199,7 +199,7 @@ public:
 
 	// 空文字列を除き辞書順で k 番目の部分文字列が s[l..r) であるとき {l, r} を返す（なければ {-1, -1} を返す）
 	pii get(ll k) const {
-		// verify : https://yukicoder.me/problems/no/2361
+		// verify : https://yukicoder.me/problems/no/3188
 
 		Assert(!acc.empty());
 
@@ -247,6 +247,13 @@ public:
 		return os;
 	}
 #endif
+
+	/* f の定義の雛形
+	auto f = [&](int x1, int x2, int y1, int y2) {
+		
+	};
+	S.dfs_all(f);
+	*/
 };
 
 
@@ -1056,6 +1063,7 @@ public:
 * lcp[9]: 3---
 * sa[10]: "ssissippi"
 */
+
 
 
 //【部分文字列判定（複数回）】（旧）

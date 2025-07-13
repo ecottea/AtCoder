@@ -26,6 +26,36 @@ S801 e801() { return S801(1); }
 #define Add_mul_semiring S801, add801, o801, mul801, e801
 
 
+//【F_(2^61-1)上 加算 - 乗算 可換半環】
+/* verify : https://yukicoder.me/problems/no/3082 */
+constexpr ull MOD = (1ULL << 61) - 1;
+constexpr ull MASK30 = (1ULL << 30) - 1;
+constexpr ull MASK31 = (1ULL << 31) - 1;
+ull get_mod817(ull a) {
+	ull ah = a >> 61, al = a & MOD;
+	ull res = ah + al;
+	if (res >= MOD) res -= MOD;
+	return res;
+}
+ull mul817(ull a, ull b) {
+	ull ah = a >> 31, al = a & MASK31;
+	ull bh = b >> 31, bl = b & MASK31;
+
+	ull c = ah * bl + bh * al;
+	ull ch = c >> 30, cl = c & MASK30;
+
+	ull term1 = 2 * ah * bh;
+	ull term2 = ch + (cl << 31);
+	ull term3 = al * bl;
+
+	return get_mod817(term1 + term2 + term3);
+}
+ull add817(ull x, ull y) { return get_mod817(x + y); }
+ull o817() { return 0; }
+ull e817() { return 1; }
+#define F61_Add_mul_semiring ull, add817, o817, mul817, e817
+
+
 //【行列の 加算 - 乗算 半環】
 /* verify : https://yukicoder.me/problems/no/2448 */
 constexpr int size813 = 2;
@@ -124,7 +154,7 @@ S806 e806() { return { 0, -INFL }; }
 #define Tropical_affine_max_invcomposite_semiring S806, add806, o806, mul806, e806
 
 
-//【max-plus 数列の 各点 max - 畳込み 可換半環】
+//【max-plus 数列の 各点max - 畳込み 可換半環】
 /*
 * S ∋ a : 数列 a[0..n) を表す．
 * a add b : a[0..n) と b[0..m) の各点 max を表す（無い要素は -∞ とする）
@@ -148,11 +178,17 @@ S815 e815() { return S815(0); }
 #define MPlusSeq_Max_Conv_semiring S815, add815, o815, mul815, e815
 
 
-//【max-plus 数列（上に凸）の 各点 max - 畳込み 可換半環】
+//【max-plus 数列（上に凸）の 各点max - 畳込み 可換半環】
 /*
 * S ∋ a : 上に凸な数列 a[0..n) を表す．
 * a add b : a[0..n) と b[0..m) の各点 max を表す（無い要素は -∞ とする）
 * a mul b : a[0..n) と b[0..m) の max-plus 畳込みを表す．
+* 
+* 制約 : 各点 max をとっても上に凸
+* 
+* 例 : 次の形の行列の積で生成される行列の各成分は上に凸である：
+*	[[a]  [-∞, b]]
+*	[[c]    [d]  ]
 *
 * 利用：【max-plus 畳込み（上に凸）】
 */

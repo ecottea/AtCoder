@@ -7,7 +7,7 @@
 // ■■■■■ 全域木 ■■■■■
 
 
-//【最小全域森】O(m log n)
+//【最小全域森】O(n + m log n)
 /*
 * 重み付き無向グラフ g の最小全域森を求め，そのコストを返す．
 * 最小全域森を msf に構成し，各最小全域木の代表元を rs に格納する．
@@ -50,7 +50,7 @@ ll kruskal(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
 }
 
 
-//【最小全域木】O(m log n)
+//【最小全域木】O(n + m log n)
 /*
 * 重み付き無向グラフ g の頂点 r を含む連結成分の最小全域木を mst に格納する．
 * また戻り値として最小コストを返す．
@@ -67,7 +67,7 @@ ll prim(const WGraph& g, int r, WGraph* mst = nullptr) {
 	vb selected(n);
 	selected[r] = true;
 
-	// 選んだ頂点から出ている辺をコスト昇順に記録しておくための優先度付きキュー．
+	// 選んだ頂点から出ている辺をコスト昇順に記録しておくための順位キュー．
 	using E = tuple<ll, int, int>;
 	priority_queue_rev<E> q;
 	repe(e, g[r]) q.push({ e.cost, r, e.to });
@@ -91,6 +91,58 @@ ll prim(const WGraph& g, int r, WGraph* mst = nullptr) {
 	}
 
 	return res;
+}
+
+
+//【最小全域森（ブルーフカ法）】O(n + m log n)
+/*
+* 重み付き無向グラフ g の最小全域森を求め，そのコストを返す．
+* 最小全域森を msf に構成し，各最小全域木の代表元を rs に格納する．
+*/
+ll boruvka(const WGraph& g, WGraph* msf = nullptr, vi* rs = nullptr) {
+	// 参考 : https://37zigen.com/boruvka-algorithm/
+	// verify : https://judge.yosupo.jp/problem/minimum_spanning_tree
+
+	int n = sz(g);
+	if (msf != nullptr)	*msf = WGraph(n);
+
+	ll cost = 0;
+	dsu d(n);
+
+	while (true) {
+		vector<tuple<ll, int, int>> e_min(n, { INFL, -1, -1 });
+
+		rep(s, n) repe(t, g[s]) {
+			if (d.same(s, t)) continue;
+
+			chmin(e_min[d.leader(s)], { t.cost, s, t });
+		}
+
+		bool end_flag = true;
+		rep(ld, n) {
+			auto [c, s, t] = e_min[ld];
+
+			if (t != -1 && !d.same(s, t)) {
+				end_flag = false;
+				cost += c;
+				d.merge(s, t);
+
+				if (msf != nullptr) {
+					(*msf)[s].push_back({ t, c });
+					(*msf)[t].push_back({ s, c });
+				}
+			}
+		}
+
+		if (end_flag) break;
+	}
+
+	if (rs != nullptr) {
+		rs->clear();
+		repe(tmp, d.groups()) rs->push_back(tmp[0]);
+	}
+
+	return cost;
 }
 
 
@@ -125,7 +177,25 @@ Graph spanning_forest(const Graph& g, vi* v = nullptr) {
 }
 
 
-//【最小全域森（圧縮）】O(n + m log n)
+//【最小全域木と連結成分数】
+/*
+* 辺の重みの最大値が K である重み付き連結無向グラフ g について，
+*	c(k) := (g の重み k 以下の辺からなる部分グラフの連結成分数)
+* とおくと，
+*	(g の最小全域木のコスト) = Σk∈[0..K) (c(k) - 1)
+* が成り立つ．
+* 
+* 同じコストの辺を対等に扱いたいときはこの言い換えが便利．
+* 
+* g が連結でない場合，
+*	(g の最小全域森のコスト) = Σk∈[0..K) c(k) - K c(K)
+* が成り立つ．
+* 
+* verify : https://atcoder.jp/contests/abc355/tasks/abc355_f
+*/
+
+
+//【最小全域森（グラフ上距離コスト）】O(n + m log n)
 /*
 * 重み付き無向グラフ g とその頂点集合 vs から，vs を頂点集合にもち，
 * 辺 s-t のコストを g における s,t 間の距離と定めた重み付き無向グラフ g2 を構成する．
@@ -275,13 +345,16 @@ vi required_edge_for_MST(int n, const vi& u, const vi& v, const vl& c) {
 
 //【全域木の数え上げ】O(n^3)
 /*
-* 無向グラフ g（多重辺可）の全域木の個数を返す．
+* 無向グラフ g（自己ループ，多重辺可）の全域木の個数を返す．
 *
 * 利用：【行列】,【行列式】
 */
 mint matrix_tree_theorem(const Graph& g) {
 	// 参考 : https://mizuwater0.hatenablog.com/entry/2018/11/25/233547
 	// verify : https://judge.yosupo.jp/problem/counting_spanning_tree_undirected
+
+	//【備考】
+	// K_n の全域木は n^(n-2) 通り（Cayley の定理）
 
 	int n = sz(g);
 	if (n <= 1) return 1;
@@ -680,6 +753,16 @@ ll directed_minimum_spanning_tree(const WGraph& g, int r, WGraph* mst = nullptr)
 
 	return res;
 }
+
+
+//【全域木と縮約】
+/*
+* 無向グラフ G=(V,E) の全域木の数を T(G) と表すとき，∀e∈E について，
+*	T(G) = T(G-e) + T(G/e)
+* が成り立つ（G-e は G から辺 e を取り除いたグラフ，G/e は G の辺 e を縮約したグラフ）
+* 
+* 参考 : https://mizuwater0.hatenablog.com/entry/2018/11/25/233547
+*/
 
 
 //【全域木の列挙】

@@ -139,12 +139,28 @@ public:
 };
 
 
-//【3 つのうちの過半数】
+//【3 つのうちの過半数が真】
 /*
 * x, y, z のうち過半数が真という条件は，以下の標準和積形で表される：
 *	(x OR y) AND (y OR z) AND (z OR x)
 * 
 * verify : https://atcoder.jp/contests/arc161/tasks/arc161_e
+*/
+
+
+//【高々 1 個が真】
+/*
+* x[0..n) のうち真であるものは高々 1 個であるという条件は，
+*	AND_{0≦i<j<n} (!x[i] OR !x[j])
+* なる標準和積形で表される．また，新たな変数 y[0..n) を
+*	y[i] = OR_i∈[0..j] x[j]
+* なるものとみなして導入することで
+*	    AND_i∈[0..n) (!x[i] OR y[i])		(x[i] ⇒ y[i])
+*	AND AND_i∈[0..n-1) (!y[i] OR y[i+1])	(y[i] ⇒ y[i+1])
+*	AND AND_i∈[0..n-1) (!y[i] OR !x[i+1])	(y[i] ⇒ !x[i+1])
+* とも表される．
+* 
+* 参考 : https://drken1215.hatenablog.com/entry/2023/08/04/021846
 */
 
 

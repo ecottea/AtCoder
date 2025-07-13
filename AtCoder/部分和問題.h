@@ -62,7 +62,7 @@ vector<T> count_partial_sum(const vi& a, int v) {
 /*
 * 正整数列 a[0..n) の部分和として各 i∈[0..v] を作る方法が何通りあるかを格納したリストを返す．
 *
-* 制約：fm は 2(v+1)! まで計算可能
+* 制約：fm は (v+1)! まで計算可能
 * 
 * 利用：【形式的冪級数】,【指数関数】
 */
@@ -468,7 +468,7 @@ mint count_multiple_partial_sum(const vector<T>& a, int m) {
 * 各 a[i] は [0..∞) 個用いることができる．
 */
 vm count_unlimited_partial_sum(const vi& a, int v) {
-	// verify : https://projecteuler.net/problem=495
+	// verify : https://yukicoder.me/problems/no/41
 
 	int n = sz(a);
 
@@ -681,6 +681,8 @@ mint count_limited_partial_sum(const vi& a, const vi& m, int v) {
 *（和を状態にもつインライン貰う DP）
 */
 int count_signed_partial_sum(const vi& a, vm& cnt) {
+	// verify : https://yukicoder.me/problems/no/1238
+
 	int n = sz(a);
 
 	// MIN, MAX : 部分和の最小値および最大値

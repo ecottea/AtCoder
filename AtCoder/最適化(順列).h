@@ -152,3 +152,9 @@ ll minimize_pair_accumulate(const vl& a, const vl& b, vi* p = nullptr) {
 }
 
 
+//【辞書順最小トポロジカルソート】
+/*
+* 分析(グラフ).h へ
+*/
+
+

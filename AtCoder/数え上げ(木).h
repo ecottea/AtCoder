@@ -35,6 +35,78 @@ mint count_independent_set(const Graph& g) {
 }
 
 
+//【木の独立集合の数え上げ（大きさ毎）】O(n^2)
+/*
+* 各 i∈[0..n] に対し，木 g の大きさ i の独立集合の個数を格納したリストを返す．
+*
+*（二乗の木 DP）
+*
+* 利用：【貰う木 DP】
+*/
+struct T_cinda {
+	vm c0, c1; // (根を非選択，根を選択)
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const T_cinda& x) {
+		os << '(' << x.c0 << "," << x.c1 << ')';
+		return os;
+	}
+#endif
+};
+T_cinda leaf_cinda(int s) {
+	return T_cinda{ vm{1, 0}, vm{0, 1} };
+}
+T_cinda add_edge_cinda(const T_cinda& x, int p, int s) {
+	int ns = sz(x.c0);
+
+	T_cinda z;
+	z.c0.resize(ns);
+	z.c1.resize(ns);
+	rep(i, ns) {
+		z.c0[i] = x.c0[i] + x.c1[i];
+		z.c1[i] = x.c0[i];
+	}
+
+	return z;
+}
+void merge_cinda(T_cinda& x, const T_cinda& y, int s) {
+	int ns = sz(x.c0), nt = sz(y.c0);
+
+	T_cinda z;
+	z.c0.resize(ns + nt - 1);
+	z.c1.resize(ns + nt - 1);
+	rep(i, ns) rep(j, nt) {
+		z.c0[i + j] += x.c0[i] * y.c0[j];
+		z.c1[i + j] += x.c1[i] * y.c1[j];
+	}
+
+	x = move(z);
+}
+void add_vertex_cinda(T_cinda& x, int s) {
+	int ns = sz(x.c0);
+
+	T_cinda z;
+	z.c0.resize(ns + 1);
+	z.c1.resize(ns + 1);
+	rep(i, ns) {
+		z.c0[i] = x.c0[i];
+		z.c1[i + 1] = x.c1[i];
+	}
+
+	x = move(z);
+}
+vm count_independent_set_by_size(const Graph& g) {
+	// verify : https://mofecoder.com/contests/oupc2024day2/tasks/oupc2024day2_a
+
+	auto dp = tree_getDP<T_cinda, leaf_cinda, add_edge_cinda, merge_cinda, add_vertex_cinda>(g, 0);
+
+	int n = sz(g);
+	vm res(n + 1);
+	repi(i, 0, n) res[i] = dp[0].c0[i] + dp[0].c1[i];
+
+	return res;
+}
+
+
 //【根付き木の部分木の数え上げ（大きさ毎）】O(n^2)
 /*
 * 与えられた r を根とする根付き木 g に対し，
@@ -715,7 +787,7 @@ vl tree_distance_frequency(const Graph& g) {
 /*
 * n 頂点のラベル付き木で，指定された辺集合 E を含むものの個数は以下の式で与えられる：
 *	E に閉路があれば 0
-*	E が森なら，辺数を m，各連結成分の大きさを c_i とすると n^(n-m-2) Π_i c_i
+*	E が森なら，辺数を m，各連結成分の大きさを c(i) とすると n^(n-m-2) Πi c(i)
 * 
 * 参考 : https://37zigen.com/prufer-code/
 * verify : https://yukicoder.me/problems/no/2917

@@ -5,7 +5,7 @@
 
 //【順列の列挙】O(nPk)
 /*
-* a[0..n) の k=n 個の要素からなる順列全てからなるリストを返す（要素の重複は検出しない）
+* a[0..n) の k 個の要素からなる順列全てからなるリストを返す（要素の重複は検出しない）
 */
 template <class T>
 vector<vector<T>> enumerate_permutations(const vector<T>& a, int k = -1) {

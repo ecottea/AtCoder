@@ -9,7 +9,7 @@
 *
 * 制約：b ≧ 2
 */
-vi integer_digits(ll n, ll b = 10) {
+vi integer_digits(ll n, int b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	Assert(abs(b) >= 2);
@@ -21,7 +21,7 @@ vi integer_digits(ll n, ll b = 10) {
 	vi ds;
 	while (n != 0) {
 		int d = (int)(n % b);
-//		int d = (int)smod(n, abs(b)); // 負数の可能性があるならこっち
+		//int d = (int)smod(n, abs(b)); // 負数の可能性があるならこっち
 		ds.push_back(d);
 		n = (n - d) / b;
 	}
@@ -39,7 +39,7 @@ vi integer_digits(ll n, ll b = 10) {
 *
 * 制約：b ≧ 2
 */
-vi integer_digits(ll n, int len, ll b = 10) {
+vi integer_digits(ll n, int len, int b = 10) {
 	// verify : https://yukicoder.me/problems/no/327
 
 	Assert(abs(b) >= 2);
@@ -48,7 +48,7 @@ vi integer_digits(ll n, int len, ll b = 10) {
 	vi ds(len);
 	rep(i, len) {
 		int d = (int)(n % b);
-//		int d = (int)smod(n, abs(b)); // 負数の可能性があるならこっち
+		//int d = (int)smod(n, abs(b)); // 負数の可能性があるならこっち
 		ds[len - 1 - i] = d;
 		n = (n - d) / b;
 	}
@@ -61,7 +61,7 @@ vi integer_digits(ll n, int len, ll b = 10) {
 /*
 * b 進表記で上位桁から順に ds[0..n) が並んだ数の値を返す．
 */
-ll from_digits(const vi& ds, ll b = 10) {
+ll from_digits(const vi& ds, int b = 10) {
 	// verify : https://atcoder.jp/contests/abc105/tasks/abc105_c
 
 	int n = sz(ds);

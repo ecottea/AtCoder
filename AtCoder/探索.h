@@ -21,12 +21,13 @@ T meguru_search(T ok, T ng, const FUNC& okQ, bool debug_mode = false) {
 	if (debug_mode) {
 		T step = ok < ng ? 1 : -1; T res = ok; bool is_ok = true;
 		for (T i = ok; i != ng + step; i += step) {
-			auto b = okQ(i);
+			auto b = (i == ok ? true : i == ng ? false : okQ(i));
 			if (b) {
 				if (!is_ok) {
 					cout << "not monotony!" << endl;
 					for (T i = ok; i != ng + step; i += step) {
-						cout << i << " : " << okQ(i) << endl;
+						auto b = (i == ok ? true : i == ng ? false : okQ(i));
+						cout << i << " : " << b << endl;
 					}
 					exit(1);
 				}
@@ -92,230 +93,333 @@ T bin_search(T ok, T ng, const FUNC& okQ, double EPS = 1e-12) {
 }
 
 
-//【三分探索（最大値）】O(log(r - l))
+//【指数探索】O(log ANS)
 /*
-* 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
-* debug_mode = true にして実行すると手元では単峰かどうかチェックしながら全探索する．
+* 条件 okQ() を満たす要素 ok から dir∈{±1} 方向の条件を満たさない要素との境界を探索する．
+* 境界に隣り合うような条件を満たす要素（ok 側）の位置を返す．
 */
 template <class T, class FUNC>
-T ternary_search_max(T l, T r, const FUNC& f, bool debug_mode = false) {
+T exponential_search(T ok, T dir, const FUNC& okQ) {
+	// verify : https://atcoder.jp/contests/utpc2023/tasks/utpc2023_k
+
+	//【備考】
+	// ok であることの判定は高速だが ng であることの判定が低速である場合に使える．
+
+	T dif = 1;
+	T ng = ok + dir * dif;
+
+	// 条件を満たさない要素を探す．
+	while (okQ(ng)) {
+		ok = ng;
+		dif *= 2;
+		ng = ok + dir * dif;
+	}
+
+	// 境界を二分探索する．
+	while (abs(ok - ng) > 1) {
+		T mid = (ok + ng) / 2;
+
+		if (okQ(mid)) ok = mid;
+		else ng = mid;
+	}
+	return ok;
+
+	/* okQ の定義の雛形
+	auto okQ = [&](ll x) {
+		return true || false;
+	};
+	*/
+}
+
+
+//【三分探索（最大値）】O(log(r - l))
+/*
+* 上に単峰な関数 f:S→T の開区間 (l..r) における最大値が f(x) であるとし，組 {x, f(x)} を返す．
+* 関数が上に単峰であるとは，階差の符号変化が + → 0 → - の順であることをいう．
+* debug_mode = true にして実行すると手元では上に単峰かどうかチェックしながら全探索する．
+*/
+template <class S, class T, class FUNC>
+pair<S, T> ternary_search_max(S l, S r, const FUNC& f, bool debug_mode = false) {
 	// verify : https://atcoder.jp/contests/abc240/tasks/abc240_f
 
 	Assert(r - l >= 2);
 
 #ifdef _MSC_VER	
-	// 単峰かどうか自信がないとき用
+	// 上に単峰かどうか自信がないとき用
 	if (debug_mode) {
-		if (r - l == 2) return l + 1;
+		vector<T> val;
+		repi(x, l + 1, r - 1) val.push_back(f(x));
 
-		auto p_val = f(l + 1); int p_sgn = 1;
-		auto val_max = p_val; T i_max = l + 1;
-
-		for (T i = l + 2; i < r; i++) {
-			auto val = f(i);
-			if (chmax(val_max, val)) i_max = i;
-
-			int sgn = (val > p_val) - (val < p_val);
-			if (p_sgn < sgn) {
-				cout << "not unimodal!" << endl;
-				for (T i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
-				exit(1);
-			}
-			p_val = val;
-			p_sgn = sgn;
+		vector<T> dif;
+		rep(i, sz(val) - 1) {
+			auto d = val[i + 1] - val[i];
+			dif.push_back((d > 0) - (d < 0));
 		}
 
-		return i_max;
+		if (!is_sorted(dif.rbegin(), dif.rend())) {
+			cerr << "not unimodal!" << endl;
+			cerr << val << endl;
+			exit(1);
+		}
+
+		auto it = max_element(all(val));
+
+		return make_pair((S)distance(val.begin(), it), *it);
 	}
 #endif
 
-	while (r - l > 2) {
-		T s = l + r;
-		T m1 = s / 2 - (s % 2 < 0);
-		T m2 = m1 + 1;
+	// 最大値の候補が 1 つしかない場合の例外処理（f(i) が不要なら省略可）
+	if (r - l == 2) return make_pair(l + 1, f(l + 1));
 
-		if (f(m1) < f(m2)) l = m1;
+	S m1, m2; T f1, f2;
+
+	while (r - l > 2) {
+		S s = l + r;
+		m1 = s / 2 - (s % 2 < 0);
+		m2 = m1 + 1;
+		f1 = f(m1);
+		f2 = f(m2);
+
+		if (f1 < f2) l = m1;
 		else r = m2;
 	}
-	return l + 1;
+
+	return make_pair(l + 1, l + 1 == m1 ? f1 : f2);
 
 	/* f の定義の雛形
+	using S = int;
 	using T = ll;
-	auto f = [&](T x) {
-		return x;
+	auto f = [&](S x) {
+		return T(0);
 	};
+	auto [x, fx] = ternary_search_max<S, T>(l, r, f);
 	*/
 }
 
 
 //【三分探索（最小値）】O(log(r - l))
 /*
-* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
-* debug_mode = true にして実行すると手元では単峰かどうかチェックしながら全探索する．
+* 下に単峰な関数 f:S→T の開区間 (l..r) における最小値が f(x) であるとし，組 {x, f(x)} を返す．
+* 関数が下に単峰であるとは，階差の符号変化が - → 0 → + の順であることをいう．
+* debug_mode = true にして実行すると手元では下に単峰かどうかチェックしながら全探索する．
 */
-template <class T, class FUNC>
-T ternary_search_min(T l, T r, const FUNC& f, bool debug_mode = false) {
+template <class S, class T, class FUNC>
+pair<S, T> ternary_search_min(S l, S r, const FUNC& f, bool debug_mode = false) {
 	// verify : https://atcoder.jp/contests/abc279/tasks/abc279_d
 
+	Assert(r - l >= 2);
+
 #ifdef _MSC_VER	
-	// 単峰かどうか自信がないとき用
+	// 下に単峰かどうか自信がないとき用
 	if (debug_mode) {
-		if (r - l == 2) return l + 1;
+		vector<T> val;
+		repi(x, l + 1, r - 1) val.push_back(f(x));
 
-		auto p_val = f(l + 1); int p_sgn = -1;
-		auto val_min = p_val; T i_min = l + 1;
-
-		for (T i = l + 2; i < r; i++) {
-			auto val = f(i);
-			if (chmin(val_min, val)) i_min = i;
-
-			int sgn = (val > p_val) - (val < p_val);
-			if (p_sgn > sgn) {
-				cout << "not unimodal!" << endl;
-				for (T i = l + 1; i < r; i++) cout << f(i) << " \n"[i == r - 1];
-				exit(1);
-			}
-			p_val = val;
-			p_sgn = sgn;
+		vector<T> dif;
+		rep(i, sz(val) - 1) {
+			auto d = val[i + 1] - val[i];
+			dif.push_back((d > 0) - (d < 0));
 		}
 
-		return i_min;
+		if (!is_sorted(dif.begin(), dif.end())) {
+			cerr << "not unimodal!" << endl;
+			cerr << val << endl;
+			exit(1);
+		}
+
+		auto it = min_element(all(val));
+
+		return make_pair((S)distance(val.begin(), it), *it);
 	}
 #endif
 
-	while (r - l > 2) {
-		T s = l + r;
-		T m1 = s / 2 - (s % 2 < 0);
-		T m2 = m1 + 1;
+	// 最大値の候補が 1 つしかない場合の例外処理（f(i) が不要なら省略可）
+	if (r - l == 2) return make_pair(l + 1, f(l + 1));
 
-		if (f(m1) > f(m2)) l = m1;
+	S m1, m2; T f1, f2;
+
+	while (r - l > 2) {
+		S s = l + r;
+		m1 = s / 2 - (s % 2 < 0);
+		m2 = m1 + 1;
+		f1 = f(m1);
+		f2 = f(m2);
+
+		if (f1 > f2) l = m1;
 		else r = m2;
 	}
-	return l + 1;
+
+	return make_pair(l + 1, l + 1 == m1 ? f1 : f2);
 
 	/* f の定義の雛形
+	using S = int;
 	using T = ll;
-	auto f = [&](T x) {
-		return x;
+	auto f = [&](S x) {
+		return T(0);
 	};
+	auto [x, fx] = ternary_search_min<S, T>(l, r, f);
 	*/
 }
 
 
 //【ランダム三分探索（最大値）】O(log(r - l))
 /*
-* 階差の符号変化が + → 0 → - である関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
-* 上に単峰でなくても運が良ければ正しい x を返す．
+* 上に単峰な関数 f:S→T の開区間 (l..r) における最大値が f(x) であるとし，組 {x, f(x)} を返す．
+* 関数が上に単峰であるとは，階差の符号変化が + → 0 → - の順であることをいう．
+* f が上に単峰でなくても運が良ければ正しい {x, f(x)} を返す．
 */
-template <class FUNC>
-ll random_ternary_search_max(ll l, ll r, const FUNC& f) {
-	// verify : https://atcoder.jp/contests/abc342/tasks/abc342_f
+template <class S, class T, class FUNC>
+pair<S, T> random_ternary_search_max(S l, S r, const FUNC& f) {
+	// verify : https://yukicoder.me/problems/no/2546
+
+	Assert(r - l >= 2);
 
 	static bool first_call = true;
 
 	static mt19937 mt;
-	static uniform_int_distribution<ll> rnd;
+	static uniform_int_distribution<S> rnd;
 	if (first_call) {
 		first_call = false;
 		mt.seed((int)time(NULL));
-		rnd = uniform_int_distribution<ll>(0, INFL);
+		rnd = uniform_int_distribution<S>((S)0, (S)INFL);
 	}
+
+	S m1 = l + 1 + rnd(mt) % (r - l - 1);
+	T f1 = f(m1);
 
 	while (r - l > 2) {
-		ll m1 = l + 1 + rnd(mt) % (r - l - 1);
-		ll m2 = l + 1 + rnd(mt) % (r - l - 1);
-		if (m1 == m2) continue;
-		if (m1 > m2) swap(m1, m2);
+		S m2 = l + 1 + rnd(mt) % (r - l - 1 - 1);
+		if (m2 >= m1) m2++;
 
-		if (f(m1) < f(m2)) l = m1;
-		else r = m2;
+		T f2 = f(m2);
+
+		if (m1 > m2) {
+			swap(m1, m2);
+			swap(f1, f2);
+		}
+
+		if (f1 < f2) {
+			l = m1;
+			m1 = m2;
+			f1 = f2;
+		}
+		else {
+			r = m2;
+		}
 	}
-	return l + 1;
+
+	return make_pair(l + 1, f1);
 
 	/* f の定義の雛形
-	auto f = [&](ll x) {
-		return x;
+	using S = int;
+	using T = ll;
+	auto f = [&](S x) {
+		return T(0);
 	};
+	auto [x, fx] = random_ternary_search_max<S, T>(l, r, f);
 	*/
 }
 
 
 //【ランダム三分探索（最小値）】O(log(r - l))
 /*
-* 階差の符号変化が - → 0 → + である関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
-* 下に単峰でなくても運が良ければ正しい x を返す．
+* 下に単峰な関数 f:S→T の開区間 (l..r) における最小値が f(x) であるとし，組 {x, f(x)} を返す．
+* 関数が下に単峰であるとは，階差の符号変化が - → 0 → + の順であることをいう．
+* f が下に単峰でなくても運が良ければ正しい {x, f(x)} を返す．
 */
-template <class FUNC>
-ll random_ternary_search_min(ll l, ll r, const FUNC& f) {
-	// verify : https://atcoder.jp/contests/abc374/tasks/abc374_e
+template <class S, class T, class FUNC>
+pair<S, T> random_ternary_search_min(S l, S r, const FUNC& f) {
+	// verify : https://atcoder.jp/contests/arc194/tasks/arc194_c
+
+	Assert(r - l >= 2);
 
 	static bool first_call = true;
 
 	static mt19937 mt;
-	static uniform_int_distribution<ll> rnd;
+	static uniform_int_distribution<S> rnd;
 	if (first_call) {
 		first_call = false;
 		mt.seed((int)time(NULL));
-		rnd = uniform_int_distribution<ll>(0, INFL);
+		rnd = uniform_int_distribution<S>((S)0, (S)INFL);
 	}
+
+	S m1 = l + 1 + rnd(mt) % (r - l - 1);
+	T f1 = f(m1);
 
 	while (r - l > 2) {
-		ll m1 = l + 1 + rnd(mt) % (r - l - 1);
-		ll m2 = l + 1 + rnd(mt) % (r - l - 1);
-		if (m1 == m2) continue;
-		if (m1 > m2) swap(m1, m2);
+		S m2 = l + 1 + rnd(mt) % (r - l - 1 - 1);
+		if (m2 >= m1) m2++;
 
-		if (f(m1) > f(m2)) l = m1;
-		else r = m2;
+		T f2 = f(m2);
+
+		if (m1 > m2) {
+			swap(m1, m2);
+			swap(f1, f2);
+		}
+
+		if (f1 > f2) {
+			l = m1;
+			m1 = m2;
+			f1 = f2;
+		}
+		else {
+			r = m2;
+		}
 	}
-	return l + 1;
+
+	return make_pair(l + 1, f1);
 
 	/* f の定義の雛形
-	auto f = [&](ll x) {
-		return x;
+	using S = int;
+	using T = ll;
+	auto f = [&](S x) {
+		return T(0);
 	};
+	auto [x, fx] = random_ternary_search_min<S, T>(l, r, f);
 	*/
 }
 
 
 //【フィボナッチ探索】
 /*
-* Fibonacci_search(ll w) : O(log w)
+* Fibonacci_search<S>(S w) : O(log w)
 *	最大で幅 w の開区間まで扱えるよう初期化する．
 *
-* pll search_max(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
+* pST search_max<T>(S l, S r, FUNC(S→T) f) : O(log(r - l))
 *	開区間 (l..r) で上に単峰な関数 f の最大値が f(i) であるとし，組 {i, f(i)} を返す．
 *
-* pll search_min(ll l, ll r, function<ll(ll)> f) : O(log(r - l))
+* pST search_min<T>(S l, S r, FUNC(S→T) f) : O(log(r - l))
 *	開区間 (l..r) で下に単峰な関数 f の最小値が f(i) であるとし，組 {i, f(i)} を返す．
 */
+template <class S>
 class Fibonacci_search {
 	int n;
-	vl fib;
+	vector<S> fib;
 
-	pll search(ll left, ll right, const function<ll(ll)>& f, ll sgn) const {
+	template <class T, class FUNC>
+	pair<S, T> search(S left, S right, const FUNC& f, T sgn) const {
 		Assert(right - left >= 2);
 
 		// 最大値の候補が 1 つしかない場合の例外処理（f(i) が不要なら省略可）
 		if (right - left == 2) return make_pair(left + 1, f(left + 1));
 
 		// 符号変化の条件を満たすよう範囲外の値を定めておく．
-		auto F = [&](ll x) {
-			if (x >= right) return -INFL - (x - right); // たぶん大丈夫だけどオーバーフローに注意
+		auto F = [&](S x) {
+			if (x >= right) return -T(INFL) - T(x - right); // たぶん大丈夫だけどオーバーフローに注意
 			else return sgn * f(x);
 		};
 
 		// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点を得る．
 		int i = n;
-		ll l = left;
-		ll r = l + fib[i];
-		ll m1 = l + fib[i - 2];
-		ll m2 = l + fib[i - 1];
+		S l = left;
+		S r = l + fib[i];
+		S m1 = l + fib[i - 2];
+		S m2 = l + fib[i - 1];
 		i -= 3;
 
 		// 内分点における関数値の計算
-		ll v1 = F(m1);
-		ll v2 = F(m2);
+		T v1 = F(m1);
+		T v2 = F(m2);
 
 		// 候補が内分点のみになるまで
 		while (i > 0) {
@@ -353,7 +457,7 @@ class Fibonacci_search {
 	}
 
 public:
-	Fibonacci_search(ll w) : n(1), fib({ 1, 1 }) {
+	Fibonacci_search(S w) : n(1), fib({ S(1), S(1) }) {
 		// verify : https://yukicoder.me/problems/no/2627
 
 		// 利用する範囲のフィボナッチ数列を準備する．
@@ -364,17 +468,19 @@ public:
 	}
 
 	// 開区間 (l..r) で上に単峰な関数 f の最大値が f(i) であるとし，組 {i, f(i)} を返す．
-	pll search_max(ll l, ll r, const function<ll(ll)>& f) const {
+	template <class T, class FUNC>
+	pair<S, T> search_max(S l, S r, const FUNC& f) const {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ba
 
-		return search(l, r, f, 1);
+		return search<T, FUNC>(l, r, f, 1);
 	}
 
 	// 開区間 (l..r) で下に単峰な関数 f の最小値が f(i) であるとし，組 {i, f(i)} を返す．
-	pll search_min(ll l, ll r, const function<ll(ll)>& f) const {
+	template <class T, class FUNC>
+	pair<S, T> search_min(S l, S r, const FUNC& f) const {
 		// verify : https://atcoder.jp/contests/abc330/tasks/abc330_c
 
-		return search(l, r, f, -1);
+		return search<T, FUNC>(l, r, f, -1);
 	}
 
 	/* f の定義の雛形
@@ -387,23 +493,25 @@ public:
 
 //【黄金分割探索（実数，最大値）】O(log((r - l) / EPS))
 /*
-* 全域で上に単峰な関数 f(x) の開区間 (l..r) における最大値を与える x を返す．
+* 全域で上に単峰な関数 f(x) の開区間 (l..r) における最大値が f(x) であるとし，組 {x, f(x)} を返す．
 */
-template <class FUNC>
-double golden_search_max(double l, double r, const FUNC& f, double EPS = 1e-12) {
-	constexpr double phi = 1.61803398875; // 黄金数
+template <class D, class FUNC>
+pair<D, D> golden_search_max(D l, D r, const FUNC& f, D EPS = 1e-12) {
+	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_b
 
-	int L = max((int)(log((r - l) / EPS) / log(phi)), 1);
+	constexpr D phi = 1.618033988749895; // 黄金数
+
+	int L = max((int)(log((r - l) / EPS) / log(phi)), 0);
 
 	// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点
-	double m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
-	double m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
+	D m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
+	D m2 = (l * phi + r * (1 + phi)) / (2 * phi + 1);
 
 	// 内分点における関数値の計算
-	double v1 = f(m1);
-	double v2 = f(m2);
+	D v1 = f(m1);
+	D v2 = f(m2);
 
-	// 絶対誤差か相対誤差が EPS 以下になるまで
+	// 絶対誤差が EPS 以下になるまで
 	rep(hoge, L) {
 		// 左の内分点での値の方が大きければ，次の区間は左側をとる．
 		if (v1 > v2) {
@@ -434,27 +542,29 @@ double golden_search_max(double l, double r, const FUNC& f, double EPS = 1e-12) 
 	}
 
 	// 最後の候補を比較し，大きかった方の x を返す．
-	return (v1 > v2) ? m1 : m2;
+	return (v1 > v2) ? make_pair(m1, v1) : make_pair(m2, v2);
 
 	/* f の定義の雛形
-	auto f = [&](double x) {
-		return x;
+	using D = double;
+	auto f = [&](D x) {
+		return (D)x;
 	};
+	auto [x, fx] = golden_search_max<D>(l, r, f);
 	*/
 }
 
 
 //【黄金分割探索（実数，最小値）】O(log((r - l) / EPS))
 /*
-* 全域で下に単峰な関数 f(x) の開区間 (l..r) における最小値を与える x を返す．
+* 全域で下に単峰な関数 f(x) の開区間 (l..r) における最小値が f(x) であるとし，組 {x, f(x)} を返す．
 */
 template <class D, class FUNC>
-D golden_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
+pair<D, D> golden_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 	// verify : https://atcoder.jp/contests/arc049/tasks/arc049_b
 
 	constexpr D phi = 1.618033988749895; // 黄金数
 
-	int L = max((int)(log((r - l) / EPS) / log(phi)), 1);
+	int L = max((int)(log((r - l) / EPS) / log(phi)), 0);
 
 	// l, m1, m2, r の順で区間を φ : 1 : φ に内分する点
 	D m1 = (l * (1 + phi) + r * phi) / (2 * phi + 1);
@@ -464,7 +574,7 @@ D golden_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 	D v1 = f(m1);
 	D v2 = f(m2);
 
-	// 絶対誤差か相対誤差が EPS 以下になるまで
+	// 絶対誤差が EPS 以下になるまで
 	rep(hoge, L) {
 		// 左の内分点での値の方が小さければ，次の区間は左側をとる．
 		if (v1 < v2) {
@@ -495,12 +605,14 @@ D golden_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 	}
 
 	// 最後の候補を比較し，小さかった方の x を返す．
-	return (v1 < v2) ? m1 : m2;
+	return (v1 < v2) ? make_pair(m1, v1) : make_pair(m2, v2);
 
 	/* f の定義の雛形
-	auto f = [&](double x) {
-		return x;
+	using D = double;
+	auto f = [&](D x) {
+		return (D)x;
 	};
+	auto [x, fx] = golden_search_min<D>(l, r, f);
 	*/
 }
 
@@ -511,7 +623,7 @@ D golden_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 * 下に単峰じゃなくても運が良ければ正しい x を返す．
 */
 template <class D, class FUNC>
-D random_ternary_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
+pair<D, D> random_ternary_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 	// verify : https://atcoder.jp/contests/abc130/tasks/abc130_f
 
 	static bool first_call = true;
@@ -523,31 +635,39 @@ D random_ternary_search_min(D l, D r, const FUNC& f, D EPS = 1e-12) {
 		first_call = false;
 	}
 
-	D m1 = l, m2 = r;
+	D m1 = l + (r - l) * rnd(mt);
+	D f1 = f(m1);
 
 	// 絶対誤差か相対誤差が EPS 以下になるまで
-	while (r - l > EPS && r - l > EPS * (r + l) / 2) {
-		m1 = l + (r - l) * rnd(mt);
-		m2 = l + (r - l) * rnd(mt);
-		if (m1 > m2) swap(m1, m2);
+	while (r - l > EPS && r - l > EPS * abs(r + l) / 2) {
+		D m2 = l + (r - l) * rnd(mt);
+		D f2 = f(m2);
 
-		// 左の内分点での値の方が小さければ，次の区間は左側をとる．
-		if (f(m1) < f(m2)) {
-			r = m2;
+		if (m1 > m2) {
+			swap(m1, m2);
+			swap(f1, f2);
 		}
+
 		// 右の内分点での値の方が小さければ，次の区間は右側をとる．
-		else {
+		if (f1 > f2) {
 			l = m1;
+			m1 = m2;
+			f1 = f2;
+		}
+		// 左の内分点での値の方が小さければ，次の区間は左側をとる．
+		else {
+			r = m2;
 		}
 	}
 
-	// 最後の候補を比較し，小さかった方の x を返す．
-	return (f(m1) < f(m2)) ? m1 : m2;
+	return { m1, f1 };
 
 	/* f の定義の雛形
-	auto f = [&](double x) {
-		return x;
+	using D = double;
+	auto f = [&](D x) {
+		return (D)x;
 	};
+	auto [x, fx] = random_ternary_search_min<D>(l, r, f);
 	*/
 }
 
@@ -621,13 +741,15 @@ void parallel_binary_search(vi& ok, vi& ng, const function<void(const vi&, vb&)>
 }
 
 
-//【二分探索（最小値固定）】O(n (log n)^2)
+//【二分探索（最小値指定）】O(n (log n)^2)
 /*
 * 与えられた列 a[0..n) に対し，各 m∈[0..n) について，m を含む区間 [l..r) で
-* argmin a[l..r) = m（最左優先）かつ is_ok(m, l, r) = true となるものの個数のリストを返す．
+* argmin a[l..r) = m（最左優先）かつ okQ(m, l, r) = true となるものの個数のリストを返す．
 * max_flag = true とすると最大値固定とする．
 *
-* 制約：is_ok(m,・,・) は単調
+* 制約 : okQ(m,・,・) は単調
+* 
+*（逆マージテク）
 */
 template <class T, class FUNC>
 vl bin_search_fixed_min(const vector<T>& a, const FUNC& okQ, bool max_flag = false) {
@@ -735,8 +857,8 @@ vl bin_search_fixed_min(const vector<T>& a, const FUNC& okQ, bool max_flag = fal
 * st から到達可能な頂点 t のリストを返す．nxt(s) は s の次に訪れることのできる頂点のリストを返す．
 * 探索は lim [ms] だけ続ける．
 */
-template <class T>
-set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt, int lim = (int)1e9) {
+template <class T, class FUNC>
+set<T> get_reachable_set(T st, const FUNC& nxt, int lim = (int)1e9) {
 	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_c
 
 	auto start = chrono::system_clock::now();
@@ -771,7 +893,7 @@ set<T> get_reachable_set(T st, const function<vector<T>(T)>& nxt, int lim = (int
 
 	/* nxt の定義の雛形
 	using T = ll;
-	function<vector<T>(T)> nxt = [&](T s) {
+	auto nxt = [&](T s) {
 		vector<T> res;
 
 		return res;

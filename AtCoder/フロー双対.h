@@ -354,7 +354,7 @@ struct Ushige_DAG {
 *【最大流問題の LP 定式化】の双対をとると，y[s][t], p[v] を変数とする
 *	minimize	Σs→t u[s][t] y[s][t]
 *	subject to	y[s][t] + p[t] - p[s] ≧ 0 （∀s→t ∈ E）
-*				p[S] - p[T] >= 1
+*				p[S] - p[T] ≧ 1
 *				y[s][t] ≧ 0 （∀s→t ∈ E）
 * なる線形計画問題になる．
 * 
@@ -400,7 +400,7 @@ struct Ushige_DAG {
 *	f[e] : 辺 e のフロー
 * とおくと，一般化最小費用流問題は，f[e] を変数とする
 *	minimize	Σe c[e] f[e]
-*	subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = g[v] （∀v ∈ V）
+*	subject to	Σe∈out[v] f[e] - Σe∈in[v] f[e] = d[v] （∀v ∈ V）
 *				0 ≦ f[e] ≦ u[e] （∀e ∈ E）
 * なる線形計画問題として定式化できる．
 */
@@ -472,8 +472,8 @@ struct Ushige_DAG {
 *	制約条件に p[t] - p[s] ≦ ub を追加する．
 *	注意：ub < 0 だと流量が INF 増加して計算量がやばいかも．
 *
-* ll solve() : O(F (n + m) log n)（F : 係数の絶対値の和，m : ReLU 項の数）
-*	最小化問題を解き，目的関数値を返す．
+* ll solve(vl* p) : O(F (n + m) log n)（F : 係数の絶対値の和，m : ReLU 項の数）
+*	最小化問題を解き，目的関数値を返す．必要なら p にポテンシャルを格納する．
 */
 class Generalized_dual_mcf {
 	// 参考 : https://www.slideshare.net/wata_orz/ss-91375739
@@ -543,7 +543,7 @@ public:
 	void add_dif_relu(int s, int t, ll u, ll c) {
 		// verify : https://atcoder.jp/contests/abc224/tasks/abc224_h
 
-		// s から t に流用 u でコスト c の辺を張りたい．
+		// s から t に流量 u でコスト c の辺を張りたい．
 		// コストが非負の場合
 		if (c >= 0) {
 			// 普通に張ればいい．
@@ -567,11 +567,14 @@ public:
 		//		u max(0, p[t] - p[s] - c) + u max(0, p[s] - p[t] + c)
 		// を加算すればよい．
 
+		//【備考】
+		// 同様にすれば任意の区分線形凸関数は ReLU の和で表現できる．
+
 		add_dif_relu(s, t, u, c);
 		add_dif_relu(t, s, u, -c);
 	}
 
-	// 制約条件に p[t] - p[s] <= ub を追加する．
+	// 制約条件に p[t] - p[s] ≦ ub を追加する．
 	void add_dif_ub(int s, int t, ll ub) {
 		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2230
 
@@ -584,8 +587,8 @@ public:
 	}
 
 	// 最小化問題を解き，目的関数値を返す．
-	ll solve() {
-		// verify : https://onlinejudge.u-aizu.ac.jp/problems/2230
+	ll solve(vl* p = nullptr) {
+		// verify : https://atcoder.jp/contests/abc393/tasks/abc393_g
 
 		// ST : 始点（湧き出しへ），GL : 終点（吸い込みから）
 		int ST = n, GL = n + 1;
@@ -597,16 +600,48 @@ public:
 		}
 
 		// 最小費用流を求める．
-		auto [cap, cost] = g.flow(ST, GL);
+		auto [flow, cost] = g.flow(ST, GL);
+
+		if (p) {
+			// g2 : 残余ネットワーク
+			vector<vector<pil>> g2(n + 2);
+			repe(e, g.edges()) {
+				// 流量を増加する余裕がある場合
+				if (e.flow < e.cap) g2[e.from].emplace_back(e.to, e.cost);
+
+				// 逆流させる余裕がある場合
+				if (e.flow > 0) g2[e.to].emplace_back(e.from, -e.cost);
+			}
+
+			vl pot(n + 2, INFL);
+			pot[GL] = 0;
+
+			// g2 にベルマンフォード法を適用しポテンシャルを求める．
+			while (1) {
+				bool updated = false;
+
+				// 全ての辺について緩和を行う．
+				rep(s, n + 2) repe(e, g2[s]) {
+					if (chmin(pot[e.first], pot[s] + e.second)) updated = true;
+				}
+
+				// もし更新が起こらなければポテンシャルが確定する．
+				if (!updated) break;
+			}
+
+			rep(i, n) pot[i] -= pot[ST];
+			pot.resize(n);
+			*p = move(pot);
+		}
 
 		return -(precost + cost);
 	}
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Generalized_dual_mcf& g) {
-		os << "cost: " << g.precost << endl;
+		os << "precost: " << g.precost << endl;
 		os << "div: " << g.div << endl;
-//		os << "graph:" << endl << g.g;
+		os << "graph:" << endl << g.g;
 		return os;
 	}
 #endif

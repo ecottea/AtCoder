@@ -190,6 +190,9 @@ vm coefficients_of_power(const vm& a, const vm& b, int N) {
 	//		= [z^N] [w^[0..N]] a(z) / (1 - b(z)w)
 	// と書き直せるので，2 変数ボスタン-森法で求められる．
 
+	//【注意】
+	// b(z) が低次多項式なら分割統治 FFT でいい．
+
 	int na = sz(a), nb = sz(b);
 	if (na == 0 || nb == 0) return vm(0, N + 1);
 
@@ -319,8 +322,7 @@ vm composition(const vm& f, const vm& g, int N, const Factorial_mint& fm) {
 
 	// 2^K : N 以上の最小の 2 冪
 	int K = msb(N - 1) + 1;
-	dump(K);
-
+	
 	vvvm q(K);
 
 	q[0] = vvm(sz(g), vm(2));

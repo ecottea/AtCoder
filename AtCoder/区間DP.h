@@ -167,7 +167,8 @@ ll hu_tucker(vl p) {
 
 	int n = sz(p);
 
-	vector<Skew_heap_rev<ll>> heap(n - 1); // heap[i] : 葉 i, nxt[i] とマージできる中間ノード
+	using SH = Skew_heap<ll, greater<ll>>;
+	vector<SH> heap(n - 1); // heap[i] : 葉 i, nxt[i] とマージできる中間ノード
 	vi prv(n, -1), nxt(n, -1); // 双方向リストでの前[次]の葉の番号
 	vl cost(n - 1); // 葉 i または中間ノード i を含むマージの最小コスト
 	priority_queue_rev<pli> q; // マージコスト昇順に (コスト, 番号) を記録
@@ -184,8 +185,7 @@ ll hu_tucker(vl p) {
 		// 次にマージするのは葉 i または中間ノード i で，そのコストは c
 		ll c = 0; int i;
 		do {
-			tie(c, i) = q.top();
-			q.pop();
+			tie(c, i) = q.top(); q.pop();
 		} while (nxt[i] == -1 || cost[i] != c); // 以前から状況が変化していたら無視
 		res += c;
 
@@ -202,8 +202,7 @@ ll hu_tucker(vl p) {
 			mi = mni = true;
 		}
 		else {
-			ll c2 = heap[i].top();
-			heap[i].pop();
+			ll c2 = heap[i].top(); heap[i].pop();
 
 			// 中間ノード i と中間ノード i をマージする場合
 			if (!heap[i].empty() && heap[i].top() + c2 == c) {
@@ -222,7 +221,7 @@ ll hu_tucker(vl p) {
 		// 葉 i をマージに使ったため左の中間ノード j = prv[i] と併合する．
 		if (mi && i > 0) {
 			int j = prv[i];
-			heap[j].merge(heap[i]); heap[i] = Skew_heap_rev<ll>();
+			heap[j].merge(heap[i]); heap[i] = SH();
 			nxt[j] = nxt[i];
 			nxt[i] = -1;
 			prv[nxt[j]] = j;
@@ -232,7 +231,7 @@ ll hu_tucker(vl p) {
 		// 葉 nxt[i] をマージに使ったため右の中間ノード j = nxt[i] と併合する．
 		if (mni && nxt[i] < n - 1) {
 			int j = nxt[i];
-			heap[i].merge(heap[j]); heap[j] = Skew_heap_rev<ll>();
+			heap[i].merge(heap[j]); heap[j] = SH();
 			nxt[i] = nxt[j];
 			nxt[j] = -1;
 			prv[nxt[i]] = i;
@@ -249,7 +248,8 @@ ll hu_tucker(vl p) {
 		// 中間ノード i と中間ノード i をマージする場合の最小コスト
 		if (!heap[i].empty()) chmin(cost[i], c + heap[i].top());
 
-		heap[i].push(c); // 2 つ目の確認のため pop してしまった 1 つ目を戻しておく
+		// 2 つ目の確認のため pop してしまった 1 つ目を戻しておく
+		heap[i].push(c);
 
 		// これらのうち最小のもののみを記録する．
 		q.push({ cost[i], i });

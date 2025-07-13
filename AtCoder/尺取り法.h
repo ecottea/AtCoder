@@ -5,11 +5,13 @@
 
 //【和が s 以下の最大区間長】O(n)
 /*
-* 非負整数列 a[0..n) で，Σa[l..r) ≦ s となる連続部分列の長さの最大値 r - l を返す．
+* 非負整数列 a[0..n) で，Σa[l..r) ≦ s となる連続部分列の長さの最大値 r-l を返す．
 *
 *（尺取り法）
 */
 int maximize_interval_length(const vl& a, ll s) {
+	// verify : https://mojacoder.app/users/Kurolium/problems/Kotonoha_Algo2
+
 	int n = sz(a);
 
 	// l, r : a[l..r) を走査中であることを表す．

@@ -223,6 +223,28 @@ vector<T> and_convolution(vector<T> f, vector<T> g) {
 }
 
 
+//【積集合畳込み（二項式）】O(2^N N)
+/*
+* 与えられた [0..N) 上の集合関数族 f_i = z_Ω + c[i]z_i (i⊂[0..N)) に対して
+* 総 AND 畳込みをとって得られる集合関数 g[0..2^N) を返す．
+*/
+template <class T>
+vector<T> multi_and_convolution_binomial(vector<T> c) {
+	int N = msb(sz(c));
+
+	// 乗法単位元である 1 を加算し，採用/不採用どちらも可とする．
+	repb(set, N) c[set] += T(1);
+
+	// 演算を積として上位集合ゼータ変換する．
+	rep(i, N) repb(set, N) if (getb(set, i)) c[set ^ (1 << i)] *= c[set];
+
+	// 演算を和として上位集合メビウス変換する．
+	rep(i, N) repb(set, N) if (getb(set, i)) c[set ^ (1 << i)] -= c[set];
+
+	return c;
+}
+
+
 //【上位集合 max ゼータ変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の上位集合からの累積 max が
@@ -260,6 +282,116 @@ vector<T> superset_and_max_convolution(vector<T> f, vector<T> g) {
 }
 
 
+//【オンライン上位集合ゼータ変換（ランダムアクセス）】
+/*
+* Online_set_superzeta_rand<T>(int N) : O(N 2^N)
+*	f[0..2^N) の上位集合ゼータ変換 g[0..2^N) を計算できるよう初期化する．
+*
+* set(int t, T f) : O(N)
+*	f=f[t] を与える．
+*
+* T get(int t) : O(1)
+*	g[t] = Σs⊃t f[s] を返す．
+*	制約 : ∀s⊃t について f[s] を指定済でなくてはならない．
+*/
+template <class T>
+class Online_set_superzeta_rand {
+	int N;
+	vector<vector<T>> fs;
+
+public:
+	// f[0..2^N) の上位集合ゼータ変換 g[0..2^N) を計算できるよう初期化する．
+	Online_set_superzeta_rand(int N) : N(N), fs(1LL << N, vector<T>(N + 1)) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+	}
+	Online_set_superzeta_rand() : N(0) {}
+
+	// f=f[t] を与える．
+	void set(int t, T f) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		fs[t][0] = f;
+		rep(j, N) {
+			fs[t][j + 1] = fs[t][j];
+			if (!getb(t, j)) fs[t][j + 1] += fs[t ^ (1 << j)][j];
+		}
+	}
+
+	// g[t] = Σs⊃t f[s] を返す．
+	T get(int t) const {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		return fs[t][N];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_set_superzeta_rand& O) {
+		repb(set, O.N) os << O.fs[set][O.N] << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン上位集合メビウス変換（ランダムアクセス）】
+/*
+* Online_set_supermobius_rand<T>(int N) : O(N 2^N)
+*	g[0..2^N) の上位集合メビウス変換 f[0..2^N) を計算できるよう初期化する．
+*
+* set(int t, T g) : O(N)
+*	g=g[t] を与える．
+*
+* T get(int t) : O(1)
+*	f[t] = Σs⊃t (-1)^|s-t| g[s] を返す．
+*	制約 : ∀s⊃t について g[s] を指定済でなくてはならない．
+*/
+template <class T>
+class Online_set_supermobius_rand {
+	int N;
+	vector<vector<T>> fs;
+
+public:
+	// g[0..2^N) の上位集合メビウス変換 f[0..2^N) を計算できるよう初期化する．
+	Online_set_supermobius_rand(int N) : N(N), fs(1LL << N, vector<T>(N + 1)) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+	}
+	Online_set_supermobius_rand() : N(0) {}
+
+	// g=g[t] を与える．
+	void set(int t, T g) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		fs[t][N] = g;
+		repir(j, N - 1, 0) {
+			fs[t][j] = fs[t][j + 1];
+			if (!getb(t, j)) fs[t][j] -= fs[t ^ (1 << j)][j];
+		}
+	}
+
+	// f[t] = Σs⊃t (-1)^|s-t| g[s] を返す．
+	T get(int t) const {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		return fs[t][0];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_set_supermobius_rand& O) {
+		repb(set, O.N) os << O.fs[set][0] << " ";
+		return os;
+	}
+#endif
+};
+
+
 //【下位集合ゼータ変換】O(2^N N)
 /*
 * [0..N) 上の集合関数 f[S] の下位集合からの累積和が
@@ -285,8 +417,8 @@ void set_subzeta(vector<T>& f) {
 	int n = sz(f);
 	int N = msb(n - 1) + 1;
 
-	// n が 2 冪でなくても [0..n) の範囲では正しく計算できる．
-	rep(i, N) rep(set, n) if (getb(set, i)) f[set] += f[set - (1 << i)];
+	// N が 2 冪でなくても [0..n) の範囲では正しく計算できる．
+	rep(i, N) rep(set, n) if (getb(set, i)) f[set] += f[set ^ (1 << i)];
 }
 
 
@@ -316,7 +448,7 @@ void set_submobius(vector<T>& g) {
 
 	int N = msb(sz(g));
 
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] -= g[set];
+	rep(i, N) repb(set, N) if (!getb(set, i)) g[set ^ (1 << i)] -= g[set];
 }
 
 
@@ -402,16 +534,38 @@ vector<T> or_convolution(vector<T> f, vector<T> g) {
 	int N = msb(sz(f));
 
 	// f, g を下位集合ゼータ変換する．
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] += f[set];
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) g[set + (1 << i)] += g[set];
+	rep(i, N) repb(set, N) if (!getb(set, i)) f[set ^ (1 << i)] += f[set];
+	rep(i, N) repb(set, N) if (!getb(set, i)) g[set ^ (1 << i)] += g[set];
 
 	// 各点積をとる．
 	repb(set, N) f[set] *= g[set];
 
 	// 結果を下位集合メビウス変換する．
-	rep(i, N) repb(set, N) if (!(set & (1 << i))) f[set + (1 << i)] -= f[set];
+	rep(i, N) repb(set, N) if (!getb(set, i)) f[set ^ (1 << i)] -= f[set];
 
 	return f;
+}
+
+
+//【和集合畳込み（二項式）】O(2^N N)
+/*
+* 与えられた [0..N) 上の集合関数族 f_i = z_φ + c[i]z_i (i⊂[0..N)) に対して
+* 総 OR 畳込みをとって得られる集合関数 g[0..2^N) を返す．
+*/
+template <class T>
+vector<T> multi_or_convolution_binomial(vector<T> c) {
+	int N = msb(sz(c));
+
+	// 乗法単位元である 1 を加算し，採用/不採用どちらも可とする．
+	repb(set, N) c[set] += T(1);
+
+	// 演算を積として下位集合ゼータ変換する．
+	rep(i, N) repb(set, N) if (getb(set, i)) c[set] *= c[set ^ (1 << i)];
+
+	// 演算を和として下位集合メビウス変換する．
+	rep(i, N) repb(set, N) if (getb(set, i)) c[set] -= c[set ^ (1 << i)];
+
+	return c;
 }
 
 
@@ -494,6 +648,232 @@ vector<T> distinct_subset_or_max_convolution(const vector<T>& f) {
 }
 
 
+//【オンライン下位集合ゼータ変換（昇順）】
+/*
+* Online_set_subzeta<T>(int N) : O(2^N)
+*	f[0..2^N) の下位集合ゼータ変換 g[0..2^N) を計算できるよう初期化する．
+*
+* T set_get(T f) : O(N)
+*	t 回目に呼び出すときは，f=f[t] を与えれば，g[t] = Σs⊂t f[s] を返す．
+*
+* int size() : O(1)
+*	set() を呼んだ回数を返す．
+*/
+template <class T>
+class Online_set_subzeta {
+	int N, t; // t : 次が何回目の呼び出しか
+	vector<T> g;
+
+public:
+	// f[0..2^N) の下位集合ゼータ変換 g[0..2^N) を計算できるよう初期化する．
+	Online_set_subzeta(int N) : N(N), t(0), g(1LL << N, T(0)) {
+		// verify : https://atcoder.jp/contests/arc198/tasks/arc198_e
+	}
+	Online_set_subzeta() : N(0), t(0) {}
+
+	// set_get を呼んだ回数を返す．
+	int size() const {
+		return t;
+	}
+
+	// t 回目に呼び出すときは，f=f[t] を与えれば，g[t] = Σs⊂t f[s] を返す．
+	T set_get(T f) {
+		// verify : https://atcoder.jp/contests/arc198/tasks/arc198_e
+
+		g[t] = f;
+
+		T res = f;
+		repis(i, t) res += g[t ^ (1 << i)];
+
+		rep(b, lsb(~t)) {
+			int pt = t ^ (1 << b);
+			repb(set, b) {
+				g[t ^ set] += g[pt ^ set];
+			}
+		}
+
+		t++;
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_set_subzeta& O) {
+		os << O.g << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン下位集合メビウス変換（昇順）】
+/*
+* Online_set_submobius<T>(int N) : O(2^N)
+*	g[0..2^N) の下位集合メビウス変換 f[0..2^N) を計算できるよう初期化する．
+*
+* T set_get(T f) : O(N)
+*	t 回目に呼び出すときは，g=g[t] を与えれば，f[t] = Σs⊂t (-1)^(t-s) g[s] を返す．
+*
+* int size() : O(1)
+*	set() を呼んだ回数を返す．
+*/
+template <class T>
+class Online_set_submobius {
+	int N, t; // t : 次が何回目の呼び出しか
+	vector<T> f;
+
+public:
+	// g[0..2^N) の下位集合メビウス変換 f[0..2^N) を計算できるよう初期化する．
+	Online_set_submobius(int N) : N(N), t(0), f(1LL << N, T(0)) {
+		// verify : https://atcoder.jp/contests/arc198/tasks/arc198_e
+	}
+	Online_set_submobius() : N(0), t(0) {}
+
+	// set_get を呼んだ回数を返す．
+	int size() const {
+		return t;
+	}
+
+	// t 回目に呼び出すときは，g=g[t] を与えれば，f[t] = Σs⊂t (-1)^(t-s) g[s] を返す．
+	T set_get(T g) {
+		// verify : https://atcoder.jp/contests/arc198/tasks/arc198_e
+
+		f[t] = g;
+
+		T res = g;
+		repis(i, t) res -= f[t ^ (1 << i)];
+
+		rep(b, lsb(~t)) {
+			int pt = t ^ (1 << b);
+			repb(set, b) {
+				f[t ^ set] -= f[pt ^ set];
+			}
+		}
+
+		t++;
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_set_submobius& O) {
+		os << O.f << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン下位集合ゼータ変換（ランダムアクセス）】
+/*
+* Online_set_subzeta_rand<T>(int N) : O(N 2^N)
+*	f[0..2^N) の下位集合ゼータ変換 g[0..2^N) を計算できるよう初期化する．
+*
+* set(int t, T f) : O(N)
+*	f=f[t] を与える．
+*
+* T get(int t) : O(1)
+*	g[t] = Σs⊂t f[s] を返す．
+*	制約 : ∀s⊂t について f[s] を指定済でなくてはならない．
+*/
+template <class T>
+class Online_set_subzeta_rand {
+	int N;
+	vector<vector<T>> fs;
+
+public:
+	// f[0..2^N) の下位集合ゼータ変換 g[0..2^N) を計算できるよう初期化する．
+	Online_set_subzeta_rand(int N) : N(N), fs(1LL << N, vector<T>(N + 1)) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+	}
+	Online_set_subzeta_rand() : N(0) {}
+
+	// f=f[t] を与える．
+	void set(int t, T f) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		fs[t][0] = f;
+		rep(j, N) {
+			fs[t][j + 1] = fs[t][j];
+			if (getb(t, j)) fs[t][j + 1] += fs[t ^ (1 << j)][j];
+		}
+	}
+
+	// g[t] = Σs⊂t f[s] を返す．
+	T get(int t) const {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		return fs[t][N];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_set_subzeta_rand& O) {
+		repb(set, O.N) os << O.fs[set][O.N] << " ";
+		return os;
+	}
+#endif
+};
+
+
+//【オンライン下位集合メビウス変換（ランダムアクセス）】
+/*
+* Online_set_submobius_rand<T>(int N) : O(N 2^N)
+*	g[0..2^N) の下位集合メビウス変換 f[0..2^N) を計算できるよう初期化する．
+*
+* set(int t, T g) : O(N)
+*	g=g[t] を与える．
+*
+* T get(int t) : O(1)
+*	f[t] = Σs⊂t (-1)^|t-s| g[s] を返す．
+*	制約 : ∀s⊂t について g[s] を指定済でなくてはならない．
+*/
+template <class T>
+class Online_set_submobius_rand {
+	int N;
+	vector<vector<T>> fs;
+
+public:
+	// g[0..2^N) の下位集合メビウス変換 f[0..2^N) を計算できるよう初期化する．
+	Online_set_submobius_rand(int N) : N(N), fs(1LL << N, vector<T>(N + 1)) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+	}
+	Online_set_submobius_rand() : N(0) {}
+
+	// g=g[t] を与える．
+	void set(int t, T g) {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		fs[t][N] = g;
+		repir(j, N - 1, 0) {
+			fs[t][j] = fs[t][j + 1];
+			if (getb(t, j)) fs[t][j] -= fs[t ^ (1 << j)][j];
+		}
+	}
+
+	// f[t] = Σs⊂t (-1)^|t-s| g[s] を返す．
+	T get(int t) const {
+		// verify : https://judge.yosupo.jp/problem/bitwise_and_convolution
+
+		Assert(t < (1 << N));
+
+		return fs[t][0];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_set_submobius_rand& O) {
+		repb(set, O.N) os << O.fs[set][0] << " ";
+		return os;
+	}
+#endif
+};
+
+
 //【非交和畳込み】O(2^N N^2)
 /*
 * SPS.h の【SPS 積】を用いれば良い．
@@ -503,20 +883,20 @@ vector<T> distinct_subset_or_max_convolution(const vector<T>& f) {
 //【集合の高速ゼータ／メビウス変換と行列のクロネッカー積】
 /*
 * f[0..2^n) を上位集合で高速ゼータ変換して g[0..2^n) にする線形変換の表現行列は，
-* 上三角行列 [1 1] の d 個のクロネッカー積に等しい．
+* 上三角行列 [1 1] の n 個のクロネッカー積に等しい．
 *           [0 1]
 *
 * f[0..2^n) を下位集合で高速ゼータ変換して g[0..2^n) にする線形変換の表現行列は，
-* 下三角行列 [1 0] の d 個のクロネッカー積に等しい．
+* 下三角行列 [1 0] の n 個のクロネッカー積に等しい．
 *           [1 1]
 * verify : https://atcoder.jp/contests/arc137/tasks/arc137_d
 *
 * g[0..2^n) を上位集合で高速メビウス変換して f[0..2^n) にする線形変換の表現行列は，
-* 上三角行列 [1 -1] の d 個のクロネッカー積に等しい．
+* 上三角行列 [1 -1] の n 個のクロネッカー積に等しい．
 *           [0  1]
 *
 * g[0..2^n) を下位集合で高速メビウス変換して f[0..2^n) にする線形変換の表現行列は，
-* 下三角行列 [ 1 0] の d 個のクロネッカー積に等しい．
+* 下三角行列 [ 1 0] の n 個のクロネッカー積に等しい．
 *           [-1 1]
 */
 
@@ -595,6 +975,9 @@ vector<S> and_convolution(vector<S> a, vector<S> b) {
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
 vector<S> superset_and_convolution(vector<S> a, vector<S> b) {
+	//【注意】
+	// add に冪等性がないと推移律が壊れる．
+
 	int n = msb(sz(a));
 
 	set_superzeta<S, add, o>(a);
@@ -677,6 +1060,9 @@ vector<S> or_convolution(vector<S> a, vector<S> b) {
 */
 template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
 vector<S> subset_or_convolution(vector<S> a, vector<S> b) {
+	//【注意】
+	// add に冪等性がないと推移律が壊れる．
+
 	int n = msb(sz(a));
 
 	set_subzeta<S, add, o>(a);
@@ -686,34 +1072,3 @@ vector<S> subset_or_convolution(vector<S> a, vector<S> b) {
 
 	return a;
 }
-
-
-//【複数の二項式の下位和集合畳込み】O(2^n n^2)
-/*
-* 半環 (S, add, o, mul, e) の元を要素とする 2^n 個の二項式 (e {} + a[set] set)
-* を全て下位和集合畳込みした結果を返す．
-*
-* 利用：【下位和集合畳込み（半環）】
-*/
-template <class S, S(*add)(S, S), S(*o)(), S(*mul)(S, S), S(*e)()>
-vector<S> multi_subset_or_convoluion(const vector<S>& a) {
-	// verify : https://atcoder.jp/contests/abc215/tasks/abc215_h
-
-	int N = sz(a);
-
-	vector<vector<S>> f(N);
-	rep(i, N) f[i] = { a[i] };
-
-	// 2 冪個ずつまとめていく（分割統治法）
-	for (int k = 1; k < N; k *= 2) {
-		for (int i = 0; i + k < N; i += 2 * k) {
-			auto c = subset_or_convolution<S, add, o, mul, e>(f[i], f[i + k]);
-			rep(set, k) c[set] = add(c[set], f[i + k][set]);
-			f[i].insert(f[i].end(), all(c));
-		}
-	}
-
-	return f[0];
-}
-
-

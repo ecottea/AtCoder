@@ -19,7 +19,7 @@ vvm count_lattice_path(const vvc& c, const char WALL = '#') {
 
 	// cnt[i][j] : c[0][0] から c[i][j] までの経路数
 	vvm cnt(h, vm(w));
-	cnt[0][0] = 1;
+	cnt[0][0] = (c[0][0] == WALL ? 0 : 1);
 
 	// 貰う DP
 	rep(i, h) rep(j, w) {
@@ -254,11 +254,11 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 
 //【最短経路数（x≧y 内）】
 /*
-* (0, 0) から (h, w) までの最短格子路のうち，常に x≧y を満たすものの総数は
+* (0, 0) から (h, w) までの最短格子路のうち，常に x≧y を満たすものの総数は次の通り：
 *	bin(h+w,h) (h-w+1) / (h+1)
 * 
-* 特に，(0, 0) から (n, n) までの最短格子路のうち，常に x≧y を満たすものの総数は
-*	bin(2n,n) / (n+1) （カタラン数）
+* 特に，(0, 0) から (n, n) までだとカタラン数 Catalan(n) になる：
+*	bin(2n,n) / (n+1)
 * 
 * 参考 : https://oeis.org/A009766
 * verify : https://projecteuler.net/problem=739
@@ -267,12 +267,20 @@ mint count_lattice_path_in_band(int h, int w, int l, int r, const Factorial_mint
 
 //【最短経路数（x≧y 内，折れ曲がり回数指定）】
 /*
-* (0, 0) から (n, n) までの最短格子路のうち，常に x≧y を満たし，
-* 直線 x=y に向かって折れ曲がる回数が k 回のものの個数は，Narayana 数
-*	N(n, k) = (1/n) bin(n,k) bin(n,k-1)
-* で与えられる．
+* (0, 0) から (h, w) までの最短格子路のうち，常に x≧y を満たし，
+* 直線 x=y に向かって折れ曲がる回数が k 回のものの個数は次の通り：
+*	((h-w+1)/w) bin(h,k-1) bin(w,k)
 * 
-* 参考 : https://en.wikipedia.org/wiki/Narayana_number
+* 特に，(0, 0) から (n, n) までだと Narayana 数 N(n,k) になる：
+*	(1/n) bin(n,k-1) bin(n,k)
+*
+* verify : https://atcoder.jp/contests/agc070/tasks/agc070_c
+*/
+
+
+//【グリッド上の最短経路数】
+/*
+* 参考 : https://kanpurin.hatenablog.com/entry/2021/09/15/220913
 */
 
 
@@ -326,7 +334,7 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 }
 
 
-//【直線に沿った格子路上の積】O(log(n + m))
+//【直線に沿った格子路上の積（モノイド）】O(log(n + m))
 /*
 * (0, 0) から (n, (an+b)//m) までの直線 y=(ax+b)/m 以下の上方向優先の最短格子路について，
 * 右に進むときは f，上に進むときは g を順に掛け合わせたモノイド (S, op, e) の元を返す．
@@ -454,26 +462,28 @@ vvi solve_maze(const vector<vector<T>>& c, int sx, int sy, const T wall = '#') {
 
 //【迷路（複数始点）】O(h w)
 /*
-* 壁が wall で表された h×w の迷路 c について，スタートの集合 s[i] = (sx, sy) から
-* 各マス c[i][j] への最短経路長の最小値を dist[i][j] に格納する．（到達不能なら -1）
+* 壁が wall で表された h×w の迷路 c について，スタートの集合 s[k] = (sx, sy) から
+* 各マス c[i][j] への最短経路長（到達不能なら INF）の最小値を格納したリストを返す．
 *
 *（格子上の幅優先探索）
 */
-void solve_maze(const vvc& c, const vector<pii>& s, vvi& dist, const char wall = '#') {
+template <class T>
+vvi solve_maze(const vector<vector<T>>& c, const vector<pii>& s, const T wall = '#') {
+	// https://atcoder.jp/contests/abc383/tasks/abc383_c
+
 	int h = sz(c), w = sz(c[0]);
-	dist = vvi(h, vi(w, -1));
+
+	vvi dist(h, vi(w, INF));
 
 	// q : 未探索のマスを記録しておくキュー
 	queue<pii> q;
-	repe(p, s) {
-		q.push(p);
-		dist[p.first][p.second] = 0;
+	for (auto [x, y] : s) {
+		q.push({ x , y });
+		dist[x][y] = 0;
 	}
 
 	while (!q.empty()) {
-		int x, y;
-		tie(x, y) = q.front();
-		q.pop();
+		auto [x, y] = q.front(); q.pop();
 
 		// マス (x, y) の 4 近傍を調べる．
 		rep(k, 4) {
@@ -482,14 +492,10 @@ void solve_maze(const vvc& c, const vector<pii>& s, vvi& dist, const char wall =
 			int ny = y + DY[k];
 
 			// 範囲外または壁マスなら何もしない．
-			if (nx < 0 || nx >= h || ny < 0 || ny >= w || c[nx][ny] == wall) {
-				continue;
-			}
+			if (!inQ(nx, ny, 0, 0, h, w) || c[nx][ny] == wall) continue;
 
 			// 既に最短経路長が確定済みなら何もしない．
-			if (dist[nx][ny] != -1) {
-				continue;
-			}
+			if (dist[nx][ny] != INF) continue;
 
 			// 最短経路長の確定
 			dist[nx][ny] = dist[x][y] + 1;
@@ -497,6 +503,185 @@ void solve_maze(const vvc& c, const vector<pii>& s, vvi& dist, const char wall =
 			q.push({ nx, ny });
 		}
 	}
+
+	return dist;
+}
+
+
+//【迷路（数え上げ）】O(h w)
+/*
+* 壁が wall で表された h×w の迷路 c について，スタート (sx, sy) から
+* 各マス c[i][j] への最短経路の総数を格納した二次元リストを返す．
+*
+*（格子上の幅優先探索）
+*/
+template <class T>
+vvm count_maze_path(const vector<vector<T>>& c, int sx, int sy, const T wall = '#') {
+	// verify : https://mofecoder.com/contests/itfpc2024/tasks/itfpc2024_j
+
+	int h = sz(c), w = sz(c[0]);
+
+	vvi dist(h, vi(w, INF));
+	dist[sx][sy] = 0;
+
+	vvm cnt(h, vm(w));
+	cnt[sx][sy] = 1;
+
+	// q : 未探索のマスを記録しておくキュー
+	queue<pii> q;
+	q.push({ sx, sy });
+
+	while (!q.empty()) {
+		auto [x, y] = q.front(); q.pop();
+
+		// マス (x, y) の 4 近傍を調べる．
+		rep(k, 4) {
+			// (nx, ny) : (x, y) の近傍の座標
+			int nx = x + DX[k];
+			int ny = y + DY[k];
+
+			// 範囲外または壁マスなら何もしない．
+			if (!inQ(nx, ny, 0, 0, h, w) || c[nx][ny] == wall) continue;
+
+			// 既に最短経路長が確定済の場合
+			if (dist[nx][ny] != INF) {
+				// 現時点での最短距離と同じなら個数を加算する．
+				if (dist[nx][ny] == dist[x][y] + 1) {
+					cnt[nx][ny] += cnt[x][y];
+				}
+				continue;
+			}
+
+			// 最短経路長の確定
+			dist[nx][ny] = dist[x][y] + 1;
+			cnt[nx][ny] = cnt[x][y];
+
+			q.push({ nx, ny });
+		}
+	}
+
+	return cnt;
+}
+
+
+//【迷路（色指定）】O(h w)
+/*
+* マス (i,j) の色が c[i][j] である h×w の迷路について，
+* スタート (sx, sy) から各マス (i,j) への最短経路長を格納したリストを返す．
+* 移動コストは，同色のマス間は 0，異色のマス間は 1 とする．
+*
+*（格子上の 01-BFS）
+*/
+vvi solve_coloered_maze(const vvi& c, int sx, int sy) {
+	// verify : https://atcoder.jp/contests/abc359/tasks/abc359_c
+
+	int h = sz(c), w = sz(c[0]);
+
+	vvi dist(h, vi(w, INF));
+	dist[sx][sy] = 0;
+
+	// q : 未探索のマスを記録しておくデック
+	deque<pii> q;
+	q.push_back({ sx, sy });
+
+	while (!q.empty()) {
+		// 未探索の頂点 (x, y) を 1 つ得る．
+		auto [x, y] = q.front(); q.pop_front();
+
+		// マス (x, y) の 4 近傍を調べる．
+		rep(k, 4) {
+			// (nx, ny) : (x, y) の近傍の座標
+			int nx = x + DX[k];
+			int ny = y + DY[k];
+
+			// 範囲外なら無視する．
+			if (!inQ(nx, ny, 0, 0, h, w)) continue;
+
+			int cost = (c[x][y] != c[nx][ny]);
+
+			int d = dist[x][y] + cost;
+
+			// 暫定の最短距離が更新できるか
+			if (chmin(dist[nx][ny], d)) {
+				if (cost == 0) q.push_front({ nx, ny });
+				else q.push_back({ nx, ny });
+			}
+		}
+	}
+
+	return dist;
+
+	/* 距離の可視化用
+	rep(i, h) {
+		rep(j, w) {
+			int d = dist[i][j];
+			cout << "\033[1;3" << d % 7 << "m" << setfill('0') << right << setw(2) << d << " ";
+		}
+		cout << endl;
+	}
+	*/
+}
+
+
+//【迷路】O(h + w + n)
+/*
+* 外周が壁に囲まれた [1..h]×[1..w] 内の迷路について，n 個の壁が (xs[i], ys[i]) にあるとする．
+* 始点 (1,1) から終点 (h,w) まで到達可能かどうかを返す．
+*
+*（右手法）
+*/
+bool solve_maze(int h, int w, vi xs, vi ys) {
+	// verify : https://atcoder.jp/contests/abc413/tasks/abc413_g
+
+	int n = sz(xs);
+
+	// 迷路の壁
+	set<pii> xys;
+
+	// 盤内の障害物
+	rep(i, n) xys.insert({ xs[i], ys[i] });
+
+	// 周囲の壁
+	repi(x, 1, h) {
+		xys.insert({ x, 0 });
+		xys.insert({ x, w + 1 });
+	}
+	repi(y, 1, w) {
+		xys.insert({ 0, y });
+		xys.insert({ h + 1, y });
+	}
+
+	// 位置（最初は (1,1)）
+	int x = 1, y = 1;
+
+	// 向き（最初は下向き，反時計回り）
+	int dir = 0;
+
+	while (1) {
+		int nx = x + DX[dir];
+		int ny = y + DY[dir];
+
+		if (xys.count({ nx, ny })) {
+			// 反時計回りに回転
+			dir = (dir + 1) % 4;
+		}
+		else {
+			// 1 つ前に進む
+			x = nx;
+			y = ny;
+
+			// 時計回りに回転
+			dir = (dir + 3) % 4;
+		}
+
+		// ゴールに到着したら終了
+		if (x == h && y == w) return true;
+
+		// 初期状態に戻ったらゴール不可能
+		if (x == 1 && y == 1 && dir == 0) return false;
+	}
+
+	return false; // ここにはこない
 }
 
 

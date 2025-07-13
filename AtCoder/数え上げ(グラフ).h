@@ -298,6 +298,64 @@ MFPS chromatic_polynomial(const Graph& g) {
 }
 
 
+//【無向グラフのハミルトン閉路の数え上げ】O(2^n n^2)
+/*
+* 重み付き対称隣接行列 c[0..n)[0..n) が表す無向グラフ g に対し，各頂点集合 set について，
+* 誘導部分グラフ g[set] のハミルトン閉路の個数を並べたリストを返す．
+*
+*（bit DP）
+*/
+vm count_hamiltonian_cycle(const vvm& c) {
+	// verify : https://atcoder.jp/contests/abc411/tasks/abc411_g
+
+	int n = sz(c);
+	if (n == 0) return vm{ 0 };
+	if (n == 1) return vm{ 0, 0 };
+
+	vm res(1LL << n, 0);
+
+	// v : set に含まれる番号最大の頂点
+	rep(v, n) {
+		// dp[s][set] : 頂点 s から頂点 v までの set⊂[0..v] を通る単純パスの個数
+		vvm dp(v + 1, vm(1LL << (v + 1), 0));
+		dp[v][1LL << v] = 1;
+
+		// 貰う DP
+		repi(set, 1 << v, (1 << (v + 1)) - 1) {
+			// s, t ∈ set なる辺 s→t をチェックする．
+			repis(s, set) repis(t, set - (1 << s)) {
+				dp[s][set] += c[s][t] * dp[t][set - (1 << s)];
+			}
+		}
+
+		// g[set] のハミルトン路 s→v に辺 v→s を追加して g[set] のハミルトン閉路を得る．
+		repi(set, 1 << v, (1 << (v + 1)) - 1) repis(s, set) {
+			res[set] += dp[s][set] * c[v][s];
+		}
+	}
+
+	mint inv2 = mint(2).inv();
+
+	// 長さ 2 の閉路は，同じ辺を往復してしまっているので数え直す．
+	rep(u, n) rep(v, n) {
+		if (v == u) continue;
+
+		int set = (1 << u) + (1 << v);
+		res[set] = c[u][v] * (c[u][v] - 1) * inv2;
+	}
+
+	// 長さ 3 以上の閉路は，回る向き 2 通りで重複カウントしているので 2 で割る．
+	repb(set, n) {
+		int pc = popcount(set);
+		if (pc <= 2) continue;
+
+		res[set] *= inv2;
+	}
+
+	return res;
+}
+
+
 //【単純パス，単純サイクルの数え上げ】O(2^n n (n+m))
 /*
 * 有向グラフ g について，set を通る単純パス s→t の個数を cnt[s][t][set] に格納し，cnt を返す．

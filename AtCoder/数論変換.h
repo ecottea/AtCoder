@@ -1,6 +1,8 @@
 #pragma once
 #include "header.h"
 #include "二項係数.h"
+#include <boost/multiprecision/cpp_int.hpp>
+#define __int128 boost::multiprecision::int128_t
 // ■■■■■ 数論変換（mod 998244353），添字和畳込み ■■■■■
 
 
@@ -299,6 +301,123 @@ vm self_convolution(const vm& a, ll k) {
 * set(mint a, mint b) : ならし O((log n)^2)
 *	t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
 *
+* mint [](int i) : O(1)
+*	c[i] = Σj∈[0..i] a[j] b[i-j] を返す．
+*	制約 : a[0..i], b[0..i] を指定済でなくてはならない．
+*
+* mint back() : O(1)
+*	直前に決定された c[i] を返す．
+*
+* int size() : O(1)
+*	set() を呼んだ回数を返す．
+*/
+class Online_convolution {
+	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
+
+	int n, t; // t : 次が何回目の呼び出しか
+	vm as, bs, cs;
+
+public:
+	// 長さ n の数列同士の畳込みを行えるよう初期化する．
+	Online_convolution(int n) : n(n), t(0), as(n), bs(n), cs(n) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+	}
+	Online_convolution() : n(0), t(0) {}
+
+	// set を呼んだ回数を返す．
+	int size() const {
+		return t;
+	}
+
+	// t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+	void set(mint a, mint b) {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+
+		as[t] = a; bs[t] = b;
+
+		int i1_max = lsb(t + 2), i2_max = i1_max;
+
+		// 対角線上の正方形領域に対する処理を行う場合
+		if (popcount(t + 2) == 1) { i1_max -= 2; i2_max -= 1; }
+
+		// 2^i : 正方形の一辺の長さ（対角線より下）
+		repi(i, 0, i1_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = t + 1 - (1 << i);
+			int y_min = (1 << i) - 1;
+
+			vm as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vm cs_sub = convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		// 2^i : 正方形の一辺の長さ（対角線以上）
+		repi(i, 0, i2_max) {
+			// cs_sub[0..j_max] まで計算する必要がある．
+			int j_max = min((1 << (i + 1)) - 2, n - 1 - t);
+
+			// len : 真に計算するべき正方形の一辺の長さ
+			int len = min(1 << i, j_max + 1);
+
+			// as[x_min..x_min+len) と bs[y_min..y_min+len) を畳み込む．
+			int x_min = (1 << i) - 1;
+			int y_min = t + 1 - (1 << i);
+
+			vm as_sub, bs_sub;
+			copy(as.begin() + x_min, as.begin() + (x_min + len), back_inserter(as_sub));
+			copy(bs.begin() + y_min, bs.begin() + (y_min + len), back_inserter(bs_sub));
+
+			vm cs_sub = convolution(as_sub, bs_sub);
+			repi(j, 0, j_max) cs[t + j] += cs_sub[j];
+		}
+
+		t++;
+	}
+
+	// c[i] を返す．
+	mint const& operator[](int i) const {
+		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
+
+		Assert(i < t);
+
+		return cs[i];
+	}
+
+	// 直前に決定された c[i] を返す．
+	mint back() const {
+		// verify : https://judge.yosupo.jp/problem/log_of_formal_power_series
+
+		return cs[t - 1];
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Online_convolution& c) {
+		os << "a: " << c.as << endl;
+		os << "b: " << c.bs << endl;
+		os << "c: " << c.cs;
+		return os;
+	}
+#endif
+};
+
+
+//【rollback オンライン畳込み（mod 998244353）】
+/*
+* Online_convolution(int n) : O(n)
+*	a[0..n) と b[0..n) の畳込み c[0..n) を計算できるよう初期化する．
+*
+* set(mint a, mint b) : ならし O((log n)^2)
+*	t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
+*
 * reset() : ならし O((log n)^2)
 *	直前の set() を取り消す．
 *
@@ -308,8 +427,11 @@ vm self_convolution(const vm& a, ll k) {
 *
 * mint back() : O(1)
 *	直前に決定された c[i] を返す．
+* 
+* int size() : O(1)
+*	set() を呼んだ回数を返す．
 */
-class Online_convolution {
+class Rollback_online_convolution {
 	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
 
 	int n, t; // t : 次が何回目の呼び出しか
@@ -318,10 +440,15 @@ class Online_convolution {
 
 public:
 	// 長さ n の数列同士の畳込みを行えるよう初期化する．
-	Online_convolution(int n) : n(n), t(0), as(n), bs(n), cs(n) {
+	Rollback_online_convolution(int n) : n(n), t(0), as(n), bs(n), cs(n) {
 		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
 	}
-	Online_convolution() : n(0), t(0) {}
+	Rollback_online_convolution() : n(0), t(0) {}
+
+	// set を呼んだ回数を返す．
+	int size() const {
+		return t;
+	}
 
 	// t 回目に呼び出すときは，a=a[t], b=b[t] を与える．
 	void set(mint a, mint b) {
@@ -431,7 +558,7 @@ public:
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Online_convolution& c) {
+	friend ostream& operator<<(ostream& os, const Rollback_online_convolution& c) {
 		os << "a: " << c.as << endl;
 		os << "b: " << c.bs << endl;
 		os << "c: " << c.cs;
@@ -461,6 +588,9 @@ public:
 *
 * init() : O(n)
 *	初期化する．
+* 
+* int size() : O(1)
+*	set() を呼んだ回数を返す．
 */
 class Semi_online_convolution {
 	// 参考 : https://qiita.com/Kiri8128/items/1738d5403764a0e26b4c
@@ -486,6 +616,11 @@ public:
 	}
 	Semi_online_convolution() : n(0), t(0) {}
 
+	// set を呼んだ回数を返す．
+	int size() const {
+		return t;
+	}
+
 	// t 回目に呼び出すときは，a=a[t] を与える．
 	void set(mint a) {
 		// verify : https://atcoder.jp/contests/abc280/tasks/abc280_e
@@ -495,6 +630,11 @@ public:
 		// b[0], b[1] との積だけは例外処理
 		cs[t] += as[t] * bss[0][0];
 		if (t + 1 < n) cs[t + 1] += as[t] * bss[0][1];
+
+		if (t <= 1) {
+			t++;
+			return;
+		}
 
 		int i_max = lsb(t);
 
@@ -961,7 +1101,7 @@ vm filtering(vm a, vm b) {
 	return a;
 }
 
-
+ 
 //【畳込み（法が任意）】O((n + m) log(n + m))（手元ではオーバーフローでバグるので注意）
 /*
 * a と b の MOD を法とした畳込みを返す．

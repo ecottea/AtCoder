@@ -202,6 +202,65 @@ vm convolution_DP_dc(mint dp0, const vm& c, const FUNC& f) {
 }
 
 
+//【畳込み遷移（mod 998244353，ランダムアクセス）】O(n√T log n)
+/*
+* DP の初項と漸化式が，dp0, c[0..n], x[0..T), y[0..T), {f_t} を用いて
+*	dp[0] = dp0
+*	dp[y[t]] += f_t( Σj∈[0..x[t]] c[x[t]-j] dp[j] ) （t∈[0..T)）
+* で与えられるときの dp[0..n] を返す．
+*
+*（平方分割 FFT）
+*/
+template <class FUNC>
+vm convolution_DP_ra(mint dp0, const vm& c, const vi& x, const vi& y, const FUNC& f) {
+	// verify : https://atcoder.jp/contests/arc196/tasks/arc196_c
+
+	//【備考】
+	// c[0..n] を dp2[0..n] に取り替えることも可能．
+
+	int n = sz(c) - 1;
+	int T = sz(x);
+
+	int sqrtT = (int)sqrt(T) * 7 + 1;
+
+	vm dp(n + 1);
+	dp[0] = dp0;
+
+	vector<pim> lazy;
+
+	vm ans;
+
+	rep(t, T) {
+		if (t % sqrtT == 0) {
+			for (auto [i, v] : lazy) {
+				dp[i] += v;
+			}
+			ans = convolution(dp, c);
+			lazy.clear();
+		}
+
+		mint val = ans[x[t]];
+		for (auto [i, v] : lazy) {
+			if (x[t] - i >= 0) val += v * c[x[t] - i];
+		}
+		val = f(t, val);
+
+		lazy.emplace_back(y[t], val);
+	}
+	for (auto [i, v] : lazy) {
+		dp[i] += v;
+	}
+
+	return dp;
+
+	/* f の定義の雛形
+	auto f = [&](int t, mint x) {
+		return x;
+	};
+	*/
+}
+
+
 //【累積畳込み遷移（mod 998244353）】O((n + N) K log n log N)
 /*
 * DP の初項と漸化式が，a[0..n], K 次未満の多項式族 {f_i} を用いて

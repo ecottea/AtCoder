@@ -144,7 +144,7 @@ struct Bipartite_matching {
 *	S, T の要素数を n, m として初期化する．
 *
 * add_edge(int s, int t, ll c) : O(1)
-*	s∈S と t∈T の間にコスト c の辺を張る．
+*	s∈S と t∈T の間にコスト c(≧0) の辺を張る．
 *
 * pil solve() : O(cost (n + m) log n)
 *	最大マッチングの大きさと，そのうちの最小コストの組を返す．
@@ -845,6 +845,7 @@ int bipartite_edge_chromatic(int ns, int nt, const vi& u, const vi& v, vi& col) 
 
 	return d_max;
 }
+
 
 
 //【完全二部グラフの最小コスト完全マッチング】O(|S|^4) ?（計算量壊れてる！！）

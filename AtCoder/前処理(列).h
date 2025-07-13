@@ -3,9 +3,9 @@
 // ■■■■■ 列に対する汎用性のある前処理 ■■■■■
 
 
-//【最近傍要素】
+//【数列上ジャンプ】
 /*
-* Nearest_element(vT a) : O(n)
+* Jump_on_array(vT a) : O(n)
 *	数列 a[0..n) で初期化する．
 *
 * build_prev_equal() : O(n)
@@ -45,20 +45,22 @@
 *	a(i..n) 内にある a[i] より大きい[以上の] 要素の最左位置を返す（なければ n）
 */
 template <class T>
-class Nearest_element {
+class Jump_on_array {
 	int n;
 	vector<T> a;
 	vi pe, pl, pg, ne, nl, ng;
 
 public:
 	// 数列 a[0..n) で初期化する．
-	Nearest_element(const vector<T>& a) : n(sz(a)), a(a) {
-		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bh
+	Jump_on_array(const vector<T>& a) : n(sz(a)), a(a) {
+		// verify : https://judge.yosupo.jp/problem/cartesian_tree
 	}
-	Nearest_element() {}
+	Jump_on_array() {}
 
 	// 自身に等しい数の前の位置を一括計算する．
 	void build_prev_equal() {
+		// verify : https://atcoder.jp/contests/abc378/tasks/abc378_c
+
 		pe.assign(n, -1);
 
 		// val_to_pos[x] : 値 x が最後に現れた位置（左から走査する）
@@ -76,7 +78,7 @@ public:
 
 	// 自身より小さい数の前の位置を一括計算する．eq = true にすると自身以下とする．
 	void build_prev_less(bool eq = false) {
-		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+		// verify : https://judge.yosupo.jp/problem/cartesian_tree
 
 		pl.assign(n, -1);
 		stack<pair<int, T>> st;
@@ -127,7 +129,7 @@ public:
 
 	// 自身より小さい数の次の位置を一括計算する．eq = true にすると自身以下とする．
 	void build_next_less(bool eq = false) {
-		// verify : https://judge.yosupo.jp/problem/lyndon_factorization
+		// verify : https://judge.yosupo.jp/problem/cartesian_tree
 
 		nl.assign(n, n);
 		stack<pair<int, T>> st;
@@ -157,17 +159,17 @@ public:
 
 	// a[0..i) 内にある a[i] に等しい要素の最右位置を返す（なければ -1）
 	int prev_equal(int i) {
-		// verify : https://atcoder.jp/contests/abc371/tasks/abc371_e
+		// verify : https://atcoder.jp/contests/abc378/tasks/abc378_c
 
-		Assert(0 <= i && i < n);
+		Assert(i >= 0); Assert(i < n);
 		return pe[i];
 	}
 
 	// a[0..i) 内にある a[i] より小さい[以下の] 要素の最右位置を返す（なければ -1）
 	int prev_less(int i) {
-		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_g
+		// verify : https://judge.yosupo.jp/problem/cartesian_tree
 
-		Assert(0 <= i && i < n);
+		Assert(i >= 0); Assert(i < n);
 		return pl[i];
 	}
 
@@ -175,7 +177,7 @@ public:
 	int prev_greater(int i) {
 		// verify: https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bh
 
-		Assert(0 <= i && i < n);
+		Assert(i >= 0); Assert(i < n);
 		return pg[i];
 	}
 
@@ -183,26 +185,26 @@ public:
 	int next_equal(int i) {
 		// verify : https://atcoder.jp/contests/abc174/tasks/abc174_f
 
-		Assert(0 <= i && i < n);
+		Assert(i >= 0); Assert(i < n);
 		return ne[i];
 	}
 
 	// a(i..n) 内にある a[i] より小さい[以下の] 要素の最左位置を返す（なければ n）
 	int next_less(int i) {
-		// verify : https://judge.yosupo.jp/problem/lyndon_factorization
+		// verify : https://judge.yosupo.jp/problem/cartesian_tree
 
-		Assert(0 <= i && i < n);
+		Assert(i >= 0); Assert(i < n);
 		return nl[i];
 	}
 
 	// a(i..n) 内にある a[i] より大きい[以上の] 要素の最左位置を返す（なければ n）
 	int next_greater(int i) {
-		Assert(0 <= i && i < n);
+		Assert(i >= 0); Assert(i < n);
 		return ng[i];
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Nearest_element& ne) {
+	friend ostream& operator<<(ostream& os, const Jump_on_array& ne) {
 		os << "pl: " << ne.pl << endl;
 		os << "pg: " << ne.pg << endl;
 		os << "nl: " << ne.nl << endl;

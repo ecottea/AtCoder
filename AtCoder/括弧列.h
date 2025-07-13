@@ -4,17 +4,17 @@
 // ■■■■■ 括弧列 ■■■■■
 
 
-//【括弧列の正しさ判定】O(n)
+//【括弧列の正規性判定】O(n)
 /*
-* 文字列 s[0..n) が正しい括弧列かを返す．
+* 文字列 s[0..n) が正規括弧列かを返す．
 */
-bool parenthesis_sequenceQ(const string& s) {
+bool valid_parenthesis_sequenceQ(const string& s) {
 	// verify : https://atcoder.jp/contests/arc141/tasks/arc141_c
 
 	//【方法】
 	// 括弧文字列 s[0..n) に対して，'(' を +1, ')' を -1 に置き換える操作を行い，
 	// さらに左から累積和をとったものを acc[0..n] とする．このとき，
-	//		s が正しい括弧列 ⇔ min(acc) = acc[n] = 0
+	//		s が正規括弧列 ⇔ min(acc) = acc[n] = 0
 
 	int n = sz(s);
 
@@ -32,9 +32,9 @@ bool parenthesis_sequenceQ(const string& s) {
 }
 
 
-//【対応する括弧の位置】O(n)
+//【正規括弧列の対応する括弧の位置】O(n)
 /*
-* 正しい括弧列 s[0..n) について，s[i] と対応する括弧の位置のリストを返す．
+* 正規括弧列 s[0..n) について，s[i] と対応する括弧の位置のリストを返す．
 * 括弧以外の文字は無視され，対応する括弧の位置は -1 とする．
 */
 vi corresponding_parentheses_pos(const string& s) {
@@ -63,17 +63,44 @@ vi corresponding_parentheses_pos(const string& s) {
 }
 
 
-//【括弧列の数え上げ】
+//【最長正規括弧列（部分列）】O(n)
 /*
-* 長さ 2n の括弧列の総数はカタラン数 1/(n+1) bin(2n, n) である．
+* 括弧文字列 s[0..n) の部分列である正規括弧列のうち最長のものの長さを返す．
+*/
+int longest_parenthesis_subsequence(const string& s) {
+	int n = sz(s);
+
+	int res = 0;
+
+	int l_cnt = 0;
+
+	rep(i, n) {
+		if (s[i] == '(') {
+			l_cnt++;
+		}
+		else if (s[i] == ')') {
+			if (l_cnt > 0) {
+				l_cnt--;
+				res += 2;
+			}
+		}
+	}
+
+	return res;
+}
+
+
+//【正規括弧列の数え上げ】
+/*
+* 長さ 2n の正規括弧列の総数はカタラン数 1/(n+1) bin(2n, n) である．
 *
 * 証明：括弧列を通行禁止線をもった格子路に対応させ，反射原理を用いれば良い．
 */
 
 
-//【括弧列の数え上げ（部分文字列）】O(n)
+//【正規括弧列の数え上げ（部分文字列）】O(n)
 /*
-* 括弧文字列 s[0..n) の部分文字列で正しい括弧列になっているものの個数を返す．
+* 括弧文字列 s[0..n) の部分文字列で正規括弧列になっているものの個数を返す．
 */
 ll count_parenthesis_substrings(const string& s) {
 	int n = sz(s);
@@ -98,9 +125,9 @@ ll count_parenthesis_substrings(const string& s) {
 }
 
 
-//【括弧列の数え上げ（部分列，mod 998244353）】O(n (log n)^2)
+//【正規括弧列の数え上げ（部分列，mod 998244353）】O(n (log n)^2)
 /*
-* 括弧文字列 s[0..n) の部分列である括弧列の個数を返す．
+* 括弧文字列 s[0..n) の部分列である正規括弧列の個数を返す．
 *
 * 制約：fm は (2n)! まで計算可能
 *
@@ -127,9 +154,9 @@ mint count_parenthesis_subsequences(const string& s, const Factorial_mint& fm) {
 }
 
 
-//【括弧列の数え上げ（置換，mod 998244353）】O(n + N (log N)^2) (N : s 内の '?' の数)
+//【正規括弧列の数え上げ（置換，mod 998244353）】O(n + N (log N)^2) (N : s 内の '?' の数)
 /*
-* s[0..n) 内の '?' を '(' または ')' に置き換えて得られる括弧列の個数を返す．
+* s[0..n) 内の '?' を '(' または ')' に置き換えて得られる正規括弧列の個数を返す．
 *
 * 制約：fm は (2n)! まで計算可能
 * 
@@ -191,9 +218,9 @@ mint count_parenthesis_replace(const string& s, const Factorial_mint& fm) {
 }
 
 
-//【括弧列との内積の最大化】O(n log n)
+//【正規括弧列との内積の最大化】O(n log n)
 /*
-* 与えられた数列 a[0..2n) について，括弧列 s[0..2n) の '(' を +1, ')' を -1 に
+* 与えられた数列 a[0..2n) について，正規括弧列 s[0..2n) の '(' を +1, ')' を -1 に
 * 置き換えた列と a[0..2n) との内積の最大値を返す．
 */
 ll maximize_parenthesis_inner_product(const vl& a) {
@@ -232,9 +259,9 @@ ll maximize_parenthesis_inner_product(const vl& a) {
 }
 
 
-//【括弧列 → 木】O(n)
+//【正規括弧列 → 木】O(n)
 /*
-* 括弧列 s[0..2n) について，ネスト関係を表した 0 を根とする有向根付き木 g[0..n] を返す．
+* 正規括弧列 s[0..2n) について，ネスト関係を表した 0 を根とする有向根付き木 g[0..n] を返す．
 * i 番目の頂点は対応する括弧の組 s[ls[i]] = '(', s[rs[i]] = ')' に対応し，子ほどネストが深いものとする．
 * ただし ls[0] = -1, rs[0] = 2n とする．
 */
@@ -269,21 +296,21 @@ Graph parenthesis_tree(const string& s, vi* ls = nullptr, vi* rs = nullptr) {
 }
 
 
-//【括弧列の対応と偶奇】
+//【正規括弧列の対応と偶奇】
 /*
-* 括弧列 s において，s[i]='(' と s[j]=')' が対応する括弧であるとき i と j の偶奇は異なる．
+* 正規括弧列 s において，s[i]='(' と s[j]=')' が対応する括弧であるとき i と j の偶奇は異なる．
 *
-* 証明：s(i..j) もまた括弧列であり，これの長さが偶数であることから直ちに従う．
+* 証明：s(i..j) もまた正規括弧列であり，これの長さが偶数であることから直ちに従う．
 *
 * verify : https://atcoder.jp/contests/agc048/tasks/agc048_b
 */
 
 
-//【括弧列の重なり】
+//【正規括弧列の重なり】
 /*
-* 括弧文字列 s+t+u について，
-*	s+t と t+u が共に括弧列 ⇒ s, t, u は全て括弧列
-*	s+t+u と t が共に括弧列 ⇒ s+u, t は共に括弧列
+* 正規括弧文字列 s+t+u について，
+*	s+t と t+u が共に正規括弧列 ⇒ s, t, u は全て正規括弧列
+*	s+t+u と t が共に正規括弧列 ⇒ s+u, t は共に正規括弧列
 *
 * verify : https://yukicoder.me/problems/no/2133
 */
@@ -296,9 +323,9 @@ Graph parenthesis_tree(const string& s, vi* ls = nullptr, vi* rs = nullptr) {
 */
 
 
-//【色付き括弧列の正しさ判定】O(n)
+//【色付き括弧列の正規性判定】O(n)
 /*
-* 色付き括弧列 p[0..2n) が正しい色付き括弧列かどうかを返す．
+* 色付き括弧列 p[0..2n) が正規色付き括弧列かどうかを返す．
 */
 bool colored_parenthesis_sequenceQ(const vi& p) {
 	// verify : https://atcoder.jp/contests/abc338/tasks/abc338_e
@@ -382,9 +409,9 @@ ll count_illegal_colored_parenthesis_pair(vi p) {
 }
 
 
-//【括弧列の列挙】O(Catalan(n) n)（n = 15 くらいまで OK）
+//【正規括弧列の列挙】O(Catalan(n) n)（n = 15 くらいまで OK）
 /*
-* 長さ 2n の括弧列全てを辞書順に格納したリストを返す．
+* 長さ 2n の正規括弧列全てを辞書順に格納したリストを返す．
 */
 vector<string> enumerate_parenthesis_sequences(int n) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_b

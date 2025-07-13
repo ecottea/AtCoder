@@ -3,52 +3,14 @@
 // ■■■■■ 文字列に対する汎用性のある前処理 ■■■■■
 
 
-//【ランレングス符号（文字列）】O(n)
-/*
-* 文字列 s[0..n) をランレングス符号化し，結果を格納したリスト cls を返す．
-* cls[i] = {c, l} は前から i 番目の連が l 個の文字 c からなることを表す．
-*/
-vector<pair<char, int>> run_length_encoding(const string& s) {
-	// verify : https://atcoder.jp/contests/abc124/tasks/abc124_d
-
-	int n = sz(s);
-	vector<pair<char, int>> cls;
-
-	if (n == 0) return cls;
-
-	cls.emplace_back(s[0], 1);
-
-	// いま読んでいる文字の種類を記憶する．
-	char c = s[0];
-
-	repi(i, 1, n - 1) {
-		// 記憶している文字と同じ文字の場合
-		if (s[i] == c) {
-			// 列の長さを増やす．
-			cls.back().second++;
-		}
-		// 記憶している文字と異なる文字の場合
-		else {
-			// 新しい文字を記憶しておく．
-			c = s[i];
-
-			// 新たな列を追加する．
-			cls.emplace_back(c, 1);
-		}
-	}
-
-	return cls;
-}
-
-
 //【ランレングス符号】O(n)
 /*
 * a[0..n) をランレングス符号化し，結果を格納したリスト cls を返す．
 * cls[i] = {c, l} は前から i 番目の連が l 個の文字 c からなることを表す．
 */
-template <class T>
-vector<pair<T, int>> run_length_encoding(const vector<T>& a) {
-	// verify : https://atcoder.jp/contests/arc024/tasks/arc024_2
+template <class STR, class T = remove_reference_t<decltype(declval<STR>()[0])>>
+vector<pair<T, int>> run_length_encoding(const STR& a) {
+	// verify : https://atcoder.jp/contests/abc381/tasks/abc381_c
 
 	int n = sz(a);
 	vector<pair<T, int>> cls;
@@ -83,11 +45,11 @@ vector<pair<T, int>> run_length_encoding(const vector<T>& a) {
 //【ランレングス符号（区切り位置）】O(n)
 /*
 * a[0..n) をランレングス符号化する．
-* 前から i 番目の連が a[x[i]..x[i+1]) で，その文字が c[i] であったことを格納する．
+* 前から k 番目の連が a[x[k]..x[k+1]) で，その文字が c[k] であったことを格納する．
 */
-template <class T>
-void run_length_encoding(const vector<T>& a, vector<T>& c, vi& x) {
-	// verify : https://atcoder.jp/contests/arc092/tasks/arc092_c
+template <class STR, class T = remove_reference_t<decltype(declval<STR>()[0])>>
+void run_length_encoding(const STR& a, vector<T>& c, vi& x) {
+	// verify : https://atcoder.jp/contests/abc401/tasks/abc401_d
 
 	int n = sz(a);
 	c.clear(); x = vi{ 0 };
@@ -106,99 +68,111 @@ void run_length_encoding(const vector<T>& a, vector<T>& c, vi& x) {
 }
 
 
-//【文字の次の位置】O(26 n)
+//【文字列上ジャンプ】
 /*
-* k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s[i..n) で最初に文字 c が現れる位置（無いなら n）を nxt[i][c] に格納し nxt を返す．
+* Jump_on_string(STR s, int C = 26, T a = 'a') : O(n C)
+*	s[0..n) で初期化する．文字種は a から始まる連続する C 種類とする．
+*
+* int next(int l, T c, int k = 0) : O(1)
+*	s[l..n) 内の文字 c の左から k 番目（0-indexed）の位置を返す（なければ n を返す）
+*
+* int prev(int r, T c, int k = 0) : O(1)
+*	s[0..r) 内の文字 c の右から k 番目（0-indexed）の位置を返す（なければ -1 を返す）
+*
+* int count(int l, int r, T c) : O(1)
+*	s[l..r) 内の文字 c の個数を返す．
 */
-template <class STR = string, class T = char>
-vvi next_position(const STR& s, int k = 26, T a = 'a') {
-	// verify : https://atcoder.jp/contests/abc138/tasks/abc138_e
+template <class STR, class T = remove_reference_t<decltype(declval<STR>()[0])>>
+class Jump_on_string {
+	int n;
 
-	int n = sz(s);
+	int C; int a;
 
-	// nxt[i][c] : s[i..n-1] で最初に文字 c が現れる位置（無いなら n）
-	vvi nxt(n + 1, vi(k, n));
+	// pos[c] : s[0..n) 内の文字 c がある位置の昇順リスト
+	vvi pos;
 
-	repir(i, n - 1, 0) {
-		rep(c, k) nxt[i][c] = nxt[i + 1][c];
-		nxt[i][s[i] - a] = i;
+	// acc[c][i] : 文字 c が s[0..i) に含まれている個数
+	vvi acc;
+
+	//【備考】
+	// acc に対してさらに c 方向に累積和をとっておけば，
+	// 自身より大きい[小さい] 文字に関するなんやかんやも O(1) で処理できるようになる．
+
+public:
+	// S[0..Mn) = s[0..n)×M で初期化する．文字種は a から始まる連続する C 種類とする．
+	Jump_on_string(const STR& s, int C = 26, T a = 'a') : n(sz(s)), C(C), a(a), pos(C), acc(C, vi(n + 1)) {
+		// verify : https://atcoder.jp/contests/abc381/tasks/abc381_e
+
+		rep(i, n) {
+			int c = s[i] - a;
+			pos[c].emplace_back(i);
+			rep(c2, C) acc[c2][i + 1] += acc[c2][i] + (c2 == c);
+		}
+	}
+	Jump_on_string() : n(0), C(0), a(0) {}
+
+	// s[l..n) 内の文字 c の左から k 番目（0-indexed）の位置を返す（なければ n を返す）
+	int next(int l, T c, int k = 0) {
+		// verify : https://atcoder.jp/contests/abc381/tasks/abc381_e
+
+		c -= a;
+		Assert(0 <= c); Assert(c < C);
+
+		if (l >= n) return n;
+		chmax(l, 0);
+
+		// K : s[0..n) 内の文字 c の個数
+		int K = acc[c][n];
+
+		// s[0..n) 内の左から k 番目とする．
+		k += acc[c][l];
+		if (k >= K) return n;
+
+		return pos[c][k];
 	}
 
-	return nxt;
-}
+	// s[0..r) 内の文字 c の右から k 番目（0-indexed）の位置を返す（なければ -1 を返す）
+	int prev(int r, T c, int k = 0) {
+		// verify : https://atcoder.jp/contests/abc381/tasks/abc381_e
 
+		c -= a;
+		Assert(0 <= c); Assert(c < C);
 
-//【文字の前の位置】O(26 n)
-/*
-* k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s[0..i) で最後に文字 c が現れる位置（無いなら -1）を prv[i][c] に格納し prv を返す．
-*/
-template <class STR = string, class T = char>
-vvi prev_position(const STR& s, int k = 26, T a = 'a') {
-	// verify : https://yukicoder.me/problems/no/2281
+		if (r < 0) return -1;
+		chmin(r, n);
 
-	int n = sz(s);
+		// s[0..n) 内の左から k 番目とする．
+		k = acc[c][r] - 1 - k;
+		if (k < 0) return -1;
 
-	// prv[i + 1][c] : s[0..i] で最後に文字 c が現れる位置（無いなら -1）
-	vvi prv(n + 1, vi(k, -1));
-
-	rep(i, n) {
-		rep(c, k) prv[i + 1][c] = prv[i][c];
-		prv[i + 1][s[i] - a] = i;
+		return pos[c][k];
 	}
 
-	return prv;
-}
+	// s[l..r) 内の文字 c の個数を返す．
+	int count(int l, int r, T c) {
+		// verify : https://atcoder.jp/contests/abc381/tasks/abc381_e
 
+		c -= a;
+		Assert(0 <= c); Assert(c < C);
 
-//【文字の最初の位置】O(n + 26)
-/*
-* k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s で最初に文字 c が現れる位置（無いなら n）を pos[c] に格納し pos を返す．
-*/
-vi first_position(const string& s) {
-	int n = sz(s);
-	const int k = 26;
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return 0;
 
-	// pos[c] : s で最初に文字 c が現れる位置（無いなら n）
-	vi pos(k, n);
-
-	repir(i, n - 1, 0) pos[s[i] - 'a'] = i;
-
-	return pos;
-}
-
-
-//【文字の最後の位置】O(n + 26)
-/*
-* k = 26 種類の英小文字からなる文字列 s[0..n) について，
-* s で最後に文字 c が現れる位置（無いなら -1）を pos[c] に格納し pos を返す．
-*/
-vi last_position(const string& s) {
-	// verify : https://atcoder.jp/contests/agc047/tasks/agc047_b
-
-	int n = sz(s);
-	const int k = 26;
-
-	// pos[c] : s で最初に文字 c が現れる位置（無いなら -1）
-	vi pos(k, -1);
-
-	rep(i, n) pos[s[i] - 'a'] = i;
-
-	return pos;
-}
+		return acc[c][r] - acc[c][l];
+	}
+};
 
 
 //【異なる文字の次の位置】O(n)
 /*
 * s[0..n) で，j > i かつ s[j] != s[i] なる最小の j（なければ n）を nxt[i] に格納し nxt を返す．
 */
-vi next_different_position(const string& s) {
+template <class STR>
+vi next_different_position(const STR& s) {
 	int n = sz(s);
 	vi nxt(n);
 
-	char c = s[n - 1]; // 走査中の文字
+	auto c = s[n - 1]; // 走査中の文字
 	int pos = n; // 走査中の文字以外が最後に現れた位置
 
 	// 後ろから走査していく
@@ -218,11 +192,12 @@ vi next_different_position(const string& s) {
 /*
 * s[0..n) で，j < i かつ s[j] != s[i] なる最大の j（なければ -1）を prv[i] に格納し prv を返す．
 */
-vi prev_different_position(const string& s) {
+template <class STR>
+vi prev_different_position(const STR& s) {
 	int n = sz(s);
 	vi prv(n);
 
-	char c = s[0]; // 走査中の文字
+	auto c = s[0]; // 走査中の文字
 	int pos = -1; // 走査中の文字以外が最初に現れた位置
 
 	// 前から走査していく
@@ -236,5 +211,60 @@ vi prev_different_position(const string& s) {
 
 	return prv;
 }
+
+
+//【数列の圧縮埋め込み】
+/*
+* string encode(vi a) : O(n)
+*	a を 10 進表現と比べて 5/9 倍程度に圧縮した文字列 s を返す．
+*	制約：0 ≦ a[i] < 2^30
+* 
+* vi decode(string s) : O(n)
+*	圧縮した文字列 s から元の数列 a を復元して返す．
+*/
+namespace Compress_embed {
+	string encode(const vi& a) {
+		// verify : https://atcoder.jp/contests/arc162/tasks/arc162_f
+				
+		int n = sz(a);
+
+		string s;
+
+		// 5 桁の 64 進数にし，0 から順に ['0'..'O'] 凵 ['_'..'~'] を割り当てる．
+		rep(i, n) {
+			rep(j, 5) {
+				if (a[i] & (0b100000 << (6 * j))) {
+					s += '_' + ((a[i] >> (6 * j)) & 0b011111);
+				}
+				else {
+					s += '0' + ((a[i] >> (6 * j)) & 0b011111);
+				}
+			}
+		}
+
+		return s;
+	}
+
+	vi decode(const string& s) {
+		// verify : https://atcoder.jp/contests/arc162/tasks/arc162_f
+		
+		int n = sz(s) / 5;
+
+		vi a(n);
+
+		rep(i, n) {
+			rep(j, 5) {
+				if (s[5 * i + j] >= '_') {
+					a[i] |= ((s[5 * i + j] - '_') | 0b100000) << (6 * j);
+				}
+				else {
+					a[i] |= (s[5 * i + j] - '0') << (6 * j);
+				}
+			}
+		}
+
+		return a;
+	}
+};
 
 

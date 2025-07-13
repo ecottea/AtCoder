@@ -6,95 +6,34 @@
 
 
 //【局面のニム値】O(?)（遅いので実験用）
-/*
-* 初期局面 p から遷移可能な局面とそのニム値の組のリストを返す．
-* nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納するものとする．
-*/
-template <class T>
-map<T, int> calc_nimber(const T& p, function<void(const T&, vector<T>&)>& nxt) {
-	map<T, int> nim; // これをグローバル変数にすれば再利用可能
+using POS = int; // 局面を表す型を決める．
+vector<POS> get_next_poss(const POS& p) { // 局面 p から遷移可能な局面のリストを返すよう実装する．
+	vector<POS> nps;
 
-	function<int(const T&)> calc_nimber = [&](const T& p) {
-		if (nim.count(p)) return nim[p];
-
-		vector<T> nps;
-		nxt(p, nps);
-
-		vi next_nimbers;
-		repe(np, nps) {
-			next_nimbers.push_back(calc_nimber(np));
-		}
-		uniq(next_nimbers);
-
-		int i = 0;
-		while (i < sz(next_nimbers) && next_nimbers[i] == i) i++;
-		nim[p] = i;
-
-		return nim[p];
-	};
-	calc_nimber(p);
-
-	return nim;
-
-	/* nxt の定義の雛形
-	using T = vi;
-	function<void(const T&, vector<T>&)> nxt = [&](const T& p, vector<T>& nps) {
-
-	};
-	*/
+	return nps;
 }
+map<POS, int> nimber; // nimber[p] : 局面 p の nimber
+map<POS, vector<POS>> best_hands; // best_hands[p] : 局面 p での最善手
+int get_nimber(const POS& p) { // 局面 p の nimber を返す．
+	// verify : https://atcoder.jp/contests/arc192/tasks/arc192_b 
 
+	if (nimber.count(p)) return nimber[p];
 
-//【最善手】O(?)（遅いので実験用）
-/*
-* 初期局面 p から遷移可能な各局面 x について，
-* 組 (x, x のニム値, x から最善手を選んで遷移できる局面のリスト) のリストを返す．
-* nxt(p, nps) を呼ぶと，p から遷移可能な局面のリストを nps に格納するものとする．
-*/
-template <class T>
-vector<tuple<T, int, vector<T>>> best_move(const T& p, function<void(const T&, vector<T>&)>& nxt) {
-	// veirfy : https://mojacoder.app/users/tatyam/problems/yet-another-min-nim
-	
-	map<T, int> nim; // これをグローバル変数にすれば再利用可能
+	auto nps = get_next_poss(p);
 
-	vector<tuple<T, int, vector<T>>> best;
+	vi next_nimbers;
+	repe(np, nps) {
+		int x = get_nimber(np);
+		next_nimbers.push_back(x);
+		//if (x == 0) best_hands[p].push_back(np); // 最善手も欲しいならこれを使う．
+	}
+	uniq(next_nimbers);
 
-	function<int(const T&)> calc_nimber = [&](const T& p) {
-		if (nim.count(p)) return nim[p];
+	int x = 0;
+	while (x < sz(next_nimbers) && next_nimbers[x] == x) x++;
+	nimber[p] = x;
 
-		vector<T> nps;
-		nxt(p, nps);
-		uniq(nps);
-		vector<T> win;
-
-		vi next_nimbers;
-		repe(np, nps) {
-			int nimber = calc_nimber(np);
-			if (nimber == 0) win.push_back(np);
-			next_nimbers.push_back(nimber);
-		}
-		uniq(next_nimbers);
-		uniq(win);
-
-		int i = 0;
-		while (i < sz(next_nimbers) && next_nimbers[i] == i) i++;
-		nim[p] = i;
-
-		if (win.empty()) best.emplace_back(p, 0, move(nps));
-		else best.emplace_back(p, i, move(win));
-
-		return i;
-	};
-	calc_nimber(p);
-
-	return best;
-
-	/* nxt の定義の雛形
-	using T = vi;
-	function<void(const T&, vector<T>&)> nxt = [&](const T& p, vector<T>& nps) {
-
-	};
-	*/
+	return x;
 }
 
 
@@ -286,8 +225,8 @@ vi subtraction_nim(const vi& c, int n) {
 
 //【約数減算ニム】
 /*
-* 山から取り除ける石の個数が n の約数に限られるルールのニムについて，
-* n の約数でない最小の正整数を p^e とすると，i 個の石からなる山のニム値は i mod p^e である．
+* 山から取り除ける石の個数が N（定数）の約数に限られるルールのニムについて，
+* N の約数でない最小の正整数を p^e とすると，i 個の石からなる山のニム値は i mod p^e である．
 * 
 * verify : https://codeforces.com/contest/1844/problem/D
 */

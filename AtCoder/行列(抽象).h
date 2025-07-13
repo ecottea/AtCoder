@@ -99,7 +99,7 @@ struct Matrix {
 		// verify : https://codeforces.com/contest/1681/problem/E
 
 		Matrix res(m, b.n);
-		rep(i, res.m) rep(j, res.n) rep(k, n) res[i][j] = add(res[i][j], mul(v[i][k], b[k][j]));
+		rep(i, res.m) rep(k, n) rep(j, res.n) res[i][j] = add(res[i][j], mul(v[i][k], b[k][j]));
 		return res;
 	}
 
@@ -230,7 +230,7 @@ struct Fixed_matrix {
 		// verify : https://atcoder.jp/contests/abc317/tasks/abc317_h
 
 		Fixed_matrix res;
-		rep(i, n) rep(j, n) rep(k, n) res[i][j] = add(res[i][j], mul(v[i][k], b[k][j]));
+		rep(i, n) rep(k, n) rep(j, n) res[i][j] = add(res[i][j], mul(v[i][k], b[k][j]));
 		return res;
 	}
 

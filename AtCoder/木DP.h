@@ -459,7 +459,7 @@ vector<T> rerooting(const Graph& g, vector<vector<T>>* sub = nullptr) {
 	T add_vertex(const T& x, int s) {
 		return { x.v + 1 };
 	}
-	vector<T> solve_by_tree_getDP(const Graph& g) {
+	vector<T> solve_by_rerooting(const Graph& g) {
 		return rerooting<T, leaf, add_edge, merge, add_vertex>(g);
 	}
 	*/
@@ -626,66 +626,53 @@ vector<T> rerooting(const WGraph& g, vector<vector<T>>* sub = nullptr) {
 
 //【static top tree】
 /*
-* Static_top_tree<S, F, get_val, get_fnc, add_edge, merge, add_vtx, comp, act>(Graph g, int r) : O(n (log n)^2)
+* Static_top_tree<F, get_fnc, rake, comp>(Graph g, int r) : O(n (log n)^2)
 *	r を根とする根付き木 g で初期化する．
 *
 * set(int s) : O((log n)^2)
 *	頂点 s の情報の更新を反映する．
 *
-* S get() : O(1)
-*	根付き木全体の値を返す．
+* F get() : O(1)
+*	根付き木全体に対応する関数を返す．
 *
 * なおテンプレート引数が表す関数は以下の通りとする：
 *
-* S get_val(int s) :
-*   葉 s のみからなる部分木についての値を返す．
-*
 * F get_fnc(int s) :
-*   節点 s のみからなる欠損部分木（子が 1 つ欠けた部分木）について，
-*	関数 : (欠けた部分木の値 → 部分木 s の値) を返す．
+*   生きた葉 s とその仮の親 p'（開頂点）のみからなる開部分木に対応する関数 f を返す．
+*	開部分木 t に対応する関数が g であるとき，t を s に結合した開部分木の関数が f o g になるようにする．
 *
-* S add_edge(S x, int s) :
-*   部分木 s の値が x でその親が p のとき，
-*   辺 p'→s を追加した開部分木 p' についての答えを返す（記号 ' は開頂点を表す）
-*
-* S merge(S x, S y) :
-*   開根を共有する開部分木 2 つの値がそれぞれ x, y のとき，それらをマージした開部分木の値を返す．
-*
-* F add_vtx(S x, int s) :
-*	開根 s' をもつ開部分木 s' の値が x のとき，
-*	根 s を追加した欠損部分木 s についての関数 : (欠けた部分木の値 → 部分木 s の値) を返す．
+* F rake(F f, F g) :
+*   開部分木 s, t に対応する関数が f, g のとき，開部分木の開根を重ねた開部分木に対する関数を返す．
+*	その際 g の生きた葉は死に関数としての能力を失うので 2 変数関数になるわけではない．
 *
 * F comp(F f, F g) :
 *	合成関数 f o g を返す．
-*
-* S act(F f, S x) :
-*	f(x) を返す．
 */
-template <class S, class F, S(*get_val)(int), F(*get_fnc)(int), S(*add_edge)(const S&, int), S(*merge)(const S&, const S&), F(*add_vtx)(const S&, int), F(*comp)(const F&, const F&), S(*act)(const F&, const S&)>
+template <class F, F(*get_fnc)(int), F(*rake)(const F&, const F&), F(*comp)(const F&, const F&)>
 class Static_top_tree {
 	// 参考 : https://atcoder.jp/contests/abc351/editorial/9868
 
 	struct Node {
-		// tp : ノードのタイプ
-		//	A:act, C:comp, V:add_vtx, M:merge, E:add_edge, f:get_fnc, x:get_val
+		// tp : ノードのタイプ（R:rake, C:comp, f:leaf）
 		char tp = '?';
 
-		// id : heavy path ならその根，light child ならその親
-		//	ただし二分木の構築後は不要になるので，使い回して参照すべき頂点番号を表す．
+		// id : heavy path ならその根，light child ならその長男
 		int id = -1;
 
-		// [l..r) : heavy path, light child 共にどの範囲を見ているか
-		int l = -1, r = -1;
-
 		// pp : 親ノードへのポインタ，lp[rp] : 左[右]の子ノードへのポインタ
-		//	ただし子が 1 つの場合は lp のみを使用する．
 		Node* pp = nullptr, * lp = nullptr, * rp = nullptr;
 
 		// f : 関数
 		F f;
 
-		// x : 値
-		S x;
+		//// 参考 : https://qiita.com/tubo28/items/f058582e457f6870a800
+		//static inline int node_count = 0;
+		//// 静的に確保した配列から返す
+		//void* operator new(std::size_t) {
+		//	constexpr int MAX_N = (int)2e5 * 2 + 10; // 2 倍居る
+		//	static Node pool[MAX_N];
+		//	return pool + node_count++;
+		//}
 	};
 
 	// root : 根（根付き木全体に対応する）
@@ -697,7 +684,7 @@ class Static_top_tree {
 public:
 	// rt を根とする根付き木 g で初期化する．
 	Static_top_tree(const Graph& g, int rt) {
-		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
+		// verify : https://judge.yosupo.jp/problem/point_set_tree_path_composite_sum_fixed_root
 
 		int n = sz(g);
 
@@ -723,167 +710,151 @@ public:
 		// hp[s] : 根を s とする heavy path を成す頂点の列（深さ降順）
 		vvi hp(n);
 
-		// lc[s] : 頂点 s の light child のリスト
+		// lc[s] : 頂点 s の兄弟である light child のリスト（自身を lc[s][0] に含む）
 		vvi lc(n);
 
 		// HL 分解を行う．
 		function<void(int, int, int)> dfs_hld = [&](int s, int p, int r) {
 			hp[r].push_back(s);
 
+			int ht = -1;
+
 			if (j_max[s] != -1) {
-				int t = g[s][j_max[s]];
-				dfs_hld(t, s, r);
+				ht = g[s][j_max[s]];
+				lc[ht].push_back(ht);
+
+				dfs_hld(ht, s, r);
 			}
 
 			rep(j, sz(g[s])) {
 				int t = g[s][j];
 				if (t == p || j == j_max[s]) continue;
 
-				lc[s].push_back(t);
+				lc[ht].push_back(t);
 
 				dfs_hld(t, s, t);
 			}
 		};
 		dfs_hld(rt, -1, rt);
 
-		root = new Node{ 'A', rt, 0, sz(hp[rt]) };
+		root = new Node{ 'C', rt };
 		st.resize(n);
 
 		// トップダウンに二分木を構築する．
-		function<void(Node*)> dfs_btree = [&](Node* p) {
-			if (p->tp == 'A' || p->tp == 'C') {
-				if (p->r - p->l > 1) {
-					int m = (p->l + p->r) / 2;
+		// [l..r) : heavy path, light child 共にどの範囲を見ているか
+		function<void(Node*, int, int)> dfs_btree = [&](Node* p, int l, int r) {
+			// 仮ラベルが 'C'
+			if (p->tp == 'C') {
+				// ラベルが 'C'
+				if (r - l >= 2) {
+					int m = (l + r) / 2;
 
-					p->lp = new Node{ 'C', p->id, p->l, m, p };
-					dfs_btree(p->lp);
+					p->lp = new Node{ 'C', p->id, p };
+					dfs_btree(p->lp, l, m);
 
-					p->rp = new Node{ p->tp, p->id, m, p->r, p };
-					dfs_btree(p->rp);
+					p->rp = new Node{ 'C', p->id, p };
+					dfs_btree(p->rp, m, r);
 
-					if (p->tp == 'A') p->x = act(p->lp->f, p->rp->x);
-					else p->f = comp(p->lp->f, p->rp->f);
+					p->f = comp(p->lp->f, p->rp->f);
 				}
+				// ラベルが 'R' か 'f'
 				else {
-					p->id = hp[p->id][p->l]; // 使い回して頂点番号を入れておく
-					st[p->id] = p;
-					int r = sz(lc[p->id]);
-					if (r > 0) {
-						p->tp = 'V';
-						p->lp = new Node{ 'M', p->id, 0, r, p };
-						dfs_btree(p->lp);
+					p->id = hp[p->id][l]; // light child の長男の頂点番号
+					l = 0;
+					r = sz(lc[p->id]);
 
-						p->f = add_vtx(p->lp->x, p->id);
+					if (r <= 1) {
+						p->tp = 'f';
+						p->f = get_fnc(p->id);
+						st[p->id] = p;
 					}
 					else {
-						if (p->tp == 'A') {
-							p->tp = 'x';
-							p->x = get_val(p->id);
-						}
-						else {
-							p->tp = 'f';
-							p->f = get_fnc(p->id);
-						}
+						p->tp = 'R';
+						dfs_btree(p, l, r);
 					}
 				}
 			}
-			else if (p->tp == 'M') {
-				if (p->r - p->l > 1) {
-					int m = (p->l + p->r) / 2;
+			// 仮ラベルが 'R'
+			else {
+				// ラベルが 'R'
+				if (r - l >= 2) {
+					int m = (l + r) / 2;
 
-					p->lp = new Node{ 'M', p->id, p->l, m, p };
-					dfs_btree(p->lp);
+					p->lp = new Node{ 'R', p->id, p };
+					dfs_btree(p->lp, l, m);
 
-					p->rp = new Node{ 'M', p->id, m, p->r, p };
-					dfs_btree(p->rp);
+					p->rp = new Node{ 'R', p->id, p };
+					dfs_btree(p->rp, m, r);
 
-					p->x = merge(p->lp->x, p->rp->x);
+					p->f = rake(p->lp->f, p->rp->f);
 				}
+				// ラベルが 'C' か 'f'
 				else {
-					p->id = lc[p->id][p->l]; // 使い回して頂点番号を入れておく
-					int r = sz(hp[p->id]);
+					p->id = lc[p->id][l]; // heavy path の根の頂点番号
+					l = 0;
+					r = sz(hp[p->id]);
 
-					p->tp = 'E';
-					p->lp = new Node{ 'A', p->id, 0, r, p };
-					dfs_btree(p->lp);
-
-					p->x = add_edge(p->lp->x, p->id);
+					if (r <= 1) {
+						p->tp = 'f';
+						p->f = get_fnc(p->id);
+						st[p->id] = p;
+					}
+					else {
+						p->tp = 'C';
+						dfs_btree(p, l, r);
+					}
 				}
 			}
 		};
-		dfs_btree(root);
+		dfs_btree(root, 0, sz(hp[rt]));
 	}
+	Static_top_tree() {}
 
 	// 頂点 s の情報の更新を反映する．
 	void set(int v) {
-		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
+		// verify : https://judge.yosupo.jp/problem/point_set_tree_path_composite_sum_fixed_root
 
 		Node* p = st[v];
 
 		// ボトムアップに必要な箇所のみ更新する．
 		while (p) {
-			if (p->tp == 'A') {
-				p->x = act(p->lp->f, p->rp->x);
+			if (p->tp == 'R') {
+				p->f = rake(p->lp->f, p->rp->f);
 			}
 			else if (p->tp == 'C') {
 				p->f = comp(p->lp->f, p->rp->f);
 			}
-			else if (p->tp == 'V') {
-				p->f = add_vtx(p->lp->x, p->id);
-			}
-			else if (p->tp == 'M') {
-				p->x = merge(p->lp->x, p->rp->x);
-			}
-			else if (p->tp == 'E') {
-				p->x = add_edge(p->lp->x, p->id);
-			}
-			else if (p->tp == 'x') {
-				p->x = get_val(v);
-			}
 			else if (p->tp == 'f') {
-				p->f = get_fnc(v);
+				p->f = get_fnc(p->id);
 			}
 
 			p = p->pp;
 		}
 	}
 
-	// 根付き木全体の値を返す．
-	S get() {
-		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
+	// 根付き木全体の関数を返す．
+	F get() {
+		// verify : https://judge.yosupo.jp/problem/point_set_tree_path_composite_sum_fixed_root
 
-		return root->x;
+		return root->f;
 	}
 
 	/* 雛形
-	using S = mint;
 	struct F {
-		mint a, b;
+	mint a, b;
 	};
-	S get_val(int s) {
-		return a[s];
+	F get_fnc(int i) {
+		return F{ 1, a[i] };
 	}
-	F get_fnc(int s) {
-		return { 1, a[s] };
-	}
-	S add_edge(const S& x, int s) {
-		return x;
-	}
-	S merge(const S& x, const S& y) {
-		return x * y;
-	}
-	F add_vtx(const S& x, int s) {
-		return { x, a[s] };
+	F rake(const F& f, const F& g) {
+		return F{ f.a * g.b, f.b * g.b };
 	}
 	F comp(const F& f, const F& g) {
-		return { f.a * g.a, f.a * g.b + f.b };
+		return F{ f.a * g.a, f.a * g.b + f.b };
 	}
-	S act(const F& f, const S& x) {
-		return f.a * x + f.b;
-	}
-	Static_top_tree<S, F, get_val, get_fnc, add_edge, merge, add_vtx, comp, act> G(g, 0);
+	Static_top_tree<F, get_fnc, rake, comp> G(g, 0);
 	*/
-};
+}; 
 
 
 //【static top tree（全方位）】
@@ -1588,6 +1559,278 @@ vector<T> tree_giveDP(const WGraph& g, int r) {
 	vector<T> solve_by_tree_giveDP(const WGraph& g, int r) {
 		return tree_giveDP<T, apply, root>(g, r);
 	}
+	*/
+};
+
+
+
+//【static top tree】
+/*
+* Static_top_tree_old<S, F, get_val, get_fnc, add_edge, merge, add_vtx, comp, act>(Graph g, int r) : O(n (log n)^2)
+*	r を根とする根付き木 g で初期化する．
+*
+* set(int s) : O((log n)^2)
+*	頂点 s の情報の更新を反映する．
+*
+* S get() : O(1)
+*	根付き木全体の値を返す．
+*
+* なおテンプレート引数が表す関数は以下の通りとする：
+*
+* S get_val(int s) :
+*   葉 s のみからなる部分木についての値を返す．
+*
+* F get_fnc(int s) :
+*   節点 s のみからなる欠損部分木（子が 1 つ欠けた部分木）について，
+*	関数 : (欠けた部分木の値 → 部分木 s の値) を返す．
+*
+* S add_edge(S x, int s) :
+*   部分木 s の値が x でその親が p のとき，
+*   辺 p'→s を追加した開部分木 p' についての答えを返す（記号 ' は開頂点を表す）
+*
+* S merge(S x, S y) :
+*   開根を共有する開部分木 2 つの値がそれぞれ x, y のとき，それらをマージした開部分木の値を返す．
+*
+* F add_vtx(S x, int s) :
+*	開根 s' をもつ開部分木 s' の値が x のとき，
+*	根 s を追加した欠損部分木 s についての関数 : (欠けた部分木の値 → 部分木 s の値) を返す．
+*
+* F comp(F f, F g) :
+*	合成関数 f o g を返す．
+*
+* S act(F f, S x) :
+*	f(x) を返す．
+*/
+template <class S, class F, S(*get_val)(int), F(*get_fnc)(int), S(*add_edge)(const S&, int), S(*merge)(const S&, const S&), F(*add_vtx)(const S&, int), F(*comp)(const F&, const F&), S(*act)(const F&, const S&)>
+class Static_top_tree_old {
+	// 参考 : https://atcoder.jp/contests/abc351/editorial/9868
+
+	struct Node {
+		// tp : ノードのタイプ
+		//	A:act, C:comp, V:add_vtx, M:merge, E:add_edge, f:get_fnc, x:get_val
+		char tp = '?';
+
+		// id : heavy path ならその根，light child ならその親
+		//	ただし二分木の構築後は不要になるので，使い回して参照すべき頂点番号を表す．
+		int id = -1;
+
+		// [l..r) : heavy path, light child 共にどの範囲を見ているか
+		int l = -1, r = -1;
+
+		// pp : 親ノードへのポインタ，lp[rp] : 左[右]の子ノードへのポインタ
+		//	ただし子が 1 つの場合は lp のみを使用する．
+		Node* pp = nullptr, * lp = nullptr, * rp = nullptr;
+
+		// f : 関数
+		F f;
+
+		// x : 値
+		S x;
+
+		//// 参考 : https://qiita.com/tubo28/items/f058582e457f6870a800
+		//static inline int node_count = 0;
+		//// 静的に確保した配列から返す
+		//void* operator new(std::size_t) {
+		//	constexpr int MAX_N = (int)2e5 * 3 + 10; // 3 倍居る
+		//	static Node pool[MAX_N];
+		//	return pool + node_count++;
+		//}
+	};
+
+	// root : 根（根付き木全体に対応する）
+	Node* root;
+
+	// st[s] : 頂点 s の変更があったとき，どのノードから更新を始めればいいか
+	vector<Node*> st;
+
+public:
+	// rt を根とする根付き木 g で初期化する．
+	Static_top_tree_old(const Graph& g, int rt) {
+		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
+
+		int n = sz(g);
+
+		// j_max[s] : s の重さ最大の部分木が何番目か
+		vi j_max(n, -1);
+
+		// 部分木の重さを調べる．
+		function<int(int, int)> dfs_wgt = [&](int s, int p) {
+			int ws = 0; int wt_max = -INF;
+
+			rep(j, sz(g[s])) {
+				auto t = g[s][j];
+				if (t == p) continue;
+
+				int wt = dfs_wgt(t, s);
+				ws += wt + 1;
+				if (chmax(wt_max, wt)) j_max[s] = j;
+			}
+			return ws;
+		};
+		dfs_wgt(rt, -1);
+
+		// hp[s] : 根を s とする heavy path を成す頂点の列（深さ降順）
+		vvi hp(n);
+
+		// lc[s] : 頂点 s の light child のリスト
+		vvi lc(n);
+
+		// HL 分解を行う．
+		function<void(int, int, int)> dfs_hld = [&](int s, int p, int r) {
+			hp[r].push_back(s);
+
+			if (j_max[s] != -1) {
+				int t = g[s][j_max[s]];
+				dfs_hld(t, s, r);
+			}
+
+			rep(j, sz(g[s])) {
+				int t = g[s][j];
+				if (t == p || j == j_max[s]) continue;
+
+				lc[s].push_back(t);
+
+				dfs_hld(t, s, t);
+			}
+		};
+		dfs_hld(rt, -1, rt);
+
+		root = new Node{ 'A', rt, 0, sz(hp[rt]) };
+		st.resize(n);
+
+		// トップダウンに二分木を構築する．
+		function<void(Node*)> dfs_btree = [&](Node* p) {
+			if (p->tp == 'A' || p->tp == 'C') {
+				if (p->r - p->l > 1) {
+					int m = (p->l + p->r) / 2;
+
+					p->lp = new Node{ 'C', p->id, p->l, m, p };
+					dfs_btree(p->lp);
+
+					p->rp = new Node{ p->tp, p->id, m, p->r, p };
+					dfs_btree(p->rp);
+
+					if (p->tp == 'A') p->x = act(p->lp->f, p->rp->x);
+					else p->f = comp(p->lp->f, p->rp->f);
+				}
+				else {
+					p->id = hp[p->id][p->l]; // 使い回して頂点番号を入れておく
+					st[p->id] = p;
+					int r = sz(lc[p->id]);
+					if (r > 0) {
+						p->tp = 'V';
+						p->lp = new Node{ 'M', p->id, 0, r, p };
+						dfs_btree(p->lp);
+
+						p->f = add_vtx(p->lp->x, p->id);
+					}
+					else {
+						if (p->tp == 'A') {
+							p->tp = 'x';
+							p->x = get_val(p->id);
+						}
+						else {
+							p->tp = 'f';
+							p->f = get_fnc(p->id);
+						}
+					}
+				}
+			}
+			else if (p->tp == 'M') {
+				if (p->r - p->l > 1) {
+					int m = (p->l + p->r) / 2;
+
+					p->lp = new Node{ 'M', p->id, p->l, m, p };
+					dfs_btree(p->lp);
+
+					p->rp = new Node{ 'M', p->id, m, p->r, p };
+					dfs_btree(p->rp);
+
+					p->x = merge(p->lp->x, p->rp->x);
+				}
+				else {
+					p->id = lc[p->id][p->l]; // 使い回して頂点番号を入れておく
+					int r = sz(hp[p->id]);
+
+					p->tp = 'E';
+					p->lp = new Node{ 'A', p->id, 0, r, p };
+					dfs_btree(p->lp);
+
+					p->x = add_edge(p->lp->x, p->id);
+				}
+			}
+		};
+		dfs_btree(root);
+	}
+
+	// 頂点 s の情報の更新を反映する．
+	void set(int v) {
+		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
+
+		Node* p = st[v];
+
+		// ボトムアップに必要な箇所のみ更新する．
+		while (p) {
+			if (p->tp == 'A') {
+				p->x = act(p->lp->f, p->rp->x);
+			}
+			else if (p->tp == 'C') {
+				p->f = comp(p->lp->f, p->rp->f);
+			}
+			else if (p->tp == 'V') {
+				p->f = add_vtx(p->lp->x, p->id);
+			}
+			else if (p->tp == 'M') {
+				p->x = merge(p->lp->x, p->rp->x);
+			}
+			else if (p->tp == 'E') {
+				p->x = add_edge(p->lp->x, p->id);
+			}
+			else if (p->tp == 'x') {
+				p->x = get_val(v);
+			}
+			else if (p->tp == 'f') {
+				p->f = get_fnc(v);
+			}
+
+			p = p->pp;
+		}
+	}
+
+	// 根付き木全体の値を返す．
+	S get() {
+		// verify : https://atcoder.jp/contests/abc351/tasks/abc351_g
+
+		return root->x;
+	}
+
+	/* 雛形
+	using S = mint;
+	struct F {
+		mint a, b;
+	};
+	S get_val(int s) {
+		return a[s];
+	}
+	F get_fnc(int s) {
+		return { 1, a[s] };
+	}
+	S add_edge(const S& x, int s) {
+		return x;
+	}
+	S merge(const S& x, const S& y) {
+		return x * y;
+	}
+	F add_vtx(const S& x, int s) {
+		return { x, a[s] };
+	}
+	F comp(const F& f, const F& g) {
+		return { f.a * g.a, f.a * g.b + f.b };
+	}
+	S act(const F& f, const S& x) {
+		return f.a * x + f.b;
+	}
+	Static_top_tree_old<S, F, get_val, get_fnc, add_edge, merge, add_vtx, comp, act> G(g, 0);
 	*/
 };
 

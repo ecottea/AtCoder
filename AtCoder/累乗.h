@@ -61,7 +61,7 @@ public:
 };
 
 
-//【累乗の剰余（64 bit）】
+//【累乗の剰余（64 bit）】O(log n)
 /*
 * x^n (mod m) を返す．
 */
@@ -95,7 +95,7 @@ ll pow_mod_large(ll x, ll n, ll m) {
 *（繰り返し二乗法）
 */
 template <class S, S(*op)(S, S), S(*e)()>
-S pow(const S& x, ll n) {
+S pow_monoid(const S& x, ll n) {
 	// verify : https://atcoder.jp/contests/abc367/tasks/abc367_e
 
 	S res(e()), pow2 = x;
@@ -337,16 +337,44 @@ int tetration(ll a, ll b, int m) {
 //【フロベニウス写像】
 /*
 * 標数 p の可換環においては，p 乗する写像は自己準同型になる．すなわち以下が成り立つ：
-*	(a + b)^p = a^p + b^p, (a b)^p = a^p b^p
+*	(a + b)^p = a^p + b^p
+*	(a b)^p   = a^p b^p
+* 
+* verify : https://yukicoder.me/problems/no/2994
 */
 
 
 //【mod p^n での p 乗】
 /*
-* a^p (mod p^n) の値は a mod p^(n-1) のみに依存して決まる．すなわち以下が成り立つ：
-*	(a + p^(n-1))^p ≡ a^p (mod p^n)
+* n ≧ 2 のとき，a^p (mod p^n) の値は a mod p^(n-1) のみに依存して決まる．
+* すなわち以下が成り立つ：
+*	(a + k p^(n-1))^p ≡ a^p (mod p^n)
+* 
+*（証明）二項定理より
+*	(a + k p^(n-1))^p
+*	= a^p + bin(p,1) a^(p-1) k p^(n-1) + bin(p,2) a^(p-2) (k p^(n-1))^2 + ...
+* であるが，p:素数 より
+*	bin(p,r) ≡ 0 (mod p)  (r > 0)
+* なので，これは (mod p^n) で a^p に等しい．
 *
 * verify : https://yukicoder.me/problems/no/2344
+*/
+
+
+//【累乗和（mod p）】
+/*
+* 1^k + 2^k + ... + (p-1)^k ≡ -1 （k ≡ 0 (mod p-1) のとき）
+*                           ≡  0 （k !≡ 0 (mod p-1) のとき）
+* 
+*（証明）r を mod p での原始根とすると，左辺は
+*		(左辺) = ∑i∈[0..p-1) (r^i)^k = ∑i∈[0..p-1) (r^k)^i
+* となる．
+*		r^k ≡ 1 (mod p) ⇔ k ≡ 0 (mod p-1)
+* であれば
+*		(左辺) ≡ ∑i∈[0..p-1) 1^i = p-1 ≡ -1 (mod p)
+* となり，さもなくば等比数列の和の公式とフェルマーの小定理より
+*		(左辺) ≡ (1 - r^(p-1))/(1-r) ≡ (1-1) / (1-r) = 0 (mod p)
+* となる．
 */
 
 

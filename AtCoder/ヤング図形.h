@@ -56,9 +56,9 @@ vector<tuple<T, T, int>> transpose_yd_rect(const vector<T>& a) {
 
 //【ヤング図形のドミノ分割】O(n)
 /*
-* ヤング図形 a[0..h) を左上を 0 とする 0, 1 の市松模様に彩色する．
+* ヤング図形 a[0..h) を左上を 0 とする 0/1 の市松模様に彩色する．
 * a をドミノに分割し，各 k∈[0,1] に対し，右上が k であるようなドミノだけを抽出して作った
-* 新たなヤング図形を b[k] に格納して b[0..1] を返す（分割不可能なら空配列を返す）
+* 新たなヤング図形を b[k] に格納して {b[0], b[1]} を返す（分割不可能なら空配列を返す）
 */
 vvi domino_division_yd(const vi& a) {
 	// 参考 : https://mathlog.info/articles/2214
@@ -89,12 +89,12 @@ vvi domino_division_yd(const vi& a) {
 
 //【標準タブロー】
 /*
-* N の分割を表すヤング図形 λ に対し，各行および各列について単調増加になるように
-* [0..N) を 1 回ずつ書き込んだものを標準タブローという．
+* n の分割を表すヤング図形 λ に対し，各行および各列について単調増加になるように
+* [0..n) を 1 回ずつ書き込んだものを標準タブローという．
 */
 
 
-//【標準タブローの数え上げ】O(Σa)
+//【標準タブローの数え上げ】O(n)
 /*
 * ヤング図形 a に対応する標準タブローの個数を返す．
 * 戻り値は，ヤング図形であるという性質を保ちながら 1 マスずつ箱を配置する方法の数とも解釈できる．
@@ -103,7 +103,7 @@ vvi domino_division_yd(const vi& a) {
 */
 mint hook_length_formula(const vi& a) {
 	// 参考 : https://zenn.dev/koboshi/articles/306304c0381c1e
-	// verify : https://yukicoder.me/problems/no/2149
+	// verify : https://atcoder.jp/contests/abc378/tasks/abc378_g
 
 	//【方法】
 	// ヤング図形 a のあるマス (i,j) について，そのマスの右または下にあるマス（自身を含む）
@@ -111,7 +111,7 @@ mint hook_length_formula(const vi& a) {
 	// a に対応する標準タブローの個数は，以下の式で与えられる：
 	//		n! / (Π_(i,j) h(i,j))
 
-	int n = sz(a);
+	int h = sz(a);
 
 	// a_sum : マスの総数（分割対象の自然数）
 	int a_sum = accumulate(all(a), 0);
@@ -124,24 +124,24 @@ mint hook_length_formula(const vi& a) {
 
 	// 分母は各マスにおけるフック長の積
 	mint dnm = 1;
-	rep(i, n) rep(j, a[i]) dnm *= (a[i] - j) + (at[j] - i) - 1;
+	rep(i, h) rep(j, a[i]) dnm *= (a[i] - j) + (at[j] - i) - 1;
 
 	return num / dnm;
 }
 
 
-//【ヤング図形の数え上げ（被包含指定）】O(N)
+//【ヤング図形の数え上げ（被包含指定）】O(n)
 /*
-* 大きさ N のヤング図形 a[0..h) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
+* 大きさ n のヤング図形 a[0..h) に包含されるヤング図形の個数を返す（空のヤング図形も含む）
 */
 mint count_young_diagrams(const vi& a) {
-	int n = sz(a);
+	int h = sz(a);
 
 	// dp_i[j] : a[0..i) に包含される，右端の高さが j であるヤング図形の個数
 	vm dp(a[0] + 1);
 	dp[a[0]] = 1;
 
-	rep(i, n) {
+	rep(i, h) {
 		// acc[j] : Σdp_i[j..∞)
 		vm acc(sz(dp) + 1);
 		repir(j, sz(dp) - 1, 0) acc[j] = acc[j + 1] + dp[j];
@@ -183,25 +183,25 @@ mint count_young_diagrams_ll(vector<T> a) {
 	//		= Σr∈[0..i+1) (-1)^r c[i-r] bin(x, r)
 	// となり，係数 c[0..i) を使いまわした上で同じ形に表される．
 	// 
-	// c[0]=1 から始めて先の遷移式 (*) を用いた DP で c[0..n) を昇順に求めていけば良い．
+	// c[0]=1 から始めて先の遷移式 (*) を用いた DP で c[0..h) を昇順に求めていけば良い．
 	//（オンライン畳込みの形なので，二項係数用の前計算が可能な程度の a[0] なら高速化できる）
 
 	//【備考】
 	// 幅が同じところをまとめて遷移させているだけの最短格子路数の DP だとも思える．
 
 	a.push_back(0); // 右端の高さが 0 でなければならないことにする．
-	int n = sz(a);
+	int h = sz(a);
 
-	vm c(n);
+	vm c(h);
 	c[0] = 1;
 
-	repi(i, 1, n - 1) {
+	repi(i, 1, h - 1) {
 		auto bin = binomial_fixed_n(a[i - 1] + 1, i);
 
 		rep(r, i) c[i] += (r & 1 ? -1 : 1) * c[i - 1 - r] * bin[r + 1];
 	}
 
-	return c[n - 1];
+	return c[h - 1];
 }
 
 
@@ -226,6 +226,7 @@ mint count_young_diagrams_ll(vector<T> a) {
 * なる対応をもつ．
 * 
 * 参考 : https://zenn.dev/koboshi/articles/306304c0381c1e
+* 実験用 : https://www.integral-domain.org/lwilliams/Applets/Math/RS.php
 * verify : https://yukicoder.me/problems/no/2048
 */
 
@@ -235,6 +236,8 @@ mint count_young_diagrams_ll(vector<T> a) {
 * ヤング図形 a[0..h) に包含されるヤング図形を格納したリストを返す（空のヤング図形も含む）
 */
 vvi enumerate_young_diagrams(const vi& a) {
+	// verify : https://atcoder.jp/contests/abc378/tasks/abc378_g
+
 	int n = sz(a);
 	vi yng; vvi yngs;
 
@@ -262,6 +265,46 @@ vvi enumerate_young_diagrams(const vi& a) {
 	rf(0);
 
 	return yngs;
+}
+
+
+//【ヤング図形の列挙（被包含指定，包含指定）】O(?)
+/*
+* ヤング図形 a_out[0..h) に包含され，a_in[0..h) を包含するような
+* ヤング図形を格納したリストを返す（空のヤング図形も含む）
+*/
+vvi enumerate_young_diagrams(const vi& a_out, vi a_in) {
+	// verify : https://atcoder.jp/contests/abc378/tasks/abc378_g
+
+	int h = sz(a_out);
+	a_in.resize(h);
+
+	vi a; vvi res;
+
+	function<void(int)> rf = [&](int i) {
+		// 高さが h になったら完成とする．
+		if (i == h) {
+			res.push_back(a);
+			return;
+		}
+
+		// i 列目に箱を置く場合
+		int j_min = max(1, a_in[i]);
+		int j_max = a_out[i];
+		if (i > 0) chmin(j_max, a[i - 1]);
+
+		repi(j, j_min, j_max) {
+			a.push_back(j);
+			rf(i + 1);
+			a.pop_back();
+		}
+
+		// i 列目に箱を置かない場合は打ち切って完成とする．
+		if (a_in[i] == 0) res.push_back(a);
+	};
+	rf(0);
+
+	return res;
 }
 
 

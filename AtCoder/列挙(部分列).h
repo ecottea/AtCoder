@@ -40,12 +40,14 @@ vector<string> enumerate_subsequences(const string& s) {
 }
 
 
-//【部分列の列挙（長さ指定）】O(bin(n, m) m) ?
+//【部分列の列挙（長さ指定）】O(bin(n+1, m))（m が大きいとき bin(n,m) よりずっと大きいので注意！）
 /*
 * a[0..n) の長さ m の部分列全てを格納したリストを返す（重複含む）
 */
 template <class T>
 vector<vector<T>> enumerate_subsequences(const vector<T>& a, int m) {
+	// verify : https://atcoder.jp/contests/abc386/tasks/abc386_e
+
 	int n = sz(a);
 
 	vector<vector<T>> seqs;

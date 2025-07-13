@@ -30,7 +30,7 @@
 *   全要素に対して mask と XOR をとったと仮定し，最小要素を返す．
 *
 * T get(ll i, T mask = 0) : O(B)
-*   全要素に対して mask と XOR をとったと仮定し，昇順で i 番目（0-indexed）の要素を返す．
+*   全要素に対して mask と XOR をとったと仮定し，昇順で i 番目（0-indexed）の要素を返す（なければ -1）
 *
 * ll lower_bound(T val, T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，
@@ -45,6 +45,9 @@
 *
 * ll count(T l, T r, T mask = 0) : O(B)
 *   全要素に対して mask と XOR をとったと仮定し，値 [l..r) をもつ要素の個数を返す．
+*
+* vector<pTl> get_all() : O(n)
+*	全要素の (値, 個数) の組のリストを返す．
 */
 template <class T = ll>
 class Binary_trie {
@@ -53,6 +56,15 @@ class Binary_trie {
 	struct Node {
 		ll cnt; // 部分木のもつ要素の個数
 		Node* ch[2]; // 左右の子へのポインタ
+
+		//// 参考 : https://qiita.com/tubo28/items/f058582e457f6870a800
+		//static inline int node_count = 0;
+		//// 静的に確保した配列から返す
+		//void* operator new(std::size_t) {
+		//	constexpr int MAX_N = (1 + 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 + 512 + 1024 + 2048 + 4096 + 8192 + 16384 + 32768 + 65536 + 131072 + 262144 + 500000 * 12);
+		//	static Node pool[MAX_N];
+		//	return pool + node_count++;
+		//}
 
 		Node() : cnt(0), ch{ nullptr, nullptr } {}
 	};
@@ -156,6 +168,18 @@ class Binary_trie {
 		delete t;
 	}
 
+	void get_all_sub(Node* t, T val, int b, vector<pair<T, ll>>& res) const {
+		if (t == nullptr) return;
+
+		if (b < 0) {
+			res.emplace_back(val, t->cnt);
+			return;
+		}
+
+		get_all_sub(t->ch[0], val << 1, b - 1, res);
+		get_all_sub(t->ch[1], (val << 1) | T(1), b - 1, res);
+	}
+
 	void print_sub(Node* t, T val, int b, ostream& os) const {
 		if (t == nullptr) return;
 
@@ -170,11 +194,14 @@ class Binary_trie {
 
 public:
 	// 空で初期化する． : O(1)
-	Binary_trie(int B_ = 62) : root(nullptr), B(B_) {}
+	Binary_trie(int B_ = 62) : root(nullptr), B(B_) {
+		// verify : https://judge.yosupo.jp/problem/ordered_set
+	}
 
 	// メモリを開放する．： O(n B)
 	~Binary_trie() {
-//		free_sub(root);
+		// verify : https://yukicoder.me/problems/no/2977
+		//free_sub(root);
 	}
 
 	// 要素数を返す． : O(1)
@@ -189,21 +216,21 @@ public:
 
 	// 値 val を cnt[=1] 個追加する． : O(B)
 	void insert(T val, ll cnt = 1) {
-		// verify(cnt=1) : https://judge.yosupo.jp/problem/set_xor_min
+		// verify : https://judge.yosupo.jp/problem/set_xor_min
 
 		root = insert_sub(root, val, cnt, B - 1);
 	}
 
 	// 値 val を cnt[=1] 個削除する． : O(B)
 	void erase(T val, ll cnt = 1) {
-		// verify(cnt=1) : https://judge.yosupo.jp/problem/set_xor_min
+		// verify : https://judge.yosupo.jp/problem/set_xor_min
 
 		root = erase_sub(root, val, cnt, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの最大要素を返す． : O(B)
 	T max_element(T mask = 0) const {
-		// verify(mask=0) : https://judge.yosupo.jp/problem/double_ended_priority_queue
+		// verify : https://judge.yosupo.jp/problem/double_ended_priority_queue
 
 		return min_element_sub(root, ~mask, B - 1);
 	}
@@ -215,17 +242,18 @@ public:
 		return min_element_sub(root, mask, B - 1);
 	}
 
-	// mask[=0] との XOR をとったときの昇順で i 番目（0-indexed）の要素を返す． : O(B)
+	// mask[=0] との XOR をとったときの昇順で i 番目（0-indexed）の要素を返す（なければ -1）
 	T get(ll i, T mask = 0) const {
-		// verify : https://atcoder.jp/contests/arc147/tasks/arc147_e
+		// verify : https://judge.yosupo.jp/problem/ordered_set
 
-		Assert(0 <= i && i < size());
+		if (i < 0 || size() <= i) return T(-1);
+
 		return get_sub(root, mask, i, B - 1);
 	}
 
 	// mask[=0] との XOR をとったときの val 以上の最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
 	ll lower_bound(T val, T mask = 0) const {
-		// verify : https://judge.yosupo.jp/problem/point_set_range_frequency
+		// verify : https://judge.yosupo.jp/problem/ordered_set
 
 		if (val <= 0) return 0LL;
 		if (val >= (T(1) << B)) return size();
@@ -235,23 +263,32 @@ public:
 
 	// mask[=0] との XOR をとったときの val より大きい最小の要素が昇順で何番目の要素かを返す．（0-indexed） : O(B)
 	ll upper_bound(T val, T mask = 0) const {
-		// verify : https://codeforces.com/contest/966/problem/C
+		// verify : https://judge.yosupo.jp/problem/ordered_set
 
 		return lower_bound_sub(root, mask, val + 1, B - 1);
 	}
 
 	// 要素 val の個数を返す． : O(B)
 	ll count(T val) const {
-		// verify : https://judge.yosupo.jp/problem/set_xor_min
+		// verify : https://judge.yosupo.jp/problem/associative_array
 
 		return upper_bound(val) - lower_bound(val);
 	}
 
 	// mask[=0] との XOR をとったときの [l..r) に値をもつ要素の個数を返す． : O(B)
 	ll count(T l, T r, T mask = 0) const {
-		// verify : https://www.spoj.com/problems/SUBXOR/
+		// verify : https://judge.yosupo.jp/problem/ordered_set
 
 		return lower_bound(r, mask) - lower_bound(l, mask);
+	}
+
+	// 全要素の (値, 個数) の組のリストを返す．
+	vector<pair<T, ll>> get_all() const {
+		// verify : https://atcoder.jp/contests/joig2024-open/tasks/joig2024_f
+
+		vector<pair<T, ll>> res;
+		get_all_sub(root, T(0), B - 1, res);
+		return res;
 	}
 
 #ifdef _MSC_VER
@@ -308,7 +345,9 @@ public:
 
 	// 区間の数を返す．
 	int size() const {
-		return sz(l_to_r);
+		// verify : https://atcoder.jp/contests/abc411/tasks/abc411_c
+
+		return sz(l_to_r) - 2;
 	}
 
 	// x が含まれる区間 [l..r) を返す（なければ {-1, -1} を返す）
@@ -439,18 +478,21 @@ public:
 * Interval_map<S, T>(S L, S R, T v0) : O(1)
 *	定義域を [L..R) とし，a[L..R) = v0 で初期化する．
 *
-* void set(S l, S r, T v) : ならし O(log n)
+* void set_interval(S l, S r, T v) : ならし O(log n)
 *	a[l..r) = v とする．
 *
 * T get(S i) : O(log n)
 *	a[i] を返す．
 *
-* vector<tuple<S, S, T>> get(S l, S r) : O(n)
+* tuple<S, S, T> get_interval(S i) : O(log n)
+*	i を含む値の等しい極大区間が a[l..r)=v だとして，3 つ組 {l, r, v} を返す．
+*
+* vector<tuple<S, S, T>> get_all(S l, S r) : O(n)
 *	a[l..r) を連長圧縮した結果を {左端, 右端, 値} のリストとして返す．
-*	注意：これを呼んだ直後に set(l, r, v) を呼ぶなら計算量はならし O(log n)
+*	備考：これを呼んだ直後に set_interval(l, r, v) を呼ぶなら計算量はならし O(log n)
 */
 template <class S, class T>
-class Interval_map {
+struct Interval_map {
 	// L, R : 定義域が [L..R) であることを表す．
 	S L, R;
 
@@ -462,41 +504,63 @@ public:
 	Interval_map(S L, S R, T v0) : L(L), R(R) {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac
 
+		// 番兵として絶対使わない値を置いておく
+		l_to_v[L - 1] = T(INFL) + 1;
 		l_to_v[L] = v0;
-		l_to_v[R] = v0; // 番兵
+		l_to_v[R] = T(INFL) + 1;
 	}
 	Interval_map() : L(0), R(0) {}
 
-	// 区間 [l..r) に値 v を割り当てる．
-	void set(S l, S r, T v) {
+	// a[l..r) = v とする．
+	void set_interval(S l, S r, T v) {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac
 
 		chmax(l, L); chmin(r, R);
 		if (l >= r) return;
 
 		auto it = l_to_v.upper_bound(l);
-		T vr = prev(it)->second;
+		auto pit = prev(it);
+		T vR = pit->second;
+
+		if (pit->first == l) {
+			pit = l_to_v.erase(pit);
+			pit = prev(pit);
+		}
+		T vL = pit->second;
+
+		// 丸ごと上書きされる区間は削除する．
 		while (it != l_to_v.end()) {
 			if (it->first > r) break;
 
-			vr = it->second;
+			vR = it->second;
 			it = l_to_v.erase(it);
 		}
 
-		l_to_v[l] = v;
-		l_to_v[r] = vr;
+		if (v != vR) l_to_v[r] = vR;
+		if (v != vL) l_to_v[l] = v;
 	}
 
 	// a[i] を返す．
 	T get(S i) {
 		// verify : https://codeforces.com/contest/1638/problem/E
 
-		Assert(L <= i && i < R);
+		Assert(L <= i); Assert(i < R);
 		return prev(l_to_v.upper_bound(i))->second;
 	}
 
+	// i を含む値の等しい極大区間が a[l..r)=v だとして，3 つ組 {l, r, v} を返す．
+	tuple<S, S, T> get_interval(S i) {
+		// verify : https://atcoder.jp/contests/abc380/tasks/abc380_e
+
+		Assert(L <= i); Assert(i < R);
+
+		auto it = l_to_v.upper_bound(i);
+		auto pit = prev(it);
+		return { pit->first, it->first, pit->second };
+	}
+
 	// a[l..r) を連長圧縮した結果を {左端, 右端, 値} のリストとして返す．
-	vector<tuple<S, S, T>> get(S l, S r) {
+	vector<tuple<S, S, T>> get_all(S l, S r) {
 		// verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac
 
 		chmax(l, L); chmin(r, R);
@@ -504,9 +568,9 @@ public:
 
 		vector<tuple<S, S, T>> res;
 		auto nit = l_to_v.upper_bound(l), it = prev(nit);
-		T i = it->first;
+		S i = it->first;
 		while (i < r) {
-			T ni = nit->first;
+			S ni = nit->first;
 			res.emplace_back(max(i, l), min(ni, r), it->second);
 			i = ni;
 			it = nit++;
@@ -517,7 +581,7 @@ public:
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Interval_map& IM) {
-		auto it = IM.l_to_v.begin();
+		auto it = next(IM.l_to_v.begin());
 		while (it->first < IM.R) {
 			os << "[" << it->first << "," << next(it)->first << "):" << it->second << " ";
 			it++;
@@ -654,30 +718,32 @@ struct Trie_tree_set {
 
 //【トライ木（写像）】
 /*
-* Trie_tree_map<T>(T nil = lowest()) : O(1)
+* Trie_tree_map<T>(T nil = lowest()) : O(26)
 *   空で初期化する．
 *
 * int size() : O(1)
 *   登録されている文字列の個数を返す．
 *
-* set(string s, T x) : O(|s|)
+* set(string s, T x) : O(|s| 26)
 *   文字列 s に値 x を割り当てる．
 *
 * T get(string s) : O(|s|)
 *   文字列 s に割り当てられている値を返す（無ければ nil）
 *
-* int get_all(string s, vi& len, vT& val) : O(|s|)
-*	文字列 s の接頭辞である登録済文字列の長さを len，値を val にそれぞれ格納する．
-*	またリストの長さを返す．
+* vpiT get_all(string s) : O(|s|)
+*	文字列 s の接頭辞である登録済文字列の {長さ, 値} の組のリストを返す．
 *
 * int count_prefix(string s) : O(|s|)
 *   文字列 s を接頭辞にもつ文字列が何個登録されているかを返す．
+*
+* vpiT erase_all(string s) : ならし O(|s| 26)
+*	文字列 s を接頭辞にもつ登録済文字列を全削除し，{長さ, 値} の組のリストを返す．
 */
 template <class T>
-struct Trie_tree_map {
+class Trie_tree_map {
 	// 参考 : https://algo-logic.info/trie-tree/
 
-	static constexpr int K = 26; // 文字数
+	static constexpr int K = 26;   // 文字数
 	static constexpr char A = 'a'; // 最初の文字
 
 	struct Node {
@@ -711,8 +777,11 @@ struct Trie_tree_map {
 		return p;
 	}
 
+public:
 	// 空で初期化する．
 	Trie_tree_map(T nil = numeric_limits<T>::lowest()) : nil(nil) {
+		// verify : https://atcoder.jp/contests/abc403/tasks/abc403_e
+
 		root = new Node('^', nil, 0);
 	}
 
@@ -723,6 +792,8 @@ struct Trie_tree_map {
 
 	// 文字列 s に値 x を割り当てる．
 	void set(const string& str, T x) {
+		// verify : https://atcoder.jp/contests/abc403/tasks/abc403_e
+
 		Node* p = root;
 
 		// str の文字 c を先頭から順に見ていく
@@ -743,25 +814,26 @@ struct Trie_tree_map {
 
 	// 文字列 s に割り当てられている値を返す（無ければ nil）
 	T get(const string& str) const {
+		// verify : https://atcoder.jp/contests/abc403/tasks/abc403_e
+
 		Node* p = get_node(str);
 
 		return p ? p->val : nil;
 	}
 
-	int get_all(const string& str, vi& len, vector<T>& val) const {
-		// verify : https://atcoder.jp/contests/agc047/tasks/agc047_b
+	// 文字列 s の接頭辞である登録済文字列の {長さ, 値} の組のリストを返す．
+	vector<pair<int, T>> get_all(const string& str) const {
+		// verify : https://atcoder.jp/contests/abc403/tasks/abc403_e
 
-		len.clear(); val.clear();
+		vector<pair<int, T>> res;
+
 		int l = 0;
 
 		Node* p = root;
 
 		// str の文字 c を先頭から順に見ていく
 		repe(c, str) {
-			if (p->val != nil) {
-				len.push_back(l);
-				val.push_back(p->val);
-			}
+			if (p->val != nil) res.emplace_back(l, p->val);
 
 			// 登録済みの文字だった場合
 			if (p->childs[c - A]) {
@@ -771,15 +843,13 @@ struct Trie_tree_map {
 			}
 			// 未登録の文字だった場合
 			else {
-				return sz(len);
+				return res;
 			}
 		}
 
-		if (p->val != nil) {
-			len.push_back(l);
-			val.push_back(p->val);
-		}
-		return sz(len);
+		if (p->val != nil) res.emplace_back(l, p->val);
+
+		return res;
 	}
 
 
@@ -788,6 +858,48 @@ struct Trie_tree_map {
 		Node* p = get_node(str);
 
 		return p ? p->cnt : 0;
+	}
+
+	// 文字列 s を接頭辞にもつ登録済文字列を全削除し，{長さ, 値} の組のリストを返す．
+	vector<pair<int, T>> erase_all(const string& str) {
+		// verify : https://atcoder.jp/contests/abc403/tasks/abc403_e
+
+		vector<pair<int, T>> res;
+
+		Node* p = get_node(str);
+		if (!p) return res;
+
+		int l = sz(str);
+
+		// p の先にある登録済文字列を記録しつつ削除する．
+		function<void(Node*)> dfs = [&](Node* p) {
+			if (p->val != nil) {
+				res.emplace_back(l, p->val);
+			}
+
+			l++;
+			rep(k, K) {
+				if (!p->childs[k]) continue;
+
+				dfs(p->childs[k]);
+			}
+			l--;
+
+			delete p;
+		};
+		dfs(p);
+
+		p = root;
+		int el_cnt = sz(res);
+
+		// str の文字 c を先頭から順に見ていく
+		rep(i, l - 1) {
+			p->cnt -= el_cnt;
+			p = p->childs[str[i] - A];
+		}
+		p->childs[str[l - 1] - A] = nullptr;
+
+		return res;
 	}
 
 #ifdef _MSC_VER

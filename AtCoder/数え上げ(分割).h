@@ -5,10 +5,29 @@
 // ■■■■■ 数え上げ（集合の分割） ■■■■■
 
 
-//【ベル数】
+//【ベル数（mod 998244353）】O(n log n)
 /*
-* 大きさ n の集合を分割する方法の数はベル数で与えられ，その指数型母関数は exp(exp(z) - 1) である．
+* 各 i∈[0..n] について，大きさ i の集合を分割する方法の数を格納したリストを返す．
+*
+* 制約：fm は (n+1)! まで計算可能
+*
+* 利用：【指数関数】
 */
+vm bell_number(int n, const Factorial_mint& fm) {
+	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%99%E3%83%AB%E6%95%B0
+	// verify : https://judge.yosupo.jp/problem/bell_number
+
+	//【方法】
+	// ベル数の指数型母関数は exp(exp(z) - 1) である．
+
+	MFPS f(0, n + 1);
+	repi(i, 1, n) f[i] = fm.fact_inv(i);
+
+	f = exp_fps(f, n + 1, fm);
+	repi(i, 0, n) f[i] *= fm.fact(i);
+
+	return f.c;
+}
 
 
 //【分割数】O(n√n)

@@ -87,6 +87,8 @@ template <class T> inline vector<T> operator*(const T& c, const vector<T>& x) {
 
 // ƒxƒNƒgƒ‹‚Ì“àÏ : O(n)
 template <class T> inline T dot(const vector<T>& x, const vector<T>& y) {
+	// verify : https://mojacoder.app/users/aiblecode/contests/aiblecode-open/tasks/17
+
 	T res = 0;
 	rep(i, sz(x)) res += x[i] * y[i];
 	return res;

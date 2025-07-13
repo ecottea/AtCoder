@@ -291,32 +291,42 @@ FB15 idB15() { return S0; }
 * 可換モノイド作用付き生成集合 (S, F, act, id, E, comp) を表す．
 *
 * すなわち，S が集合，(F, comp, id) が E で生成されたモノイド，act が作用で，
-*	合成   : ∀x ∈ S, ∀f, g ∈ F,	(f g)(x) = f(g(x))
+*	合成   : ∀x ∈ S, ∀f, g ∈ F,	(f o g)(x) = f(g(x))
 *	可換   : ∀f, g ∈ F,				f o g = g o f
 *   恒等射 : ∀x ∈ S,				id(x) = x
 * を満たすものとする．
 */
 
 
+//【chmin 作用付き集合】
+using SB17 = ll;
+using FB17 = SB17;
+using EB17 = SB17;
+void actB17(FB17& f, SB17& x) { chmin(x, f); }
+void compB17(EB17 e, FB17& f) {	chmin(f, e); }
+FB17 idB17() { return INFL; }
+#define Chmin_Int_mset SB17, FB17, actB17, idB17, EB17, compB17 
+
+
 //【要素の挿入&削除 作用付き 最大値 集合】
 /*
-* 利用【削除可能ヒープ】
+* 利用：【削除可能ヒープ】
 * 
 * verify : https://atcoder.jp/contests/abc342/tasks/abc342_g
 */
-using S201 = int;
-using F201 = Eraseable_heap<int>;
-using E201 = pii; // (val, tp) (tp=1:挿入, -1:削除)
-void act201(F201& f, S201& x) {
+using SB16 = int;
+using FB16 = Eraseable_heap<int>;
+using EB16 = pii; // (val, tp) (tp=1:挿入, -1:削除)
+void actB16(FB16& f, SB16& x) {
 	if (f.empty()) return;
 	chmax(x, f.top());
 }
-void comp201(E201 e, F201& f) {
+void compB16(EB16 e, FB16& f) {
 	auto [val, tp] = e;
 	if (tp == 1) f.push(val);
 	else f.erase(val);
 }
-F201 id201() { return F201(); }
-#define SetInsErs_MaxInt_mset S201, F201, act201, id201, E201, comp201 
+FB16 idB16() { return FB16(); }
+#define SetInsErs_MaxInt_mset SB16, FB16, actB16, idB16, EB16, compB16 
 
 

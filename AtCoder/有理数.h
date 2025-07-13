@@ -38,6 +38,9 @@
 * T ceil() : O(1)
 *	自身の ceil を返す．
 *
+* Frac absolute() : O(1)
+*	自身の絶対値を返す．
+* 
 * bool integerQ() : O(1)
 *	自身が整数かを返す．
 */
@@ -125,6 +128,7 @@ struct Frac {
 	Frac operator-(const Frac& b) const { Frac a = *this; return a -= b; }
 	Frac operator*(const Frac& b) const { Frac a = *this; return a *= b; }
 	Frac operator/(const Frac& b) const { Frac a = *this; return a /= b; }
+	Frac operator+() const { return Frac(*this); }
 	Frac operator-() const { return Frac(*this) *= Frac(-1); }
 
 	// 整数との四則演算
@@ -174,6 +178,13 @@ struct Frac {
 			a.num *= dnm / a.dnm;
 			a.dnm = dnm;
 		}
+	}
+
+	// 自身の絶対値を返す．
+	Frac absolute() const {
+		// verify : https://atcoder.jp/contests/abc393/tasks/abc393_g
+
+		return Frac(abs(num), dnm);
 	}
 
 	// 自身の floor を返す．
@@ -283,6 +294,7 @@ struct Frac_mint {
 	Frac_mint operator-(const Frac_mint& b) const { Frac_mint a = *this; return a -= b; }
 	Frac_mint operator*(const Frac_mint& b) const { Frac_mint a = *this; return a *= b; }
 	Frac_mint operator/(const Frac_mint& b) const { Frac_mint a = *this; return a /= b; }
+	Frac_mint operator+() const { return Frac_mint(*this); }
 	Frac_mint operator-() const { return Frac_mint(*this) *= Frac_mint(-1); }
 	Frac_mint inv() const { return Frac_mint(dnm, num); }
 
@@ -463,6 +475,7 @@ pair<mint, mint> together(const vi& a, const vi& b) {
 *
 * pTT lca(T n1, T d1, T n2, T d2) : O(log min(n1, d1, n2, d2))
 *	n1/d1 と n2/d2 との LCA を n/d とし，組 {n, d} を返す．
+*	備考 : n/d は n1/d1 ≦ n/d ≦ n2/d2 を満たす有理数のうち d が最小のものである．
 *
 * pTT ancestor(T n, T d, T dep) : O(log min(n, d, dep))
 *	n/d の祖先であって深さが dep の有理数を np/dp とし，組 {np, dp} を返す（なければ {-1, -1}）
@@ -731,7 +744,7 @@ namespace Stern_brocot_tree {
 	// okQ() の true と false の境界を返す．
 	template <class T = ll, class FUNC>
 	tuple<T, T, T, T> bin_search(const FUNC& okQ, T v_max = T(INFL)) {
-		// verify : https://projecteuler.net/problem=192
+		// verify : https://atcoder.jp/contests/abc385/tasks/abc385_f
 
 		T nl = 0, dl = 1; bool bl = okQ(nl, dl);
 		T nr = 1, dr = 0; bool br = okQ(nr, dr);
@@ -742,8 +755,8 @@ namespace Stern_brocot_tree {
 			if (bl == bm) {
 				// k_max : nm, dm が v_max を超えない k の最大値
 				T k_max = T(INFL);
-				if (nr > 0) chmin(k_max, (v_max - nm) / nr);
-				if (dr > 0) chmin(k_max, (v_max - dm) / dr);
+				if (nr > 0) chmin<T>(k_max, (v_max - nm) / nr);
+				if (dr > 0) chmin<T>(k_max, (v_max - dm) / dr);
 
 				// k : okQ(nm/dm) が切り替わるまでの移動回数
 				T k_ng = 0, k_ok = 1;
@@ -778,8 +791,8 @@ namespace Stern_brocot_tree {
 			else {
 				// k_max : nm, dm が v_max を超えない k の最大値
 				T k_max = T(INFL);
-				if (nl > 0) chmin(k_max, (v_max - nm) / nl);
-				if (dl > 0) chmin(k_max, (v_max - dm) / dl);
+				if (nl > 0) chmin<T>(k_max, (v_max - nm) / nl);
+				if (dl > 0) chmin<T>(k_max, (v_max - dm) / dl);
 
 				// k : okQ(nm/dm) が切り替わるまでの移動回数
 				T k_ng = 0, k_ok = 1;
@@ -1141,6 +1154,7 @@ pair<T, T> rationalize(long double x, T dnm_max = T(INFL), long double EPS = 1e-
 
 	return { sign * ps.back(), qs.back() };
 }
+
 
 
 //【既約分数】（激遅）

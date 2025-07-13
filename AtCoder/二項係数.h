@@ -21,6 +21,9 @@
 * mint perm(int n, int r) : O(1)
 *	順列の数 nPr を返す．
 *
+* mint perm_inv(int n, int r) : O(1)
+*	順列の数の逆数 1/nPr を返す．
+*
 * mint bin(int n, int r) : O(1)
 *	二項係数 nCr を返す．
 *
@@ -35,6 +38,12 @@
 *
 * mint neg_bin(int n, int r) : O(1)
 *	負の二項係数 nCr = (-1)^r -n+r-1Cr を返す（n ≦ 0, r ≧ 0）
+*
+* mint pochhammer(int x, int n) : O(1)
+*	ポッホハマー記号 x^(n) を返す（n ≧ 0）
+*
+* mint pochhammer_inv(int x, int n) : O(1)
+*	ポッホハマー記号の逆数 1/x^(n) を返す（n ≧ 0）
 */
 class Factorial_mint {
 	int n_max;
@@ -76,7 +85,8 @@ public:
 	mint inv(int n) const {
 		// verify : https://atcoder.jp/contests/exawizards2019/tasks/exawizards2019_d
 
-		Assert(0 < n && n <= n_max);
+		Assert(n > 0);
+		Assert(n <= n_max);
 		return fac[n - 1] * fac_inv[n];
 	}
 
@@ -88,6 +98,16 @@ public:
 
 		if (r < 0 || n - r < 0) return 0;
 		return fac[n] * fac_inv[n - r];
+	}
+
+	// 順列の数 nPr の逆数を返す．
+	mint perm_inv(int n, int r) const {
+		// verify : https://yukicoder.me/problems/no/3139
+
+		Assert(n <= n_max);
+		Assert(0 <= r); Assert(r <= n);
+
+		return fac_inv[n] * fac[n - r];
 	}
 
 	// 二項係数 nCr を返す．
@@ -104,7 +124,8 @@ public:
 		// verify : https://www.codechef.com/problems/RANDCOLORING
 
 		Assert(n <= n_max);
-		Assert(r >= 0 && n - r >= 0);
+		Assert(r >= 0);
+		Assert(n - r >= 0);
 		return fac_inv[n] * fac[r] * fac[n - r];
 	}
 
@@ -127,8 +148,8 @@ public:
 		// verify : https://mojacoder.app/users/riantkb/problems/toj_ex_2
 
 		if (n == 0) return (int)(r == 0);
-		Assert(n + r - 1 <= n_max);
 		if (r < 0 || n - 1 < 0) return 0;
+		Assert(n + r - 1 <= n_max);
 		return fac[n + r - 1] * fac_inv[r] * fac_inv[n - 1];
 	}
 
@@ -137,9 +158,43 @@ public:
 		// verify : https://atcoder.jp/contests/abc345/tasks/abc345_g
 
 		if (n == 0) return (int)(r == 0);
-		Assert(-n + r - 1 <= n_max);
 		if (r < 0 || -n - 1 < 0) return 0;
+		Assert(-n + r - 1 <= n_max);
 		return (r & 1 ? -1 : 1) * fac[-n + r - 1] * fac_inv[r] * fac_inv[-n - 1];
+	}
+
+	// ポッホハマー記号 x^(n) を返す（n ≧ 0）
+	mint pochhammer(int x, int n) {
+		// verify : https://atcoder.jp/contests/agc070/tasks/agc070_c
+
+		int x2 = x + n - 1;
+		if (x <= 0 && 0 <= x2) return 0;
+
+		if (x > 0) {
+			Assert(x2 <= n_max);
+			return fac[x2] * fac_inv[x - 1];
+		}
+		else {
+			Assert(-x <= n_max);
+			return (n & 1 ? -1 : 1) * fac[-x] * fac_inv[-x2 - 1];
+		}
+	}
+
+	// ポッホハマー記号の逆数 1/x^(n) を返す（n ≧ 0）
+	mint pochhammer_inv(int x, int n) {
+		// verify : https://atcoder.jp/contests/agc070/tasks/agc070_c
+
+		int x2 = x + n - 1;
+		Assert(!(x <= 0 && 0 <= x2));
+
+		if (x > 0) {
+			Assert(x2 <= n_max);
+			return fac_inv[x2] * fac[x - 1];
+		}
+		else {
+			Assert(-x <= n_max);
+			return (n & 1 ? -1 : 1) * fac_inv[-x] * fac[-x2 - 1];
+		}
 	}
 };
 
@@ -1194,7 +1249,7 @@ public:
 * 制約：fm は (n-1)! まで計算可能
 */
 vm binomial_sum_fixed_r(int n, int r, const Factorial_mint& fm) {
-	// verify : https://www.codechef.com/problems/MEX_SEQ
+	// verify : https://atcoder.jp/contests/arc190/tasks/arc190_b
 
 	//【方法】
 	//		a[i] := Σj∈[0..r) bin(i, j)
@@ -1269,7 +1324,22 @@ vm weighted_binomial_sum_fixed_r(int n, int r, mint p, mint q, const Factorial_m
 * パスカルの三角形の斜め方向の累積和は以下の式で求められる：
 *	Σi=[i0..i1) bin(i, r) = bin(i1, r+1) - bin(i0, r+1)
 * 
+* (証明)
+*	Σi=[i0..i1) bin(i, r)
+*	= Σi=[i0..i1) (bin(i+1, r+1) - bin(i, r+1))（bin(n,r) = bin(n-1,r-1) + bin(n-1,r) より）
+*	= bin(i1, r+1) - bin(i0, r+1)（望遠鏡和）
+*
 * verify : https://atcoder.jp/contests/abc154/tasks/abc154_f
+*/
+
+
+//【指数加重ホッケースティック和】
+/*
+* パスカルの三角形の斜め方向の指数加重累積和は，次のように和の範囲を変えられる：
+*	Σi=[K..N] w^(N-i) bin(i-1, K-1)
+*	= (w^N - Σi∈[0..K) (w-1)^i bin(N, i)) / (w-1)^K  （K≧1, w≧2）
+* 
+* verify : https://yukicoder.me/problems/no/3138
 */
 
 

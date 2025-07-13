@@ -33,6 +33,81 @@ vector<T> naive_dirichlet_convolution(const vector<T>& a, const vector<T>& b) {
 }
 
 
+//【ディリクレ畳込み（二項式）】O(n log n)
+/*
+* 数論関数族 f_i = z_1 + c[i]z_i (i∈[1..n]) に対して
+* 総ディリクレ畳込みをとって得られる数論関数 g[1..n] を返す．
+*/
+template <class T>
+vector<T> multi_dirichlet_convolution_binomial(const vector<T>& c) {
+	int n = sz(c) - 1;
+
+	vector<T> f(n + 1);
+	f[1] = 1;
+
+	repi(i, 2, n) repir(j, n / i, 1) f[j * i] += f[j] * c[i];
+
+	repi(i, 1, n) f[i] *= 1 + c[1];
+
+	return f;
+}
+
+
+//【ディリクレ畳込み（二項式，任意）】O(n (log m)^2 + m log m)
+/*
+* 数論関数族 f_i = z_1 + c[i] z_d[i] に対して
+* 総ディリクレ畳込みをとって得られる数論関数 g[1..m] を返す．
+*/
+vm multi_dirichlet_convolution_binomial(int m, const vm& c, const vi& d) {
+	int n = sz(c);
+
+	vvvm d_to_cs(m + 1); mint f0 = 1;
+	rep(i, n) {
+		if (d[i] == 1) {
+			f0 *= 1 + c[i];
+		}
+		else if (d[i] <= m) {
+			d_to_cs[d[i]].emplace_back(vm{ 1, c[i] });
+		}
+	}
+
+	vm f(m + 1);
+	f[1] = 1;
+
+	repi(d, 2, m) {
+		int K = sz(d_to_cs[d]);
+		if (K == 0) continue;
+
+		vl pow_d{ 1 };
+		while (pow_d.back() * d <= m) pow_d.push_back(pow_d.back() * d);
+		int L = sz(pow_d);
+
+		// 2 冪個ずつ掛けていく（分割統治積）
+		for (int k = 1; k < K; k *= 2) {
+			for (int i = 0; i + k < K; i += 2 * k) {
+				d_to_cs[d][i] = convolution(d_to_cs[d][i], d_to_cs[d][i + k]);
+				if (sz(d_to_cs[d][i]) > L) {
+					d_to_cs[d][i].resize(L);
+				}
+			}
+		}
+		L = sz(d_to_cs[d][0]);
+
+		repir(i, m / d, 1) {
+			repi(l, 1, L - 1) {
+				if (i * pow_d[l] > m) break;
+
+				f[i * pow_d[l]] += f[i] * d_to_cs[d][0][l];
+			}
+		}
+	}
+
+	repi(i, 1, m) f[i] *= f0;
+
+	return f;
+}
+
+
 //【ディリクレ逆畳込み（素朴）】O(n log n)
 /*
 * 数論関数 a[1..n] と b[1..n] のディリクレ畳込みが c[1..n] であるとし，b を返す．

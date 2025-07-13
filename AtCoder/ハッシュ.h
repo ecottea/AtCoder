@@ -175,7 +175,7 @@ public:
 /*
 * ハッシュ rh1, rh2 をもつ文字列 s1, s2 について，s1[l1..r1) < s2[l2..r2) かを返す．
 *
-* 利用：【ローリングハッシュ（列）】，【めぐる式二分探索】
+* 利用：【ローリングハッシュ（列）】
 */
 template <class STR>
 bool comp(const STR& s1, const Rolling_hash<STR>& rh1, int l1, int r1,
@@ -186,30 +186,22 @@ bool comp(const STR& s1, const Rolling_hash<STR>& rh1, int l1, int r1,
 	chmax(l1, 0); chmin(r1, sz(s1)); chmax(l2, 0); chmin(r2, sz(s2));
 	if (l1 >= r1 || l2 >= r2) return 0;
 
-	// 0 文字目（あれば）を見るだけで決まる場合も多いはず．
-	if (r2 - l2 == 0) return false;
-	if (r1 - l1 == 0) return true;
-	if (s1[l1] < s2[l2]) return true;
-	if (s1[l1] > s2[l2]) return false;
+	// 接頭辞が何文字一致しているかを二分探索する．
+	int ok = 0, ng = min(r1 - l1, r2 - l2) + 1;
+	while (ng - ok > 1) {
+		int mid = (ok + ng) / 2;
 
-	// 1 文字目（あれば）を見るだけで決まる場合も多いはず．
-	if (r2 - l2 == 1) return false;
-	if (r1 - l1 == 1) return true;
-	if (s1[l1 + 1] < s2[l2 + 1]) return true;
-	if (s1[l1 + 1] > s2[l2 + 1]) return false;
+		auto hash1 = rh1.get(l1, l1 + mid);
+		auto hash2 = rh2.get(l2, l2 + mid);
 
-	// 接頭辞が len 文字一致しているか
-	function<bool(int)> okQ = [&](int len) {
-		auto hash1 = rh1.get(l1, l1 + len);
-		auto hash2 = rh2.get(l2, l2 + len);
-		return hash1 == hash2;
-	};
-	int len = meguru_search(2, min(r1 - l1, r2 - l2) + 1, okQ);
+		if (hash1 == hash2) ok = mid;
+		else ng = mid;
+	}
 
-	// len 文字目（あれば）を見て比較する．
-	if (r2 - l2 == len) return false;
-	if (r1 - l1 == len) return true;
-	return s1[l1 + len] < s2[l2 + len];
+	// ok 文字目（あれば）を見て比較する．
+	if (r2 - l2 == ok) return false;
+	if (r1 - l1 == ok) return true;
+	return s1[l1 + ok] < s2[l2 + ok];
 }
 
 
@@ -1111,8 +1103,8 @@ struct Hash {
 	// verify : https://yukicoder.me/problems/no/1648
 
 	// pair<int, ll> の場合の例
-	size_t operator()(const pair<int, ll>& p) const {
-		auto hash1 = hash<int>{}(p.first);
+	size_t operator()(const pair<ll, ll>& p) const {
+		auto hash1 = hash<ll>{}(p.first);
 		auto hash2 = hash<ll>{}(p.second);
 
 		size_t seed = 0;

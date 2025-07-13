@@ -128,13 +128,13 @@ public:
 * Linear_cumulative_sum<T>(vT v) : O(n)
 *	配列 v[0..n) で初期化する．
 *
-* T sum(int l, int r, ll a, ll b) : O(1)
+* T sum(int l, int r, T a, T b) : O(1)
 *	Σj∈[l..r) (a j + b) v[j] を返す．（空なら 0 を返す，範囲外の値は 0 とみなす）
 *
-* T sum_to_right(int l, int r, ll w0, ll w1) : O(1)
+* T sum_to_right(int l, int r, T w0, T w1) : O(1)
 *	v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
 *
-* T sum_to_left(int r, int l, ll w0, ll w1) : O(1)
+* T sum_to_left(int r, int l, T w0, T w1) : O(1)
 *	v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
 */
 template <class T>
@@ -159,7 +159,7 @@ public:
 	Linear_cumulative_sum() : n(0) {}
 
 	// Σj∈[l..r) (a j + b) v[j] を返す．
-	inline T sum(int l, int r, ll a, ll b) {
+	inline T sum(int l, int r, T a, T b) {
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return T(0);
 
@@ -169,22 +169,22 @@ public:
 	}
 
 	// v[l..r) に昇順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-	inline T sum_to_right(int l, int r, ll w0, ll w1) {
+	inline T sum_to_right(int l, int r, T w0, T w1) {
 		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
 
 		// a l + b = w0, a(l+1) + b = w1 を解いて a, b を求める．
-		ll a = w1 - w0;
-		ll b = w0 - a * l;
+		T a = w1 - w0;
+		T b = w0 - a * l;
 		return sum(l, r, a, b);
 	}
 
 	// v(l..r] に降順に等差重み w0, w1, ... を掛け合わせて和をとった値を返す．
-	inline T sum_to_left(int r, int l, ll w0, ll w1) {
+	inline T sum_to_left(int r, int l, T w0, T w1) {
 		// verify : https://atcoder.jp/contests/agc030/tasks/agc030_b
 
 		// a r + b = w0, a(r-1) + b = w1 を解いて a, b を求める．
-		ll a = w0 - w1;
-		ll b = w0 - a * r;
+		T a = w0 - w1;
+		T b = w0 - a * r;
 		return sum(l + 1, r + 1, a, b);
 	}
 };
@@ -303,34 +303,40 @@ class Mod_cumulative_sum {
 	int n;
 	T m;
 
-	// A[i] : Σa[0..i);
-	vector<T> A;
+	// acc_a[i] : Σa[0..i)
+	vector<T> acc_a;
 
-	// A_rem : A[0..n) mod m
-	Wavelet_matrix<T> A_rem;
+	// acc_rem[i] : Σrem[0..i)
+	vector<T> acc_rem;
+
+	// rem : a[0..n) mod m
+	Wavelet_matrix<T> Rem;
 
 public:
 	// 数列 a[0..n) と法 m で初期化する．
-	Mod_cumulative_sum(const vector<T>& a, T m) : n(sz(a)), m(m), A(n + 1) {
+	Mod_cumulative_sum(const vector<T>& a, T m) : n(sz(a)), m(m), acc_a(n + 1), acc_rem(n + 1) {
 		// verify : https://yukicoder.me/problems/no/2627
 
 		Assert(m > 0);
 
-		rep(i, n) A[i + 1] = A[i] + a[i];
+		rep(i, n) acc_a[i + 1] = acc_a[i] + a[i];
 
-		vector<T> ini(n);
+		vector<T> rem(n);
 		rep(i, n) {
-			ini[i] = a[i] % m;
-			if (ini[i] < 0) ini[i] += m;
+			rem[i] = a[i] % m;
+			if (rem[i] < 0) rem[i] += m;
 		}
-		A_rem = Wavelet_matrix<T>(ini);
+
+		rep(i, n) acc_rem[i + 1] = acc_rem[i] + rem[i];
+
+		Rem = Wavelet_matrix<T>(rem);
 	}
 	Mod_cumulative_sum() : n(0) {}
 
 	// Σi∈[l..r) (a[i] + b) mod m を返す．
 	T mod_sum(int l, int r, T b) {
 		// verify : https://yukicoder.me/problems/no/2627
-		
+
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
@@ -338,8 +344,8 @@ public:
 		if (b_rem < 0) b_rem += m;
 
 		T res = T(r - l) * b_rem;
-		res += A_rem.sum(l, r);
-		res -= m * A_rem.count(l, r, m - b_rem, m);
+		res += acc_rem[r] - acc_rem[l];
+		res -= m * Rem.count(l, r, m - b_rem, m);
 
 		return res;
 	}
@@ -347,7 +353,7 @@ public:
 	// Σi∈[l..r) (-a[i] + b) mod m を返す．
 	T mod_sum_neg(int l, int r, T b) {
 		// verify : https://yukicoder.me/problems/no/2627
-		
+
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
@@ -355,8 +361,8 @@ public:
 		if (b_rem < 0) b_rem += m;
 
 		T res = T(r - l) * b_rem;
-		res -= A_rem.sum(l, r);
-		res += m * A_rem.count(l, r, b_rem + 1, m);
+		res -= acc_rem[r] - acc_rem[l];
+		res += m * Rem.count(l, r, b_rem + 1, m);
 
 		return res;
 	}
@@ -364,11 +370,11 @@ public:
 	// Σi∈[l..r) floor((a[i] + b) / m) を返す．
 	T floor_sum(int l, int r, T b) {
 		// verify : https://yukicoder.me/problems/no/2627
-		
+
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
-		T res = A[r] - A[l];
+		T res = acc_a[r] - acc_a[l];
 		res += T(r - l) * b;
 		res -= mod_sum(l, r, b);
 		res /= m;
@@ -379,11 +385,11 @@ public:
 	// Σi∈[l..r) floor((-a[i] + b) / m) を返す．
 	T floor_sum_neg(int l, int r, T b) {
 		// verify : https://yukicoder.me/problems/no/2627
-		
+
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
-		T res = -(A[r] - A[l]);
+		T res = -(acc_a[r] - acc_a[l]);
 		res += T(r - l) * b;
 		res -= mod_sum_neg(l, r, b);
 		res /= m;
@@ -905,40 +911,64 @@ void sliding_window_minimum(vector<T> a, int w, vector<T>& a_min, bool max_flag 
 
 //【間引きスライド最小値】O(n)
 /*
-* 配列 a[0..n) に対し，a_min[i] に以下の値（m 個おきでの直前 w 個の最小値）を格納する：
+* 配列 a[0..n) に対し，a_min[i] に以下の値（m 個おきでの直前 w 個の最小値）を格納し，a_min を返す：
 *		min( a[i], a[i-m], a[i-2m], ..., a[i-(w-1)m] )
 * max_flag = true のときはスライド最大値を求める．範囲外の値は無視する．
 */
 template <class T>
-void thinning_sliding_window_minimum(vector<T> a, int w, int m, vector<T>& a_min, bool max_flag = false) {
+vector<T> thinning_sliding_window_minimum(const vector<T>& a, int w, int m, bool max_flag = false) {
+	// verify : https://yukicoder.me/problems/no/3000
+
 	int n = sz(a);
-	a_min.resize(n);
 
-	if (max_flag) rep(i, n) a[i] *= -1;
+	if (!max_flag) {
+		vector<T> a_min(n);
 
-	// 添字が ir (mod m) のところだけに対してスライド最小値のアルゴリズムを適用する．
-	rep(ir, min(m, n)) {
-		// 現在の最小値の位置と，今後最小値になりうる数の位置を昇順に入れておくデック
-		deque<int> q;
+		// 添字が ir (mod m) のところだけに対してスライド最小値のアルゴリズムを適用する．
+		rep(ir, min(m, n)) {
+			// 現在の最小値の位置と，今後最小値になりうる数の位置を昇順に入れておくデック
+			deque<int> q;
 
-		repi(iq, 0, (n - 1 - ir) / m) {
-			int i = iq * m + ir;
+			repi(iq, 0, (n - 1 - ir) / m) {
+				int i = iq * m + ir;
 
-			// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
-			if (!q.empty() && q.front() <= i - w * m) q.pop_front();
+				// 現在の最小値が注目区間の外に出たら，デックの先頭から削除する．
+				if (!q.empty() && q.front() <= i - w * m) q.pop_front();
 
-			// 新しく区間に入る数より大きい数は，今後最小値とはなりえないのでデックの末尾から削除する．
-			while (!q.empty() && a[i] <= a[q.back()]) q.pop_back();
+				// 新しく区間に入る数より大きい数は，今後最小値とはなりえないのでデックの末尾から削除する．
+				while (!q.empty() && a[i] <= a[q.back()]) q.pop_back();
 
-			// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
-			q.push_back(i);
+				// 新しく区間に入る数は，常に今後最小値となる可能性があるのでデックの末尾に追加する．
+				q.push_back(i);
 
-			// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
-			a_min[i] = a[q.front()];
+				// 現時点での最小値を知るには，デックの先頭が指す位置を見れば良い．
+				a_min[i] = a[q.front()];
+			}
 		}
-	}
 
-	if (max_flag) rep(i, n) a_min[i] *= -1;
+		return a_min;
+	}
+	else {
+		vector<T> a_max(n);
+
+		rep(ir, min(m, n)) {
+			deque<int> q;
+
+			repi(iq, 0, (n - 1 - ir) / m) {
+				int i = iq * m + ir;
+
+				if (!q.empty() && q.front() <= i - w * m) q.pop_front();
+
+				while (!q.empty() && a[i] >= a[q.back()]) q.pop_back();
+
+				q.push_back(i);
+
+				a_max[i] = a[q.front()];
+			}
+		}
+
+		return a_max;
+	}
 }
 
 

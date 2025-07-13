@@ -50,33 +50,65 @@ mint fibonacci(ll n) {
 	//		[a1[n]] = [1 0]   [1]
 	// と表示することができるので，行列の累乗を計算する問題に帰着する．
 
+	//【備考】
+	// 一般項は
+	//		fib[n] = (1/√5) ( ((1+√5)/2)^n - ((1-√5)/2)^n )
+	// と表されるが，√5 を添加して体を二次拡大し，n 乗を繰り返し二乗法で処理すると手間は同じである．
+
 	Fixed_matrix<mint, 2> coef({ {1, 1}, {1, 0} });
 	return coef.pow(n).v[0][1];
 }
 
 
-//【k-ナッチ数】O(n)
+//【フィボナッチ数列の mod p 周期】
 /*
-* 各 i∈[0..n) について，i 番目の k-ナッチ数を格納したリスト seq を返す．
-* 初項は seq[0..k-1) = 0, seq[k-1] = 1 とする．
+* フィボナッチ数列の mod p での周期を T(p) とおくと，
+*	p≡1,4 (mod 5) のとき T(p) | (p-1)
+*	p≡2,3 (mod 5) のとき T(p) | 2(p+1)
+*	p=5           のとき T(p) = 20
+*
+* 参考 : https://manabitimes.jp/math/1434
+*/
+
+
+//【フィボナッチ数列の mod m 周期】
+/*
+* フィボナッチ数列の mod m での周期は O(m log m) になり，fib(0)=0 を含む．
+* 
+* verify : https://yukicoder.me/problems/no/2989
+*/
+
+
+//【フィボナッチ数列の累積和】
+/*
+* Σfib[0..n] = fib[n+2] - 1
+* 
+* verify : https://yukicoder.me/problems/no/2989
+*/
+
+
+//【K-ナッチ数】O(n)
+/*
+* 各 i∈[0..n) について，i 番目の K-ナッチ数を格納したリスト seq を返す．
+* 初項は seq[0..K-1) = 0, seq[K-1] = 1 とする．
 *
 *（累積和で高速化した DP）
 */
 template <class T>
-vector<T> k_nacci_acc(int n, int k) {
+vector<T> k_nacci_acc(int n, int K) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_semiexp
 
 	vector<T> seq(n);
-	if (n < k) return seq;
-	seq[k - 1] = 1;
+	if (n < K) return seq;
+	seq[K - 1] = 1;
 
 	// acc[i] : Σseq[0..i)
 	vector<T> acc(n + 1);
-	acc[k] = 1;
+	acc[K] = 1;
 
-	repi(i, k, n - 1) {
+	repi(i, K, n - 1) {
 		// seq[i] = Σseq[i-k..i) = acc[i] - acc[i-k]
-		seq[i] = acc[i] - acc[i - k];
+		seq[i] = acc[i] - acc[i - K];
 
 		// acc[i+1] = Σseq[0..i] = acc[i] + seq[i]
 		acc[i + 1] = acc[i] + seq[i];
@@ -86,28 +118,28 @@ vector<T> k_nacci_acc(int n, int k) {
 }
 
 
-//【k-ナッチ数】O(n + k)
+//【K-ナッチ数】O(n + k)
 /*
-* 各 i∈[0..n) について，i 番目の k-ナッチ数を格納したリスト seq を返す．
-* 初項は seq[0..k-1) = 0, seq[k-1] = 1 とする．
+* 各 i∈[0..n) について，i 番目の K-ナッチ数を格納したリスト seq を返す．
+* 初項は seq[0..K-1) = 0, seq[K-1] = 1 とする．
 *
 *（いもす法で高速化した DP）
 */
 template <class T>
-vector<T> k_nacci_imos(int n, int k) {
+vector<T> k_nacci_imos(int n, int K) {
 	// verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_semiexp
 
-	vector<T> seq(n + k + 1);
-	seq[k - 1] = 1;
+	vector<T> seq(n + K + 1);
+	seq[K - 1] = 1;
 
 	// 初項からの寄与の種を蒔く．
-	seq[k] += seq[k - 1];
-	seq[k + k] -= seq[k - 1];
+	seq[K] += seq[K - 1];
+	seq[K + K] -= seq[K - 1];
 
-	repi(i, k, n - 1) {
+	repi(i, K, n - 1) {
 		// seq[i] からの寄与の種を蒔く．
 		seq[i + 1] += seq[i];
-		seq[i + k + 1] -= seq[i];
+		seq[i + K + 1] -= seq[i];
 
 		// 累積和をとる．
 		seq[i + 1] += seq[i];
@@ -118,16 +150,16 @@ vector<T> k_nacci_imos(int n, int k) {
 }
 
 
-//【k-ナッチ数】O(k log k log n)
+//【K-ナッチ数】O(K log K log n)
 /*
-* n 番目の k-ナッチ数 a[n] を返す（初項は a[0..k-1) = 0, a[k-1] = 1 とする）
+* n 番目の K-ナッチ数 a[n] を返す（初項は a[0..K-1) = 0, a[K-1] = 1 とする）
 *
 * 利用：【形式的冪級数】,【線形漸化式】
 */
-mint k_nacci_fps(ll n, int k) {
-	Assert(k > 0);
-	vm a(k), c(k, 1);
-	a[k - 1] = 1;
+mint k_nacci_fps(ll n, int K) {
+	Assert(K > 0);
+	vm a(K), c(K, 1);
+	a[K - 1] = 1;
 	return linearly_recurrent_sequence(a, c, n);
 }
 
@@ -279,8 +311,11 @@ mint bernoulli(int n, const Factorial_mint& fm) {
 
 //【第 1 種スターリング数】
 /*
+* 第 1 種スターリング数 S(n,k) は上昇階乗冪の展開係数として以下の式で定義される：
+*	S(n,k) = [z^k] z(z+1)...(z+n-1)
+* 
 * FPS(mint).h の【一次式の積の展開（等差数列）】で a = -1, b = 0 とすれば良い．
-* 数え上げ(順列).h の【j 個の巡回置換の積で表される順列の数え上げ】を利用すれば良い．
+* または 数え上げ(順列).h の【j 個の巡回置換の積で表される順列の数え上げ】を利用すれば良い．
 */
 
 
@@ -297,7 +332,7 @@ vm stirling_S1_fixed_K(int N, int K, const Factorial_mint& fm) {
 	// verify : https://judge.yosupo.jp/problem/stirling_number_of_the_first_kind_fixed_k
 
 	//【方法】
-	// 符号付き第 1 種スターリング数 S(n,K) の定義は
+	// 符号付き第 1 種スターリング数 S(n,k) の定義は
 	//		Σk∈[0..n] S(n,k) z^k = Πi∈[0..n) (z-i)
 	// であった．
 	// 
@@ -346,7 +381,6 @@ vm stirling_S1_fixed_K(int N, int K, const Factorial_mint& fm) {
 * int get(ll n, ll k) : O(log n)
 *	符号付き第 1 種スターリング数 S(n, k) mod p を返す．
 */
-ostream& operator<<(ostream& os, const dynamic_modint<82645>& x) { os << x.val(); return os; }
 class Stirling_S1_small_prime_mod {
 	int p; // 利用する法（素数）
 
@@ -459,7 +493,6 @@ vm stirling_s2_fixed_K(int N, int K, const Factorial_mint& fm) {
 * int get(ll n, ll r) : O(log n)
 *	第 2 種スターリング数 s(n, r) mod p を返す．
 */
-ostream& operator<<(ostream& os, const dynamic_modint<124572>& x) { os << x.val(); return os; }
 class Stirling_S2_small_prime_mod {
 	int p; // 利用する法（素数）
 
@@ -581,10 +614,28 @@ vm weierstrass_p(int n, mint g2, mint g3) {
 //【カタラン数の自己畳込み】
 /*
 * カタラン数の列 {C[n]} を k(>0) 回自己畳込みした数列を {C^(k)[n]} とすると，
-*	C^(k)[n] = bin(2n + k, n) * k / (2n + k)
+*	C^(k)[n] = bin(2n+k, n) * k / (2n+k)
 * である．
 * 
 * verify : https://atcoder.jp/contests/xmascon22/tasks/xmascon22_d
+*/
+
+
+//【モンモール数】
+/*
+* 数え上げ(順列).h へ
+*/
+
+
+//【ベル数】
+/*
+* 数え上げ(分割).h へ
+*/
+
+
+//【分割数】
+/*
+* 数え上げ(分割).h へ
 */
 
 

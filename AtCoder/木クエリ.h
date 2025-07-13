@@ -332,7 +332,7 @@ public:
 */
 template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
 class Path_sum_query {
-	// 参考：https://perogram.hateblo.jp/entry/2020/10/01/034136
+	// 参考 : https://perogram.hateblo.jp/entry/2020/10/01/034136
 
 	int n;
 
@@ -358,6 +358,7 @@ class Path_sum_query {
 				p[t] = s;
 
 				rf(t);
+				// add_edge(t, t.cost); // 重み付きグラフの場合
 			}
 
 			// s から最後に離れる
@@ -371,8 +372,8 @@ class Path_sum_query {
 
 public:
 	// rt を根とする根付き木 g と値 o() で初期化する．
-	Path_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), p(n), ft(n) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+	Path_sum_query(const Graph& g, int rt) : n(sz(g)), in(n), out(n), p(n), ft(n + 1) {
+		// verify : https://atcoder.jp/contests/kupc2012/tasks/kupc2012_11
 
 		euler_tour(g, rt);
 	}
@@ -381,12 +382,12 @@ public:
 	void add_vertex(int s, S val) {
 		// いもす法のように，部分木 s にいる間だけ val が累積和に寄与するようにする．
 		ft.add(in[s], val);
-		ft.add(out[s], -val);
+		ft.add(out[s], inv(val));
 	}
 
 	// 頂点 s を子とする辺に val を加算する．
 	void add_edge(int s, S val) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+		// verify : https://atcoder.jp/contests/kupc2012/tasks/kupc2012_11
 
 		// 根からのパスについては
 		//		s を子とする辺を通る ⇔ s を通る
@@ -396,7 +397,7 @@ public:
 
 	// 根 r から s までの頂点と辺の値の総和を返す．
 	S sum_root_path(int s) const {
-		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_5_D
+		// verify : https://atcoder.jp/contests/kupc2012/tasks/kupc2012_11
 
 		return ft.sum(0, in[s] + 1);
 	}
@@ -1958,11 +1959,11 @@ public:
 
 //【[隣接,部分木,パス]頂点作用／[隣接,部分木,パス]頂点総和（M-可換モノイド）】
 /*
-* Verious_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt) : O(n)
+* Vertex_Verious_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt) : O(n)
 *	rt を根とする根付き木 g と頂点値 v[0..n) = o() で初期化する．
 *	要素は M-可換モノイド (S, op, o, F, act, comp, id) の元とする．
 *
-* Verious_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt, vS a) : O(n)
+* Vertex_Verious_apply_sum_query<S, op, o, F, act, comp, id>(Graph g, int rt, vS a) : O(n)
 *	rt を根とする根付き木 g と頂点値 v[0..n) = a[0..n) で初期化する．
 *
 * set(int s, S x) : O(log n)
@@ -1981,7 +1982,7 @@ public:
 *	部分木 s の頂点の値の総和を返す．
 * 
 * S sum_path(int s, int t) : O((log n)^2)
-*	パス s→t 上の頂点（両端含む）の値の総和を返す．
+*	パス s-t 上の頂点（両端含む）の値の総和を返す．
 *
 * S sum_all() : O(1)
 *	全頂点の値の総和を返す．
@@ -1999,7 +2000,7 @@ public:
 *	部分木 s の頂点の値に f を作用させる．
 * 
 * apply_path(int s, int t, F f) : O((log n)^2)
-*	パス s→t 上の頂点（両端含む）の値に f を作用させる．
+*	パス s-t 上の頂点（両端含む）の値に f を作用させる．
 *
 * apply_all(F f) : O(log n)
 *	全頂点の値に f を作用させる．
@@ -2736,7 +2737,7 @@ void dsu_on_tree(const Graph& g, int rt, const F_INS& insert, const F_ERS& erase
 	vl sum(n + 1);
 	sum[0] = (ll)n * (n + 1) / 2;
 
-	auto insert = [&](int s) {
+	auto insert_vtx = [&](int s) {
 		int col = c[s];
 		int f = freq[col], nf = f + 1;
 
@@ -2747,7 +2748,7 @@ void dsu_on_tree(const Graph& g, int rt, const F_INS& insert, const F_ERS& erase
 		chmax(freq_max, nf);
 	};
 
-	auto erase = [&](int s) {
+	auto erase_vtx = [&](int s) {
 		int col = c[s];
 		int f = freq[col], nf = f - 1;
 
@@ -2763,7 +2764,7 @@ void dsu_on_tree(const Graph& g, int rt, const F_INS& insert, const F_ERS& erase
 		res[s] = sum[freq_max];
 	};
 
-	dsu_on_tree(g, 0, insert, erase, get_sol);
+	dsu_on_tree(g, 0, insert_vtx, erase_vtx, get_sol);
 	*/
 }
 
@@ -2889,24 +2890,22 @@ vector<S> mos_algorithm_path_edge(const WGraph& g, const vi& u, const vi& v) {
 */
 pli op_moLCA(pli a, pli b) { return min(a, b); }
 pli e_moLCA() { return { INFL, -1 }; }
-template <class T, class S>
-vector<S> mos_algorithm_path_vertex(const Graph& g, const vector<T>& a, const vi& u, const vi& v) {
+template <class F1, class F2, class F3>
+void mos_algorithm_on_tree_vtx(const Graph& g, const vi& u, const vi& v, const F1& insert, const F2& erase, const F3& get_sol) {
 	// 参考 : https://ei1333.hateblo.jp/entry/2017/09/11/211011
 	// verify : https://www.spoj.com/problems/COT2/
 
 	int n = sz(g), q = sz(u);
-	int sqrt_q = (int)(sqrt(q) + 1e-12);
+	int sqrt_q = max((int)sqrt(q), 1);
 	int width = max((n + sqrt_q - 1) / sqrt_q, 1);
-	vector<S> res(q);
 
 	// 便宜上 g を 0 を根とする根付き木とみなす．
 	//	in[s] : オイラーツアーで最初に頂点 s を訪れた時刻（根なら 0）
 	//	out[s] : オイラーツアーで最後に頂点 s から離れた時刻（根なら 2n-1）
 	//	pos[t] : オイラーツアーで時刻 t に訪れていた頂点の番号
 	//	dep[s] : 頂点 s の深さ
-	//	c[t] : t 番目に通った辺の両端の頂点のうち子の方の番号（辺の識別用）
-	//	w[t] : t 番目に通った辺の両端の頂点のうち子の方の重み
-	vi in(n), out(n), pos(2 * n - 1), dep(n), c(2 * (n - 1)); vector<T> w(2 * (n - 1));
+	//	c[t] : t 番目に通った辺の両端の頂点のうち子の方の番号
+	vi in(n), out(n), pos(2 * n - 1), dep(n), c(2 * (n - 1));
 
 	// 0 を根とする根付き木とみなしてオイラーツアーを行う．
 	int time = 0;
@@ -2917,13 +2916,11 @@ vector<S> mos_algorithm_path_vertex(const Graph& g, const vector<T>& a, const vi
 		repe(t, g[s]) {
 			if (t == p) continue;
 
-			w[time - 1] = a[t];
 			c[time - 1] = t;
 
 			dep[t] = dep[s] + 1;
 			rf(t, s);
 
-			w[time - 1] = a[t];
 			c[time - 1] = t;
 
 			pos[time++] = s;
@@ -2936,10 +2933,10 @@ vector<S> mos_algorithm_path_vertex(const Graph& g, const vector<T>& a, const vi
 	// seg : 深さに関する RmQ を処理するためのセグ木
 	vector<pli> ini(2 * n - 1);
 	rep(t, 2 * n - 1) ini[t] = { dep[pos[t]], pos[t] };
-	Segtree<pli, op_moLCA, e_moLCA> seg(ini);
+	segtree<pli, op_moLCA, e_moLCA> seg(ini);
 
 	// 頂点 s, t の LCA を返す．
-	auto lca = [&](int s, int t) {
+	auto get_lca = [&](int s, int t) {
 		// 初めて s または t に訪れたとき
 		int left = min(in[s], in[t]);
 
@@ -2964,38 +2961,14 @@ vector<S> mos_algorithm_path_vertex(const Graph& g, const vector<T>& a, const vi
 	}
 	sort(all(lb_sr_j));
 
-	// ----------------------- ここを実装する ------------------------
 
-	// 必要なデータ構造を用意する．
-	vl freq((int)2e5 + 10);
-	S sol = 0;
-
-	// 区間に要素 w を追加し，データ構造を更新する．
-	auto insert = [&](T w) {
-		if (freq[w] == 0) sol++;
-		freq[w]++;
-	};
-
-	// 区間から要素 w を削除し，データ構造を更新する．
-	auto erase = [&](T w) {
-		freq[w]--;
-		if (freq[w] == 0) sol--;
-	};
-
-	// クエリ j に対し，データ構造を参照して解を求める．
-	auto get_sol = [&](int j) {
-		return sol;
-	};
-
-	// --------------------------------------------------------------
-
-	// exist[i] : 子 i をもつ辺がデータ構造に含まれているか
+	// exist[i] : 頂点 i がデータ構造に含まれているか
 	vi exist(n);
 
-	// 辺の有無を切り替える．
+	// 頂点の有無を切り替える．
 	auto flip = [&](int t) {
-		if (exist[c[t]]) erase(w[t]);
-		else insert(w[t]);
+		if (exist[c[t]]) erase(c[t]);
+		else insert(c[t]);
 
 		exist[c[t]] ^= 1;
 	};
@@ -3015,17 +2988,42 @@ vector<S> mos_algorithm_path_vertex(const Graph& g, const vector<T>& a, const vi
 		while (lpt < l[j]) flip(lpt++);
 		while (rpt > r[j]) flip(--rpt);
 
-		// パスの両端点の LCA の重みを追加する．
-		insert(a[lca(u[j], v[j])]);
+		// パスの両端点の LCA を追加する．
+		int lca = get_lca(u[j], v[j]);
+		insert(lca);
 
 		// クエリ j に対する解を得る．
-		res[j] = get_sol(j);
+		get_sol(j);
 
-		// パスの両端点の LCA の重みを削除する．
-		erase(a[lca(u[j], v[j])]);
+		// パスの両端点の LCA を削除する．
+		erase(lca);
 	}
 
-	return res;
+	/* 雛形
+	// 必要なデータ構造を用意する．
+	vi freq(n);
+	int sol = 0;
+
+	// 区間に要素 w を追加し，データ構造を更新する．
+	auto insert = [&](int i) {
+		if (freq[w[i]] == 0) sol++;
+		freq[w[i]]++;
+	};
+
+	// 区間から要素 w を削除し，データ構造を更新する．
+	auto erase = [&](int i) {
+		freq[w[i]]--;
+		if (freq[w[i]] == 0) sol--;
+	};
+
+	// クエリ j に対し，データ構造を参照して解を求める．
+	vi res(q);
+	auto get_sol = [&](int j) {
+		res[j] = sol;
+	};
+
+	mos_algorithm_on_tree_vtx(g, u, v, insert, erase, get_sol);
+	*/
 }
 
 
@@ -3262,6 +3260,8 @@ public:
 
 	// 頂点 i とその親との間の辺を切断する．
 	void cut(int i) {
+		// verify : https://judge.yosupo.jp/problem/incremental_minimum_spanning_forest
+
 		cut(&vs[i]);
 	}
 
@@ -4341,6 +4341,14 @@ public:
 	}
 #endif
 };
+
+
+//【Vertex Get Contour Prod（可換モノイド作用）】
+/*
+* 参考 : https://noshi91.hatenablog.com/entry/2022/03/27/042143
+* 参考 : https://github.com/yosupo06/library-checker-problems/blob/master/tree/vertex_get_range_contour_add_on_tree/sol/correct.cpp
+*/
+
 
 
 //【根付き木のオイラーツアー】O(n)

@@ -76,10 +76,6 @@ using mint = modint998244353;
 //using mint = static_modint<1000000007>;
 //using mint = modint; // mint::set_mod(m);
 
-namespace atcoder {
-	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
-}
 using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using vvvvm = vector<vvvm>; using pim = pair<int, mint>;
 #endif
 
@@ -87,6 +83,14 @@ using vm = vector<mint>; using vvm = vector<vm>; using vvvm = vector<vvm>; using
 #ifdef _MSC_VER // 手元環境（Visual Studio）
 #include "local.hpp"
 #else // 提出用（gcc）
+int mute_dump = 0;
+int frac_print = 0;
+#if __has_include(<atcoder/all>)
+namespace atcoder {
+	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
+}
+#endif
 inline int popcount(int n) { return __builtin_popcount(n); }
 inline int popcount(ll n) { return __builtin_popcountll(n); }
 inline int lsb(int n) { return n != 0 ? __builtin_ctz(n) : -1; }
@@ -95,8 +99,7 @@ inline int msb(int n) { return n != 0 ? (31 - __builtin_clz(n)) : -1; }
 inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump(...)
 #define dumpel(...)
-#define dump_list(v)
-#define dump_mat(v)
+#define dump_math(v)
 #define input_from_file(f)
 #define output_to_file(f)
 #define Assert(b) { if (!(b)) { vc MLE(1<<30); EXIT(MLE.back()); } } // RE の代わりに MLE を出す
@@ -163,15 +166,38 @@ map<S, T, greater<S>>
 // 多倍長整数（入出力が O(n^2) なので注意！）
 #include <boost/multiprecision/cpp_int.hpp>
 using Bint = boost::multiprecision::cpp_int;
+using vB = vector<Bint>; using vvB = vector<vB>; using vvvB = vector<vvB>;
 Bint gcd(const Bint& x, const Bint& y) { return boost::math::gcd(x, y); }
 Bint lcm(const Bint& x, const Bint& y) { return boost::math::lcm(x, y); }
 boost::swap ?
 #include <boost/move/move.hpp>
 boost::move
 
+// 多倍長整数（The GNU Multiple Precision Arithmetic Library）
+#include <gmpxx.h>
+using Bint = mpz_class
+
 // 動的にサイズを変更できる bitset
 #include <boost/dynamic_bitset.hpp>
 boost::dynamic_bitset<> bs(n);
+
+// bitset のサイズを動的に決める
+// 参考 : https://codeforces.com/blog/entry/100910?&mobile=true#comment-896093
+template <int M = 1>
+int solve(int n, int m) {
+	if (m > M) return solve<min(M * 2, 1 << 24)>(n, m);
+	Bit_matrix<M> A(n, m);
+	rep(i, n) rep(j, m) {
+		char c;
+		cin >> c;
+		A[i][j] = c - '0';
+	}
+	return reduced_row_echelon_form(A);
+}
+
+// 色付け出力
+int x;
+cout << "\033[1;3" << x % 7 << "m" << setw(1) << x << " ";
 
 // 時間計測して TLE 寸前に終了
 auto start = chrono::system_clock::now();
@@ -180,8 +206,8 @@ auto msec = chrono::duration_cast<chrono::milliseconds>(now - start).count();
 if (msec >= 1950) break;
 
 // QCFium 法
-#pragma GCC target("avx2")
-#pragma GCC optimize("O3")
+#pragma GCC target("avx2") // yukicoder では消す
+#pragma GCC optimize("O3") // たまにバグる
 #pragma GCC optimize("unroll-loops")
 */
 
@@ -248,8 +274,7 @@ void bug_find() {
 
 	mute_dump = true;
 
-	mt19937_64 mt;
-	mt.seed((int)time(NULL));
+	mt19937_64 mt((int)time(NULL));
 	uniform_int_distribution<ll> rnd(0LL, 1LL << 60);
 
 	rep(hoge, 100) {
@@ -306,40 +331,6 @@ auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; re
 --------------------------------------------------------------- */
 
 
-// mint を手元環境でだけ有理数表示したいとき用
-/* -----------------------------------------------------------------
-
-string mint_to_frac(mint x, int v_max = 31595) {
-	repi(dnm, 1, v_max) {
-		int num = (x * dnm).val();
-		if (num == 0) {
-			return "0";
-		}
-		if (num <= v_max) {
-			if (dnm == 1) return to_string(num);
-			return to_string(num) + "/" + to_string(dnm);
-		}
-		if (mint::mod() - num <= v_max) {
-			if (dnm == 1) return "-" + to_string(mint::mod() - num);
-			return "-" + to_string(mint::mod() - num) + "/" + to_string(dnm);
-		}
-	}
-
-	return to_string(x.val());
-}
-
-namespace atcoder {
-	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
-#ifdef _MSC_VER
-	inline ostream& operator<<(ostream& os, const mint& x) { os << mint_to_frac(x); return os; }
-#else
-	inline ostream& operator<<(ostream& os, const mint& x) { os << x.val(); return os; }
-#endif	
-}
-
--------------------------------------------------------------- - */
-
-
 // インタラクティブ問題のデバッグ用の雛形
 /* -----------------------------------------------------------------
 
@@ -383,3 +374,110 @@ struct Opponent {
 --------------------------------------------------------------- */
 
 
+// 実験用の雛形（cin, cout 利用）
+/* -----------------------------------------------------------------
+
+void naive() {
+	// 愚直コード
+}
+
+void solve() {
+	// 提出用コード
+}
+
+mt19937_64 mt;
+uniform_int_distribution<ll> rnd(0LL, 1LL << 60);
+void make_testcase(int seed, ostream& os) {
+	mt.seed(seed);
+
+	int q = rnd(mt) % 10 + 1;
+	os << q << "\n";
+
+	rep(j, q) {
+		int tp = rnd(mt) % 10;
+
+		if (tp == 0) {
+			os << tp << "\n";
+		}
+		else if (tp == 1) {
+			ll y0 = rnd(mt) % 11 - 5;
+
+			os << tp << " " << y0 << "\n";
+		}
+	}
+}
+
+
+void bug_find() {
+#ifdef _MSC_VER
+	// 合わない入力例を見つける．
+
+	mute_dump = true;
+
+	int seed0 = (int)time(NULL);
+
+	stringstream ss_out, ss_in;
+	cin.rdbuf(ss_in.rdbuf());
+	cout.rdbuf(ss_out.rdbuf());
+
+	rep(hoge, 100000) {
+		int seed = seed0 ^ hoge;
+		//cerr << seed << endl;
+
+		make_testcase(seed, ss_in);
+		naive();
+		auto res_naive = ss_out.str();
+		ss_in.str(""); ss_in.clear();
+		ss_out.str(""); ss_out.clear();
+
+		make_testcase(seed, ss_in);
+		solve();
+		auto res_solve = ss_out.str();
+		ss_in.str(""); ss_in.clear();
+		ss_out.str(""); ss_out.clear();
+
+		if (res_naive != res_solve) {
+			cerr << "----------error!----------" << endl;
+			cerr << "seed:" << endl;
+			cerr << seed << endl;
+			cerr << "input:" << endl;
+			make_testcase(seed, cerr);
+			cerr << "results:" << endl;
+			cerr << res_naive << endl;
+			cerr << res_solve << endl;
+			cerr << "--------------------------" << endl;
+		}
+	}
+
+	mute_dump = false;
+	exit(0);
+#endif
+}
+
+int main() {
+//	input_from_file("input.txt");
+//	output_to_file("output.txt");
+
+	bug_find();
+
+	stringstream ss_out, ss_in;
+	cin.rdbuf(ss_in.rdbuf());
+
+	int seed = 1747724476;
+
+	make_testcase(seed, cout);
+
+	make_testcase(seed, ss_in);
+	naive();
+	auto res_naive = ss_out.str();
+	ss_in.str(""); ss_in.clear();
+	ss_out.str(""); ss_out.clear();
+
+	make_testcase(seed, ss_in);
+	solve();
+	auto res_solve = ss_out.str();
+	ss_in.str(""); ss_in.clear();
+	ss_out.str(""); ss_out.clear();
+}
+
+--------------------------------------------------------------- */

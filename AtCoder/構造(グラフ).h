@@ -327,7 +327,7 @@ Graph create_random_Graph(int n, int p, bool self_loop = false) {
 //【重み付き有向グラフのランダム生成】O(n^2)
 /*
 * n 頂点で，コストが [c_min..c_max] 内の一様乱数で与えられ，
-* 辺の存在確率が p % であるランダムな重み付き有向グラフを返す．
+* 辺の存在確率が p % であるランダムな多重辺のない重み付き有向グラフを返す．
 * self_loop : 自己ループを許可するか（デフォルトでは false）
 */
 WGraph create_random_WGraph(int n, ll c_min, ll c_max, int p, bool self_loop = false) {

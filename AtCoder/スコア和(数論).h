@@ -233,7 +233,7 @@ Floor_vector<T> func_on_prime_acc(const Floor_vector<T>& F) {
 }
 
 
-//【[i=1] の累積和（一括）】O(nl log nl + √(n nh))
+//【[i=1] の累積和（一括）】O(nl + nh)
 /*
 * 1(s) をディリクレ母関数にもつ乗法的数論関数 f[i]=(i=1?1:0) について，f[1..N] の累積和を返す．
 */
@@ -252,7 +252,7 @@ Floor_vector<T> id_acc(ll N, int nl) {
 }
 
 
-//【1 の累積和（一括）】O(nl log nl + √(n nh))
+//【1 の累積和（一括）】O(nl + nh)
 /*
 * ζ(s) をディリクレ母関数にもつ乗法的数論関数 f[i]=1 について，f[1..N] の累積和を返す．
 */
@@ -271,7 +271,7 @@ Floor_vector<T> one_acc(ll N, int nl) {
 }
 
 
-//【i の累積和（一括）】O(nl log nl + √(n nh))
+//【i の累積和（一括）】O(nl + nh)
 /*
 * ζ(s-1) をディリクレ母関数にもつ乗法的数論関数 f[i]=i について，f[1..N] の累積和を返す．
 */
@@ -299,7 +299,7 @@ Floor_vector<T> linear_acc(ll N, int nl) {
 }
 
 
-//【i^2 の累積和（一括）】O(nl log nl + √(n nh))
+//【i^2 の累積和（一括）】O(nl + nh)
 /*
 * ζ(s-2) をディリクレ母関数にもつ乗法的数論関数 f[i]=i^2 について，f[1..N] の累積和を返す．
 */
@@ -343,7 +343,7 @@ Floor_vector<T> square_acc(ll N, int nl) {
 }
 
 
-//【i^3 の累積和（一括）】O(nl log nl + √(n nh))
+//【i^3 の累積和（一括）】O(nl + nh)
 /*
 * ζ(s-3) をディリクレ母関数にもつ乗法的数論関数 f[i]=i^3 について，f[1..N] の累積和を返す．
 */
@@ -741,5 +741,88 @@ T square_free_sum(ll N) {
 *
 * verify : https://yukicoder.me/problems/no/1781
 */
+
+
+//【余りの和】（遅い）
+/*
+* Mod_sum(vl a) : O(n log n)
+*	整数列 a[0..n) で初期化する．
+*
+* ll mod_sum(ll m) : O(max(a) log(n) / m)
+*	Σi∈[0..n) (a[i] mod m) を返す．
+*
+* ll lack_sum(ll m) : O(max(a) log(n) / m)
+*	a[0..n) を m で割った不足の和を返す．
+*
+* ll floor_sum(ll m) : O(max(a) log(n) / m)
+*	Σi∈[0..n) floor(a[i] / m) を返す．
+*
+* ll ceil_sum(ll m) : O(max(a) log(n) / m)
+*	Σi∈[0..n) ceil(a[i] / m) を返す．
+*/
+template <class T>
+class Mod_sum {
+	int n;
+	vector<T> a;
+	vl acc;
+
+public:
+	// 整数列 a[0..n) で初期化する．
+	Mod_sum(const vector<T>& a_) : n(sz(a_)), a(a_), acc(n + 1) {
+		// verify : https://atcoder.jp/contests/arc126/tasks/arc126_c
+
+		sort(all(a));
+		rep(i, n) acc[i + 1] = acc[i] + a[i];
+	}
+	Mod_sum() : n(0) {}
+
+	// Σi∈[0..n) (a[i] mod m) を返す．
+	ll mod_sum(T m) const {
+		ll res = 0;
+
+		T v = a[0] - smod(a[0], m);
+		int pi = 0;
+
+		while (pi < n) {
+			int i = lbpos(a, v + m);
+			res += (acc[i] - acc[pi]) - (ll)v * (i - pi);
+
+			v += m;
+			pi = i;
+		}
+
+		return res;
+	}
+
+	// a[0..n) を m で割った不足の和を返す．
+	ll lack_sum(T m) const {
+		// verify : https://atcoder.jp/contests/arc126/tasks/arc126_c
+
+		ll res = 0;
+
+		T v = a[0] + smod(-a[0], m);
+		int pi = 0;
+
+		while (pi < n) {
+			int i = ubpos(a, v);
+			res += (ll)v * (i - pi) - (acc[i] - acc[pi]);
+
+			v += m;
+			pi = i;
+		}
+
+		return res;
+	}
+
+	// Σi∈[0..n) floor(a[i] / m) を返す．
+	ll floor_sum(T m) const {
+		return (acc[n] - mod_sum(m)) / m;
+	}
+
+	// Σi∈[0..n) ceil(a[i] / m) を返す．
+	ll ceil_sum(T m) const {
+		return (acc[n] + lack_sum(m)) / m;
+	}
+};
 
 

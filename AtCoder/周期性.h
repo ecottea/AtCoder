@@ -5,7 +5,7 @@
 
 //【周期数列（配列）】
 /*
-* Periodic_sequence_sum<T>(vT a, int n0) : O(n)
+* Periodic_sequence<T>(vT a, int n0) : O(n)
 *	A = a[0..n0) + a[n0..n)*∞ なる数列 A[0..∞) で初期化する．
 *
 * T sum(ll n)
@@ -39,7 +39,7 @@ public:
 
 		T res = acc0[n0];
 		n -= n0;
-		res += acc1[n1] * (n / n1) + acc1[n % n1];
+		res += (T)(acc1[n1] * (n / n1) + acc1[n % n1]);
 
 		return res;
 	}
@@ -102,7 +102,7 @@ public:
 		// verify : https://atcoder.jp/contests/abc346/tasks/abc346_f
 
 		c -= a;
-		Assert(0 <= c && c < C);
+		Assert(0 <= c); Assert(c < C);
 
 		if (l >= M * n) return M * n;
 		chmax(l, 0LL);
@@ -127,7 +127,7 @@ public:
 		// verify : https://atcoder.jp/contests/ttpc2022/tasks/ttpc2022_e
 
 		c -= a;
-		Assert(0 <= c && c < C);
+		Assert(0 <= c); Assert(c < C);
 
 		if (r < 0) return -1LL;
 		chmin(r, M * n);
@@ -148,8 +148,10 @@ public:
 
 	// S[l..r) 内の文字 c の個数を返す．
 	ll count(ll l, ll r, char c) {
+		// verify : https://atcoder.jp/contests/utpc2023/tasks/utpc2023_n
+
 		c -= a;
-		Assert(0 <= c && c < C);
+		Assert(0 <= c); Assert(c < C);
 
 		chmax(l, 0LL); chmin(r, M * n);
 		if (l >= r) return 0LL;
@@ -262,8 +264,8 @@ struct Periodic_sequence_sum {
 * a[i+1] = f(a[i]), a[0] = a0 なる数列について，a[0] から始まる非周期列の長さ nc と
 * a[nc] から始まる周期列の長さ c の組 {nc, c} を返す．
 */
-template <class T>
-pii floyds_cycle_finding(const function<T(T)>& f, T a0) {
+template <class T, class FUNC>
+pii floyds_cycle_finding(const FUNC& f, T a0) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%95%E3%83%AD%E3%82%A4%E3%83%89%E3%81%AE%E5%BE%AA%E7%92%B0%E6%A4%9C%E5%87%BA%E6%B3%95
 	// verify : https://atcoder.jp/contests/abc030/tasks/abc030_d
 
@@ -292,8 +294,8 @@ pii floyds_cycle_finding(const function<T(T)>& f, T a0) {
 
 	/* f の定義の雛形
 	using T = int;
-	function<T(T)> f = [&](T x) {
-		return 0;
+	auto f = [&](T x) {
+		return x;
 	};
 	*/
 }

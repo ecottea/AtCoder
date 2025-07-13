@@ -1,82 +1,197 @@
 #pragma once
 #include "header.h"
+#include "列クエリ.h"
 // ■■■■■ 関数，写像 ■■■■■
 
 
 //【写像の合成】
 /*
-* Map_composite(vi f, ll M) : O(n log M)
-*	[0..n) 上の写像 f : i → f[i] で初期化する．f^M まで計算可能とする．
+* Map_composite(vi f) : O(n)
+*	[0..n) 上の写像 f : x → f[x] で初期化する．
 *
-* int apply(int x, ll m) : O(log m)
+* int apply(int x, ll m) : O(log n)
 *	f^m(x) を返す．
 *
-* ll max_right(int x, function<bool(int)>& okQ) : O(log M)
-*	okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
+* int max_right(int x, FUNC& okQ) : O(log n)
+*	okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す（恒真なら INF）
 *
-*（ダブリング）
+*（HLD）
 */
 class Map_composite {
-	int n, K;
+	// n : 頂点数
+	int n;
 
-	// nxt[k][i] : f^(2^k)[i]
-	vvi nxt;
+	// id[v], pos[v] : 頂点 v がどの成分の何番目に属しているか
+	vi id, pos;
+
+	// vs[k], to[k] : k 番目の成分の頂点のリストと，成分から出た先の頂点（なければ -1）
+	vvi vs; vi to;
+
+	// g を HLD し，重さ最大の頂点を最初にもってくる．
+	int dfs_HLD(int s, Graph& g) const {
+		int ws = 0; int wt_max = -INF; int j_max = -1;
+
+		int J = sz(g[s]);
+		rep(j, J) {
+			int wt = dfs_HLD(g[s][j], g);
+			if (chmax(wt_max, wt)) j_max = j;
+			ws += wt + 1;
+		}
+
+		if (j_max > 0) swap(g[s][j_max], g[s][0]);
+
+		return ws;
+	}
+
+	// パスの情報を記録する．
+	void dfs_HLD2(int s, const Graph& g) {
+		vs.back().push_back(s);
+		id[s] = sz(vs) - 1;
+
+		int J = sz(g[s]);
+		if (J == 0) return;
+
+		dfs_HLD2(g[s][0], g);
+
+		repi(j, 1, J - 1) {
+			vs.push_back(vi());
+			to.push_back(s);
+
+			dfs_HLD2(g[s][j], g);
+		}
+	}
 
 public:
-	// [0..n) 上の写像 i → f[i] で初期化する．f^M まで計算可能とする．
-	Map_composite(const vi& f, ll M) : n(sz(f)), K(msb(max(M, 1LL)) + 1), nxt(K, vi(n)) {
+	Map_composite(const vi& f) : n(sz(f)), id(n, -1), pos(n, -1) {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
 
-		// f^(2^0)[i] = f[i]
-		rep(i, n) nxt[0][i] = f[i];
+		// g : functional graph f の逆グラフ
+		Graph g(n);
+		rep(s, n) g[f[s]].push_back(s);
 
-		// f^(2^(k+1))[i] = f^(2^k)[ f^(2^k)[i] ]
-		rep(k, K - 1) rep(i, n) nxt[k + 1][i] = nxt[k][nxt[k][i]];
-	}
-	Map_composite() : n(0), K(0) {}
+		rep(i, n) {
+			if (id[i] != -1) continue;
+
+			// サイクル上の頂点 r を見つける．
+			int v = i;
+			while (id[v] == -1) {
+				id[v] = -2;
+				v = f[v];
+			}
+
+			// サイクルを記録する．
+			vs.push_back(vi());
+			to.push_back(-1);
+
+			while (id[v] == -2) {
+				vs.back().push_back(v);
+				id[v] = sz(vs) - 1;
+
+				v = f[v];
+			}
+
+			// 同じ連結成分のサイクル以外の辺を HLD し記録する．
+			int s = v;
+			do {
+				repe(t, g[s]) {
+					if (id[t] >= 0) continue;
+
+					dfs_HLD(t, g);
+
+					vs.push_back(vi());
+					to.push_back(s);
+
+					dfs_HLD2(t, g);
+				}
+				s = f[s];
+			} while (s != v);
+		}
+
+		// パスの頂点の並びを逆順から正順に直す．
+		rep(k, sz(vs)) {
+			if (to[k] != -1) reverse(all(vs[k]));
+			rep(i, sz(vs[k])) pos[vs[k][i]] = i;
+		}
+	};
+	Map_composite() : n(0) {}
 
 	// f^m(x) を返す．
 	int apply(int x, ll m) const {
 		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
 
-		Assert(0 <= x && x < n);
+		Assert(0 <= x); Assert(x < n);
 
-		int k = 0;
-		while (m > 0) {
-			if (m & 1) x = nxt[k][x];
-			m /= 2;
-			k++;
+		int i = id[x];
+		int p = pos[x];
+
+		while (to[i] != -1) {
+			if (m < sz(vs[i]) - p) {
+				return vs[i][p + m];
+			}
+			m -= sz(vs[i]) - p;
+
+			x = to[i];
+			i = id[x];
+			p = pos[x];
 		}
-		return x;
+
+		return vs[i][(p + m) % sz(vs[i])];
 	}
 
 	// okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
-	ll max_right(int x, const function<bool(int)>& okQ) const {
+	template <class FUNC>
+	int max_right(int x, const FUNC& okQ) const {
 		// verify : https://atcoder.jp/contests/arc060/tasks/arc060_c
 
-		Assert(0 <= x && x < n);
-		if (!okQ(x)) return -1;
+		Assert(0 <= x); Assert(x < n);
 
-		ll m = 0;
-		repir(k, K - 1, 0) {
-			m <<= 1;
-			if (okQ(nxt[k][x])) {
-				m++;
-				x = nxt[k][x];
+		int i = id[x];
+		int p = pos[x];
+
+		int res = -1;
+
+		while (to[i] != -1) {
+			// 成分内で ok/ng が切り替わる場合
+			if (!okQ(vs[i].back())) {
+				// 境界を二分探索する．
+				int ok = p - 1, ng = sz(vs[i]) - 1;
+
+				while (ng - ok > 1) {
+					int mid = (ok + ng) / 2;
+
+					if (okQ(vs[i][mid])) ok = mid;
+					else ng = mid;
+				}
+
+				res += ok - (p - 1);
+
+				return res;
 			}
-		}
-		return m;
-	}
 
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Map_composite& mc) {
-		rep(k, mc.K) {
-			os << (1LL << k) << ":" << endl;
-			rep(i, mc.n) os << mc.nxt[k][i] << " "; os << endl;
+			res += sz(vs[i]) - p;
+
+			x = to[i];
+			i = id[x];
+			p = pos[x];
 		}
-		return os;
+
+		int L = sz(vs[i]);
+		if (okQ(vs[i][(p + L - 1) % L])) return INF;
+
+		// 境界を二分探索する．
+		int ok = p - 1, ng = p + L - 1;
+
+		while (ng - ok > 1) {
+			int mid = (ok + ng) / 2;
+
+			if (okQ(vs[i][mid % L])) ok = mid;
+			else ng = mid;
+		}
+
+		res += ok - (p - 1);
+
+		return res;
 	}
-#endif
 
 	/* okQ の定義の雛形
 	auto okQ = [&](int i) {
@@ -86,133 +201,183 @@ public:
 };
 
 
-//【写像の合成（モノイド）】
+//【写像の合成（総和）】
 /*
-* Map_accumulate<S, op, e>(vi f, vS a, ll I) : O(n log I)
-*	[0..n) 上の写像 f : x → f[x] と列 a[0..n) で初期化する．f^I まで計算可能とする．
+* Map_accumulate<T>(vi f, vT a) : O(n)
+*	[0..n) 上の写像 f : x → f[x] と数列 a[0..n) で初期化する．
 *
-* int apply(int x, ll i) : O(log i)
-*	f^i(x) を返す．
+* int apply(int x, ll m) : O(log n)
+*	f^m(x) を返す．
 *
-* S accumulate(int x, ll r) : O(log r)
-*	Πa[f^[0..r)(x)] を返す．
+* T accumulate(int x, ll m) : O(log n)
+*	Σa[f^[0..m)(x)] を返す．
 *
-* ll max_right(int x, function<bool(int, S)>& okQ) : O(log I)
-*	okQ(f^i(x), Πa[f^[0..i)(x)]) = true かつ okQ(f^(i+1)(x), Πa[f^[0..i+1)(x)]) = false なる i を返す．
-*
-*（ダブリング）
+*（HLD）
 */
-template <class S, S(*op)(S, S), S(*e)()>
+template <class T>
 class Map_accumulate {
-	int n, K;
+	// n : 頂点数
+	int n;
 
-	// nxt[k][x] : f^(2^k)[x]
-	vvi nxt;
+	// id[v], pos[v] : 頂点 v がどの成分の何番目に属しているか
+	vi id, pos;
 
-	// acc[k][x] : Σi∈[0..2^k) a[f^i[x]]
-	using vS = vector<S>; using vvS = vector<vS>;
-	vvS acc;
+	// vs[k], to[k] : k 番目の成分の頂点のリストと，成分から出た先の頂点（なければ -1）
+	vvi vs; vi to;
+
+	// acc[k] : k 番目の成分の累積和
+	vector<vector<T>> acc;
+
+	// g を HLD し，重さ最大の頂点を最初にもってくる．
+	int dfs_HLD(int s, Graph& g) const {
+		int ws = 0; int wt_max = -INF; int j_max = -1;
+
+		int J = sz(g[s]);
+		rep(j, J) {
+			int wt = dfs_HLD(g[s][j], g);
+			if (chmax(wt_max, wt)) j_max = j;
+			ws += wt + 1;
+		}
+
+		if (j_max > 0) swap(g[s][j_max], g[s][0]);
+
+		return ws;
+	}
+
+	// パスの情報を記録する．
+	void dfs_HLD2(int s, const Graph& g) {
+		vs.back().push_back(s);
+		id[s] = sz(vs) - 1;
+
+		int J = sz(g[s]);
+		if (J == 0) return;
+
+		dfs_HLD2(g[s][0], g);
+
+		repi(j, 1, J - 1) {
+			vs.push_back(vi());
+			to.push_back(s);
+
+			dfs_HLD2(g[s][j], g);
+		}
+	}
 
 public:
-	// [0..n) 上の写像 f : x → f[x] と数列 a[0..n) で初期化する．f^I まで計算可能とする．
-	Map_accumulate(const vi& f, const vS& a, ll I)
-		: n(sz(f)), K(msb(max(I, 1LL)) + 1), nxt(K, vi(n)), acc(K, vS(n))
-	{
+	Map_accumulate(const vi& f, const vector<T>& a) : n(sz(f)), id(n, -1), pos(n, -1) {
 		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
 
-		// f^(2^0)[x] = f[x]
-		rep(x, n) nxt[0][x] = f[x];
+		// g : functional graph f の逆グラフ
+		Graph g(n);
+		rep(s, n) g[f[s]].push_back(s);
 
-		// Σi=[0..2^0) a[f^i[x]] = a[x]
-		rep(x, n) acc[0][x] = a[x];
+		rep(i, n) {
+			if (id[i] != -1) continue;
 
-		rep(k, K - 1) {
-			rep(x, n) {
-				// 例：
-				// f^8[x] = f^4[ f^4[x] ]
-				nxt[k + 1][x] = nxt[k][nxt[k][x]];
-
-				// 例：
-				// a[f^0[x]] + a[f^1[x]] + a[f^2[x]] + a[f^3[x]]
-				//	+ a[f^4[x]] + a[f^5[x]] + a[f^6[x]] + a[f^7[x]]
-				// = a[f^0[x]] + a[f^1[x]] + a[f^2[x]] + a[f^3[x]]
-				//	+ a[f^0[ f^4[x] ]] + a[f^1[ f^4[x] ]] + a[f^2[ f^4[x] ]] + a[f^3[ f^4[x] ]]
-				acc[k + 1][x] = op(acc[k][x], acc[k][nxt[k][x]]);
+			// サイクル上の頂点 r を見つける．
+			int v = i;
+			while (id[v] == -1) {
+				id[v] = -2;
+				v = f[v];
 			}
-		}
-	}
 
-	// f^i(x) を返す．
-	int apply(int x, ll i) const {
-		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
+			// サイクルを記録する．
+			vs.push_back(vi());
+			to.push_back(-1);
 
-		Assert(0 <= x && x < n);
+			while (id[v] == -2) {
+				vs.back().push_back(v);
+				id[v] = sz(vs) - 1;
 
-		int k = 0;
-		while (i > 0) {
-			if (i & 1) x = nxt[k][x];
-			i >>= 1;
-			k++;
-		}
-		return x;
-	}
-
-	// Πi=[0..r) a[ f^i(x) ] を返す．
-	S accumulate(S x, ll r) const {
-		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
-
-		Assert(0 <= x && x < n);
-
-		int k = 0; S val = e();
-		while (r > 0) {
-			if (r & 1) {
-				val = op(val, acc[k][x]);
-				x = nxt[k][x];
+				v = f[v];
 			}
-			r >>= 1;
-			k++;
+
+			// 同じ連結成分のサイクル以外の辺を HLD し記録する．
+			int s = v;
+			do {
+				repe(t, g[s]) {
+					if (id[t] >= 0) continue;
+
+					dfs_HLD(t, g);
+
+					vs.push_back(vi());
+					to.push_back(s);
+
+					dfs_HLD2(t, g);
+				}
+				s = f[s];
+			} while (s != v);
 		}
 
-		return val;
-	}
+		// パスの頂点の並びを逆順から正順に直す．
+		acc.resize(sz(vs));
+		rep(k, sz(vs)) {
+			int L = sz(vs[k]);
 
-	// okQ(f^i(x), Πa[f^[0..i)(x)]) = true かつ okQ(f^(i+1)(x), Πa[f^[0..i+1)(x)]) = false なる i を返す．
-	ll max_right(int x, const function<bool(int, S)>& okQ) const {
-		// verify : https://atcoder.jp/contests/arc169/tasks/arc169_b
+			if (to[k] != -1) reverse(all(vs[k]));
+			rep(i, L) pos[vs[k][i]] = i;
 
-		Assert(0 <= x && x < n);
-		if (!okQ(x, e())) return -1;
-
-		ll i = 0; S val = e();
-		repir(k, K - 1, 0) {
-			i <<= 1;
-			auto nval = op(val, acc[k][x]);
-			if (okQ(nxt[k][x], nval)) {
-				i++;
-				val = nval;
-				x = nxt[k][x];
-			}
+			acc[k].resize(L + 1);
+			rep(i, L) acc[k][i + 1] = acc[k][i] + a[vs[k][i]];
 		}
-		return i;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Map_accumulate& ma) {
-		rep(k, ma.K) {
-			os << (1LL << k) << ":" << endl;
-			rep(x, ma.n) os << ma.nxt[k][x] << " "; os << endl;
-			rep(x, ma.n) os << ma.acc[k][x] << " "; os << endl;
-		}
-		return os;
-	}
-#endif
-
-	/* okQ の定義の雛形
-	using S = ll;
-	auto okQ = [&](int x, S acc) {
-		return true || false;
 	};
-	*/
+	Map_accumulate() : n(0) {}
+
+	// f^m(x) を返す．
+	int apply(int x, ll m) const {
+		Assert(0 <= x); Assert(x < n);
+
+		int i = id[x];
+		int p = pos[x];
+
+		while (to[i] != -1) {
+			if (m < sz(vs[i]) - p) {
+				return vs[i][p + m];
+			}
+			m -= sz(vs[i]) - p;
+
+			x = to[i];
+			i = id[x];
+			p = pos[x];
+		}
+
+		return vs[i][(p + m) % sz(vs[i])];
+	}
+
+	// Σa[f^[0..m)(x)] を返す．
+	T accumulate(int x, ll m) const {
+		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
+
+		Assert(0 <= x); Assert(x < n);
+
+		int i = id[x];
+		int p = pos[x];
+
+		T res = T(0);
+
+		while (to[i] != -1) {
+			int L = sz(vs[i]);
+
+			if (m < L - p) {
+				res += acc[i][p + m] - acc[i][p];
+				return res;
+			}
+
+			m -= L - p;
+			res += acc[i][L] - acc[i][p];
+
+			x = to[i];
+			i = id[x];
+			p = pos[x];
+		}
+
+		ll L = sz(vs[i]);
+		ll q = (p + m) / L;
+		ll r = (p + m) % L;
+		res += acc[i][L] * q + acc[i][r];
+		res -= acc[i][p];
+
+		return res;
+	}
 };
 
 
@@ -293,7 +458,7 @@ public:
 };
 
 
-//【Convex-Hull Trick（挿入狭義単調，クエリ狭義単調）】（オーバーフロー注意）
+//【Convex-Hull Trick（挿入狭義単調，クエリ狭義単調）】（狭義注意！オーバーフロー注意）
 /*
 * Convex_hull_trick_monotonous<T>(bool max_flag = false) : O(1)
 *	空で初期化する．max_flag = false[true] なら最小値[最大値] クエリに対応する．
@@ -805,501 +970,6 @@ public:
 	friend ostream& operator<<(ostream& os, const Convex_hull_trick_integer& cht) {
 		for (auto it = cht.lines.begin(); it != cht.lines.end(); it++) {
 			os << *it << (next(it) != cht.lines.end() ? "," : "");
-		}
-		return os;
-	}
-#endif
-};
-
-
-//【Slope Trick】
-/*
-* Slope_trick() : O(1)
-*	定数関数 f(x) = 0 で初期化する．
-*
-* ll min(ll* l = nullptr, ll* r = nullptr) : O(1)
-*	min f(x) を返し，必要ならそれを与える x の範囲 [l, r) を格納する．
-*
-* add_const(ll x0) : O(1)
-*	f(x) += y0 とする．
-*
-* add_right(ll x0) : O(log n)
-*	f(x) += max(x - x0, 0) とする．（＿／ の形を加算する．）
-*
-* add_left(ll x0) : O(log n)
-*	f(x) += max(x0 - x, 0) とする．（＼＿ の形を加算する．）
-*
-* add_abs(ll x0) : O(log n)
-*	f(x) += |x - x0| とする．（＼／ の形を加算する．）
-*
-* acc_min_left() : O(1)
-*	f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
-*
-* acc_min_right() : O(1)
-*	f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
-*
-* shift(ll x0) : O(1)
-*	f(x) を右に x0 だけ平行移動する．（f(x) ← f(x - x0)）
-*
-* sliding_window_min(ll dl, ll dr) : O(1)
-*	f(x) を min f([x-dl, x+dr]) に置き換える．（＼＿＿／ の形にする．）
-* 
-* vector<pll> get_points(ll l, ll r) : O(n)
-*	[l..r] 内の f(x) の折れ点（両端含む）を x 座標昇順に格納したリストを返す．
-*/
-struct Slope_trick {
-	// 参考 : https://maspypy.com/slope-trick-1-%E8%A7%A3%E8%AA%AC%E7%B7%A8
-
-	ll y_min; // 最小値
-	priority_queue<ll> qL; // 最小値より左の折れ点の x 座標を降順に取り出せるキュー
-	priority_queue_rev<ll> qR; // 最小値より右の折れ点の x 座標を昇順に取り出せるキュー
-	ll addL; // 最小値より左側の平行移動量
-	ll addR; // 最小値より右側の平行移動量
-
-	// f(x) = 0 で初期化する．
-	Slope_trick() : y_min(0), addL(0), addR(0) {
-		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
-
-		// 番兵を挿入しておく．
-		qL.push(-INFL);
-		qR.push(INFL);
-	};
-
-	// min f(x) を返し，必要ならそれを与える x の範囲 [l, r) を格納する．
-	ll min(ll* l = nullptr, ll* r = nullptr) {
-		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
-
-		if (r != nullptr) {
-			*l = qL.top() + addL;
-			*r = qR.top() + addR + 1;
-		}
-		return y_min;
-	}
-
-	// f(x) += y0 とする．
-	void add_const(ll y0) {
-		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
-
-		y_min += y0;
-	}
-
-	// f(x) += min(x - x0, 0) とする．（＿／ の形を加算する．）
-	void add_right(ll x0) {
-		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
-
-		y_min += max(0LL, (qL.top() + addL) - x0);
-		qL.push(x0 - addL);
-		qR.push((qL.top() + addL) - addR);
-		qL.pop();
-	}
-
-	// f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
-	void add_left(ll x0) {
-		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
-
-		y_min += max(0LL, x0 - (qR.top() + addR));
-		qR.push(x0 - addR);
-		qL.push((qR.top() + addR) - addL);
-		qR.pop();
-	}
-
-	// f(x) += |x - x0| とする．（＼／ の形を加算する．）
-	void add_abs(ll x0) {
-		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
-
-		add_right(x0);
-		add_left(x0);
-	}
-
-	// f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
-	void acc_min_left() {
-		qR = priority_queue_rev<ll>();
-		qR.push(INFL);
-	}
-
-	// f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
-	void acc_min_right() {
-		qL = priority_queue<ll>();
-		qL.push(-INFL);
-	}
-
-	// f(x) を x0 だけ右に平行移動する．（f(x) ← f(x - x0)）
-	void shift(ll x0) {
-		addL += x0;
-		addR += x0;
-	}
-
-	// f(x) を min f([x-dl, x+dr]) に置き換える．（＼＿＿／ の形にする．）
-	void sliding_window_min(ll dl, ll dr) {
-		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
-
-		addL -= dl;
-		addR += dr;
-	}
-
-	// [l..r] 内の f(x) の折れ点（両端含む）を x 座標昇順に返す．
-	vector<pll> get_points(ll l, ll r) const {
-		// verify : https://www.codechef.com/problems/UNRCOST
-
-		auto qL2(qL); auto qR2(qR);
-
-		vector<pll> res; ll a = 0, y = y_min;
-		while (!qL2.empty()) {
-			ll x = qL2.top(); qL2.pop();
-			if (x + addL < l) x = l - addL;
-			if (!res.empty()) y -= (res.back().first - (x + addL)) * a;
-			if (res.empty() || res.back().first != x + addL) res.emplace_back(x + addL, y);
-			if (x + addL == l) break;
-			a--;
-		}
-		reverse(all(res));
-
-		a = 0; y = y_min;
-		while (!qR2.empty()) {
-			ll x = qR2.top(); qR2.pop();
-			if (x + addR > r) x = r - addR;
-			if (!res.empty()) y += ((x + addR) - res.back().first) * a;
-			if (res.empty() || res.back().first != x + addR) res.emplace_back(x + addR, y);
-			if (x + addR == r) break;
-			a++;
-		}
-
-		return res;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Slope_trick& st) {
-		os << st.get_points(-100, 100);
-		return os;
-	}
-#endif
-};
-
-
-//【狭義単調な点列】
-/*
-* Monotonous_points<T>(bool y_smaller = false) : O(1)
-*	空で初期化する．
-*	x 座標は狭義単調増加で，y 座標は y_smaller=false[true] なら狭義単調増加[減少]とする．
-*
-* int size() : O(1)
-*	点の個数を返す．
-*
-* void insert(T x, T y) : ならし O(log n)
-*	点 (x, y) を挿入し，それにより単調性に違反する点は全て削除する．
-*	x 座標や y 座標がちょうど等しい点も消してしまうので注意！
-*
-* bool find_LL(T x, T y, bool eq = false) : O(log n)
-*	x' < x かつ y' < y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
-*
-* bool find_LG(T x, T y, bool eq = false) : O(log n)
-*	x' < x かつ y' > y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
-*
-* bool find_GL(T x, T y, bool eq = false) : O(log n)
-*	x' > x かつ y' < y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
-*
-* bool find_GG(T x, T y, bool eq = false) : O(log n)
-*	x' > x かつ y' > y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
-*
-* pTT lower_bound(T x) : O(log n)
-*	x' ≧ x なる x 座標が最小の点 (x', y') を返す（なければ (INFL, INFL[-INFL])）
-*
-* pTT upper_bound(T x) : O(log n)
-*	x' > x なる x 座標が最小の点 (x', y') を返す（なければ (INFL, INFL[-INFL])）
-*
-* pTT lower_bound_rev(T x) : O(log n)
-*	x' ≦ x なる x 座標が最大の点 (x', y') を返す（なければ (-INFL, -INFL[INFL])）
-*
-* pTT upper_bound_rev(T x) : O(log n)
-*	x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-INFL, -INFL[INFL])）
-*
-* pTT get_all_points() : O(n)
-*	全ての点を x 座標昇順に並べたリストを返す．
-*/
-template <class T>
-struct Monotonous_points {
-	// 参考 : https://topcoder-g-hatena-ne-jp.jag-icpc.org/skyaozora/20141216.html
-
-	bool y_smaller; // y 座標について狭義単調減少か
-
-	// x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少] な点列
-	// ただし番兵として (-inf, -inf[inf]) と (inf, inf[-inf]) を含む．
-	map<T, T> x_to_y;
-
-	// 空で初期化する．x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少]とする．
-	Monotonous_points(bool y_smaller = false) : y_smaller(y_smaller) {
-		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
-
-		// 番兵を挿入しておく．
-		if (!y_smaller) {
-			x_to_y[-T(INFL)] = -T(INFL);
-			x_to_y[T(INFL)] = T(INFL);
-		}
-		else {
-			x_to_y[-T(INFL)] = T(INFL);
-			x_to_y[T(INFL)] = -T(INFL);
-		}
-	}
-
-	// 点の個数を返す．
-	int size() const {
-		// verify : https://atcoder.jp/contests/abc372/tasks/abc372_d
-
-		// 両端の番兵の分を引く．
-		return sz(x_to_y) - 2;
-	}
-
-	// 点 (x, y) を挿入し，単調性に違反する点は全て削除する．
-	void insert(T x, T y) {
-		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
-
-		// x ≦ x' なる最小の x' を指すイテレータを得る．
-		auto it = x_to_y.lower_bound(x);
-
-		// x' から昇順に，y' ≦ y[ y' ≧ y ] である限り要素を削除する．
-		if (!y_smaller) {
-			while (true) {
-				if (it->second > y) break;
-				it = x_to_y.erase(it);
-			}
-		}
-		else {
-			while (true) {
-				if (it->second < y) break;
-				it = x_to_y.erase(it);
-			}
-		}
-
-		// x' から降順に，y' ≧ y[ y' ≦ y ] である限り要素を削除する．
-		if (!y_smaller) {
-			while (true) {
-				it = prev(it);
-				if (it->second < y) break;
-				it = x_to_y.erase(it);
-			}
-		}
-		else {
-			while (true) {
-				it = prev(it);
-				if (it->second > y) break;
-				it = x_to_y.erase(it);
-			}
-		}
-
-		// 点 (x, y) を挿入する．
-		x_to_y[x] = y;
-	}
-
-	// x' < x かつ y' < y なる点が存在するかを返す（eq=true なら等号も許す）
-	bool find_LL(T x, T y, bool eq = false) {
-		// verify : https://onlinejudge.u-aizu.ac.jp/problems/1341
-
-		if (!eq) {
-			T y2 = prev(x_to_y.lower_bound(x))->second;
-			return y2 != -INFL && y2 < y;
-		}
-		else {
-			T y2 = prev(x_to_y.upper_bound(x))->second;
-			return y2 != -INFL && y2 <= y;
-		}
-	}
-
-	// x' < x かつ y' > y なる点が存在するかを返す（eq=true なら等号も許す）
-	bool find_LG(T x, T y, bool eq = false) {
-		if (!eq) {
-			T y2 = prev(x_to_y.lower_bound(x))->second;
-			return y2 != INFL && y2 > y;
-		}
-		else {
-			T y2 = prev(x_to_y.upper_bound(x))->second;
-			return y2 != INFL && y2 >= y;
-		}
-	}
-
-	// x' > x かつ y' < y なる点が存在するかを返す（eq=true なら等号も許す）
-	bool find_GL(T x, T y, bool eq = false) {
-		if (!eq) {
-			T y2 = x_to_y.upper_bound(x)->second;
-			return y2 != -INFL && y2 < y;
-		}
-		else {
-			T y2 = x_to_y.lower_bound(x)->second;
-			return y2 != -INFL && y2 <= y;
-		}
-	}
-
-	// x' > x かつ y' > y なる点が存在するかを返す（eq=true なら等号も許す）
-	bool find_GG(T x, T y, bool eq = false) {
-		if (!eq) {
-			T y2 = x_to_y.upper_bound(x)->second;
-			return y2 != INFL && y2 > y;
-		}
-		else {
-			T y2 = x_to_y.lower_bound(x)->second;
-			return y2 != INFL && y2 >= y;
-		}
-	}
-
-	// x' ≧ x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
-	pair<T, T> lower_bound(T x) {
-		// verify : https://codeforces.com/gym/100633/problem/D
-
-		return *x_to_y.lower_bound(x);
-	}
-
-	// x' > x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
-	pair<T, T> upper_bound(T x) {
-		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
-
-		return *x_to_y.upper_bound(x);
-	}
-
-	// x' ≦ x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
-	pair<T, T> lower_bound_rev(T x) {
-		return *prev(x_to_y.upper_bound(x));
-	}
-
-	// x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
-	pair<T, T> upper_bound_rev(T x) {
-		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
-
-		return *prev(x_to_y.lower_bound(x));
-	}
-
-	// 全ての点を x 座標昇順に並べたリストを返す．
-	vector<pair<T, T>> get_all_points() {
-		// verify : https://atcoder.jp/contests/abc354/tasks/abc354_c
-
-		vector<pair<T, T>> res;
-		res.reserve(sz(x_to_y));
-		repe(tmp, x_to_y) res.push_back(tmp);
-		return res;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Monotonous_points& mp) {
-		repe(p, mp.x_to_y) if (abs(p.first) != mp.inf) os << p << " ";
-		return os;
-	}
-#endif
-};
-
-
-//【区分線形凸関数】
-/*
-* Convex_function() : O(1)
-*	n=1 本の線分からなる定数関数 f(x) = 0 で初期化する．
-*
-* add_const(ll c) : O(1)
-*	f(x) ← f(x) + c とする．（上に c 平行移動する）
-*
-* shift(ll d) : O(n)
-*	f(x) ← f(x - d) とする．（右に d 平行移動する）
-*
-* add_right(ll x0) : O(n)
-*	f(x) ← f(x) + max(x - x0, 0) とする．（＿／ の形を加算する．）
-*
-* add_left(ll x0) : O(n)
-*	f(x) ← f(x) + max(x0 - x, 0) とする．（＼＿ の形を加算する．）
-*
-* max(Convex_function g) : O(n)
-*	f(x) ← max(f(x), g(x)) とする．（g(x) との各点 max をとる）
-*
-* ll get(ll x0) : O(n)
-*	f(x0) を返す．
-*/
-class Convex_function_PL {
-	// 参考 : https://atcoder.jp/contests/abc219/editorial/2669
-
-	//【方法】
-	// 下に凸な区分線形関数を，n 個の一次関数の max として表現する．
-
-	// a_min[a_max] : 傾きの最小値[最大値]
-	int a_min, a_max;
-
-	// bs : 直線を傾き昇順に並べたときの切片のリスト
-	deque<ll> bs;
-
-public:
-	Convex_function_PL() : a_min(0), a_max(0), bs{ 0 } {
-		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
-	}
-
-	// f(x) ← f(x) + c とする．
-	void add_const(ll c) {
-		bs[0 - a_min] += c;
-	}
-
-	// f(x) ← f(x - d) とする．（右に d 平行移動する）
-	void shift(ll d) {
-		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
-
-		repi(a, a_min, a_max) bs[a - a_min] -= a * d;
-	}
-
-	// f(x) ← f(x) + max(x - x0, 0) とする．（＿／ の形を加算する．）
-	void add_right(ll x0) {
-		ll y_max = -INFL; int a0 = -INF;
-		repi(a, a_min, a_max) {
-			ll y = a * x0 + bs[a - a_min];
-			if (chmax(y_max, y)) a0 = a;
-		}
-
-		bs.push_back(-INFL); a_max++;
-
-		repir(a, a_max, a0 + 1) bs[a - a_min] = bs[a - 1 - a_min] - x0;
-	}
-
-	// f(x) ← f(x) + max(x0 - x, 0) とする．（＼＿ の形を加算する．）
-	void add_left(ll x0) {
-		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
-
-		ll y_max = -INFL; int a0 = -INF;
-		repi(a, a_min, a_max) {
-			ll y = a * x0 + bs[a - a_min];
-			if (chmax(y_max, y)) a0 = a;
-		}
-
-		bs.push_front(-INFL); a_min--;
-
-		repi(a, a_min, a0 - 1) bs[a - a_min] = bs[a + 1 - a_min] + x0;
-	}
-
-	// f(x) ← max(f(x), g(x)) とする．
-	void max(const Convex_function_PL& g) {
-		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
-
-		if (a_min > g.a_min) {
-			rep(hoge, a_min - g.a_min) bs.push_front(-INFL);
-			a_min = g.a_min;
-		}
-
-		if (a_max < g.a_max) {
-			rep(hoge, g.a_max - a_max) bs.push_back(-INFL);
-			a_max = g.a_max;
-		}
-
-		repi(a, g.a_min, g.a_max) chmax(bs[a - a_min], g.bs[a - g.a_min]);
-	}
-
-	// f(x0) を返す．
-	ll get(ll x0) {
-		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
-
-		ll y_max = -INFL;
-		repi(a, a_min, a_max) {
-			ll y = a * x0 + bs[a - a_min];
-			chmax(y_max, y);
-		}
-
-		return y_max;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Convex_function_PL& f) {
-		repi(a, f.a_min, f.a_max) {
-			os << a << " x + " << f.bs[a - f.a_min];
-			if (a < f.a_max) os << ", ";
 		}
 		return os;
 	}
@@ -1999,6 +1669,881 @@ public:
 };
 
 
+//【Slope Trick】
+/*
+* Slope_trick() : O(1)
+*	R 上の n=1 個の線分からなる関数 f(x) = 0 で初期化する．
+*
+* ll min(ll* l = nullptr, ll* r = nullptr) : O(1)
+*	min f(x) を返し，必要ならそれを与える x の範囲 [l..r] を格納する．
+*
+* add_const(ll y0) : O(1)
+*	f(x) += y0 とする．
+*
+* add_right(ll x0) : O(log n)
+*	f(x) += max(x - x0, 0) とする．（＿／ の形を加算する．）
+*
+* add_left(ll x0) : O(log n)
+*	f(x) += max(x0 - x, 0) とする．（＼＿ の形を加算する．）
+*
+* add_abs(ll x0) : O(log n)
+*	f(x) += |x - x0| とする．（＼／ の形を加算する．）
+*
+* add(Slope_trick& g) : O(min(n log(g.n), g.n log(n)))
+*	f(x) += g(x) とする．（g(x) は破壊される）
+*
+* acc_min_left() : O(1)
+*	f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
+*
+* acc_min_right() : O(1)
+*	f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
+*
+* shift(ll x0) : O(1)
+*	f(x) を右に x0 だけ平行移動する．（f(x) ← f(x - x0)）
+*
+* sliding_window_min(ll dl, ll dr) : O(1)
+*	f(x) を min f([x-dl..x+dr]) に置き換える．（左に dr，右に dl 伸ばして ＼＿＿／ の形にする．）
+*
+* vector<pll> get_points() : O(n)
+*	f(x) の折れ点を x 座標昇順に格納したリストを返す．
+*/
+class Slope_trick {
+	// 参考 : https://maspypy.com/slope-trick-1-%E8%A7%A3%E8%AA%AC%E7%B7%A8
+
+	//【注意】
+	// chmax(f(x), g(x)) はできない．そもそも交点が整数座標にならない．
+
+	ll y_min; // 最小値
+	priority_queue<ll> qL; // 最小値より左の折れ点の x 座標を降順に取り出せるキュー
+	priority_queue_rev<ll> qR; // 最小値より右の折れ点の x 座標を昇順に取り出せるキュー
+	ll addL; // 最小値より左側の平行移動量
+	ll addR; // 最小値より右側の平行移動量
+
+public:
+	// f(x) = 0 で初期化する．
+	Slope_trick() : y_min(0), addL(0), addR(0) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		// 番兵を挿入しておく．
+		qL.push(-INFL);
+		qR.push(INFL);
+	};
+
+	// min f(x) を返し，必要ならそれを与える x の範囲 [l..r] を格納する．
+	ll min(ll* l = nullptr, ll* r = nullptr) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		if (l) *l = qL.top() + addL;
+		if (r) *r = qR.top() + addR;
+
+		return y_min;
+	}
+
+	// f(x) += y0 とする．
+	void add_const(ll y0) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		y_min += y0;
+	}
+
+	// f(x) += min(x - x0, 0) とする．（＿／ の形を加算する．）
+	void add_right(ll x0) {
+		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
+
+		y_min += max(0LL, (qL.top() + addL) - x0);
+		qL.push(x0 - addL);
+		qR.push((qL.top() + addL) - addR);
+		qL.pop();
+	}
+
+	// f(x) += min(x0 - x, 0) とする．（＼＿ の形を加算する．）
+	void add_left(ll x0) {
+		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
+
+		y_min += max(0LL, x0 - (qR.top() + addR));
+		qR.push(x0 - addR);
+		qL.push((qR.top() + addR) - addL);
+		qR.pop();
+	}
+
+	// f(x) += |x - x0| とする．（＼／ の形を加算する．）
+	void add_abs(ll x0) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		add_right(x0);
+		add_left(x0);
+	}
+
+	// f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
+	void acc_min_left() {
+		// verify : https://atcoder.jp/contests/kupc2016/tasks/kupc2016_h
+		
+		qR = priority_queue_rev<ll>();
+		qR.push(INFL);
+	}
+
+	// f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
+	void acc_min_right() {
+		qL = priority_queue<ll>();
+		qL.push(-INFL);
+	}
+
+	// f(x) を x0 だけ右に平行移動する．（f(x) ← f(x - x0)）
+	void shift(ll x0) {
+		// verify : https://atcoder.jp/contests/arc123/tasks/arc123_d
+		
+		addL += x0;
+		addR += x0;
+	}
+
+	// f(x) を min f([x-dl..x+dr]) に置き換える．（左に dr，右に dl 伸ばして ＼＿＿／ の形にする．）
+	void sliding_window_min(ll dl, ll dr) {
+		// verify : https://atcoder.jp/contests/abc217/tasks/abc217_h
+
+		addL -= dr;
+		addR += dl;
+	}
+
+	// f(x) += g(x) とする．（g(x) は破壊される）
+	void add(Slope_trick& g) {
+		// verify : https://atcoder.jp/contests/utpc2012/tasks/utpc2012_12
+
+		if (sz(qL) + sz(qR) < sz(g.qL) + sz(g.qR)) swap(*this, g);
+
+		y_min += g.y_min;
+
+		while (true) {
+			ll x = g.qL.top(); g.qL.pop();
+			if (x == -INFL) break;
+			add_left(g.addL + x);
+		}
+
+		while (true) {
+			ll x = g.qR.top(); g.qR.pop();
+			if (x == INFL) break;
+			add_right(g.addR + x);
+		}
+	}
+
+	// f(x) の折れ点を x 座標昇順に格納したリストを返す．
+	vector<pll> get_points() const {
+		// verify : https://www.codechef.com/problems/UNRCOST
+
+		//【備考】
+		// 外側については順位キューの大きさを傾きとして外挿すればいい．
+
+		auto qL2(qL); auto qR2(qR);
+
+		vector<pll> res; ll a = 0, y = y_min;
+		while (true) {
+			ll x = qL2.top(); qL2.pop();
+			if (x == -INFL) break;
+			if (!res.empty()) y -= (res.back().first - (x + addL)) * a;
+			if (res.empty() || res.back().first != x + addL) res.emplace_back(x + addL, y);
+			a--;
+		}
+		reverse(all(res));
+
+		a = 0; y = y_min;
+		while (true) {
+			ll x = qR2.top(); qR2.pop();
+			if (x == INFL) break;
+			if (!res.empty()) y += ((x + addR) - res.back().first) * a;
+			if (res.empty() || res.back().first != x + addR) res.emplace_back(x + addR, y);
+			a++;
+		}
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Slope_trick& st) {
+		os << st.get_points();
+		return os;
+	}
+#endif
+};
+
+
+//【Slope Trick と min-plus 畳込み】
+/*
+* Slope Trick における一部の操作はある区分線形凸関数 g(x) との min-plus 畳込み
+*		f(x) ← min_t (f(x-t) + g(t))
+* と解釈でき，傾きについては単なるマージになる．
+*
+* f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
+*		g(x) = (x≧0 ? 0 : +∞)  （￣|＿ の形）
+*
+* f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
+*		g(x) = (x≦0 ? 0 : +∞)  （＿|￣ の形）
+* 
+* f(x) を右に x0 だけ平行移動する．（f(x) ← f(x - x0)）
+*		g(x) = (x=x0 ? 0 : +∞)  （￣|￣ の形）
+* 
+* f(x) を min f([x-dl..x+dr]) に置き換える．（＼＿＿／ の形にする．）
+*		g(x) = (-dr≦x≦dl ? 0 : +∞)  （￣|＿＿|￣ の形）
+*/
+
+
+//【Slope Trick（平衡二分探索木）】
+/*
+* Slope_trick_BBST() : O(1)
+*	[-INF..INF] 上の n=1 個の線分からなる関数 f(x) = 0 で初期化する．
+*
+* Slope_trick_BBST(ll x_min, ll x_max) : O(1)
+*	[x_min..x_max] 上の n=1 個の線分からなる関数 f(x) = 0 で初期化する．
+*
+* pll min() : O(log n)
+*	f(x) が x=x0 で最小値をとるとき，(x0, f(x0)) を返す（x0 は最左）
+*
+* sub_add_p(ll x0, ll p_sub, ll p_add) : O(log n)
+*	x-p グラフにおいて，x<x0 の範囲から p_sub を引き，x>x0 の範囲に p_add を加える．
+*
+* sub_add_x(ll p0, ll x_sub, ll x_add) : O(log n)
+*	x-p グラフにおいて，p<p0 の範囲から x_sub を引き，p>p0 の範囲に x_add を加える．
+*
+* sub_add_p_undo(ll x0, ll p_sub, ll p_add) : O(log n)
+*	直前に行った sub_add_p(x0, p_sub, p_add) を取り消す．
+*
+* sub_add_x_undo(ll p0, ll x_sub, ll x_add) : O(log n)
+*	直前に行った sub_add_x(p0, x_sub, x_add) を取り消す．
+*
+* add_const(ll y0) : O(1)
+*	f(x) += y0 とする．
+*
+* add_right(ll x0, ll c=1) : O(log n)
+*	f(x) += c max(x - x0, 0) とする．（＿／ の形を加算する．）
+*
+* add_left(ll x0, ll c=1) : O(log n)
+*	f(x) += c max(x0 - x, 0) とする．（＼＿ の形を加算する．）
+*
+* add_abs(ll x0, ll c=1) : O(log n)
+*	f(x) += c |x - x0| とする．（＼／ の形を加算する．）
+*
+* acc_min_left() : O(log n)
+*	f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
+*
+* acc_min_right() : O(log n)
+*	f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
+*
+* shift(ll x0) : O(1)
+*	f(x) を右に x0 だけ平行移動する．（f(x) ← f(x - x0)）
+*
+* sliding_window_min(ll dl, ll dr) : O(log n)
+*	f(x) を min f([x-dl..x+dr]) に置き換える．（左に dr，右に dl 伸ばして ＼＿＿／ の形にする．）
+*
+* vector<pll> get_points() : O(n)
+*	f(x) の折れ点を x 座標昇順に格納したリストを返す．
+*
+* 利用：【Implicit Treap（可換モノイド）】
+*/
+using S_st = array<ll, 3>; // (x, p, y)  (p=dy/dx)
+S_st op_st(S_st a, S_st b) {
+	auto [ax, ap, ay] = a;
+	auto [bx, bp, by] = b;
+	return { ax + bx, ap + bp, ap * bx + ay + by };
+}
+S_st e_st() { return { 0, 0, 0 }; }
+S_st inv_st(S_st a) {
+	auto [x, p, y] = a;
+	return { -x, -p, p * x - y };
+}
+struct Slope_trick_BBST {
+	S_st xpyL, xpyR;
+
+	using IT = Implicit_treap<S_st, op_st, e_st>;
+	IT s;
+
+public:
+	// [-INF..INF] 上の n=1 個の線分からなる関数 f(x) = 0 で初期化する．
+	Slope_trick_BBST() : xpyL({ -INF, 0, 0 }), xpyR({ INF, 0, 0 }) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		s.insert(0, S_st({ 2 * INF, 0, 0 }));
+	}
+
+	// [x_min..x_max] 上の n=1 個の線分からなる関数 f(x) = 0 で初期化する．
+	Slope_trick_BBST(ll x_min, ll x_max) : xpyL({ x_min, 0, 0 }), xpyR({ x_max, 0, 0 }) {
+		// verify : https://atcoder.jp/contests/kupc2016/tasks/kupc2016_h
+
+		s.insert(0, S_st({ x_max - x_min, 0, 0 }));
+	}
+
+	// f(x) が x=x0 で最小値をとるとき，(x0, f(x0)) を返す（x0 は最左）
+	pll min() {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		auto sR = s.split_max_right([&](S_st mat) {
+			return op_st(xpyL, mat)[1] < 0;
+		});
+
+		auto tmp = op_st(xpyL, s.sum());
+
+		s.merge_right(sR);
+
+		return { tmp[0], tmp[2] };
+	}
+
+	// x-p グラフにおいて，x<x0 の範囲から p_sub を引き，x>x0 の範囲に p_add を加える．
+	void sub_add_p(ll x, ll p_sub, ll p_add) {
+		auto sM = s.split_max_right([&](S_st mat) {
+			return op_st(xpyL, mat)[0] <= x;
+		});
+		auto sR = sM.split(1);
+
+		auto tmp = op_st(xpyL, s.sum());
+		ll dxL = x - tmp[0];
+
+		tmp = op_st(tmp, sM.sum());
+		ll dxR = tmp[0] - x;
+
+		IT nsM;
+		if (dxL) nsM.insert(0, S_st({ dxL, 0, 0 }));
+		nsM.insert(1, S_st({ 0, p_add + p_sub, 0 }));
+		if (dxR) nsM.insert(2, S_st({ dxR, 0, 0 }));
+
+		s.merge_right(nsM);
+		s.merge_right(sR);
+
+		xpyL[1] -= p_sub;
+		xpyL[2] += (x - xpyL[0]) * p_sub;
+
+		xpyR[1] += p_add;
+		xpyR[2] += (xpyR[0] - x) * p_add;
+	}
+
+	// 直前に行った sub_add_p(x0, p_sub, p_add) を取り消す．
+	void sub_add_p_undo(ll x, ll p_sub, ll p_add) {
+		// verify : https://atcoder.jp/contests/abc406/tasks/abc406_g
+
+		auto sL = s.split_min_left([&](S_st mat) {
+			return op_st(xpyR, inv_st(mat))[0] >= x;
+		});
+		auto sR = s.split_max_right([&](S_st mat) {
+			return mat[0] == 0;
+		});
+
+		auto tmp = s.sum();
+
+		s = sL;
+		sR.insert(0, S_st({ 0, tmp[1] - (p_add + p_sub), 0 }));
+		s.merge_right(sR);
+
+		xpyL[1] += p_sub;
+		xpyL[2] -= (x - xpyL[0]) * p_sub;
+
+		xpyR[1] -= p_add;
+		xpyR[2] -= (xpyR[0] - x) * p_add;
+	}
+
+	// x-p グラフにおいて，p<p0 の範囲から x_sub を引き，p>p0 の範囲に x_add を加える．
+	void sub_add_x(ll p, ll x_sub, ll x_add) {
+		// verify : https://atcoder.jp/contests/abc406/tasks/abc406_g
+		
+		auto sM = s.split_max_right([&](S_st mat) {
+			return op_st(xpyL, mat)[1] <= p;
+		});
+		auto sR = sM.split(1);
+
+		auto tmp = op_st(xpyL, s.sum());
+		ll dpD = p - tmp[1];
+
+		tmp = op_st(tmp, sM.sum());
+		ll dpU = tmp[1] - p;
+
+		IT nsM;
+		if (dpD) nsM.insert(0, S_st({ 0, dpD, 0 }));
+		nsM.insert(1, S_st({ x_add + x_sub, 0, 0 }));
+		if (dpU) nsM.insert(2, S_st({ 0, dpU, 0 }));
+
+		s.merge_right(nsM);
+		s.merge_right(sR);
+
+		xpyL[0] -= x_sub;
+		xpyL[2] -= x_sub * p;
+
+		xpyR[0] += x_add;
+		xpyR[2] -= x_add * p;
+	}
+
+	// 直前に行った sub_add_x(p0, x_sub, x_add) を取り消す．
+	void sub_add_x_undo(ll p, ll x_sub, ll x_add) {
+		// verify : https://atcoder.jp/contests/abc406/tasks/abc406_g
+		
+		auto sL = s.split_min_left([&](S_st mat) {
+			return op_st(xpyR, inv_st(mat))[1] >= p;
+		});
+		auto sR = s.split_max_right([&](S_st mat) {
+			return mat[1] == 0;
+		});
+
+		auto tmp = s.sum();
+
+		s = sL;
+		sR.insert(0, S_st({ tmp[0] - (x_add + x_sub), 0, 0 }));
+		s.merge_right(sR);
+
+		xpyL[0] += x_sub;
+		xpyL[2] += x_sub * p;
+
+		xpyR[0] -= x_add;
+		xpyR[2] += x_add * p;
+	}
+
+	// f(x) += y_add とする．
+	void add_const(ll y_add) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		xpyL[2] += y_add;
+		xpyR[2] += y_add;
+	}
+
+	// f(x) += c max(x - x0, 0) とする．（＿／ の形を加算する．）
+	void add_right(ll x0, ll c = 1) {
+		sub_add_p(x0, 0, c);
+	}
+
+	// f(x) += c max(x0 - x, 0) とする．（＼＿ の形を加算する．）
+	void add_left(ll x0, ll c = 1) {
+		sub_add_p(x0, c, 0);
+	}
+
+	// f(x) += c |x - x0| とする．（＼／ の形を加算する．）
+	void add_abs(ll x0, ll c = 1) {
+		// verify : https://atcoder.jp/contests/abc127/tasks/abc127_f
+
+		sub_add_p(x0, c, c);
+	}
+
+	// f(x) を左から累積最小値をとったものに置き換える．（＼＿ の形にする．）
+	void acc_min_left() {
+		// verify : https://atcoder.jp/contests/kupc2016/tasks/kupc2016_h
+
+		// sub_add_p(0, 0, ∞) だが，不要な部分は削除したいので別で書く．
+
+		auto sR = s.split_max_right([&](S_st mat) {
+			return op_st(xpyL, mat)[1] <= 0;
+		});
+
+		auto tmp = op_st(xpyL, s.sum());
+		ll dpD = 0 - tmp[1];
+
+		auto tmp2 = sR.sum();
+
+		IT nsR;
+		if (dpD) nsR.insert(0, S_st({ 0, dpD, 0 }));
+		if (tmp2[0]) nsR.insert(1, S_st({ tmp2[0], 0, 0 }));
+
+		s.merge_right(nsR);
+
+		xpyR[1] = 0;
+		xpyR[2] = tmp[2];
+	}
+
+	// f(x) を右から累積最小値をとったものに置き換える．（＿／ の形にする．）
+	void acc_min_right() {
+		// verify : https://atcoder.jp/contests/kupc2016/tasks/kupc2016_h
+
+		// sub_add_p(0, ∞, 0) だが，不要な部分は削除したいので別で書く．
+
+		auto sL = s.split_min_left([&](S_st mat) {
+			return op_st(xpyR, inv_st(mat))[1] >= 0;
+		});
+
+		auto tmp = op_st(xpyR, inv_st(s.sum()));
+		ll dpU = tmp[1] - 0;
+
+		auto tmp2 = sL.sum();
+
+		IT nsL;
+		if (tmp2[0]) nsL.insert(0, S_st({ tmp2[0], 0, 0 }));
+		if (dpU) nsL.insert(1, S_st({ 0, dpU, 0 }));
+
+		s.merge_left(nsL);
+
+		xpyL[1] = 0;
+		xpyL[2] = tmp[2];
+	}
+
+	// f(x) を右に x0 だけ平行移動する．（f(x) ← f(x - x0)）
+	void shift(ll x_add) {
+		// verify : https://atcoder.jp/contests/arc123/tasks/arc123_d
+
+		// sub_add_p(-∞, 0, x_add) だが，O(1) で済むので別で書く．
+
+		xpyL[0] += x_add;
+		xpyR[0] += x_add;
+	}
+
+	// f(x) を min f([x-dl..x+dr]) に置き換える．（左に dr，右に dl 伸ばして ＼＿＿／ の形にする．）
+	void sliding_window_min(ll dl, ll dr) {
+		// verify : https://atcoder.jp/contests/arc070/tasks/arc070_c
+
+		sub_add_x(0, dr, dl);
+	}
+
+	// f(x) の折れ点を x 座標昇順に格納したリストを返す．
+	vector<pll> get_points() {
+		// verify : https://www.codechef.com/problems/UNRCOST
+
+		auto mats = s.get_all();
+
+		vector<pll> res;
+		res.reserve(sz(mats) + 1);
+
+		auto xpy = xpyL;
+		res.emplace_back(xpy[0], xpy[2]);
+
+		repe(mat, mats) {
+			xpy = op_st(xpy, mat);
+			pll xy = { xpy[0], xpy[2] };
+
+			if (res.back() != xy) res.emplace_back(xy);
+		}
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Slope_trick_BBST& ST) {
+		os << ST.get_points();
+		return os;
+	}
+#endif
+};
+
+
+//【Slope Trick（各点 max）】
+/*
+* Slope_trick_max() : O(1)
+*	R 上の n=1 本の線分からなる定数関数 f(x) = 0 で初期化する．
+*
+* add_const(ll c) : O(1)
+*	f(x) ← f(x) + c とする．（上に c 平行移動する）
+*
+* shift(ll d) : O(n)
+*	f(x) ← f(x - d) とする．（右に d 平行移動する）
+*
+* add_right(ll x0) : O(n)
+*	f(x) ← f(x) + max(x - x0, 0) とする．（＿／ の形を加算する．）
+*
+* add_left(ll x0) : O(n)
+*	f(x) ← f(x) + max(x0 - x, 0) とする．（＼＿ の形を加算する．）
+*
+* max(Slope_trick_max g) : O(n)
+*	f(x) ← max(f(x), g(x)) とする．（g(x) との各点 max をとる）
+*
+* ll get(ll x0) : O(n)
+*	f(x0) を返す．
+*/
+class Slope_trick_max {
+	// 参考 : https://atcoder.jp/contests/abc219/editorial/2669
+
+	//【方法】
+	// 下に凸な区分線形関数を，n 個の一次関数の max として表現する．
+
+	// a_min[a_max] : 傾きの最小値[最大値]
+	int a_min, a_max;
+
+	// bs : 直線を傾き昇順に並べたときの切片のリスト
+	deque<ll> bs;
+
+public:
+	Slope_trick_max() : a_min(0), a_max(0), bs{ 0 } {
+		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
+	}
+
+	// f(x) ← f(x) + c とする．
+	void add_const(ll c) {
+		bs[0 - a_min] += c;
+	}
+
+	// f(x) ← f(x - d) とする．（右に d 平行移動する）
+	void shift(ll d) {
+		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
+
+		repi(a, a_min, a_max) bs[a - a_min] -= a * d;
+	}
+
+	// f(x) ← f(x) + max(x - x0, 0) とする．（＿／ の形を加算する．）
+	void add_right(ll x0) {
+		ll y_max = -INFL; int a0 = -INF;
+		repi(a, a_min, a_max) {
+			ll y = a * x0 + bs[a - a_min];
+			if (chmax(y_max, y)) a0 = a;
+		}
+
+		bs.push_back(-INFL); a_max++;
+
+		repir(a, a_max, a0 + 1) bs[a - a_min] = bs[a - 1 - a_min] - x0;
+	}
+
+	// f(x) ← f(x) + max(x0 - x, 0) とする．（＼＿ の形を加算する．）
+	void add_left(ll x0) {
+		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
+
+		ll y_max = -INFL; int a0 = -INF;
+		repi(a, a_min, a_max) {
+			ll y = a * x0 + bs[a - a_min];
+			if (chmax(y_max, y)) a0 = a;
+		}
+
+		bs.push_front(-INFL); a_min--;
+
+		repi(a, a_min, a0 - 1) bs[a - a_min] = bs[a + 1 - a_min] + x0;
+	}
+
+	// f(x) ← max(f(x), g(x)) とする．
+	void max(const Slope_trick_max& g) {
+		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
+
+		if (a_min > g.a_min) {
+			rep(hoge, a_min - g.a_min) bs.push_front(-INFL);
+			a_min = g.a_min;
+		}
+
+		if (a_max < g.a_max) {
+			rep(hoge, g.a_max - a_max) bs.push_back(-INFL);
+			a_max = g.a_max;
+		}
+
+		repi(a, g.a_min, g.a_max) chmax(bs[a - a_min], g.bs[a - g.a_min]);
+	}
+
+	// f(x0) を返す．
+	ll get(ll x0) {
+		// verify : https://atcoder.jp/contests/abc219/tasks/abc219_h
+
+		ll y_max = -INFL;
+		repi(a, a_min, a_max) {
+			ll y = a * x0 + bs[a - a_min];
+			chmax(y_max, y);
+		}
+
+		return y_max;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Slope_trick_max& f) {
+		repi(a, f.a_min, f.a_max) {
+			os << a << " x + " << f.bs[a - f.a_min];
+			if (a < f.a_max) os << ", ";
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【狭義単調な点列】
+/*
+* Monotonous_points<T>(bool y_smaller = false) : O(1)
+*	空で初期化する．
+*	x 座標は狭義単調増加で，y 座標は y_smaller=false[true] なら狭義単調増加[減少]とする．
+*
+* int size() : O(1)
+*	点の個数を返す．
+*
+* void insert(T x, T y) : ならし O(log n)
+*	点 (x, y) を挿入し，それにより単調性に違反する点は全て削除する．
+*	x 座標や y 座標がちょうど等しい点も消してしまうので注意！
+*
+* bool find_LL(T x, T y, bool eq = false) : O(log n)
+*	x' < x かつ y' < y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
+*
+* bool find_LG(T x, T y, bool eq = false) : O(log n)
+*	x' < x かつ y' > y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
+*
+* bool find_GL(T x, T y, bool eq = false) : O(log n)
+*	x' > x かつ y' < y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
+*
+* bool find_GG(T x, T y, bool eq = false) : O(log n)
+*	x' > x かつ y' > y なる点 (x', y') が存在するかを返す（eq=true なら等号も許す）
+*
+* pTT lower_bound(T x) : O(log n)
+*	x' ≧ x なる x 座標が最小の点 (x', y') を返す（なければ (INFL, INFL[-INFL])）
+*
+* pTT upper_bound(T x) : O(log n)
+*	x' > x なる x 座標が最小の点 (x', y') を返す（なければ (INFL, INFL[-INFL])）
+*
+* pTT lower_bound_rev(T x) : O(log n)
+*	x' ≦ x なる x 座標が最大の点 (x', y') を返す（なければ (-INFL, -INFL[INFL])）
+*
+* pTT upper_bound_rev(T x) : O(log n)
+*	x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-INFL, -INFL[INFL])）
+*
+* pTT get_all_points() : O(n)
+*	全ての点を x 座標昇順に並べたリストを返す．
+*/
+template <class T>
+struct Monotonous_points {
+	// 参考 : https://topcoder-g-hatena-ne-jp.jag-icpc.org/skyaozora/20141216.html
+
+	bool y_smaller; // y 座標について狭義単調減少か
+
+	// x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少] な点列
+	// ただし番兵として (-inf, -inf[inf]) と (inf, inf[-inf]) を含む．
+	map<T, T> x_to_y;
+
+	// 空で初期化する．x 座標は狭義単調増加で，y 座標は y_greater=true[false] なら狭義単調増加[減少]とする．
+	Monotonous_points(bool y_smaller = false) : y_smaller(y_smaller) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		// 番兵を挿入しておく．
+		if (!y_smaller) {
+			x_to_y[-T(INFL)] = -T(INFL);
+			x_to_y[T(INFL)] = T(INFL);
+		}
+		else {
+			x_to_y[-T(INFL)] = T(INFL);
+			x_to_y[T(INFL)] = -T(INFL);
+		}
+	}
+
+	// 点の個数を返す．
+	int size() const {
+		// verify : https://atcoder.jp/contests/abc372/tasks/abc372_d
+
+		// 両端の番兵の分を引く．
+		return sz(x_to_y) - 2;
+	}
+
+	// 点 (x, y) を挿入し，単調性に違反する点は全て削除する．
+	void insert(T x, T y) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		// x ≦ x' なる最小の x' を指すイテレータを得る．
+		auto it = x_to_y.lower_bound(x);
+
+		// x' から昇順に，y' ≦ y[ y' ≧ y ] である限り要素を削除する．
+		if (!y_smaller) {
+			while (true) {
+				if (it->second > y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+		else {
+			while (true) {
+				if (it->second < y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+
+		// x' から降順に，y' ≧ y[ y' ≦ y ] である限り要素を削除する．
+		if (!y_smaller) {
+			while (true) {
+				it = prev(it);
+				if (it->second < y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+		else {
+			while (true) {
+				it = prev(it);
+				if (it->second > y) break;
+				it = x_to_y.erase(it);
+			}
+		}
+
+		// 点 (x, y) を挿入する．
+		x_to_y[x] = y;
+	}
+
+	// x' < x かつ y' < y なる点が存在するかを返す（eq=true なら等号も許す）
+	bool find_LL(T x, T y, bool eq = false) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/problems/1341
+
+		if (!eq) {
+			T y2 = prev(x_to_y.lower_bound(x))->second;
+			return y2 != -INFL && y2 < y;
+		}
+		else {
+			T y2 = prev(x_to_y.upper_bound(x))->second;
+			return y2 != -INFL && y2 <= y;
+		}
+	}
+
+	// x' < x かつ y' > y なる点が存在するかを返す（eq=true なら等号も許す）
+	bool find_LG(T x, T y, bool eq = false) {
+		if (!eq) {
+			T y2 = prev(x_to_y.lower_bound(x))->second;
+			return y2 != INFL && y2 > y;
+		}
+		else {
+			T y2 = prev(x_to_y.upper_bound(x))->second;
+			return y2 != INFL && y2 >= y;
+		}
+	}
+
+	// x' > x かつ y' < y なる点が存在するかを返す（eq=true なら等号も許す）
+	bool find_GL(T x, T y, bool eq = false) {
+		if (!eq) {
+			T y2 = x_to_y.upper_bound(x)->second;
+			return y2 != -INFL && y2 < y;
+		}
+		else {
+			T y2 = x_to_y.lower_bound(x)->second;
+			return y2 != -INFL && y2 <= y;
+		}
+	}
+
+	// x' > x かつ y' > y なる点が存在するかを返す（eq=true なら等号も許す）
+	bool find_GG(T x, T y, bool eq = false) {
+		if (!eq) {
+			T y2 = x_to_y.upper_bound(x)->second;
+			return y2 != INFL && y2 > y;
+		}
+		else {
+			T y2 = x_to_y.lower_bound(x)->second;
+			return y2 != INFL && y2 >= y;
+		}
+	}
+
+	// x' ≧ x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+	pair<T, T> lower_bound(T x) {
+		// verify : https://codeforces.com/gym/100633/problem/D
+
+		return *x_to_y.lower_bound(x);
+	}
+
+	// x' > x なる x 座標が最小の点 (x', y') を返す（なければ (inf, inf[-inf])）
+	pair<T, T> upper_bound(T x) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		return *x_to_y.upper_bound(x);
+	}
+
+	// x' ≦ x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+	pair<T, T> lower_bound_rev(T x) {
+		return *prev(x_to_y.upper_bound(x));
+	}
+
+	// x' < x なる x 座標が最大の点 (x', y') を返す（なければ (-inf, -inf[inf])）
+	pair<T, T> upper_bound_rev(T x) {
+		// verify : https://atcoder.jp/contests/abc283/tasks/abc283_f
+
+		return *prev(x_to_y.lower_bound(x));
+	}
+
+	// 全ての点を x 座標昇順に並べたリストを返す．
+	vector<pair<T, T>> get_all_points() {
+		// verify : https://atcoder.jp/contests/abc354/tasks/abc354_c
+
+		vector<pair<T, T>> res;
+		res.reserve(sz(x_to_y));
+		repe(tmp, x_to_y) res.push_back(tmp);
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Monotonous_points& mp) {
+		repe(p, mp.x_to_y) if (abs(p.first) != mp.inf) os << p << " ";
+		return os;
+	}
+#endif
+};
+
+
 //【線分群の最小値（傾きの種類が少ない）】
 /*
 * Segment_min(int n, int a_min, int a_max, bool max_flag = false) : O(n (a_max - a_min))
@@ -2096,6 +2641,216 @@ struct Segment_min {
 		return os;
 	}
 #endif
+};
+
+
+
+//【写像の合成（ダブリング）】（やや遅い）
+/*
+* Map_composite_doubling(vi f, ll M) : O(n log M)
+*	[0..n) 上の写像 f : i → f[i] で初期化する．f^M まで計算可能とする．
+*
+* int apply(int x, ll m) : O(log m)
+*	f^m(x) を返す．
+*
+* ll max_right(int x, function<bool(int)>& okQ) : O(log M)
+*	okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
+*/
+class Map_composite_doubling {
+	int n, K;
+
+	// nxt[k][i] : f^(2^k)[i]
+	vvi nxt;
+
+public:
+	// [0..n) 上の写像 i → f[i] で初期化する．f^M まで計算可能とする．
+	Map_composite_doubling(const vi& f, ll M) : n(sz(f)), K(msb(max(M, 1LL)) + 1), nxt(K, vi(n)) {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
+
+		// f^(2^0)[i] = f[i]
+		rep(i, n) nxt[0][i] = f[i];
+
+		// f^(2^(k+1))[i] = f^(2^k)[ f^(2^k)[i] ]
+		rep(k, K - 1) rep(i, n) nxt[k + 1][i] = nxt[k][nxt[k][i]];
+	}
+	Map_composite_doubling() : n(0), K(0) {}
+
+	// f^m(x) を返す．
+	int apply(int x, ll m) const {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
+
+		Assert(0 <= x && x < n);
+
+		int k = 0;
+		while (m > 0) {
+			if (m & 1) x = nxt[k][x];
+			m /= 2;
+			k++;
+		}
+		return x;
+	}
+
+	// okQ(f^m(x)) = true かつ okQ(f^(m+1)(x)) = false なる m を返す．
+	ll max_right(int x, const function<bool(int)>& okQ) const {
+		// verify : https://atcoder.jp/contests/arc060/tasks/arc060_c
+
+		Assert(0 <= x && x < n);
+		if (!okQ(x)) return -1;
+
+		ll m = 0;
+		repir(k, K - 1, 0) {
+			m <<= 1;
+			if (okQ(nxt[k][x])) {
+				m++;
+				x = nxt[k][x];
+			}
+		}
+		return m;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Map_composite_doubling& mc) {
+		rep(k, mc.K) {
+			os << (1LL << k) << ":" << endl;
+			rep(i, mc.n) os << mc.nxt[k][i] << " "; os << endl;
+		}
+		return os;
+	}
+#endif
+
+	/* okQ の定義の雛形
+	auto okQ = [&](int i) {
+		return true || false;
+	};
+	*/
+};
+
+
+//【写像の合成（モノイド，ダブリング）】（やや遅い）
+/*
+* Map_accumulate_doubling<S, op, e>(vi f, vS a, ll I) : O(n log I)
+*	[0..n) 上の写像 f : x → f[x] と列 a[0..n) で初期化する．f^I まで計算可能とする．
+*
+* int apply(int x, ll i) : O(log i)
+*	f^i(x) を返す．
+*
+* S accumulate(int x, ll r) : O(log r)
+*	Πa[f^[0..r)(x)] を返す．
+*
+* ll max_right(int x, function<bool(int, S)>& okQ) : O(log I)
+*	okQ(f^i(x), Πa[f^[0..i)(x)]) = true かつ okQ(f^(i+1)(x), Πa[f^[0..i+1)(x)]) = false なる i を返す．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Map_accumulate_doubling {
+	int n, K;
+
+	// nxt[k][x] : f^(2^k)[x]
+	vvi nxt;
+
+	// acc[k][x] : Σi∈[0..2^k) a[f^i[x]]
+	using vS = vector<S>; using vvS = vector<vS>;
+	vvS acc;
+
+public:
+	// [0..n) 上の写像 f : x → f[x] と数列 a[0..n) で初期化する．f^I まで計算可能とする．
+	Map_accumulate_doubling(const vi& f, const vS& a, ll I)
+		: n(sz(f)), K(msb(max(I, 1LL)) + 1), nxt(K, vi(n)), acc(K, vS(n))
+	{
+		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
+
+		// f^(2^0)[x] = f[x]
+		rep(x, n) nxt[0][x] = f[x];
+
+		// Σi=[0..2^0) a[f^i[x]] = a[x]
+		rep(x, n) acc[0][x] = a[x];
+
+		rep(k, K - 1) {
+			rep(x, n) {
+				// 例：
+				// f^8[x] = f^4[ f^4[x] ]
+				nxt[k + 1][x] = nxt[k][nxt[k][x]];
+
+				// 例：
+				// a[f^0[x]] + a[f^1[x]] + a[f^2[x]] + a[f^3[x]]
+				//	+ a[f^4[x]] + a[f^5[x]] + a[f^6[x]] + a[f^7[x]]
+				// = a[f^0[x]] + a[f^1[x]] + a[f^2[x]] + a[f^3[x]]
+				//	+ a[f^0[ f^4[x] ]] + a[f^1[ f^4[x] ]] + a[f^2[ f^4[x] ]] + a[f^3[ f^4[x] ]]
+				acc[k + 1][x] = op(acc[k][x], acc[k][nxt[k][x]]);
+			}
+		}
+	}
+
+	// f^i(x) を返す．
+	int apply(int x, ll i) const {
+		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_be
+
+		Assert(0 <= x && x < n);
+
+		int k = 0;
+		while (i > 0) {
+			if (i & 1) x = nxt[k][x];
+			i >>= 1;
+			k++;
+		}
+		return x;
+	}
+
+	// Πi=[0..r) a[ f^i(x) ] を返す．
+	S accumulate(S x, ll r) const {
+		// verify : https://atcoder.jp/contests/abc241/tasks/abc241_e
+
+		Assert(0 <= x && x < n);
+
+		int k = 0; S val = e();
+		while (r > 0) {
+			if (r & 1) {
+				val = op(val, acc[k][x]);
+				x = nxt[k][x];
+			}
+			r >>= 1;
+			k++;
+		}
+
+		return val;
+	}
+
+	// okQ(f^i(x), Πa[f^[0..i)(x)]) = true かつ okQ(f^(i+1)(x), Πa[f^[0..i+1)(x)]) = false なる i を返す．
+	ll max_right(int x, const function<bool(int, S)>& okQ) const {
+		// verify : https://atcoder.jp/contests/arc169/tasks/arc169_b
+
+		Assert(0 <= x && x < n);
+		if (!okQ(x, e())) return -1;
+
+		ll i = 0; S val = e();
+		repir(k, K - 1, 0) {
+			i <<= 1;
+			auto nval = op(val, acc[k][x]);
+			if (okQ(nxt[k][x], nval)) {
+				i++;
+				val = nval;
+				x = nxt[k][x];
+			}
+		}
+		return i;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Map_accumulate_doubling& ma) {
+		rep(k, ma.K) {
+			os << (1LL << k) << ":" << endl;
+			rep(x, ma.n) os << ma.nxt[k][x] << " "; os << endl;
+			rep(x, ma.n) os << ma.acc[k][x] << " "; os << endl;
+		}
+		return os;
+	}
+#endif
+
+	/* okQ の定義の雛形
+	using S = ll;
+	auto okQ = [&](int x, S acc) {
+		return true || false;
+	};
+	*/
 };
 
 

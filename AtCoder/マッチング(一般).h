@@ -3,12 +3,13 @@
 #include "数論変換.h"
 #include "二項係数.h"
 #include "構造(グラフ).h"
+#include "行列.h"
 // ■■■■■ 一般グラフのマッチング ■■■■■
 
 
 //【貪欲に選べるマッチング】
 /*
-* コストなし無向グラフ g において以下が成り立つ：
+* 重みなし無向グラフ g において以下が成り立つ：
 *		マッチング s-t を含む最大マッチングが存在しない
 *		⇒ ある s', t' が存在し，マッチング s-s', t-t' が作れる
 * 対偶をとれば，
@@ -55,6 +56,141 @@ int maximum_matching(const Graph& g) {
 	repb(set, n) if (dp[set]) chmax(res, popcount(set));
 
 	return res / 2;
+}
+
+
+//【最大マッチング（高速）】O(n^3)
+/*
+* 与えられた無向グラフ g の最大マッチングの大きさを返す．
+*
+* 利用：【階段行列】
+*/
+int maximum_matching_fast(const Graph& g) {
+	// 参考 : https://kopricky.github.io/code/Academic/maximum_matching_memo.html
+	
+	int n = sz(g);
+
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<int> rnd(1, 998244352);
+
+	// A : 重みを乱数で決めたタット行列
+	Matrix<mint> A(n, n);
+	rep(s, n) repe(t, g[s]) if (s < t) {
+		mint w = rnd(mt);
+		A[s][t] = w;
+		A[t][s] = -w;
+	}
+
+	// g の最大マッチングの大きさは高確率で rank(A)/2 に等しい．
+	auto rnk = reduced_row_echelon_form(A);
+
+	return rnk / 2;
+}
+
+
+//【最大マッチング（高速，復元）】O(n^3)
+/*
+* 与えられた無向グラフ g の最大マッチングを返す．
+*
+* 利用：【転置】,【階段行列】,【逆行列】
+*/
+vector<pii> maximum_matching_reconst_fast(const Graph& g) {
+	// 参考 : https://kopricky.github.io/code/Academic/maximum_matching_memo.html
+	// verify : https://judge.yosupo.jp/problem/general_matching
+
+	int n = sz(g);
+
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<int> rnd(1, 998244352);
+
+	// A : 重みを乱数で決めたタット行列
+	Matrix<mint> A(n, n);
+	rep(s, n) repe(t, g[s]) if (s < t) {
+		mint w = rnd(mt);
+		A[s][t] = w;
+		A[t][s] = -w;
+	}
+
+	// A を階段行列に変形しピボット位置のリストを得る．
+	//	g の最大マッチングの大きさは高確率で rank(A)/2 に等しい．
+	//	またそのときマッチングに使われる頂点はピボット位置の列番号に対応する．
+	vector<pii> piv;
+	auto A_tmp(A);
+	n = reduced_row_echelon_form(A_tmp, &piv);
+
+	// p : 最大マッチングに使われる頂点のリスト
+	vi p;
+	rep(i, n) p.push_back(piv[i].second);
+
+	// T : タット行列 A の p に対応する部分
+	Matrix<mint> T(n, n);
+	rep(i, n) rep(j, n) T[i][j] = A[p[i]][p[j]];
+
+	// T_inv : T の逆行列 T^(-1)
+	auto T_inv = inverse_matrix(T);
+
+	// res : マッチングのリスト
+	vector<pii> res;
+
+	// 頂点を選び尽くすまで反復する．
+	while (!p.empty()) {
+		// 頂点 p[n-1] と頂点 p[k] をマッチさせることができるかを順に調べていく．
+		rep(k, n - 1) {
+			// 辺が無いならもちろんダメ．
+			if (T[k][n - 1] == 0) continue;
+
+			//      T = [A, -C^T; C, D] とブロック分けする（A:2x2）
+			// T^(-1) = [P, -Q^T; Q, R] とブロック分けする（P:2x2）
+
+			// P が正則でない場合（⇔ P が零行列の場合）はダメ．
+			if (T_inv[k][n - 1] == 0) continue;
+
+			Matrix<mint> P(2, 2);
+			P[0][0] = T_inv[k][k];
+			P[0][1] = T_inv[k][n - 1];
+			P[1][0] = T_inv[n - 1][k];
+			P[1][1] = T_inv[n - 1][n - 1];
+			auto P_inv = inverse_matrix(P);
+
+			Matrix<mint> Q(n - 2, 2);
+			rep(i, k) {
+				Q[i][0] = T_inv[i][k];
+				Q[i][1] = T_inv[i][n - 1];
+			}
+			repi(i, k + 1, n - 2) {
+				Q[i - 1][0] = T_inv[i][k];
+				Q[i - 1][1] = T_inv[i][n - 1];
+			}
+
+			Matrix<mint> R(n - 2, n - 2);
+			rep(i, k) rep(j, k) R[i][j] = T_inv[i][j];
+			repi(i, k + 1, n - 2) rep(j, k) R[i - 1][j] = T_inv[i][j];
+			rep(i, k) repi(j, k + 1, n - 2) R[i][j - 1] = T_inv[i][j];
+			repi(i, k + 1, n - 2) repi(j, k + 1, n - 2) R[i - 1][j - 1] = T_inv[i][j];
+
+			// D^(-1) = R + Q P^(-1) Q^T なので，これで T^(-1) を更新する．
+			T_inv = R + Q * P_inv * transpose(Q);
+
+			// T を更新する．
+			repi(i, k + 1, n - 2) rep(j, k) T[i - 1][j] = T[i][j];
+			rep(i, k) repi(j, k + 1, n - 2) T[i][j - 1] = T[i][j];
+			repi(i, k + 1, n - 2) repi(j, k + 1, n - 2) T[i - 1][j - 1] = T[i][j];
+			T.resize(n - 2, n - 2);
+
+			// p[k] と p[n-1] のマッチングを記録する．
+			res.push_back({ p[k], p[n - 1] });
+
+			// p を更新する．
+			repi(i, k + 1, n - 2) p[i - 1] = p[i];
+			p.resize(n - 2);
+
+			// サイズを小さくして次の反復へ．
+			n -= 2;
+			break;
+		}
+	}
+
+	return res;
 }
 
 
@@ -215,14 +351,43 @@ vl minimum_cost_matching(const WGraph& g) {
 }
 
 
-//【完全マッチングの存在判定】O(n^3)
+//【最小コスト完全マッチング（01 コスト）】O(n^3)
 /*
-* 単純無向グラフ G に完全マッチングが存在するとき，辺の重みを乱数で定めたタット行列の
-* 行列式は高確率で非 0 になり，存在しなければ必ず 0 になる．
-* ここでいうタット行列とは，交代的な重み付き隣接行列のこととする．
-* 
-* verify : https://onlinejudge.u-aizu.ac.jp/problems/2347
+* 与えられた重み付き無向グラフ g のコスト最小完全マッチングのコストを返す（なければ INF）
+*
+* 制約 : fm は n! まで計算可能
+*
+* 利用：【行列式（1 次多項式）】
 */
+int minimum_cost_perfect_matching_01_fast(const WGraph& g, const Factorial_mint& fm) {
+	// 参考 : https://atcoder.jp/contests/abc412/editorial/13380
+	// verify : https://atcoder.jp/contests/abc412/tasks/abc412_g
+
+	int n = sz(g);
+
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<int> rnd(1, 998244352);
+
+	// zA+B : 重みを乱数で決めたタット行列（z:コスト）
+	Matrix<mint> A(n, n), B(n, n);
+	rep(s, n) repe(t, g[s]) if (s < t) {
+		mint w = rnd(mt);
+		if (t.cost) {
+			A[s][t] = w;
+			A[t][s] = -w;
+		}
+		else {
+			B[s][t] = w;
+			B[t][s] = -w;
+		}
+	}
+
+	auto f = determinant_FPS_1deg(A, B, fm);
+	
+	rep(i, sz(f)) if (f[i] != 0) return i / 2;
+
+	return INF;
+}
 
 
 //【完全グラフの完全マッチングの数え上げ（異色頂点間，mod 998244353）】O(n (log n)^2)

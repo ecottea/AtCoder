@@ -422,8 +422,6 @@ mint count_unique_palindrome_subsequences(const string& s) {
 /*
 * s[0..n) の部分列のうち t[0..m) に一致するものの個数を返す．
 * ただし部分列として同じでも，添字列として異なるものは区別する．
-*
-*（耳 DP）
 */
 template <class T>
 mint count_same_subsequences(const vector<T>& s, const vector<T>& t) {

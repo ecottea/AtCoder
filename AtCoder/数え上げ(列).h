@@ -5,12 +5,12 @@
 // ■■■■■ 数え上げ（列） ■■■■■
 
 
-//【整数の数え上げ（余り指定）】O(1)
+//【連続整数の剰余の数え上げ】O(1)
 /*
-* x∈[l..r) で x ≡ k (mod m) を満たすものの個数を返す．
+* x∈[l..r) のうち x ≡ k (mod m) を満たすものの個数を返す．
 */
 template <class T>
-T count_by_reminder(T l, T r, T m, T k) {
+T count_by_mod(T l, T r, T m, T k) {
 	// verify : https://atcoder.jp/contests/abc334/tasks/abc334_b
 
 	//【方法】
@@ -29,6 +29,31 @@ T count_by_reminder(T l, T r, T m, T k) {
 	l2 += k;
 
 	return (r - l2 + m - 1) / m;
+}
+
+
+//【連続整数の剰余の数え上げ（範囲指定）】O(1)
+/*
+* i∈[0..n) のうち i mod m ∈ [l..r) を満たすものの個数を返す．
+* 
+* 制約：0 ≦ l, r ≦ m
+*/
+template <class T>
+T count_by_mod_range(T n, T m, T l, T r) {
+	// verify : https://atcoder.jp/contests/agc072/tasks/agc072_c
+
+	//【方法】
+	// n = m Q + R と表す．
+	// i∈[0..m Q) なる i については (r-l)Q 個ある．
+	// 残りについては max(min(r,R)-l, 0) 個ある．
+
+	Assert(m > 0);
+	if (l >= r || n <= 0) return 0;
+
+	T Q = n / m;
+	T R = n % m;
+
+	return (r - l) * Q + max(min(r, R) - l, T(0));
 }
 
 

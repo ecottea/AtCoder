@@ -79,12 +79,16 @@ void mos_algorithm(int n, const vi& l, const vi& r, const F1& insert, const F2& 
 	auto get_sol = [&](int j) {
 		res[j] = freq[ax_cp[n + j]];
 	};
+
+	mos_algorithm(n, l, r, insert, erase, get_sol);
 	*/
 }
 
 
 //【Mo's algorithm（非対称）】O(n√q β + q log q)
 /*
+* [0..n) 上の q 個の区間クエリ [l[j]..r[j]) を一括で処理する．
+*
 * insert_left(int i) : O(β)
 *	区間の左に a[i] を追加し，データ構造を更新する．
 *
@@ -178,6 +182,8 @@ void mos_algorithm_asymmetric(int n, const vi& l, const vi& r, const F1& insert_
 	auto get_sol = [&](int j) {
 		res[j] = inv;
 	};
+
+	mos_algorithm_asymmetric(n, l, r, insert_left, insert_right, erase_left, erase_right, get_sol);
 	*/
 }
 
@@ -312,7 +318,7 @@ void mos_algorithm_rollback(int n, const vi& l, const vi& r, const F1& init, con
 /*
 * a[0..n) の q 個の区間 a[l[j]..r[j]) クエリに対する解を格納したリストを返す．
 *
-* 制約：右端の要素の追加が O(β) で可能，左右に分かれたデータ構造からの解の計算が O(√n) 程度で可能
+* 制約：右端の要素の追加が O(β) で可能，左右に分かれたデータ構造からの解の計算が O(√q) 程度で可能
 * 注意：データ構造そのもののマージが高速にできるのならセグメント木で十分．
 */
 template <class T, class S>
@@ -392,6 +398,16 @@ void mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r, vector<S>
 }
 
 
+//【Mo's algorithm + 平方分割】O(n√q + q√n)
+/*
+* データ構造の 1 点更新が O(1)，区間取得が O(√n) でできるとき，
+* Mo's algorithm と組み合わせることで計算量を O(n√q + q√n) にできる．
+*（1 点更新が O(log n)，区間取得が O(log n) だと O(n√q logn + q log n) になってしまう．）
+* 
+* verify : https://atcoder.jp/contests/abc405/tasks/abc405_g
+*/
+
+
 //【Implicit Treap（可換モノイド）】
 /*
 * Implicit_treap<S, op, e>() : O(1)
@@ -412,6 +428,9 @@ void mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r, vector<S>
 *
 * S get(int i) : O(log n)
 *	a[i] を返す（なければ e() を返す）
+*
+* S sum() : O(1)
+*	Σa[0..n) を返す（空なら e() を返す）
 *
 * S sum(int l, int r) : O(log n)
 *	Σa[l..r) を返す（空なら e() を返す）
@@ -440,8 +459,17 @@ void mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r, vector<S>
 * Implicit_treap split(int key) : O(log n)
 *	自身から位置 key 以上の要素を切り出し，切り出してできた木を返す．
 *
-* void merge(Implicit_treap IT) : O(log n)
+* Implicit_treap split_max_right(function<bool(S)> g) : O(log n)
+*	g( Σa[0..r) ) = true となる最大の r までを残し，a[r..n) を切り出してできた木を返す．
+*
+* Implicit_treap split_min_left(function<bool(S)> g) : O(log n)
+*	g( Σa[l..n) ) = true となる最大の l までを残し，a[0..l) を切り出してできた木を返す．
+*
+* void merge_right(Implicit_treap IT) : O(log n)
 *	自身の右側に IT をマージする．
+*
+* void merge_left(Implicit_treap IT) : O(log n)
+*	自身の左側に IT をマージする．
 *
 * vS get_all() : O(n)
 *	全要素のリストを返す．
@@ -449,6 +477,9 @@ void mos_algorithm_merge(const vector<T>& a, const vi& l, const vi& r, vector<S>
 template <class S, S(*op)(S, S), S(*e)()>
 class Implicit_treap {
 	// 参考 : https://xuzijian629.hatenablog.com/entry/2018/12/08/000452
+
+	//【備考】
+	// 非可換モノイドでも reverse(), rotate() 以外なら使える．
 
 	inline static bool first_call = true;
 	inline static mt19937 rnd;
@@ -460,8 +491,20 @@ class Implicit_treap {
 		int cnt;				// 部分木のノード数
 		bool rev;				// 部分木が反転されているか
 		Node* l, * r;			// 左右の子へのポインタ
+
+		//// 参考 : https://qiita.com/tubo28/items/f058582e457f6870a800
+		//static inline int node_count = 0;
+		//// 静的に確保した配列から返す
+		//void* operator new(std::size_t) {
+		//	constexpr int MAX_N = (int)6e5 + 10; // 適切な大きさに設定
+		//	static Node pool[MAX_N];
+		//	return pool + node_count++;
+		//}
+
+		Node() : value(e()), acc(e()), priority(0), cnt(0), rev(false), l(nullptr), r(nullptr) {}
 		Node(S value, unsigned int priority) : value(value), acc(e()), priority(priority),
-			cnt(1), rev(false), l(nullptr), r(nullptr) {}
+			cnt(1), rev(false), l(nullptr), r(nullptr) {
+		}
 	};
 
 	Node* root;
@@ -526,6 +569,60 @@ class Implicit_treap {
 		}
 
 		// 繋ぎ変えで部分木 t の cnt と acc が壊れたので更新する．
+		pushup(t);
+	}
+
+	void split_max_right(Node* t, S& x, const function<bool(S)>& g, Node*& l, Node*& r) {
+		// 空なら分割しなくていい．
+		if (!t) {
+			l = r = nullptr;
+			return;
+		}
+
+		// t の情報を更新する．
+		pushdown(t);
+
+		auto tmp = op(x, op(acc(t->l), t->value));
+		if (!g(tmp)) {
+			// 左の木を分割しその左側を l に採用する．小さくなった右側は t->l に繋ぎ直す．
+			split_max_right(t->l, x, g, l, t->l);
+			r = t;
+		}
+		else {
+			// 右の木を分割しその右側を r に採用する．小さくなった左側は t->r に繋ぎ直す．
+			x = tmp;
+			split_max_right(t->r, x, g, t->r, r);
+			l = t;
+		}
+
+		// 繋ぎ変えで部分木 t の acc が壊れたので更新する．
+		pushup(t);
+	}
+
+	void split_min_left(Node* t, S& x, const function<bool(S)>& g, Node*& l, Node*& r) {
+		// 空なら分割しなくていい．
+		if (!t) {
+			l = r = nullptr;
+			return;
+		}
+
+		// t の情報を更新する．
+		pushdown(t);
+
+		auto tmp = op(t->value, op(acc(t->r), x));
+		if (g(tmp)) {
+			// 左の木を分割しその左側を l に採用する．小さくなった右側は t->l に繋ぎ直す．
+			x = tmp;
+			split_min_left(t->l, x, g, l, t->l);
+			r = t;
+		}
+		else {
+			// 右の木を分割しその右側を r に採用する．小さくなった左側は t->r に繋ぎ直す．
+			split_min_left(t->r, x, g, t->r, r);
+			l = t;
+		}
+
+		// 繋ぎ変えで部分木 t の acc が壊れたので更新する．
 		pushup(t);
 	}
 
@@ -647,6 +744,13 @@ public:
 	// 要素数を返す．
 	int size() {
 		return cnt(root);
+	}
+
+	// Σa[0..n) を返す（空なら e() を返す）
+	S sum() {
+		// verify : https://atcoder.jp/contests/abc406/tasks/abc406_g
+
+		return acc(root);
 	}
 
 	// Σa[l..r) を返す（空なら e() を返す）
@@ -788,6 +892,8 @@ public:
 
 	// 自身から位置 key 以上の要素を切り出し，切り出して出来た木を返す．
 	Implicit_treap split(int key) {
+		// verify : https://atcoder.jp/contests/abc406/tasks/abc406_g
+
 		Node* l, * r;
 		split(root, key, l, r);
 		root = l;
@@ -796,9 +902,42 @@ public:
 		return ret;
 	}
 
+	// g( Σa[0..r) ) = true となる最大の r までを残し，a[r..n) を切り出してできた木を返す．
+	Implicit_treap split_max_right(const function<bool(S)>& g) {
+		// verify : https://atcoder.jp/contests/abc406/tasks/abc406_g
+
+		S acc = e(); Node* l, * r;
+		split_max_right(root, acc, g, l, r);
+		root = l;
+		Implicit_treap ret;
+		ret.root = r;
+		return ret;
+	}
+
+	// g( Σa[l..n) ) = true となる最大の l までを残し，a[0..l) を切り出してできた木を返す．
+	Implicit_treap split_min_left(const function<bool(S)>& g) {
+		// verify : https://atcoder.jp/contests/kupc2016/tasks/kupc2016_h
+
+		S acc = e(); Node* l, * r;
+		split_min_left(root, acc, g, l, r);
+		root = r;
+		Implicit_treap ret;
+		ret.root = l;
+		return ret;
+	}
+
 	// 自身の右側に IT をマージする．
-	void merge(Implicit_treap& IT) {
+	void merge_right(Implicit_treap& IT) {
+		// verify : https://atcoder.jp/contests/abc406/tasks/abc406_g
+
 		merge(root, root, IT.root);
+	}
+
+	// 自身の右側に IT をマージする．
+	void merge_left(Implicit_treap& IT) {
+		// verify : https://atcoder.jp/contests/kupc2016/tasks/kupc2016_h
+
+		merge(root, IT.root, root);
 	}
 
 	// 全要素のリストを返す．
@@ -892,6 +1031,17 @@ class Implicit_treap {
 		int cnt;				// 部分木のノード数
 		bool rev;				// 部分木が反転されているか
 		Node* l, * r;			// 左右の子へのポインタ
+
+		// 参考 : https://qiita.com/tubo28/items/f058582e457f6870a800
+		static inline int node_count = 0;
+		// 静的に確保した配列から返す
+		void* operator new(std::size_t) {
+			constexpr int MAX_N = (int)5e5 + (int)5e5 + 10; // 適切な大きさに設定
+			static Node pool[MAX_N];
+			return pool + node_count++;
+		}
+
+		Node() : value(e()), acc(e()), lazy(id()), priority(0), cnt(0), rev(false), l(nullptr), r(nullptr) {}
 		Node(S value, unsigned int priority) : value(value), acc(e()), lazy(id()), priority(priority),
 			cnt(1), rev(false), l(nullptr), r(nullptr) {}
 	};
@@ -1783,6 +1933,113 @@ struct Quadratic_division_Mset {
 };
 
 
+//【バケット平方分割（アーベル群）】
+/*
+* Quadratic_division<S, op, o, inv>(int n) : O(n e)
+*	v[0..n) = o() で初期化する．
+*	要素はアーベル群 (S, op, o, inv) の元とする．
+*
+* Quadratic_division<S, op, o, inv>(vS a) : O(n op)
+*	v[0..n) = a[0..n) で初期化する．
+*
+* set(int i, S x) : O(op + inv)
+*	v[i] = x とする．
+*
+* add(int i, S x) : O(2 op)
+*	v[i] += x とする．
+*
+* S get(int i) : O(1)
+*	v[i] を返す．
+*
+* S sum(int l, int r) : O(√n op)
+*	Σv[l..r) を返す．空なら o() を返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
+struct Quadratic_division {
+	using vS = vector<S>;
+
+	// n : 要素数
+	// w : バケット幅
+	// m : バケット数
+	int n, w, m;
+	vector<S> v, v_sum;
+
+	// v[0..n) = o() で初期化する．
+	Quadratic_division(int n) : n(n) {
+		w = (int)floor(sqrt(n));
+		m = (n + w - 1) / w;
+
+		v = vS(n, o());
+		v_sum = vS(m, o());
+	}
+
+	// v[0..n) = a[0..n) で初期化する．
+	Quadratic_division(vector<S>& a) : Quadratic_division(sz(a)) {
+		v = a;
+		v_sum = vS(m, o());
+		rep(i, n) {
+			int j = i / w;
+			v_sum[j] = op(v_sum[j], v[i]);
+		}
+	}
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		// v[i] を含むバケットの総和を差分更新する．
+		int j = i / w;
+		v_sum[j] = op(op(v_sum[j], inv(v[i])), x);
+
+		// 要素 v[i] の更新
+		v[i] = x;
+	}
+
+	// v[i] += x とする．
+	void add(int i, S x) {
+		// v[i] を含むバケットの総和を差分更新する．
+		int j = i / w;
+		v_sum[j] = op(v_sum[j], x);
+
+		// 要素 v[i] の更新
+		v[i] = op(v[i], x);
+	}
+
+	// v[i] を返す．
+	S get(int i) const {
+		return v[i];
+	}
+
+	// Σv[l..r) を返す．空なら o() を返す．
+	S sum(int l, int r) const {
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return o();
+
+		S res = o();
+
+		int j_min = l / w + 1, j_max = r / w - 1;
+
+		if (j_min <= j_max) {
+			repi(i, l, j_min * w - 1) res = op(res, v[i]);
+			repi(j, j_min, j_max) res = op(res, v_sum[j]);
+			repi(i, (j_max + 1) * w, r - 1) res = op(res, v[i]);
+		}
+		else {
+			repi(i, l, r - 1) res = op(res, v[i]);
+		}
+
+		return res;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Quadratic_division qd) {
+		rep(i, qd.n) {
+			os << qd.get(i) << " ";
+		}
+		return os;
+	}
+#endif
+};
+
+
 //【rollback 配列】
 /*
 * Rollback_array<T>(int n) : O(n)
@@ -2171,6 +2428,15 @@ class Persistent_queue {
 		T val = -1; // キューの末尾の値
 		vector<Node*> nx; // nx[i] : 2^i 個先のノードへのポインタ（ダブリング用）
 
+		//// 参考 : https://qiita.com/tubo28/items/f058582e457f6870a800
+		//static inline int node_count = 0;
+		//// 静的に確保した配列から返す
+		//void* operator new(std::size_t) {
+		//	constexpr int MAX_N = (int)5e5 + 10; // 適切な大きさに設定
+		//	static Node pool[MAX_N];
+		//	return pool + node_count++;
+		//}
+
 		// コンストラクタ（val : 追加する値，p : 直前の末尾ノードへのポインタ）
 		Node(T val_, Node* nx0) : val(val_) {
 			nx.push_back(nx0);
@@ -2200,36 +2466,42 @@ class Persistent_queue {
 public:
 	// 型 T の空キューで初期化する．
 	Persistent_queue() : n(1), his_p(1), his_len(1) {
+		// verify : https://judge.yosupo.jp/problem/persistent_queue
+
 		his_p[0] = new Node();
 	}
 
 	// t 番目の履歴のキューの大きさを返す．
 	int size(int t) {
-		Assert(0 <= t && t < n);
+		Assert(0 <= t); Assert(t < n);
 		return his_len[t];
 	}
 
 	// t 番目の履歴が空キューかを返す．
 	bool empty(int t) {
-		Assert(0 <= t && t < n);
+		Assert(0 <= t); Assert(t < n);
 		return size(t) == 0;
 	}
 
 	// t 番目の履歴のキューの先頭の値を返す．
 	T front(int t) {
-		Assert(0 <= t && t < n);
+		// verify : https://judge.yosupo.jp/problem/persistent_queue
+		
+		Assert(0 <= t); Assert(t < n);
 		return his_p[t]->next(his_len[t] - 1)->val;
 	}
 
 	// t 番目の履歴のキューの末尾の値を返す．
 	T back(int t) {
-		Assert(0 <= t && t < n);
+		Assert(0 <= t); Assert(t < n);
 		return his_p[t]->val;
 	}
 
 	// t 番目の履歴に対し val を末尾に追加したキューを最新の履歴として記録し，履歴番号を返す．
 	int push(T val, int t) {
-		Assert(0 <= t && t < n);
+		// verify : https://judge.yosupo.jp/problem/persistent_queue
+		
+		Assert(0 <= t); Assert(t < n);
 		Node* p = new Node(val, his_p[t]);
 		his_p.push_back(p);
 		his_len.push_back(his_len[t] + 1);
@@ -2238,7 +2510,9 @@ public:
 
 	// t 番目の履歴に対し先頭要素を削除したキューを最新の履歴として記録し，履歴番号を返す．
 	int pop(int t) {
-		Assert(0 <= t && t < n);
+		// verify : https://judge.yosupo.jp/problem/persistent_queue
+		
+		Assert(0 <= t); Assert(t < n);
 		his_p.push_back(his_p[t]);
 		his_len.push_back(his_len[t] - 1);
 		return n++;
@@ -2400,6 +2674,7 @@ public:
 	}
 #endif
 };
+
 
 
 //【二分探索木】

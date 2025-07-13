@@ -207,7 +207,7 @@ bool mongeQ(int h, int w, const FUNC& A, ll NIL = 2 * INFL + 100) {
 //【monotone minima】O(w log h + h)
 /*
 * 与えられた monotone 行列 a[0..h)[0..w) について，各行の最小値の位置を並べたリストを返す．
-* NIL は無効値を表す．
+* NIL は無効値を表す．行全てが NIL のときは，上方なら -1，下方なら w とする．
 *
 * 制約：無効値は右上または左下にしか存在しない．
 */
@@ -222,21 +222,44 @@ vi monotone_minima(int h, int w, const FUNC& a, ll NIL = 2 * INFL + 100) {
 
 	vi j_min(h);
 
+	// i0 : 無効値以外が現れる最初の行番号
+	int i0 = 0;
+	while (i0 < h) {
+		if (a(i0, 0) != NIL || a(i0, w - 1) != NIL) break;
+		j_min[i0] = -1;
+		i0++;
+	}
+	if (i0 == h) return j_min;
+
+	// i1 : 無効値以外が現れる最後の行番号
+	int i1 = h - 1;
+	while (1) {
+		if (a(i1, w - 1) != NIL || a(i1, 0) != NIL) break;
+		j_min[i1] = w;
+		i1--;
+	}
+
+	// 無効値を除いたときのバウンディングボックスの高さ
+	int H = i1 - i0 + 1;
+
+	// 0-indexed への変換のため 1 引いておく．
+	i0--;
+
 	// di : 行を調べる間隔 / 2（最大の 2 冪から始めて半分ずつにしていく）
-	for (int di = 1 << msb(h); di > 0; di >>= 1) {
+	for (int di = 1 << msb(H); di > 0; di >>= 1) {
 		// i : 調べる行番号（1-indexed）
 		//	2 di ずつ増加させるので lsb は変化しない．
 		int di2 = 2 * di;
-		for (int i = di; i <= h; i += di2) {
-			int jL = (i - di > 0 ? j_min[i - di - 1] : 0);
-			int jR = (i + di <= h ? j_min[i + di - 1] : w - 1);
+		for (int i = di; i <= H; i += di2) {
+			int jL = (i - di > 0 ? j_min[i0 + i - di] : 0);
+			int jR = (i + di <= H ? j_min[i0 + i + di] : w - 1);
 
 			ll a_min = 2 * INFL + 10;
 			repi(j, jL, jR) {
-				ll val = a(i - 1, j);
+				ll val = a(i0 + i, j);
 				if (val == NIL) continue;
 
-				if (chmin<ll>(a_min, val)) j_min[i - 1] = j;
+				if (chmin<ll>(a_min, val)) j_min[i0 + i] = j;
 			}
 		}
 	}
@@ -244,9 +267,11 @@ vi monotone_minima(int h, int w, const FUNC& a, ll NIL = 2 * INFL + 100) {
 	return j_min;
 
 	/* A の定義の雛形
+	ll NIL = 2 * INFL + 100;
 	auto A = [&](int i, int j) {
 		return 0LL;
 	};
+	auto pos = monotone_minima(h, w, A, NIL);
 	*/
 }
 

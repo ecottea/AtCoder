@@ -483,6 +483,34 @@ int longest_common_subsequence(const vector<T>& s, const vector<T>& t, vector<T>
 }
 
 
+//【最長共通部分列（部分順列）】O(n log n)
+/*
+* [0..n) の部分順列 p, q の最長共通部分列の長さを返す．
+*
+* 利用：【最長増加部分列】
+*/
+int longest_common_subsequence(int n, const vi& p, const vi& q) {
+	// verify : https://atcoder.jp/contests/arc189/tasks/arc189_c
+
+	//【方法】
+	// p = [0, 1, 2, ..., |p|-1] となるよう番号を振り直し，これら以外の番号を無視すれば，
+	// 元の p,q の最長共通部分列の長さは，振り直した後の q の最長増加部分列の長さに一致する．
+
+	int np = sz(p), nq = sz(q);
+
+	vi p_inv(n, -1);
+	rep(i, np) p_inv[p[i]] = i;
+
+	vi seq;
+	rep(i, nq) {
+		int pos = p_inv[q[i]];
+		if (pos != -1) seq.push_back(pos);
+	}
+
+	return LIS_length_to_val(seq);
+}
+
+
 //【レーベンシュタイン距離】O(|s| |t|)
 /*
 * 文字列 s から文字列 t へのレーベンシュタイン距離を返す．

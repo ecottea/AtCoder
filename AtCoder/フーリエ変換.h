@@ -383,6 +383,11 @@ public:
 		cs[t] += as[t] * bss[0][0];
 		if (t + 1 < n) cs[t + 1] += as[t] * bss[0][1];
 
+		if (t <= 1) {
+			t++;
+			return;
+		}
+
 		int i_max = lsb(t);
 
 		// 2^i : ³•ûŒ`‚Ìˆê•Ó‚Ì’·‚³

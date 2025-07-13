@@ -5,24 +5,41 @@
 // ■■■■■ 最適化（組） ■■■■■
 
 
+//【組の存在判定 → 組の復元】O(β log n)
+/*
+* a[0..n) に条件 P を満たす組が存在するか？の判定が O(β) でできる場合，
+* a をランダムシャッフルして二分割すれば，条件 P を満たす組が同じ側に集まる確率は約 1/2 以上である．
+* これを組の全探索ができるほど列が短くなるまで繰り返せば良い．
+*/
+
+
 //【組の差の最大化】O(n)
 /*
 * a[0..n) に対して以下の値を返す：
-*		max_(i < j) (a[j] - a[i])
-* また最大値を与える (i, j) を ids に格納する．
+*		max_(l<r) (a[r] - a[l])
+* また必要なら最大値を与える (l, r) を格納する．
 */
 template <class T>
-T maximize_pair_diff(const vector<T>& a, pii* ids = nullptr) {
+T maximize_pair_diff(const vector<T>& a, int* l = nullptr, int* r = nullptr) {
+	// verify : https://atcoder.jp/contests/abc408/tasks/abc408_d
+
 	//【方法】
 	// 累積 min をもちながら左から線形走査すればいい．
 
 	int n = sz(a);
-	T res = numeric_limits<T>::lowest(), a_min = a[0]; int i_min = 0;
-	if (ids == nullptr) ids = new pii;
+
+	if (!l) l = new int;
+	if (!r) r = new int;
+
+	T res = -(T)INFL;
+	T a_min = a[0]; int l_min = 0;
 
 	repi(i, 1, n - 1) {
-		if (chmax(res, a[i] - a_min)) *ids = { i_min, i };
-		if (chmin(a_min, a[i])) i_min = i;
+		if (chmax(res, a[i] - a_min)) {
+			*l = l_min;
+			*r = i;
+		}
+		if (chmin(a_min, a[i])) l_min = i;
 	}
 
 	return res;
@@ -32,7 +49,7 @@ T maximize_pair_diff(const vector<T>& a, pii* ids = nullptr) {
 //【組の XOR の最小化】O(n log n)
 /*
 * a[0..n) に対して以下の値を返す：
-*		max_(i < j) (a[j] XOR a[i])
+*		min_(i<j) (a[j] XOR a[i])
 * また最小値を与える (i, j) を ids に格納する．
 */
 template <class T>
@@ -69,12 +86,100 @@ T minimize_pair_XOR(const vector<T>& a, pii* ids = nullptr) {
 //【組の XOR の最大化】O(n log n)
 /*
 *【binary trie】の max_element(mask) を用いれば良い．
+* 値域が狭ければ度数分布に直して XOR 畳込みを用いることもできる．
 * 
 * verify : https://codeforces.com/contest/1847/problem/C
 */
 
 
-//【組の GCD の最小化】O(n + A log(log A))（A = max(a)）
+//【組の AND の最小化】O(n + m + A log A) （A=max(a,b)）
+/*
+* a[0..n), b[0..m) に対して以下の値を返す：
+*		min_i∈[0..n) min_j∈[0..m) (a[i] AND b[j])
+*/
+int minimize_pair_AND(const vi& a, const vi& b) {
+	//【方法】
+	// 度数分布に直して AND 畳込みを用いれば良い．
+
+	int n = sz(a), m = sz(b);
+
+	int a_max = *max_element(all(a));
+	int b_max = *max_element(all(b));
+	int N = msb(max(a_max, b_max)) + 1;
+
+	// f, g : a, b の度数分布
+	vl f(1LL << N), g(1LL << N);
+	rep(i, n) f[a[i]]++;
+	rep(j, m) g[b[j]]++;
+
+	// f, g を上位集合ゼータ変換する．
+	rep(i, N) repb(set, N) if (!getb(set, i)) f[set] += f[set | (1 << i)];
+	rep(i, N) repb(set, N) if (!getb(set, i)) g[set] += g[set | (1 << i)];
+
+	// 各点積をとる．
+	repb(set, N) f[set] *= g[set];
+
+	// 結果を上位集合メビウス変換する．
+	rep(i, N) repb(set, N) if (!getb(set, i)) f[set] -= f[set | (1 << i)];
+
+	rep(x, 1 << N) if (f[x]) return x;
+
+	return INF;
+}
+
+
+//【組の AND の最大化（要素毎，復元）】O(n + m + A log A) （A=max(a,b)）
+/*
+* 与えられた a[0..n), b[0..m) について，各 i ごとの
+*		max_j∈[0..m) (a[i] AND b[j])
+* を格納したリストを返す．必要ならば id に argmax_j を格納する．
+*/
+vi maximize_pair_AND(const vi& a, const vi& b, vi* id = nullptr) {
+	// 参考 : https://x.com/noya2ruler/status/1916902816138092629
+
+	//【方法】
+	// a[i] AND b[j] は，set⊂a[i] かつ set⊂b[j] を満たす "最大" の set と特徴付けられる．
+	// よって求めたい値は max の max 形ゆえ緩和ができ，代わりに
+	//		max_j∈[0..m) max{ set | set⊂a[i] かつ set⊂b[j] }
+	//		= max{ set⊂a[i] | ∃j,set⊂b[j] }
+	// を求めれば良い．
+	// これは上位集合ゼータ変換と下位集合ゼータ変換を組み合わせて行える．
+
+	int n = sz(a), m = sz(b);
+
+	int a_max = *max_element(all(a));
+	int b_max = *max_element(all(b));
+	int N = msb(max(a_max, b_max)) + 1;
+
+	// g[set] : set がある b[j] に一致するなら j，さもなくば -1
+	vi g(1LL << N, -1);
+	rep(j, m) g[b[j]] = j;
+
+	// g を上位集合ゼータ変換する（上からの累積 max をとる）
+	// g[set] : set がある b[j] の下位集合なら j，さもなくば -1
+	rep(i, N) repb(set, N) if (!getb(set, i)) chmax(g[set], g[set | (1 << i)]);
+
+	// f[set] : set がある b[j] の下位集合ならば {set, j}，さもなくば -∞
+	vector<pii> f(1LL << N, { -INF, -1 });
+	repb(set, N) if (g[set] != -1) f[set] = { set, g[set] };
+
+	// f を下位集合ゼータ変換する（下からの累積 max をとる）
+	// f[set] : set の下位集合 sub で，ある b[j] の下位集合でもあるような {sub の最大値, j}
+	rep(i, N) repb(set, N) if (getb(set, i)) chmax(f[set], f[set ^ (1 << i)]);
+
+	vi res(n);
+	rep(i, n) res[i] = f[a[i]].first;
+
+	if (id) {
+		id->resize(n);
+		rep(i, n) (*id)[i] = f[a[i]].second;
+	}
+
+	return res;
+}
+
+
+//【組の GCD の最小化】O(n + A log(log A))（A=max(a)）
 /*
 * 与えられた正整数列 a[0..n) に対して MIN_i<j GCD(a[i], a[j]) を返す．
 *
@@ -90,7 +195,7 @@ int minimize_pair_gcd(const vi& a) {
 	vl cnt(m + 1);
 	rep(i, n) cnt[a[i]] = 1;
 
-	Div_mul_transform<ll> g(m);
+	Div_mul_transform g(m);
 	cnt = g.gcd_convolution(cnt, cnt);
 
 	repi(j, 1, m) if (cnt[j]) return j;
@@ -99,7 +204,7 @@ int minimize_pair_gcd(const vi& a) {
 }
 
 
-//【組の GCD の最小化（復元）】O(n + A log A log n)（A = max(a)）
+//【組の GCD の最小化（復元）】O(n + A log A log n)（A=max(a)）
 /*
 * 与えられた正整数列 a[0..n) に対して MIN_i<j GCD(a[i], a[j]) の値と，
 * それを実現する i, j を合わせた 3 つ組 (g, i, j) を返す．
@@ -119,7 +224,7 @@ tuple<int, int, int> minimize_pair_gcd_construct(const vi& a) {
 	vl cnt(m + 1);
 	rep(i, n) cnt[a[i]] = 1;
 
-	Div_mul_transform<ll> D(m);
+	Div_mul_transform D(m);
 	cnt = D.gcd_convolution(cnt, cnt);
 
 	// g = MIN_i<j GCD(a[i], a[j])
@@ -198,10 +303,10 @@ tuple<int, int, int> minimize_pair_gcd_construct(const vi& a) {
 }
 
 
-//【組の GCD の最大化（復元）】O(n + A log A)（A = max(a)）
+//【組の GCD の最大化（復元）】O(n + A log A)（A=max(a)）
 /*
 * 与えられた正整数列 a[0..n) に対して MAX_i<j GCD(a[i], a[j]) を返す．
-* また最小値を与える (i, j) を ids に格納する．
+* また最大値を与える (i, j) を ids に格納する．
 */
 int maximize_pair_gcd(const vi& a, pii* ids = nullptr) {
 	//【方法】
@@ -262,7 +367,72 @@ int maximize_pair_gcd(const vi& a, pii* ids = nullptr) {
 }
 
 
-//【組の LCM の最小化（復元）】O(n + A log A)（A = max(a)）
+//【組の GCD の最大化（要素毎，復元）】O(n + m + A log(log A)) （A=max(a,b)）
+/*
+* 与えられた a[0..n), b[0..m) について，各 i ごとの
+*		max_j∈[0..m) gcd(a[i], b[j])
+* を格納したリストを返す．必要ならば id に argmax_j を格納する．
+*/
+vi maximize_pair_GCD(const vi& a, const vi& b, vi* id = nullptr) {
+	// 参考 : https://x.com/noya2ruler/status/1916902816138092629
+
+	//【方法】
+	// gcd(a[i], b[j]) は g|a[i] かつ g|b[j] を満たす "最大" の g と特徴付けられる．
+	// よって求めたい値は max の max 形ゆえ緩和ができ，代わりに
+	//		max_j∈[0..m) max{ g : g|a[i] かつ g|b[j] }
+	//		= max{ g|a[i] : ∃j,g|b[j] }
+	// を求めれば良い．
+	// これは倍数ゼータ変換と約数ゼータ変換を組み合わせて行える．
+
+	int n = sz(a), m = sz(b);
+
+	int a_max = *max_element(all(a));
+	int b_max = *max_element(all(b));
+	int N = max(a_max, b_max);
+	Assert(N >= 1);
+
+	// ps : N 以下の素数のリスト
+	vi ps;
+
+	// エラトステネスの篩
+	vb is_prime(N + 1, true);
+	is_prime[0] = is_prime[1] = false;
+	int i = 2;
+	for (; i * i <= N; i++) if (is_prime[i]) {
+		ps.push_back(i);
+		for (int j = i * i; j <= N; j += i) is_prime[j] = false;
+	}
+	for (; i <= N; i++) if (is_prime[i]) ps.push_back(i);
+
+	// g[x] : x がある b[j] に一致するなら j，さもなくば -1
+	vi g(N + 1, -1);
+	rep(j, m) g[b[j]] = j;
+
+	// g を倍数ゼータ変換する（上からの累積 max をとる）
+	// g[x] : x がある b[j] の約数なら j，さもなくば -1
+	repe(p, ps) repir(i, N / p, 1) chmax(g[i], g[p * i]);
+
+	// f[x] : x がある b[j] の約数ならば {x, j}，さもなくば -∞
+	vector<pii> f(N + 1, { -INF, -1 });
+	repi(x, 1, N) if (g[x] != -1) f[x] = { x, g[x] };
+
+	// f を約数ゼータ変換する（下からの累積 max をとる）
+	// f[x] : x の約数 g で，ある b[j] の約数でもあるような {g の最大値, j}
+	repe(p, ps) repi(i, 1, N / p) chmax(f[p * i], f[i]);
+
+	vi res(n);
+	rep(i, n) res[i] = f[a[i]].first;
+
+	if (id) {
+		id->resize(n);
+		rep(i, n) (*id)[i] = f[a[i]].second;
+	}
+
+	return res;
+}
+
+
+//【組の LCM の最小化（復元）】O(n + A log A)（A=max(a)）
 /*
 * 与えられた正整数列 a[0..n) に対して MIN_i<j LCM(a[i], a[j]) を返す．
 * また最小値を与える (i, j) を ids に格納する．
@@ -340,6 +510,8 @@ ll minimize_pair_lcm(const vi& a, pii* ids = nullptr) {
 /*
 * 与えられた正整数列 a[0..n) に対して MAX_i<j LCM(a[i], a[j]) を返す．
 * また最大値を与える (i, j) を ids に格納する．
+* 
+* 利用：【素因数分解（複数）】
 */
 ll maximize_pair_lcm(const vi& a, pii* ids = nullptr) {
 	// 参考 : https://drken1215.hatenablog.com/entry/2020/01/14/023500
@@ -434,13 +606,13 @@ ll maximize_pair_lcm(const vi& a, pii* ids = nullptr) {
 //【組の内積の最小化】O((n + m) log n)
 /*
 * min_(i,j)∈[0..n)×[0..m) (a1[i], a2[i])・(b1[j], b2[j]) を返す．
-* min_flag = false とすると最大値を返す．
+* max_flag = true とすると最大値を返す．
 *
 * 制約 : b1[j] > 0 （∀j∈[0..m)）
 *
 * 利用：【Convex-Hull Trick】,【有理数】
 */
-ll minimize_pair_inner_product(const vl& a1, const vl& a2, const vl& b1, const vl& b2, bool min_flag = true) {
+ll minimize_pair_inner_product(const vl& a1, const vl& a2, const vl& b1, const vl& b2, bool max_flag = false) {
 	// verify : https://atcoder.jp/contests/arc051/tasks/arc051_d
 
 	//【方法】
@@ -454,12 +626,12 @@ ll minimize_pair_inner_product(const vl& a1, const vl& a2, const vl& b1, const v
 
 	int n = sz(a1), m = sz(b1);
 
-	Convex_hull_trick<Frac<ll>> cht(min_flag);
+	Convex_hull_trick<Frac<ll>> cht(!max_flag);
 
 	// 直線群 {y = a2[i] x + a1[i]}_i で初期化する．
 	rep(i, n) cht.insert(Frac(a2[i]), Frac(a1[i]));
 
-	if (min_flag) {
+	if (!max_flag) {
 		ll res = INFL;
 
 		// 各 j について，x = b2[j]/b1[j] における最小値を求める．
@@ -484,13 +656,5 @@ ll minimize_pair_inner_product(const vl& a1, const vl& a2, const vl& b1, const v
 		return res;
 	}
 }
-
-
-//【判定 → 復元】O(β log n)
-/*
-* a[0..n) に条件 P を満たす組が存在するか？の判定が O(β) でできる場合，
-* a をランダムシャッフルして二分割すれば，条件 P を満たす組が同じ側に集まる確率は約 1/2 以上である．
-* これを組の全探索ができるほど列が短くなるまで繰り返せば良い．
-*/
 
 

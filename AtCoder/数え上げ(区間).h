@@ -190,7 +190,7 @@ vector<pair<T, ll>> count_min_intervals(const vector<T>& a) {
 	// verify : https://atcoder.jp/contests/agc005/tasks/agc005_b
 
 	//【方法】
-	// min(a[0..n)) = m で a[i] = m であるとする．a[i] を含むような区間 [l, r) は，
+	// min(a[0..n)) = m で a[i] = m であるとする．a[i] を含むような区間 [l..r) は，
 	// l∈[0..i] かつ r∈(i..n] であるような区間の全てであり，min(a[l..r)) = m である．
 	// これと同様のことをデカルト木の各ノードについて行えば良い．
 

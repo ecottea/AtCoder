@@ -121,7 +121,7 @@
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>C:\libs\boost\include\boost-1_83</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -141,7 +141,7 @@
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>C:\libs\boost\include\boost-1_83</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClInclude Include="DP.h" />
     <ClInclude Include="2変数FPS.h" />
+    <ClInclude Include="エスパー.h" />
     <ClInclude Include="スコア和%28列%29.h" />
     <ClInclude Include="体.h" />
     <ClInclude Include="数え上げ%28組%29.h" />

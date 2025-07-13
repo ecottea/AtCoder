@@ -92,7 +92,7 @@ T interval_scheduling(const vector<S>& l, const vector<S>& r, const vector<T>& a
 
 //【流動区間スケジューリング問題（両端指定，1 日拘束）】O(n log n)
 /*
-* 着手可能期間が [l[i]..r[i])，拘束日数が 1 の n 個の仕事を請け負える最大個数を返す．
+* 着手可能期間 [l[i]..r[i])，拘束日数 1 の n 個の仕事を請け負える最大個数を返す．
 * また必要なら最大個数を実現する仕事の (番号, 着手時刻) のリストを sel に格納する．
 */
 template <class T>
@@ -144,7 +144,7 @@ int floating_interval_scheduling(const vector<T>& l, const vector<T>& r, vector<
 
 //【流動区間スケジューリング問題（重み付き，一端指定）】O(n max(r) + n log n)
 /*
-* 着手可能期間が [0..r[i])，拘束日数が w[i]，報酬が a[i] の n 個の仕事から得られる最大報酬を返す．
+* 着手可能期間 [0..r[i])，拘束日数 w[i]，非負報酬 a[i] の n 個の仕事から得られる最大報酬を返す．
 */
 ll floating_interval_scheduling(const vi& r, const vi& w, const vl& a) {
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_k
@@ -184,7 +184,7 @@ ll floating_interval_scheduling(const vi& r, const vi& w, const vl& a) {
 
 //【流動区間スケジューリング問題（重み付き，一端指定，1 日拘束）】O(n log n)
 /*
-* 着手可能期間が [0..r[i])，拘束日数が 1，報酬が a[i] の n 個の仕事から得られる最大報酬を返す．
+* 着手可能期間 [0..r[i])，拘束日数 1，非負報酬 a[i] の n 個の仕事から得られる最大報酬を返す．
 */
 template <class S, class T>
 T floating_interval_scheduling(const vector<S>& r, const vector<T>& a) {
@@ -198,12 +198,12 @@ T floating_interval_scheduling(const vector<S>& r, const vector<T>& a) {
 	sort(all(ra), greater<pair<S, T>>());
 
 	// 番兵
-	ra.emplace_back(-1, 0);
+	ra.emplace_back(S(0), T(0));
 
 	// 報酬の高い順に取り出せる順位キュー
 	priority_queue<T> q;
 
-	T res = 0;
+	T res = T(0);
 
 	// now : 現在時刻
 	S now = (S)INFL;
@@ -218,7 +218,7 @@ T floating_interval_scheduling(const vector<S>& r, const vector<T>& a) {
 			now--;
 		}
 
-		// 現在時刻を l まで進める．
+		// 現在時刻を r-1 まで戻す．
 		now = r - 1;
 
 		// 新しく請け負えるようになった仕事 i を記録する．

@@ -5,7 +5,7 @@
 
 //【約数倍数変換】
 /*
-* Div_mul_transform<T>(int n) : O(n log(log n))
+* Div_mul_transform(int n) : O(n log(log n))
 *   n 以下の素数を持って初期化する．
 *
 * divisor_zeta(vT& a) : O(n log(log n))
@@ -28,7 +28,6 @@
 *
 * 制約：1-indexed とし，a[0], b[0] は使用しない．
 */
-template <typename T>
 class Div_mul_transform {
 	// 参考 : https://qiita.com/convexineq/items/afc84dfb9ee4ec4a67d5
 
@@ -56,6 +55,7 @@ public:
 	Div_mul_transform() {}
 
 	// A[i] = Σ_(j | i) a[j] なる A に上書きする（約数からの寄与を足し込む）
+	template <typename T>
 	void divisor_zeta(vector<T>& a) {
 		// verify : https://judge.yosupo.jp/problem/lcm_convolution
 
@@ -80,6 +80,7 @@ public:
 	}
 
 	//  A[i] = Σ_(j | i) a[j] なる a に上書きする（約数からの寄与を取り除く）
+	template <typename T>
 	void divisor_mobius(vector<T>& A) {
 		// verify : https://judge.yosupo.jp/problem/lcm_convolution
 
@@ -104,6 +105,7 @@ public:
 	}
 
 	// c[k] = Σ_(LCM(i, j) = k) a[i] b[j] なる c を返す．
+	template <typename T>
 	vector<T> lcm_convolution(vector<T> a, vector<T> b) {
 		// verify : https://judge.yosupo.jp/problem/lcm_convolution
 
@@ -121,6 +123,7 @@ public:
 	}
 
 	// A[i] = Σ_(i | j) a[j] なる A に上書きする（倍数からの寄与を足し込む）
+	template <typename T>
 	void multiple_zeta(vector<T>& a) {
 		// verify : https://judge.yosupo.jp/problem/gcd_convolution
 
@@ -145,6 +148,7 @@ public:
 	}
 
 	// A[i] = Σ_(i | j) a[j] なる a に上書きする（倍数からの寄与を取り除く）
+	template <typename T>
 	void multiple_mobius(vector<T>& A) {
 		// verify : https://judge.yosupo.jp/problem/gcd_convolution
 
@@ -169,6 +173,7 @@ public:
 	}
 
 	// c[k] = Σ_(GCD(i, j) = k) a[i] b[j] なる c を返す．
+	template <typename T>
 	vector<T> gcd_convolution(vector<T> a, vector<T> b) {
 		// verify : https://judge.yosupo.jp/problem/gcd_convolution
 
@@ -342,6 +347,94 @@ public:
 		return a;
 	}
 };
+
+
+//【LCM 畳込み（二項式）】O(n log(log n))
+/*
+* 数論関数族 f_i = z_1 + c[i]z_i (i∈[1..n]) に対して
+* 総 LCM 畳込みをとって得られる数論関数 g[1..n] を返す．
+*/
+template <class T>
+vector<T> multi_lcm_convolution_binomial(vector<T> c) {
+	int n = sz(c) - 1;
+
+	vi ps; // 素数のリスト
+
+	// is_prime[i] : i が素数か
+	vb is_prime(n + 1, true);
+	is_prime[0] = is_prime[1] = false;
+	int i = 2;
+
+	// √n 以下の i の処理
+	for (; i <= n / i; i++) if (is_prime[i]) {
+		ps.push_back(i);
+		for (int j = i * i; j <= n; j += i) is_prime[j] = false;
+	}
+
+	// √n より大きい i の処理
+	for (; i <= n; i++) if (is_prime[i]) ps.push_back(i);
+
+	// 乗法単位元である 1 を加算し，採用/不採用どちらも可とする．
+	repi(i, 1, n) c[i] += T(1);
+
+	// 演算を積として約数ゼータ変換する．
+	repe(p, ps) repi(i, 1, n / p) c[p * i] *= c[i];
+
+	// 演算を和として約数メビウス変換する．
+	repe(p, ps) repir(i, n / p, 1) c[p * i] -= c[i];
+
+	return c;
+}
+
+
+//【GCD 畳込み（二項式）】O(n log(log n))
+/*
+* 数論関数族 f_i = z_0 + c[i]z_i (i∈[1..n]) に対して
+* 総 GCD 畳込みをとって得られる数論関数 g[1..n] を返す．
+*/
+template <class T>
+vector<T> multi_gcd_convolution_binomial(vector<T> c) {
+	int n = sz(c) - 1;
+
+	if (n == 1) {
+		c[0] = 1;
+		return c;
+	}
+
+	vi ps; // 素数のリスト
+
+	// is_prime[i] : i が素数か
+	vb is_prime(n + 1, true);
+	is_prime[0] = is_prime[1] = false;
+	int i = 2;
+
+	// √n 以下の i の処理
+	for (; i <= n / i; i++) if (is_prime[i]) {
+		ps.push_back(i);
+		for (int j = i * i; j <= n; j += i) is_prime[j] = false;
+	}
+
+	// √n より大きい i の処理
+	for (; i <= n; i++) if (is_prime[i]) ps.push_back(i);
+
+	// 乗法単位元である 1 を加算し，採用/不採用どちらも可とする．
+	repi(i, 1, n) c[i] += T(1);
+
+	// 演算を積として倍数ゼータ変換する．
+	repe(p, ps) repir(i, n / p, 1) c[i] *= c[p * i];
+
+	// 演算を和として倍数メビウス変換する．
+	repe(p, ps) {
+		repi(i, 1, n / p) c[i] -= c[p * i];
+
+		// 上に無限にある 1 からの寄与も考える（1 回で全て消滅する）
+		if (p == 2) repi(i, n / p + 1, n) c[i]--;
+	}
+
+	c[0] = 1;
+
+	return c;
+}
 
 
 //【メビウス関数の和】

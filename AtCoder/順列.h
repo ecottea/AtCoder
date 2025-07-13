@@ -133,18 +133,17 @@ ll inversion_number(const vector<T>& a) {
 //y“]“|”iÀˆ³jzO(n log n)
 /*
 * a[0..n) ‚Ì“]“|”‚ğ•Ô‚·D
-*
-* —˜—pFyÀ•Wˆ³kz
 */
 template <class T>
 ll inversion_number_cc(const vector<T>& a) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_5_D
+	// verify : https://onlinejudge.u-aizu.ac.jp/services/room.html#ACPC2021Day3/problems/F
 
 	int n = sz(a);
 
-	// b : a ‚ğÀ•Wˆ³k‚µ‚½Œ‹‰Ê
-	vi b;
-	int m = coordinate_compression(a, b);
+	vector<T> a_uniq(a);
+	uniq(a_uniq);
+
+	int m = sz(a_uniq);
 
 	// fw[i] : ¡‚Ü‚ÅŒ©‚Ä‚«‚½”ÍˆÍ‚É’l i ‚ª‰½ŒÂ‚ ‚Á‚½‚©
 	fenwick_tree<int> fw(m);
@@ -152,13 +151,22 @@ ll inversion_number_cc(const vector<T>& a) {
 
 	// ˆÊ’u‚É‚Â‚¢‚Ä¸‡‚ÉŒ©‚Ä‚¢‚­D
 	rep(i, n) {
-		fw.add(b[i], 1);
+		int b = lbpos(a_uniq, a[i]);
+
+		fw.add(b, 1);
 
 		// ©g‚æ‚è‘å‚«‚¢”‚ª¡‚Ü‚Å‚É‰½ŒÂ‚ ‚Á‚½‚©’²‚×C‰ÁZ‚·‚éD
-		res += fw.sum(b[i] + 1, m);
+		res += fw.sum(b + 1, m);
 	}
+
 	return res;
 }
+
+
+//y‹t‡—ñ‚Ì“]“|”z
+/*
+* ‡—ñ p[0..n) ‚Ì‹t‡—ñ‚ª q[0..n) ‚Å‚ ‚é‚Æ‚«Cinv(p) = inv(q) ‚Å‚ ‚éD
+*/
 
 
 //yÅ¬ swap ‰ñ”zO(n log n)

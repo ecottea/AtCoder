@@ -3,27 +3,6 @@
 // ■■■■■ 畳込み ■■■■■
 
 
-//【畳込みの使い所】
-/*
-* 数列 a[0..n), b[0..n) が与えられているとする．
-* 例えば通常の畳込みは，全ての k∈[0..n) についての Σi∈[0..k] a[i] b[k-i] を
-* 一括で O(n log n) で求めたいときに使う．
-* 特定の k に対して求めたいだけであれば，愚直に和をとっても O(k) で計算できる．
-*
-* verify : https://atcoder.jp/contests/abc276/tasks/abc276_g
-*/
-
-
-//【上側畳込み】
-/*
-* 与えられた a[0..N], b[0..N] に対して
-*		c[i] = Σj∈[i..N] a[N+i-j] b[j]
-* なる c[0..N] を求めたい場合，convolution(a, b)[N..2N] を取得すればよい．
-*
-* verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
-*/
-
-
 //【畳込み（素朴）】O(n m)
 /*
 * a[0..n) と b[0..m) を畳み込んだ数列 c[0..n+m-1) を返す．
@@ -47,6 +26,87 @@ vector<T> naive_convolution(const vector<T>& a, const vector<T>& b) {
 
 	return c;
 }
+
+
+//【畳込みの表現行列】
+/*
+* 例えば [0..4) との畳込み
+*		g[k] = Σ_(i+j=k) f[i] j
+* の表現行列は次のようになる：
+*		[g[0]]   [0        ] [f[0]]
+*		[g[1]]   [1 0      ] [f[1]]
+*		[g[2]]   [2 1 0    ] [f[2]]
+*		[g[3]] = [3 2 1 0  ] [f[3]]
+*		[g[4]]   [  3 2 1 0] [f[4]]
+*		[g[5]]   [    3 2 1]
+*		[g[6]]   [      3 2]
+*		[g[7]]   [        3]
+*/
+
+
+//【畳込みの使い所】
+/*
+* 数列 a[0..n), b[0..n) が与えられているとする．
+* 例えば通常の畳込みは，全ての k∈[0..n) についての Σi∈[0..k] a[i] b[k-i] を
+* 一括で O(n log n) で求めたいときに使う．
+* 特定の K に対して求めたいだけであれば，愚直に和をとっても O(K) で計算できる．
+*
+* verify : https://atcoder.jp/contests/abc276/tasks/abc276_g
+*/
+
+
+//【フィルタリング（素朴）】O(n m)
+/*
+* a[0..n+m-1) にフィルタ b[0..m) をかけた結果 c[0..n) を返す．c[i] は以下の式で表される：
+*		c[i] = Σj∈[0..m) a[i+j] b[j]
+* i はフィルタの平行移動量を表す．
+*/
+template <class T>
+vector<T> naive_filtering(const vector<T>& a, const vector<T>& b) {
+	int m = sz(b), n = sz(a) - m + 1;
+	if (n <= 0) return vector<T>();
+
+	// c[i] = Σj∈[0..m) a[i+j] b[j]
+	vector<T> c(n);
+	rep(i, n) rep(j, m) c[i] += a[i + j] * b[j];
+
+	return c;
+}
+
+
+//【フィルタリングの表現行列】
+/*
+* 例えば [0..4) によるフィルタリング
+*		g[k] = Σ_(i+k=j) f[i] j
+* の表現行列は次のようになる：
+*		[g[0]]   [0 1 2 3        ] [f[0]]
+*		[g[1]]   [  0 1 2 3      ] [f[1]]
+*		[g[2]] = [    0 1 2 3    ] [f[2]]
+*		[g[3]]   [      0 1 2 3  ] [f[3]]
+*		[g[4]]   [        0 1 2 3] [f[4]]
+*                                  [f[5]]
+*                                  [f[6]]
+*                                  [f[7]]
+* 
+* また [0..8) へのフィルタリング
+*		g[k] = Σ_(i+k=j) i f[j]
+* の表現行列は次のようになる：
+*		[g[0]]   [0 1 2 3] [f[0]]
+*		[g[1]]   [1 2 3 4] [f[1]]
+*		[g[2]] = [2 3 4 5] [f[2]]
+*		[g[3]]   [3 4 5 6] [f[3]]
+*		[g[4]]   [4 5 6 7]
+*/
+
+
+//【上側畳込み】
+/*
+* 与えられた a[0..N], b[0..N] に対して
+*		c[i] = Σj∈[i..N] a[N+i-j] b[j]
+* なる c[0..N] を求めたい場合，convolution(a, b)[N..2N] を取得すればよい．
+*
+* verify : https://atcoder.jp/contests/abc217/tasks/abc217_g
+*/
 
 
 //【自己畳込み（素朴）】O(n^2 log k)
@@ -325,10 +385,10 @@ public:
 };
 
 
-//【整数商畳込み】O(m + n log n)
+//【切り捨て商畳込み（商ごと）】O(m + n log n)
 /*
 * 与えられた a[0..n), b[0..m) に対して
-*       c[k] = Σ(floor(i/j) = k) a[i] b[j]
+*       c[k] = Σ_(floor(i/j) = k) a[i] b[j]
 * なる c[0..n) を返す．
 */
 template<class T>
@@ -357,6 +417,133 @@ vector<T> floordiv_convolution(const vector<T>& a, const vector<T>& b) {
 	repi(k, 1, n - 1) {
 		repi(j, 1, min(m - 1, n / k)) {
 			c[k] += b[j] * (acc_a[min(j * k + j, n)] - acc_a[j * k]);
+		}
+	}
+
+	return c;
+}
+
+
+//【切り捨て商畳込み（商ごと）の表現行列】
+/*
+* 例えば [1..5] との切り捨て商畳込み（商ごと）
+*		g[k] = Σ_(floor(i/j) = k) f[i] j
+* の表現行列は次のようになる：
+*		[g[0]]   [1+2+3+4+5 2+3+4+5 3+4+5 4+5 5        ] [f[0]]
+*		[g[1]]   [          1       2     2+3 3+4 3+4+5] [f[1]]
+*		[g[2]]   [                  1         2   2    ] [f[2]]
+*		[g[3]] = [                        1            ] [f[3]]
+*		[g[4]]   [                            1        ] [f[4]]
+*		[g[5]]   [                                1    ] [f[5]]
+* 
+* また [0..5] との切り捨て商畳込み（商ごと）
+*		g[k] = Σ_(floor(i/j) = k) i f[j]
+* の表現行列は次のようになる：
+*		[g[0]]   [0 0+1 0+1+2 0+1+2+3 0+1+2+3+4]
+*		[g[1]]   [1 2+3 3+4+5 4+5     5        ] [f[1]]
+*		[g[2]]   [2 4+5                        ] [f[2]]
+*		[g[3]] = [3                            ] [f[3]]
+*		[g[4]]   [4                            ] [f[4]]
+*		[g[5]]   [5                            ] [f[5]]
+*/
+
+
+//【切り捨て商畳込み（分母ごと）】O(m + n log n)
+/*
+* 与えられた a[0..n), b[0..m) に対して
+*       c[k] = Σ_(floor(i/k) = j) a[i] b[j]
+* なる c[0..n] を返す．
+*/
+template<class T>
+vector<T> floordiv_convolution_by_dnm(const vector<T>& a, const vector<T>& b) {
+	// verify : https://yukicoder.me/problems/no/3054
+
+	//【方法】
+	// 和の範囲についての条件は
+	//		floor(i/k) = j
+	//		⇔ j ≦ i/k < j+1
+	//		⇔ j k ≦ i < j k + k
+	// と書き直せるので，
+	//		c[k]
+	//		= Σj∈[0..m) Σi∈[j k..j k + k) a[i] b[j]
+	//		= Σj∈[0..m) b[j] Σa[j k..j k + k)
+	// となる．a の累積和を前計算しておけば，
+	// k ごとに独立に c[k] を計算しても計算量は調和級数で抑えられる．
+
+	int n = sz(a), m = sz(b);
+
+	vector<T> acc_a(n + 1);
+	rep(i, n) acc_a[i + 1] = acc_a[i] + a[i];
+
+	vector<T> c(n + 1);
+	repi(k, 1, n) {
+		repi(j, 0, min(m - 1, n / k)) {
+			c[k] += b[j] * (acc_a[min(j * k + k, n)] - acc_a[j * k]);
+		}
+	}
+
+	return c;
+}
+
+
+//【切り捨て商畳込み（分母ごと）の表現行列】
+/*
+* 例えば [0..5] との切り捨て商畳込み（分母ごと）
+*		g[k] = Σ_(floor(i/k) = j) f[i] j
+* の表現行列は次のようになる：
+*		                       [f[0]]
+*		[g[1]]   [0 1 2 3 4 5] [f[1]]
+*		[g[2]]   [0 0 1 1 2 2] [f[2]]
+*		[g[3]] = [0 0 0 1 1 1] [f[3]]
+*		[g[4]]   [0 0 0 0 1 1] [f[4]]
+*		[g[5]]   [0 0 0 0 0 1] [f[5]]
+*
+* また
+*		g[k] = Σ_(floor(i/k) = j) i f[j]
+* の表現行列は次のようになる：
+*		                                     [f[0]]
+*		[g[1]]   [0         1     2   3 4 5] [f[1]]
+*		[g[2]]   [0+1       2+3   4+5      ] [f[2]]
+*		[g[3]] = [0+1+2     3+4+5          ] [f[3]]
+*		[g[4]]   [0+1+2+3   4+5            ] [f[4]]
+*		[g[5]]   [0+1+2+3+4 5              ] [f[5]]
+*/
+
+
+//【切り上げ商畳込み（分母ごと）】O(m + n log n)
+/*
+* 与えられた a[0..n), b[0..m) に対して
+*       c[k] = Σ_(ceil(i/k) = j) a[i] b[j]
+* なる c[0..n] を返す．
+*/
+template<class T>
+vector<T> ceildiv_convolution_by_dnm(const vector<T>& a, const vector<T>& b) {
+	// verify : https://atcoder.jp/contests/arc126/tasks/arc126_c
+
+	//【方法】
+	// 和の範囲についての条件は
+	//		ceil(i/k) = j
+	//		⇔ j-1 < i/k ≦ j
+	//		⇔ j k - k < i ≦ j k
+	// と書き直せるので，
+	//		c[k]
+	//		= Σj∈[0..m) Σi∈(j k - k..j k] a[i] b[j]
+	//		= Σj∈[0..m) b[j] Σa[j k - k + 1..j k + 1)
+	// となる．a の累積和を前計算しておけば，
+	// k ごとに独立に c[k] を計算しても計算量は調和級数で抑えられる．
+
+	int n = sz(a), m = sz(b);
+
+	vector<T> acc_a(n + 1);
+	rep(i, n) acc_a[i + 1] = acc_a[i] + a[i];
+
+	vector<T> c(n + 1);
+	repi(k, 1, n) {
+		repi(j, 0, min(m - 1, (n + k - 1) / k)) {
+			int i1 = max(j * k - k + 1, 0);
+			int i2 = min(j * k + 1, n);
+
+			c[k] += b[j] * (acc_a[i2] - acc_a[i1]);
 		}
 	}
 

@@ -24,6 +24,25 @@ T divide_and_conquer_product(vector<T> a) {
 }
 
 
+//【分割統治積（モノイド）】O(n log n)
+/*
+* Πa[0..n) を返す（Πa[l1..r1) と Πa[l2..r2) の積の計算量が O((r1-l1)+(r2-l2)) 程度とする）
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+S divide_and_conquer_product(vector<S> a) {
+	int n = sz(a);
+
+	// 2 冪個ずつ掛けていく（分割統治法）
+	for (int k = 1; k < n; k *= 2) {
+		for (int i = 0; i + k < n; i += 2 * k) {
+			a[i] = op(a[i], a[i + k]);
+		}
+	}
+
+	return a[0];
+}
+
+
 //【累積積の加重和】O(n (log n)^2)
 /*
 * 与えられた cs[0..n], as[0..n) に対し，Σi=[0..n] cs[i] Πas[0..i) を返す．

@@ -120,6 +120,7 @@ map<T, int> dynamic_BFS(T st, const FUNC& nxt) {
 
 		return res;
 	};
+	auto dist = dynamic_BFS(s, nxt);
 	*/
 }
 
@@ -254,7 +255,7 @@ vl dijkstra(const WGraph& g, int st) {
 }
 
 
-//【単一始点最短路（貰う遷移）】O(n + m log n)（ちょっと遅い）
+//【単一始点最短路（貰う遷移）】O(n + m log n)（ちょっと遅い，完全グラフだととても遅い）
 /*
 * 非負の重み付きグラフ g に対し st から各頂点への最短距離（到達不能なら INFL）を格納したリストを返す．
 */
@@ -292,7 +293,7 @@ vl dijkstra_get(const WGraph& g, int st) {
 /*
 * 非負の重み付きグラフ g に対し st から各頂点への最短距離（到達不能なら INFL）を格納したリストを返す．
 */
-vl dijkstra(const WGraph& g, int st) {
+vl dijkstra_dense(const WGraph& g, int st) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E3%83%80%E3%82%A4%E3%82%AF%E3%82%B9%E3%83%88%E3%83%A9%E6%B3%95
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/lesson/1/ALDS1/all/ALDS1_12_C
 
@@ -335,10 +336,10 @@ vl dijkstra(const WGraph& g, int st) {
 * nxt(s) は s の次に訪れることのできる {頂点, 移動コスト} の組のリストを返す．
 */
 template <class T>
-unordered_map<T, ll> dynamic_dijkstra(T st, const function<vector<pair<T, ll>>(T)>& nxt) {
+map<T, ll> dynamic_dijkstra(T st, const function<vector<pair<T, ll>>(T)>& nxt) {
 	// verify : https://atcoder.jp/contests/abc297/tasks/abc297_e
 
-	unordered_map<T, ll> dist; // st からの最短距離を保持するテーブル
+	map<T, ll> dist; // st からの最短距離を保持するテーブル
 	dist[st] = 0;
 
 	// 組 (スタートからの距離, 頂点番号) を入れる優先度付きキュー
@@ -444,11 +445,11 @@ vl potentialed_dijkstra(const WGraph& g, const vl& u, int st) {
 //【ダイクストラ法（任意コスト）】O(n + m log n)
 /*
 * 参照付きグラフ g に対し st から各頂点への最小コスト（到達不能なら INFL）を格納したリストを返す．
-* 初期コストは ini_cost で，コスト x の状態で辺 e を通ると，通過後のコストは f(e, x) になるとする．
+* 初期コストは ini_cost で，コスト c の状態で辺 e を通ると，通過後のコストは f(e, c) になるとする．
 *
 * 制約：
-*	f(x) は x について広義単調増加（途中であえてコストを増やすメリットがない）
-*	f(x) ≧ x（辺を通ることでコストが減ることがない）
+*	f(c) は c について広義単調増加（途中であえてコストを増やすメリットがない）
+*	f(c) ≧ c（辺を通ることでコストが減ることがない）
 */
 template <class G, class FUNC>
 vl dijkstra(const G& g, int st, const FUNC& f, ll ini_cost) {
@@ -537,45 +538,83 @@ WGraph dijkstra_tree(const WGraph& g, int st, vl* dist = nullptr) {
 }
 
 
-//【単一始点最短路（負コスト可）】O(n m)
+//【単一始点最短路（負コスト可）】O(n m / 2)
 /*
-* 重み付きグラフ g（負のコストも可）に対し，
-* st から各頂点への最短距離を格納したリストを返す．
-* もし st から到達可能な負のコストをもつ閉路があれば空リストを返す．
+* 重み付きグラフ g（負のコストも可）に対し，ST から各頂点への最短距離を格納したリストを返す．
+* ST から辿り着けない場合は INFL，距離に下限がない場合は -INFL とする．
 */
-vl bellman_ford(const WGraph& g, int st) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_1_B
-
-	//【補足】
-	// min-plus 半環上のスパース行列とベクトルの積の反復とも思える．
+vl bellman_ford(const WGraph& g, int ST) {
+	// 参考 : https://lealgorithm.blogspot.com/2023/12/bellman-ford.html
+	// verify : https://atcoder.jp/contests/abc061/tasks/abc061_d
 
 	int n = sz(g);
-	vl dist(n, INFL); // スタートからの最短距離を保持するテーブル
-	dist[st] = 0;
 
+	vl dist(n, INFL);
+	dist[ST] = 0;
+
+	// 頂点をランダムに順序付ける（ST は最初）
+	vi p(n);
+	iota(all(p), 0);
+	if (ST != 0) swap(p[ST], p[0]);
+
+	mt19937_64 mt((int)time(NULL));
+	shuffle(p.begin() + 1, p.end(), mt);
+
+	vi p_inv(n);
+	rep(i, n) p_inv[p[i]] = i;
+
+	// 辺を良い順番に並べ直す．
+	vector<tuple<int, int, ll>> es;
+
+	// 始点から遠ざかる方向の辺を昇順に並べる．
 	rep(i, n) {
-		bool updated = false;
-
-		// 全ての辺についての操作
-		rep(s, n) {
-			repe(e, g[s]) {
-				// もし (始点への距離) + (辺のコスト) < (終点への距離) なら (終点への距離) を更新する．
-				// INFL からは何を引いても INFL になるようにしているので，
-				// st から到達可能な負閉路しか検出しない．
-				if (dist[s] != INFL && dist[s] + e.cost < dist[e.to]) {
-					dist[e.to] = dist[s] + e.cost;
-					updated = true;
-				}
-			}
+		int s = p[i];
+		for (auto [t, c] : g[s]) {
+			if (i <= p_inv[t]) es.emplace_back(s, t, c);
 		}
-
-		// もし距離の更新が起こらなければ最短距離確定
-		if (!updated) return dist;
 	}
 
-	// もし全ての辺についての操作を n 回繰り返しても距離の更新があったなら，
-	// st から到達可能な負の閉路を持っている．
-	return vl();
+	// 始点に近づく方向の辺を降順に並べる．
+	repir(i, n - 1, 0) {
+		int s = p[i];
+		for (auto [t, c] : g[s]) {
+			if (i > p_inv[t]) es.emplace_back(s, t, c);
+		}
+	}
+
+	// 負閉路がなければ n/2 回の反復で最短距離が確定する．
+	rep(hoge, n / 2) {
+		for (auto [s, t, c] : es) {
+			if (dist[s] != INFL) chmin(dist[t], dist[s] + c); // アンダーフロー注意
+		}
+
+		// 期待値的には n/3 回の反復で最短距離が確定するので，思い切って打ち切る嘘解法もあり．
+	}
+
+	// st からの距離が -INFL である点のリスト
+	queue<int> q;
+
+	// n/2 回の反復で最短距離が確定していない場合，その点は負閉路上に存在する．
+	for (auto [s, t, c] : es) {
+		if (dist[s] != INFL && dist[t] > dist[s] + c) {
+			dist[t] = -INFL;
+			q.push(t);
+		}
+	}
+
+	// BFS を行い距離 -INFL の頂点を確定する．
+	while (!q.empty()) {
+		auto s = q.front(); q.pop();
+
+		repe(t, g[s]) {
+			if (dist[t] == -INFL) continue;
+
+			dist[t] = -INFL;
+			q.push(t);
+		}
+	}
+
+	return dist;
 }
 
 
@@ -684,8 +723,8 @@ int shortest_path(const Graph& g, int st, int gl, vi* path = nullptr) {
 * st から gl までの最短距離を返し（到達不能なら INF），path に最短パス上の頂点の列を格納する．
 * nxt(s) は s の次に訪れることのできる頂点のリストを返す．
 */
-template <class T>
-int dynamic_shortest_path(T st, T gl, const function<vector<T>(T)>& nxt, vector<T>* path = nullptr) {
+template <class T, class FUNC>
+int dynamic_shortest_path(T st, T gl, const FUNC& nxt, vector<T>* path = nullptr) {
 	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_f
 
 	unordered_map<T, int> dist; // st からの最短距離を保持するテーブル
@@ -699,7 +738,6 @@ int dynamic_shortest_path(T st, T gl, const function<vector<T>(T)>& nxt, vector<
 	while (!que.empty()) {
 		// 未探索の頂点 s を得る．
 		auto s = que.front(); que.pop();
-		dump(s, ":", dist[s]);
 
 		bool end_flag = false;
 		repe(t, nxt(s)) {
@@ -745,7 +783,7 @@ int dynamic_shortest_path(T st, T gl, const function<vector<T>(T)>& nxt, vector<
 
 	/* nxt の定義の雛形
 	using T = ll;
-	function<vector<T>(T)> nxt = [&](T s) {
+	auto nxt = [&](T s) {
 		vector<T> res;
 
 		return res;
@@ -955,10 +993,10 @@ ll minimum_cost_path(const WGraph& g, int st, int gl, vi* path = nullptr) {
 */
 template <class T>
 ll dynamic_minimum_cost_path(T st, T gl, const function<vector<pair<T, ll>>(T)>& nxt, vector<T>* path = nullptr) {
-	unordered_map<T, ll> dist;
+	map<T, ll> dist;
 	dist[st] = 0;
 
-	unordered_map<T, T> p;
+	map<T, T> p;
 
 	priority_queue_rev<pair<ll, T>> q;
 	q.emplace(0, st);
@@ -1364,21 +1402,24 @@ void nearest_neighbor(const WGraph& g, const vi& vs, vi& nn, vl& dist) {
 }
 
 
-//【k-近傍探索】O(n + k m log n)
+//【K-近傍探索】O(n + K m log n)
 /*
 * 重み付き無向グラフ g とその頂点集合 vs について，
-* 頂点 i と近い方から k 個の vs の頂点を knn[i] に，
-* i と knn[i] との距離を dist[i] にそれぞれ格納する（なければそれぞれ -1, INFL）
+* 頂点 i に近い方から K 個の vs の頂点のリストを knn[i] に，
+* i と knn[i][k] との距離を dist[i][k] にそれぞれ格納する（なければそれぞれ -1, INFL）
 *
 *（ダイクストラ法）
 */
-void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& dist) {
+void k_nearest_neighbor(const WGraph& g, const vi& vs, int K, vvi& knn, vvl& dist) {
 	// verify : https://atcoder.jp/contests/abc245/tasks/abc245_g
+
+	//【備考】
+	// g が有向グラフなら，vs の頂点から i までの距離についての K-近傍探索を行う．
 
 	int n = sz(g);
 
-	knn = vvi(n, vi(k, -1));
-	dist = vvl(n, vl(k, INFL));
+	knn = vvi(n, vi(K, -1));
+	dist = vvl(n, vl(K, INFL));
 
 	// iv_to_cost[i][v] : v から i までの最短距離
 	vector<unordered_map<int, ll>> iv_to_cost(n);
@@ -1390,8 +1431,8 @@ void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& dis
 	while (!q.empty()) {
 		auto [c, s, v] = q.top(); q.pop();
 
-		// k 近傍を調べ終わっていたら何もしない．
-		if (sz(iv_to_cost[s]) == k) continue;
+		// K 近傍を調べ終わっていたら何もしない．
+		if (sz(iv_to_cost[s]) == K) continue;
 
 		// 既に v からの最短距離が求まっているなら何もしない．
 		if (iv_to_cost[s].count(v)) continue;
@@ -1405,12 +1446,12 @@ void k_nearest_neighbor(const WGraph& g, const vi& vs, int k, vvi& knn, vvl& dis
 
 	// 結果の格納
 	rep(i, n) {
-		int j = 0;
-		repe(p, iv_to_cost[i]) {
-			knn[i][j] = p.first;
-			dist[i][j] = p.second;
-			j++;
-		}
+		// 一旦距離昇順にソートする．
+		vector<pli> dt;
+		for (auto [t, d] : iv_to_cost[i]) dt.push_back({ d, t });
+		sort(all(dt));
+
+		rep(k, sz(dt)) tie(dist[i][k], knn[i][k]) = dt[k];
 	}
 }
 

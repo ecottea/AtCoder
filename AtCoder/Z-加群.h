@@ -17,7 +17,7 @@
 /* verify : https://atcoder.jp/contests/abc253/tasks/abc253_f */
 using S301 = ll;
 S301 op301(S301 x, S301 y) { return x + y; }
-S301 o301() { return 0; }
+S301 o301() { return S301(0); }
 S301 inv301(S301 x) { return -x; }
 S301 mul301(ll a, S301 x) { return S301(a * x); }
 #define Sum_Zmodule S301, op301, o301, inv301, mul301
@@ -26,7 +26,7 @@ S301 mul301(ll a, S301 x) { return S301(a * x); }
 //yæZ Z-‰ÁŒQz
 using S302 = mint;
 S302 op302(S302 x, S302 y) { return x * y; }
-S302 o302() { return 1; }
+S302 o302() { return S302(1); }
 S302 inv302(S302 x) { return x.inv(); } // ’x‚¢
 S302 mul302(ll a, S302 x) { return x.pow(a); } // ’x‚¢
 #define Mul_Zmodule S302, op302, o302, inv302, mul302
@@ -36,8 +36,8 @@ S302 mul302(ll a, S302 x) { return x.pow(a); } // ’x‚¢
 /* verify : https://atcoder.jp/contests/jsc2021/tasks/jsc2021_h */
 using S303 = ll;
 S303 op303(S303 x, S303 y) { return x ^ y; }
-S303 o303() { return 0; }
+S303 o303() { return S303(0); }
 S303 inv303(S303 x) { return x; }
-S303 mul303(ll a, S303 x) { return a & 1 ? x : 0; }
+S303 mul303(ll a, S303 x) { return a & 1LL ? x : S303(0); }
 #define XOR_Zmodule S303, op303, o303, inv303, mul303
 

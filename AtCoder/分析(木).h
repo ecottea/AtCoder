@@ -2,7 +2,6 @@
 #include "header.h"
 #include "構造(グラフ).h"
 #include "木DP.h"
-#include "最短路.h"
 // ■■■■■ 木の性質の分析 ■■■■■
 
 
@@ -65,7 +64,7 @@ int tree_diameter(const Graph& g, vi* path = nullptr) {
 			// 発見済みの頂点なら何もしない．
 			if (dist[t] != INF) continue;
 
-			// v からの最短距離を確定する．
+			// v1 からの最短距離を確定する．
 			dist[t] = dist[s] + 1;
 			parent[t] = s;
 
@@ -88,6 +87,14 @@ int tree_diameter(const Graph& g, vi* path = nullptr) {
 
 	return d;
 }
+
+
+//【木の直径の共通部分】
+/*
+* 木 g の全ての直径の共通部分は空にはならない．
+* 
+* verify : https://yukicoder.me/problems/11626
+*/
 
 
 //【重み付き木の直径】O(n)
@@ -866,6 +873,21 @@ vi rooted_tree_classification(const Graph& g, int r) {
 }
 
 
+//【木の同型類】
+/*
+* 重心（高々 2 通り）を値とする根付き木に変換し，【根付き木の同型類】を用いればよい．
+* 重心の代わりに中心を用いることもできる．
+* 
+* verify : https://yukicoder.me/problems/11626
+*/
+
+
+//【根付き木のハッシュ】
+/*
+* 参考 : https://snuke.hatenablog.com/entry/2017/02/03/054210
+*/
+
+
 //【木の親】O(n)
 /*
 * 各 s∈[0..n) について，r を根とする木 g の頂点 s の親を格納したリストを返す（なければ -1）
@@ -1009,6 +1031,8 @@ T_hut add_vertex_hut(const T_hut& x, int s) {
 	return x;
 }
 vl height_of_undirected_tree(const Graph& g) {
+	// verify : https://atcoder.jp/contests/abc401/tasks/abc401_f
+
 	return rerooting<T_hut, leaf_hut, add_edge_hut, merge_hut, add_vertex_hut>(g);
 }
 

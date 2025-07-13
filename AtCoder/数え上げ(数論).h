@@ -379,6 +379,114 @@ ll count_square_free(ll N) {
 }
 
 
+//【整数の数え上げ（素因数分解の型ごと）】O(n^(3/4))
+/*
+* x = p^a q^b r^c ... のとき，多重集合 {a,b,c,...} を降順ソートしたものを x の素因数分解の型と呼ぶ．
+* 各素因数分解の型 tp に対し，[1..n] 内の型 tp をもつ整数の個数を格納したリストを返す．
+*/
+map<vi, ll> count_by_prime_signature(ll n) {
+	// verify : https://mojacoder.app/users/shobonvip/problems/shobonvip_pqrst/editorial
+
+	int m = (int)(sqrt(n) + 1e-9);
+
+	// 1 と素数の昇順リスト
+	vl ps{ 1 };
+
+	// cnt0_p[v] : [2..v] 内の p 以下の素数で篩い終えた後残っている数の個数
+	// cnt1_p[v] : [2..n/v] 内の p 以下の素数で篩い終えた後残っている数の個数
+	vl cnt0(m + 1), cnt1(m + 1);
+
+	repi(v, 1, m) {
+		cnt0[v] = v - 1;
+		cnt1[v] = n / v - 1;
+	}
+
+	repi(p, 2, m) {
+		ll c = cnt0[p - 1];
+
+		// p が素数でなければ次の p へ
+		if (cnt0[p] == c) continue;
+		ps.push_back(p);
+
+		// cnt1 の更新
+		repi(v, 1, m) {
+			// p^2 > n/v なら更新不要
+			if (p > n / v / p) break;
+
+			if (v <= m / p) {
+				cnt1[v] -= cnt1[v * p] - c;
+			}
+			else {
+				cnt1[v] -= cnt0[n / v / p] - c;
+			}
+		}
+
+		// cnt0 の更新
+		repir(v, m, 1) {
+			// p^2 > v なら更新不要
+			if (p > v / p) break;
+
+			cnt0[v] -= cnt0[v / p] - c;
+		}
+	}
+
+	map<vi, ll> cnt;
+	cnt[{}]++;
+
+	// s     : 注目頂点
+	// i_gpf : s の最大素因数が何番目の素数か
+	// tp    : 素因数分解の型（順序付き）
+	function<void(ll, int, vi)> dfs = [&](ll s, int i_gpf, vi tp) {
+		ll p = ps[i_gpf];
+
+		// s の最小の子 s * p からの寄与を加算する．
+		if (s != 1) {
+			tp.back()++;
+			cnt[tp]++;
+			tp.back()--;
+		}
+
+		// その他の s の子からの寄与をまとめて加算する．
+		if (s <= m) {
+			tp.push_back(1);
+			cnt[tp] += cnt1[s] - cnt0[p];
+			tp.pop_back();
+		}
+		else {
+			tp.push_back(1);
+			cnt[tp] += cnt0[n / s] - cnt0[p];
+			tp.pop_back();
+		}
+
+		// s の最小の子 s * p を探索する．
+		if (s != 1 && s <= n / (p * p)) {
+			tp.back()++;
+			dfs(s * p, i_gpf, tp);
+			tp.back()--;
+		}
+
+		// その他の s の子を探索する．
+		tp.push_back(1);
+		for (int i = i_gpf + 1; i < sz(ps) && s <= n / (ps[i] * ps[i]); i++) {
+			dfs(s * ps[i], i, tp);
+		}
+	};
+	dfs(1, 0, vi());
+
+	// 素因数分解の型の順序を無視してまとめ直す．
+	map<vi, ll> cnt2;
+	repe(tmp, cnt) {
+		if (tmp.second == 0) continue;
+
+		auto es = tmp.first;
+		sort(all(es), greater<int>());
+		cnt2[es] += tmp.second;
+	}
+
+	return cnt2;
+}
+
+
 //【二元一次不定方程式の解の数え上げ】
 /*
 * GCD.h へ

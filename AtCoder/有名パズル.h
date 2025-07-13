@@ -16,39 +16,46 @@ vi N_queen_problem(int n, const vi& x0, const vi& y0) {
 	// verify : https://atcoder.jp/contests/arc001/tasks/arc001_3
 
 	int k = sz(x0);
-	
-	unordered_map<int, int> x_to_y;
+
+	vi x2y(n, -1);
 	rep(i, k) {
 		// 同じ行に 2 つクイーンがある場合は明らかに不可能．
-		if (x_to_y.count(x0[i])) return vi();
+		if (x2y[x0[i]] != -1) return vi();
 
-		x_to_y[x0[i]] = y0[i];
+		x2y[x0[i]] = y0[i];
 	}
 
+	// p[i] : i 行目のクイーンを何列目に置くか
 	vi p(n);
 	iota(all(p), 0);
 
-	// p[i] : i 行目のクイーンを何列目に置くか
 	// 順列全探索を行うので，各行各列に 1 つずつであることまでは保証されている．
 	repp(p) {
-		vb rd(2 * n - 1), ld(2 * n - 1);
-
-		// 初期配置と矛盾がないかのチェック
-		for (auto [x, y] : x_to_y) if (p[x] != y) goto NEXT_LOOP;
+		vb rd(2 * n - 1), ld(2 * n - 1); bool ok = true;
 
 		rep(i, n) {
+			// 初期配置と矛盾がないかのチェック
+			if (x2y[i] != -1 && x2y[i] != p[i]) {
+				ok = false;
+				break;
+			}
+
 			// 左下がりの対角線方向のチェック
-			if (ld[i + p[i]]) goto NEXT_LOOP;
+			if (ld[i + p[i]]) {
+				ok = false;
+				break;
+			}
 			ld[i + p[i]] = true;
 
 			// 右下がりの対角線方向のチェック
-			if (rd[i - p[i] + n - 1]) goto NEXT_LOOP;
+			if (rd[i - p[i] + n - 1]) {
+				ok = false;
+				break;
+			}
 			rd[i - p[i] + n - 1] = true;
 		}
 
-		return p;
-
-	NEXT_LOOP:;
+		if (ok) return p;
 	}
 
 	return vi();
@@ -214,6 +221,15 @@ int solve_15puzzle(const vvi& a_, int max_step = 45) {
 
 	return -1;
 }
+
+
+//【スライドパズル】
+/*
+* スライドパズルが解けるための必要十分条件は，
+* パネルおよび空きマスの置換の偶奇と空きマスの移動距離の偶奇が一致することである．
+* 
+* verify : https://yukicoder.me/problems/no/3131
+*/
 
 
 //【こおりのぬけみち】O(n log n)

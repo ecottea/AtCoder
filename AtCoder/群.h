@@ -26,15 +26,25 @@ S601 inv601(S601 a) { return -a; }
 
 
 //【総積 アーベル群】
-/* verify : https://mojacoder.app/users/shogo314/problems/rectangle_product */
-using S602 = mint;
+using S602 = double;
 S602 op602(S602 a, S602 b) { return a * b; }
-S602 e602() { return 1; }
-S602 inv602(S602 a) { return a.inv(); }
+S602 e602() { return S602(1); }
+S602 inv602(S602 a) { return S602(1) / a; }
 #define Mul_group S602, op602, e602, inv602
 
 
+//【有限体上 総積 アーベル群】
+/* verify : https://yukicoder.me/problems/no/3026 */
+using T611 = mint;
+using S611 = pair<T611, T611>;
+S611 op611(S611 a, S611 b) { return { a.first * b.first, a.second * b.second }; }
+S611 e611() { return { T611(1), T611(1) }; }
+S611 inv611(S611 a) { return { a.second, a.first }; }
+#define FpMul_group S611, op611, e611, inv611
+
+
 //【XOR アーベル群】
+/* verify : // verify : https://codeforces.com/contest/869/problem/E */
 using S603 = int;
 S603 op603(S603 a, S603 b) { return a ^ b; }
 S603 e603() { return 0; }
@@ -44,7 +54,7 @@ S603 inv603(S603 a) { return a; }
 
 //【可逆アフィン変換の合成 群】
 /*
-* S ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．（a != 0）
+* S ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．（a ≠ 0）
 * f op g : 合成した一次関数 f o g を返す．
 *
 * 正則行列 (a, b; 0, 1) の全体が積に関して作っている群ともみなせる．
@@ -61,11 +71,11 @@ S604 op604(S604 f, S604 g) {
 }
 S604 e604() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 S604 inv604(S604 f) {
-	mint a, b;
-	tie(a, b) = f; // f(x) = a x + b;
+	auto [a, b] = f; // f(x) = a x + b;
 
 	// f(x) = a x + b ⇔ x = (1/a) f(x) - b/a
-	return { a.inv(), -b / a };
+	mint a_inv = a.inv();
+	return { a_inv, -b * a_inv };
 }
 #define AffineComposite_group S604, op604, e604, inv604
 
@@ -91,7 +101,8 @@ S608 inv608(S608 f) {
 	auto [a, b] = f; // f(x) = a x + b;
 
 	// f(x) = a x + b ⇔ x = (1/a) f(x) - b/a
-	return { a.inv(), -b / a };
+	mint a_inv = a.inv();
+	return { a_inv, -b * a_inv };
 }
 #define AffineInvComposite_group S608, op608, e608, inv608
 

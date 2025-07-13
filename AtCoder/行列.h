@@ -73,7 +73,7 @@ struct Matrix {
 		rep(i, a.n) rep(j, a.m) is >> a.v[i][j];
 		return is;
 	}
-	
+
 	// 行の追加
 	void push_back(const vector<T>& a) {
 		Assert(sz(a) == m);
@@ -87,9 +87,19 @@ struct Matrix {
 		v.pop_back();
 		n--;
 	}
+
+	// サイズ変更
 	void resize(int n_) {
 		v.resize(n_);
 		n = n_;
+	}
+
+	void resize(int n_, int m_) {
+		n = n_;
+		m = m_;
+
+		v.resize(n);
+		rep(i, n) v[i].resize(m);
 	}
 
 	// 空か
@@ -305,18 +315,32 @@ struct Fixed_matrix {
 };
 
 
-//【階段行列】O(n^2 m)
+//【転置】O(n m)
 /*
-* 行基本変形で n×m 行列 mat を階段行列に変形する．
-* 最も右下のピボットの位置 (i, j) を返す．零行列なら (-1, -1) を返す．
+* n×m 行列 A を転置した m×n 行列を返す．
 */
 template <class T>
-pii reduced_row_echelon_form(Matrix<T>& mat) {
+Matrix<T> transpose(const Matrix<T>& A) {
+	int n = A.n, m = A.m;
+
+	Matrix<T> AT(m, n);
+	rep(i, n) rep(j, m) AT[j][i] = A[i][j];
+
+	return AT;
+}
+
+
+//【階段行列】O(n^2 m)
+/*
+* 行基本変形で n×m 行列 A を階段行列に変形し，A の階数を返す．
+* また必要ならピボット位置 (i,j) の昇順リストを piv に格納する．
+*/
+template <class T>
+int reduced_row_echelon_form(Matrix<T>& A, vector<pii>* piv = nullptr) {
 	// verify : https://judge.yosupo.jp/problem/matrix_rank
 
-	int n = mat.n, m = mat.m;
-	auto& v = mat.v;
-	
+	int n = A.n, m = A.m;
+
 	// 直前に見つけたピボットの位置
 	int pi = -1, pj = -1;
 
@@ -326,7 +350,7 @@ pii reduced_row_echelon_form(Matrix<T>& mat) {
 	while (i < n && j < m) {
 		// 同じ列の下方の行から非 0 成分を見つける．
 		int i2 = i;
-		while (i2 < n && v[i2][j] == 0) i2++;
+		while (i2 < n && A[i2][j] == 0) i2++;
 
 		// 見つからなかったら注目位置を右に移す．
 		if (i2 == n) {
@@ -336,29 +360,30 @@ pii reduced_row_echelon_form(Matrix<T>& mat) {
 
 		// 見つかったら第 i 行とその行を入れ替える．
 		pi = i; pj = j;
-		if (i != i2) swap(v[i], v[i2]);
+		if (i != i2) swap(A[i], A[i2]);
+		if (piv) piv->emplace_back(pi, pj);
 
 		// v[i][j] が 1 になるよう行全体を v[i][j] で割る．
-		T vij_inv = T(1) / v[i][j];
-		repi(j2, j, m - 1) v[i][j2] *= vij_inv;
-		
+		T Aij_inv = T(1) / A[i][j];
+		repi(j2, j, m - 1) A[i][j2] *= Aij_inv;
+
 		// v[i][j] より下方の行の成分が全て 0 になるよう i 行目を定数倍して減じる．
 		repi(i2, i + 1, n - 1) {
-			T mul = v[i2][j];
-			repi(j2, j, m - 1) v[i2][j2] -= v[i][j2] * mul;
+			T mul = A[i2][j];
+			repi(j2, j, m - 1) A[i2][j2] -= A[i][j2] * mul;
 		}
 
 		//// v[i][j] より上方の行の成分も全て 0 にしたい場合はこれも実行する．
 		//repi(i2, 0, i - 1) {
-		//	T mul = v[i2][j];
-		//	repi(j2, j, m - 1) v[i2][j2] -= v[i][j2] * mul;
+		//	T mul = A[i2][j];
+		//	repi(j2, j, m - 1) A[i2][j2] -= A[i][j2] * mul;
 		//}
 
 		// 注目位置を右下に移す．
 		i++; j++;
 	}
 
-	return { pi, pj };
+	return pi + 1;
 }
 
 
@@ -549,7 +574,7 @@ vector<T> gauss_jordan_elimination_diagonal(vector<vector<T>> a, vector<T> b) {
 
 	rep(i, n) {
 		// i 行目の係数を左から走査し非 0 を見つける．
-		int j = i - k, j_max = min(n - 1, i + k);
+		int j = max(i - k, 0), j_max = min(n - 1, i + k);
 		for (; j <= j_max; j++) if (a[i][k - i + j] != T(0)) break;
 
 		// 非 0 成分が無かった場合は不定または不能
@@ -644,6 +669,225 @@ vd functional_equation(const vi& f, const vector<T>& a, const vector<T>& b) {
 	rep(s, n) if (id[s] != -2) rf2(s);
 
 	return res;
+}
+
+
+//【線形回帰】O(cnt dim min(cnt, dim))
+/*
+* get_sample() で得た cnt 個のサンプル点を元に線形回帰を行い係数列を返す（失敗すれば空リスト）
+* code には，変数不足なら -(不足量)，さもなくば斉次方程式の解空間の次元を格納する．
+*
+* 利用：【行列】,【線形方程式】
+*/
+template <class FUNC>
+vm linear_regression(const FUNC& get_sample, int cnt, int* code = nullptr) {
+	// verify : https://mofecoder.com/contests/oupc2024day2/tasks/oupc2024day2_a
+
+	Matrix<mint> A(cnt, 0); vm b(cnt);
+
+	// 説明変数と目的変数の対を cnt 個用意する．
+	rep(i, cnt) {
+		auto [vec, ans] = get_sample();
+		A[i] = vec;
+		b[i] = ans;
+	}
+	A.m = sz(A.v[0]);
+
+	// 説明変数の数以上にデータがないといつでも非自明解をもってしまって意味がない（とも限らない）
+	if (A.n < A.m) {
+		if (code) *code = A.n - A.m;
+		return vm();
+	}
+
+	// 行列方程式 A x = b を解いて特殊解 x を求める．
+	vvm xs;
+	auto x = gauss_jordan_elimination(A, b, &xs);
+	if (code) *code = sz(xs);
+	//dumpel(xs);
+
+	// 解が係数列なのでそれを返す（解がなければ説明変数が足りておらず失敗）
+	return x;
+
+	/* 雛形
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<ll> rnd(0, (ll)1e18);
+
+	int sample_num = -1;
+
+	auto get_sample = [&]() {
+		++sample_num;
+
+		// テストケースのランダム生成
+		int a = (int)(rnd(mt) % 11 - 5);
+		int b = (int)(rnd(mt) % 11 - 5);
+		string s;
+		rep(k, 8) s += "01"[rnd(mt) % 2];
+
+		// 手動で入れたいケースがある場合はここで作成する．
+		if (sample_num == -1) {
+			;
+		}
+		// 係数を決め打って自由度を殺したい場合はここに追加する．
+		else if (sample_num == -2) {
+			// coef[0] = 1 に決め打ち
+			vm vec(n + 1); vec[0] = 1;
+			mint ans = 1;
+			return make_pair(vec, ans);
+		}
+
+		// テストケースから説明変数ベクトルを作成
+		vm vec{ 1 };
+		vec.push_back(a);
+		vec.push_back(b);
+		vec.push_back(min(a, b));
+
+		// 目的変数の計算
+		mint ans = naive(a, b, s);
+
+		// 説明変数と目的変数の対を返す
+		return make_pair(vec, ans);
+	};
+
+	int code;
+	auto coef = linear_regression(get_sample, 500, &code);
+	dump(coef); dump("code:", code);
+	*/
+}
+
+
+//【線形回帰（ラベル毎）】O(cnt dim min(cnt, dim))
+/*
+* get_sample() で得た cnt 個のサンプル点（L 種のラベル付き）を元に線形回帰を行い，
+* 各ラベル lab 毎に係数列をまとめた二次元リストを返す（失敗すれば空リスト）
+* code[lab] には，変数不足なら -(不足量)，さもなくば斉次方程式の解空間の次元を格納する．
+*
+* 利用：【行列】,【線形方程式】
+*/
+template <class FUNC>
+vvm linear_regression(const FUNC& get_sample, int cnt, int L, vi* code = nullptr) {
+	// verify : https://atcoder.jp/contests/abc271/submissions/35791883
+
+	vector<Matrix<mint>> As(L);
+	vvm bs(L);
+
+	// 説明変数と目的変数の対を cnt 個用意する．
+	rep(i, cnt) {
+		auto [vec, lab, ans] = get_sample();
+		As[lab].push_back(vec);
+		bs[lab].push_back(ans);
+	}
+
+	vvm res(L);
+	if (code) code->resize(L);
+
+	rep(lab, L) {
+		// サンプルが 1 つもないラベルは無視する．
+		if (bs[lab].empty()) {
+			if (code) (*code)[lab] = 999;
+			continue;
+		}
+
+		// 説明変数の数以上にデータがないといつでも非自明解をもってしまって意味がない（とも限らない）
+		As[lab].m = sz(As[lab].v[0]);
+		if (As[lab].n < As[lab].m) {
+			if (code) (*code)[lab] = As[lab].n - As[lab].m;
+			continue;
+		}
+
+		// 行列方程式 A x = b を解いて特殊解 x を求める．
+		vvm xs;
+		auto x = gauss_jordan_elimination(As[lab], bs[lab], &xs);
+		if (code) (*code)[lab] = sz(xs);
+
+		// 解が係数列なのでそれを返す（解がなければ説明変数が足りておらず失敗）
+		res[lab] = x;
+	}
+
+	return res;
+
+	/* 雛形
+	mt19937_64 mt((int)time(NULL));
+	uniform_int_distribution<ll> rnd(0, (ll)1e18);
+
+	int sample_num = -1;
+
+	auto get_sample = [&]() {
+		++sample_num;
+
+		// テストケースのランダム生成
+		int a, b; string s;
+		while (1) {
+			a = (int)(rnd(mt) % 21 - 10);
+			b = (int)(rnd(mt) % 21 - 10);
+			if (abs(a) <= 3 && abs(b) <= 3) continue;
+
+			rep(k, 8) s += "01"[rnd(mt) % 2];
+			break;
+		}
+
+		// 手動で入れたいケースがある場合はここで作成する．
+		if (sample_num == -1) {
+			;
+		}
+		// 係数を決め打って自由度を殺したい場合はここに追加する．
+		else if (sample_num == -2) {
+			// coef[0] = 1 に決め打ち
+			vm vec(n + 1); vec[0] = 1;
+			mint ans = 1;
+			return make_pair(vec, ans);
+		}
+
+		// テストケースから説明変数ベクトルを作成
+		vm vec{ 1 };
+		vec.push_back(a);
+		vec.push_back(b);
+		vec.push_back(min(a, b));
+
+		// テストケースからラベルを作成
+		int lab = 0;
+		if (a + b > 0 && b == 0) lab = 0;
+		else if (a - b > 0 && b > 0) lab = 1;
+		else if (a - b == 0 && b > 0) lab = 2;
+		else if (a - b < 0 && a > 0) lab = 3;
+		else if (a - b < 0 && a == 0) lab = 4;
+		else if (a + b > 0 && a < 0) lab = 5;
+		else if (a + b == 0 && a < 0) lab = 6;
+		else if (a + b < 0 && b > 0) lab = 7;
+		else if (a + b < 0 && b == 0) lab = 8;
+		else if (a - b < 0 && b < 0) lab = 9;
+		else if (a - b == 0 && b < 0) lab = 10;
+		else if (a - b > 0 && a < 0) lab = 11;
+		else if (a - b > 0 && a == 0) lab = 12;
+		else if (a + b < 0 && a > 0) lab = 13;
+		else if (a + b == 0 && a > 0) lab = 14;
+		else if (a + b > 0 && b < 0) lab = 15;
+
+		lab *= 2;
+		lab += a & 1;
+
+		lab *= 2;
+		lab += b & 1;
+
+		rep(k, 8) {
+			lab *= 2;
+			lab += s[k] - '0';
+		}
+
+		// 目的変数の計算
+		mint ans = naive(a, b, s);
+
+		// 説明変数と目的変数の対を返す
+		return make_tuple(vec, lab, ans);
+	};
+
+	vi code;
+	auto coef = linear_regression(get_sample, 1000000, 16*2*2*(1<<8), &code);
+	int L = sz(coef);
+
+	unordered_map<int, int> code_dist;
+	repe(c, code) code_dist[c]++;
+	dump("code_dist:"); dumpel(code_dist);
+	*/
 }
 
 
@@ -765,7 +1009,7 @@ mint determinant_arbitrary_mod(const Matrix<mint>& mat) {
 *
 * 制約：fm は n! まで計算可能
 *
-* 利用：【逆行列】,【行列式】，【特性多項式（mod 998244353）】
+* 利用：【逆行列】,【行列式】，【特性多項式（mod 998244353）】,【平行移動】
 */
 MFPS determinant_FPS_1deg(const Matrix<mint>& A, const Matrix<mint>& B, const Factorial_mint& fm) {
 	// verify : https://yukicoder.me/problems/no/1907
@@ -854,6 +1098,71 @@ T determinant_arbitrary(const Matrix<T>& mat) {
 /*
 * FPS(mint).h の【差積】を用いれば良い．
 */
+
+
+//【パフィアン】O(n^3)
+/*
+* n 次交代行列 mat のパフイアンを返す．
+*/
+template <class T>
+T pfaffian(const Matrix<T>& mat) {
+	// verify : https://judge.yosupo.jp/problem/pfaffian_of_matrix
+
+	//【方法】
+	// 等式
+	//		Pf(P A P^T) = det(P) Pf(A)
+	// を利用するため，A を 3 重対角行列に変形する．
+	// 3 重対角行列のパフィアンは上副対角成分を 1 つおきに掛けることで容易に求まる．
+
+	int n = mat.n;
+	if (n & 1) return T(0);
+
+	auto v = mat.v;
+
+	// 対角の 1 つ下を掛けていくので，あらかじめ符号のズレを補正しておく．
+	mint res = (n & 2 ? -1 : 1);
+
+	// i : 行番号
+	repi(i, 1, n - 1) {
+		// 同じ列の下方の行から非 0 成分を見つける．
+		int i2 = i;
+		while (i2 < n && v[i2][i - 1] == T(0)) i2++;
+
+		// 見つからなかったら次の列へ．
+		if (i2 == n) {
+			// 0 が確定した場合は打ち切って終了．
+			if (i & 1) return 0;
+
+			continue;
+		}
+
+		// i2 行目に見つかったら i 行目と i2 行目を入れ替える．
+		if (i2 != i) {
+			swap(v[i], v[i2]);
+
+			// 後に影響があるので i 列目と i2 列目も入れ替える．
+			repi(i3, i, n - 1) swap(v[i3][i], v[i3][i2]);
+
+			// パフィアンの値は -1 倍される．
+			res *= -1;
+		}
+
+		// v[i][i-1] が 1 になるよう行全体を v[i][i-1] で割る．
+		// 奇数行目ならパフィアンの値も更新する．
+		if (i & 1) res *= v[i][i - 1];
+		T vij_inv = T(1) / v[i][i - 1];
+		repi(j2, i - 1, n - 1) v[i][j2] *= vij_inv;
+
+		// v[i][i-1] より下方の行の成分が全て 0 になるよう i 行目を定数倍して減じる．
+		// これは列方向の操作をサボってもなぜか後に影響しないのでサボる．
+		repi(i2, i + 1, n - 1) {
+			T mul = v[i2][i - 1];
+			repi(j2, i - 1, n - 1) v[i2][j2] -= v[i][j2] * mul;
+		}
+	}
+
+	return res;
+}
 
 
 //【パーマネント】O(2^n n)
@@ -1006,6 +1315,8 @@ Matrix<T> inverse_matrix(const Matrix<T>& mat) {
 */
 template <class T>
 int rank_normal_form(const Matrix<T>& a, Matrix<T>& p, Matrix<T>& q) {
+	// verify : https://judge.yosupo.jp/problem/adjugate_matrix
+
 	int n = a.n, m = a.m;
 
 	// 元の行列 mat と単位行列を繋げた拡大行列を作る．
@@ -1070,8 +1381,8 @@ int rank_normal_form(const Matrix<T>& a, Matrix<T>& p, Matrix<T>& q) {
 		if (j != j2) rep(i2, n + m) swap(v[i2][j], v[i2][j2]);
 
 		// v[i][j] が 1 になるよう列全体を v[i][j] で割る．
-		T div = T(1) / v[i][j];
-		repi(i2, i, n + m - 1) v[i2][j] *= div;
+		T vij_inv = T(1) / v[i][j];
+		repi(i2, i, n + m - 1) v[i2][j] *= vij_inv;
 
 		// v[i][j] と同じ行の成分が全て 0 になるよう j 列目を定数倍して減じる．
 		rep(j2, m) {

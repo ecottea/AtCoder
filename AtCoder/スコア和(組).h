@@ -85,7 +85,7 @@ mint pair_difference_sum(vector<T> a) {
 }
 
 
-//【組の XOR の総和】O((n + m) log A)（A = max(a, b)）
+//【組の XOR の総和】O((n + m) log A)（A=max(a,b)）
 /*
 * Σi∈[0..n) Σj∈[0..m) (a[i] XOR b[j]) の値を返す．
 */
@@ -113,7 +113,7 @@ T pair_xor_sum(const vl& a, const vl& b) {
 }
 
 
-//【組の XOR の総和】O(n + m + A log A)（A = max(a, b)）
+//【組の XOR の総和】O(n + m + A log A)（A=max(a,b)）
 /*
 * Σi∈[0..n) Σj∈[0..m) (a[i] XOR b[j]) の値を返す．
 *
@@ -160,7 +160,7 @@ T pair_xor_sum(const vi& a, const vi& b) {
 */
 
 
-//【組の和の総 XOR】O(n log m log A)（A = max(a[i], b[j])）
+//【組の和の総 XOR】O(n log m log A)（A=max(a,b)）
 /*
 * XOR_i∈[0..n) XOR_j∈[0..m) (a[i] + b[j]) の値を返す．
 */
@@ -210,7 +210,7 @@ int pair_sum_xor(const vi& a, const vi& b) {
 }
 
 
-//【組の GCD の総和】O(n + A log(log A))（A = max(a[i], b[j])）
+//【組の GCD の総和】O(n + A log(log A))（A=max(a,b)）
 /*
 * Σi∈[0..n) Σj∈[0..m) GCD(a[i], b[j]) の値を返す．
 *
@@ -233,7 +233,7 @@ T pair_gcd_sum(const vi& a, const vi& b) {
 	rep(i, n) cnt_a[a[i]]++;
 	rep(j, m) cnt_b[b[j]]++;
 
-	Div_mul_transform<T> g(A);
+	Div_mul_transform g(A);
 	auto cnt = g.gcd_convolution(cnt_a, cnt_b);
 
 	T res = 0;
@@ -250,10 +250,12 @@ T pair_gcd_sum(const vi& a, const vi& b) {
 * の形や，GCD 加重和
 *	Σx Σy u[x] v[y] GCD(x, y)
 * の形を GCD 畳込みを用いて高速に計算できる．
+* 
+* verify : https://atcoder.jp/contests/pakencamp-2024-day1/tasks/pakencamp_2024_day1_o
 */
 
 
-//【組の LCM の総和】O(n + m + A log(log A))（A = max(a[i], b[j])）
+//【組の LCM の総和】O(n + m + A log(log A))（A=max(a,b)）
 /*
 * Σi∈[0..n) Σj∈[0..m) LCM(a[i], b[j]) の値を返す．
 *
@@ -279,7 +281,7 @@ mint pair_lcm_sum(const vi& a, const vi& b) {
 	rep(i, n) a_cnt[a[i]] += a[i];
 	rep(j, m) b_cnt[b[j]] += b[j];
 
-	Div_mul_transform<mint> g(A);
+	Div_mul_transform g(A);
 	auto c = g.gcd_convolution(a_cnt, b_cnt);
 
 	Factorial_mint fm(A);
@@ -290,13 +292,13 @@ mint pair_lcm_sum(const vi& a, const vi& b) {
 }
 
 
-//【組の整数商の総和】O(n + m + A log A)（A = max(a[i])）
+//【組の整数商の総和】O(n + m + A log A)（A=max(a)）
 /*
 * Σi∈[0..n) Σj∈[0..m) floor(a[i] / b[j]) の値を返す．
 *
 * 制約：b[j] ≧ 1
 *
-* 利用：【整数商畳込み】
+* 利用：【切り捨て商畳込み（商ごと）】
 */
 template <class T>
 T pair_floordiv_sum(const vi& a, const vi& b) {
@@ -308,7 +310,7 @@ T pair_floordiv_sum(const vi& a, const vi& b) {
 	//		= Σx Σy u[x] v[y] floor(x / y)  （floor_div 加重和の形）
 	//		= Σq Σ(floor(x / y) = q) u[x] v[y] q
 	//		= Σq q Σ(floor(x / y) = q) u[x] v[y]
-	// と書き直せるので，整数商畳込みを用いて高速化できる．
+	// と書き直せるので，切り捨て商畳込みを用いて高速化できる．
 
 	int n = sz(a), m = sz(b);
 
@@ -332,17 +334,17 @@ T pair_floordiv_sum(const vi& a, const vi& b) {
 *	Σi∈[0..n) Σj∈[0..m) F(a[i]) G(b[j]) H(floor(a[i] / b[j]))
 * の形や，floor_div 加重和
 *	Σx Σy u[x] v[y] floor(x / y)
-* の形を整数商畳込みを用いて高速に計算できる．
+* の形を切り捨て商畳込みを用いて高速に計算できる．
 */
 
 
-//【組の剰余の総和】O(n + m + A log A)（A = max(a[i])）
+//【組の剰余の総和】O(n + m + A log A)（A=max(a)）
 /*
 * Σi∈[0..n) Σj∈[0..m) (a[i] mod b[j]) の値を返す．
 *
 * 制約：b[j] ≧ 1
 *
-* 利用：【整数商畳込み】
+* 利用：【切り捨て商畳込み（商ごと）】
 */
 template <class T>
 T pair_mod_sum(const vi& a, const vi& b) {
@@ -356,7 +358,7 @@ T pair_mod_sum(const vi& a, const vi& b) {
 	//		= Σx Σy u[x] v[y] x - Σx Σy u[x] v[y] floor(x / y) y
 	//		= (Σx x u[x])(Σy v[y]) - Σq Σ(floor(x / y) = q) u[x] v[y] q y
 	//		= Σa[0..n) m - Σq q Σ(floor(x / y) = q) u[x] (y v[y])
-	// と書き直せるので，整数商畳込みを用いて高速化できる．
+	// と書き直せるので，切り捨て商畳込みを用いて高速化できる．
 
 	int n = sz(a), m = sz(b);
 

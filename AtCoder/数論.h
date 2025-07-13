@@ -23,7 +23,7 @@ bool primeQ(ll n) {
 //y‘fˆö”•ª‰ğzO(ãn)
 /*
 * n ‚ğ‘fˆö”•ª‰ğ‚µ‚½Œ‹‰Ê‚ğ pps ‚ÉŠi”[‚µ pps ‚ğ•Ô‚·D
-* pps[p] = d ‚Í n ‚É‘fˆö” p ‚ª d ŒÂŠÜ‚Ü‚ê‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
+* pps[p] = e ‚Í n ‚É‘fˆö” p ‚ª e ŒÂŠÜ‚Ü‚ê‚Ä‚¢‚é‚±‚Æ‚ğ•\‚·D
 */
 template <class T>
 map<T, int> factor_integer(T n) {

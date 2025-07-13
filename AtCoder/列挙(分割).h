@@ -392,6 +392,36 @@ vvi ordered_integer_partitions_len(int n, int d) {
 }
 
 
+//【非負整数の順序付き分割の列挙（値指定）】O(2^n)
+/*
+* 非負整数 n を正整数列 a[0..m) の要素に順序付きで分割する方法のリストを返す．
+*/
+vvi ordered_integer_partitions_val_len(int n, vi a) {
+	uniq(a);
+
+	vvi ips;
+	vi ip;
+
+	function<void(int)> rf = [&](int s) {
+		if (s == 0) {
+			ips.push_back(ip);
+			return;
+		}
+
+		repe(x, a) {
+			if (x > s) break;
+
+			ip.push_back(x);
+			rf(s - x);
+			ip.pop_back();
+		}
+	};
+	rf(n);
+
+	return ips;
+}
+
+
 //【非負整数の順序付き分割の列挙（d 個，値指定）】O(bin(n+d-1, d-1))
 /*
 * 非負整数 n を非負整数列 a[0..m) の要素 d 個に順序付きで分割する方法のリストを返す．

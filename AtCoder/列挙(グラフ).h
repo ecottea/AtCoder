@@ -94,6 +94,55 @@ vvi enumerate_simple_path(const G& g, int ST, int GL) {
 }
 
 
+//【単純サイクルの列挙】O(?)
+/*
+* グラフ g の 単純サイクル（始点と終点が等しい）全てを格納した二次元リストを返す．
+*/
+template <class G>
+vvi enumerate_simple_cycle(const G& g) {
+	int n = sz(g);
+	vvi res;
+	vi seq; // 訪れた頂点の列
+
+	// 頂点を訪れたことを記録しておくテーブル．
+	vb seen(n);
+
+	// 再帰用の関数
+	function<void(int)> dfs = [&](int s) {
+		// s を訪れたことを記録
+		seen[s] = true;
+		seq.push_back(s);
+
+		repe(t, g[s]) {
+			// 単純サイクルを発見したら記録する（自己ループを許す）
+			if (t == seq[0]) {
+				res.push_back(seq);
+				res.back().push_back(t);
+				continue;
+			}
+
+			// 探索済なら何もしない．
+			if (seen[t]) continue;
+
+			// 始点より番号が小さい頂点には戻らない（重複防止）
+			if (t < seq[0]) continue;
+
+			// 未探索の頂点を探索しにいく．
+			dfs(t);
+		}
+
+		// s を訪れた記録を削除
+		seen[s] = false;
+		seq.pop_back();
+	};
+
+	// 始点を全通り試す．
+	rep(s, n) dfs(s);
+
+	return res;
+}
+
+
 //【連結成分の列挙】O(?)
 /*
 * 無向グラフ g の大きさ k の連結成分全てのリストを返す．
@@ -443,53 +492,62 @@ vvi enumerate_clique(const Graph& g) {
 }
 
 
-//【三角形の列挙】O(m √m log n) ?
+//【三角形の列挙】O(n + m√m)
 /*
-* 無向グラフ g の三角形 {v1, v2, v3} のリストを返す．（v1 < v2 < v3）
+* 単純無向グラフ g の三角形 {v1, v2, v3} 全てについて f(v1, v2, v3) を実行する．
 */
-vector<tuple<int, int, int>> enumerate_triangles(const Graph& g) {
+template <class FUNC>
+void enumerate_triangles(const Graph& g, const FUNC& f) {
+	// 参考 : https://www.slideshare.net/slideshow/trianguler/38443802
 	// verify : https://judge.yosupo.jp/problem/enumerate_triangles
+
+	//【備考】
+	// 使い道の例 : https://ssrs.hatenablog.com/entry/2024/11/23/061141
+
+	//【注意】
+	// 単純グラフでないと計算量が爆発する（多重 C_3 など）
+	// 重み付き単純グラフにすれば数え上げくらいならできる．
 
 	int n = sz(g);
 
-	// gD : g の s → t (s < t) なる辺のみからなる DAG
+	// deg[s] : 頂点 s の次数
+	vi deg(n);
+	rep(s, n) deg[s] = sz(g[s]);
+
+	// p[i] : 次数が昇順 i 番目の頂点
+	vi p(n);
+	iota(all(p), 0);
+	sort(all(p), [&](int l, int r) { return deg[l] < deg[r]; });
+
+	// q[s] : 頂点 s の次数が昇順何番目か
+	vi q(n);
+	rep(i, n) q[p[i]] = i;
+
+	// gD : g の s→t (q[s] < q[t]) なる辺のみからなる DAG
+	// 全ての頂点 v について v の出次数が O(√m) である．
 	Graph gD(n);
-	rep(s, n) repe(t, g[s]) if (s < t) gD[s].push_back(t);
+	rep(s, n) repe(t, g[s]) if (q[s] < q[t]) gD[s].push_back(t);
 
-	// d[s] : gD の頂点 s の出次数
-	vi d(n);
-	rep(s, n) {
-		d[s] = sz(gD[s]);
-		sort(all(gD[s])); // 辺は行き先について昇順ソートしておく
+	// 入辺の存在を記録する（使い回す）
+	vi e_in(n, -1); int id = 0;
+
+	// 全ての辺 s→t をチェックする．
+	repe(s, p) repe(t, gD[s]) {
+		// 辺 s→u をもつ頂点 u を記録する．
+		repe(u, gD[s]) e_in[u] = id;
+
+		// 辺 t→u をもてば三角形 {s, t, u} が見つかる．
+		repe(u, gD[t]) if (e_in[u] == id) f(s, t, u);
+
+		id++;
 	}
 
-	vector<tuple<int, int, int>> res;
-
-	rep(s, n) repe(t, gD[s]) {
-		if (d[s] < d[t]) {
-			// 辺 s→u をもつ各 u について，辺 t→u が存在するかを二分探索で調べる．
-			repir(j, sz(gD[s]) - 1, 0) {
-				int u = gD[s][j];
-				if (u <= t) break;
-
-				auto it = lower_bound(all(gD[t]), u);
-				if (it != gD[t].end() && *it == u) {
-					res.emplace_back(s, t, u);
-				}
-			}
-		}
-		else {
-			// 辺 t→u をもつ各 u について，辺 s→u が存在するかを二分探索で調べる．
-			repe(u, gD[t]) {
-				auto it = lower_bound(all(gD[s]), u);
-				if (it != gD[s].end() && *it == u) {
-					res.emplace_back(s, t, u);
-				}
-			}
-		}
-	}
-
-	return res;
+	/* 関数 f の雛形
+	auto f = [&](int v1, int v2, int v3) {
+		res += x[v1] * x[v2] * x[v3];
+	};
+	enumerate_triangles(g, f);
+	*/
 }
 
 
@@ -524,3 +582,11 @@ WGraph enumerate_edge_on_shortest_path(const WGraph& g, int ST, int GL) {
 /*
 * マッチング(一般).h へ
 */
+
+
+//【独立集合の列挙】
+/*
+* 分析(グラフ).h の【独立集合判定（一括）】を用いれば良い．
+*/
+
+

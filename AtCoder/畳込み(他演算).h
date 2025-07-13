@@ -22,6 +22,12 @@ vector<T> naive_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
 }
 
 
+//【max-plus 畳込み（二項式）】
+/*
+* ナップサック問題である．
+*/
+
+
 //【max-plus 畳込み（広義単調減少）】O(n m)
 /*
 * 広義単調減少な数列 a, b を max-plus 代数にて畳み込んだ数列 c は広義単調減少である．
@@ -59,6 +65,9 @@ vector<T> concave_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
 	//
 	// c[3] 以降も同様に考え候補を 2 つに絞ることができる．
 
+	//【備考】
+	// chmin(-,INFL) を付けないとオーバーフローが怖いが，付けると凸性の破壊が怖い．
+
 	int n = sz(a), m = sz(b);
 
 	// 一方が空数列だった場合は空数列を返す．
@@ -81,6 +90,13 @@ vector<T> concave_max_plus_convolution(const vector<T>& a, const vector<T>& b) {
 
 	return c;
 }
+
+
+//【max-plus 畳込み（上に凸）と階差】
+/*
+* 上に凸な数列 a[0..n), b[0..m) を max-plus 代数にて畳み込んだ上に凸な数列 c[0..n+m-1) は，
+* 初項は c[0] = a[0] + b[0]，階差は a, b の階差のマージで得られる．
+*/
 
 
 //【max-plus 畳込み（片方が上に凸）】O(n log(n + m) + m)

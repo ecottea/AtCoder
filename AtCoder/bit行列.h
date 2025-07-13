@@ -24,10 +24,10 @@
 * A * x : O(n M / 64)
 *	n×m 行列 A と m 次元列ベクトル x の積を返す．
 *
-* A * B : O(n m l)
+* A * B : O(n m l / 64)
 *	n×m 行列 A と m×l 行列 B の積を返す．
 *
-* Bit_matrix<M> pow(ll d) : O(n^3 log d)
+* Bit_matrix<M> pow(ll d) : O(n^3 log d / 64)
 *	自身を d 乗した行列を返す．
 *
 * Bit_matrix<M> transpose() : O(n m)
@@ -66,7 +66,10 @@ struct Bit_matrix {
 	inline bitset<M>& operator[](int i) { return v[i]; }
 
 	// 行の追加
-	void push_back(const bitset<M>& col) { v.push_back(col); n++; }
+	void push_back(const bitset<M>& col) {
+		v.push_back(col);
+		n++;
+	}
 
 	// 行列ベクトル積
 	bitset<M> operator*(const bitset<M>& x) const {
@@ -77,16 +80,21 @@ struct Bit_matrix {
 
 	// 積
 	Bit_matrix operator*(const Bit_matrix& b) const {
+		// verify : https://judge.yosupo.jp/problem/matrix_product_mod_2
+
+		vector<bitset<M>> bT(b.m);
+		rep(i, b.n) rep(j, b.m) bT[j][i] = b[i][j];
+
 		Bit_matrix res(n, b.m);
-		rep(i, res.n) rep(j, res.m) rep(k, m) res[i][j] = res[i][j] ^ (v[i][k] & b[k][j]);
+		rep(i, res.n) rep(j, res.m) res[i][j] = (v[i] & bT[j]).count() % 2;
 		return res;
 	}
 	Bit_matrix& operator*=(const Bit_matrix& b) { *this = *this * b; return *this; }
 
 	// 累乗
 	Bit_matrix pow(ll d) const {
-		// verify : https://atcoder.jp/contests/jag2013summer-day4/tasks/icpc2013summer_day4_f
-		
+		// verify : https://atcoder.jp/contests/abc388/tasks/abc388_f
+
 		Bit_matrix res(n), pow2 = *this;
 		while (d > 0) {
 			if (d & 1) res *= pow2;
@@ -345,9 +353,9 @@ bool gauss_jordan_elimination(const Bit_matrix<M>& A, const vb& b,
 }
 
 
-//【基底の選択】O(n^2)
+//【基底の選択】O(n D)
 /*
-* 与えられたビットベクトル v[0..n) に対し，Span(v) の基底を返す．
+* 与えられた D 次元ビットベクトル v[0..n) に対し，Span(v) の基底を返す（msb はユニーク）
 */
 template <class T>
 vector<T> noshi_base(const vector<T>& v) {
@@ -369,6 +377,17 @@ vector<T> noshi_base(const vector<T>& v) {
 * これには【行簡約形（行交換なし）】を用いることができる．
 *
 * verify : https://atcoder.jp/contests/abc236/tasks/abc236_f
+*/
+
+
+//【ビット行列 ⇔ 有向完全二部グラフ】
+/*
+* n×m ビット行列 M に対し，部集合を S=[0..n), T=[0..m) とし，辺の向きを
+*	M[i][j] = 1 ⇔ S[i] → T[j]
+*	M[i][j] = 0 ⇔ S[i] ← T[j]
+* と定めた有向完全二部グラフとは 1:1 対応する．
+* 
+* verify : https://atcoder.jp/contests/arc186/tasks/arc186_a
 */
 
 

@@ -27,14 +27,46 @@
 
 //【乗算 作用付き 総和 可換モノイド】
 /* verify : https://atcoder.jp/contests/acl1/tasks/acl1_e */
-using S101 = mint;
+using T101 = mint;
+using S101 = T101;
 S101 op101(S101 x, S101 y) { return x + y; }
-S101 e101() { return 0; }
-using F101 = mint;
+S101 e101() { return T101(0); }
+using F101 = T101;
 S101 act101(F101 f, S101 x) { return f * x; }
 F101 comp101(F101 f, F101 g) { return f * g; }
-F101 id101() { return 1; }
+F101 id101() { return T101(1); }
 #define Mul_Sum_mmonoid S101, op101, e101, F101, act101, comp101, id101
+
+
+//【F_(2^61-1)上 乗算 作用付き 総和 可換モノイド】
+constexpr ull MOD = (1ULL << 61) - 1;
+constexpr ull MASK30 = (1ULL << 30) - 1;
+constexpr ull MASK31 = (1ULL << 31) - 1;
+ull get_mod136(ull a) {
+	ull ah = a >> 61, al = a & MOD;
+	ull res = ah + al;
+	if (res >= MOD) res -= MOD;
+	return res;
+}
+ull mul136(ull a, ull b) {
+	ull ah = a >> 31, al = a & MASK31;
+	ull bh = b >> 31, bl = b & MASK31;
+
+	ull c = ah * bl + bh * al;
+	ull ch = c >> 30, cl = c & MASK30;
+
+	ull term1 = 2 * ah * bh;
+	ull term2 = ch + (cl << 31);
+	ull term3 = al * bl;
+
+	return get_mod136(term1 + term2 + term3);
+}
+ull op136(ull x, ull y) { return get_mod136(x + y); }
+ull e136() { return 0; }
+ull act136(ull f, ull x) { return mul136(f, x); }
+ull comp136(ull f, ull g) { return mul136(f, g); }
+ull id136() { return 1; }
+#define F61_Mul_Sum_mmonoid ull, op136, e136, ull, act136, comp136, id136
 
 
 //【2×2行列乗算 左作用付き 2次元ベクトル総和 可換モノイド】
@@ -72,7 +104,7 @@ F124 comp124(F124 f, F124 g) {
 F124 id124() {
 	// [1 0]
 	// [0 1]
-	return { 1, 0, 0, 1 };
+	return { T124(1), T124(0), T124(0), T124(1) };
 }
 #define Matrix2LMul_Vector2_mmonoid S124, op124, e124, F124, act124, comp124, id124
 
@@ -86,7 +118,7 @@ S134 op134(S134 x, S134 y) {
 	return x;
 }
 S134 e134() {
-	S134 x{ 0 };
+	S134 x{ T134(0) };
 	return x;
 }
 using F134 = Fixed_matrix<T134, N134>;
@@ -101,11 +133,11 @@ F134 id134() { return 1; }
 using T115 = ll;
 using S115 = T115;
 S115 op115(S115 x, S115 y) { return min(x, y); }
-S115 e115() { return INFL; }
+S115 e115() { return T115(INFL); }
 using F115 = T115;
 S115 act115(F115 f, S115 x) { return min(f, x); }
 F115 comp115(F115 f, F115 g) { return min(f, g); }
-F115 id115() { return INFL; }
+F115 id115() { return T115(INFL); }
 #define Chmin_Min_mmonoid S115, op115, e115, F115, act115, comp115, id115
 
 
@@ -114,21 +146,22 @@ F115 id115() { return INFL; }
 using T116 = ll;
 using S116 = T116;
 S116 op116(S116 x, S116 y) { return max(x, y); }
-S116 e116() { return -INFL; }
+S116 e116() { return -T116(INFL); }
 using F116 = T116;
 S116 act116(F116 f, S116 x) { return max(f, x); }
 F116 comp116(F116 f, F116 g) { return max(f, g); }
-F116 id116() { return -INFL; }
+F116 id116() { return -T116(INFL); }
 #define Chmax_Max_mmonoid S116, op116, e116, F116, act116, comp116, id116
 
 
 //【変更 作用付き 左変更 モノイド】
 /* verify : https://yukicoder.me/problems/no/2308 */
-using S102 = int;
-S102 e102() { return INF + 2; } // 使わない値なら何でも OK
+using T102 = int;
+using S102 = T102;
+S102 e102() { return T102(INFL + 2); } // 使わない値なら何でも OK
 S102 op102(S102 x, S102 y) { return x == e102() ? y : x; }
-using F102 = int;
-F102 id102() { return INF + 1; } // 使わない値なら何でも OK
+using F102 = T102;
+F102 id102() { return T102(INFL + 1); } // 使わない値なら何でも OK
 S102 act102(F102 f, S102 x) { return f == id102() ? x : f; }
 F102 comp102(F102 f, F102 g) { return f == id102() ? g : f; }
 #define Update_LUpdate_mmonoid S102, op102, e102, F102, act102, comp102, id102
@@ -136,11 +169,12 @@ F102 comp102(F102 f, F102 g) { return f == id102() ? g : f; }
 
 //【変更 作用付き max 可換モノイド】
 /* verify : https://atcoder.jp/contests/typical90/tasks/typical90_ac */
-using S103 = int;
+using T103 = int;
+using S103 = T103;
 S103 op103(S103 x, S103 y) { return max(x, y); }
-S103 e103() { return -INF; }
-using F103 = int;
-F103 id103() { return INF + 1; } // 使わない値なら何でも OK
+S103 e103() { return -T103(INFL); }
+using F103 = T103;
+F103 id103() { return T103(INFL + 1); } // 使わない値なら何でも OK
 S103 act103(F103 f, S103 x) { return f == id103() ? x : f; }
 F103 comp103(F103 f, F103 g) { return f == id103() ? g : f; }
 #define Update_Max_mmonoid S103, op103, e103, F103, act103, comp103, id103
@@ -148,11 +182,12 @@ F103 comp103(F103 f, F103 g) { return f == id103() ? g : f; }
 
 //【変更 作用付き min 可換モノイド】
 /* verify : https://atcoder.jp/contests/abc177/tasks/abc177_f */
-using S104 = int;
+using T104 = int;
+using S104 = T104;
 S104 op104(S104 x, S104 y) { return min(x, y); }
-S104 e104() { return INF; }
-using F104 = int;
-F104 id104() { return INF + 1; } // 使わない値なら何でも OK
+S104 e104() { return T104(INFL); }
+using F104 = T104;
+F104 id104() { return T104(INFL + 1); } // 使わない値なら何でも OK
 S104 act104(F104 f, S104 x) { return f == id104() ? x : f; }
 F104 comp104(F104 f, F104 g) { return f == id104() ? g : f; }
 #define Update_Min_mmonoid S104, op104, e104, F104, act104, comp104, id104
@@ -160,25 +195,27 @@ F104 comp104(F104 f, F104 g) { return f == id104() ? g : f; }
 
 //【加算 作用付き max 可換モノイド】
 /* verify : https://atcoder.jp/contests/arc017/tasks/arc017_4 */
-using S105 = ll;
+using T105 = ll;
+using S105 = T105;
 S105 op105(S105 x, S105 y) { return max(x, y); }
-S105 e105() { return -INFL; }
-using F105 = ll;
+S105 e105() { return -T105(INFL); }
+using F105 = T105;
 S105 act105(F105 f, S105 x) { return f + x; }
 F105 comp105(F105 f, F105 g) { return f + g; }
-F105 id105() { return 0; }
+F105 id105() { return T105(0); }
 #define Add_Max_mmonoid S105, op105, e105, F105, act105, comp105, id105
 
 
 //【加算 作用付き min 可換モノイド】
 /* verify : https://atcoder.jp/contests/abc245/tasks/abc245_e */
-using S106 = ll;
+using T106 = ll;
+using S106 = T106;
 S106 op106(S106 x, S106 y) { return min(x, y); }
-S106 e106() { return INFL; }
-using F106 = ll;
+S106 e106() { return T106(INFL); }
+using F106 = T106;
 S106 act106(F106 f, S106 x) { return f + x; }
 F106 comp106(F106 f, F106 g) { return f + g; }
-F106 id106() { return 0; }
+F106 id106() { return T106(0); }
 #define Add_Min_mmonoid S106, op106, e106, F106, act106, comp106, id106
 
 
@@ -187,12 +224,15 @@ F106 id106() { return 0; }
 using T135 = int;
 using S135 = pair<T135, T135>;
 S135 op135(S135 x, S135 y) { return { min(x.first, y.first), max(x.second, y.second) }; }
-S135 e135() { return { INF, -INF }; }
+S135 e135() { return { T135(INFL), -T135(INFL) }; }
 using F135 = T135;
 S135 act135(F135 f, S135 x) { return { f + x.first, f + x.second }; }
 F135 comp135(F135 f, F135 g) { return f + g; }
-F135 id135() { return 0; }
+F135 id135() { return T135(0); }
 #define Add_MinMax_mmonoid S135, op135, e135, F135, act135, comp135, id135
+
+
+//【アフィン 作用付き min,max 可換モノイド】
 
 
 //【加算 作用付き 総和 可換モノイド】
@@ -214,7 +254,7 @@ S108 op108(S108 x, S108 y) {
 	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
 	return { vx + vy, cx + cy };
 }
-S108 e108() { return { 0, 0 }; }
+S108 e108() { return { T108(0), T108(0) }; }
 S108 act108(F108 f, S108 x) {
 	auto [v, c] = x; // ベクトル (v, c)
 
@@ -248,8 +288,8 @@ S109 op109(S109 x, S109 y) {
 	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
 	return { vx + vy, cx + cy };
 }
-S109 e109() { return { 0, 0 }; }
-F109 id109() { return INFL + 1; } // 使わない値なら何でも OK
+S109 e109() { return { T109(0), T109(0) }; }
+F109 id109() { return T109(INFL + 1); } // 使わない値なら何でも OK
 S109 act109(F109 f, S109 x) {
 	if (f == id109()) return x;
 
@@ -286,7 +326,7 @@ S107 op107(S107 x, S107 y) {
 	// (vx, cx) + (vy, cy) = (vx + vy, cx + cy)
 	return { vx + vy, cx + cy };
 }
-S107 e107() { return { 0, 0 }; }
+S107 e107() { return { T107(0), T107(0) }; }
 S107 act107(F107 f, S107 x) {
 	auto [v, c] = x; // ベクトル (v, c)
 	auto [a, b] = f; // 行列 (a, b; 0, 1)
@@ -301,7 +341,7 @@ F107 comp107(F107 f, F107 g) {
 	// (a, b; 0, 1).(c, d; 0, 1) = (a c, a d + b; 0, 1)
 	return { a * c, a * d + b };
 }
-F107 id107() { return { 1, 0 }; }
+F107 id107() { return { T107(1), T107(0) }; }
 #define Affine_Sum_mmonoid S107, op107, e107, F107, act107, comp107, id107
 
 
@@ -323,17 +363,17 @@ S120 op120(S120 x, S120 y) {
 
 	return { s2x + s2y, sx + sy, cx + cy };
 }
-S120 e120() { return { 0, 0, 0 }; }
+S120 e120() { return { T120(0), T120(0), T120(0) }; }
 S120 act120(F120 f, S120 x) {
 	auto [s2x, sx, cx] = x;
 
 	// (1, 2f, f^2; 0, 1, f; 0, 0, 1).(s2x, sx, cx)
-	return { s2x + 2 * f * sx + f * f * cx, sx + f * cx, cx };
+	return { s2x + T120(2) * f * sx + f * f * cx, sx + f * cx, cx };
 }
 F120 comp120(F120 f, F120 g) {
 	return f + g;
 }
-F120 id120() { return 0; }
+F120 id120() { return T120(0); }
 #define Add_Sqsum_mmonoid S120, op120, e120, F120, act120, comp120, id120
 
 
@@ -345,6 +385,7 @@ F120 id120() { return 0; }
 * s act f : f を s に変更する．
 * s comp t : s に変更する作用にする．
 */
+// verify : https://judge.yosupo.jp/problem/range_set_range_composite
 using T125 = mint;
 using S125 = tuple<T125, T125, int>; // {a, b, c} : c 個の合成で x → a x + b
 using F125 = tuple<T125, T125, bool>; // {a, b, is_id} : x → a x + b に変更
@@ -355,7 +396,7 @@ S125 op125(S125 f, S125 g) {
 	// (g o f)(x) = ga (fa x + fb) + gb = (ga fa)x + (ga fb + gb)
 	return { ga * fa, ga * fb + gb, fc + gc };
 }
-S125 e125() { return { 1, 0, 0 }; }
+S125 e125() { return { T125(1), T125(0), 0 }; }
 S125 act125(F125 s, S125 f) {
 	auto [sa, sb, sid] = s;
 	auto [fa, fb, fc] = f;
@@ -363,7 +404,7 @@ S125 act125(F125 s, S125 f) {
 	if (sid) return f;
 
 	// sa_pow_sum : Σi∈[0..fc) sa^i
-	T125 sa_pow_sum(0), pow2 = sa, sumpow2 = 1;
+	T125 sa_pow_sum(0), pow2 = sa, sumpow2 = T125(1);
 	int n = fc;
 	while (n > 0) {
 		if (n & 1) sa_pow_sum = sa_pow_sum * pow2 + sumpow2;
@@ -372,7 +413,7 @@ S125 act125(F125 s, S125 f) {
 		n /= 2;
 	}
 
-	return { sa_pow_sum * (sa - 1) + 1, sa_pow_sum * sb, fc };
+	return { sa_pow_sum * (sa - 1) + T125(1), sa_pow_sum * sb, fc };
 
 }
 F125 comp125(F125 s, F125 t) {
@@ -389,13 +430,14 @@ F125 id125() {
 
 
 //【AND 作用付き XOR 可換モノイド】
-using S110 = int;
+using T110 = int;
+using S110 = T110;
 S110 op110(S110 x, S110 y) { return x ^ y; }
-S110 e110() { return 0; }
-using F110 = int;
+S110 e110() { return T110(0); }
+using F110 = T110;
 S110 act110(F110 f, S110 x) { return f & x; }
 F110 comp110(F110 f, F110 g) { return f & g; }
-F110 id110() { return ~0; }
+F110 id110() { return ~T110(0); }
 #define AND_XOR_mmonoid S110, op110, e110, F110, act110, comp110, id110
 
 
@@ -412,19 +454,18 @@ F110 id110() { return ~0; }
 * f act x : 区間 x の元全てに f を作用させる．
 * f comp g : 関数の合成 f o g
 */
-// verify : https://yukicoder.me/problems/no/2439
 using T128 = ll;
 using S128 = pair<T128, T128>;			// {min, max}
 using F128 = tuple<T128, T128, T128>;	// {add, min, max}
 S128 op128(S128 x, S128 y) {
 	auto [px, qx] = x;	// {x_min, x_max}
-	auto [py, qy] = x;	// {y_min, y_max}
+	auto [py, qy] = y;	// {y_min, y_max}
 
 	T128 P = min(px, py);
-	T128 Q = max(px, py);
+	T128 Q = max(qx, qy);
 	return S128{ P, Q };
 }
-S128 e128() { return { INFL, -INFL }; }
+S128 e128() { return { T128(INFL), -T128(INFL) }; }
 S128 act128(F128 f, S128 x) {
 	auto [a, b, c] = f;	// f(x) = max(min(a + x, b), c)
 	auto [p, q] = x;	// {min, max}
@@ -461,7 +502,7 @@ F128 comp128(F128 f, F128 g) {
 	T128 C = max(min(fa + gc, fb), fc);
 	return F128{ A, B, C };
 }
-F128 id128() { return F128{ 0, INFL, -INFL }; } // e(x) = max(min(a + 0, ∞), -∞)
+F128 id128() { return F128{ T128(0), T128(INFL), -T128(INFL) }; } // e(x) = max(min(a + 0, ∞), -∞)
 #define MixedTropicalAffine_MinMax_mmonoid S128, op128, e128, F128, act128, comp128, id128
 
 
@@ -483,26 +524,26 @@ S129 op129(S129 g, S129 f) {
 	// (g o f)(x) = ga (fa x + fb) + gb = (ga fa)x + (ga fb + gb)
 	return { ga + fa, max(ga + fb, gb), fc + gc };
 }
-S129 e129() { return { 0, -INFL, 0 }; }
+S129 e129() { return { T129(0), -T129(INFL), 0 }; }
 S129 act129(F129 s, S129 f) {
 	auto [sa, sb] = s;
 	auto [fa, fb, fc] = f;
 
-	if (sa == INFL + 1) return f;
+	if (sa == T129(INFL + 1)) return f;
 
 	// (a, b; 0, 1)^c = (a^c, (1+a+...+a^(c-1)) b; 0, 1)
-	return { fc * sa, sb + (sa >= 0 ? sa * (fc - 1) : 0), fc };
+	return { fc * sa, sb + (sa >= T129(0) ? sa * (fc - 1) : T129(0)), fc };
 
 }
 F129 comp129(F129 s, F129 t) {
 	auto [sa, sb] = s;
 	auto [ta, tb] = t;
 
-	if (sa == INFL + 1) return t;
+	if (sa == T129(INFL + 1)) return t;
 	return s;
 }
 F129 id129() {
-	return { INFL + 1, INFL + 1 };
+	return { T129(INFL + 1), T129(INFL + 1) };
 }
 #define Update_TropicalAffine_mmonoid S129, op129, e129, F129, act129, comp129, id129
 
@@ -534,7 +575,7 @@ S127 op127(S127 x, S127 y) {
 	// [cx]   [cy]   [cx + cy]
 	return { vx ^ vy, cx ^ cy };
 }
-S127 e127() { return { 0, 0 }; }
+S127 e127() { return { T127(0), T127(0) }; }
 S127 act127(F127 f, S127 x) {
 	auto [v, c] = x; // ベクトル (v, c)
 	auto [a, b] = f; // 行列 (a, b; 0, 1)
@@ -551,29 +592,31 @@ F127 comp127(F127 f, F127 g) {
 	// [0, 1] [0, 1]   [ 0  ,    1    ]
 	return { (a & c), (a & d) ^ b };
 }
-F127 id127() { return { ~0, 0 }; }
+F127 id127() { return { ~T127(0), T127(0) }; }
 #define BitAffine_XOR_mmonoid S127, op127, e127, F127, act127, comp127, id127
 
 
 //【乗算 作用付き GCD 可換モノイド】
-using S113 = ll;
+using T113 = ll;
+using S113 = T113;
 S113 op113(S113 x, S113 y) { return gcd(x, y); }
-S113 e113() { return 0; }
-using F113 = ll;
+S113 e113() { return T113(0); }
+using F113 = T113;
 S113 act113(F113 f, S113 x) { return f * x; }
 F113 comp113(F113 f, F113 g) { return f * g; } // オーバーフロー注意
-F113 id113() { return 1; }
+F113 id113() { return T113(1); }
 #define Mul_GCD_mmonoid S113, op113, e113, F113, act113, comp113, id113
 
 
 //【乗算 作用付き LCM 可換モノイド】
-using S114 = ll;
+using T114 = ll;
+using S114 = T114;
 S114 op114(S114 x, S114 y) { return lcm(x, y); }
-S114 e114() { return 1; }
-using F114 = ll;
+S114 e114() { return T114(1); }
+using F114 = T114;
 S114 act114(F114 f, S114 x) { return f * x; }
 F114 comp114(F114 f, F114 g) { return f * g; } // オーバーフロー注意
-F114 id114() { return 1; }
+F114 id114() { return T114(1); }
 #define Mul_LCM_mmonoid S114, op114, e114, F114, act114, comp114, id114
 
 
@@ -596,7 +639,7 @@ S117 op117(S117 x, S117 y) {
 	// (vx, sx, cx) + (vy, sy, cy) = (vx + vy, sx + sy, cx + cy)
 	return { vx + vy, sx + sy, cx + cy };
 }
-S117 e117() { return { 0, 0, 0 }; }
+S117 e117() { return { T117(0), T117(0), T117(0) }; }
 S117 act117(F117 f, S117 x) {
 	auto [v, s, c] = x; // ベクトル (v, s, c)
 	auto [a, b] = f; // 行列 (1, a, b; 0, 1, 0; 0, 0, 1)
@@ -611,7 +654,7 @@ F117 comp117(F117 f, F117 g) {
 	// (1, a, b; 0, 1, 0; 0, 0, 1).(1, c, d; 0, 1, 0; 0, 0, 1) = (1, a + c, b + d; 0, 1, 0; 0, 0, 1)
 	return { a + c, b + d };
 }
-F117 id117() { return { 0, 0 }; }
+F117 id117() { return { T117(0), T117(0) }; }
 #define LinearAdd_Sum_mmonoid S117, op117, e117, F117, act117, comp117, id117
 
 
@@ -635,7 +678,7 @@ S121 op121(S121 x, S121 y) {
 	return { vx + vy, sx + sy, cx + cy };
 }
 S121 e121() { return { 0, 0, 0 }; }
-F121 id121() { return { INFL + 1, INFL + 1 }; } // 使わない値なら何でも OK
+F121 id121() { return { T121(INFL) + 1, T121(INFL) + 1 }; } // 使わない値なら何でも OK
 S121 act121(F121 f, S121 x) {
 	if (f == id121()) return x;
 
@@ -670,8 +713,8 @@ S130 op130(S130 x, S130 y) {
 
 	return { min(vx, vy), min(lx, ly), max(rx, ry) };
 }
-S130 e130() { return { INFL, INF, -INF }; }
-F130 id130() { return { INFL + 1, INFL + 1 }; } // 使わない値なら何でも OK
+S130 e130() { return { T130(INFL), INF, -INF }; }
+F130 id130() { return { T130(INFL) + 1, T130(INFL) + 1 }; } // 使わない値なら何でも OK
 S130 act130(F130 f, S130 x) {
 	if (f == id130()) return x;
 
@@ -708,8 +751,8 @@ S131 op131(S131 x, S131 y) {
 
 	return { max(vx, vy), min(lx, ly), max(rx, ry) };
 }
-S131 e131() { return { -INFL, INF, -INF }; }
-F131 id131() { return { INFL + 1, INFL + 1 }; } // 使わない値なら何でも OK
+S131 e131() { return { -T131(INFL), INF, -INF }; }
+F131 id131() { return { T131(INFL) + 1, T131(INFL) + 1 }; } // 使わない値なら何でも OK
 S131 act131(F131 f, S131 x) {
 	if (f == id131()) return x;
 
@@ -734,7 +777,7 @@ using S118 = ll;
 S118 op118(S118 x, S118 y) { return x | y; }
 S118 e118() { return 0; }
 using F118 = ll;
-F118 id118() { return -INFL - 1; } // 使わない値なら何でも OK
+F118 id118() { return F118(INFL) + 1; } // 使わない値なら何でも OK
 S118 act118(F118 f, S118 x) { return f == id118() ? x : f; }
 F118 comp118(F118 f, F118 g) { return f == id118() ? g : f; }
 #define Update_OR_mmonoid S118, op118, e118, F118, act118, comp118, id118
@@ -833,8 +876,9 @@ F126 id126() { return false; }
 * F ∋ f : f 加算する作用を表す．
 */
 // verify : https://judge.yosupo.jp/problem/area_of_union_of_rectangles
-using S119 = pair<ll, int>; // (v, c)
-using F119 = ll;
+using T119 = int;
+using S119 = pair<T119, int>; // (v, c)
+using F119 = T119;
 S119 op119(S119 x, S119 y) {
 	auto [vx, cx] = x;
 	auto [vy, cy] = y;
@@ -843,14 +887,14 @@ S119 op119(S119 x, S119 y) {
 	if (vx > vy) return y;
 	return { vx, cx + cy };
 }
-S119 e119() { return { INFL, 0 }; }
+S119 e119() { return { T119(INFL), 0 }; }
 S119 act119(F119 f, S119 x) {
 	auto [vx, cx] = x;
 
 	return { vx + f, cx };
 }
 F119 comp119(F119 f, F119 g) { return f + g; }
-F119 id119() { return 0; }
+F119 id119() { return T119(0); }
 #define Add_CntMin_mmonoid S119, op119, e119, F119, act119, comp119, id119
 
 
@@ -878,6 +922,76 @@ S132 act132(F132 f, S132 x) {
 F132 comp132(F132 f, F132 g) { return f + g; }
 F132 id132() { return 0; }
 #define Add_CntMax_mmonoid S132, op132, e132, F132, act132, comp132, id132
+
+
+//【変更 作用付き K値LIS モノイド】
+/*
+* S ∋ x = {a[0..K)[0..K), w} :
+*	a[l][r] : [l..r] の範囲の数のみを使う場合の広義 LIS の長さ
+*	w : 区間の幅
+* F ∋ f : f への変更作用を表す．
+* x op y : 区間 x, y をこの順に連結する．
+* f act x : 区間 x の要素を全て f に変更する．
+* f comp g : f への変更作用となる．
+*/
+// verify : https://yukicoder.me/problems/no/2697
+constexpr int K133 = 4;
+struct S133 {
+	// a[l][r] : [l..r] の範囲の数のみを使う場合の LIS の長さの最大値
+	array<array<int, K133>, K133> a;
+
+	// w : 区間の幅
+	int w;
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const S133& x) {
+		os << "(" << x.a << "," << x.w << ")";
+		return os;
+	}
+#endif
+};
+using F133 = int;
+S133 op133(S133 x, S133 y) {
+	S133 z;
+	rep(i, K133) rep(j, K133) z.a[i][j] = 0;
+
+	rep(i, K133) repi(j, i, K133 - 1) {
+		chmax(z.a[i][j], x.a[i][j]);
+		chmax(z.a[i][j], y.a[i][j]);
+		repi(k, i, j) {
+			chmax(z.a[i][j], x.a[i][k] + y.a[k][j]);
+		}
+	}
+
+	z.w = x.w + y.w;
+
+	return z;
+}
+S133 e133() {
+	S133 z;
+	rep(i, K133) rep(j, K133) z.a[i][j] = 0;
+	z.w = 0;
+	return z;
+}
+F133 id133() {
+	return -1;
+}
+S133 act133(F133 f, S133 x) {
+	if (f == id133()) return x;
+
+	rep(i, K133) rep(j, K133) {
+		if (i <= f && f <= j) x.a[i][j] = x.w;
+		else x.a[i][j] = 0;
+	}
+
+	return x;
+}
+F133 comp133(F133 f, F133 g) {
+	if (f == id133()) return g;
+
+	return f;
+}
+#define Update_LIS_mmonoid S133, op133, e133, F133, act133, comp133, id133
 
 
 //【AND,OR 作用付き AND 可換モノイド】

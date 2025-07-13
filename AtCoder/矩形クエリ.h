@@ -10,10 +10,10 @@
 * Offline_rectangle_sum<T>() : O(1)
 *	v[0..h)[0..w) = 0 で初期化する（h, w は自動で調整される）
 *
-* void add(ll x, int y, T val) : O(1)
+* void add(ll x, ll y, T val) : O(1)
 *	v[x][y] += val とする．
 *
-* void sum(ll x1, ll x2, int y1, int y2) : O(1)
+* void sum(ll x1, ll x2, ll y1, ll y2) : O(1)
 *	クエリ Σv[x1..x2)[y1..y2) を追加する．
 *
 * vT solve() : O((n + q) log(n + q))
@@ -378,67 +378,186 @@ public:
 };
 
 
-//【1 点加算 → 矩形和（アーベル群）】（遅い）
+//【ウェーブレット行列（点群，アーベル群）】
 /*
-* Static_rectangle_sum<S, op, o, inv>(vl x, vl y, vS v) : O(n log n)
-*	値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
-*	値はアーベル群 (S, op, o, inv) の要素とする．
+* Wavelet_matrix_points<S, T, op, o, inv>(vS x, vS y, vT v) : O(n log n)
+*	大きさ n の重み付き点群 ((x[i], y[i]), v[i]) で初期化する．
+*	値はアーベル群 (T, op, o, inv) の要素とする．
 *
-* S sum(ll x1, ll x2, ll y1, ll y2) : O(log n)
-*	[x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
+* S get(S x0, S x1, int i) : O(log n)
+*	x∈[x0..x1) なる点のうち，y 座標昇順で i 番目の点の y 座標を返す（なければ INFL）
 *
-* 利用：【永続セグメント木（モノイド）】,【座標圧縮】
+* int count(S x0, S x1, S y0, S y1) : O(log n)
+*	[x0..x1)×[y0..y1) 内の点の個数を返す．
+*
+* T sum(S x0, S x1, S y0, S y1) : O(log n)
+*	[x0..x1)×[y0..y1) 内の点の重みの和を返す．
 */
-template <class S, S(*op)(S, S), S(*o)(), S(*inv)(S)>
-class Static_rectangle_sum {
-	// 参考 : https://qiita.com/hotman78/items/9c643feae1de087e6fc5
+template <class S, class T, T(*op)(T, T), T(*o)(), T(*inv)(T)>
+class Wavelet_matrix_points {
+	// 参考 : https://miti-7.hatenablog.com/entry/2018/04/28/152259
 
-	// x[y] 座標の昇順列（x 座標は全て，y 座標はユニーク）
-	vl xs, ys;
+	int n; // 要素数
+	int m; // msb 以下の桁数
+	vi bs; // bs[i][j] : 第 j+1 ビットについての安定ソート後の y[i] の第 j ビット
+	array<vvi, 2> bs_acc; // bs_acc[b] : bs[*][b] のビット b=0,1 それぞれの個数の累積和
+	vi num_zeros; // num_zeros[j] : bs[j] の 0 の個数
+	vector<vector<T>> acc; // acc[j] : 第 j ビットについての安定ソート後の w の累積和
+	vector<S> x_sort; // x 座標の昇順列
+	vector<S> y_uniq; // y 座標のユニークな昇順列
 
-	// x 座標を時刻とみなした，圧縮後の y 座標に関する永続セグメント木
-	Persistent_segtree<S, op, o> seg;
+	// a[l..r) の中で [0..v) に値をもつ要素の個数を返す．
+	int count_rsub(int l, int r, int v) {
+		int cnt = 0;
+		repir(j, m - 1, 0) {
+			if (getb(v, j)) {
+				cnt += bs_acc[0][j][r] - bs_acc[0][j][l];
+				r = num_zeros[j] + bs_acc[1][j][r];
+				l = num_zeros[j] + bs_acc[1][j][l];
+			}
+			else {
+				r = bs_acc[0][j][r];
+				l = bs_acc[0][j][l];
+			}
+		}
+
+		return cnt;
+	}
+
+	// a[l..r) の中で [0..v) に値をもつ要素の和を返す．
+	T sum_rsub(int l, int r, int v) {
+		T res = o();
+		repir(j, m - 1, 0) {
+			if (getb(v, j)) {
+				res = op(res, op(acc[j][bs_acc[0][j][r]], inv(acc[j][bs_acc[0][j][l]])));
+				r = num_zeros[j] + bs_acc[1][j][r];
+				l = num_zeros[j] + bs_acc[1][j][l];
+			}
+			else {
+				r = bs_acc[0][j][r];
+				l = bs_acc[0][j][l];
+			}
+		}
+
+		return res;
+	}
 
 public:
-	// 値 v[i] をもった n 個の点群 (x[i], y[i]) で初期化する．
-	Static_rectangle_sum(const vl& x, const vl& y, const vector<S>& v) {
-		// verify : https://judge.yosupo.jp/problem/rectangle_sum
-
-		int n = sz(x);
-		xs.resize(n);
-
-		// y 座標を座標圧縮しておく．
-		vi y_cp;
-		int m = coordinate_compression(y, y_cp, &ys);
-
-		// 点群を x 座標昇順にソートする
-		vector<pli> xi(n);
+	// 大きさ n の重み付き点群 ((x[i], y[i]), v[i]) で初期化する．
+	Wavelet_matrix_points(const vector<S>& x, const vector<S>& y, const vector<T>& v) : n(sz(x)) {
+		// verify : https://yukicoder.me/problems/no/3026
+		
+		// 点群を x 座標昇順にソートする．
+		vector<pair<S, int>> xi(n);
 		rep(i, n) xi[i] = { x[i], i };
 		sort(all(xi));
 
-		// x 座標を時刻とみなして永続セグメント木に乗せる．
-		seg = Persistent_segtree<S, op, o>(m);
-		rep(t, n) {
-			int i;
-			tie(xs[t], i) = xi[t];
+		// y_uniq : y 座標のユニークな昇順列
+		y_uniq = y;
+		uniq(y_uniq);
+		y_uniq.emplace_back((S)INFL + 1); // 番兵
 
-			S val = seg.get(y_cp[i], t);
-			seg.set(y_cp[i], op(val, v[i]), t);
+		// x_sort : x 座標の昇順列
+		x_sort.resize(n);
+
+		// ycp_v : 座圧後の y 座標と重みの組の列
+		vector<pair<int, T>> ycp_v(n);
+
+		rep(i, n) {
+			int id;
+			tie(x_sort[i], id) = xi[i];
+			ycp_v[i] = { lbpos(y_uniq, y[id]), v[id] };
 		}
+
+		// メモリ確保
+		m = msb(sz(y_uniq)) + 1;
+		bs.resize(n);
+		bs_acc[0] = bs_acc[1] = vvi(m, vi(n + 1));
+		num_zeros.resize(m);
+		acc.assign(m + 1, vector<T>(n + 1, o()));
+
+		// j : 注目ビット位置（上位ビットから順に見ていく）
+		repir(j, m - 1, 0) {
+			rep(i, n) {
+				// bs[i][j] : 注目ビットが 1 か
+				bs[i] |= ycp_v[i].first & (1 << j);
+
+				// ビット 0, 1 それぞれの個数の累積和を求める．
+				rep(b, 2) bs_acc[b][j][i + 1] = bs_acc[b][j][i];
+				int b = getb(ycp_v[i].first, j);
+				bs_acc[b][j][i + 1]++;
+				num_zeros[j] += 1 - b;
+
+				// 重みの累積和を求める．
+				acc[j + 1][i + 1] = op(acc[j + 1][i], ycp_v[i].second);
+			}
+
+			// 注目ビットが 0 のものを左，1 のものを右に寄せる安定ソートを行う．
+			vector<pair<int, T>> nycp_w0, nycp_w1;
+			nycp_w0.reserve(num_zeros[j]);
+			nycp_w1.reserve(n - num_zeros[j]);
+			rep(i, n) {
+				if (getb(ycp_v[i].first, j)) nycp_w1.push_back(ycp_v[i]);
+				else nycp_w0.push_back(ycp_v[i]);
+			}
+			ycp_v.clear();
+			repe(tmp, nycp_w0) ycp_v.push_back(tmp);
+			repe(tmp, nycp_w1) ycp_v.push_back(tmp);
+		}
+
+		// 重みの累積和を求める．
+		rep(i, n) acc[0][i + 1] = op(acc[0][i], ycp_v[i].second);
+	}
+	Wavelet_matrix_points() : n(0), m(0) {}
+
+	// x∈[x0..x1) なる点のうち，y 座標昇順で i 番目の点の y 座標を返す（なければ INFL）
+	S get(S x0, S x1, int i) {
+		int x0_cp = lbpos(x_sort, x0);
+		int x1_cp = lbpos(x_sort, x1);
+		if (x0_cp >= x1_cp) return S(INFL);
+		int y_cp = 0;
+
+		repir(j, m - 1, 0) {
+			y_cp <<= 1;
+
+			int cnt0 = bs_acc[0][j][x1_cp] - bs_acc[0][j][x0_cp];
+			if (i >= cnt0) {
+				y_cp++;
+				x0_cp = num_zeros[j] + bs_acc[1][j][x0_cp];
+				x1_cp = num_zeros[j] + bs_acc[1][j][x1_cp];
+				i -= cnt0;
+			}
+			else {
+				x0_cp = bs_acc[0][j][x0_cp];
+				x1_cp = bs_acc[0][j][x1_cp];
+			}
+		}
+
+		return y_cp < sz(y_uniq) ? y_uniq[y_cp] : S(INFL);
 	}
 
-	// [x1..x2)×[y1..y2) 内にある全ての点の値の和を返す．
-	S sum(ll x1, ll x2, ll y1, ll y2) const {
-		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+	// [x0..x1)×[y0..y1) 内の点の個数を返す．
+	int count(S x0, S x1, S y0, S y1) {
+		int x0_cp = lbpos(x_sort, x0);
+		int x1_cp = lbpos(x_sort, x1);
+		int y0_cp = lbpos(y_uniq, y0);
+		int y1_cp = lbpos(y_uniq, y1);
+		if (x0_cp >= x1_cp || y0_cp >= y1_cp) return 0;
 
-		if (x1 >= x2 || y1 >= y2) return o();
+		return count_rsub(x0_cp, x1_cp, y1_cp) - count_rsub(x0_cp, x1_cp, y0_cp);
+	}
 
-		int t1 = lbpos(xs, x1);
-		int t2 = lbpos(xs, x2);
-		int j1 = lbpos(ys, y1);
-		int j2 = lbpos(ys, y2);
+	// [x0..x1)×[y0..y1) 内の点の重みの和を返す．
+	T sum(S x0, S x1, S y0, S y1) {
+		// verify : https://yukicoder.me/problems/no/3026
+		
+		int x0_cp = lbpos(x_sort, x0);
+		int x1_cp = lbpos(x_sort, x1);
+		int y0_cp = lbpos(y_uniq, y0);
+		int y1_cp = lbpos(y_uniq, y1);
+		if (x0_cp >= x1_cp || y0_cp >= y1_cp) return o();
 
-		return op(seg.prod(j1, j2, t2), inv(seg.prod(j1, j2, t1)));
+		return op(sum_rsub(x0_cp, x1_cp, y1_cp), inv(sum_rsub(x0_cp, x1_cp, y0_cp)));
 	}
 };
 
@@ -842,6 +961,435 @@ public:
 
 		return res;
 	}
+};
+
+
+//【2 次元 K-D 木（M-可換モノイド）】
+/*
+* KDTree_2D<T, S, op, e, F, act, comp, id>(vT x, vT y, vS v) : O(n log n)
+*	大きさ n の重み付き点群 ((x[i], y[i]), v[i]) で初期化する．
+*	v[i] は左作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
+*
+* get(int i) : O(√n)
+*	v[i] を返す．
+*
+* set(int i, S val) : O(√n)
+*	v[i] ← val とする．
+*
+* S sum(T x1, T x2, T y1, T y2) : O(√n)
+*	[x1..x2)×[y1..y2) 内の点の重みの和を返す．
+*
+* apply(T x1, T x2, T y1, T y2, F f) : O(√n)
+*	[x1..x2)×[y1..y2) 内の点全ての重みに f を作用させる．
+*
+* call_rect(T x1, T x2, T y1, T y2, function<void(int, S)> g) : O(√n + K)
+*	[x1..x2)×[y1..y2) 内の点 K 個全てに対して g(i, v[i]) を呼ぶ．
+*
+* tiSl nearest(T x, T y) : O(log n)
+*	(x, y) にユークリッド距離で最も近い点の (i, v[i], dist^2) を返す．
+*	制約：点群の配置は一様ランダム
+*
+* K_nearest(T x, T y, function<void(int, S)> g) : O(K log n) ?
+*	(x, y) にユークリッド距離で近い順で K 個の点全てに対して g(i, v[i], dist^2) を呼ぶ．
+*	制約：点群の配置は一様ランダム
+*
+* call_circle(T x, T y, T D, function<void(int, S)> g) : O(K log n) ?
+*	(x, y) からのユークリッド距離が D 以内の K 個の点全てに対して g(i, v[i], dist^2) を呼ぶ．
+*	制約：点群の配置は一様ランダム
+*/
+template <class T, class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class KDTree_2D {
+	// 参考 : https://trap.jp/post/1489/
+
+	struct Node {
+		int idx;          // 点の番号
+		T x1, x2, y1, y2; // 矩形 [x1..x2]×[y1..y2] に対応するノードであることを表す
+		S val;            // ノードの値
+		F lazy;           // 遅延させている作用
+		Node* lc, * rc;   // 左右の子へのポインタ
+		Node* p;          // 親へのポインタ
+
+		Node() : idx(-1), x1(T(INFL)), x2(-T(INFL)), y1(T(INFL)), y2(-T(INFL)),
+			val(o()), lazy(id()), lc(nullptr), rc(nullptr), p(nullptr) {}
+	};
+
+	int n;                // 頂点数
+	Node* root;           // 根へのポインタ
+	vector<Node*> leaves; // 葉へのポインタ
+
+	void init(Node*& t, int iL, int iR, bool divx, vector<tuple<T, T, S, int>>& ps) {
+		// 要素が一つだけなら葉として格納して帰る．
+		if (iR - iL == 1) {
+			auto [x, y, v, idx] = ps[iL];
+
+			t = new Node();
+			t->idx = idx;
+			t->x1 = t->x2 = x;
+			t->y1 = t->y2 = y;
+			t->val = v;
+
+			leaves[idx] = t;
+
+			return;
+		}
+
+		int iM = (iL + iR) / 2;
+
+		if (divx) {
+			auto cmp = [](const tuple<T, T, S, int>& lhs, const tuple<T, T, S, int>& rhs) {
+				return std::get<0>(lhs) < std::get<0>(rhs);
+			};
+			nth_element(ps.begin() + iL, ps.begin() + iM, ps.begin() + iR, cmp);
+		}
+		else {
+			auto cmp = [](const tuple<T, T, S, int>& lhs, const tuple<T, T, S, int>& rhs) {
+				return std::get<1>(lhs) < std::get<1>(rhs);
+			};
+			nth_element(ps.begin() + iL, ps.begin() + iM, ps.begin() + iR, cmp);
+		}
+
+		t = new Node();
+		init(t->lc, iL, iM, !divx, ps);
+		init(t->rc, iM, iR, !divx, ps);
+		t->x1 = min(t->lc->x1, t->rc->x1);
+		t->x2 = max(t->lc->x2, t->rc->x2);
+		t->y1 = min(t->lc->y1, t->rc->y1);
+		t->y2 = max(t->lc->y2, t->rc->y2);
+		t->val = op(t->lc->val, t->rc->val);
+
+		t->lc->p = t;
+		t->rc->p = t;
+	}
+
+	// 子をもつノード t が不変条件を満たすよう子ノードの val から再計算を行う．
+	// 呼び出す際には，子の lazy がいずれも id() でなくてはならない．
+	void update(Node* t) {
+		// 参考 : https://qiita.com/ngtkana/items/4d0b84d45210771aa074
+
+		t->val = op(t->lc->val, t->rc->val);
+	}
+
+	// ノード t の不変条件を満たしたまま lazy を id() に書き換える．
+	// 呼び出す際には，部分木 t 内の全てのノードで不変条件が満たされなければならない．
+	void eval(Node* t) {
+		// 参考 : https://qiita.com/ngtkana/items/4d0b84d45210771aa074
+
+		// 遅延させていた作用がなければ何もしない．
+		if (t->lazy == id()) return;
+
+		// 葉ならすぐに作用させる．
+		if (!t->lc) {
+			t->val = act(t->lazy, t->val);
+			t->lazy = id();
+			return;
+		}
+
+		// 遅延作用を子に移す．
+		t->lc->lazy = comp(t->lazy, t->lc->lazy);
+		t->rc->lazy = comp(t->lazy, t->rc->lazy);
+
+		// 自身の値に遅延させていた作用を適用する．
+		t->val = act(t->lazy, t->val);
+		t->lazy = id();
+	}
+
+	// 部分木 t 内の矩形 [x1..x2]×[y1..y2] との共通部分に属する要素の和を返す．
+	S sum(Node* t, T x1, T x2, T y1, T y2) {
+		eval(t);
+
+		// 注目矩形とクエリ範囲が共通部分をもたない場合
+		if (x2 < t->x1 || t->x2 < x1 || y2 < t->y1 || t->y2 < y1) return o();
+
+		// 注目矩形がクエリ範囲に包まれている場合
+		if (x1 <= t->x1 && t->x2 <= x2 && y1 <= t->y1 && t->y2 <= y2) return t->val;
+
+		// 左右の子を見にいって値を求め，その和を返す．
+		return op(sum(t->lc, x1, x2, y1, y2), sum(t->rc, x1, x2, y1, y2));
+	}
+
+	// 部分木 t 内の矩形 [x1..x2]×[y1..y2] との共通部分に属する要素に f を作用させる．
+	void apply(Node* t, T x1, T x2, T y1, T y2, F f) {
+		eval(t);
+
+		// 注目矩形とクエリ範囲が共通部分をもたない場合
+		if (x2 < t->x1 || t->x2 < x1 || y2 < t->y1 || t->y2 < y1) return;
+
+		// 注目矩形がクエリ範囲に包まれている場合
+		if (x1 <= t->x1 && t->x2 <= x2 && y1 <= t->y1 && t->y2 <= y2) {
+			t->lazy = f;
+			return;
+		}
+
+		// 左右の子に f を作用させる．
+		apply(t->lc, x1, x2, y1, y2, f);
+		apply(t->rc, x1, x2, y1, y2, f);
+
+		eval(t->lc);
+		eval(t->rc);
+		update(t);
+	}
+
+	// 部分木 t 内の矩形 [x1..x2]×[y1..y2] との共通部分に属する点全てを res に格納する．
+	template <class FUNC>
+	void call_rect(Node* t, T x1, T x2, T y1, T y2, const FUNC& g) {
+		eval(t);
+
+		// 注目矩形とクエリ範囲が共通部分をもたない場合
+		if (x2 < t->x1 || t->x2 < x1 || y2 < t->y1 || t->y2 < y1) return;
+
+		// 葉であれば点に対して g を呼ぶ．
+		if (t->idx != -1) {
+			g(t->idx, t->val);
+			return;
+		}
+
+		// 左右の子を見にいく．
+		call_rect(t->lc, x1, x2, y1, y2, g);
+		call_rect(t->rc, x1, x2, y1, y2, g);
+	}
+
+	// ノード t に対応する矩形と点 (x, y) との距離の 2 乗を返す．
+	ll sq_dist(Node* t, T x, T y) {
+		T dx = clamp(x, t->x1, t->x2) - x;
+		T dy = clamp(y, t->y1, t->y2) - y;
+		return (ll)dx * dx + (ll)dy * dy;
+	}
+
+	void nearest(Node* t, T x, T y, ll& d_min, int& idx, S& val) {
+		// d : 注目矩形とクエリ点との距離の 2 乗
+		ll d = sq_dist(t, x, y);
+
+		// 暫定の最短距離以上であれば先を調べず帰る．
+		if (d >= d_min) return;
+
+		eval(t);
+
+		// 葉なら暫定の最短距離を更新して帰る．
+		if (t->idx != -1) {
+			d_min = d;
+			idx = t->idx;
+			val = t->val;
+			return;
+		}
+
+		// 左右の子を調べにいく．
+		if (sq_dist(t->lc, x, y) < sq_dist(t->rc, x, y)) {
+			nearest(t->lc, x, y, d_min, idx, val);
+			nearest(t->rc, x, y, d_min, idx, val);
+		}
+		else {
+			nearest(t->rc, x, y, d_min, idx, val);
+			nearest(t->lc, x, y, d_min, idx, val);
+		}
+	}
+
+	struct cmp_pq {
+		bool operator()(const tuple<ll, int, S>& lhs, const tuple<ll, int, S>& rhs) const {
+			return std::get<0>(lhs) < std::get<0>(rhs);
+		}
+	};
+	using PQ = priority_queue<tuple<ll, int, S>, vector<tuple<ll, int, S>>, cmp_pq>;
+
+	void K_nearest(Node* t, T x, T y, PQ& q) {
+		// d : 注目矩形とクエリ点との距離の 2 乗
+		ll d = sq_dist(t, x, y);
+
+		// 暫定の最短距離以上であれば先を調べず帰る．
+		if (d >= std::get<0>(q.top())) return;
+
+		eval(t);
+
+		// 葉なら暫定の最短距離を更新して帰る．
+		if (t->idx != -1) {
+			q.push({ d, t->idx, t->val });
+			q.pop();
+			return;
+		}
+
+		// 左右の子を調べにいく．
+		if (sq_dist(t->lc, x, y) < sq_dist(t->rc, x, y)) {
+			K_nearest(t->lc, x, y, q);
+			K_nearest(t->rc, x, y, q);
+		}
+		else {
+			K_nearest(t->rc, x, y, q);
+			K_nearest(t->lc, x, y, q);
+		}
+	}
+
+	template <class FUNC>
+	void call_circle(Node* t, T x, T y, ll D_sq, const FUNC& g) {
+		ll d = sq_dist(t, x, y);
+
+		// 注目矩形とクエリ範囲が共通部分をもたない場合
+		if (d > D_sq) return;
+
+		eval(t);
+
+		// 葉であれば点に対して g を呼ぶ．
+		if (t->idx != -1) {
+			g(t->idx, t->val, d);
+			return;
+		}
+
+		// 左右の子を見にいく．
+		call_circle(t->lc, x, y, D_sq, g);
+		call_circle(t->rc, x, y, D_sq, g);
+	}
+
+#ifdef _MSC_VER
+	void print(Node* t, ostream& os) {
+		eval(t);
+
+		// 葉なら出力する．
+		if (!t->lc) {
+			os << "(" << t->x1 << "," << t->y1 << "):" << t->val << " ";
+			return;
+		}
+
+		print(t->lc, os);
+		print(t->rc, os);
+	}
+#endif
+
+public:
+	// 大きさ n の重み付き点群 ((x[i], y[i]), v[i]) で初期化する．
+	KDTree_2D(const vector<T>& x, const vector<T>& y, const vector<S>& v) : n(sz(x)), leaves(n) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_point_set_rectangle_affine_rectangle_sum
+
+		Assert(n > 0);
+		vector<tuple<T, T, S, int>> ps(n);
+		rep(i, n) ps[i] = { x[i], y[i], v[i], i };
+
+		init(root, 0, n, true, ps);
+	}
+
+	// v[i] ← val とする．
+	void set(int i, S val) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_point_set_rectangle_affine_rectangle_sum
+
+		Assert(0 <= i); Assert(i < n);
+
+		auto t = leaves[i];
+
+		vector<Node*> ts;
+		ts.reserve(msb(n) + 2);
+		while (t) {
+			ts.push_back(t);
+			t = t->p;
+		}
+
+		int K = sz(ts);
+
+		repir(k, K - 1, 0) eval(ts[k]);
+
+		ts[0]->val = val;
+
+		repi(k, 1, K - 1) {
+			eval(ts[k]->lc);
+			eval(ts[k]->rc);
+			update(ts[k]);
+		}
+	}
+
+	// v[i] を返す．
+	S get(int i) {
+		// verify : https://atcoder.jp/contests/past202004-open/tasks/past202004_n
+
+		Assert(0 <= i); Assert(i < n);
+
+		auto t = leaves[i];
+
+		vector<Node*> ts;
+		ts.reserve(msb(n) + 2);
+		while (t) {
+			ts.push_back(t);
+			t = t->p;
+		}
+
+		int K = sz(ts);
+
+		repir(k, K - 1, 0) eval(ts[k]);
+
+		return ts[0]->val;
+	}
+
+	// [x1..x2)×[y1..y2) 内の点の重みの和を返す．
+	S sum(T x1, T x2, T y1, T y2) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_point_set_rectangle_affine_rectangle_sum
+
+		if (x1 >= x2 || y1 >= y2) return o();
+		return sum(root, x1, x2 - 1, y1, y2 - 1);
+	}
+
+	// [x1..x2)×[y1..y2) 内の点全てに f を作用させる．
+	void apply(T x1, T x2, T y1, T y2, F f) {
+		// verify : https://judge.yosupo.jp/problem/dynamic_point_set_rectangle_affine_rectangle_sum
+
+		if (x1 >= x2 || y1 >= y2) return;
+		apply(root, x1, x2 - 1, y1, y2 - 1, f);
+	}
+
+	// [x1..x2)×[y1..y2) 内の点全てに対して g(i, v[i]) を呼ぶ．
+	template <class FUNC>
+	void call_rect(T x1, T x2, T y1, T y2, const FUNC& g) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_C
+
+		call_rect(root, x1, x2 - 1, y1, y2 - 1, g);
+	}
+
+	// (x, y) にユークリッド距離で最も近い点の (i, v[i], dist^2) を返す．
+	tuple<int, S, ll> nearest(T x, T y) {
+		// verify : https://yukicoder.me/problems/no/2909
+
+		ll d_min = INFL; int idx = -1; S val = o();
+		nearest(root, x, y, d_min, idx, val);
+		return { idx, val, d_min };
+	}
+
+	// (x, y) にユークリッド距離で近い順で K 個の点全てに対して g(i, v[i]，dist^2) を呼ぶ．
+	template <class FUNC>
+	void K_nearest(T x, T y, int K, const FUNC& g) {
+		// verify : https://judge.yosupo.jp/problem/closest_pair
+
+		PQ q;
+		rep(hoge, K) q.emplace(INFL, -1, o());
+		K_nearest(root, x, y, q);
+
+		while (!q.empty()) {
+			auto [d, i, v] = q.top(); q.pop();
+			g(i, v, d);
+		}
+	}
+
+	// (x, y) からのユークリッド距離が D 以内の点全てに対して g(i, v[i]，dist^2) を呼ぶ．
+	template <class FUNC>
+	void call_circle(T x, T y, T D, const FUNC& g) {
+		// verify : https://atcoder.jp/contests/abc234/tasks/abc234_h
+
+		call_circle(root, x, y, (ll)D * D, g);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, KDTree_2D& kd) {
+		kd.print(kd.root, os);
+		return os;
+	}
+#endif
+
+	/* FUNC の雛形
+	using S = int;
+	auto func = [&](int i, S x) {
+		res.push_back(i);
+	};
+	KD.call(x1, x2, y1, y2, func);
+
+	using S = int;
+	auto func = [&](int i, S x, ll dist_sq) {
+		res.push_back(i);
+	};
+	KD.call(x1, x2, y1, y2, func);
+	*/
 };
 
 

@@ -292,16 +292,66 @@ int intersection_C_C(const Circle<ll>& c1, const Circle<ll>& c2, Point<double>& 
 	Point<double> nn = Point<double>(-(double)d.y, (double)d.x) * (h / d.norm());
 	p1 = Point<double>(o1) + nd + nn;
 	p2 = Point<double>(o1) + nd - nn;
+	
+	if (isnan(p1.x)) return 0;
+
 	return 2;
 }
 
 
-//【2 円の交点（実数）】O(1)
+//【2 円の交点（中心と 1 点指定）】O(1)
 /*
-* 2 円 c1, c2 の共有点の個数を返す．また共有点があればその座標を p1, p2 に格納する．
+* 点 o1 を中心とし点 a1 を通る円と点 o2 を中心とし点 a2 を通る円との共有点のリストを返す．
+*
+* 制約 : 4 乗がオーバーフローしない
+*/
+template <class T>
+vector<Point<double>> intersection_C_C(const Point<T>& o1, const Point<T>& a1, const Point<T>& o2, const Point<T>& a2) {
+	T x1 = o1.x;
+	T y1 = o1.y;
+	T x2 = o2.x;
+	T y2 = o2.y;
+
+	T r1_sq = (a1 - o1).sqnorm();
+	T r2_sq = (a2 - o2).sqnorm();
+	T dist_sq = (o1 - o2).sqnorm();
+
+	// D : 判別式
+	T D = 2 * dist_sq * (r1_sq + r2_sq) - (r1_sq - r2_sq) * (r1_sq - r2_sq) - dist_sq * dist_sq;
+
+	vector<Point<double>> res;
+
+	if (D < 0) return res;
+
+	T x_num = (r2_sq - r1_sq) * (x1 - x2) + (x1 + x2) * dist_sq;
+	T y_num = (r2_sq - r1_sq) * (y1 - y2) + (y1 + y2) * dist_sq;
+
+	if (D == 0) {
+		double res_x = (double)x_num / (2 * dist_sq);
+		double res_y = (double)y_num / (2 * dist_sq);
+		res.emplace_back(res_x, res_y);
+	}
+	else {
+		// ここで実数同士の異符号の和が発生しているので桁落ちする．
+		double res_x = (x_num + (y2 - y1) * sqrt(D)) / (2 * dist_sq);
+		double res_y = (y_num - (x2 - x1) * sqrt(D)) / (2 * dist_sq);
+		res.emplace_back(res_x, res_y);
+
+		res_x = (x_num - (y2 - y1) * sqrt(D)) / (2 * dist_sq);
+		res_y = (y_num + (x2 - x1) * sqrt(D)) / (2 * dist_sq);
+		res.emplace_back(res_x, res_y);
+	}
+
+	return res;
+}
+
+
+//【2 円の交点（実数）】O(1)（誤差注意！）
+/*
+* 2 円 c1, c2 の共有点のリストを返す．
 */
 template <class D>
-int intersection_C_C(const Circle<D>& c1, const Circle<D>& c2, Point<D>& p1, Point<D>& p2) {
+vector<Point<D>> intersection_C_C(const Circle<D>& c1, const Circle<D>& c2) {
 	// verify : https://atcoder.jp/contests/abc157/tasks/abc157_f
 
 	// 円 c1, c2 の中心と半径
@@ -312,20 +362,26 @@ int intersection_C_C(const Circle<D>& c1, const Circle<D>& c2, Point<D>& p1, Poi
 	Point<D> d = o2 - o1;
 	D r_sum = r1 + r2, r_dif = abs(r1 - r2);
 
+	vector<Point<D>> res;
+
 	// 中心間距離が円の半径の和より大きい場合 → 共有点 0 個
-	if (d.sqnorm() > r_sum * r_sum) return 0;
+	if (d.sqnorm() > r_sum * r_sum) return res;
 
 	// 中心間距離が円の半径の差より小さい場合 → 共有点 0 個
-	if (d.sqnorm() < r_dif * r_dif) return 0;
+	if (d.sqnorm() < r_dif * r_dif) return res;
 
 	// その他の場合 → 交点 2 個
 	D x = (r1 * r1 - r2 * r2 + d.sqnorm()) / (2 * d.norm());
 	D h = sqrt(r1 * r1 - x * x);
 	Point<D> nd = Point<D>(d) * (x / d.norm());
 	Point<D> nn = Point<D>(-(D)d.y, (D)d.x) * (h / d.norm());
-	p1 = Point<D>(o1) + nd + nn;
-	p2 = Point<D>(o1) + nd - nn;
-	return 2;
+	res.push_back(Point<D>(o1) + nd - nn);
+	res.push_back(Point<D>(o1) + nd + nn);
+
+	// 2 個と思ってたら 0 個だった場合はごめんなさいする．
+	if (isnan(res[0].x)) return vector<Point<D>>();
+
+	return res;
 }
 
 

@@ -3,6 +3,62 @@
 // ■■■■■ スコア和（列） ■■■■■
 
 
+//【連続整数の剰余の総和】O(1)
+/*
+* x∈[l..r) のうち x ≡ k (mod m) を満たすものの総和を返す．
+*/
+template <class T, class S = T>
+S continuous_mod_sum(T l, T r, T m, T k) {
+	// verify : https://atcoder.jp/contests/abc334/tasks/abc334_b
+
+	Assert(m > 0);
+	if (l >= r) return 0;
+
+	l += smod(-l + k, m);
+	r += smod(-r + k, m);
+	T cnt = (r - l) / m;
+	T sum = (l + r - m);
+	S res = (cnt % 2 == 0) ? (S)(cnt / 2) * sum : (S)(sum / 2) * cnt;
+
+	return res;
+}
+
+
+//【連続整数の剰余の総和（範囲指定）】O(1)
+/*
+* i∈[0..n) のうち i mod m ∈ [l..r) を満たすものの総和を返す．
+*
+* 制約：0 ≦ l, r ≦ m
+*/
+template <class T, class S = T>
+S continuous_mod_range_sum(T n, T m, T l, T r) {
+	// verify : https://yukicoder.me/problems/no/2489
+
+	Assert(m > 0);
+	if (l >= r || n <= 0) return 0;
+
+	T Q = n / m;
+	T R = n % m;
+
+	T cnt0 = r - l;
+	T sum0 = l + r - 1;
+	S res = 0;
+	if (cnt0 % 2 == 0) res = (S)(cnt0 / 2) * Q * (sum0 + m * (Q - 1));
+	else if (Q % 2 == 0) res = (S)(Q / 2) * cnt0 * (sum0 + m * (Q - 1));
+	else res = (S)((sum0 + m * (Q - 1)) / 2) * cnt0 * Q;
+
+	l = m * Q + l;
+	r = m * Q + min(r, R);
+	if (l < r) {
+		T cnt = r - l;
+		T sum = l + r - 1;
+		res += (cnt % 2 == 0) ? (S)(cnt / 2) * sum : (S)(sum / 2) * cnt;
+	}
+
+	return res;
+}
+
+
 //【一次式の切り捨て和】O(log(n + m))
 /*
 * Σi∈[0..n) floor((a i + b) / m) を返す．
@@ -167,6 +223,127 @@ tuple<T, T, T> arithmetic_linear_square_floor_sum(T n, T m, T a, T b) {
 }
 
 
+//【一次式の累乗切り捨て和】O((P Q)^2 log(n + m))
+/*
+* Σi∈[0..n) i^P floor((a i + b) / m)^Q を返す．
+*
+* 利用：【直線に沿った格子路上の積（モノイド）】
+*/
+using T_apfs = mint; // 戻り値の型
+T_apfs bin_apfs[21][21] = { // 足りなければ適宜追加する．
+	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,3,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,4,6,4,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,5,10,10,5,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,6,15,20,15,6,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,7,21,35,35,21,7,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,8,28,56,70,56,28,8,1,0,0,0,0,0,0,0,0,0,0,0,0},
+	{1,9,36,84,126,126,84,36,9,1,0,0,0,0,0,0,0,0,0,0,0},
+	{1,10,45,120,210,252,210,120,45,10,1,0,0,0,0,0,0,0,0,0,0},
+	{1,11,55,165,330,462,462,330,165,55,11,1,0,0,0,0,0,0,0,0,0},
+	{1,12,66,220,495,792,924,792,495,220,66,12,1,0,0,0,0,0,0,0,0},
+	{1,13,78,286,715,1287,1716,1716,1287,715,286,78,13,1,0,0,0,0,0,0,0},
+	{1,14,91,364,1001,2002,3003,3432,3003,2002,1001,364,91,14,1,0,0,0,0,0,0},
+	{1,15,105,455,1365,3003,5005,6435,6435,5005,3003,1365,455,105,15,1,0,0,0,0,0},
+	{1,16,120,560,1820,4368,8008,11440,12870,11440,8008,4368,1820,560,120,16,1,0,0,0,0},
+	{1,17,136,680,2380,6188,12376,19448,24310,24310,19448,12376,6188,2380,680,136,17,1,0,0,0},
+	{1,18,153,816,3060,8568,18564,31824,43758,48620,43758,31824,18564,8568,3060,816,153,18,1,0,0},
+	{1,19,171,969,3876,11628,27132,50388,75582,92378,92378,75582,50388,27132,11628,3876,969,171,19,1,0},
+	{1,20,190,1140,4845,15504,38760,77520,125970,167960,184756,167960,125970,77520,38760,15504,4845,1140,190,20,1}
+};
+int ex_apfs, ey_apfs;
+struct S_apfs {
+	vector<T_apfs> v = vector<T_apfs>((ex_apfs + 1) * (ey_apfs + 1));
+	T_apfs f = 0, g = 0;
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const S_apfs& x) {
+		os << "(" << x.v << "," << x.f << "," << x.g << ")";
+		return os;
+	}
+#endif
+};
+S_apfs op_apfs(S_apfs b, S_apfs a) {
+	vector<T_apfs> bf_pow(ex_apfs + 1);
+	bf_pow[0] = T_apfs(1);
+	repi(i, 1, ex_apfs) bf_pow[i] = bf_pow[i - 1] * b.f;
+
+	vector<T_apfs> bg_pow(ey_apfs + 1);
+	bg_pow[0] = T_apfs(1);
+	repi(i, 1, ey_apfs) bg_pow[i] = bg_pow[i - 1] * b.g;
+
+	repi(jx, 0, ex_apfs) repi(jy, 0, ey_apfs) {
+		repi(ix, jx, ex_apfs) repi(iy, jy, ey_apfs) {
+			b.v[jx * (ey_apfs + 1) + jy] += a.v[ix * (ey_apfs + 1) + iy]
+				* bin_apfs[ix][jx] * bf_pow[ix - jx]
+				* bin_apfs[iy][jy] * bg_pow[iy - jy];
+		}
+	}
+
+	b.f += a.f;
+	b.g += a.g;
+
+	return b;
+}
+S_apfs e_apfs() {
+	S_apfs a;
+	return a;
+}
+template <class T>
+T_apfs arithmetic_powered_floor_sum(T n, T m, T a, T b, int P, int Q) {
+	// 参考 : https://qiita.com/sounansya/items/51b39e0d7bf5cc194081
+	// verify : https://yukicoder.me/problems/no/2996
+
+	//【方法】
+	// i^p floor((ai+b)/m)^q も一緒に計算していくことで行列積とみなせる．
+	// クロネッカー積分解を考えることで計算量を落とせる．
+
+	if (n <= 0) return T_apfs(0);
+
+	Assert(m != 0);
+
+	if (m < 0) {
+		m = -m;
+		a = -a;
+		b = -b;
+	}
+
+	ex_apfs = P;
+	ey_apfs = Q;
+
+	S_apfs f;
+	repi(i, 0, P) f.v[i * (Q + 1) + Q] = bin_apfs[P][i];
+	f.f = T_apfs(1);
+
+	S_apfs g;
+	repi(i, 1, Q) g.v[(P + 1) * (Q + 1) - 1 - i] = bin_apfs[Q][i];
+	g.g = T_apfs(1);
+
+	// a < 0 のときは Σi∈[0..n) i^P (-floor((a i + b) / m))^Q を求め，後で (-1)^Q 倍する．
+	if (a < 0) b = m - T(1) - b;
+
+	T br = smod(b, m);
+	T bq = (b - br) / m;
+
+	// (0, b/m) → (n-1, (a(n-1)+b)/m) の移動に対応する行列積を計算する．
+	auto h = multiple_along_line<ll, S_apfs, op_apfs, e_apfs>(n - 1, m, abs(a), br, f, g);
+
+	// (0, 0) → (0, b/m) の移動に対応する行列を右から掛ける．
+	T_apfs res(0); T_apfs bq_pow(1);
+	repi(i, 0, Q) {
+		res += h.v[i] * bq_pow;
+		if (i < Q) bq_pow *= bq;
+	}
+	if (P == 0) res += bq_pow;
+
+	if ((a < 0) && (Q & 1)) res *= T_apfs(-1);
+
+	return res;
+}
+
+
 //【一次式の積の切り捨て和】O(log(n + m))
 /*
 * Σi∈[0..n) floor((a i + b1) / m) floor((a i + b2) / m) を返す．
@@ -227,7 +404,8 @@ T arithmetic_mod_sum(T n, T m, T a, T b) {
 	Assert(m > 0);
 	if (n <= 0) return 0;
 
-	a = smod(a, m); b = smod(b, m);
+	a = smod(a, m);
+	b = smod(b, m);
 
 	T res = a * n * (n - 1) / 2 + b * n;
 	res -= m * arithmetic_floor_sum(n, m, a, b);
@@ -280,7 +458,7 @@ T arithmetic_mod_sum(T n, T m, T a, T b, T l, T r) {
 }
 
 
-//【連続自然数の popcount の総和】O(log N)
+//【連続整数の popcount の総和】O(log N)
 /*
 * Σi∈[0..N) popcount(i) を返す．
 */
@@ -341,7 +519,7 @@ T arithmetic_popcount_sum(ll n, ll a, ll b) {
 }
 
 
-//【連続自然数の総 XOR】O(1)
+//【連続整数の総 XOR】O(1)
 /*
 * XOR[0..n) を返す．
 */

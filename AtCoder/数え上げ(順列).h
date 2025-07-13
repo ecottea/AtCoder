@@ -11,6 +11,8 @@
 * 次に使う数は今までのどの数よりも大きいことが保証される．
 * これにより状態を減らして DP を行うことができる場合がある．
 * 
+* 順列の要素のうちの一部の値が指定されているような状況では使いづらい．
+* 
 * verify : https://atcoder.jp/contests/tdpc/tasks/tdpc_string
 */
 
@@ -26,9 +28,9 @@
 
 //【攪乱順列の数（モンモール数）】O(n)
 /*
-* 各 i∈[0..n] について，長さ i の攪乱順列の数を mon[i] に格納する．
+* 各 i∈[0..n] について長さ i の攪乱順列の数を格納したリストを返す．
 */
-void montmort_number(int n, vm& mon) {
+vm montmort_number(int n) {
 	// 参考 : https://ja.wikipedia.org/wiki/%E5%AE%8C%E5%85%A8%E9%A0%86%E5%88%97
 	// verify : https://judge.yosupo.jp/problem/montmort_number_mod
 
@@ -45,10 +47,12 @@ void montmort_number(int n, vm& mon) {
 	//		mon[n] = (n-1)(mon[n-1] + mon[n-2])
 	// を得る．
 
-	mon.resize(n + 1);
+	vm mon(n + 1);
 	mon[0] = 1;
 
 	repi(i, 2, n) mon[i] = (i - 1) * (mon[i - 1] + mon[i - 2]);
+
+	return mon;
 }
 
 
@@ -90,6 +94,60 @@ void montmort_number(int n, vm& mon) {
 */
 
 
+//【大小関係の指定された順列の数え上げ】O(2^n m)
+/*
+* m 個の p[i] < p[j] 型の条件を満たす [0..n) の順列 p[0..n) の数え上げは，
+* 頂点 [0..n) と辺 i→j をもつグラフの【トポロジカルソートの数え上げ】に帰着できる．
+*
+* verify : https://atcoder.jp/contests/abc041/tasks/abc041_d
+*/
+
+
+//【大小関係の指定された順列の数え上げ（ヒープ条件）】O(n)
+/*
+* [0..n) の順列 p[0..n) で，任意の i∈[0..n) について p[i] < p[v[i]] を満たすものの個数を返す．
+* 条件を指定しない場合は v[i] = -1 とする．
+*/
+mint count_permutations_by_heap_magnitude(const vi& v) {
+	//【方法】
+	// 大小関係にサイクルがあれば条件を満たす順列は明らかに 0 個である．
+	// さもなくば条件はいくつかの独立なヒープ条件に分解できる．
+	// さらにヒープ条件は，各部分木についてその中で根が最大，という独立な条件に分解できる．
+
+	int n = sz(v);
+
+	Graph g(n); dsu d(n);
+	rep(i, n) {
+		if (v[i] == -1) continue;
+
+		// 大小関係にサイクルがあればもちろん 0 個である．
+		if (d.same(i, v[i])) return 0;
+		d.merge(i, v[i]);
+
+		// DFS のために親から子に向かって辺を張る．
+		g[v[i]].push_back(i);
+	}
+
+	mint dnm = 1;
+
+	function<int(int)> dfs = [&](int s) {
+		int w = 1;
+		repe(t, g[s]) w += dfs(t);
+
+		dnm *= w;
+
+		return w;
+	};
+	rep(i, n) if (v[i] == -1) dfs(i);
+
+	mint res = 1;
+	repi(i, 1, n) res *= i;
+	res /= dnm;
+
+	return res;
+}
+
+
 //【隣接大小関係の指定された順列の数え上げ（いもす法）】O(n^2)
 /*
 * '<', '>' からなる文字列 s[0..n-1) で指定される
@@ -97,7 +155,7 @@ void montmort_number(int n, vm& mon) {
 *
 *（いもす法で高速化した配る DP）
 */
-mint count_permutations_adjacent_relation_imos(const string& s) {
+mint count_permutations_by_adjacent_magnitude_imos(const string& s) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_t
 
 	int n = sz(s) + 1;
@@ -137,7 +195,7 @@ mint count_permutations_adjacent_relation_imos(const string& s) {
 *
 *（累積和で高速化した貰う DP）
 */
-mint count_permutations_adjacent_relation_acc(const string& s) {
+mint count_permutations_by_adjacent_magnitude_acc(const string& s) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_t
 
 	int n = sz(s) + 1;
@@ -179,7 +237,7 @@ mint count_permutations_adjacent_relation_acc(const string& s) {
 *
 *（挿入 DP）
 */
-mint count_permutations_adjacent_relation_insertDP(const string& s) {
+mint count_permutations_by_adjacent_magnitude_insertDP(const string& s) {
 	// verify : https://atcoder.jp/contests/dp/tasks/dp_t
 
 	int n = sz(s) + 1;
@@ -214,6 +272,38 @@ mint count_permutations_adjacent_relation_insertDP(const string& s) {
 }
 
 
+//【単峰順列の数え上げ】
+/*
+* [0..n) の順列 p[0..n) で極大要素がちょうど 1 つ存在するものは 2^(n-1) 個ある．
+*
+*（証明）値について降順に挿入 DP を用いる．
+* n-1 の位置は 1 通り，n-2 以下の数は両端の 2 通りから選べるので順列は 2^(n-1) 個ある．
+*
+* verify : https://mojacoder.app/users/googol_S0/problems/beat-l-r
+*/
+
+
+//【差が 2 以上の順列の数え上げ】
+/*
+* [0..n) の順列 p[0..n) で隣接要素の差が 2 以上であるものの総数を a[n] とおくと，
+*	If n = 0 or 1 then a(n) = 1;
+*	if n = 2 or 3 then a(n) = 0;
+*	otherwise a(n) = (n+1)*a(n-1) - (n-2)*a(n-2) - (n-5)*a(n-3) + (n-3)*a(n-4).
+*	G.f.: Sum_{n >= 0} n!*x^n*(1-x)^n/(1+x)^n.
+* 
+* 参考 : https://oeis.org/A002464
+*/
+
+
+//【交代順列の数え上げ】
+/*
+* [0..n) の順列 p[0..n) で p[0] < p[1] > p[2] < p[3] > ... を満たすものを交代順列という．
+* 交代順列の個数の指数型母関数は tan(z) + 1/cos(z) である．
+* 
+* verify : https://yukicoder.me/problems/no/963
+*/
+
+
 //【123-avoiding な順列の数え上げ】
 /*
 * 最長増加部分列の長さが 2 以下である順列 p[0..n) を 123-avoiding であるという．
@@ -224,66 +314,13 @@ mint count_permutations_adjacent_relation_insertDP(const string& s) {
 */
 
 
-//【2 つ以下の増加部分列に分割可能な順列の数え上げ】O(n^2)
+//【順列の数え上げ（増加連分割）】
 /*
-* 2 つ以下の増加部分列に分割可能な [0..n) の順列の個数を返す．
+* [0..n) の順列 p[0..n) で，単調増加な連に分割したとき (連の長さ) ≡ 0, 1 (mod 2m)
+* であるようなものの個数を f_n とすると，その指数型母関数は
+*		Σn∈[0..∞) f_n z^n/n! = 1/(Σn∈[0..2m) (-1)^n z^n/n!)
 *
-*（挿入 DP）
-*/
-mint count_permutations_2IS(int n) {
-	// 参考 : https://degwer.hatenablog.com/entry/20171220
-
-	//【方法】
-	// [1..n] の順列 p[1..n] を 2 つの増加部分列に分割する方法は複数あり数えづらい．
-	// そこで分割の方法が一意になるように制約を課して数えやすくすることを考える．
-	//
-	// [1..i] の順列を A, B の 2 つの列に分割するとき，
-	//		A は i を含む
-	//		B の末尾は可能な限り小さくする
-	// の 2 つの制約を課すものとする．これで分割の方法は一意になった．
-	//
-	// これを踏まえて DP テーブルを
-	//		dp[i][j] : A, B に分割できる [1..i] の順列で，B の末尾が j であるものの数
-	// と定める．（B が空なら j = 0 とする）
-	//
-	// [1..i] の順列 p[1..i] に対し，x 以上の数を全てインクリメントした後 p[i+1] = x を追加すると，
-	//		p[i+1] = i+1 とする場合：		j' = j
-	//		j < p[i+1] < i+1 とする場合：	j' = p[i+1]
-	// というように遷移する．
-
-	//【備考】
-	// 実は二項係数で書けそう．
-
-	// dp[i][j] : A, B に分割できる [1..i] の順列で，B の末尾が j であるものの数
-	vvm dp(n + 1, vm(n));
-	dp[1][0] = 1;
-
-	// 貰う DP
-	rep(i, n) {
-		// acc[j] : Σdp[i][0..i)
-		vm acc(i + 2);
-		repi(j, 0, i) acc[j + 1] = acc[j] + dp[i][j];
-
-		// p[i+1] = i+1 とする場合
-		repi(j, 0, i) dp[i + 1][j] += dp[i][j];
-
-		// j < p[i+1] < i+1 とする場合
-		repi(j, 0, i) dp[i + 1][j] += acc[j];
-	}
-	dumpel(dp);
-
-	return accumulate(all(dp[n]), mint(0));
-}
-
-
-//【単峰順列の数え上げ】
-/*
-* [0..n) の順列 p[0..n) で極大要素がちょうど 1 つ存在するものは 2^(n-1) 個ある．
-* 
-*（証明）値について降順に挿入 DP を用いる．
-* n-1 の位置は 1 通り，n-2 以下の数は両端の 2 通りから選べるので順列は 2^(n-1) 個ある．
-* 
-* verify : https://mojacoder.app/users/googol_S0/problems/beat-l-r
+* 参考 : https://arxiv.org/abs/1807.09290
 */
 
 
@@ -638,7 +675,7 @@ void count_adjacent_sequence_fast(const vi& cnt, vm& res, Factorial_mint& fm) {
 }
 
 
-//【列の数え上げ（差 1 以下禁止）】O(n m max(cnt[i])^7) ? 
+//【列の数え上げ（差 1 以下禁止）】O(n m max(cnt[i])^7) ?
 /*
 * [0..n) それぞれを cnt[0..n) 個ずつ含む長さ m の列で，差が 1 以下の数が隣り合わないものの個数を返す．
 *
@@ -646,6 +683,19 @@ void count_adjacent_sequence_fast(const vi& cnt, vm& res, Factorial_mint& fm) {
 *
 * 利用：【階乗など（法が大きな素数）】
 */
+struct Hash_CNS {
+	size_t operator()(const tuple<int, int, int>& p) const {
+		auto hash0 = hash<ll>{}(get<0>(p));
+		auto hash1 = hash<ll>{}(get<1>(p));
+		auto hash2 = hash<ll>{}(get<2>(p));
+
+		size_t seed = 0;
+		seed ^= hash0 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hash1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		seed ^= hash2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		return seed;
+	}
+};
 mint count_noncontinuous_sequence(const vi& cnt_) {
 	// verify : https://atcoder.jp/contests/joi2019yo/tasks/joi2019_yo_f
 
@@ -662,39 +712,24 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 	int n = sz(cnt);
 	Factorial_mint fm(m);
 
-	// unordered_map<ll, -> 用
-	auto hash = [&](int j0, int j1, int J1) {
-		// j0 の最大値は i がひとかたまりになった場合の cnt_max - 1
-		// j1 の最大値は i と i-1 が交互に並んだ場合の 2 * cnt_max
-		// これらを基数として j0, j1, J1 を混ぜ合わせる．
-		return j0 + (ll)cnt_max * (j1 + (2LL * cnt_max + 1) * J1);
-	};
-	auto unhash = [&](ll v) {
-		int j0 = v % cnt_max; v /= cnt_max;
-		int j1 = v % (2 * cnt_max); v /= (2LL * cnt_max + 1);
-		int J1 = (int)v;
-		return make_tuple(j0, j1, J1);
-	};
-
 	// dp[i][{j0, j1, J1}] : [0..i) までで以下の条件を満たす列の個数：
 	//		j0 : i-1 を含む差が 0 の隣接箇所（i-1 と i-1）の個数
 	//		j1 : i-1 を含む差が 1 の隣接箇所（i-1 と i-2）の個数
 	//		j2 : i-1 を含む差が 2 以上の隣接箇所の個数
 	//		J1 : i-1 を含まない差が 1 以下の隣接箇所の個数
 	//		J2 : i-1 を含まない差が 2 以上の隣接箇所の個数
-	vector<unordered_map<ll, mint>> dp(n + 1);
-	dp[0][hash(0, 0, 0)] = 1;
+	vector<unordered_map<tuple<int, int, int>, mint, Hash_CNS>> dp(n + 1);
+	dp[0][{0, 0, 0}] = 1;
 	dump(dp[0]);
 
 	int len = 2; // 文字列の長さ（両端の番兵 -inf, inf を含む）
 
 	// i : 次に挿入する数
 	rep(i, n) {
-		repe(tmp, dp[i]) {
-			int j0, j1, j2, J1, J2;
-			tie(j0, j1, J1) = unhash(tmp.first);
-			j2 = 2 * (i > 0 ? cnt[i - 1] : 0) - (2 * j0 + j1);
-			J2 = (len - 1) - (j0 + j1 + j2 + J1);
+		for (auto [j0j1J1, val] : dp[i]) {
+			auto [j0, j1, J1] = j0j1J1;
+			int j2 = 2 * (i > 0 ? cnt[i - 1] : 0) - (2 * j0 + j1);
+			int J2 = (len - 1) - (j0 + j1 + j2 + J1);
 
 			// k : 数 i をいくつの固まりに分けるか
 			// ここからのループがひどいが，定数倍 1/5! = 1/120 が掛かっている．
@@ -712,7 +747,7 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 								int nj1 = 2 * ij0 + ij1 + ij2;
 								int nJ1 = (J1 - iJ1) + (j0 - ij0) + (j1 - ij1);
 
-								mint add = tmp.second;
+								mint add = val;
 
 								// cnt[i] 個の文字を順序込みで k 個に分ける方法の数
 								//	まず文字を k 個減らしておき，重複組合せの考え方を用いて
@@ -728,7 +763,7 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 								add *= fm.bin(J1, iJ1);
 								add *= fm.bin(J2, iJ2);
 
-								dp[i + 1][hash(nj0, nj1, nJ1)] += add;
+								dp[i + 1][{nj0, nj1, nJ1}] += add;
 							}
 						}
 					}
@@ -738,7 +773,7 @@ mint count_noncontinuous_sequence(const vi& cnt_) {
 		len += cnt[i];
 	}
 
-	return dp[n][hash(0, 0, 0)];
+	return dp[n][{0, 0, 0}];
 }
 
 

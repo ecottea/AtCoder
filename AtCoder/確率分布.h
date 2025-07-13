@@ -140,6 +140,18 @@ void multinomial_distribution_kind_probability(int K, const vm& p, vm& pr) {
 *	F_k(x) = Σj∈[k..n] bin(n,j) F(x)^j (1-F(x))^(n-j)
 *	f_k(x) = n bin(n-1,k-1) F(x)^(k-1) (1-F(x))^(n-k) f(x)
 * で与えられる．
+* 
+*（証明）
+* 累積分布関数の定義より，
+*	F_k(x)
+*	= Pr(X[0..n) のうち昇順で k 番目の値 ≦ x)
+*	= Pr(X[0..n) のうち x 以下の値が k 個以上)
+*	= Σj∈[k..n] Pr(X[0..n) のうち x 以下の値が j 個)
+*	= Σj∈[k..n] bin(n,j) Pr(X≦x)^j Pr(X>x)^(n-j)
+*	= Σj∈[k..n] bin(n,j) F(x)^j (1-F(x))^(n-j)
+* となる．また F_k(x) を x で微分し望遠鏡和をとることで f_k(x) の表式を得る．
+*
+* 参考 : https://ja.wikipedia.org/wiki/%E9%A0%86%E5%BA%8F%E7%B5%B1%E8%A8%88%E9%87%8F
 */
 
 

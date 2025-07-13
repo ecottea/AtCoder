@@ -138,6 +138,117 @@ public:
 };
 
 
+//【偶奇 Union-Find】
+/*
+* Parity_union_find(int n) : O(n)
+*	非連結な頂点 [0..n) で初期化する．
+*
+* merge_even(int a, int b) : O(α(n))
+*	頂点 a と頂点 b を長さ 0 の辺で結ぶ．（統合とみなせる）
+*
+* merge_odd(int a, int b) : O(α(n))
+*	頂点 a と頂点 b を長さ 1 の辺で結ぶ．
+*
+* bool same_even(int a, int b) : O(α(n))
+*	頂点 a, b 間の距離が偶数かを返す．（非連結なら false を返す）
+*
+* bool same_odd(int a, int b) : O(α(n))
+*	頂点 a, b 間の距離が奇数かを返す．（非連結なら false を返す）
+*
+* int count_even(int a) : O(α(n))
+*	頂点 a の属する連結成分に含まれる a と偶数回の移動で行き来できる頂点の個数を返す．
+*
+* int count_odd(int a) : O(α(n))
+*	頂点 a の属する連結成分に含まれる a と奇数回の移動で行き来できる頂点の個数を返す．
+*/
+class Parity_union_find {
+	int n;
+	dsu d;
+
+	// cnt[i] : 頂頂点 i を根とする連結成分内にある頂点 [0..n) の個数
+	vi cnt;
+
+public:
+	// 非連結な頂点 [0..n) で初期化する．
+	Parity_union_find(int n) : n(n), d(2 * n), cnt(2 * n) {
+		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
+
+		rep(i, n) cnt[i] = 1;
+	}
+	Parity_union_find() : n(0) {}
+
+	// 頂点 a と頂点 b を 1 つに統合する．
+	void merge_even(int a, int b) {
+		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
+
+		Assert(0 <= a && a < n && 0 <= b && b < n);
+
+		if (d.same(a, b)) return;
+
+		int c = cnt[d.leader(a)] + cnt[d.leader(b)];
+		d.merge(a, b);
+		cnt[d.leader(a)] = c;
+
+		c = cnt[d.leader(a + n)] + cnt[d.leader(b + n)];
+		d.merge(a + n, b + n);
+		cnt[d.leader(a + n)] = c;
+	}
+
+	// 頂点 a と頂点 b を辺で結ぶ．
+	void merge_odd(int a, int b) {
+		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
+
+		Assert(0 <= a && a < n && 0 <= b && b < n);
+
+		if (d.same(a, b + n)) return;
+
+		int c = cnt[d.leader(a)] + cnt[d.leader(b + n)];
+		d.merge(a, b + n);
+		cnt[d.leader(a)] = c;
+
+		c = cnt[d.leader(a + n)] + cnt[d.leader(b)];
+		d.merge(a + n, b);
+		cnt[d.leader(a + n)] = c;
+	}
+
+	// 頂点 a, b 間を偶数回の移動で行き来できるかを返す．
+	bool same_even(int a, int b) {
+		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
+
+		Assert(0 <= a && a < n && 0 <= b && b < n);
+
+		return d.same(a, b);
+	}
+
+	// 頂点 a, b 間を奇数回の移動で行き来できるかを返す．
+	bool same_odd(int a, int b) {
+		// verify : https://atcoder.jp/contests/abc126/tasks/abc126_d
+
+		Assert(0 <= a && a < n && 0 <= b && b < n);
+
+		return d.same(a, b + n);
+	}
+
+	// 頂点 a の属する連結成分に含まれる a と偶数回の移動で行き来できる頂点の個数を返す．
+	int count_even(int a) {
+		// verify : https://www.codechef.com/problems/RANDCOLORING
+
+		Assert(0 <= a && a < n);
+
+		return cnt[d.leader(a)];
+	}
+
+	// 頂点 a の属する連結成分に含まれる a と奇数回の移動で行き来できる頂点の個数を返す．
+	int count_odd(int a) {
+		// verify : https://www.codechef.com/problems/RANDCOLORING
+
+		Assert(0 <= a && a < n);
+
+		return d.same(a, a + n) ? d.size(a) / 2 : d.size(a) - cnt[d.leader(a)];
+	}
+};
+
+
 //【ポテンシャル Union-Find】
 /*
 * Potential_union_find<T>(int n) : O(n)
@@ -414,6 +525,8 @@ public:
 
 	// 連結成分の (頂点番号, ポテンシャル) の組のリストを返す．
 	vector<vector<pair<int, S>>> groups() {
+		// verify : https://atcoder.jp/contests/abc396/tasks/abc396_e
+
 		vector<vector<pair<int, S>>> res(m);
 
 		vi r_to_i(n, -1); int i = 0;
@@ -485,6 +598,8 @@ struct Partially_persistent_union_find {
 	Partially_persistent_union_find(int n_)
 		: n(n_), now(0), parent(n), rank(n, 1), time(n, INF), num(n)
 	{
+		// verify : https://atcoder.jp/contests/code-thanks-festival-2017-open/tasks/code_thanks_festival_2017_h
+		
 		rep(i, n) {
 			parent[i] = i;
 			num[i].push_back({ 0, 1 });
@@ -850,117 +965,6 @@ public:
 };
 
 
-//【偶奇 Union-Find】
-/*
-* Parity_union_find(int n) : O(n)
-*	非連結な頂点 [0..n) で初期化する．
-*
-* merge_even(int a, int b) : O(α(n))
-*	頂点 a と頂点 b を長さ 0 の辺で結ぶ．（統合とみなせる）
-*
-* merge_odd(int a, int b) : O(α(n))
-*	頂点 a と頂点 b を長さ 1 の辺で結ぶ．
-*
-* bool same_even(int a, int b) : O(α(n))
-*	頂点 a, b 間の距離が偶数かを返す．（非連結なら false を返す）
-*
-* bool same_odd(int a, int b) : O(α(n))
-*	頂点 a, b 間の距離が奇数かを返す．（非連結なら false を返す）
-*
-* int count_even(int a) : O(α(n))
-*	頂点 a の属する連結成分に含まれる a と偶数回の移動で行き来できる頂点の個数を返す．
-*
-* int count_odd(int a) : O(α(n))
-*	頂点 a の属する連結成分に含まれる a と奇数回の移動で行き来できる頂点の個数を返す．
-*/
-class Parity_union_find {
-	int n;
-	dsu d;
-
-	// cnt[i] : 頂頂点 i を根とする連結成分内にある頂点 [0..n) の個数
-	vi cnt;
-
-public:
-	// 非連結な頂点 [0..n) で初期化する．
-	Parity_union_find(int n) : n(n), d(2 * n), cnt(2 * n) {
-		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
-
-		rep(i, n) cnt[i] = 1;
-	}
-	Parity_union_find() : n(0) {}
-
-	// 頂点 a と頂点 b を 1 つに統合する．
-	void merge_even(int a, int b) {
-		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
-
-		Assert(0 <= a && a < n && 0 <= b && b < n);
-
-		if (d.same(a, b)) return;
-
-		int c = cnt[d.leader(a)] + cnt[d.leader(b)];
-		d.merge(a, b);
-		cnt[d.leader(a)] = c;
-
-		c = cnt[d.leader(a + n)] + cnt[d.leader(b + n)];
-		d.merge(a + n, b + n);
-		cnt[d.leader(a + n)] = c;
-	}
-
-	// 頂点 a と頂点 b を辺で結ぶ．
-	void merge_odd(int a, int b) {
-		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
-
-		Assert(0 <= a && a < n && 0 <= b && b < n);
-
-		if (d.same(a, b + n)) return;
-
-		int c = cnt[d.leader(a)] + cnt[d.leader(b + n)];
-		d.merge(a, b + n);
-		cnt[d.leader(a)] = c;
-
-		c = cnt[d.leader(a + n)] + cnt[d.leader(b)];
-		d.merge(a + n, b);
-		cnt[d.leader(a + n)] = c;
-	}
-
-	// 頂点 a, b 間を偶数回の移動で行き来できるかを返す．
-	bool same_even(int a, int b) {
-		// verify : https://atcoder.jp/contests/arc036/tasks/arc036_d
-
-		Assert(0 <= a && a < n && 0 <= b && b < n);
-
-		return d.same(a, b);
-	}
-
-	// 頂点 a, b 間を奇数回の移動で行き来できるかを返す．
-	bool same_odd(int a, int b) {
-		// verify : https://atcoder.jp/contests/abc126/tasks/abc126_d
-
-		Assert(0 <= a && a < n && 0 <= b && b < n);
-
-		return d.same(a, b + n);
-	}
-
-	// 頂点 a の属する連結成分に含まれる a と偶数回の移動で行き来できる頂点の個数を返す．
-	int count_even(int a) {
-		// verify : https://www.codechef.com/problems/RANDCOLORING
-
-		Assert(0 <= a && a < n);
-
-		return cnt[d.leader(a)];
-	}
-
-	// 頂点 a の属する連結成分に含まれる a と奇数回の移動で行き来できる頂点の個数を返す．
-	int count_odd(int a) {
-		// verify : https://www.codechef.com/problems/RANDCOLORING
-
-		Assert(0 <= a && a < n);
-
-		return d.same(a, a + n) ? d.size(a) / 2 : d.size(a) - cnt[d.leader(a)];
-	}
-};
-
-
 //【[1点,連結成分]加算／[1点,連結成分]総和 Union-Find】
 /*
 * Add_Sum_union_find<T>(int n) : O(n)
@@ -1004,6 +1008,9 @@ public:
 */
 template <class T>
 class Add_Sum_union_find {
+	//【備考】
+	// 経路圧縮もできるがやるとなぜか遅くなった．
+
 	int n; // 頂点の個数
 	int m; // 連結成分数
 
@@ -1078,6 +1085,8 @@ public:
 
 	// 頂点 s の属する連結成分の頂点数を返す．
 	int size(int s) {
+		// verify : https://yukicoder.me/problems/no/483
+
 		// s の根を調べ，そこに記録されている頂点数の情報を返す．
 		return cnt[leader(s)];
 	}
@@ -1128,6 +1137,8 @@ public:
 
 	// 頂点 s に x を加算する．
 	void add(int s, T x) {
+		// verify : https://yukicoder.me/problems/no/483
+
 		v[s] += x;
 		vsum[leader(s)] += x;
 	}
@@ -1270,6 +1281,8 @@ struct Sum_union_find {
 
 	// 連結成分の個数を返す．
 	int size() {
+		// verify : https://yukicoder.me/problems/11831
+
 		return m;
 	}
 
@@ -1292,6 +1305,393 @@ struct Sum_union_find {
 		repe(g, d.groups()) {
 			repe(v, g) os << v << " ";
 			os << "sum: " << d.sum(g[0]) << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【[連結成分]作用／[1点,連結成分]総和 Union-Find（M-可換モノイド）】
+/*
+* Apply_Sum_union_find<S, op, o, F, act, comp, id>(int n) : O(n)
+*	非連結で頂点数 n の Union-Find を値 o で初期化する．
+*	要素は左作用付き可換モノイド (S, op, o, F, act, comp, id) の元とする．
+*
+* Apply_Sum_union_find<S, op, o, F, act, comp, id>(vS a) : O(n)
+*	非連結で頂点数 n の Union-Find を値 a[0..n) で初期化する．
+*
+* bool merge(int s, int t) : O(log n)
+*	頂点 s と頂点 t を統合し，実際に統合されたかを返す．
+*
+* bool same(int s, int t) : O(log n)
+*	頂点 s と頂点 t が同じ連結成分に属するかを返す．
+*
+* int leader(int s) : O(log n)
+*	頂点 s の属する連結成分の根を返す．
+*	注意 : 戻り値は [0..2n-1) の範囲の値をとる．
+*
+* int size(int s) : O(log n)
+*	頂点 s の属する連結成分の頂点数を返す．
+*
+* int size() : O(1)
+*	連結成分の個数を返す．
+*
+* S get(int s) : O(log n)
+*	頂点 s の値を返す．
+*
+* S sum_component(int s) : O(log n)
+*	頂点 s の属する連結成分の総和を返す．
+*
+* void apply_component(int s, F f) : O(log n)
+*	頂点 s を含む連結成分全体の値に f を作用させる．
+*
+* vvi groups() : O(n log n)
+*	連結成分のリストを返す．
+*/
+template <class S, S(*op)(S, S), S(*o)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Apply_Sum_union_find {
+	int n; // 頂点の個数
+	int m; // 連結成分数
+
+	// par[s] : 頂点 s の親（s が根なら -1）
+	vi par;
+
+	// cnt[s] : 頂点 s を根とする連結成分の頂点数（根以外は未定義）
+	vi cnt;
+
+	// v[s] : 頂点 s の初期値
+	vector<S> v;
+
+	// vsum[s] : 頂点 s を根とする連結成分の総和（根以外は未定義）
+	vector<S> vsum;
+
+	// vapply[s] : 部分木 s への作用値
+	vector<F> vapply;
+
+public:
+	// 非連結で大きさ n の Union-Find を値 o で初期化する．
+	Apply_Sum_union_find(int n) : n(n), m(n), par(2 * n - 1, -1), cnt(2 * n - 1, 1), v(n, o()), vsum(2 * n - 1, o()), vapply(2 * n - 1, id()) {
+		// verify : https://atcoder.jp/contests/nupc2024/tasks/nupc2024_d
+	}
+
+	// 非連結で頂点数 n の Union-Find を値 a[0..n) で初期化する．
+	Apply_Sum_union_find(const vector<S>& a) : n(sz(a)), m(n), par(2 * n - 1, -1), cnt(2 * n - 1, 1), v(a), vsum(2 * n - 1, o()), vapply(2 * n - 1, id()) {
+		rep(i, n) vsum[i] = a[i];
+	}
+	Apply_Sum_union_find() : n(0), m(0) {}
+
+	// 頂点 s の属する連結成分の根を返す．
+	int leader(int s) {
+		// p : s の親
+		int p = par[s];
+
+		// s が根であれば自身を返す．
+		if (p == -1) return s;
+
+		// r : s の属する連結成分の根
+		int r = leader(p);
+
+		// p に溜まっている作用を s に直接作用させる．
+		if (p != r) vapply[s] = comp(vapply[p], vapply[s]);
+
+		// s を根に直接繋ぐ（経路圧縮）
+		par[s] = r;
+
+		return r;
+	}
+
+	// 頂点 s, t を結合し，実際に統合されたかを返す．
+	bool merge(int s, int t) {
+		// verify : https://atcoder.jp/contests/nupc2024/tasks/nupc2024_d
+
+		// 頂点 s, t の属する連結成分の根 rs, rt を得る．
+		int rs = leader(s);
+		int rt = leader(t);
+
+		// 根が同じであれば既に連結であるから何もしない．
+		if (rs == rt) return false;
+
+		// 共通の親 p を追加して連結成分を統合する（マージテクは使わない）
+		int p = 2 * n - m;
+		cnt[p] = cnt[rs] + cnt[rt];
+		vsum[p] = op(vsum[rs], vsum[rt]);
+		par[rs] = p;
+		par[rt] = p;
+
+		// 連結成分の数を 1 つ減らす．
+		m--;
+
+		return true;
+	}
+
+	// 頂点 s, t が同じ連結成分に属するかを返す．
+	bool same(int s, int t) {
+		// 根が同じなら連結である．
+		return leader(s) == leader(t);
+	}
+
+	// 頂点 s の属する連結成分の頂点数を返す．
+	int size(int s) {
+		// s の根を調べ，そこに記録されている頂点数の情報を返す．
+		return cnt[leader(s)];
+	}
+
+	// 連結成分の個数を返す．
+	int size() {
+		return m;
+	}
+
+	// 連結成分のリストを返す．
+	vvi groups() {
+		vvi res(m);
+
+		// r_to_col[r] : 根を r とする連結成分が何番目か
+		vi r_to_col(2 * n - 1, -1); int col = 0;
+
+		rep(s, n) {
+			int r = leader(s);
+			if (r_to_col[r] == -1) r_to_col[r] = col++;
+			res[r_to_col[r]].push_back(s);
+		}
+
+		return res;
+	}
+
+	// 頂点 s の値を返す．
+	S get(int s) {
+		// verify : https://atcoder.jp/contests/nupc2024/tasks/nupc2024_d
+
+		int r = leader(s);
+
+		S res = v[s];
+
+		if (r != s) res = act(vapply[s], res);
+		res = act(vapply[r], res);
+
+		return res;
+	}
+
+	// 頂点 s の属する連結成分の総和を返す．
+	S sum_component(int s) {
+		// s の根を調べ，そこに記録されている総和の情報を返す．
+		return vsum[leader(s)];
+	}
+
+	// 頂点 s を含む連結成分全体に f を作用させる．
+	void apply_component(int s, F f) {
+		// verify : https://atcoder.jp/contests/nupc2024/tasks/nupc2024_d
+
+		int r = leader(s);
+
+		vapply[r] = comp(f, vapply[r]);
+		vsum[r] = act(f, vsum[r]);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Apply_Sum_union_find d) {
+		repe(g, d.groups()) {
+			repe(v, g) os << v << ":" << d.get(v) << " ";
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【[1点,連結成分]加算／[1点,連結成分]総和 Union-Find】
+/*
+* Add_Sum_union_find<T>(int n) : O(n)
+*	非連結で頂点数 n の Union-Find を値 0 で初期化する．
+*
+* Add_Sum_union_find<T>(vT a) : O(n)
+*	非連結で頂点数 n の Union-Find を値 a[0..n) で初期化する．
+*
+* bool merge(int s, int t) : O(log n)
+*	頂点 s と頂点 t を統合し，実際に統合されたかを返す．
+*
+* bool same(int s, int t) : O(log n)
+*	頂点 s と頂点 t が同じ連結成分に属するかを返す．
+*
+* int leader(int s) : O(log n)
+*	頂点 s の属する連結成分の根を返す．
+*
+* int size(int s) : O(log n)
+*	頂点 s の属する連結成分の頂点数を返す．
+*
+* int size() : O(1)
+*	連結成分の個数を返す．
+*
+* T get(int s) : O(log n)
+*	頂点 s の値を返す．
+*
+* T sum_component(int s) : O(log n)
+*	頂点 s の属する連結成分の総和を返す．
+*
+* void set(int s, T x) : O(log n)
+*	頂点 s の値を x にする．
+*
+* void add(int s, T x) : O(1)
+*	頂点 s に x を加算する．
+*
+* void add_component(int s, T x) : O(log n)
+*	頂点 s を含む連結成分全体に x を加算する．
+*
+* vvi groups() : O(n log n)
+*	連結成分のリストを返す．
+*/
+template <class T>
+class Add_Sum_union_find {
+	int n; // 頂点の個数
+	int m; // 連結成分数
+
+	// par[s] : 頂点 s の親（s が根なら -1）
+	vi par;
+
+	// cnt[s] : 頂点 s を根とする連結成分の頂点数（根以外は未定義）
+	vi cnt;
+
+	// v[s] : 頂点 s の値（ただし加算は反映されていない）
+	vector<T> v;
+
+	// vsum[s] : 頂点 s を根とする連結成分の総和（根以外は未定義）
+	vector<T> vsum;
+
+	// vadd[s] : 部分木 s への加算値
+	vector<T> vadd;
+
+public:
+	// 非連結で大きさ n の Union-Find を値 0 で初期化する．
+	Add_Sum_union_find(int n) : n(n), m(n), par(n, -1), cnt(n, 1), v(n), vsum(n), vadd(n) {
+		// verify : https://mofecoder.com/contests/yurufuwa_onsite_08/tasks/yurufuwa_onsite_08_f
+	}
+
+	// 非連結で頂点数 n の Union-Find を値 a[0..n) で初期化する．
+	Add_Sum_union_find(const vector<T>& a) : n(sz(a)), m(n), par(n, -1), cnt(n, 1), v(a), vsum(a), vadd(n) {
+	}
+	Add_Sum_union_find() : n(0), m(0) {}
+
+	// 頂点 s の属する連結成分の根を返す．
+	int leader(int s) {
+		// s が根でない限り親への移動を繰り返す．
+		while (par[s] != -1) s = par[s];
+
+		return s;
+	}
+
+	// 頂点 s, t を結合し，実際に統合されたかを返す．
+	bool merge(int s, int t) {
+		// verify : https://mofecoder.com/contests/yurufuwa_onsite_08/tasks/yurufuwa_onsite_08_f
+
+		// 頂点 s, t の属する連結成分の根 rs, rt を得る．
+		int rs = leader(s);
+		int rt = leader(t);
+
+		// 根が同じであれば既に連結であるから何もしない．
+		if (rs == rt) return false;
+
+		// 大きい連結成分の根を改めて rs，小さい方を rt とする．
+		if (cnt[rs] < cnt[rt]) swap(rs, rt);
+
+		// rs を根とする大きい連結成分に，rt を根とする小さい連結成分を統合する（マージテク）
+		par[rt] = rs;
+		cnt[rs] += cnt[rt];
+		vsum[rs] += vsum[rt];
+		vadd[rt] -= vadd[rs];
+
+		// 連結成分の数を 1 つ減らす．
+		m--;
+
+		return true;
+	}
+
+	// 頂点 s, t が同じ連結成分に属するかを返す．
+	bool same(int s, int t) {
+		// 根が同じなら連結である．
+		return leader(s) == leader(t);
+	}
+
+	// 頂点 s の属する連結成分の頂点数を返す．
+	int size(int s) {
+		// s の根を調べ，そこに記録されている頂点数の情報を返す．
+		return cnt[leader(s)];
+	}
+
+	// 連結成分の個数を返す．
+	int size() {
+		return m;
+	}
+
+	// 連結成分のリストを返す．
+	vvi groups() {
+		// verify : https://mofecoder.com/contests/yurufuwa_onsite_08/tasks/yurufuwa_onsite_08_f
+		
+		vvi res(m);
+
+		// r_to_id[r] : 根を r とする連結成分が何番目か
+		vi r_to_id(n, -1); int id = 0;
+
+		rep(s, n) {
+			int r = leader(s);
+			if (r_to_id[r] == -1) r_to_id[r] = id++;
+			res[r_to_id[r]].push_back(s);
+		}
+
+		return res;
+	}
+
+	// 頂点 s の値を返す．
+	T get(int s) {
+		T res = v[s];
+
+		// s から根までの加算値を集める．
+		while (s != -1) {
+			res += vadd[s];
+			s = par[s];
+		}
+
+		return res;
+	}
+
+	// 頂点 s の属する連結成分の総和を返す．
+	T sum_component(int s) {
+		// verify : https://mofecoder.com/contests/yurufuwa_onsite_08/tasks/yurufuwa_onsite_08_f
+
+		// s の根を調べ，そこに記録されている総和の情報を返す．
+		return vsum[leader(s)];
+	}
+
+	// 頂点 s に x を加算する．
+	void add(int s, T x) {
+		// verify : https://mofecoder.com/contests/yurufuwa_onsite_08/tasks/yurufuwa_onsite_08_f
+
+		int r = leader(s);
+
+		v[s] += x;
+		vsum[r] += x;
+	}
+
+	// 頂点 s の値を x にする．
+	void set(int s, T x) {
+		// 現在の値との差分を加算する．
+		add(s, x - get(s));
+	}
+
+	// 頂点 s を含む連結成分全体に x を加算する．
+	void add_component(int s, T x) {
+		// r : s の属する連結成分の根
+		int r = leader(s);
+
+		vsum[r] += x * (T)cnt[r];
+		vadd[r] += x;
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Add_Sum_union_find d) {
+		repe(g, d.groups()) {
+			repe(v, g) os << v << ":" << d.get(v) << " ";
+			os << endl;
 		}
 		return os;
 	}

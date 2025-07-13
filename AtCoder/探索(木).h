@@ -4,15 +4,14 @@
 // ■■■■■ 木の探索 ■■■■■
 
 
-//【深さ優先探索】O(n + m)
+//【深さ優先探索】O(n)
 /*
-* 木 g に対し始点を st として深さ優先探索を行い，通った頂点を順に seq に格納する．
-* 一度訪れた頂点には，帰り道以外で再び訪れることはない．
+* 木 g に対し始点を st として深さ優先探索を行い，通った頂点を順に格納したリストを返す．
 */
 template <class G>
-void tree_dfs(G& g, int st, vi& seq) {
+vi tree_dfs(const G& g, int st) {
 	int n = sz(g);
-	seq.clear();
+	vi seq;
 
 	// 再帰用の関数
 	function<void(int, int)> dfs = [&](int s, int p) {
@@ -35,16 +34,18 @@ void tree_dfs(G& g, int st, vi& seq) {
 
 	// 根を始点として再帰関数を呼び出す．
 	dfs(st, -1);
+
+	return seq;
 }
 
 
-//【深さ優先探索（森）】O(n + m)
+//【深さ優先探索（森）】O(n)
 /*
 * 森 g の各木に対し適当な始点から深さ優先探索を行い，通った頂点を順に seq に格納する．
 * 一度訪れた頂点には，帰り道以外で再び訪れることはない．
 */
 template <class G>
-void forest_dfs(G& g, int st, vi& seq) {
+void forest_dfs(const G& g, int st, vi& seq) {
 	// verify : https://atcoder.jp/contests/abc213/tasks/abc213_d
 
 	int n = sz(g);

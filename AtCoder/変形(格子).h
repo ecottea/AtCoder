@@ -3,6 +3,23 @@
 // ■■■■■ 格子データの向きの変換 ■■■■■
 
 
+//【転置】O(h w)
+/*
+* a[0..h)[0..w) を転置したものを返す．
+*/
+template <class T>
+vector<vector<T>> transpose(const vector<vector<T>>& a) {
+	// verify : https://yukicoder.me/problems/no/1974
+
+	int h = sz(a), w = sz(a[0]);
+
+	vector<vector<T>> b(w, vector<T>(h));
+	rep(i, h) rep(j, w) b[j][i] = a[i][j];
+
+	return b;
+}
+
+
 //【左右反転】O(h w)
 /*
 * a[0..h)[0..w) を左右反転したものを返す．
@@ -32,23 +49,6 @@ vector<vector<T>> flip_x(const vector<vector<T>>& a) {
 
 	vector<vector<T>> b(h, vector<T>(w));
 	rep(i, h) rep(j, w) b[i][j] = a[h - 1 - i][j];
-
-	return b;
-}
-
-
-//【転置】O(h w)
-/*
-* a[0..h)[0..w) を転置したものを返す．
-*/
-template <class T>
-vector<vector<T>> transpose(const vector<vector<T>>& a) {
-	// verify : https://yukicoder.me/problems/no/1974
-
-	int h = sz(a), w = sz(a[0]);
-
-	vector<vector<T>> b(w, vector<T>(h));
-	rep(i, h) rep(j, w) b[j][i] = a[i][j];
 
 	return b;
 }
@@ -103,6 +103,38 @@ vector<vector<T>> rotate270(const vector<vector<T>>& a) {
 }
 
 
+//【二次元 → 一次元】O(h w)
+/*
+* 二次元リスト a[0..h)[0..w) を一次元化したリストを返す．
+*/
+template <class T>
+vector<T> flatten(const vector<vector<T>>& a) {
+	int h = sz(a), w = sz(a[0]);
+
+	vector<T> seq(h * w);
+	rep(i, h) rep(j, w) seq[i * w + j] = a[i][j];
+
+	return seq;
+}
+
+
+//【一次元 → 二次元】O(h w)
+/*
+* リスト seq[0..hw) を幅 w で二次元化した二次元リストを返す．
+*/
+template <class T>
+vector<vector<T>> partition(const vector<T>& seq, int w) {
+	int n = sz(seq);
+	Assert(n % w == 0);
+	int h = n / w;
+
+	vector<vector<T>> a(h, vector<T>(w));
+	rep(i, h) rep(j, w) a[i][j] = seq[i * w + j];
+
+	return a;
+}
+
+
 //【トリミング】O(h w)
 /*
 * a[0..h)[0..w) を bg 以外を全て含む最小矩形でトリミングした結果を返す．
@@ -134,11 +166,13 @@ vector<vector<T>> trim(const vector<vector<T>>& a, T bg = '.') {
 }
 
 
-//【上三角領域の矩形分割】O(n log n)
+//【上三角領域の矩形分割】O(n)
 /*
 * n×n 格子の狭義上三角領域 S = {(i,j) | 0 ≦ i < j < n} を矩形に分割し，矩形のリストを返す．
 * strict = false にすると広義上三角部分 S = {(i,j) | 0 ≦ i ≦ j < n} を矩形に分割する．
 * 矩形 [i1..i2)×[j1..j2) は 4 つ組 {i1, i2, j1, j2} で表す．
+*
+* 全ての矩形をわたる (高さ)+(幅) の総和は O(n log n) で抑えられる．
 *
 *（分割統治法）
 */
@@ -165,16 +199,20 @@ vector<tuple<int, int, int, int>> trig_to_rects(int n, bool strict = true) {
 }
 
 
-//【帯領域の矩形分割】O((h + w) log(h + w))
+//【帯領域の矩形分割】O(h + w)
 /*
 * h×w 格子の帯領域 S = {(x,y) | y_min[x] ≦ y ≦ y_max[x]} を矩形に分割し，矩形のリストを返す．
 * 矩形 [x1..x2)×[y1..y2) は 4 つ組 {x1, x2, y1, y2} で表す．
+*
+* 全ての矩形をわたる (高さ)+(幅) の総和は O((h+w)log(h+w)) で抑えられる．
 *
 * 制約：y_min[0..h), y_max[0..h) は広義単調増加，y_min[i] ≦ y_max[i]
 *
 *（分割統治法）
 */
 vector<tuple<int, int, int, int>> band_to_rects(const vi& y_min, const vi& y_max) {
+	// verify : https://yukicoder.me/problems/no/989
+
 	int h = sz(y_min), w = y_max.back() + 1;
 
 	// 各 y についての x の下限を求める．

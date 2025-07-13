@@ -456,15 +456,15 @@ class Dynamic_segtree {
 public:
 	// a[0..n) = e() で初期化する．
 	Dynamic_segtree(ll n) : n(n), root(nullptr) {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite_large_array
 	}
 	Dynamic_segtree() : n(0LL), root(nullptr) {}
 
 	// a[i] = x とする．
 	void set(ll i, S x) {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite_large_array
 
-		Assert(0LL <= i && i < n);
+		Assert(0LL <= i); Assert(i < n);
 
 		set(root, 0LL, n, i, x, SET);
 	}
@@ -473,30 +473,30 @@ public:
 	void apply_left(ll i, S x) {
 		// verify : https://mojacoder.app/users/Tonegawac/problems/data-structure2
 
-		Assert(0LL <= i && i < n);
+		Assert(0LL <= i); Assert(i < n);
 
 		set(root, 0LL, n, i, x, APL);
 	}
 
 	// a[i] = a[i] * x とする．
 	void apply_right(ll i, S x) {
-		Assert(0LL <= i && i < n);
+		Assert(0LL <= i); Assert(i < n);
 
 		set(root, 0LL, n, i, x, APR);
 	}
 
 	// a[i] を返す．
 	S get(ll i) const {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+		// verify : https://judge.yosupo.jp/problem/associative_array
 
-		Assert(0LL <= i && i < n);
+		Assert(0LL <= i); Assert(i < n);
 
 		return get(root, 0LL, n, i);
 	}
 
 	// Πa[l..r) を返す．空なら e() を返す．
 	S prod(ll l, ll r) const {
-		// verify : https://www.spoj.com/problems/ADAAPHID/
+		// verify : https://judge.yosupo.jp/problem/point_set_range_composite_large_array
 
 		chmax(l, 0LL); chmin(r, n);
 		if (l >= r) return e();
@@ -673,7 +673,7 @@ public:
 	S get(int i) {
 		// verify : https://judge.yosupo.jp/problem/range_affine_point_get
 
-		Assert(0 <= i && i < actual_n);
+		Assert(0 <= i); Assert(i < actual_n);
 		return get_sub(i, 1, 0, n);
 	}
 
@@ -690,7 +690,7 @@ public:
 	void apply(int i, F f) {
 		// verify : https://yukicoder.me/problems/no/1000
 
-		Assert(0 <= i && i < actual_n);
+		Assert(0 <= i); Assert(i < actual_n);
 		apply_sub(i, i + 1, f, 1, 0, n);
 	}
 
@@ -713,7 +713,7 @@ public:
 };
 
 
-//【可換双対セグメント木（M<E>-集合）】
+//【可換双対セグメント木（可換 M<E>-集合）】
 /*
 * Commutative_dual_segtree<S, F, act, id, E, comp>(vT v) : O(n)
 *	配列 v[0..n) で初期化する．
@@ -832,133 +832,166 @@ class Lazy_segtree {
 	// 遅延評価用の完全二分木
 	vector<F> lazy;
 
-	// 遅延させていた評価を行う．：O(1)
+	// 子をもつノード k が不変条件を満たすよう子ノードの val から再計算を行う．
+	// 呼び出す際には，子の lazy がいずれも id() でなくてはならない．
+	void update(int k) {
+		v[k] = op(v[k * 2], v[k * 2 + 1]);
+	}
+
+	// ノード k の不変条件を満たしたまま lazy を id() に書き換える．
+	// 呼び出す際には，部分木 k 内の全てのノードで不変条件が満たされなければならない．
 	void eval(int k) {
 		// 遅延させていた評価がなければ何もしない．
 		if (lazy[k] == id()) return;
 
-		// 葉でなければ子に伝搬する．
+		// 葉ならすぐに作用させる．
+		if (k >= n) {
+			v[k] = act(lazy[k], v[k]);
+			lazy[k] = id();
+			return;
+		}
+
+		// 遅延作用を子に移す．
 		if (k < n) {
-			// 左作用を考えているのでこの向きに合成する．
 			lazy[k * 2] = comp(lazy[k], lazy[k * 2]);
 			lazy[k * 2 + 1] = comp(lazy[k], lazy[k * 2 + 1]);
 		}
 
-		// 自身を評価する．
+		// 自身の値に遅延させていた作用を適用する．
 		v[k] = act(lazy[k], v[k]);
 		lazy[k] = id();
 	}
 
-	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	void set_sub(int i, S x, int k, int kl, int kr) {
-		// まず自身の評価を行っておく．
+	// 部分木 k の位置 pos を値 val にする（部分木 k は区間 [kL..kR) に対応する）
+	void set_sub(int pos, S val, int k, int kL, int kR) {
 		eval(k);
-
-		// 範囲外なら何もしない．
-		if (kr <= i || i < kl) return;
 
 		// 葉まで降りてきたら値を代入して帰る．
-		if (kl == i && kr == i + 1) {
-			v[k] = x;
+		if (k >= n) {
+			v[k] = val;
 			return;
 		}
 
-		// 左右の子を見に行く．
-		set_sub(i, x, k * 2, kl, (kl + kr) / 2);
-		set_sub(i, x, k * 2 + 1, (kl + kr) / 2, kr);
-		v[k] = op(v[k * 2], v[k * 2 + 1]);
+		// 区間の中央
+		int kM = (kL + kR) / 2;
+
+		// 左右いずれかの子に対する処理を行う．
+		if (pos < kM) {
+			set_sub(pos, val, k * 2, kL, kM);
+			eval(k * 2 + 1);
+		}
+		else {
+			eval(k * 2);
+			set_sub(pos, val, k * 2 + 1, kM, kR);
+		}
+
+		update(k);
 	}
 
-	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	S prod_sub(int l, int r, int k, int kl, int kr) {
-		// まず自身の評価を行っておく．
+	// 部分木 k 内の区間 [kL..kR)∩[l..r) に属する要素の積を返す．
+	S prod_sub(int l, int r, int k, int kL, int kR) {
+		// [kL..kR) ∩ [l..r) = {} の場合は単位元を返す．
+		if (kR <= l || r <= kL) return e();
+
 		eval(k);
 
-		// 範囲外なら単位元 e() を返す．
-		if (kr <= l || r <= kl) return e();
+		// [kL..kR) ⊂ [l..r) の場合は区間の総積を返す．
+		if (l <= kL && kR <= r) return v[k];
 
-		// 完全に範囲内なら葉まで降りず自身の値を返す．
-		if (l <= kl && kr <= r) return v[k];
+		// 区間の中央
+		int kM = (kL + kR) / 2;
 
-		// 一部の範囲のみを含むなら子を見に行く．
-		S vl = prod_sub(l, r, k * 2, kl, (kl + kr) / 2);
-		S vr = prod_sub(l, r, k * 2 + 1, (kl + kr) / 2, kr);
-		return op(vl, vr);
+		// 左右の子からの寄与を求める．
+		S vL = prod_sub(l, r, k * 2, kL, kM);
+		S vR = prod_sub(l, r, k * 2 + 1, kM, kR);
+
+		// それらの積を返す．
+		return op(vL, vR);
 	}
 
-	// k : 注目ノード，[kl, kr) : ノード v[k] が表す区間
-	void apply_sub(int l, int r, F f, int k, int kl, int kr) {
-		// まず自身の評価を行っておく．
+	// 部分木 k 内の区間 [kL..kR)∩[l..r) に f を作用させる．
+	void apply_sub(int l, int r, F f, int k, int kL, int kR) {
 		eval(k);
 
-		// 範囲外なら何もしない．
-		if (kr <= l || r <= kl) return;
+		// [kL..kR) ∩ [l..r) = {} の場合は何もしない．
+		if (kR <= l || r <= kL) return;
 
-		// 完全に範囲内なら自身の値を更新する．
-		if (l <= kl && kr <= r) {
-			// 左作用を考えているのでこの向きに合成する．
+		// [kL..kR) ⊂ [l..r) の場合は自身の値を更新する．
+		if (l <= kL && kR <= r) {
 			lazy[k] = comp(f, lazy[k]);
-
-			// return 直後に親から v[k] を参照される可能性があるので eval() が必要．
-			eval(k);
-
 			return;
 		}
 
-		// 一部の範囲のみを含むなら子を見に行く．
-		apply_sub(l, r, f, k * 2, kl, (kl + kr) / 2);
-		apply_sub(l, r, f, k * 2 + 1, (kl + kr) / 2, kr);
-		v[k] = op(v[k * 2], v[k * 2 + 1]);
+		// 区間の中央
+		int kM = (kL + kR) / 2;
+
+		// 左右の子に f を作用させる．
+		apply_sub(l, r, f, k * 2, kL, kM);
+		apply_sub(l, r, f, k * 2 + 1, kM, kR);
+
+		eval(k * 2);
+		eval(k * 2 + 1);
+		update(k);
 	}
 
-	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	int max_right_sub(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
-		// まず自身の評価を行っておく．
+	// 部分木 k に対応する区間 [kL..kR) 内で，f( Πv[l..r) ) = true となる最大の r を返す（x = Πv[l..kL)）
+	template <class FUNC>
+	int max_right_sub(int l, S& x, int k, int kL, int kR, const FUNC& f) {
+		// [kL..kR) ∩ [l..n) = {} の場合は部分木 k 内には境界はない．
+		if (kR <= l) return actual_n;
+
 		eval(k);
 
-		// 範囲外の場合
-		if (kr <= l || r <= kl) return r;
-
-		// [kl..kr) 全体が範囲内で，g( Πv[l..kr) ) = true の場合
-		if (l <= kl && kr <= r && g(op(x, v[k]))) {
+		// f( Πv[l..kR) ) = true の場合は部分木 k 内には境界はない．
+		if (l <= kL && f(op(x, v[k]))) {
 			x = op(x, v[k]);
-			return r;
+			return actual_n;
 		}
 
-		// 自身が葉であればその位置を返す．
-		if (k >= n) return k - n;
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (k >= n) return kL;
 
-		// まず左の部分木を見に行き，見つかったならそれを返す．
-		int pos = max_right_sub(l, r, x, k * 2, kl, (kl + kr) / 2, g);
-		if (pos != r) return pos;
+		// 区間の中央
+		int kM = (kL + kR) / 2;
 
-		// 見つからなかったなら右の部分木も見にいき，結果を返す．
-		return max_right_sub(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
+		// まず左の部分木を見にいき境界の位置を探す
+		int pos = max_right_sub(l, x, k * 2, kL, kM, f);
+
+		// 境界が見つかったならそれを返す．
+		if (pos != actual_n) return pos;
+
+		// さもなくば右の部分木を見にいき境界の位置を探す．
+		return max_right_sub(l, x, k * 2 + 1, kM, kR, f);
 	}
 
-	// k : 注目ノード，[kl..kr) : ノード v[k] が表す区間
-	int min_left_sub(int l, int r, S& x, int k, int kl, int kr, const function<bool(S)>& g) {
-		// まず自身の評価を行っておく．
+	// 部分木 k に対応する区間 [kL..kR) 内で，f( Πv[l..r) ) = true となる最小の l を返す（x = Πv[kR..r)）
+	template <class FUNC>
+	int min_left_sub(int r, S& x, int k, int kL, int kR, const FUNC& f) {
+		// [kL..kR) ∩ [l..n) = {} の場合は部分木 k 内には境界はない．
+		if (r <= kL) return 0;
+
 		eval(k);
 
-		// 範囲外の場合
-		if (kr <= l || r <= kl) return l - 1;
-
-		// [kl..kr) 全体が範囲内で，g( Πv[kl..r) ) = true の場合
-		if (l <= kl && kr <= r && g(op(v[k], x))) {
+		// f( Πv[kL..r) ) = true の場合は部分木 k 内には境界はない．
+		if (kR <= r && f(op(v[k], x))) {
 			x = op(v[k], x);
-			return l - 1;
+			return 0;
 		}
 
-		// 自身が葉であればその位置を返す．
-		if (k >= n) return k - n;
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (k >= n) return kR;
 
-		// まず右の部分木を見に行き，見つかったならそれを返す．
-		int pos = min_left_sub(l, r, x, k * 2 + 1, (kl + kr) / 2, kr, g);
-		if (pos != l - 1) return pos;
+		// 区間の中央
+		int kM = (kL + kR) / 2;
 
-		// 見つからなかったなら左の部分木も見にいき，結果を返す．
-		return min_left_sub(l, r, x, k * 2, kl, (kl + kr) / 2, g);
+		// まず右の部分木を見にいき境界の位置を探す．
+		int pos = min_left_sub(r, x, k * 2 + 1, kM, kR, f);
+
+		// 境界が見つかったならそれを返す．
+		if (pos != 0) return pos;
+
+		// さもなくば左の部分木を見にいき境界の位置を探す．
+		return min_left_sub(r, x, k * 2, kL, kM, f);
 	}
 
 public:
@@ -982,16 +1015,17 @@ public:
 		// 全てのノードに正しい値を設定する．
 		repir(i, n - 1, 1) v[i] = op(v[i * 2], v[i * 2 + 1]);
 	}
-
-	Lazy_segtree() : n(0), actual_n(0) {} // ダミー
+	Lazy_segtree() : n(0), actual_n(0) {}
 
 	// v[i] = x とする．
 	void set(int i, S x) {
+		Assert(0 <= i); Assert(i < actual_n);
 		set_sub(i, x, 1, 0, n);
 	}
 
 	// v[i] を返す．
 	S get(int i) {
+		Assert(0 <= i); Assert(i < actual_n);
 		return prod(i, i + 1);
 	}
 
@@ -1004,6 +1038,7 @@ public:
 
 	// v[i] = f( v[i] ) とする．
 	void apply(int i, F f) {
+		Assert(0 <= i); Assert(i < actual_n);
 		apply(i, i + 1, f);
 	}
 
@@ -1015,17 +1050,21 @@ public:
 	}
 
 	// g( Πv[l..r) ) = true となる最大の r を返す．
-	int max_right(int l, const function<bool(S)>& g) {
+	template <class FUNC>
+	int max_right(int l, const FUNC& g) {
+		Assert(g(e()));
 		S x = e();
-		return max_right_sub(l, actual_n, x, 1, 0, n, g);
+		return max_right_sub(l, x, 1, 0, n, g);
 	}
 
 	// g( Πv[l..r) ) = true となる最小の l を返す．
-	int min_left(int r, const function<bool(S)>& g) {
+	template <class FUNC>
+	int min_left(int r, const FUNC& g) {
 		// verify : https://www.codechef.com/problems/SUBSEQI
 
+		Assert(g(e()));
 		S x = e();
-		return min_left_sub(0, r, x, 1, 0, n, g) + 1;
+		return min_left_sub(r, x, 1, 0, n, g);
 	}
 
 #ifdef _MSC_VER
@@ -1159,24 +1198,35 @@ public:
 
 //【動的遅延評価セグメント木（M-モノイド）】
 /*
-* Dynamic_lazy_segtree<S, op, e>(ll n) : O(1)
-*	a[0..n) = e() で初期化する．
+* Dynamic_lazy_segtree<S, op, e, F, act, comp, id>(ll n) : O(1)
+*	v[0..n) = e() で初期化する．
 *	要素は左作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
 *
+* Dynamic_lazy_segtree<S, op, e, F, act, comp, id>(ll n, S x) : O(1)
+*	v[0..n) = x で初期化する．
+*
 * set(ll i, S x) : O(log n)
-*	a[i] = x とする．
+*	v[i] = x とする．
 *
 * S get(ll i) : O(log n)
-*	a[i] を返す（なければ e() を返す）
+*	v[i] を返す（なければ e() を返す）
 *
 * S prod(ll l, ll r) : O(log n)
-*	Πa[l..r) を返す．空なら e() を返す．
+*	Πv[l..r) を返す．空なら e() を返す．
 *
 * apply(ll i, F f) : O(log n)
-*	a[i] = f( a[i] ) とする．
+*	v[i] = f( v[i] ) とする．
 *
 * apply(ll l, ll r, F f) : O(log n)
-*	a[l..r) = f( a[l..r) ) とする．
+*	v[l..r) = f( v[l..r) ) とする．
+*
+* ll max_right(ll l, function<bool(S)> f) : O(log n)
+*	f( Πv[l..r) ) = true となる最大の r を返す．
+*   制約：f( e() ) = true，f は単調
+*
+* ll min_left(ll r, function<bool(S)> f) : O(log n)
+*	f( Πv[l..r) ) = true となる最小の l を返す．
+*	制約：f( e() ) = true，f は単調
 */
 template <class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
 class Dynamic_lazy_segtree {
@@ -1189,21 +1239,48 @@ class Dynamic_lazy_segtree {
 	};
 
 	ll n;
+	ll actual_n; // 実際の要素数
 	Node* root;
+	vector<S> mul;
 
-	// 遅延させていた作用を適用する．
+	// 子をもつノード t が不変条件を満たすよう子ノードの val から再計算を行う．
+	// 呼び出す際には，子の lazy がいずれも id() でなくてはならない．
+	void update(Node* t) {
+		t->val = op(t->lc->val, t->rc->val);
+	}
+
+	// ノード t の不変条件を満たしたまま lazy を id() に書き換える．
+	// 呼び出す際には，部分木 t 内の全てのノードで不変条件が満たされなければならない．
 	void eval(Node*& t, ll tL, ll tR) {
+		// ノードが存在しなかった場合は新たに作成する．
+		if (!t) {
+			t = new Node();
+			t->val = mul[msb(tR - tL)];
+		}
+
 		// 遅延させていた作用がなければ何もしない．
 		if (t->lazy == id()) return;
 
-		// 遅延作用を子に移す．
-		if (tR - tL >= 2) {
-			if (!t->lc) t->lc = new Node();
-			t->lc->lazy = comp(t->lazy, t->lc->lazy);
-
-			if (!t->rc) t->rc = new Node();
-			t->rc->lazy = comp(t->lazy, t->rc->lazy);
+		// 葉ならすぐに作用させる．
+		if (tR - tL == 1) {
+			t->val = act(t->lazy, t->val);
+			t->lazy = id();
+			return;
 		}
+
+		// 遅延作用を子に移す．
+		int b = msb(tR - tL) - 1;
+		if (!t->lc) {
+			t->lc = new Node();
+			t->lc->val = mul[b];
+		}
+		t->lc->lazy = comp(t->lazy, t->lc->lazy);
+
+		if (!t->rc) {
+			t->rc = new Node();
+			t->rc->val = mul[b];
+		}
+		t->rc->lazy = comp(t->lazy, t->rc->lazy);
 
 		// 自身の値に遅延させていた作用を適用する．
 		t->val = act(t->lazy, t->val);
@@ -1212,42 +1289,35 @@ class Dynamic_lazy_segtree {
 
 	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [tL..tR) に対応する）
 	void set(Node*& t, ll tL, ll tR, ll pos, S val) {
-		// ノードが存在しなかった場合は新たに作成する．
-		if (!t) t = new Node();
-
-		// 自身の遅延作用を適用する．
 		eval(t, tL, tR);
 
-		// 範囲外なら何もしない．
-		if (pos < tL || tR <= pos) return;
-
 		// 葉まで降りてきたら値を代入して帰る．
-		if (tL == pos && tR == pos + 1) {
+		if (tR - tL == 1) {
 			t->val = val;
-			t->lazy = id();
 			return;
 		}
 
 		// 区間の中央
 		ll tM = (tL + tR) / 2LL;
 
-		// 左右の子に対する処理を行う．
-		set(t->lc, tL, tM, pos, val);
-		set(t->rc, tM, tR, pos, val);
+		// 左右いずれかの子に対する処理を行う．
+		if (pos < tM) {
+			set(t->lc, tL, tM, pos, val);
+			eval(t->rc, tM, tR);
+		}
+		else {
+			eval(t->lc, tL, tM);
+			set(t->rc, tM, tR, pos, val);
+		}
 
-		// 自身の値を更新する．
-		t->val = op(t->lc->val, t->rc->val);
+		update(t);
 	}
 
 	// 部分木 t 内の区間 [tL..tR)∩[l..r) に属する要素の積を返す．
 	S prod(Node*& t, ll tL, ll tR, ll l, ll r) {
-		// ノードが存在しなかった場合は新たに作成する．
-		if (!t) t = new Node();
-
 		// [tL..tR) ∩ [l..r) = {} の場合は単位元を返す．
 		if (r <= tL || tR <= l) return e();
 
-		// 自身の遅延作用を適用する．
 		eval(t, tL, tR);
 
 		// [tL..tR) ⊂ [l..r) の場合は区間の総積を返す．
@@ -1266,10 +1336,6 @@ class Dynamic_lazy_segtree {
 
 	// 部分木 t 内の区間 [tL..tR)∩[l..r) に f を作用させる．
 	void apply(Node*& t, ll tL, ll tR, ll l, ll r, F f) {
-		// ノードが存在しなかった場合は新たに作成する．
-		if (!t) t = new Node();
-
-		// 自身の遅延作用を適用する．
 		eval(t, tL, tR);
 
 		// [tL..tR) ∩ [l..r) = {} の場合は何もしない．
@@ -1278,7 +1344,6 @@ class Dynamic_lazy_segtree {
 		// [tL..tR) ⊂ [l..r) の場合は自身の値を更新する．
 		if (l <= tL && tR <= r) {
 			t->lazy = comp(f, t->lazy);
-			eval(t, tL, tR);
 			return;
 		}
 
@@ -1289,72 +1354,150 @@ class Dynamic_lazy_segtree {
 		apply(t->lc, tL, tM, l, r, f);
 		apply(t->rc, tM, tR, l, r, f);
 
-		// 自身の値を更新する．
-		t->val = op(t->lc->val, t->rc->val);
+		eval(t->lc, tL, tM);
+		eval(t->rc, tM, tR);
+		update(t);
 	}
 
-	void print(Node* t, ll tL, ll tR, ostream& os) {
-		if (!t) return;
+	// 部分木 t に対応する区間 [tL..tR) 内で，f( Πv[l..r) ) = true となる最大の r を返す（acc = Πv[l..tL)）
+	ll max_right(Node* t, ll tL, ll tR, ll l, const function<bool(S)>& f, S& acc) {
+		// [tL..tR) ∩ [l..n) = {} の場合は部分木 t 内には境界はない．
+		if (tR <= l) return actual_n;
 
-		// 自身の遅延作用を適用する．
 		eval(t, tL, tR);
+
+		// f( Πv[l..tR) ) = true の場合は部分木 t 内には境界はない．
+		if (l <= tL && f(op(acc, t->val))) {
+			acc = op(acc, t->val);
+			return actual_n;
+		}
+
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (tR - tL == 1) return tL;
 
 		// 区間の中央
 		ll tM = (tL + tR) / 2LL;
 
-		print(t->lc, tL, tM, os);
-		if (tR - tL == 1) os << "(" << tL << "," << t->val << ") ";
-		print(t->rc, tM, tR, os);
+		// まず左の部分木を見にいき境界の位置を探す．
+		ll res = max_right(t->lc, tL, tM, l, f, acc);
+
+		// 境界が見つかったならそれを返す．
+		if (res != actual_n) return res;
+
+		// さもなくば右の部分木を見にいき境界の位置を探す．
+		return max_right(t->rc, tM, tR, l, f, acc);
+	}
+
+	// 部分木 t に対応する区間 [tL..tR) 内で，f( Πv[l..r) ) = true となる最小の l を返す（acc = Πv[tR..r)）
+	ll min_left(Node* t, ll tL, ll tR, ll r, const function<bool(S)>& f, S& acc) {
+		// [tL..tR) ∩ [l..n) = {} の場合は部分木 t 内には境界はない．
+		if (r <= tL) return 0LL;
+
+		eval(t, tL, tR);
+
+		// f( Πv[tL..r) ) = true の場合は部分木 t 内には境界はない．
+		if (tR <= r && f(op(t->val, acc))) {
+			acc = op(t->val, acc);
+			return 0LL;
+		}
+
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (tR - tL == 1) return tR;
+
+		// 区間の中央
+		ll tM = (tL + tR) / 2LL;
+
+		// まず右の部分木を見にいき境界の位置を探す．
+		ll res = min_left(t->rc, tM, tR, r, f, acc);
+
+		// 境界が見つかったならそれを返す．
+		if (res != 0LL) return res;
+
+		// さもなくば左の部分木を見にいき境界の位置を探す．
+		return min_left(t->lc, tL, tM, r, f, acc);
 	}
 
 public:
-	// a[0..n) = e() で初期化する．
-	Dynamic_lazy_segtree(ll n) : n(n), root(nullptr) {
-		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+	// v[0..n) = e() で初期化する．
+	Dynamic_lazy_segtree(ll n_) : actual_n(n_), root(nullptr) {
+		// verify : https://atcoder.jp/contests/pakencamp-2024-day1/tasks/pakencamp_2024_day1_p
+
+		int B = n_ == 0 ? 0 : msb(n_ - 1) + 1;
+		n = 1LL << B;
+
+		mul = vector<S>(B + 1, e());
+	}
+
+	// v[0..n) = x で初期化する．
+	Dynamic_lazy_segtree(ll n_, S x) : actual_n(n_), root(nullptr) {
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum_large_array
+
+		int B = n_ == 0 ? 0 : msb(n_ - 1) + 1;
+		n = 1LL << B;
+
+		mul = vector<S>(B + 1);
+		mul[0] = x;
+		repi(b, 1, B) mul[b] = op(mul[b - 1], mul[b - 1]);
 	}
 	Dynamic_lazy_segtree() : n(0LL), root(nullptr) {}
 
-	// a[i] = x とする．
+	// v[i] = x とする．
 	void set(ll i, S x) {
-		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
-
-		Assert(0LL <= i && i < n);
+		Assert(0LL <= i); Assert(i < actual_n);
 
 		set(root, 0LL, n, i, x);
 	}
 
-	// a[i] を返す．
+	// v[i] を返す．
 	S get(ll i) {
-		Assert(0LL <= i && i < n);
+		Assert(0LL <= i); Assert(i < actual_n);
 
 		return prod(root, 0LL, n, i, i + 1);
 	}
 
-	// Πa[l..r) を返す．空なら e() を返す．
+	// Πv[l..r) を返す．空なら e() を返す．
 	S prod(ll l, ll r) {
-		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum_large_array
 
-		chmax(l, 0LL); chmin(r, n);
+		chmax(l, 0LL); chmin(r, actual_n);
 		if (l >= r) return e();
 
 		return prod(root, 0LL, n, l, r);
 	}
 
-	// a[i] = f( a[i] ) とする．
+	// v[i] = f( v[i] ) とする．
 	void apply(ll i, F f) {
 		apply(root, 0LL, n, i, i + 1, f);
 	}
 
-	// a[l..r) = f( a[l..r) ) とする．
+	// v[l..r) = f( v[l..r) ) とする．
 	void apply(ll l, ll r, F f) {
-		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum
+		// verify : https://judge.yosupo.jp/problem/range_affine_range_sum_large_array
 
 		apply(root, 0LL, n, l, r, f);
 	}
 
+	// f( Πv[l..r) ) = true となる最大の r を返す．
+	ll max_right(ll l, const function<bool(S)>& f) {
+		chmax(l, 0LL);
+
+		S acc = e();
+		Assert(f(e()));
+		return min(max_right(root, 0LL, n, l, f, acc), actual_n);
+	}
+
+	// f( Πv[l..r) ) = true となる最小の l を返す．
+	ll min_left(ll r, const function<bool(S)>& f) {
+		chmin(r, actual_n);
+
+		S acc = e();
+		Assert(f(e()));
+		return min_left(root, 0LL, n, r, f, acc);
+	}
+
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, Dynamic_lazy_segtree& seg) {
-		seg.print(seg.root, 0LL, seg.n, os);
+		rep(i, seg.actual_n) os << seg.get(i) << " ";
 		return os;
 	}
 #endif
@@ -1379,7 +1522,7 @@ public:
 * S sum(int x1, int x2, ll y1, ll y2) : O(log h log w)
 *	Σa[x1..x2)[y1..y2) を返す．空なら o() を返す．
 *
-* S all_prod() : O(log w)
+* S all_sum() : O(log w)
 *	Σa[0..h)[0..w) を返す．
 *
 * 利用：【動的セグメント木（モノイド）】
@@ -1402,7 +1545,7 @@ public:
 	void apply(int i, ll j, S x) {
 		// verify : https://judge.yosupo.jp/problem/point_add_rectangle_sum
 
-		Assert(0 <= i && i < h && 0 <= j && j < w);
+		Assert(0 <= i); Assert(i < h); Assert(0 <= j); Assert(j < w);
 
 		i += h;
 		while (i >= 1) {
@@ -1415,7 +1558,7 @@ public:
 	void set(int i, ll j, S x) {
 		// verify : https://atcoder.jp/contests/abc369/tasks/abc369_f
 
-		Assert(0 <= i && i < h && 0 <= j && j < w);
+		Assert(0 <= i); Assert(i < h); Assert(0 <= j); Assert(j < w);
 
 		i += h;
 		while (i >= 1) {
@@ -1426,7 +1569,7 @@ public:
 
 	// a[i][j] を返す（なければ o() を返す）
 	S get(int i, ll j) const {
-		Assert(0 <= i && i < h && 0 <= j && j < w);
+		Assert(0 <= i); Assert(i < h); Assert(0 <= j); Assert(j < w);
 
 		return v[i + h].get(j);
 	}
@@ -1741,7 +1884,7 @@ public:
 *	v[0..n) = e() で初期化する．履歴番号は 0 とする．
 *	要素はモノイド (S, op, e) の元とする．
 *
-* Persistent_segtree<S, op, e>(vS v) : O(n)
+* Persistent_lazy_segtree<S, op, e>(vS v) : O(n)
 *	配列 v[0..n) の要素で初期化する．履歴番号は 0 とする．
 *
 * int set(int i, S x, int t) : O(log n)
@@ -1753,216 +1896,1029 @@ public:
 * S prod(int l, int r, int t) : O(log n)
 *	t 番目の履歴の Πv[l..r) を返す．
 *
-* S all_prod(int t) : O(1)
-*	t 番目の履歴の Πv[0..n) を返す．
+* int copy(int l, int r, int s, int t) : O(log n)
+*	s 番目の履歴の v[l..r) を t 番目の履歴の v[l..r) に上書きした配列を最新の履歴として記録し，履歴番号を返す．
 *
 * int max_right(int l, function<bool(S)> f, int t) : O(log n)
-*	t 番目の履歴について，f(Πv[l..r)) = true となる最大の r を返す．
-*	制約：f(e()) = true，f は単調
+*	t 番目の履歴について，f( Πv[l..r) ) = true となる最大の r を返す．
+*   制約：f( e() ) = true，f は単調
 *
 * int min_left(int r, function<bool(S)> f, int t) : O(log n)
-*	t 番目の履歴について，f(Πv[l..r)) = true となる最小の l を返す．
-*	制約：f(e()) = true，f は単調
+*	t 番目の履歴について，f( Πv[l..r) ) = true となる最小の l を返す．
+*	制約：f( e() ) = true，f は単調
 */
 template <class S, S(*op)(S, S), S(*e)()>
 class Persistent_segtree {
-	struct Node {
-		int l, r;
-		S val; // Πv[l..r) の値
-		Node* lp, * rp; // 左右の子へのポインタ
+	// 参考 : https://37zigen.com/persistent-segment-tree/
 
-		Node(int l_, int r_, S val_ = e(), Node* lp_ = nullptr, Node* rp_ = nullptr)
-			: l(l_), r(r_), val(val_), lp(lp_), rp(rp_) {}
+	struct Node {
+		S val;			// ノードの値
+		Node* lc, * rc;	// 左右の子
+
+		Node() : val(e()), lc(nullptr), rc(nullptr) {}
 	};
 
 	int n; // 配列の大きさ
 	int T; // 履歴の個数
 	vector<Node*> his; // 履歴へのポインタ
 
-	Node* init_rf(const vector<S>& v, int l, int r) {
+	// 部分木 t に対応する区間 [tL..tR) を e() で初期化する．
+	Node* init_e(int tL, int tR) {
 		// 葉を作る場合
-		if (r - l == 1) {
-			Node* p = new Node(l, r, v[l]);
+		if (tR - tL == 1) {
+			Node* p = new Node();
 			return p;
 		}
 
-		Node* p = new Node(l, r);
-		int m = (l + r) / 2;
-		p->lp = init_rf(v, l, m);
-		p->rp = init_rf(v, m, r);
-		p->val = op(p->lp->val, p->rp->val);
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// 新規ノードの作成
+		Node* p = new Node();
+		p->lc = init_e(tL, tM);
+		p->rc = init_e(tM, tR);
+		return p;
+	}
+
+	// 部分木 t に対応する区間 [tL..tR) を v[tL..tR) で初期化する．
+	Node* init(int tL, int tR, const vector<S>& v) {
+		// 葉を作る場合
+		if (tR - tL == 1) {
+			Node* p = new Node();
+			p->val = v[tL];
+			return p;
+		}
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// 新規ノードの作成
+		Node* p = new Node();
+		p->lc = init(tL, tM, v);
+		p->rc = init(tM, tR, v);
+		p->val = op(p->lc->val, p->rc->val);
+		return p;
+	}
+
+	void update(Node* t) {
+		t->val = op(t->lc->val, t->rc->val);
+	}
+
+	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [tL..tR) に対応する）
+	Node* set(Node* t, int tL, int tR, int pos, S val) {
+		// 葉まで降りてきたら値を代入して帰る．
+		if (!t->lc) {
+			Node* p = new Node();
+			p->val = val;
+			return p;
+		}
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		Node* p = new Node();
+
+		// 左右いずれかの子に対する処理を行う．
+		if (pos < tM) {
+			p->lc = set(t->lc, tL, tM, pos, val);
+			p->rc = t->rc;
+		}
+		else {
+			p->lc = t->lc;
+			p->rc = set(t->rc, tM, tR, pos, val);
+		}
+
+		update(p);
 
 		return p;
 	}
 
-	Node* set_rf(Node* p, int i, S x) {
-		// p が葉の場合
-		if (p->r - p->l == 1) {
-			Node* np = new Node(p->l, p->r, x);
-			return np;
-		}
+	// 部分木 t 内の区間 [tL..tR)∩[l..r) に属する要素の積を返す．
+	S prod(Node* t, int tL, int tR, int l, int r) const {
+		// [tL..tR) ∩ [l..r) = {} の場合は単位元を返す．
+		if (r <= tL || tR <= l) return e();
 
-		Node* np = new Node(p->l, p->r);
-		int m = (p->l + p->r) / 2;
-		if (i < m) {
-			np->lp = set_rf(p->lp, i, x);
-			np->rp = p->rp;
-		}
-		else {
-			np->lp = p->lp;
-			np->rp = set_rf(p->rp, i, x);
-		}
-		np->val = op(np->lp->val, np->rp->val);
+		// [tL..tR) ⊂ [l..r) の場合は区間の総積を返す．
+		if (l <= tL && tR <= r) return t->val;
 
-		return np;
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// 左右の子からの寄与を求める．
+		S vL = prod(t->lc, tL, tM, l, r);
+		S vR = prod(t->rc, tM, tR, l, r);
+
+		// それらの積を返す．
+		return op(vL, vR);
 	}
 
-	S get_rf(Node* p, int i) const {
-		// p が葉の場合
-		if (p->r - p->l == 1) return p->val;
+	// 部分木 t 内の区間 [tL..tR)∩[l..r) に部分木 s の同じ区間をコピーする．
+	Node* copy(Node* t, Node* s, int tL, int tR, int l, int r) {
+		// [tL..tR) ∩ [l..r) = {} の場合は何もしない．
+		if (r <= tL || tR <= l) return t;
 
-		int m = (p->l + p->r) / 2;
-		if (i < m) return get_rf(p->lp, i);
-		else  return get_rf(p->rp, i);
+		// [tL..tR) ⊂ [l..r) の場合は s をコピーする．
+		if (l <= tL && tR <= r) return s;
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		Node* p = new Node();
+		p->lc = copy(t->lc, s->lc, tL, tM, l, r);
+		p->rc = copy(t->rc, s->rc, tM, tR, l, r);
+
+		update(p);
+
+		return p;
 	}
 
-	S prod_rf(Node* p, int l, int r) const {
-		// 範囲外なら単位元 e() を返す．
-		if (p->r <= l || r <= p->l) return e();
+	// 部分木 t に対応する区間 [tL..tR) 内で，f( Πv[l..r) ) = true となる最大の r を返す（acc = Πv[l..tL)）
+	int max_right(Node* t, int tL, int tR, int l, const function<bool(S)>& f, S& acc) {
+		// [tL..tR) ∩ [l..n) = {} の場合は部分木 t 内には境界はない．
+		if (tR <= l) return n;
 
-		// 完全に範囲内なら葉まで降りず自身の値を返す．
-		if (l <= p->l && p->r <= r) return p->val;
-
-		// 一部の範囲のみを含むなら子を見に行く．
-		S vl = prod_rf(p->lp, l, r);
-		S vr = prod_rf(p->rp, l, r);
-		return op(vl, vr);
-	}
-
-	int max_right_rf(Node* p, int l, S& x, const function<bool(S)>& f) const {
-		// 範囲外の場合
-		if (p->r <= l) return n;
-
-		// f( Πv[p->l..p->r) ) = true の場合
-		if (l <= p->l && f(op(x, p->val))) {
-			x = op(x, p->val);
+		// f( Πv[l..tR) ) = true の場合は部分木 t 内には境界はない．
+		if (l <= tL && f(op(acc, t->val))) {
+			acc = op(acc, t->val);
 			return n;
 		}
 
-		// p が葉の場合，これがちょうど条件を満たさなくなる値なのでその位置を返す．
-		if (p->r - p->l == 1) return p->l;
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (tR - tL == 1) return tL;
 
-		// 左の部分木から見に行く．境界が見つかったらそれを返す．
-		int pos = max_right_rf(p->lp, l, x, f);
-		if (pos != n) return pos;
+		// 区間の中央
+		int tM = (tL + tR) / 2;
 
-		// 見つからなかったら右の部分木も見に行き，結果を返す．
-		return max_right_rf(p->rp, l, x, f);
+		// まず左の部分木を見にいき境界の位置を探す．
+		int res = max_right(t->lc, tL, tM, l, f, acc);
+
+		// 境界が見つかったならそれを返す．
+		if (res != n) return res;
+
+		// さもなくば右の部分木を見にいき境界の位置を探す．
+		return max_right(t->rc, tM, tR, l, f, acc);
 	}
 
-	int min_left_rf(Node* p, int r, S& x, const function<bool(S)>& f) const {
-		// 範囲外の場合
-		if (r <= p->l) return -1;
+	// 部分木 t に対応する区間 [tL..tR) 内で，f( Πv[l..r) ) = true となる最小の l を返す（acc = Πv[tR..r)）
+	int min_left(Node* t, int tL, int tR, int r, const function<bool(S)>& f, S& acc) {
+		// [tL..tR) ∩ [l..n) = {} の場合は部分木 t 内には境界はない．
+		if (r <= tL) return 0;
 
-		// f( Πv[p->l..p->r) ) = true の場合
-		if (p->r <= r && f(op(p->val, x))) {
-			x = op(p->val, x);
-			return -1;
+		// f( Πv[tL..r) ) = true の場合は部分木 t 内には境界はない．
+		if (tR <= r && f(op(t->val, acc))) {
+			acc = op(t->val, acc);
+			return 0;
 		}
 
-		// p が葉の場合，これがちょうど条件を満たさなくなる値なのでその位置を返す．
-		if (p->r - p->l == 1) return p->l;
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (tR - tL == 1) return tR;
 
-		// 右の部分木から見に行く．境界が見つかったらそれを返す．
-		int pos = min_left_rf(p->rp, r, x, f);
-		if (pos != -1) return pos;
+		// 区間の中央
+		int tM = (tL + tR) / 2;
 
-		// 見つからなかったら左の部分木も見に行き，結果を返す．
-		return min_left_rf(p->lp, r, x, f);
+		// まず右の部分木を見にいき境界の位置を探す．
+		int res = min_left(t->rc, tM, tR, r, f, acc);
+
+		// 境界が見つかったならそれを返す．
+		if (res != 0) return res;
+
+		// さもなくば左の部分木を見にいき境界の位置を探す．
+		return min_left(t->lc, tL, tM, r, f, acc);
 	}
 
-	void print_rf(Node* p, ostream& os) const {
-		if (p->r - p->l == 1) {
-			os << p->val << " ";
-			return;
-		}
+	// 部分木 t に対応する区間 [tL..tR) 内の要素を出力する．
+	void print(Node* t, int tL, int tR, ostream& os) {
+		// 区間の中央
+		int tM = (tL + tR) / 2;
 
-		print_rf(p->lp, os);
-		print_rf(p->rp, os);
+		if (t->lc) {
+			print(t->lc, tL, tM, os);
+			print(t->rc, tM, tR, os);
+		}
+		else {
+			os << "(" << tL << "," << t->val << ") ";
+		}
 	}
 
 public:
-	// 配列 v[0..n) の要素で初期化する．
+	// v[0..n) = e() で初期化する．履歴番号は 0 とする．
+	Persistent_segtree(int n) : n(n), T(1), his(1) {
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+		his[0] = init_e(0, n);
+	}
+
+	// 配列 v[0..n) の要素で初期化する．履歴番号は 0 とする．
 	Persistent_segtree(const vector<S>& v) : n(sz(v)), T(1), his(1) {
-		his[0] = init_rf(v, 0, n);
+		his[0] = init(0, n, v);
 	}
-
-	// v[0..n) = e() で初期化する．
-	Persistent_segtree(int n_) : n(n_), T(1), his(1) {
-		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
-
-		vector<S> v(n, e());
-		his[0] = init_rf(v, 0, n);
-	}
-
-	Persistent_segtree() : n(0), T(0) {} // ダミー
+	Persistent_segtree() : n(0), T(0), his(0) {}
 
 	// t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
 	int set(int i, S x, int t) {
-		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
 
-		Assert(0 <= i && i < n);
+		Assert(0 <= i); Assert(i < n);
 		Assert(t < T);
-		his.push_back(set_rf(his[t], i, x));
+		his.push_back(set(his[t], 0, n, i, x));
 		return T++;
 	}
 
 	// t 番目の履歴の v[i] を返す．
 	S get(int i, int t) const {
-		Assert(0 <= i && i < n);
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
+
+		Assert(0 <= i); Assert(i < n);
 		Assert(t < T);
-		return get_rf(his[t], i);
+		return prod(his[t], 0, n, i, i + 1);
 	}
 
 	// t 番目の履歴の Πv[l..r) を返す．
 	S prod(int l, int r, int t) const {
-		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
+		// verify : https://judge.yosupo.jp/problem/rectangle_sum
 
-		Assert(0 <= l && r <= n);
+		chmax(l, 0); chmin(r, n);
 		Assert(t < T);
 		if (l >= r) return e();
-		return prod_rf(his[t], l, r);
+		return prod(his[t], 0, n, l, r);
 	}
 
-	// t 番目の履歴の Πv[0..n) を返す．
-	S all_prod(int t) const {
-		// verify : https://atcoder.jp/contests/abc165/tasks/abc165_f
-
-		Assert(t < T);
-		return prod(0, n, t);
+	// s 番目の履歴の v[l..r) を t 番目の履歴の v[l..r) に上書きした配列を最新の履歴として記録し，履歴番号を返す．
+	int copy(int l, int r, int s, int t) {
+		chmax(l, 0); chmin(r, n);
+		Assert(s < T); Assert(t < T);
+		his.push_back(copy(his[t], his[s], 0, n, l, r));
+		return T++;
 	}
 
-	// t 番目の履歴について，f(Πv[l..r)) = true となる最大の r を返す．
-	int max_right(int l, const function<bool(S)>& f, int t) const {
-		// verify : https://atcoder.jp/contests/practice2/tasks/practice2_j
+	// t 番目の履歴について，f( Πv[l..r) ) = true となる最大の r を返す．
+	int max_right(int l, const function<bool(S)>& f, int t) {
+		chmax(l, 0);
 
-		S x(e());
-		return max_right_rf(his[t], l, x, f);
+		S acc = e();
+		Assert(f(e()));
+		return max_right(his[t], 0, n, l, f, acc);
 	}
 
-	// t 番目の履歴について，f(Πv[l..r)) = true となる最小の l を返す．
-	int min_left(int r, const function<bool(S)>& f, int t) const {
-		S x(e());
-		return min_left_rf(his[t], r, x, f) + 1;
+	// t 番目の履歴について，f( Πv[l..r) ) = true となる最小の l を返す．
+	int min_left(int r, const function<bool(S)>& f, int t) {
+		chmin(r, n);
+
+		S acc = e();
+		Assert(f(e()));
+		return min_left(his[t], 0, n, r, f, acc);
 	}
 
 #ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Persistent_segtree& seg) {
+	friend ostream& operator<<(ostream& os, Persistent_segtree seg) {
 		rep(t, seg.T) {
 			os << t << ": ";
-			seg.print_rf(seg.his[t], os);
+			seg.print(seg.his[t], 0, seg.n, os);
 			os << endl;
 		}
+		return os;
+	}
+#endif
+};
+
+
+//【永続遅延評価セグメント木（M-モノイド）】
+/*
+* Persistent_lazy_segtree<S, op, e, F, act, comp, id>(int n) : O(n)
+*	v[0..n) = e() で初期化する．履歴番号は 0 とする．
+*	要素は左作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
+*
+* Persistent_lazy_segtree<S, op, e, F, act, comp, id>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．履歴番号は 0 とする．
+*
+* int set(int i, S x, int t) : O(log n)
+*	t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+*
+* S get(int i, int t) : O(log n)
+*	t 番目の履歴の v[i] を返す．
+*
+* S prod(int l, int r, int t) : O(log n)
+*	t 番目の履歴の Πv[l..r) を返す．
+*
+* int apply(int i, F f, int t) : O(log n)
+*	t 番目の履歴に対し v[i] = f( v[i] ) とした配列を最新の履歴として記録し，履歴番号を返す．
+*
+* int apply(int l, int r, F f, int t) : O(log n)
+*	t 番目の履歴に対し v[l..r) = f( v[l..r) ) とした配列を最新の履歴として記録し，履歴番号を返す．
+*
+* int copy(int l, int r, int s, int t) : O(log n)
+*	s 番目の履歴の v[l..r) を t 番目の履歴の v[l..r) に上書きした配列を最新の履歴として記録し，履歴番号を返す．
+*
+* int max_right(int l, function<bool(S)> f, int t) : O(log n)
+*	t 番目の履歴について，f( Πv[l..r) ) = true となる最大の r を返す．
+*   制約：f( e() ) = true，f は単調
+*
+* int min_left(int r, function<bool(S)> f, int t) : O(log n)
+*	t 番目の履歴について，f( Πv[l..r) ) = true となる最小の l を返す．
+*	制約：f( e() ) = true，f は単調
+*/
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Persistent_lazy_segtree {
+	// 参考 : https://37zigen.com/persistent-segment-tree/
+
+	struct Node {
+		S val;			// ノードの値
+		F lazy;			// 遅延させている作用
+		Node* lc, * rc;	// 左右の子
+
+		Node() : val(e()), lazy(id()), lc(nullptr), rc(nullptr) {}
+	};
+
+	int n; // 配列の大きさ
+	int T; // 履歴の個数
+	vector<Node*> his; // 履歴へのポインタ
+
+	// 部分木 t に対応する区間 [tL..tR) を e() で初期化する．
+	Node* init_e(int tL, int tR) {
+		// 葉を作る場合
+		if (tR - tL == 1) {
+			Node* p = new Node();
+			return p;
+		}
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// 新規ノードの作成
+		Node* p = new Node();
+		p->lc = init_e(tL, tM);
+		p->rc = init_e(tM, tR);
+		return p;
+	}
+
+	// 部分木 t に対応する区間 [tL..tR) を v[tL..tR) で初期化する．
+	Node* init(int tL, int tR, const vector<S>& v) {
+		// 葉を作る場合
+		if (tR - tL == 1) {
+			Node* p = new Node();
+			p->val = v[tL];
+			return p;
+		}
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// 新規ノードの作成
+		Node* p = new Node();
+		p->lc = init(tL, tM, v);
+		p->rc = init(tM, tR, v);
+		p->val = op(p->lc->val, p->rc->val);
+		return p;
+	}
+
+	// 子をもつノード t が不変条件を満たすよう子ノードの val から再計算を行う．
+	// 呼び出す際には，子の lazy がいずれも id() でなくてはならない．
+	void update(Node* t) {
+		// 参考 : https://qiita.com/ngtkana/items/4d0b84d45210771aa074
+
+		t->val = op(t->lc->val, t->rc->val);
+	}
+
+	// ノード t の不変条件を満たしたまま lazy を id() に書き換える．
+	// 呼び出す際には，部分木 t 内の全てのノードで不変条件が満たされなければならない．
+	void eval(Node* t) {
+		// 参考 : https://qiita.com/ngtkana/items/4d0b84d45210771aa074
+		
+		// 遅延させていた作用がなければ何もしない．
+		if (t->lazy == id()) return;
+
+		// 葉ならすぐに作用させる．
+		if (!t->lc) {
+			t->val = act(t->lazy, t->val);
+			t->lazy = id();
+			return;
+		}
+
+		// 遅延作用を子に移す．
+		auto lc = t->lc;
+		t->lc = new Node();
+		t->lc->val = lc->val;
+		t->lc->lazy = comp(t->lazy, lc->lazy);
+		t->lc->lc = lc->lc;
+		t->lc->rc = lc->rc;
+
+		auto rc = t->rc;
+		t->rc = new Node();
+		t->rc->val = rc->val;
+		t->rc->lazy = comp(t->lazy, rc->lazy);
+		t->rc->lc = rc->lc;
+		t->rc->rc = rc->rc;
+
+		// 自身の値に遅延させていた作用を適用する．		
+		t->val = act(t->lazy, t->val);
+		t->lazy = id();
+	}
+
+	// 部分木 t の位置 pos を値 val にする（部分木 t は区間 [tL..tR) に対応する）
+	Node* set(Node* t, int tL, int tR, int pos, S val) {
+		eval(t);
+
+		// 葉まで降りてきたら値を代入して帰る．
+		if (!t->lc) {
+			Node* p = new Node();
+			p->val = val;
+			return p;
+		}
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		Node* p = new Node();
+
+		// 左右いずれかの子に対する処理を行う．
+		if (pos < tM) {
+			p->lc = set(t->lc, tL, tM, pos, val);
+			p->rc = t->rc;
+			eval(p->rc);
+		}
+		else {
+			p->lc = t->lc;
+			eval(p->lc);
+			p->rc = set(t->rc, tM, tR, pos, val);
+		}
+
+		update(p);
+
+		return p;
+	}
+
+	// 部分木 t 内の区間 [tL..tR)∩[l..r) に属する要素の積を返す．
+	S prod(Node*& t, int tL, int tR, int l, int r) {
+		// [tL..tR) ∩ [l..r) = {} の場合は単位元を返す．
+		if (r <= tL || tR <= l) return e();
+
+		eval(t);
+
+		// [tL..tR) ⊂ [l..r) の場合は区間の総積を返す．
+		if (l <= tL && tR <= r) return t->val;
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// 左右の子からの寄与を求める．
+		S vL = prod(t->lc, tL, tM, l, r);
+		S vR = prod(t->rc, tM, tR, l, r);
+
+		// それらの積を返す．
+		return op(vL, vR);
+	}
+
+	// 部分木 t 内の区間 [tL..tR)∩[l..r) に f を作用させる．
+	Node* apply(Node* t, int tL, int tR, int l, int r, F f) {
+		eval(t);
+
+		// [tL..tR) ∩ [l..r) = {} の場合は何もしない．
+		if (r <= tL || tR <= l) return t;
+
+		// [tL..tR) ⊂ [l..r) の場合は自身の値を更新する．
+		if (l <= tL && tR <= r) {
+			Node* p = new Node();
+			p->val = t->val;
+			p->lazy = comp(f, t->lazy);
+			p->lc = t->lc;
+			p->rc = t->rc;
+			return p;
+		}
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		Node* p = new Node();
+
+		// 左右の子に f を作用させる．
+		p->lc = apply(t->lc, tL, tM, l, r, f);
+		p->rc = apply(t->rc, tM, tR, l, r, f);
+
+		eval(p->lc);
+		eval(p->rc);
+		update(p);
+
+		return p;
+	}
+
+	// 部分木 t 内の区間 [tL..tR)∩[l..r) に部分木 s の同じ区間をコピーする．
+	Node* copy(Node* t, Node*& s, int tL, int tR, int l, int r) {
+		eval(t);
+
+		// [tL..tR) ∩ [l..r) = {} の場合は何もしない．
+		if (r <= tL || tR <= l) return t;
+
+		eval(s);
+
+		// [tL..tR) ⊂ [l..r) の場合は s をコピーする．
+		if (l <= tL && tR <= r) return s;
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		Node* p = new Node();
+
+		p->lc = copy(t->lc, s->lc, tL, tM, l, r);
+		p->rc = copy(t->rc, s->rc, tM, tR, l, r);
+
+		update(p);
+
+		return p;
+	}
+
+	// 部分木 t に対応する区間 [tL..tR) 内で，f( Πv[l..r) ) = true となる最大の r を返す（acc = Πv[l..tL)）
+	int max_right(Node*& t, int tL, int tR, int l, const function<bool(S)>& f, S& acc) {
+		// [tL..tR) ∩ [l..n) = {} の場合は部分木 t 内には境界はない．
+		if (tR <= l) return n;
+
+		eval(t);
+
+		// f( Πv[l..tR) ) = true の場合は部分木 t 内には境界はない．
+		if (l <= tL && f(op(acc, t->val))) {
+			acc = op(acc, t->val);
+			return n;
+		}
+
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (tR - tL == 1) return tL;
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// まず左の部分木を見にいき境界の位置を探す．
+		int res = max_right(t->lc, tL, tM, l, f, acc);
+
+		// 境界が見つかったならそれを返す．
+		if (res != n) return res;
+
+		// さもなくば右の部分木を見にいき境界の位置を探す．
+		return max_right(t->rc, tM, tR, l, f, acc);
+	}
+
+	// 部分木 t に対応する区間 [tL..tR) 内で，f( Πv[l..r) ) = true となる最小の l を返す（acc = Πv[tR..r)）
+	int min_left(Node*& t, int tL, int tR, int r, const function<bool(S)>& f, S& acc) {
+		// [tL..tR) ∩ [l..n) = {} の場合は部分木 t 内には境界はない．
+		if (r <= tL) return 0;
+
+		eval(t);
+
+		// f( Πv[tL..r) ) = true の場合は部分木 t 内には境界はない．
+		if (tR <= r && f(op(t->val, acc))) {
+			acc = op(t->val, acc);
+			return 0;
+		}
+
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (tR - tL == 1) return tR;
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		// まず右の部分木を見にいき境界の位置を探す．
+		int res = min_left(t->rc, tM, tR, r, f, acc);
+
+		// 境界が見つかったならそれを返す．
+		if (res != 0) return res;
+
+		// さもなくば左の部分木を見にいき境界の位置を探す．
+		return min_left(t->lc, tL, tM, r, f, acc);
+	}
+
+	// 部分木 t に対応する区間 [tL..tR) 内の要素を出力する．
+	void print(Node*& t, int tL, int tR, ostream& os) {
+		eval(t);
+
+		// 区間の中央
+		int tM = (tL + tR) / 2;
+
+		if (t->lc) {
+			print(t->lc, tL, tM, os);
+			print(t->rc, tM, tR, os);
+		}
+		else {
+			os << "(" << tL << "," << t->val << ") ";
+		}
+	}
+
+public:
+	// v[0..n) = e() で初期化する．履歴番号は 0 とする．
+	Persistent_lazy_segtree(int n) : n(n), T(1), his(1) {
+		his[0] = init_e(0, n);
+	}
+
+	// 配列 v[0..n) の要素で初期化する．履歴番号は 0 とする．
+	Persistent_lazy_segtree(const vector<S>& v) : n(sz(v)), T(1), his(1) {
+		// verify : https://judge.yosupo.jp/problem/persistent_range_affine_range_sum
+
+		his[0] = init(0, n, v);
+	}
+	Persistent_lazy_segtree() : n(0), T(0), his(0) {}
+
+	// t 番目の履歴に対し v[i] = x とした配列を最新の履歴として記録し，履歴番号を返す．
+	int set(int i, S x, int t) {
+		Assert(0 <= i); Assert(i < n);
+		Assert(t < T);
+		his.push_back(set(his[t], 0, n, i, x));
+		return T++;
+	}
+
+	// t 番目の履歴の v[i] を返す．
+	S get(int i, int t) {
+		Assert(0 <= i); Assert(i < n);
+		Assert(t < T);
+		return prod(his[t], 0, n, i, i + 1);
+	}
+
+	// t 番目の履歴の Πv[l..r) を返す．
+	S prod(int l, int r, int t) {
+		// verify : https://judge.yosupo.jp/problem/persistent_range_affine_range_sum
+
+		chmax(l, 0); chmin(r, n);
+		Assert(t < T);
+		if (l >= r) return e();
+		return prod(his[t], 0, n, l, r);
+	}
+
+	// t 番目の履歴に対し a[i] = f( a[i] ) とした配列を最新の履歴として記録し，履歴番号を返す．
+	int apply(int i, F f, int t) {
+		Assert(0 <= i); Assert(i < n);
+		Assert(t < T);
+		his.push_back(apply(his[t], 0, n, i, i + 1, f));
+		return T++;
+	}
+
+	// t 番目の履歴に対し a[l..r) = f( a[l..r) ) とした配列を最新の履歴として記録し，履歴番号を返す．
+	int apply(int l, int r, F f, int t) {
+		// verify : https://judge.yosupo.jp/problem/persistent_range_affine_range_sum
+
+		chmax(l, 0); chmin(r, n);
+		Assert(t < T);
+		his.push_back(apply(his[t], 0, n, l, r, f));
+		return T++;
+	}
+
+	// s 番目の履歴の v[l..r) を t 番目の履歴の v[l..r) に上書きした配列を最新の履歴として記録し，履歴番号を返す．
+	int copy(int l, int r, int s, int t) {
+		// verify : https://judge.yosupo.jp/problem/persistent_range_affine_range_sum
+
+		chmax(l, 0); chmin(r, n);
+		Assert(s < T); Assert(t < T);
+		his.push_back(copy(his[t], his[s], 0, n, l, r));
+		return T++;
+	}
+
+	// t 番目の履歴について，f( Πv[l..r) ) = true となる最大の r を返す．
+	int max_right(int l, const function<bool(S)>& f, int t) {
+		chmax(l, 0);
+
+		S acc = e();
+		Assert(f(e()));
+		return max_right(his[t], 0, n, l, f, acc);
+	}
+
+	// t 番目の履歴について，f( Πv[l..r) ) = true となる最小の l を返す．
+	int min_left(int r, const function<bool(S)>& f, int t) {
+		chmin(r, n);
+
+		S acc = e();
+		Assert(f(e()));
+		return min_left(his[t], 0, n, r, f, acc);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Persistent_lazy_segtree seg) {
+		rep(t, seg.T) {
+			os << t << ": ";
+			seg.print(seg.his[t], 0, seg.n, os);
+			os << endl;
+		}
+		return os;
+	}
+#endif
+};
+
+
+//【rollback 遅延評価セグメント木（M-モノイド）】
+/*
+* Lazy_segtree<S, op, e, F, act, comp, id>(int n) : O(n)
+*	v[0..n) = e() で初期化する．
+*	要素は左作用付きモノイド (S, op, e, F, act, comp, id) の元とする．
+*
+* Lazy_segtree<S, op, e, F, act, comp, id>(vS v) : O(n)
+*	配列 v[0..n) の要素で初期化する．
+*
+* set(int i, S x) : O(log n)
+*	v[i] = x とする．
+*
+* S get(int i) : O(log n)
+*	v[i] を返す．
+*
+* S prod(int l, int r) : O(log n)
+*	Πv[l..r) を返す．空なら e() を返す．
+*
+* apply(int i, F f) : O(log n)
+*	v[i] = f( v[i] ) とする．
+*
+* apply(int l, int r, F f) : O(log n)
+*	v[l..r) = f( v[l..r) ) とする．
+*
+* int max_right(int l, function<bool(S)> g) : O(log n)
+*	g( Πv[l..r) ) = true となる最大の r を返す．
+*   制約：g( e() ) = true かつ g は単調
+*
+* int min_left(int r, function<bool(S)> g) : O(log n)
+*	g( Πv[l..r) ) = true となる最小の l を返す．
+*	制約：g( e() ) = true かつ g は単調
+*
+* snapshot() : O(1)
+*	スナップショットを作成する．
+*
+* rollback() : ならし O(log n)
+*	直前に作成したスナップショットの状態まで巻き戻し，スナップショットを破棄する．
+*/
+template <class S, S(*op)(S, S), S(*e)(), class F, S(*act)(F, S), F(*comp)(F, F), F(*id)()>
+class Rollback_lazy_segtree {
+	int n; // 完全二分木の葉の数（必ず 2 冪）
+	int actual_n; // 実際の要素数
+
+	// 完全二分木を実現する大きさ 2n の配列（ v[0] は使用しない．）
+	// 根は v[1] で，v[i] の親は v[i/2]，左右の子は v[2i], v[2i+1] である．
+	// 0-indexed での i 番目のデータは，葉である v[i+n] に入っている．
+	vector<S> v;
+
+	// 遅延評価用の完全二分木
+	vector<F> lazy;
+
+	// 変更履歴
+	stack<pair<int, S>> history_v;
+	stack<pair<int, F>> history_lazy;
+
+	// 子をもつノード k が不変条件を満たすよう子ノードの val から再計算を行う．
+	// 呼び出す際には，子の lazy がいずれも id() でなくてはならない．
+	void update(int k) {
+		history_v.emplace(k, v[k]);
+		v[k] = op(v[k * 2], v[k * 2 + 1]);
+	}
+
+	// ノード k の不変条件を満たしたまま lazy を id() に書き換える．
+	// 呼び出す際には，部分木 k 内の全てのノードで不変条件が満たされなければならない．
+	void eval(int k) {
+		// 遅延させていた評価がなければ何もしない．
+		if (lazy[k] == id()) return;
+
+		// 葉ならすぐに作用させる．
+		if (k >= n) {
+			history_v.emplace(k, v[k]);
+			v[k] = act(lazy[k], v[k]);
+
+			history_lazy.emplace(k, lazy[k]);
+			lazy[k] = id();
+
+			return;
+		}
+
+		// 遅延作用を子に移す．
+		if (k < n) {
+			history_lazy.emplace(k * 2, lazy[k * 2]);
+			lazy[k * 2] = comp(lazy[k], lazy[k * 2]);
+
+			history_lazy.emplace(k * 2 + 1, lazy[k * 2 + 1]);
+			lazy[k * 2 + 1] = comp(lazy[k], lazy[k * 2 + 1]);
+		}
+
+		// 自身の値に遅延させていた作用を適用する．
+		history_v.emplace(k, v[k]);
+		v[k] = act(lazy[k], v[k]);
+
+		history_lazy.emplace(k, lazy[k]);
+		lazy[k] = id();
+	}
+
+	// 部分木 k の位置 pos を値 val にする（部分木 k は区間 [kL..kR) に対応する）
+	void set_sub(int pos, S val, int k, int kL, int kR) {
+		eval(k);
+
+		// 葉まで降りてきたら値を代入して帰る．
+		if (k >= n) {
+			history_v.emplace(k, v[k]);
+			v[k] = val;
+			return;
+		}
+
+		// 区間の中央
+		int kM = (kL + kR) / 2;
+
+		// 左右いずれかの子に対する処理を行う．
+		if (pos < kM) {
+			set_sub(pos, val, k * 2, kL, kM);
+			eval(k * 2 + 1);
+		}
+		else {
+			eval(k * 2);
+			set_sub(pos, val, k * 2 + 1, kM, kR);
+		}
+
+		update(k);
+	}
+
+	// 部分木 k 内の区間 [kL..kR)∩[l..r) に属する要素の積を返す．
+	S prod_sub(int l, int r, int k, int kL, int kR) {
+		// [kL..kR) ∩ [l..r) = {} の場合は単位元を返す．
+		if (kR <= l || r <= kL) return e();
+
+		eval(k);
+
+		// [kL..kR) ⊂ [l..r) の場合は区間の総積を返す．
+		if (l <= kL && kR <= r) return v[k];
+
+		// 区間の中央
+		int kM = (kL + kR) / 2;
+
+		// 左右の子からの寄与を求める．
+		S vL = prod_sub(l, r, k * 2, kL, kM);
+		S vR = prod_sub(l, r, k * 2 + 1, kM, kR);
+
+		// それらの積を返す．
+		return op(vL, vR);
+	}
+
+	// 部分木 k 内の区間 [kL..kR)∩[l..r) に f を作用させる．
+	void apply_sub(int l, int r, F f, int k, int kL, int kR) {
+		eval(k);
+
+		// [kL..kR) ∩ [l..r) = {} の場合は何もしない．
+		if (kR <= l || r <= kL) return;
+
+		// [kL..kR) ⊂ [l..r) の場合は自身の値を更新する．
+		if (l <= kL && kR <= r) {
+			history_lazy.emplace(k, lazy[k]);
+			lazy[k] = comp(f, lazy[k]);
+			return;
+		}
+
+		// 区間の中央
+		int kM = (kL + kR) / 2;
+
+		// 左右の子に f を作用させる．
+		apply_sub(l, r, f, k * 2, kL, kM);
+		apply_sub(l, r, f, k * 2 + 1, kM, kR);
+
+		eval(k * 2);
+		eval(k * 2 + 1);
+		update(k);
+	}
+
+	// 部分木 k に対応する区間 [kL..kR) 内で，f( Πv[l..r) ) = true となる最大の r を返す（x = Πv[l..kL)）
+	template <class FUNC>
+	int max_right_sub(int l, S& x, int k, int kL, int kR, const FUNC& f) {
+		// [kL..kR) ∩ [l..n) = {} の場合は部分木 k 内には境界はない．
+		if (kR <= l) return actual_n;
+
+		eval(k);
+
+		// f( Πv[l..kR) ) = true の場合は部分木 k 内には境界はない．
+		if (l <= kL && f(op(x, v[k]))) {
+			x = op(x, v[k]);
+			return actual_n;
+		}
+
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (k >= n) return kL;
+
+		// 区間の中央
+		int kM = (kL + kR) / 2;
+
+		// まず左の部分木を見にいき境界の位置を探す
+		int pos = max_right_sub(l, x, k * 2, kL, kM, f);
+
+		// 境界が見つかったならそれを返す．
+		if (pos != actual_n) return pos;
+
+		// さもなくば右の部分木を見にいき境界の位置を探す．
+		return max_right_sub(l, x, k * 2 + 1, kM, kR, f);
+	}
+
+	// 部分木 k に対応する区間 [kL..kR) 内で，f( Πv[l..r) ) = true となる最小の l を返す（x = Πv[kR..r)）
+	template <class FUNC>
+	int min_left_sub(int r, S& x, int k, int kL, int kR, const FUNC& f) {
+		// [kL..kR) ∩ [l..n) = {} の場合は部分木 k 内には境界はない．
+		if (r <= kL) return 0;
+
+		eval(k);
+
+		// f( Πv[kL..r) ) = true の場合は部分木 k 内には境界はない．
+		if (kR <= r && f(op(v[k], x))) {
+			x = op(v[k], x);
+			return 0;
+		}
+
+		// 注目している区間の幅が 1 ならば，その区間を含まないギリギリが境界とわかる．
+		if (k >= n) return kR;
+
+		// 区間の中央
+		int kM = (kL + kR) / 2;
+
+		// まず右の部分木を見にいき境界の位置を探す．
+		int pos = min_left_sub(r, x, k * 2 + 1, kM, kR, f);
+
+		// 境界が見つかったならそれを返す．
+		if (pos != 0) return pos;
+
+		// さもなくば左の部分木を見にいき境界の位置を探す．
+		return min_left_sub(r, x, k * 2, kL, kM, f);
+	}
+
+public:
+	// v[0..n) = e() で初期化する．
+	Rollback_lazy_segtree(int n_) : actual_n(n_) {
+		// 要素数以上となる最小の 2 冪を求め，n とする．
+		n = n_ > 0 ? 1 << (msb(n_ - 1) + 1) : 1;
+
+		// 完全二分木を実現する大きさ 2 * n の配列を確保する．
+		v = vector<S>(2 * n, e());
+		lazy = vector<F>(2 * n, id());
+	}
+
+	// 配列 v[0..n) の要素で初期化する．
+	Rollback_lazy_segtree(const vector<S>& v_) : Rollback_lazy_segtree(sz(v_)) {
+		// 全ての葉にデータを設定する．
+		rep(i, sz(v_)) v[i + n] = v_[i];
+
+		// 全てのノードに正しい値を設定する．
+		repir(i, n - 1, 1) v[i] = op(v[i * 2], v[i * 2 + 1]);
+	}
+	Rollback_lazy_segtree() : n(0), actual_n(0) {}
+
+	// v[i] = x とする．
+	void set(int i, S x) {
+		Assert(0 <= i); Assert(i < actual_n);
+		set_sub(i, x, 1, 0, n);
+	}
+
+	// v[i] を返す．
+	S get(int i) {
+		Assert(0 <= i); Assert(i < actual_n);
+		return prod(i, i + 1);
+	}
+
+	// Πv[l..r) を返す．空なら e() を返す．
+	S prod(int l, int r) {
+		return prod_sub(l, r, 1, 0, n);
+	}
+
+	// v[i] = f( v[i] ) とする．
+	void apply(int i, F f) {
+		Assert(0 <= i); Assert(i < actual_n);
+		apply(i, i + 1, f);
+	}
+
+	// v[l..r) = f( v[l..r) ) とする．
+	void apply(int l, int r, F f) {
+		apply_sub(l, r, f, 1, 0, n);
+	}
+
+	// g( Πv[l..r) ) = true となる最大の r を返す．
+	template <class FUNC>
+	int max_right(int l, const FUNC& g) {
+		Assert(g(e()));
+		S x = e();
+		return max_right_sub(l, x, 1, 0, n, g);
+	}
+
+	// g( Πv[l..r) ) = true となる最小の l を返す．
+	template <class FUNC>
+	int min_left(int r, const FUNC& g) {
+		Assert(g(e()));
+		S x = e();
+		return min_left_sub(r, x, 1, 0, n, g);
+	}
+
+	// スナップショットを作成する．
+	void snapshot() {
+		history_v.emplace(-1, e());
+		history_lazy.emplace(-1, id());
+	}
+
+	// 直前に作成したスナップショットの状態まで巻き戻す．
+	void rollback() {
+		while (true) {
+			auto [k, x] = history_v.top(); history_v.pop();
+			if (k == -1) break;
+
+			v[k] = x;
+		}
+
+		while (true) {
+			auto [k, f] = history_lazy.top(); history_lazy.pop();
+			if (k == -1) break;
+
+			lazy[k] = f;
+		}
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, Rollback_lazy_segtree seg) {
+		rep(i, seg.actual_n) os << seg.get(i) << " ";
 		return os;
 	}
 #endif
@@ -2493,7 +3449,7 @@ public:
 *	[l..r) = [l..m)凵[m..r) なる m を返す（[l..r) がセグ木の区間なら -1）
 *
 * vector<pTT> partiton(T l, T r) : O(log(r-l))
-*	[l..r) を昇順に区間分割した結果を返す．*
+*	[l..r) を昇順に区間分割した結果を返す．
 */
 namespace Haribote_segtree {
 	// [0..n) を扱うセグメント木について，頂点 i に対応する区間 [l..r) を返す．
@@ -2585,6 +3541,7 @@ namespace Haribote_segtree {
 		return res;
 	}
 };
+
 
 
 //【連想セグメント木（モノイド）】（遅い）

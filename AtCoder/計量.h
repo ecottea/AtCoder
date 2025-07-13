@@ -63,7 +63,7 @@ bool compare_argument(Point<T> a, Point<T> b, Point<T> e = Point<T>{ 1, 0 }, Poi
 	// もし a = O なら，a の偏角(∞) を b の偏角(≦∞)が超えることはない．
 	if (a == O) return false;
 
-	// もし b = O なら，a の偏角(＜∞) より b の偏角(∞) が大きい． 
+	// もし b = O なら，a の偏角(<∞) より b の偏角(∞) が大きい． 
 	if (b == O) return true;
 
 	// 以降は a, b は O と異なるものとして考えて良い．

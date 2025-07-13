@@ -463,7 +463,7 @@ MFPS exp_fps(const MFPS& f, int d, const Factorial_mint& fm) {
 	//		log g(z) = f(z)
 	// に対してニュートン法を用いる．
 	// 
-	// f(0) = 0 なので，mod z^1 では
+	// [z^0]f(z) = 0 なので，mod z^1 では
 	//		log(1) ≡ f(z) mod z^1
 	// が成り立つ．
 	//
@@ -724,7 +724,7 @@ MFPS sqrt_fps(const MFPS& f, int d, bool& exist) {
 /*
 * [z^N] f(z)/g(z) を返す．
 *
-* 制約 : deg f < deg g, g[0] != 0
+* 制約 : deg f < deg g, g[0] ≠ 0
 */
 mint bostan_mori(MFPS f, MFPS g, ll N) {
 	// 参考 : http://q.c.titech.ac.jp/docs/progs/polynomial_division.html
@@ -802,174 +802,7 @@ mint linearly_recurrent_sequence(const vm& a, const vm& c, ll N) {
 
 //【線形漸化式の発見】O(n^2)
 /*
-* 与えられた数列 a[0..n) に対し，以下の等式を満たす c[0..m) で m を最小とするものを返す：
-*		a[i] = Σj∈[0..m) c[j] a[i-1-j]  (∀i∈[m..n))
-*/
-vm berlekamp_massey(const vm& a) {
-	// 参考 : https://en.wikipedia.org/wiki/Berlekamp%E2%80%93Massey_algorithm
-	// verify : https://judge.yosupo.jp/problem/find_linear_recurrence
-
-	vm S(a), C{ 1 }, B{ 1 };
-	int N = sz(a), m = 1; mint b = 1;
-
-	rep(n, N) {
-		mint d = 0;
-		rep(i, sz(C)) d += C[i] * S[n - i];
-
-		if (d == 0) {
-			m++;
-		}
-		else if (2 * (sz(C) - 1) <= n) {
-			vm T(C);
-
-			mint coef = d * b.inv();
-			C.resize(max(sz(C), sz(B) + m));
-			rep(j, sz(B)) C[j + m] -= coef * B[j];
-
-			B = T;
-			b = d;
-			m = 1;
-		}
-		else {
-			mint coef = d * b.inv();
-			C.resize(max(sz(C), sz(B) + m));
-			rep(j, sz(B)) C[j + m] -= coef * B[j];
-
-			m++;
-		}
-	}
-
-	C.erase(C.begin());
-	rep(i, sz(C)) C[i] *= -1;
-
-	return C;
-}
-
-
-//【変数係数線形漸化式の発見】O(n L^2 D^2 + N (L D + log(mod)))
-/*
-* 係数多項式の次数が D 次未満の L 項間漸化式
-*	Σi∈[0..L) Σj∈[0..D) c(i,j) (m+i)^j a[m+i] = 0
-* の存在を仮定して a[0..n) を延長し a[0..N] にする（失敗したら false を返す）
-*
-* 制約 : n ≧ L(D+1)-1（ランク落ちしてるとこれでも足りないかも）
-*
-* 利用：【行列】,【線形方程式】
-*/
-template <class DUMMY = int>
-bool p_recursive(int N, vm& a, int L, int D, vm* coef = nullptr) {
-	// verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
-
-	int n = sz(a);
-
-	// 既に十分な長さがある場合はそのままで良い．
-	if (N <= n - 1) {
-		a.resize(N + 1);
-		return true;
-	}
-
-	// 式が足りないといつでも非自明解をもってしまって意味がない．
-	if (n < L * (D + 1) - 1) return false;
-
-	// 行列方程式 A x = 0 を解いて一般解の基底 xs を求める．
-	Matrix<mint> A(n - L + 1, L * D);
-	repi(n0, 0, n - L) {
-		rep(i, L) rep(j, D) {
-			A[n0][i * D + j] = mint(n0 + i).pow(j) * a[n0 + i];
-		}
-	}
-	vvm xs;
-	gauss_jordan_elimination(A, vm(n - L + 1), &xs);
-
-	// 自明解 x = 0 しか存在しない場合は失敗．
-	if (xs.empty()) return false;
-
-	a.resize(N + 1);
-
-	// 得られた非自明解 xs.back() から漸化式を復元し，それに基づき a[0..n) を延長する．
-	auto& x = xs.back();
-	repi(n0, n - L + 1, N - L + 1) {
-		mint num = 0;
-		rep(i, L - 1) {
-			mint pow_n0i = 1;
-			rep(j, D) {
-				num += x[i * D + j] * pow_n0i * a[n0 + i];
-				pow_n0i *= n0 + i;
-			}
-		}
-
-		mint dnm = 0;
-		mint pow_n0L = 1;
-		rep(j, D) {
-			dnm += x[(L - 1) * D + j] * pow_n0L;
-			pow_n0L *= n0 + L - 1;
-		}
-
-		// num + dnm * a[n0 + L - 1] = 0
-		a[n0 + L - 1] = -num / dnm;
-	}
-
-	if (coef) *coef = move(x);
-
-	return true;
-}
-
-
-//【変数係数線形漸化式の発見（Mathematica）】
-/*
-* Mathematica で以下のプログラムを実行すればよい：
-
-Clear[c, nn, dpsub];
-seq = { 愚直に計算した a[1..] } (* 添字が 1 始まりなのに注意！ *);
-terms = 3 (* 何項間漸化式の存在を仮定するか *);
-degree = 2 (* 係数多項式の次数を何次未満と仮定するか *);
-eqs = Table[Sum[c[i, j] (nn - i)^j seq[[nn - i]], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0, {nn, terms, Length@seq}];
-fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}], Integers, 2][[1]]
-sol = Solve[Sum[c[i, j] (nn - i)^j dpsub[nn - i], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0 /. fi, dpsub[nn]][[1]]
-CForm@FullSimplify@sol[[1, 2]]
-
-* 時間がかかりすぎるようなら，fi の 1 行を以下の 2 行に置き換える：
-
-eqs = eqs~Join~{c[0, degree-1] == 1} (* 1 に固定する係数の位置は適宜調整する *);
-fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}]][[1]]
-
-* コピペ後の整形では以下の関数を利用できる：
-
-auto dpsub = [&](const mint& x) { return dp[x.val()]; };
-auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; return res; };
-
-* あと積のオーバーフローや逆数にも要注意．
-*
-* verify : https://atcoder.jp/contests/arc174/tasks/arc174_c
-*/
-
-
-//【変数係数線形漸化式の発見（2 次元，Mathematica）】
-/*
-* Mathematica で以下のプログラムを実行すればよい（整形は FullSimplify[] からの CForm[] で）：
-
-Clear[c, nn1, nn2, dpsub];
-tbl = { 愚直に計算した a[1..][1..] } (* 添字が 1 始まりなのに注意！ *);
-terms = 2 (* 何項間漸化式の存在を仮定するか *);
-degree = 2 (* 係数多項式の次数を何次未満と仮定するか *);
-eqs = Flatten@Table[Sum[c[i1, j1, i2, j2] (n1 - i1)^j1 (n2 - i2)^j2 tbl[[n1 - i1]][[n2 - i2]], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}] == 0, {n1, terms, Length@tbl}, {n2, terms, Length[tbl[[1]]]}] (* 三角行列ならn2の上限はn1にする *);
-fi = FindInstance[eqs, Flatten@Table[c[i1, j1, i2, j2], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}], Integers, 2][[1]];
-sol = Solve[Sum[c[i1, j1, i2, j2] (nn1 - i1)^j1 (nn2 - i2)^j2 dpsub[nn1 - i1, nn2 - i2], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}] == 0 /. fi, dpsub[nn1, nn2]][[1]]
-CForm@FullSimplify@sol[[1, 2]]
-
-* 時間がかかりすぎるようなら，fi の 1 行を以下の 2 行に置き換える：
-
-eqs = eqs~Join~{c[0, 0, 0, 0] == 1} (* 1 に固定する係数の位置は適宜調整する *);
-fi = FindInstance[eqs, Flatten@Table[c[i1, j1, i2, j2], {i1, 0, terms - 1}, {j1, 0, degree - 1}, {i2, 0, terms - 1}, {j2, 0, degree - 1}]][[1]];
-
-* コピペ後の整形では以下の関数を利用できる：
-
-auto dpsub = [&](const mint& x, const mint& y) { return dp[x.val()][y.val()]; };
-auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; return res; };
-
-* あと積のオーバーフローや逆数にも要注意．
-*
-* verify : https://atcoder.jp/contests/tupc2023/tasks/tupc2023_l
+* エスパー.h へ
 */
 
 
@@ -1002,35 +835,49 @@ mint bostan_mori(const MFPS::SMFPS& f, const MFPS& g, ll d) {
 
 //【展開係数（分母が二項式の積）】O(deg(g) m log N)
 /*
-* f(z) = Σi∈[0..n) f[i] z^i，g(z) = Πj∈[0..m) (1 + c[j] z^d[j]) とし [z^N] f(z)/g(z) を返す．
+*	f(z) = Σi∈[0..n) f[i] z^i
+*	g(z) = Πj∈[0..m) (1 + c[j] z^d[j])
+* とし [z^N] f(z)/g(z) を返す．
 *
-* 制約 : deg f < deg g
+* 制約 : deg f < deg g, d[j] > 0
 */
 mint bostan_mori(vm f, vector<pim> dcs, ll N) {
 	// verify : https://yukicoder.me/problems/no/137
 
-	// f(z) = 0 のときは 0 を返す．
-	if (sz(f) == 0) return 0;
+	//【備考】
+	// 通常のボスタン-森法とは異なり，法が 998244353 でなくても使える．
 
-	// N = 0 のときは定数項を返す．
-	if (N == 0) return f[0];
+	while (N > 0) {
+		dump(sz(f));
 
-	int n = sz(f), m = sz(dcs);
+		// f(z) = 0 のときは 0 を返す．
+		if (sz(f) == 0) return 0;
 
-	// g(z) の奇多項式因子で z ← -z としたものを分母分子に掛け，分母は z ← z^2 としておく．
-	for (auto& [d, c] : dcs) {
-		f.resize(sz(f) + d);
-		repir(i, sz(f) - 1, d) f[i] -= f[i - d] * c;
-		c *= -c;
+		// g(z) の奇多項式因子で z ← -z としたものを分母分子に掛け，分母は z ← z^2 としておく．
+		for (auto& [d, c] : dcs) {
+			// 1 + c z^d
+
+			if (d & 1) {
+				f.resize(sz(f) + d);
+				repir(i, sz(f) - 1, d) f[i] -= f[i - d] * c;
+				c *= -c;
+			}
+			else {
+				d /= 2;
+			}
+		}
+
+		// N の偶奇に応じて f の偶[奇]多項式部分を取り出す．
+		int i_ub = sz(f); int pt = 0;
+		for (int i = (N & 1); i < i_ub; i += 2) f[pt++] = f[i];
+		f.resize(pt);
+
+		// N を半分にして次のステップに進む．
+		N /= 2;
 	}
 
-	// d の偶奇に応じて f の偶[奇]多項式部分を取り出す．
-	vm f2;
-	if (N & 1) rep(i, sz(f) / 2) f2.push_back(f[2 * i + 1]);
-	else rep(i, (sz(f) + 1) / 2) f2.push_back(f[2 * i]);
-
-	// d を半分にして再帰を回す．
-	return bostan_mori(f2, dcs, N >> 1);
+	// N = 0 になったら定数項を返す．
+	return sz(f) > 0 ? f[0] : 0;
 }
 
 
@@ -1536,6 +1383,55 @@ MFPS expand(vector<MFPS> fs) {
 }
 
 
+//【二項式の積の展開】O(n (log n)^2 + m log m)
+/*
+* z^[0..m] Πi∈[0..n) (1 + c[i] z^d[i]) を返す．
+*
+* 制約：fm は (m+1)! まで計算可能
+*
+* 利用：【対数関数】
+*/
+MFPS expand_binomial(int m, const vm& c, const vi& d, const Factorial_mint& fm) {
+	int n = sz(c);
+
+	vector<vector<MFPS>> d_to_cs(m + 1); mint f0 = 1;
+	rep(i, n) {
+		if (d[i] == 0) {
+			f0 *= 1 + c[i];
+		}
+		else if (d[i] <= m) {
+			d_to_cs[d[i]].emplace_back(vm{ 1, c[i] });
+		}
+	}
+
+	MFPS f(0, m + 1);
+
+	repi(d, 1, m) {
+		int K = sz(d_to_cs[d]);
+		if (K == 0) continue;
+
+		// 2 冪個ずつ掛けていく（分割統治積）
+		for (int k = 1; k < K; k *= 2) {
+			for (int i = 0; i + k < K; i += 2 * k) {
+				d_to_cs[d][i] *= d_to_cs[d][i + k];
+				if (sz(d_to_cs[d][i]) > m + 1) {
+					d_to_cs[d][i].resize(m + 1);
+				}
+			}
+		}
+
+		auto g = log_fps(d_to_cs[d][0], m / d + 1, fm);
+
+		rep(i, sz(g)) f[d * i] += g[i];
+	}
+
+	f = exp_fps(f, m + 1, fm);
+	f *= f0;
+
+	return f;
+}
+
+
 //【多項式の累積積の和】O(n (log n)^2)
 /*
 * 多項式の列 fs[0..k) について，Σi=[0..k] Πfs[0..i)（次数は n）を返す．
@@ -1570,6 +1466,8 @@ MFPS cumulative_product_sum(const vector<MFPS>& fs_) {
 	// と表される．
 
 	int n = sz(fs_);
+
+	if (n == 0) return MFPS(1);
 
 	// 1-indexed になおして格納する．
 	vector<MFPS> fs(n + 1);
@@ -1634,6 +1532,8 @@ MFPS weighted_cumulative_product_sum(const vector<MFPS>& as, const vector<MFPS>&
 
 	int n = sz(fs);
 
+	if (n == 0) return MFPS(1);
+
 	// 1-indexed になおして格納する．
 	vector<MFPS> gs(n + 1);
 	rep(i, n) gs[i + 1] = fs[i];
@@ -1656,6 +1556,73 @@ MFPS weighted_cumulative_product_sum(const vector<MFPS>& as, const vector<MFPS>&
 	}
 
 	return gs[1];
+}
+
+
+//【多項式の累積積の和（両側）】O(n (log n)^2)
+/*
+* 多項式の列 fs[0..K), gs[0..K) について，Σi=[0..K] Πfs[0..i) Πgs[i..K)（次数は n）を返す．
+*/
+MFPS cumulative_product_sum(vector<MFPS> fs, vector<MFPS> gs) {
+	// verify : https://atcoder.jp/contests/abc385/tasks/abc385_g
+	// 参考 : https://x.com/maspy_stars/status/1871256501479952719
+
+	//【方法】
+	// 1-indexed で考える．以下 f14 := f1 f2 f3 f4 などと略記する．
+	// 
+	// 例えば K=7 のとき，答えは
+	//		g17 + f1g27 + f12g37 + f13g47 + f14g57 + f15g67 + f16g7 + f17
+	//		= (g1+f1)g27 + f12(g3+f3)g47 + f14(g5+f5)g67 + f16(g7+f7)
+	//		= ((g1+f1)g23 + f12(g3+f3))g47 + f14((g5+f5)g67 + f56(g7+f7))
+	// である．
+	// 
+	// まずフェニック木の初期化と同様にして
+	//		f1 ← f1, f2 ← f12, f3 ← f3, f4 ← f14, f5 ← f5, f6 ← f56, f7 ← f7
+	//		g1 ← g1, g2 ← g23, g3 ← g3, g4 ← g47, g5 ← g5, g6 ← g67, g7 ← g7
+	// と更新すれば，答えは
+	//		((g1+f1)g2 + f2(g3+f3))g4 + f4((g5+f5)g6 + f6(g7+f7))
+	// と表される．
+	//
+	// 次に
+	//		f[2i+1] ← g[2i+1] + f[2i+1]
+	// と更新すれば，答えは
+	//		(f1 g2 + f2 f3)g4 + f4(f5 g6 + f6 f7)
+	// と表される．さらに
+	//		f[4i+1] ← f[4i+1] g[4i+2] + f[4i+2] f[4i+3]
+	// と更新すれば，答えは
+	//		f1 g4 + f4 f5
+	// と表される．最後に
+	//		f[8i+1] ← f[8i+1] g[8i+4] + f[8i+4] f[8i+5]
+	// とすれば，答えは
+	//		f1
+	// と表される．
+
+	int K = sz(fs);
+
+	if (K == 0) return MFPS(1);
+
+	// フェニック木の初期化段階
+	for (int pow2 = 1; 2 * pow2 <= K; pow2 *= 2) {
+		for (int i = 2 * pow2; i <= K; i += 2 * pow2) {
+			fs[i - 1] *= fs[(i - pow2) - 1];
+		}
+		for (int i = 2 * pow2; i + pow2 <= K; i += 2 * pow2) {
+			gs[i - 1] *= gs[(i + pow2) - 1];
+		}
+	}
+
+	// 奇数番目の要素への g の加算
+	for (int i = 1; i <= K; i += 2) fs[i - 1] += gs[i - 1];
+
+	// 積の加算の繰り返し
+	for (int pow2 = 2; pow2 <= K; pow2 *= 2) {
+		for (int i = 1; i + pow2 - 1 <= K; i += 2 * pow2) {
+			fs[i - 1] *= gs[(i + pow2 - 1) - 1];
+			fs[i - 1] += fs[(i + pow2 - 1) - 1] * (i + pow2 <= K ? fs[(i + pow2) - 1] : 1);
+		}
+	}
+
+	return fs[1 - 1];
 }
 
 
@@ -1684,21 +1651,73 @@ pair<MFPS, MFPS> reduction(vector<MFPS> num, vector<MFPS> dnm) {
 /*
 * 各 j∈[0..m) について，Σa[0..n)^j を格納したリストを返す．
 *
-* 利用：【有理式の通分】
+* 制約 : fm は m! まで計算可能
+*
+* 利用：【対数関数】
 */
-vm powered_sum(const vm& a, int m) {
+vm powered_sum(const vi& a, int m, const Factorial_mint& fm) {
 	// verify : https://yukicoder.me/problems/no/1145
+
+	//【方法】
+	// log のマクローリン展開の公式より
+	//		-log Πi∈[0..n)(1 - a[i]z)
+	//		= Σi∈[0..n) -log(1 - a[i]z)
+	//		= Σi∈[0..n) Σk∈[1..∞) 1/k a[i]^k z^k
+	//		= Σk∈[1..∞) 1/k (Σi∈[0..n) a[i]^k) z^k
+	// となるので，これの係数から累乗和が得られる．
+
+	if (m == 0) return vm();
 
 	int n = sz(a);
 
-	vector<MFPS> nums(n, MFPS(1)), dnms(n);
-	rep(i, n) dnms[i] = MFPS(vm{ 1, -a[i] });
+	vvm fs(n);
+	rep(i, n) fs[i] = vm{ 1, -a[i] };
 
-	auto [num, dnm] = reduction(nums, dnms);
+	// 2 冪個ずつ足していく（分割統治法）
+	for (int k = 1; k < n; k *= 2) {
+		if (sz(fs[0]) <= 60) {
+			for (int i = 0; i + k < n; i += 2 * k) {
+				// 素朴に畳み込む．				
+				fs[i] = internal::convolution_naive(fs[i], fs[i + k]);
+			}
+		}
+		else {
+			for (int i = 0; i + k < n; i += 2 * k) {
+				int w1 = sz(fs[i]);
+				int w2 = sz(fs[i + k]);
+				int w = w1 + w2 - 1;
 
-	num.resize(m); dnm.resize(m);
-	auto f = num / dnm;
+				// w1 = w2 = 2^hoge + 1 のときエイリアシングが生じるが，それより定数倍高速化を優先させる．
+				int W = 1 << (msb(w - 2) + 1);
+
+				fs[i].resize(W);
+				fs[i + k].resize(W);
+
+				internal::butterfly(fs[i]);
+				internal::butterfly(fs[i + k]);
+
+				rep(j, W) fs[i][j] *= fs[i + k][j];
+
+				internal::butterfly_inv(fs[i]);
+
+				mint inv = mint(W).inv();
+				fs[i].resize(w);
+				rep(j, w) fs[i][j] *= inv;
+
+				// エイリアシングが生じている場合は修正する．
+				if ((1 << (msb(w - 1) + 1)) != W) {
+					fs[i][w - 1] = fs[i][0] - 1;
+					fs[i][0] = 1;
+				}
+			}
+		}
+	}
+
+	MFPS f(fs[0]);
 	f.resize(m);
+	f = log_fps(f, m, fm);
+	f[0] = n;
+	repi(i, 1, m - 1) f[i] = -f[i] * i;
 
 	return f.c;
 }

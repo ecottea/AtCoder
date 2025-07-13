@@ -120,48 +120,6 @@ vvi connected_component_complement(const Graph& g) {
 }
 
 
-//【トポロジカルソート】O(n + m)
-/*
-* DAG g をトポロジカルソートした結果の i 番目の頂点を seq[i] に格納し seq を返す．
-* g が DAG でない場合は空リストを返す．
-*
-*（葉からの幅優先探索）
-*/
-vi topological_sort(const Graph& g) {
-	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_4_B
-
-	int n = sz(g);
-
-	// 入次数を求めておく．
-	vi in_degree(n);
-	rep(i, n) repe(t, g[i]) in_degree[t]++;
-
-	// 入次数が 0 の頂点から順に取り除いていく．
-	queue<int> q;
-	rep(i, n) if (in_degree[i] == 0) q.push(i);
-
-	vi seq;
-	seq.reserve(n);
-
-	while (!q.empty()) {
-		auto s = q.front(); q.pop();
-
-		// 入次数が 0 の頂点を見つけ結果に格納する．
-		seq.push_back(s);
-
-		repe(t, g[s]) {
-			// 頂点 s を取り除き，t の入次数を更新する．
-			in_degree[t]--;
-
-			// 新たに入次数 0 の頂点が生まれたらキューに追加する．
-			if (in_degree[t] == 0) q.push(t);
-		}
-	}
-
-	return sz(seq) == n ? seq : vi();
-}
-
-
 //【強連結成分分解】O(n + m)
 /*
 * 有向グラフ g を強連結成分分解し，強連結成分をトポロジカルソート順に格納したリストを返す．
@@ -235,6 +193,165 @@ vvi strongly_connected_component(const Graph& g) {
 
 	return ccs;
 }
+
+
+//【トポロジカルソート】O(n + m)
+/*
+* DAG g をトポロジカルソートし，i 番目の頂点を p[i] とし p[0..n) を返す．
+* すなわち，p は「g に辺 s→t がある ⇒ p において (s の位置) < (t の位置)」を満たす．
+* g が DAG でない場合は空リストを返す．
+*
+*（葉からの幅優先探索）
+*/
+vi topological_sort(const Graph& g) {
+	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/5/GRL/all/GRL_4_B
+
+	int n = sz(g);
+
+	// in_degree[s] : 頂点 s の入次数
+	vi in_degree(n);
+	rep(i, n) repe(t, g[i]) in_degree[t]++;
+
+	queue<int> q;
+	rep(i, n) if (in_degree[i] == 0) q.push(i);
+
+	vi seq;
+	seq.reserve(n);
+
+	// p[0..n) の要素を左から順に決めていく．
+	// 入次数が 0 の頂点から順に取り除いていけば良い．
+	while (!q.empty()) {
+		auto s = q.front(); q.pop();
+
+		// 入次数が 0 の頂点を見つけ結果に格納する．
+		seq.push_back(s);
+
+		repe(t, g[s]) {
+			// 頂点 s を取り除き，t の入次数を更新する．
+			in_degree[t]--;
+
+			// 新たに入次数 0 の頂点が生まれたらキューに追加する．
+			if (in_degree[t] == 0) q.push(t);
+		}
+	}
+
+	return sz(seq) == n ? seq : vi();
+}
+
+
+//【トポロジカルソート（辞書順最小）】O(n log n + m)
+/*
+* DAG g をトポロジカルソートし，i 番目の頂点を p[i] とし p[0..n) を返す．
+* すなわち，p は「g に辺 s→t がある ⇒ p において (s の位置) < (t の位置)」を満たす．
+* p の候補が複数ある場合は辞書順最小の p を返す．p の候補が無い場合は空リストを返す．
+*/
+vi topological_sort_min(const Graph& g) {
+	// verify : https://atcoder.jp/contests/abc223/tasks/abc223_d
+
+	//【方法】
+	//「辞書順最小 → 左から貪欲」の原則に則り p[0..n) の要素を左から順に貪欲に決めていく．
+	// 入次数 0 の頂点のうち番号最小の頂点を push_back() していけば良い．
+
+	//【備考】
+	// q = p_inv とおくと，rev(q) は辞書順最大になる．
+	// すなわち，(n..0] について順に p 内のなるだけ右に配置するという貪欲も正当である．
+
+	int n = sz(g);
+
+	// in_degree[s] : 頂点 s の入次数
+	vi in_degree(n);
+	rep(s, n) repe(t, g[s]) in_degree[t]++;
+
+	priority_queue_rev<int> q;
+	rep(s, n) if (in_degree[s] == 0) q.push(s);
+
+	vi seq;
+	seq.reserve(n);
+
+	while (!q.empty()) {
+		auto s = q.top(); q.pop();
+
+		// 入次数が 0 の頂点を見つけ結果に格納する．
+		seq.push_back(s);
+
+		repe(t, g[s]) {
+			// 頂点 s を取り除き，t の入次数を更新する．
+			in_degree[t]--;
+
+			// 新たに入次数 0 の頂点が生まれたらキューに追加する．
+			if (in_degree[t] == 0) q.push(t);
+		}
+	}
+
+	return sz(seq) == n ? seq : vi();
+}
+
+
+//【逆トポロジカルソート（辞書順最小）】O(n log n + m)
+/*
+* DAG g をトポロジカルソートし，頂点 s が何番目かを q[s] とし q[0..n) を返す．
+* すなわち，q は「g に辺 s→t がある ⇒ q[s] < q[t]」を満たす．
+* q の候補が複数ある場合は辞書順最小の q を返す．q の候補が無い場合は空リストを返す．
+*/
+vi topological_sort_invmin(const Graph& g) {
+	// verify : https://atcoder.jp/contests/arc200/tasks/arc200_c
+
+	//【方法】
+	// p = q_inv とおくと，rev(p) は辞書順最大になる．
+	// すなわち，p(n..0] について順に選べる中で最大の番号の頂点を選ぶという貪欲が正当である．
+	// よって出次数 0 の頂点のうち番号最大の頂点を push_front() していけば良い．
+
+	int n = sz(g);
+
+	// out_degree[s] : g の頂点 s の出次数
+	vi out_degree(n);
+	rep(s, n) out_degree[s] = sz(g[s]);
+
+	priority_queue<int> q;
+	rep(s, n) if (out_degree[s] == 0) q.push(s);
+
+	// g_rev : g の逆グラフ（出次数の更新用）
+	Graph g_rev(n);
+	rep(s, n) repe(t, g[s]) g_rev[t].push_back(s);
+
+	vi seq;
+	seq.reserve(n);
+
+	// 出次数 0 の頂点のうち番号最大のものを貪欲に選ぶ．
+	while (!q.empty()) {
+		auto s = q.top(); q.pop();
+
+		// 入次数が 0 の頂点を見つけ結果に格納する．
+		seq.push_back(s);
+
+		repe(t, g_rev[s]) {
+			// 頂点 s を取り除き，t の入次数を更新する．
+			out_degree[t]--;
+
+			// 新たに出次数 0 の頂点が生まれたらキューに追加する．
+			if (out_degree[t] == 0) q.push(t);
+		}
+	}
+
+	if (sz(seq) != n) return vi();
+
+	vi res(n);
+	rep(i, n) res[seq[n - 1 - i]] = i;
+
+	return res;
+}
+
+
+//【トポロジカルソートと辞書順】
+/*
+* DAG g をトポロジカルソートし，i 番目の頂点が p[i] になったとする．また q = p_inv とする．
+*	p が辞書順最小 ⇔ rev(q) が辞書順最大		（基本形とする）
+*	p が辞書順最大 ⇔ q が辞書順最大			（頂点番号を i ← n-1-i とする）
+*	rev(p) が辞書順最小 ⇔ rev(q) が辞書順最小	（逆グラフにする）
+*	rev(p) が辞書順最大 ⇔ q が辞書順最小		（逆グラフにし，頂点番号を i ← n-1-i とする）
+* 
+* verify : https://atcoder.jp/contests/arc200/tasks/arc200_c
+*/
 
 
 //【閉路抽出（無向グラフ）】O(n + m)
@@ -1329,7 +1446,7 @@ vb reachability(const Graph& g, const vi& u, const vi& v) {
 */
 
 
-//【独立集合判定】O(2^N N)
+//【独立集合判定（一括）】O(2^N N)
 /*
 * グラフ g の各頂点集合 set⊂[0..N) が独立集合かを格納したリストを返す．
 */

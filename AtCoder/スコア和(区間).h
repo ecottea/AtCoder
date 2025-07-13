@@ -1,9 +1,6 @@
 #pragma once
 #include "header.h"
-#include "数え上げ(区間).h"
 #include "前処理(文字列).h"
-#include "累積演算.h"
-#include "座標圧縮.h"
 // ■■■■■ スコア和（区間） ■■■■■
 
 
@@ -52,6 +49,74 @@ vector<T> interval_sum_every_length(const vector<T>& a) {
 	rep(i, n + 1) B[i + 1] = B[i] + A[i];
 
 	repi(w, 1, n) res[w] = (B[n + 1] - B[w]) - B[n - w + 1];
+
+	return res;
+}
+
+
+//【区間の積の総和】O(n)
+/*
+* Σi<j Πa[i..j) の値を返す．
+*/
+template <class T>
+T interval_product_sum(const vector<T>& a) {
+	int n = sz(a);
+
+	T res = T(0); T sum = T(0);
+
+	rep(i, n) {
+		sum += T(1);
+		sum *= a[i];
+		res += sum;
+	}
+
+	return res;
+}
+
+
+//【区間の積の総和（長さ K 以下）】O(n log n)
+/*
+* Σ_1≦r-l≦K Πa[l..r) の値を返す．
+*
+*（分割統治法）
+*/
+template <class T>
+mint interval_product_sum(const vector<T>& a, int K) {
+	// verify : https://www.codechef.com/problems/KPRODSUM
+
+	int n = sz(a);
+
+	mint res = 0;
+
+	function<void(int, int)> rf = [&](int l, int r) {
+		// 区間の幅が 1 になったら終了．
+		if (l + 1 == r) {
+			res += a[l];
+			return;
+		}
+
+		int m = (l + r) / 2;
+
+		// mul_l[i] : [l..m) の右からの長さ i の区間の総積
+		vm mul_l(m - l + 1, 1);
+		repir(i, m - 1, l) mul_l[m - i] = mul_l[m - i - 1] * a[i];
+
+		// mul_r[i] : [m..r) の左からの長さ i の区間の総積
+		vm mul_r(r - m + 1, 1);
+		repi(i, m + 1, r) mul_r[i - m] = mul_r[i - m - 1] * a[i - 1];
+
+		// acc_r[i] : Σmul_r[1..i)
+		vm acc_r(r - m + 1 + 1);
+		repi(i, 1, r - m) acc_r[i + 1] = acc_r[i] + mul_r[i];
+
+		// [l..m) と [m..r) それぞれから長さ 1 以上の区間を選ぶパターンについての寄与を求める．
+		repi(i, 1, m - l) res += mul_l[i] * acc_r[max(min(K - i + 1, r - m + 1), 0)];
+
+		// 左右の区間について再帰的に処理する．
+		rf(l, m);
+		rf(m, r);
+	};
+	rf(0, n);
 
 	return res;
 }
@@ -182,6 +247,15 @@ template <class T>
 mint interval_inversion_number_sum(const vector<T>& a) {
 	// verify : https://mojacoder.app/users/shinnshinn/problems/inv-query
 
+	//【方法】
+	// 主客転倒して
+	//		Σ_l<r (a[l..r) の転倒数)
+	//		= Σ_l<r Σ_l≦x<y<r Boole[a[x] > a[y]]
+	//		= Σ_x<y Boole[a[x] > a[y]] Σ_0≦l≦x<y<r≦n 1
+	//		= Σ_x<y Boole[a[x] > a[y]] (x+1)(n-y)
+	//		= Σy (n-y) Σ_{x | x<y, a[x]>a[y]} (1+x)
+	// とし，この式に基づいて計算すればよい．
+
 	int n = sz(a);
 
 	// b : a を座標圧縮した結果
@@ -204,54 +278,6 @@ mint interval_inversion_number_sum(const vector<T>& a) {
 		fen0.add(b[i], 1);
 		fen1.add(b[i], i);
 	}
-
-	return res;
-}
-
-
-//【区間の積の総和（長さ K 以下）】O(n log n)
-/*
-* Σ_1≦r-l≦K Πa[l..r) の値を返す．
-*
-*（分割統治法）
-*/
-template <class T>
-mint interval_product_sum(const vector<T>& a, int K) {
-	// verify : https://www.codechef.com/problems/KPRODSUM
-
-	int n = sz(a);
-
-	mint res = 0;
-
-	function<void(int, int)> rf = [&](int l, int r) {
-		// 区間の幅が 1 になったら終了．
-		if (l + 1 == r) {
-			res += a[l];
-			return;
-		}
-
-		int m = (l + r) / 2;
-
-		// mul_l[i] : [l..m) の右からの長さ i の区間の総積
-		vm mul_l(m - l + 1, 1);
-		repir(i, m - 1, l) mul_l[m - i] = mul_l[m - i - 1] * a[i];
-
-		// mul_r[i] : [m..r) の左からの長さ i の区間の総積
-		vm mul_r(r - m + 1, 1);
-		repi(i, m + 1, r) mul_r[i - m] = mul_r[i - m - 1] * a[i - 1];
-
-		// acc_r[i] : Σmul_r[1..i)
-		vm acc_r(r - m + 1 + 1);
-		repi(i, 1, r - m) acc_r[i + 1] = acc_r[i] + mul_r[i];
-
-		// [l..m) と [m..r) それぞれから長さ 1 以上の区間を選ぶパターンについての寄与を求める．
-		repi(i, 1, m - l) res += mul_l[i] * acc_r[max(min(K - i + 1, r - m + 1), 0)];
-
-		// 左右の区間について再帰的に処理する．
-		rf(l, m);
-		rf(m, r);
-	};
-	rf(0, n);
 
 	return res;
 }

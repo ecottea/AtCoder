@@ -92,13 +92,13 @@ S002 e002() { return S002(1); }
 #define MatrixMul_monoid S002, op002, e002
 
 
-//【逆行列総積 モノイド】
+//【行列総積 モノイド（逆順）】
 /* verify: https://atcoder.jp/contests/arc025/tasks/arc025_4 */
 constexpr int N020 = 2;
 using S020 = Fixed_matrix<mint, N020>;
 S020 op020(S020 a, S020 b) { return b * a; }
 S020 e020() { return S020(1); }
-#define MatrixInvMul_monoid S020, op020, e020
+#define MatrixRevMul_monoid S020, op020, e020
 
 
 //【min 可換モノイド】
@@ -117,13 +117,13 @@ S003 e003() { return -S003(INFL); }
 #define Max_monoid S003, op003, e003
 
 
-//【max,min 可換モノイド】
+//【min,max 可換モノイド】
 /* verify : https://codeforces.com/contest/2001/problem/D */
 using T043 = ll;
 using S043 = pair<T043, T043>;
-S043 op043(S043 a, S043 b) { return { max(a.first, b.first), min(a.second, b.second) }; }
-S043 e043() { return { -T043(INFL), T043(INFL) }; }
-#define MaxMin_monoid S043, op043, e043
+S043 op043(S043 a, S043 b) { return { min(a.first, b.first), max(a.second, b.second) }; }
+S043 e043() { return { T043(INFL), -T043(INFL) }; }
+#define MinMax_monoid S043, op043, e043
 
 
 //【XOR 可換モノイド】
@@ -206,7 +206,7 @@ S008 e008() { return { 1, 0 }; } // e(x) = x = 1 x + 0
 #define Affine_monoid S008, op008, e008
 
 
-//【アフィン変換の逆合成 モノイド】
+//【アフィン変換の合成 モノイド（逆順）】
 /*
 * S ∋ f = {a, b} : 一次関数 f(x) = a x + b を表す．
 * f op g : 逆向きに合成した一次関数 g o f を返す．
@@ -222,7 +222,7 @@ S009 op009(S009 f, S009 g) {
 	return { a * c, a * d + b };
 }
 S009 e009() { return { 1, 0 }; } // e(x) = x = 1 x + 0
-#define InvAffine_monoid S009, op009, e009
+#define RevAffine_monoid S009, op009, e009
 
 
 //【トロピカルアフィン変換の合成 モノイド】
@@ -246,7 +246,7 @@ S013 e013() { return { 0, -T013(INFL) }; } // e(x) = x = max(0 + x, -∞)
 #define TropicalAffine_monoid S013, op013, e013
 
 
-//【トロピカルアフィン変換の逆合成 モノイド】
+//【トロピカルアフィン変換の合成 モノイド（逆順）】
 /*
 * S ∋ f = {a, b} : トロピカル一次関数 f(x) = max(a + x, b) を表す．
 * f op g : 合成したトロピカル一次関数 g o f を返す．
@@ -262,7 +262,7 @@ S014 op014(S014 f, S014 g) {
 	return { a + c, max(a + d, b) };
 }
 S014 e014() { return { 0, -T014(INFL) }; } // e(x) = x = max(0 + x, -∞)
-#define TropicalInvAffine_monoid S014, op014, e014
+#define TropicalRevAffine_monoid S014, op014, e014
 
 
 //【bitアフィン変換の合成 モノイド】
@@ -289,7 +289,7 @@ S035 e035() { return { ~T035(0), T035(0) }; }
 #define BitAffine_monoid S035, op035, e035
 
 
-//【bitアフィン変換の逆合成 モノイド】
+//【bitアフィン変換の合成 モノイド（逆順）】
 /*
 * S ∋ f = {a, b} : 一次関数 f(x) = (a AND x) XOR b を表す．
 *	{a, b} = { c,  0} : f(x) = c AND x
@@ -310,7 +310,41 @@ S036 op036(S036 f, S036 g) {
 	return { (a & c), (a & d) ^ b };
 }
 S036 e036() { return { ~T036(0), T036(0) }; }
-#define BitInvAffine_monoid S036, op036, e036
+#define BitRevAffine_monoid S036, op036, e036
+
+
+//【ローリングハッシュ モノイド】
+/* verify : https://atcoder.jp/contests/arc198/tasks/arc198_d */
+using S051 = pair<ull, ull>; // (Base^len, hash)
+constexpr ull MOD = (1ULL << 61) - 1;
+constexpr ull MASK30 = (1ULL << 30) - 1;
+constexpr ull MASK31 = (1ULL << 31) - 1;
+ull get_mod051(ull a) {
+	ull ah = a >> 61, al = a & MOD;
+	ull res = ah + al;
+	if (res >= MOD) res -= MOD;
+	return res;
+}
+ull mul051(ull a, ull b) {
+	ull ah = a >> 31, al = a & MASK31;
+	ull bh = b >> 31, bl = b & MASK31;
+
+	ull c = ah * bl + bh * al;
+	ull ch = c >> 30, cl = c & MASK30;
+
+	ull term1 = 2 * ah * bh;
+	ull term2 = ch + (cl << 31);
+	ull term3 = al * bl;
+
+	return get_mod051(term1 + term2 + term3);
+}
+S051 op051(S051 x, S051 y) {
+	auto [ax, bx] = x; // (ax, bx; 0, 1)
+	auto [ay, by] = y; // (ay, by; 0, 1)
+	return { mul051(ax, ay), get_mod051(mul051(ax, by) + bx) };
+}
+S051 e051() { return { 1ULL, 0ULL }; }
+#define RollingHash_monoid S051, op051, e051
 
 
 //【第二最小値 可換モノイド】
@@ -331,32 +365,72 @@ S022 e022() { return { T022(INFL), T022(INFL) }; }
 
 
 //【第二最大値 可換モノイド】
-/* verify: https://atcoder.jp/contests/arc100/tasks/arc100_c */
-using T021 = ll;
-using S021 = pair<T021, T021>; // (最大値, 第二最大値)
-S021 op021(S021 a, S021 b) {
-	vector<T021> vals(4);
-	vals[0] = a.first;
-	vals[1] = a.second;
-	vals[2] = b.first;
-	vals[3] = b.second;
-	sort(all(vals));
+/*
+* S ∋ x[0..1) : 区間の値の降順列．
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+// verify : https://onlinejudge.u-aizu.ac.jp/beta/room.html#TOUPC001/problems/J
+using T021 = int;
+using S021 = array<T021, 2>; // (最大値, 第二最大値)
+S021 op021(S021 x, S021 y) {
+	S021 z;
 
-	return { vals[3], vals[2] };
+	// 第 1 最大値
+	if (x[0] <= y[0]) swap(x, y);
+	z[0] = x[0];
+
+	// 第 2 最大値
+	if (x[1] > y[0]) z[1] = x[1];
+	else			 z[1] = y[0];
+
+	return z;
 }
 S021 e021() { return { -T021(INFL), -T021(INFL) }; }
 #define SecondMax_monoid S021, op021, e021
 
 
-//【第 K 最小値 可換モノイド】
+//【色付き第二最大値 可換モノイド】
 /*
-* S ∋ x[0..n) : 区間の値の昇順列
+* S ∋ x[0..1) : 区間の {値, 色} の降順列．ただし同じ色は 1 つまで．
+* x op y : x, y に対応する区間を繋げた区間を表す．
+*/
+// verify : https://onlinejudge.u-aizu.ac.jp/beta/room.html#TOUPC001/problems/J
+using T050 = int;
+using C050 = int;
+using S050 = array<pair<T050, C050>, 2>;
+S050 op050(S050 x, S050 y) {
+	S050 z;
+
+	// 第 1 最大値
+	if (x[0].first <= y[0].first) swap(x, y);
+	z[0] = x[0];
+
+	// 第 2 最大値
+	if (x[1].first > y[0].first)		 z[1] = x[1];
+	else if (y[0].second != x[0].second) z[1] = y[0];
+	else if (x[1].first > y[1].first)	 z[1] = x[1];
+	else								 z[1] = y[1];
+
+	return z;
+}
+S050 e050() {
+	S050 x;
+	x[0] = { -INF, INF + 1 };
+	x[1] = { -INF, INF + 2 };
+	return x;
+}
+#define Colored2ndMax_monoid S050, op050, e050
+
+
+//【第K最小値 可換モノイド】
+/*
+* S ∋ x[0..K) : 区間の値の昇順列
 * x op y : x, y に対応する区間を繋げた区間を表す．
 */
 // verify : https://atcoder.jp/contests/abc372/tasks/abc372_e
 constexpr int K046 = 10; // 50 くらいまでいける
 using T046 = ll;
-using S046 = array<T046, K046>; // (v, c)
+using S046 = array<T046, K046>;
 S046 op046(S046 x, S046 y) {
 	S046 z;
 
@@ -382,15 +456,15 @@ S046 e046() {
 #define KthMax_monoid S046, op046, e046
 
 
-//【第 K 最大値 可換モノイド】
+//【第K最大値 可換モノイド】
 /*
-* S ∋ x[0..n) : 区間の値の降順列
+* S ∋ x[0..K) : 区間の値の降順列
 * x op y : x, y に対応する区間を繋げた区間を表す．
 */
 // verify : https://atcoder.jp/contests/abc372/tasks/abc372_e
 constexpr int K045 = 10; // 50 くらいまでいける
 using T045 = ll;
-using S045 = array<T045, K045>; // (v, c)
+using S045 = array<T045, K045>;
 S045 op045(S045 x, S045 y) {
 	S045 z;
 
@@ -582,6 +656,29 @@ S028 e028() { return { -T028(INFL), -T028(INFL), -T028(INFL), 0 }; }
 #define RangeSumMax_monoid S028, op028, e028
 
 
+//【交代和 モノイド】
+/*
+* S ∋ x = {xs, xc} : x に対応する区間についての以下の値を表す：
+*	xs : 交代和（符号は +, -, +, -, ...）
+*	xc : 要素数
+* x op y : x, y に対応する区間をこの順に繋げた区間を表す．
+*/
+// verify : https://atcoder.jp/contests/abc403/tasks/abc403_g
+using T049 = ll;
+using S049 = pair<T049, int>; // (交代和, 要素数)
+S049 op049(S049 x, S049 y) {
+	auto [xs, xc] = x;
+	auto [ys, yc] = y;
+
+	T049 zs = xs + (xc & T049(1) ? -ys : ys);
+	int zc = xc + yc;
+
+	return { zs, zc };
+}
+S049 e049() { return { T049(0), 0 }; }
+#define AlternatingSum_monoid S049, op049, e049
+
+
 //【区間 AND が 0 になる長さの最小値 モノイド】
 /* verify : https://yukicoder.me/problems/no/2901 */
 struct S044 {
@@ -703,7 +800,7 @@ S025 e025() { return S025{ 0, T025(INFL), -T025(INFL) }; } // e(x) = max(min(a +
 #define MixedTropicalAffine_monoid S025, op025, e025
 
 
-//【混合トロピカルアフィン変換の逆合成 モノイド】
+//【混合トロピカルアフィン変換の合成 モノイド（逆順）】
 /*
 * S ∋ f = {a, b, c} : 混合トロピカル一次関数 f(x) = max(min(a + x, b), c) を表す．
 * f op g : 合成した混合トロピカル一次関数 g o f を返す．
@@ -722,7 +819,7 @@ S026 op026(S026 f, S026 g) {
 	return S026{ A, B, C };
 }
 S026 e026() { return S026{ 0, T026(INFL), -T026(INFL) }; } // e(x) = max(min(a + 0, ∞), -∞)
-#define MixedTropicalInvAffine_monoid S026, op026, e026
+#define MixedTropicalRevAffine_monoid S026, op026, e026
 
 
 //【clamp移動 モノイド】
@@ -849,7 +946,7 @@ S017 op017(S017 x, S017 y) {
 	return { inv, c0, c1 };
 }
 S017 e017() { return { 0LL, 0, 0 }; }
-#define Inversion_monoid S017, op017, e017
+#define BitInversion_monoid S017, op017, e017
 
 
 //【ビット列上 部分列の種類数 モノイド】
@@ -895,7 +992,74 @@ S041 op041(S041 x, S041 y) {
 	return z;
 }
 S041 e041() { return S041{ 1, 0, 0, 0, 1, 0 }; } // 単位行列
-#define SubseqCnt_monoid S041, op041, e041
+#define BitSubseqCnt_monoid S041, op041, e041
+
+
+//【K値LIS モノイド】
+/*
+* S ∋ x = a[0..K)[0..K) :
+*	a[l][r] : [l..r] の範囲の数のみを使う場合の広義 LIS の長さ
+* x op y : 区間 x, y をこの順に連結する．
+*/
+// verify : https://yukicoder.me/problems/no/2992
+constexpr int K048 = 4;
+using S048 = array<array<int, K048>, K048>;
+S048 op048(S048 x, S048 y) {
+	S048 z;
+	rep(i, K048) rep(j, K048) z[i][j] = 0;
+
+	rep(i, K048) repi(j, i, K048 - 1) {
+		chmax(z[i][j], x[i][j]);
+		chmax(z[i][j], y[i][j]);
+		repi(k, i, j) {
+			chmax(z[i][j], x[i][k] + y[k][j]);
+		}
+	}
+
+	return z;
+}
+S048 e048() {
+	S048 z;
+	rep(i, K048) rep(j, K048) z[i][j] = 0;
+	return z;
+}
+#define LIS_monoid S048, op048, e048
+
+
+//【最長正規括弧部分列 モノイド】
+/*
+* S ∋ x = {s, l, r} :
+*	s : 最長正規括弧部分列の長さ
+*	l : 最長正規括弧部分列を抽出し終えた後に残る左側の ')' の個数
+*	r : 最長正規括弧部分列を抽出し終えた後に残る右側の '(' の個数
+* x op y : 列 x, y を連結した列
+*/
+// verify : https://yukicoder.me/problems/no/3058
+struct S047 {
+	int s, l, r;
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const S047& x) {
+		os << "(" << x.s << "," << x.l << "," << x.r << ")";
+		return os;
+	}
+#endif
+};
+const S047 pOP{ 0, 0, 1 }; // 要素 '(' に対応
+const S047 pCL{ 0, 1, 0 }; // 要素 ')' に対応
+S047 op047(S047 x, S047 y) {
+	S047 z;
+
+	int match = min(x.r, y.l);
+
+	z.s = x.s + y.s + 2 * match;
+	z.l = x.l + y.l - match;
+	z.r = x.r + y.r - match;
+
+	return z;
+}
+S047 e047() { return S047{ 0, 0, 0 }; }
+#define LongestParenSubseq_monoid S047, op047, e047
 
 
 //【数字列の値 モノイド】

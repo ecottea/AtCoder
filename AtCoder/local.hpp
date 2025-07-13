@@ -7,7 +7,7 @@ using namespace std;
 
 
 #define __int128 ll
-//#include <boost/multiprecision/cpp_int.hpp> // warning STL4038 がうざい
+//#include <boost/multiprecision/cpp_int.hpp> // warning STL4038 がうざい．デバッグもしにくい．
 //#define __int128 boost::multiprecision::int128_t // gcc の 10 倍くらい時間がかかる
 
 
@@ -189,6 +189,35 @@ inline ostream& operator<< (ostream& os, const tuple<Args...>& t)
 }
 
 
+// mint を手元環境でだけ有理数表示したいとき用
+int frac_print = 0;
+string mint_to_frac(mint x, int v_max = 31595) {
+	repi(dnm, 1, v_max) {
+		int num = (x * dnm).val();
+		if (num == 0) {
+			return "0";
+		}
+		if (num <= v_max) {
+			if (dnm == 1) return to_string(num);
+			return to_string(num) + "/" + to_string(dnm);
+		}
+		if (mint::mod() - num <= v_max) {
+			if (dnm == 1) return "-" + to_string(mint::mod() - num);
+			return "-" + to_string(mint::mod() - num) + "/" + to_string(dnm);
+		}
+	}
+	return to_string(x.val());
+}
+namespace atcoder {
+	inline istream& operator>>(istream& is, mint& x) { ll x_; is >> x_; x = x_; return is; }
+	inline ostream& operator<<(ostream& os, const mint& x) {
+		if (frac_print) os << mint_to_frac(x);
+		else os << x.val();
+		return os;
+	}
+}
+
+
 //【ファイル入出力】
 #define input_from_file(f) ifstream _is_TMP_(f); cin.rdbuf(_is_TMP_.rdbuf());
 #define output_to_file(f) ofstream _os_TMP_(f); cout.rdbuf(_os_TMP_.rdbuf());
@@ -200,7 +229,7 @@ inline ostream& operator<< (ostream& os, const tuple<Args...>& t)
 bool mute_dump = false;
 
 template <typename First>
-void dump(First first) {
+void dump(First first) { // 参照渡しではないので mute_dump = true でも遅くなることに注意！
 	if (mute_dump) return;
 
 	cerr << "\033[1;32m" << first << "\033[0m" << endl;
@@ -226,24 +255,67 @@ template <class T> void dumpel(T a) {
 	cerr << "\033[0m";
 }
 
-// Mathematica の書式に合わせた出力
-template <class T> void dump_list(vector<T> a) {
+// Mathematica の書式に合わせた出力（兼 埋め込み用）
+template <class T> void dump_math(vector<T> a, bool el = true) {
 	if (mute_dump) return;
 
 	cout << "{";
 	rep(i, sz(a)) {
-		cout << a[i] << (i < sz(a) - 1 ? ", " : "}\n");
+		cout << a[i];
+		if (i < sz(a) - 1) cout << ",";
 	}
+	cout << "}";
+	if (el) cout << ";" << endl;
 }
 
-template <class T> void dump_mat(vector<vector<T>> a) {
+template <class T> void dump_math(vector<vector<T>> a, bool el = true) {
 	if (mute_dump) return;
 
 	cout << "{";
 	rep(i, sz(a)) {
-		cout << "{";
-		rep(j, sz(a[i])) cout << a[i][j] << (j < sz(a[i]) - 1 ? "," : "}");
-		cout << (i < sz(a) - 1 ? ",\n" : "}\n");
+		dump_math(a[i], false);
+		if (i < sz(a) - 1) cout << ",";
 	}
+	cout << "}";
+
+	if (el) cout << ";" << endl;
+}
+
+template <class T> void dump_math(vector<vector<vector<T>>> a, bool el = true) {
+	if (mute_dump) return;
+
+	cout << "{";
+	rep(i, sz(a)) {
+		dump_math(a[i], false);
+		if (i < sz(a) - 1) cout << ",";
+	}
+	cout << "}";
+
+	if (el) cout << ";" << endl;
+}
+
+template <class T, int n> void dump_math(array<T, n> a, bool el = true) {
+	if (mute_dump) return;
+
+	cout << "{";
+	rep(i, n) {
+		cout << a[i];
+		if (i < n - 1) cout << ",";
+	}
+	cout << "}";
+	if (el) cout << ";" << endl;
+}
+
+template <class T, int n, int m> void dump_math(array<array<T, m>, n> a, bool el = true) {
+	if (mute_dump) return;
+
+	cout << "{";
+	rep(i, n) {
+		dump_math(a[i], false);
+		if (i < n - 1) cout << ",";
+	}
+	cout << "}";
+
+	if (el) cout << ";" << endl;
 }
 

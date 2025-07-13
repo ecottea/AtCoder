@@ -71,7 +71,7 @@ int coordinate_compression_interval(const vector<T>& x1, const vector<T>& x2,
 //【座標圧縮（長方形）】O(n log n)
 /*
 * n 個の半開長方形 [x1[i]..x2[i])×[y1[i]..y2[i]) を座標圧縮した結果を
-* x1_cp[i], y1_cp[i], x2_cp[i], y2_cp[i] に格納する．
+* x1_cp[i], x2_cp[i], y1_cp[i], y2_cp[i] に格納する．
 * また xs[i], ys[j] に圧縮された座標 i, j に対応する元の座標を格納する．
 * 戻り値として，(x 座標の数, y 座標の数) を返す．
 */
@@ -117,7 +117,7 @@ pii coordinate_compression_rectangle(
 //【座標圧縮（直方体）】O(n log n)
 /*
 * n 個の半開直方体 [x1[i]..x2[i])×[y1[i]..y2[i])×[z1[i]..z2[i]) を座標圧縮した結果を
-* x1_cp[i], y1_cp[i], z1_cp[i], x2_cp[i], y2_cp[i], z2_cp[i] に格納する．
+* x1_cp[i], x2_cp[i], y1_cp[i], y2_cp[i], z1_cp[i], z2_cp[i] に格納する．
 * また xs[i], ys[j], zs[k] に圧縮された座標 i, j, k に対応する元の座標を格納する．
 * 戻り値として，(x 座標の数, y 座標の数, z 座標の数) を返す．
 */

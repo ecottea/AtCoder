@@ -52,31 +52,22 @@ vector<tuple<int, int, int, int>> domino_tiling(const vvc& c, char ng = '#') {
 
 //【ポリオミノの列挙】O(?)（n=8 くらいまで動く）
 /*
-* n 以下の k について，k-オミノを列挙する．
-*
-* k-オミノ は k 個の点 {x, y} の集合として表す．
-* ただし x, y 各座標の最小値は 0 であるようにする．
-*
-* polyomino[k] : k-オミノを表す点の集合，の集合
+* 各 k∈[0..n] について k-オミノを列挙し，そのリストを返す．
+* k-オミノ は k 個のマス {x, y} の集合として表す．ただし x, y 各座標の最小値は 0 とする．
 */
-void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
-	// polyomino[i - 1] : i-オミノ 全て
-	// i-オミノ は i 個の点 (x, y) の集合として表す．
-	// ただし x, y 各座標の最小値は 0 であるようにする．
-	polyomino = vector<set<set<pii>>>(n);
+vector<set<set<pii>>> enumerate_polyominoes(int n) {
+	// polyomino[i] : i-オミノ 全てのリスト
+	vector<set<set<pii>>> polyomino(n + 1);
 
 	// 1-オミノ は { (0, 0) } ただ 1 つしか存在しない．
-	polyomino[0] = { { {0, 0} } };
+	polyomino[1] = { { {0, 0} } };
 
-	// 大きさ i + 1 について昇順に探していく．
-	repi(i, 0, n - 2) {
-		// 大きさ i + 1 の各ポリオミノ poly について
+	// 大きさ昇順に探していく．
+	repi(i, 1, n - 1) {
+		// 大きさ i の各ポリオミノ poly について
 		repe(poly, polyomino[i]) {
-			// (i+1)-オミノ poly の各点 (x, y) について
-			repe(p, poly) {
-				int x, y;
-				tie(x, y) = p;
-
+			// i-オミノ poly の各マス (x, y) について
+			for (auto [x, y] : poly) {
 				// 点 (x, y) の 4 近傍 (nx, ny) について
 				rep(j, 4) {
 					int nx = x + DX[j];
@@ -84,71 +75,34 @@ void enumerate_polyominoes(int n, vector<set<set<pii>>>& polyomino) {
 					pii np = { nx, ny };
 
 					// もし (nx, ny) が poly に含まれていたら何もしない．
-					if (poly.count(np) > 0) {
-						continue;
-					}
+					if (poly.count(np)) continue;
 
-					// (nx, ny) を追加した (i+2)-オミノ npoly を作る．
+					// (nx, ny) を追加した (i+1)-オミノ npoly を作る．
 					// もし nx, ny が -1 になったら全体を +1 平行移動する．
 					set<pii> npoly;
-					int add_x = 0, add_y = 0;
-					if (nx < 0) {
-						add_x = 1;
-					}
-					if (ny < 0) {
-						add_y = 1;
-					}
-					repe(p, poly) {
-						npoly.insert({ p.first + add_x, p.second + add_y });
-					}
+					int add_x = (nx == -1);
+					int add_y = (ny == -1);
+					repe(p, poly) npoly.insert({ p.first + add_x, p.second + add_y });
 					npoly.insert({ nx + add_x, ny + add_y });
 
-					// (i+2)-オミノ の集合に npoly を追加する．
-					// set を用いているので重複することはない．
+					// (i+1)-オミノ の集合に npoly を追加する．
 					polyomino[i + 1].insert(npoly);
 				}
 			}
 		}
 	}
 
-	/* 確認用
-	void zikken() {
-		cout << fixed << setprecision(12);
-
-		int n;
-		cin >> n;
-
-		vector<set<set<pii>>> polyomino;
-		enumerate_polyominoes(n, polyomino);
-
-		repe(polys, polyomino[n - 1]) {
-			vector<vector<char>> c(n, vector<char>(n, '.'));
-			repe(p, polys) {
-				int x, y;
-				tie(x, y) = p;
-
-				c[x][y] = '#';
-			}
-			rep(i, n) {
-				rep(j, n) {
-					cout << c[i][j];
-				}
-				cout << endl;
-			}
-			cout << endl;
-		}
-	}
-	*/
+	return polyomino;
 }
 
 
-//【ドミノ＆モノミノのタイリングの列挙】O(?)
+//【ドミノ＆モノミノのタイリングの列挙】O(h w 2^(h w))
 /*
 * h×w の盤面にドミノ d 個とモノミノ h w - 2 d 個を敷き詰める方法を boards に列挙する．
 * i 番目に敷き詰められたタイルを番号 i で表す．
 */
 void enumerate_domino_monomino_tiling(int h, int w, int d, vvvi& boards) {
-	//verify : https://atcoder.jp/contests/abc196/tasks/abc196_d
+	// verify : https://atcoder.jp/contests/abc196/tasks/abc196_d
 
 	vvi board(h, vi(w, -1));
 

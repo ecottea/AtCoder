@@ -3,10 +3,10 @@
 // ■■■■■ ヒープ ■■■■■
 
 
-//【併合可能ヒープ（降順）】
+//【併合可能ヒープ】
 /*
-* Skew_heap<T>() : O(1)
-*	空で初期化する．T は比較可能な型で，ヒープからは降順に取り出される．
+* Skew_heap<T, comp = less<T>>() : O(1)
+*	空で初期化する．
 *
 * bool empty() : O(1)
 *	ヒープが空かを返す．
@@ -23,13 +23,13 @@
 * pop() : O(log n)
 *	ヒープ内の最大値を削除する．
 *
-* merge(Skew_heap<T>& hp) : O(log n)
+* merge(Skew_heap& hp) : O(log n)
 *	ヒープ hp を自身に併合する．
 */
-template <class T>
-struct Skew_heap {
+template <class T, class comp = less<T>>
+class Skew_heap {
 	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
-	
+
 	struct Node {
 		Node* l, * r;
 		T v;
@@ -40,8 +40,8 @@ struct Skew_heap {
 			if (a == nullptr) return b;
 			if (b == nullptr) return a;
 
-			// a >= b となるよう並び替える
-			if (a->v < b->v) swap(a, b);
+			// a ≧ b となるよう並び替える
+			if (comp()(a->v, b->v)) swap(a, b);
 
 			// b の方が小さいので，a の左の子とマージしておけば大小関係は保たれる．
 			a->l = meld(a->l, b);
@@ -56,14 +56,15 @@ struct Skew_heap {
 	Node* root;
 	int n;
 
+public:
 	// 空で初期化
 	Skew_heap() : root(nullptr), n(0) {}
 
 	// ヒープが空かを返す．
-	bool empty() const { 
+	bool empty() const {
 		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
-		
-		return root == nullptr; 
+
+		return root == nullptr;
 	}
 
 	// ヒープの大きさを返す．
@@ -81,7 +82,7 @@ struct Skew_heap {
 	// ヒープ内の最大値を返す．
 	T top() const {
 		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
-		
+
 		return root->v;
 	}
 
@@ -96,7 +97,7 @@ struct Skew_heap {
 	}
 
 	// ヒープ hp を併合する．
-	void merge(Skew_heap<T>& hp) {
+	void merge(Skew_heap<T, comp>& hp) {
 		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
 
 		n += hp.n;
@@ -106,120 +107,6 @@ struct Skew_heap {
 
 #ifdef _MSC_VER
 	friend ostream& operator<<(ostream& os, const Skew_heap<T>& q) {
-		q.print_rf(os, q.root);
-		return os;
-	}
-	void print_rf(ostream& os, const Node* pt) const {
-		if (pt == nullptr) return;
-		os << pt->v << " "; print_rf(os, pt->l);  print_rf(os, pt->r);
-	}
-#endif
-};
-
-
-//【併合可能ヒープ（昇順）】
-/*
-* Skew_heap_rev<T>() : O(1)
-*	空で初期化する．T は比較可能な型で，ヒープからは昇順に取り出される．
-*
-* bool empty() : O(1)
-*	ヒープが空かを返す．
-*
-* int size() : O(1)
-*	ヒープの大きさを返す．
-*
-* T top() : O(1)
-*	ヒープ内の最小値を返す．
-*
-* push(T val) : O(log n)
-*	ヒープに値 val を追加する．
-*
-* pop() : O(log n)
-*	ヒープ内の最小値を削除する．
-*
-* merge(Skew_heap_rev& hp) : O(log n)
-*	ヒープ hp を自身に併合する．
-*/
-template <class T>
-struct Skew_heap_rev {
-	// 参考 : https://kopricky.github.io/code/DataStructure_Advanced/skew_heap.html
-	
-	struct Node {
-		Node* l, * r;
-		T v;
-
-		Node(T v_) : l(nullptr), r(nullptr), v(v_) {}
-
-		friend Node* meld(Node* a, Node* b) {
-			if (a == nullptr) return b;
-			if (b == nullptr) return a;
-
-			// a <= b となるよう並び替える
-			if (a->v > b->v) swap(a, b);
-
-			// b の方が大きいので，a の左の子とマージしておけば大小関係は保たれる．
-			a->l = meld(a->l, b);
-
-			// このままだと毎回左の子が成長していってまずいので，左右の子を交換する．
-			swap(a->l, a->r);
-
-			return a;
-		}
-	};
-
-	Node* root;
-	int n;
-
-	// 空で初期化
-	Skew_heap_rev() : root(nullptr), n(0) {}
-
-	// ヒープが空かを返す．
-	bool empty() const {
-		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
-
-		return root == nullptr;
-	}
-
-	// ヒープの大きさを返す．
-	int size() const { return n; }
-
-	// ヒープに値 val を追加する．
-	void push(T val) {
-		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
-
-		Node* p = new Node(val);
-		root = meld(root, p);
-		n++;
-	}
-
-	// ヒープ内の最小値を返す．
-	T top() const {
-		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
-
-		return root->v;
-	}
-
-	// ヒープ内の最小値を削除する．
-	void pop() {
-		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
-
-		Node* p = root;
-		root = meld(root->r, root->l);
-		delete p;
-		n--;
-	}
-
-	// ヒープ hp を併合する．
-	void merge(Skew_heap_rev<T>& hp) {
-		// verify : https://atcoder.jp/contests/atc002/tasks/atc002_c
-		
-		n += hp.n;
-		root = meld(root, hp.root);
-		hp.root = nullptr;
-	}
-
-#ifdef _MSC_VER
-	friend ostream& operator<<(ostream& os, const Skew_heap_rev<T>& q) {
 		q.print_rf(os, q.root);
 		return os;
 	}
@@ -499,7 +386,7 @@ public:
 
 //【削除可能分離ヒープ】
 /*
-* Eraseable_separated_heap<T, comp = less<T>>() : O(1)
+* Eraseable_separated_heap<T>() : O(1)
 *	空のヒープで初期化する．
 *
 * bool empty_l(), empty_h() : O(1)
@@ -628,7 +515,7 @@ public:
 
 //【削除可能分離ヒープ（総和）】
 /*
-* Eraseable_separated_heap_sum<T, comp = less<T>>() : O(1)
+* Eraseable_separated_heap_sum<T> : O(1)
 *	空のヒープで初期化する．
 *
 * bool empty_l(), empty_h() : O(1)
@@ -637,7 +524,7 @@ public:
 * int size_l(), size_h() : O(1)
 *	ヒープの大きさを返す．
 *
-* void push_l(T x), push_h(T x) :ならし  O(log n)
+* void push_l(T x), push_h(T x) : ならし  O(log n)
 *	ヒープに要素 x を追加する．set_l ≦ set_h は自動的に保たれる．
 *
 * T max_l(), min_h() : ならし O(log n)
@@ -648,11 +535,11 @@ public:
 *	ヒープ内の要素 x を削除する．
 *	制約 : どちらかのヒープ内に要素 x が存在する．
 *
-* void decrease_l(), decrease_r() : O(1)
+* void decrease_l(), decrease_h() : O(1)
 *	ヒープの大きさを 1 減らす．逆側は 1 増える．
 *	制約 : ヒープは空でない
 *
-* void sum_l(), sum_r() : ならし O(1)
+* void sum_l(), sum_h() : ならし O(1)
 *	ヒープ内の要素の総和を返す．
 *
 * 利用：【削除可能ヒープ】
@@ -784,7 +671,7 @@ public:
 
 	// ヒープ内の和を返す．
 	T sum_l() {
-		// verify : https://atcoder.jp/contests/donuts-2015/tasks/donuts_2015_4
+		// verify : https://atcoder.jp/contests/abc376/tasks/abc376_e
 
 		move();
 		return suml;
@@ -806,6 +693,7 @@ public:
 	}
 #endif
 };
+
 
 
 //【多重集合（大小分離）】

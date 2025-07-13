@@ -12,22 +12,22 @@ vector<vector<T>> enumerate_all_sequences(int n, const vector<T>& a) {
 	// verify : https://yukicoder.me/problems/no/2329
 
 	vector<vector<T>> seqs;
-	vector<T> seq; // 作成途中の列
+	vector<T> seq(n); // 作成途中の列
 
-	function<void()> rf = [&]() {
-		// 完成していれば記録する．
-		if (sz(seq) == n) {
+	// seq[i] を決める．
+	function<void(int)> rf = [&](int i) {
+		// seq が完成していれば記録する．
+		if (i == n) {
 			seqs.push_back(seq);
 			return;
 		}
 
 		repe(x, a) {
-			seq.push_back(x);
-			rf();
-			seq.pop_back();
+			seq[i] = x;
+			rf(i + 1);
 		}
 	};
-	rf();
+	rf(0);
 
 	return seqs;
 }
@@ -40,10 +40,12 @@ vector<vector<T>> enumerate_all_sequences(int n, const vector<T>& a) {
 template <class T>
 vector<vector<T>> enumerate_all_sequences(const vector<vector<T>>& a) {
 	int n = sz(a);
+
 	vector<vector<T>> seqs;
-	vector<T> seq(n);
+	vector<T> seq(n); // 作成途中の列
 
 	function<void(int)> rf = [&](int i) {
+		// 完成していれば記録する．
 		if (i == n) {
 			seqs.push_back(seq);
 			return;
@@ -68,7 +70,6 @@ vvi enumerate_all_sequences(int n, int ub) {
 	// verify : https://yukicoder.me/problems/no/2917
 
 	vvi seqs;
-
 	vi seq(n); // 作成途中の列
 
 	function<void(int)> rf = [&](int i) {
@@ -97,12 +98,11 @@ vvi enumerate_all_sequences(const vi& ub) {
 	// verify : https://atcoder.jp/contests/abc367/tasks/abc367_c
 
 	int n = sz(ub);
+
 	vvi seqs;
+	vi seq(n); // 作成途中の列
 
-	vi seq; // 作成途中の列
-	int i = 0; // 列の長さ
-
-	function<void()> rf = [&]() {
+	function<void(int)> rf = [&](int i) {
 		// 完成していれば記録する．
 		if (i == n) {
 			seqs.push_back(seq);
@@ -110,12 +110,11 @@ vvi enumerate_all_sequences(const vi& ub) {
 		}
 
 		rep(x, ub[i]) {
-			seq.push_back(x); i++;
-			rf();
-			seq.pop_back(); i--;
+			seq[i] = x;
+			rf(i + 1);
 		}
 	};
-	rf();
+	rf(0);
 
 	return seqs;
 }
@@ -126,15 +125,13 @@ vvi enumerate_all_sequences(const vi& ub) {
 * 数列 a[0..n) で，∀i, lb[i] ≦ a[i] < ub[i] を満たすもの全てを格納したリストを返す．
 */
 vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
-	// verify : https://atcoder.jp/contests/arc066/tasks/arc066_c
+	// verify : https://atcoder.jp/contests/abc367/tasks/abc367_c
 
 	int n = sz(lb);
 	vvi seqs;
+	vi seq(n); // 作成途中の列
 
-	vi seq; // 作成途中の列
-	int i = 0; // 列の長さ
-
-	function<void()> rf = [&]() {
+	function<void(int)> rf = [&](int i) {
 		// 完成していれば記録する．
 		if (i == n) {
 			seqs.push_back(seq);
@@ -142,12 +139,48 @@ vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
 		}
 
 		repi(x, lb[i], ub[i] - 1) {
-			seq.push_back(x); i++;
-			rf();
-			seq.pop_back(); i--;
+			seq[i] = x;
+			rf(i + 1);
 		}
 	};
-	rf();
+	rf(0);
+
+	return seqs;
+}
+
+
+//【任意列の列挙（置き換え）】O(m^K)（K : a の nil の個数）
+/*
+* 列 a[0..n) の要素 nil を集合 c[0..m) の要素で置き換えて得られる列全てを格納したリストを返す．
+*/
+template <class STR, class T = remove_reference_t<decltype(declval<STR>()[0])>>
+vector<STR> enumerate_all_sequences(const STR& a, T nil, const STR& c) {
+	int n = sz(a);
+
+	vector<STR> seqs;
+
+	STR seq; // 作成途中の列
+	seq.resize(n);
+
+	function<void(int)> rf = [&](int i) {
+		// 完成していれば記録する．
+		if (i == n) {
+			seqs.push_back(seq);
+			return;
+		}
+
+		if (a[i] != nil) {
+			seq[i] = a[i];
+			rf(i + 1);
+		}
+		else {
+			repe(x, c) {
+				seq[i] = x;
+				rf(i + 1);
+			}
+		}
+	};
+	rf(0);
 
 	return seqs;
 }
@@ -163,23 +196,17 @@ vvi enumerate_strongly_increase_sequences(int n, int m) {
 	vi a(n);
 	vvi seqs;
 
-	// len : 列の長さ
-	function<void(int)> rf = [&](int len) {
-		// 列の長さが n の場合
-		if (len == n) {
-			// 完成しているので記録
+	function<void(int)> rf = [&](int i) {
+		if (i == n) {
 			seqs.push_back(a);
 			return;
 		}
 
-		// i0 : 直前の数の大きさ
-		int i0 = (len > 0 ? a[len - 1] : -1);
+		int x0 = (i > 0 ? a[i - 1] + 1 : 0);
 
-		// 直前の数 i0 より大きい数が選べる．
-		repi(i, i0 + 1, m - 1) {
-			a[len++] = i;
-			rf(len);
-			len--;
+		repi(x, x0, m - (n - i)) {
+			a[i] = x;
+			rf(i + 1);
 		}
 	};
 	rf(0);
@@ -193,6 +220,8 @@ vvi enumerate_strongly_increase_sequences(int n, int m) {
 * 0 ≦ a[0] ≦ a[1] ≦ ... ≦ a[n-1] < m なる列 a[0..n) を格納したリストを返す．
 */
 vvi enumerate_weakly_increase_sequences(int n, int m) {
+	// verify : https://atcoder.jp/contests/abc382/tasks/abc382_d
+
 	vi a(n);
 	vvi seqs;
 

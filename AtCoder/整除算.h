@@ -7,16 +7,55 @@
 /*
 * a mod m = a - floor(a / m) m
 *
-* verify : https://yukicoder.me/problems/no/2362
+* verify : https://atcoder.jp/contests/abc402/tasks/abc402_g
 */
 
 
 //【剰余の範囲内判定 → 切り捨て商の差】
 /*
-* l ≦ (a mod m) < r    ⇔ floor((a-l)/m) - floor((a-r)/m) = 1
-* !(l ≦ (a mod m) < r) ⇔ floor((a-l)/m) - floor((a-r)/m) = 0
-*
+* 0 ≦ l ≦ r ≦ m のとき，以下の等式が成り立つ：
+*	Boole[l ≦ (a mod m) < r] = floor((a-l)/m) - floor((a-r)/m)
+* 
+* (証明)
+* 左辺の不等式を同値変形していくと，
+*		l ≦ a mod m < r
+*		⇔ l ≦ a - floor(a / m) m < r
+*		⇔ (a-l)/m ≧ floor(a/m) > (a-r)/m
+* となる．
+* 
+* これが成り立つとき，floor(a/m) が整数であることと
+*		(a-l)/m - (a-r)/m = (r-l)/m ≦ (m-0)/m = 1
+* であることより元の等式の右辺は 1 となる．
+* 
+* 成り立たないとき，
+*		(a-l)/m < floor(a/m)
+* であれば r ≦ m と合わせて
+*		floor(a/m) > (a-l)/m > (a-r)/m ≧ a/m-1 ≧ floor(a/m)-1
+* なので元の等式の右辺は 0 となり，
+*		floor(a/m) ≦ (a-r)/m
+* であれば 0 ≦ l と合わせて
+*		floor(a/m)+1 > a/m ≧ (a-l)/m ≧ (a-r)/m ≧ floor(a/m)
+* なので元の等式の右辺は 0 となる．
+* 
 * verify : https://yukicoder.me/problems/no/2280
+*/
+
+
+//【剰余の大小判定 → 整数商の差】
+/*
+* 以下の等式が成り立つ：
+*	Boole[(a mod m) < (b mod m)] = ceil((b-a)/m) - floor(b/m) + floor(a/m)
+* 
+* verify : https://yukicoder.me/problems/no/3054
+*/
+
+
+//【切り捨て商と切り上げ商の関係】
+/*
+* ceil(a / b) = floor((a - sgn(b)) / b) + 1
+* ceil(a / b) = -floor(-a / b)
+* 
+* verify : https://yukicoder.me/problems/no/3054
 */
 
 
@@ -121,6 +160,57 @@ void quotient_range(T n1, T n2, const FUNC& f) {
 	auto f = [&](T il, T ir, T q1, T q2) {
 
 	};
+	quotient_range(n1, n2, f);
+	*/
+}
+
+
+//【商列挙（平方）】O(N^(1/3))
+/*
+* 区間 [1..√N] を N/(i^2) = q（切り捨て）となる半開区間 i∈(il..ir] に分割し，
+* i について昇順にそれぞれに対して f(il, ir, q) を呼び出す．
+*/
+template <class T, class FUNC>
+void quotient_range_squared(T N, const FUNC& f) {
+	//（例）
+	// 例えば N = 99 のときは (0..9] を以下のように分割できる：
+	//		i の範囲		q=N/(i^2)
+	//		(0..1]		99
+	//		(1..2]		24
+	//		(2..3]		11
+	//		(3..4]		6
+	//		(4..5]		3
+	//		(5..7]		2
+	//		(7..9]		1
+
+	T il = 0, ir = 1; T q = N;
+	while (true) {
+		T nir = ir + 1;
+		T nq = N / (nir * nir);
+		if (q == nq) break;
+
+		f(il, ir, q);
+
+		il = ir;
+		ir = nir;
+		q = nq;
+	}
+
+	while (q >= 1) {
+		ir = (T)floor(sqrtl(1.L * N / q));
+
+		f(il, ir, q);
+
+		il = ir;
+		q--;
+	}
+
+	/* f の定義の雛形
+	using T = ll;
+	auto f = [&](T il, T ir, T q) {
+
+	};
+	quotient_range_squared(N, f);
 	*/
 }
 
@@ -215,7 +305,7 @@ T floor_div(T a, T b) {
 */
 template <class T>
 T ceil_div(T a, T b) {
-	// verify : https://atcoder.jp/contests/abc315/tasks/abc315_g
+	// verify : https://atcoder.jp/contests/abc378/tasks/abc378_b
 
 	Assert(b != 0);
 
@@ -263,131 +353,14 @@ T ceil_mod(T x, T m, T k) {
 }
 
 
-//【等差数列区間】
-/*
-* Arithmetic_range<T>(l, r, m, k) : O(1)
-*	x∈[l..r) で x ≡ k (mod m) を満たすものからなる昇順列 a で初期化する．
-*
-* T sum() : O(1)
-*	Σa を返す．
-*
-* T size() : O(1)
-*	a の要素数を返す．
-*
-* T get(T i) : O(1)
-*	a[i] を返す．
-*
-* T front() : O(1)
-*	a の先頭の要素を返す．
-*
-* T back() : O(1)
-*	a の末尾の要素を返す．
-*
-* T count(T x) : O(1)
-*	a に含まれる x の個数 (∈{0,1}) を返す．
-*
-* T lower_bound(T x) : O(1)
-*	a に含まれる x 以上の最小の要素の位置を返す（なければ a.size() を返す)
-*
-* T upper_bound(T x) : O(1)
-*	a に含まれる x より大きいの最小の要素の位置を返す（なければ a.size() を返す)
-*/
-template <class T>
-class Arithmetic_range {
-	T li, ri, m, k;
-
-public:
-	// x∈[l..r) で x ≡ k (mod m) を満たすものからなる昇順列で初期化する．
-	Arithmetic_range(T l, T r, T m, T k_) : m(m), k(k_) {
-		// verify : https://mojacoder.app/users/shogo314/problems/range_query
-
-		Assert(m > 0);
-
-		k %= m;
-		if (k < 0) k += m;
-
-		l -= k;
-		r -= k;
-
-		li = (l >= 0 ? (l + m - 1) / m : -((-l) / m));
-		ri = (r >= 0 ? (r + m - 1) / m : -((-r) / m));
-	}
-	Arithmetic_range() : li(0), ri(0), m(1), k(0) {}
-
-	// Σa を返す．
-	inline T sum() const {
-		// verify : https://mojacoder.app/users/shogo314/problems/range_query
-
-		// Σi∈[li..ri) (mi+k)
-		return (li + ri - 1) * (ri - li) / 2 * m + (ri - li) * k;
-	}
-
-	// a の要素数を返す．
-	inline T size() const {
-		// verify : https://mojacoder.app/users/shogo314/problems/range_query
-		
-		return ri - li;
-	}
-
-	// a[i] を返す．
-	inline T get(T i) const {
-		// verify : https://mojacoder.app/users/shogo314/problems/range_query
-		
-		Assert(0 <= i && i < ri - li);
-		return m * (li + i) + k;
-	}
-
-	// a の先頭の要素を返す．
-	inline T front() const {
-		// verify : https://atcoder.jp/contests/arc176/tasks/arc176_b
-
-		Assert(ri - li > 0);
-		return m * li + k;
-	}
-
-	// a の末尾の要素を返す．
-	inline T back() const {
-		Assert(ri - li > 0);
-		return m * (ri - 1) + k;
-	}
-
-	// a に含まれる x の個数 (∈{0,1}) を返す．
-	inline T count(T x) const {
-		// verify : https://mojacoder.app/users/shogo314/problems/range_query
-		
-		if ((x - k) % m != 0) return 0;
-		T xi = (x - k) / m;
-		return li <= xi && xi < ri ? 1 : 0;
-	}
-
-	// a に含まれる x 以上の最小の要素の位置を返す（なければ a.size() を返す)
-	inline T lower_bound(T x) const {
-		// verify : https://mojacoder.app/users/shogo314/problems/range_query
-		
-		x -= k;
-		T xi = (x >= 0 ? (x + m - 1) / m : -((-x) / m));
-		return min(max(xi - li, T(0)), ri - li);
-	}
-
-	// a に含まれる x より大きいの最小の要素の位置を返す（なければ a.size() を返す)
-	inline T upper_bound(T x) const {
-		// verify : https://mojacoder.app/users/shogo314/problems/range_query
-		
-		x -= k;
-		T xi = (x >= -1 ? (x + m) / m : -((-x - 1) / m));
-		return min(max(xi - li, T(0)), ri - li);
-	}
-};
-
-
-//【余りの取れる値の範囲】
+//【剰余の反復 → 速く収束】
 /*
 * 非負整数 a を m(≦a) で割った余りは a/2 未満になる．
 *
 * 証明：m ≦ a/2 のときは明らか．m > a/2 のときは
 *		a mod m = a - m < a - a/2 = a/2
 *
-* verify : https://codeforces.com/contest/1617/problem/C
+* verify : https://atcoder.jp/contests/agc003/tasks/agc003_e
 */
 
 
@@ -407,6 +380,7 @@ public:
 /*
 * 列 ディレクトリへ
 */
+
 
 //【約数からの寄与の除去】
 /*
@@ -494,63 +468,5 @@ public:
 *
 * A[1..12] から a[1..12] を逐次的に求めたい → 除原理（使う価値なし）
 */
-
-
-//【余りの和】
-/*
-* Mod_sum_query(vl a) : O(n log n)
-*	配列 a[0..n) で初期化する．
-*
-* ll mod_sum(ll m) : O(max(a) log(n) / m)
-*	a[0..n) mod m の和を返す．
-*
-* ll lack_sum(ll m) : O(max(a) log(n) / m)
-*	a[0..n) を m で割った不足の和を返す．
-*/
-class Mod_sum_query {
-	int n;
-	vl a;
-
-	ll a_sum; // Σa[0..n)
-
-public:
-	// 配列 a[0..n) で初期化する．
-	Mod_sum_query(const vl& a_) : n(sz(a_)), a(a_), a_sum(0) {
-		// verify : https://atcoder.jp/contests/arc126/tasks/arc126_c
-		
-		sort(all(a));
-		rep(i, n) a_sum += a[i];
-	}
-	Mod_sum_query() : n(0), a_sum(0) {}
-
-	// a[0..n) mod m の和を返す．
-	ll mod_sum(ll m) {
-		ll res = a_sum;
-
-		for (ll v = m; v <= a[n - 1]; v += m) {
-			// 通常の和とくらべて何個 m を引かれるかを二分探索で求めれば良い．
-			res -= m * (ll)distance(lower_bound(all(a), v), a.end());
-		}
-
-		return res;
-	}
-
-	// a[0..n) を m で割った不足の和を返す．
-	ll lack_sum(ll m) {
-		// verify : https://atcoder.jp/contests/arc126/tasks/arc126_c
-
-		// sum : 1-indexed での a[0..n) mod m の和
-		ll sum = a_sum;
-
-		for (ll v = m; v < a[n - 1]; v += m) {
-			// 通常の和とくらべて何個 m を引かれるかを二分探索で求めれば良い．
-			sum -= m * (ll)distance(lower_bound(all(a), v + 1), a.end());
-		}
-
-		// 不足分を返す．
-		return m * (ll)n - sum;
-	}
-};
-
 
 
