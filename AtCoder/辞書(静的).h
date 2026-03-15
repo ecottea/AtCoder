@@ -173,6 +173,8 @@ public:
 
 	// a[l..r) ‚Ì’†‚Å (-‡..v) ‚É’l‚ğ‚à‚Â—v‘f‚ÌŒÂ”‚ğ•Ô‚·D
 	int count(int l, int r, T v) {
+		// verify : https://judge.yosupo.jp/problem/static_range_sum_with_upper_bound
+
 		chmax(l, 0); chmin(r, n);
 		if (l >= r) return 0;
 
@@ -196,7 +198,7 @@ public:
 
 	// a[l..r) ‚Ì’†‚Å (-‡..v) ‚É’l‚ğ‚à‚Â—v‘f‚Ì˜a‚ğ•Ô‚·D
 	T sum(int l, int r, T v) {
-		// https://atcoder.jp/contests/abc339/tasks/abc339_g
+		// verify : https://judge.yosupo.jp/problem/static_range_sum_with_upper_bound
 
 		chmax(l, 0); chmin(r, n);;
 		if (l >= r) return 0;

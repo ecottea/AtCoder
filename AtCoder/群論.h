@@ -97,7 +97,7 @@ vector<pim> permutation_order_distribution(int n, const Factorial_mint& fm) {
 vector<pll> order_distribution(ll n) {
 	// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
 
-	Limited_div_mul_transform<ll> D(n);
+	Limited_div_mul_transform D(n);
 
 	unordered_map<ll, ll> cnt;
 	repe(d, D.divs) cnt[d] = d;

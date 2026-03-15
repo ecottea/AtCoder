@@ -473,7 +473,7 @@ ll Kth_CRT_2eq(const vi& s1, int m1, const vi& s2, int m2, ll K) {
 */
 
 
-//【等比数列の和の GCD】
+//【レピュニットの GCD】
 /*
 * 固定された正整数 r に対し，
 *	S(n) := 1 + r + r^2 + ... + r^(n-1) = (r^n - 1) / (r - 1)

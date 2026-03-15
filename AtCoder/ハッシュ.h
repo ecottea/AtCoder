@@ -355,7 +355,7 @@ class Rolling_hash_2D {
 	vector<ull> powBX, powBY;
 
 	// v[i][j] : a[0..i)[0..j) のハッシュ値
-	//	v[i][j] = Σx∈[0..i) Σy∈[0..j) (a[i][j] + S) BX^(i-1-x) BY^(j-1-y)
+	//	v[i][j] = Σx∈[0..i) Σy∈[0..j) (a[x][y] + S) BX^(i-1-x) BY^(j-1-y)
 	vector<vector<ull>> v;
 
 public:

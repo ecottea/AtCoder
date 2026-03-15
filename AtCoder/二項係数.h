@@ -18,6 +18,9 @@
 * mint inv(int n) : O(1)
 *	1/n を返す．
 *
+* mint inv_neg(int n) : O(1)
+*	1/n を返す（n < 0 も可）
+*
 * mint perm(int n, int r) : O(1)
 *	順列の数 nPr を返す．
 *
@@ -90,6 +93,14 @@ public:
 		return fac[n - 1] * fac_inv[n];
 	}
 
+	// 1/n を返す（n < 0 も可）
+	mint inv_neg(int n) const {
+		Assert(n != 0);
+		Assert(abs(n) <= n_max);
+		if (n > 0) return fac[n - 1] * fac_inv[n];
+		else return -fac[-n - 1] * fac_inv[-n];
+	}
+
 	// 順列の数 nPr を返す．
 	mint perm(int n, int r) const {
 		// verify : https://atcoder.jp/contests/abc172/tasks/abc172_e
@@ -132,6 +143,8 @@ public:
 	// 多項係数 nC[rs] を返す．
 	mint mul(const vi& rs) const {
 		// verify : https://yukicoder.me/problems/no/2141
+
+		if (rs.empty()) return 1;
 
 		if (*min_element(all(rs)) < 0) return 0;
 		int n = accumulate(all(rs), 0);
@@ -447,6 +460,9 @@ struct Factorial_arbitrary_small_mod {
 *
 * int bin(int n, int r) : O(ω(m) (log n + log m))
 *	nCr mod m を返す．
+*
+* int mul(vi rs) : O(?)
+*	多項係数 nC[rs] mod m を返す．（n = Σrs）
 */
 struct Factorial_arbitrary_mod {
 	// verify : https://atcoder.jp/contests/arc012/tasks/arc012_4
@@ -567,6 +583,39 @@ struct Factorial_arbitrary_mod {
 			ll rm = rm_n[i];
 			rm = (rm * inv_mod(rm_r[i], pds[i])) % pds[i];
 			rm = (rm * inv_mod(rm_s[i], pds[i])) % pds[i];
+
+			if (pw >= ds[i]) rgt[i] = 0;
+			else rgt[i] = rm * powi(ps[i], (int)pw);
+		}
+
+		// 中国剰余定理で連立合同式の解を求める．
+		return (int)crt(rgt, pds).first;
+	}
+
+	// 多項係数 nC[rs] を返す．
+	int mul(const vi& rs) const {
+		// verify : https://atcoder.jp/contests/abc425/tasks/abc425_e
+
+		int K = sz(rs);
+		if (K == 0) return 1;
+
+		if (*min_element(all(rs)) < 0) return 0;
+		int n = accumulate(all(rs), 0);
+		Assert(n <= n_max);
+
+		// n, r, n-r それぞれの pow および mod を得る．
+		vi pw_n; vl rm_n; vvi pw_rs(K); vvl rm_rs(K);
+		factorial_sub(n, pw_n, rm_n);
+		rep(k, K) factorial_sub(rs[k], pw_rs[k], rm_rs[k]);
+
+		// 情報をまとめて連立合同式を作る．
+		vl rgt(np);
+		rep(i, np) {
+			ll pw = pw_n[i];
+			rep(k, K) pw -= pw_rs[k][i];
+
+			ll rm = rm_n[i];
+			rep(k, K) rm = (rm * inv_mod(rm_rs[k][i], pds[i])) % pds[i];
 
 			if (pw >= ds[i]) rgt[i] = 0;
 			else rgt[i] = rm * powi(ps[i], (int)pw);
@@ -1549,7 +1598,26 @@ vm perm_fixed_r(ll n1, ll n2, int r) {
 */
 
 
-//【逆数（一括）】O((n2-n1) + log mod)
+//【逆数（一括，連続自然数）】O(n)
+/*
+* 1/[1..n] を返す．
+*/
+vm inv_all(int n) {
+	// verify : https://atcoder.jp/contests/abc222/tasks/abc222_h
+
+	vm inv(n + 1);
+
+	constexpr int MOD = mint::mod();
+	inv[1] = 1;
+	repi(i, 2, n) {
+		inv[i] = MOD - mint(MOD / i) * inv[MOD % i];
+	}
+
+	return inv;
+}
+
+
+//【逆数（一括，大きい連続自然数）】O((n2-n1) + log mod)
 /*
 * 1/[n1..n2) を返す（1/0 = 0 とする）
 *

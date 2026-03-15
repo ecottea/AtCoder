@@ -164,12 +164,12 @@ vm count_surjections_all_M(ll n, int m, const Factorial_mint& fm) {
 */
 
 
-//【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）】O(n^2)
+//【集合の分割の数（ボールの区別あり，箱の区別なし，箱の中身は 1 個以上）】O(n m)
 /*
-* 各 i∈[0..n], j∈[0..n] について，
+* 各 i∈[0..n], j∈[0..m] について，
 * i 点集合をちょうど j 個に分割する方法の数を格納した二次元リストを返す．
 */
-vvm stirling_S2_all_N_K(int n) {
+vvm stirling_S2_all_N_K(int n, int m) {
 	// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/7/DPL/all/DPL_5_G
 
 	//【方法】
@@ -186,10 +186,10 @@ vvm stirling_S2_all_N_K(int n) {
 	// を得る．
 
 	// c[i][j] : [0..i) をちょうど j 個に分割する方法の数
-	vvm c(n + 1, vm(n + 1));
+	vvm c(n + 1, vm(m + 1));
 	c[0][0] = 1;
 
-	repi(i, 1, n) repi(j, 1, n) c[i][j] = c[i - 1][j] * j + c[i - 1][j - 1];
+	repi(i, 1, n) repi(j, 1, m) c[i][j] = c[i - 1][j] * j + c[i - 1][j - 1];
 
 	return c;
 }

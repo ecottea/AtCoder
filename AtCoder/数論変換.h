@@ -293,6 +293,50 @@ vm self_convolution(const vm& a, ll k) {
 }
 
 
+//y„‰ñô‚İimod 998244353jzO(n log n)
+/*
+* a[0..n) ‚Æ b[0..n) ‚ğ„‰ñô‚İ‚µ‚½”—ñ c[0..n) ‚ğ•Ô‚·D
+*
+* §–ñ : n ‚Í 2 ™p
+*/
+vm cyclic_convolution(vm a, vm b) {
+	int n = sz(a);
+	Assert(sz(b) == n);
+	Assert(popcount(n) == 1);
+
+	mint n_inv = mint(n).inv();
+
+	internal::butterfly(a);
+	internal::butterfly(b);
+	rep(i, n) a[i] *= b[i] * n_inv;
+	internal::butterfly_inv(a);
+
+	return a;
+}
+
+
+//y©ŒÈ„‰ñô‚İimod 998244353jzO(n (log n + log K))
+/*
+* a[0..n) ‚ğ K ŒÂ„‰ñô‚İ‚µ‚½”—ñ c[0..n) ‚ğ•Ô‚·D
+*
+* §–ñ : n ‚Í 2 ™p
+*/
+vm self_cyclic_convolution(vm a, ll K) {
+	// verify : https://mojacoder.app/users/YSatUT/problems/can_you_stop_exactly_4
+
+	int n = sz(a);
+	Assert(popcount(n) == 1);
+
+	mint n_inv = mint(n).inv();
+
+	internal::butterfly(a);
+	rep(i, n) a[i] = a[i].pow(K) * n_inv;
+	internal::butterfly_inv(a);
+
+	return a;
+}
+
+
 //yƒIƒ“ƒ‰ƒCƒ“ô‚İimod 998244353jz
 /*
 * Online_convolution(int n) : O(n)

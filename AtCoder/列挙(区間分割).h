@@ -35,7 +35,7 @@ vector<vector<vector<T>>> enumerate_interval_partitions(const vector<T>& a) {
 }
 
 
-//【区間分割の列挙】O(bin(n-1, K-1) n)
+//【区間分割の列挙（個数指定）】O(bin(n-1, K-1) n)
 /*
 * a[0..n) を K 個の区間に分割する方法全てからなるリストを返す．
 */

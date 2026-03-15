@@ -14,9 +14,9 @@ T divide_and_conquer_product(vector<T> a) {
 	int n = sz(a);
 
 	// 2 ™pŒÂ‚¸‚ÂŠ|‚¯‚Ä‚¢‚­i•ªŠ„“¡–@j
-	for (int k = 1; k < n; k *= 2) {
-		for (int i = 0; i + k < n; i += 2 * k) {
-			a[i] = a[i] * a[i + k];
+	for (int w = 1; w < n; w *= 2) {
+		for (int i = 0; i + w < n; i += 2 * w) {
+			a[i] = a[i] * a[i + w];
 		}
 	}
 

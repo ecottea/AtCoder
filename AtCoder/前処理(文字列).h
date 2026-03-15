@@ -68,6 +68,50 @@ void run_length_encoding(const STR& a, vector<T>& c, vi& x) {
 }
 
 
+//【ランレングス符号（統合）】O(n1 + n2)
+/*
+* ランレングス符号化された列 rle1, rle2 を統合したものを返す．
+*/
+template <class T, class S>
+vector<tuple<T, T, S>> run_length_encoding_merge(const vector<pair<T, S>>& rle1, const vector<pair<T, S>>& rle2) {
+	// verify : https://atcoder.jp/contests/abc294/tasks/abc294_e
+
+	int n1 = sz(rle1), n2 = sz(rle2);
+
+	vector<tuple<T, T, S>> res;
+
+	int pt1 = 0, pt2 = 0;
+	S sub1 = 0, sub2 = 0;
+
+	while (pt1 < n1) {
+		auto [c1, l1] = rle1[pt1];
+		auto [c2, l2] = rle2[pt2];
+
+		S len1 = l1 - sub1;
+		S len2 = l2 - sub2;
+
+		if (len1 == len2) {
+			res.emplace_back(c1, c2, len1);
+			sub1 = 0; pt1++;
+			sub2 = 0; pt2++;
+		}
+		else if (len1 < len2) {
+			res.emplace_back(c1, c2, len1);
+			sub1 = 0; pt1++;
+			sub2 += len1;
+		}
+		else {
+			res.emplace_back(c1, c2, len2);
+			sub1 += len2;
+			sub2 = 0; pt2++;
+		}
+	}
+	Assert(pt2 == n2);
+
+	return res;
+}
+
+
 //【文字列上ジャンプ】
 /*
 * Jump_on_string(STR s, int C = 26, T a = 'a') : O(n C)
@@ -210,6 +254,33 @@ vi prev_different_position(const STR& s) {
 	}
 
 	return prv;
+}
+
+
+//【列の分割】O(n)
+/*
+* 列 s[0..n) を区切り文字 c で分割したリストのリストを返す．
+*/
+template <class STR, class T = remove_reference_t<decltype(declval<STR>()[0])>>
+vector<STR> split(const STR& s, T c) {
+	// verify : https://www.codechef.com/START217A/problems/RANGEMEX7
+
+	int n = sz(s);
+
+	vector<STR> res; STR sub;
+
+	rep(i, n) {
+		if (s[i] == c) {
+			res.push_back(sub);
+			sub.clear();
+		}
+		else {
+			sub.push_back(s[i]);
+		}
+	}
+	res.push_back(sub);
+
+	return res;
 }
 
 

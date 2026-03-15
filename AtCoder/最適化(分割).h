@@ -6,6 +6,59 @@
 // ■■■■■ 最適化（集合の分割） ■■■■■
 
 
+//【最大分割（集合族指定）】O(2^n n)
+/*
+* set⊂[0..n) が使用可能かが able[set] で表された集合族 S について，
+* S の元による [0..n) の分割のうち要素数が最大のものを 1 つ返す．
+*/
+vi set_partition_max(const vi& able) {
+	// verify : https://atcoder.jp/contests/abc432/tasks/abc432_f
+
+	int n = msb(sz(able));
+
+	vi dp(1LL << n, -INF);
+	dp[0] = 0;
+
+	repb(set, n) {
+		repis(i, set) {
+			chmax(dp[set], dp[set ^ (1 << i)]);
+		}
+		if (able[set]) dp[set]++;
+	}
+
+	vi res; int s = (1 << n) - 1;
+
+	while (s > 0) {
+		if (able[s]) {
+			res.push_back(s);
+
+			repis(i, s) {
+				if (dp[s ^ (1 << i)] == dp[s] - 1) {
+					s ^= 1 << i;
+					break;
+				}
+			}
+		}
+		else {
+			repis(i, s) {
+				if (dp[s ^ (1 << i)] == dp[s]) {
+					s ^= 1 << i;
+					break;
+				}
+			}
+		}
+	}
+
+	reverse(all(res));
+
+	repir(i, sz(res) - 1, 1) {
+		res[i] ^= res[i - 1];
+	}
+
+	return res;
+}
+
+
 //【分割の和スコアの最大値】O(3^n)
 /*
 * [0..n) の分割 π = 凵k S_k に対するスコアが Σk a[S_k] で与えられるとする．

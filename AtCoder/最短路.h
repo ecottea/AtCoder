@@ -375,6 +375,7 @@ map<T, ll> dynamic_dijkstra(T st, const function<vector<pair<T, ll>>(T)>& nxt) {
 
 		return res;
 	};
+	auto dist = dynamic_dijkstra<T>(s, nxt);
 	*/
 }
 
@@ -483,6 +484,7 @@ vl dijkstra(const G& g, int st, const FUNC& f, ll ini_cost) {
 	auto f = [&](const WEdge& e, ll cost) {
 		return cost + e.cost;
 	};
+	auto dist = dijkstra(g, st, f, ini_cost);
 	*/
 }
 
@@ -727,6 +729,13 @@ template <class T, class FUNC>
 int dynamic_shortest_path(T st, T gl, const FUNC& nxt, vector<T>* path = nullptr) {
 	// verify : https://atcoder.jp/contests/abc241/tasks/abc241_f
 
+	if (st == gl) {
+		if (path != nullptr) {
+			*path = vector<T>{ st };
+		}
+		return 0;
+	}
+
 	unordered_map<T, int> dist; // st ‚©‚ç‚ÌÅ’Z‹——£‚ğ•Û‚·‚éƒe[ƒuƒ‹
 	dist[st] = 0;
 
@@ -788,6 +797,8 @@ int dynamic_shortest_path(T st, T gl, const FUNC& nxt, vector<T>* path = nullptr
 
 		return res;
 	};
+	vector<T> path;
+	auto dist = dynamic_shortest_path(st, gl, nxt, &path);
 	*/
 }
 

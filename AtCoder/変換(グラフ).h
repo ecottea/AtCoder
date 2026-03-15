@@ -175,7 +175,7 @@ Graph complement_graph(const Graph& g) {
 
 //【接続二部グラフ】
 /*
-* g の n 個の頂点に対応する頂点 [0..n) と m 本の辺に対応する頂点 [n..n+m) をもち，
+* 無向グラフ g の n 個の頂点に対応する頂点 [0..n) と m 本の辺に対応する頂点 [n..n+m) をもち，
 * 頂点 i が辺 j の端点であるときに限り辺 i-(n+j) をもつ二部グラフ gc を返す．
 * directed = true とすると有向辺 i→(n+j) にする．
 */
@@ -195,6 +195,31 @@ Graph incidence_bipartite_graph(const IGraph& g, bool directed = false) {
 	}
 
 	return g2;
+}
+
+
+//【接続二部グラフ（重み付き）】
+/*
+* 重み付き単純無向グラフ g の n 個の頂点に対応する頂点 [0..n) と m 本の辺に対応する頂点 [n..n+m) をもち，
+* 頂点 i が辺 j の端点であるときに限り辺 i-(n+j) をもつ重み付き二部グラフ {gc, wgt} を返す．
+*/
+pair<Graph, vl> incidence_bipartite_graph(const WGraph& g) {
+	// verify : https://atcoder.jp/contests/abc359/tasks/abc359_g
+
+	int n = sz(g);
+
+	Graph g2(n); vl wgt(n);
+	rep(s, n) repe(e, g[s]) {
+		if (s > e.to) continue;
+
+		g2[s].push_back(sz(g2));
+		g2[e.to].push_back(sz(g2));
+		g2.push_back(vi{ s, e.to });
+
+		wgt.push_back(e.cost);
+	}
+
+	return { g2, wgt };
 }
 
 

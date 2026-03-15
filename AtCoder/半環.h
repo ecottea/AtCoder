@@ -81,7 +81,7 @@ S814 e814() { return S814(1); }
 /* verify : https://codeforces.com/contest/1681/problem/F */
 using S803 = ll;
 S803 add803(S803 x, S803 y) { return min(x, y); }
-S803 o803() { return INFL; }
+S803 o803() { return S803(INFL); }
 S803 mul803(S803 x, S803 y) { return x + y; }
 S803 e803() { return 0; }
 #define Min_plus_semiring S803, add803, o803, mul803, e803
@@ -91,7 +91,7 @@ S803 e803() { return 0; }
 /* verify : https://atcoder.jp/contests/abc310/tasks/abc310_h */
 using S804 = ll;
 S804 add804(S804 x, S804 y) { return max(x, y); }
-S804 o804() { return -INFL; }
+S804 o804() { return S804(-INFL); }
 S804 mul804(S804 x, S804 y) { return x + y; }
 S804 e804() { return 0; }
 #define Max_plus_semiring S804, add804, o804, mul804, e804

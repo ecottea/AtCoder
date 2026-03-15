@@ -155,6 +155,8 @@ vvi enumerate_all_sequences(const vi& lb, const vi& ub) {
 */
 template <class STR, class T = remove_reference_t<decltype(declval<STR>()[0])>>
 vector<STR> enumerate_all_sequences(const STR& a, T nil, const STR& c) {
+	// verify : https://atcoder.jp/contests/abc421/tasks/abc421_e
+	
 	int n = sz(a);
 
 	vector<STR> seqs;

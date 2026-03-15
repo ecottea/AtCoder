@@ -37,7 +37,7 @@ Graph read_tree(int n, bool directed = false, bool zero_indexed = false) {
 * directed : 有向木か（省略すれば false）
 * zero_indexed : 入力が 0-indexed か（省略すれば false）
 */
-void write_Tree(const Graph& g, bool directed = false, bool zero_indexed = false) {
+void write_tree(const Graph& g, bool directed = false, bool zero_indexed = false) {
 	int n = sz(g);
 
 	cout << n << endl;

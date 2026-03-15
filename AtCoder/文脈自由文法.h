@@ -237,7 +237,7 @@ void to_chomsky(const WCFG& cfg, WCFG& cnf) {
 
 	// ’PˆÊ‹K‘¥‚ğœ‹‚·‚éD
 	vvi dist(n);
-	rep(i, n) binary_BFS(g, i, dist[i]);
+	rep(i, n) dist[i] = binary_BFS(g, i);
 
 	cnf = WCFG(n2);
 	rep(i, n) {

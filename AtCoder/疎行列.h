@@ -1,6 +1,7 @@
 #pragma once
 #include "header.h"
 #include "FPS(mint).h"
+#include "エスパー.h"
 // ■■■■■ 疎行列 ■■■■■
 
 

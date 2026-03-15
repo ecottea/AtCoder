@@ -207,7 +207,7 @@ F105 id105() { return T105(0); }
 
 
 //【加算 作用付き min 可換モノイド】
-/* verify : https://atcoder.jp/contests/abc245/tasks/abc245_e */
+/* verify : https://judge.yosupo.jp/problem/range_add_range_min */
 using T106 = ll;
 using S106 = T106;
 S106 op106(S106 x, S106 y) { return min(x, y); }
@@ -232,7 +232,7 @@ F135 id135() { return T135(0); }
 #define Add_MinMax_mmonoid S135, op135, e135, F135, act135, comp135, id135
 
 
-//【アフィン 作用付き min,max 可換モノイド】
+//【アフィン 作用付き min,max 可換モノイド】TODO
 
 
 //【加算 作用付き 総和 可換モノイド】

@@ -20,6 +20,28 @@ inline double distance_P_L(const Point<T>& p, const Line<T>& l) {
 }
 
 
+//【点と線分の距離】O(1)（誤差注意！）
+/*
+* 点 p と線分 l との距離を返す．
+*/
+template <class T>
+inline double distance_P_S(const Point<T>& p, const Line<T>& l) {
+	// verify : https://atcoder.jp/contests/abc426/tasks/abc426_e
+
+	if ((l.first - l.second).norm() < 1e-9) {
+		return (p - (l.first + l.second) / 2.).norm();
+	}
+	else if ((p - l.first).dot(l.second - l.first) >= 0 && (p - l.second).dot(l.first - l.second) >= 0) {
+		Point<double> d = (l.second - l.first).normalize();
+		Point<double> n(-d.y, d.x);
+		return abs((p - l.first).dot(n));
+	}
+	else {
+		return min((p - l.first).norm(), (p - l.second).norm());
+	}
+}
+
+
 //【角度の比較（符号なし）】O(1)
 /*
 * ベクトル a, b の成す無向角よりベクトル c, d の成す無向角が大きければ true，さもなくば false を返す．

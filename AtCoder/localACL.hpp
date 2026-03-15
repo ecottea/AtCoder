@@ -11,7 +11,10 @@ template <class T>
 inline ostream& operator<<(ostream& os, fenwick_tree<T> ft) {
 	// verify : https://judge.yosupo.jp/problem/static_range_sum
 
-	int n = ft._n; // fenwicktree.hpp “à‚Å _n ‚ğ public ‚ÉˆÚ“®‚µ‚Ä‚¢‚é‚Ì‚Å’ˆÓI
+	//y’ˆÓz
+	// fenwicktree.hpp “à‚Å _n ‚ğŸè‚É public ‚ÉˆÚ“®‚µ‚Ä‚¢‚éD
+
+	int n = ft._n; 
 	for (int i = 0; i < n; i++) {
 		os << ft.sum(i, i + 1) << " ";
 	}

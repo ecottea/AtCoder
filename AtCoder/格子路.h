@@ -334,86 +334,6 @@ mint count_free_lattice_path(int n, int x, int y, const Factorial_mint& fm) {
 }
 
 
-//【直線に沿った格子路上の積（モノイド）】O(log(n + m))
-/*
-* (0, 0) から (n, (an+b)//m) までの直線 y=(ax+b)/m 以下の上方向優先の最短格子路について，
-* 右に進むときは f，上に進むときは g を順に掛け合わせたモノイド (S, op, e) の元を返す．
-*
-* 制約：n≧0, m≧1, a≧0, b≧0
-*/
-template <class T, class S, S(*op)(S, S), S(*e)()>
-S multiple_along_line(T n, T m, T a, T b, S f, S g) {
-	// 参考 : https://github.com/hos-lyric/libra/blob/master/number/gojo.cpp
-	// verify : https://judge.yosupo.jp/problem/sum_of_floor_of_linear
-
-	Assert(n >= 0); Assert(m >= 1); Assert(a >= 0); Assert(b >= 0);
-
-	// x^n を返す
-	auto pow = [](const S& x, T n) {
-		S res(e()), pow2 = x;
-		while (n > 0) {
-			if (n & 1) res = op(res, pow2);
-			pow2 = op(pow2, pow2);
-			n /= 2;
-		}
-		return res;
-	};
-
-	S resL = e(), resR = e(); bool rev = false;
-
-	while (true) {
-		// 傾きを 1 未満，切片を 1 未満にする．
-		if (rev) {
-			resR = op(pow(g, b / m), resR);
-			f = op(pow(g, a / m), f);
-		}
-		else {
-			resL = op(resL, pow(g, b / m));
-			f = op(f, pow(g, a / m));
-		}
-
-		a %= m;
-		b %= m;
-		if (a == 0 || n == 0) break;
-
-		// 左側の中途半端に余っている部分を切り取る．
-		T l = (m - b + a - 1) / a;
-		if (l > n) {
-			if (rev) {
-				resR = op(pow(f, n), resR);
-			}
-			else {
-				resL = op(resL, pow(f, n));
-			}
-			n = 0;
-			break;
-		}
-
-		if (rev) {
-			resR = op(op(g, pow(f, l)), resR);
-		}
-		else {
-			resL = op(resL, op(pow(f, l), g));
-		}
-
-		b = a * l + b - m;
-		n -= l;
-		if (n == 0) break;
-
-		// 軸を取り直して傾きを 1 より大きくする．
-		T nn = (a * n + b) / m;
-		T nm = a;
-		T na = m;
-		T nb = a * n + b - m * nn;
-
-		n = nn; m = nm; a = na; b = nb; swap(f, g);
-		rev = !rev;
-	}
-
-	return op(resL, op(pow(f, n), resR));
-}
-
-
 //【迷路】O(h w)
 /*
 * 壁が wall で表された h×w の迷路 c について，スタート (sx, sy) から
@@ -428,6 +348,7 @@ vvi solve_maze(const vector<vector<T>>& c, int sx, int sy, const T wall = '#') {
 	int h = sz(c), w = sz(c[0]);
 
 	vvi dist(h, vi(w, INF));
+	if (c[sx][sy] == wall) return dist;
 	dist[sx][sy] = 0;
 
 	// q : 未探索のマスを記録しておくキュー

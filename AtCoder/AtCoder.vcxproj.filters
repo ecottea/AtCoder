@@ -668,6 +668,9 @@
     <ClInclude Include="スコア和%28列%29.h">
       <Filter>ヘッダー ファイル\列</Filter>
     </ClInclude>
+    <ClInclude Include="エスパー.h">
+      <Filter>ヘッダー ファイル\アルゴリズム</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="input.txt">

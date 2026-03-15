@@ -2652,6 +2652,115 @@ public:
 * insert(int s) : O(β)
 *	部分木に頂点 s を追加し，データ構造を更新する．
 *
+* erase_all() : ならし O(β)
+*	追加した頂点を全て削除し，データ構造を更新する．
+*
+* get_sol(int s) : 計 O(Q)
+*	部分木 s に対し，データ構造を参照して解を求める．
+*/
+template <class F_INS, class F_ERS, class F_SOL>
+void dsu_on_tree(const Graph& g, int rt, const F_INS& insert, const F_ERS& erase_all, const F_SOL& get_sol) {
+	// 参考 : https://nyaannyaan.github.io/library/tree/dsu-on-tree.hpp.html
+	// verify : https://yukicoder.me/problems/no/3250
+
+	int n = sz(g);
+
+	// hc[s] : 頂点 s の重さ最大の子
+	vi hc(n, -1);
+
+	// 各頂点の重さ最大の子を求める．
+	function<int(int, int)> dfs_wgt = [&](int s, int p) {
+		int ws = 0; int wt_max = -1;
+		repe(t, g[s]) {
+			if (t == p) continue;
+			int wt = dfs_wgt(t, s);
+			if (chmax(wt_max, wt)) hc[s] = t;
+			ws += wt + 1;
+		}
+		return ws;
+	};
+	dfs_wgt(rt, -1);
+
+	// 部分木 s 内の頂点を全て追加する．
+	function<void(int, int)> dfs_insert = [&](int s, int p) {
+		insert(s);
+		repe(t, g[s]) {
+			if (t == p) continue;
+			dfs_insert(t, s);
+		}
+	};
+
+	// 部分木 s 内の頂点を全て追加し，部分木 s に対するクエリに答える．
+	// 必ず頂点集合が空の状態で呼ばれ，keep = false なら頂点集合を空に戻して関数を抜ける．
+	function<void(int, int, bool)> dfs = [&](int s, int p, bool keep) {
+		// light edge の先の部分木全てについての計算を行う．
+		// 計算後は頂点集合は，空である．
+		repe(t, g[s]) {
+			if (t == p || t == hc[s]) continue;
+			dfs(t, s, false);
+		}
+
+		// heavy edge の先の部分木についての計算を行う．
+		// 計算後の頂点集合は，部分木 hc[s] 内の頂点全てである．
+		if (hc[s] != -1) dfs(hc[s], s, true);
+
+		// light edge の先の頂点全てと s 自身を追加する．
+		// 計算後の頂点集合は，部分木 s 内の頂点全てである．
+		repe(t, g[s]) {
+			if (t == p || t == hc[s]) continue;
+			dfs_insert(t, s);
+		}
+		insert(s);
+
+		// 部分木 s に対するクエリに答える．
+		get_sol(s);
+
+		// keep フラグが false なら部分木 s 内の頂点を全て削除し，頂点集合を空にする．
+		if (!keep) erase_all();
+	};
+	dfs(rt, -1, true);
+
+	/* 雛形
+	// 必要なデータ構造の準備
+	mint ans = 1; vi es(K); vi hist;
+
+	// 部分木に頂点 s を追加し，データ構造を更新する．
+	auto insert_vtx = [&](int s) {
+		for (auto [p, e] : pps[s]) {
+			int k = p2k[p];
+			int prv = es[k];
+			chmax(es[k], e);
+			hist.push_back(k);
+			int d = es[k] - prv;
+			ans *= ppow[k][d];
+		}
+	};
+
+	// 追加した頂点を全て削除し，データ構造を更新する．
+	auto erase_all = [&]() {
+		repe(k, hist) es[k] = 0;
+		hist.clear();
+		ans = 1;
+	};
+
+	// 部分木 s に対し，データ構造を参照して解を求める．
+	vm res(n);
+	auto get_sol = [&](int s) {
+		res[s] = ans;
+	};
+
+	dsu_on_tree(g, 0, insert_vtx, erase_all, get_sol);
+	*/
+}
+
+
+//【DSU on Tree（1 頂点ずつ）】O(n log n β + Q)
+/*
+* 根を rt とする木 g について，各頂点を根とする部分木に対するクエリを一括で処理する．
+*
+* insert(int s) : O(β)
+*	部分木に頂点 s を追加し，データ構造を更新する．
+*
 * erase(int s) : O(β)
 *	部分木から頂点 s を削除し，データ構造を更新する．
 *

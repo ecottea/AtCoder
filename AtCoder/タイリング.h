@@ -3,99 +3,6 @@
 // ■■■■■ タイリング ■■■■■
 
 
-//【ドミノタイリング】O(h w √(h w))
-/*
-* c[0..h)[0..w) 上に置けるだけドミノ {(i1, j1), (i2, j2)} を配置し，そのリストを返す．
-* c[i][j] = ng であるようなマス (i, j) にはドミノを配置できない．
-*/
-vector<tuple<int, int, int, int>> domino_tiling(const vvc& c, char ng = '#') {
-	// verify : https://atcoder.jp/contests/practice2/tasks/practice2_d
-
-	int h = sz(c), w = sz(c[0]);
-
-	int ST = h * w, GL = ST + 1;
-	mf_graph<int> g(GL + 1);
-
-	rep(i, h) rep(j, w) {
-		if (c[i][j] == ng) continue;
-
-		// ST とマス，マスと GL を繋ぐ
-		if ((i + j) % 2 == 0) g.add_edge(ST, i * w + j, 1);
-		else g.add_edge(i * w + j, GL, 1);
-
-		// マスと隣のマスを繋ぐ
-		if ((i + j) % 2 == 0) {
-			if (i > 0 && c[i - 1][j] != ng) g.add_edge(i * w + j, (i - 1) * w + j, 1);
-			if (i < h - 1 && c[i + 1][j] != ng) g.add_edge(i * w + j, (i + 1) * w + j, 1);
-			if (j > 0 && c[i][j - 1] != ng) g.add_edge(i * w + j, i * w + (j - 1), 1);
-			if (j < w - 1 && c[i][j + 1] != ng) g.add_edge(i * w + j, i * w + (j + 1), 1);
-		}
-	}
-
-	int f = g.flow(ST, GL);
-
-	vector<tuple<int, int, int, int>> res;
-	res.reserve(f);
-
-	repe(e, g.edges()) {
-		// マスとマスを結びフローが流れている辺以外は無視する．
-		if (e.from == ST || e.to == GL || e.flow == 0) continue;
-
-		int i1 = e.from / w, j1 = e.from % w;
-		int i2 = e.to / w, j2 = e.to % w;
-		res.emplace_back(i1, j1, i2, j2);
-	}
-
-	return res;
-}
-
-
-//【ポリオミノの列挙】O(?)（n=8 くらいまで動く）
-/*
-* 各 k∈[0..n] について k-オミノを列挙し，そのリストを返す．
-* k-オミノ は k 個のマス {x, y} の集合として表す．ただし x, y 各座標の最小値は 0 とする．
-*/
-vector<set<set<pii>>> enumerate_polyominoes(int n) {
-	// polyomino[i] : i-オミノ 全てのリスト
-	vector<set<set<pii>>> polyomino(n + 1);
-
-	// 1-オミノ は { (0, 0) } ただ 1 つしか存在しない．
-	polyomino[1] = { { {0, 0} } };
-
-	// 大きさ昇順に探していく．
-	repi(i, 1, n - 1) {
-		// 大きさ i の各ポリオミノ poly について
-		repe(poly, polyomino[i]) {
-			// i-オミノ poly の各マス (x, y) について
-			for (auto [x, y] : poly) {
-				// 点 (x, y) の 4 近傍 (nx, ny) について
-				rep(j, 4) {
-					int nx = x + DX[j];
-					int ny = y + DY[j];
-					pii np = { nx, ny };
-
-					// もし (nx, ny) が poly に含まれていたら何もしない．
-					if (poly.count(np)) continue;
-
-					// (nx, ny) を追加した (i+1)-オミノ npoly を作る．
-					// もし nx, ny が -1 になったら全体を +1 平行移動する．
-					set<pii> npoly;
-					int add_x = (nx == -1);
-					int add_y = (ny == -1);
-					repe(p, poly) npoly.insert({ p.first + add_x, p.second + add_y });
-					npoly.insert({ nx + add_x, ny + add_y });
-
-					// (i+1)-オミノ の集合に npoly を追加する．
-					polyomino[i + 1].insert(npoly);
-				}
-			}
-		}
-	}
-
-	return polyomino;
-}
-
-
 //【ドミノ＆モノミノのタイリングの列挙】O(h w 2^(h w))
 /*
 * h×w の盤面にドミノ d 個とモノミノ h w - 2 d 個を敷き詰める方法を boards に列挙する．
@@ -156,7 +63,7 @@ void enumerate_domino_monomino_tiling(int h, int w, int d, vvvi& boards) {
 /*
 * h×w の盤面に T-テトロミノを敷き詰める方法全てを格納したリストを返す．
 * i 番目に敷き詰められたタイルを番号 i で表す．
-* 
+*
 *（バックトラッキング）
 */
 vvvi enumerate_Ttetromino_tiling(int h, int w) {
@@ -218,6 +125,53 @@ vvvi enumerate_Ttetromino_tiling(int h, int w) {
 	dfs(0, 0, 0);
 
 	return boards;
+}
+
+
+//【ドミノタイリング】O(h w √(h w))
+/*
+* c[0..h)[0..w) 上に置けるだけドミノ {(i1, j1), (i2, j2)} を配置し，そのリストを返す．
+* c[i][j] = ng であるようなマス (i, j) にはドミノを配置できない．
+*/
+vector<tuple<int, int, int, int>> domino_tiling(const vvc& c, char ng = '#') {
+	// verify : https://atcoder.jp/contests/practice2/tasks/practice2_d
+
+	int h = sz(c), w = sz(c[0]);
+
+	int ST = h * w, GL = ST + 1;
+	mf_graph<int> g(GL + 1);
+
+	rep(i, h) rep(j, w) {
+		if (c[i][j] == ng) continue;
+
+		// ST とマス，マスと GL を繋ぐ
+		if ((i + j) % 2 == 0) g.add_edge(ST, i * w + j, 1);
+		else g.add_edge(i * w + j, GL, 1);
+
+		// マスと隣のマスを繋ぐ
+		if ((i + j) % 2 == 0) {
+			if (i > 0 && c[i - 1][j] != ng) g.add_edge(i * w + j, (i - 1) * w + j, 1);
+			if (i < h - 1 && c[i + 1][j] != ng) g.add_edge(i * w + j, (i + 1) * w + j, 1);
+			if (j > 0 && c[i][j - 1] != ng) g.add_edge(i * w + j, i * w + (j - 1), 1);
+			if (j < w - 1 && c[i][j + 1] != ng) g.add_edge(i * w + j, i * w + (j + 1), 1);
+		}
+	}
+
+	int f = g.flow(ST, GL);
+
+	vector<tuple<int, int, int, int>> res;
+	res.reserve(f);
+
+	repe(e, g.edges()) {
+		// マスとマスを結びフローが流れている辺以外は無視する．
+		if (e.from == ST || e.to == GL || e.flow == 0) continue;
+
+		int i1 = e.from / w, j1 = e.from % w;
+		int i2 = e.to / w, j2 = e.to % w;
+		res.emplace_back(i1, j1, i2, j2);
+	}
+
+	return res;
 }
 
 
@@ -308,4 +262,51 @@ ll count_Tromino_tiling(int h, int w) {
 
 	return dp[0];
 }
+
+
+//【ポリオミノの列挙】O(?)（n=8 くらいまで動く）
+/*
+* 各 k∈[0..n] について k-オミノを列挙し，そのリストを返す．
+* k-オミノ は k 個のマス {x, y} の集合として表す．ただし x, y 各座標の最小値は 0 とする．
+*/
+vector<set<set<pii>>> enumerate_polyominoes(int n) {
+	// polyomino[i] : i-オミノ 全てのリスト
+	vector<set<set<pii>>> polyomino(n + 1);
+
+	// 1-オミノ は { (0, 0) } ただ 1 つしか存在しない．
+	polyomino[1] = { { {0, 0} } };
+
+	// 大きさ昇順に探していく．
+	repi(i, 1, n - 1) {
+		// 大きさ i の各ポリオミノ poly について
+		repe(poly, polyomino[i]) {
+			// i-オミノ poly の各マス (x, y) について
+			for (auto [x, y] : poly) {
+				// 点 (x, y) の 4 近傍 (nx, ny) について
+				rep(j, 4) {
+					int nx = x + DX[j];
+					int ny = y + DY[j];
+					pii np = { nx, ny };
+
+					// もし (nx, ny) が poly に含まれていたら何もしない．
+					if (poly.count(np)) continue;
+
+					// (nx, ny) を追加した (i+1)-オミノ npoly を作る．
+					// もし nx, ny が -1 になったら全体を +1 平行移動する．
+					set<pii> npoly;
+					int add_x = (nx == -1);
+					int add_y = (ny == -1);
+					repe(p, poly) npoly.insert({ p.first + add_x, p.second + add_y });
+					npoly.insert({ nx + add_x, ny + add_y });
+
+					// (i+1)-オミノ の集合に npoly を追加する．
+					polyomino[i + 1].insert(npoly);
+				}
+			}
+		}
+	}
+
+	return polyomino;
+}
+
 

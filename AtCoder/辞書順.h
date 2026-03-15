@@ -22,11 +22,11 @@
 * int lcp(int l1, int r1, int l2, int r2) : O(1)
 *	s[l1..r1) と s[l2..r2) の LCP の長さを返す．
 *
-* bool comp(int l1, int r1, int l2, int r2) : O(1)
-*	s[l1..r1) < s[l2..r2) かを返す．
+* int comp(int l1, int r1, int l2, int r2) : O(1)
+*	s[l1..r1) と s[l2..r2) の比較結果を返す（'>':-1, '=':0, '<':1）
 *
-* bool equalQ(int l1, int r1, int l2, int r2) : O(1)
-*	s[l1..r1) = s[l2..r2) かを返す．
+* int comp(const vector<pii>& lr1, const vector<pii>& lr2) : O(|lr1| + |lr2|)
+*	Σs[l1..r1) と Σs[l2..r2) の比較結果を返す（'>':-1, '=':0, '<':1）
 */
 template <class STR>
 class Substring_compare {
@@ -83,22 +83,68 @@ public:
 		return clamp_lcp(l1, r1, l2, r2);
 	}
 
-	// s[l1..r1) < s[l2..r2) かを返す．
-	bool comp(int l1, int r1, int l2, int r2) const {
+	// s[l1..r1) と s[l2..r2) の比較結果を返す（'>':-1, '=':0, '<':1）
+	int comp(int l1, int r1, int l2, int r2) const {
 		// verify : https://yukicoder.me/problems/no/2454
 
 		int lcp = clamp_lcp(l1, r1, l2, r2);
-		if (l2 + lcp == r2) return false;
-		if (l1 + lcp == r1) return true;
-		return sa_inv[l1] < sa_inv[l2];
+
+		if (l2 + lcp == r2) {
+			if (l1 + lcp == r1) return 0;
+			else return -1;
+		}
+		else if (l1 + lcp == r1) return 1;
+		else {
+			int d = sa_inv[l2] - sa_inv[l1];
+			return (d > 0) - (d < 0);
+		}
 	}
 
-	// s[l1..r1) = s[l2..r2) かを返す．
-	bool equalQ(int l1, int r1, int l2, int r2) const {
-		// verify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_bd
+	// Σs[l1..r1) と Σs[l2..r2) の比較結果を返す（'>':-1, '=':0, '<':1）
+	int comp(const vector<pii>& lr1, const vector<pii>& lr2) const {
+		// verify : https://atcoder.jp/contests/abc434/tasks/abc434_f
 
-		int lcp = clamp_lcp(l1, r1, l2, r2);
-		return l1 + lcp == r1 && l2 + lcp == r2;
+		int K1 = sz(lr1), K2 = sz(lr2);
+		if (K2 == 0) {
+			if (K1 == 0) return 0;
+			else return -1;
+		}
+		else if (K1 == 0) return 1;
+
+		int l1 = lr1[0].first;
+		int l2 = lr2[0].first;
+
+		int k1 = 0;
+		int k2 = 0;
+
+		while (1) {
+			int w1 = lr1[k1].second - l1;
+			int w2 = lr2[k2].second - l2;
+			int w = min(w1, w2);
+
+			int tp = comp(l1, l1 + w, l2, l2 + w);
+			if (tp != 0) return tp;
+
+			if (w1 == w) {
+				k1++;
+				if (k1 < K1) l1 = lr1[k1].first;
+			}
+			else l1 += w;
+
+			if (w2 == w) {
+				k2++;
+				if (k2 < K2) l2 = lr2[k2].first;
+			}
+			else l2 += w;
+
+			if (K2 == k2) {
+				if (K1 == k1) return 0;
+				else return -1;
+			}
+			else if (K1 == k1) return 1;
+		}
+
+		return 999;
 	}
 };
 
@@ -212,7 +258,7 @@ vi lex_order_allseq(int k, int n, ll d) {
 }
 
 
-//【隣接互換による最小文字列】
+//【隣接互換による最小文字列】O(n log n)
 /*
 * s[0..n) に対し k 回以下の隣接互換を適用して得られる辞書順最小文字列を返す．
 */
@@ -572,6 +618,9 @@ string shortest_common_nonsubsequence(const string& s, const string& t) {
 *	⇔ S / (b^|s| - 1) < T / (b^|t| - 1)
 * となるので，各文字列のみに依存する実数の通常の全順序による比較と同値となる．
 *
+* 注意：
+* これを用いた単純なソートは O(N) では済まないが，事前にランダムシャッフルして対処できる．
+* 
 * verify : https://atcoder.jp/contests/abc225/tasks/abc225_f
 */
 

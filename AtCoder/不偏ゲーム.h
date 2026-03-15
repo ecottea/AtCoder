@@ -6,15 +6,15 @@
 
 
 //【局面のニム値】O(?)（遅いので実験用）
-using POS = int; // 局面を表す型を決める．
-vector<POS> get_next_poss(const POS& p) { // 局面 p から遷移可能な局面のリストを返すよう実装する．
-	vector<POS> nps;
+using PRB = int; // 局面を表す型を決める．
+vector<PRB> get_next_poss(const PRB& p) { // 局面 p から遷移可能な局面のリストを返すよう実装する．
+	vector<PRB> nps;
 
 	return nps;
 }
-map<POS, int> nimber; // nimber[p] : 局面 p の nimber
-map<POS, vector<POS>> best_hands; // best_hands[p] : 局面 p での最善手
-int get_nimber(const POS& p) { // 局面 p の nimber を返す．
+map<PRB, int> nimber; // nimber[p] : 局面 p の nimber
+map<PRB, vector<PRB>> best_hands; // best_hands[p] : 局面 p での最善手
+int get_nimber(const PRB& p) { // 局面 p の nimber を返す．
 	// verify : https://atcoder.jp/contests/arc192/tasks/arc192_b 
 
 	if (nimber.count(p)) return nimber[p];
@@ -60,16 +60,17 @@ int get_nimber(const POS& p) { // 局面 p の nimber を返す．
 */
 ll opms(ll x, ll y) { return min(x, y); }
 ll ems() { return INFL; }
-struct Mex_multiset {
+class Mex_multiset {
 	int n;
 
 	// cnt[v] : ニム値 v の局面数
 	using SEG = segtree<ll, opms, ems>;
 	SEG cnt;
 
+public:
 	// ニム値 [0..n) を記録可能な多重集合を空で初期化する．
 	Mex_multiset(int n) : n(n) {
-		// verify : https://codeforces.com/contest/1905/problem/D
+		// verify : https://atcoder.jp/contests/abc194/tasks/abc194_e
 
 		vl ini(n);
 		cnt = SEG(ini);
@@ -426,6 +427,32 @@ vi directed_graph_game(const Graph& g) {
 *（証明）後手必勝局面に遷移できる局面は必ず先手必勝になる．
 * 
 * verify : https://atcoder.jp/contests/agc043/tasks/agc043_c
+*/
+
+
+//【無向グラフ上のコマ移動ゲーム（始点任意）】
+/*
+* ゲームのルール：
+* 無向グラフ g が与えられる．まず先手がコマを好きな頂点に配置する．
+* その後は後手から始めてコマを未訪問の頂点に移動させていき，移動不可能になった方を負けとする．
+*
+* このゲームの勝利条件は以下の通り：
+*	後手必勝 ⇔ g に完全マッチングが存在する．
+*
+* 参考 : https://37zigen.com/game-on-graph/
+*/
+
+
+//【無向グラフ上のコマ移動ゲーム（始点固定）】
+/*
+* ゲームのルール：
+* 無向グラフ g の頂点 v にコマが置かれている．
+* 先手から始めてコマを未訪問の頂点に移動させていき，移動不可能になった方を負けとする．
+*
+* このゲームの勝利条件は以下の通り：
+*	後手必勝 ⇔ v を含まない g の最大マッチングが存在する．
+*
+* verify : https://yukicoder.me/problems/no/2476
 */
 
 

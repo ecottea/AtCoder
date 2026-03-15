@@ -58,7 +58,9 @@ class Skew_heap {
 
 public:
 	// ‹ó‚Å‰Šú‰»
-	Skew_heap() : root(nullptr), n(0) {}
+	Skew_heap() : root(nullptr), n(0) {
+		// verify : https://atcoder.jp/contests/abc246/tasks/abc246_g
+	}
 
 	// ƒq[ƒv‚ª‹ó‚©‚ğ•Ô‚·D
 	bool empty() const {

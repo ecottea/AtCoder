@@ -54,9 +54,11 @@ T meguru_search(T ok, T ng, const FUNC& okQ, bool debug_mode = false) {
 	return ok;
 
 	/* okQ ‚Ì’è‹`‚Ì—Œ`
-	auto okQ = [&](ll x) {
+	using T = ll;
+	auto okQ = [&](T x) {
 		return true || false;
 	};
+	auto x = meguru_search(ok, ng, okQ);
 	*/
 }
 
@@ -898,6 +900,7 @@ set<T> get_reachable_set(T st, const FUNC& nxt, int lim = (int)1e9) {
 
 		return res;
 	};
+	auto reachable_set = get_reachable_set(st, nxt, INF);
 	*/
 }
 
@@ -947,6 +950,7 @@ unordered_set<T, HASH> get_reachable_set_hashed(T st, const function<vector<T>(T
 
 		return res;
 	};
+	auto reachable_set = get_reachable_set_hashed(st, nxt, INF);
 	*/
 }
 

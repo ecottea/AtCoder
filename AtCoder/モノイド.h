@@ -88,7 +88,7 @@ S024 e024() { return 1; }
 constexpr int N002 = 2;
 using S002 = Fixed_matrix<mint, N002>;
 S002 op002(S002 a, S002 b) { return a * b; }
-S002 e002() { return S002(1); }
+S002 e002() { return S002(true); }
 #define MatrixMul_monoid S002, op002, e002
 
 
@@ -97,8 +97,57 @@ S002 e002() { return S002(1); }
 constexpr int N020 = 2;
 using S020 = Fixed_matrix<mint, N020>;
 S020 op020(S020 a, S020 b) { return b * a; }
-S020 e020() { return S020(1); }
+S020 e020() { return S020(true); }
 #define MatrixRevMul_monoid S020, op020, e020
+
+
+//ÅyFPSçsóÒëçêœ ÉÇÉmÉCÉhÅz
+/* verify : https://yukicoder.me/problems/no/2877 */
+constexpr int N053 = 3;
+using S053 = array<array<vm, N053>, N053>;
+S053 op053(S053 a, S053 b) {
+	S053 c;
+
+	array<array<int, N053>, N053> a_len, b_len, c_len; int a_len_max = 1, b_len_max = 1;
+	rep(i, N053) rep(j, N053) {
+		a_len[i][j] = sz(a[i][j]); chmax(a_len_max, a_len[i][j]);
+		b_len[i][j] = sz(b[i][j]); chmax(b_len_max, b_len[i][j]);
+		c_len[i][j] = 0;
+	}
+
+	int L = 1 << (msb(a_len_max + b_len_max - 1) + 1);
+
+	rep(i, N053) rep(j, N053) {
+		a[i][j].resize(L); internal::butterfly(a[i][j]);
+		b[i][j].resize(L); internal::butterfly(b[i][j]);
+		c[i][j].resize(L);
+	}
+
+	rep(i, N053) rep(k, N053) rep(j, N053) rep(t, L) {
+		c[i][j][t] += a[i][k][t] * b[k][j][t];
+		chmax(c_len[i][j], a_len[i][k] + b_len[k][j] - 1);
+	}
+
+	mint inv = mint(L).inv();
+	rep(i, N053) rep(j, N053) {
+		internal::butterfly_inv(c[i][j]);
+		c[i][j].resize(c_len[i][j]);
+		repea(v, c[i][j]) v *= inv;
+	}
+
+	return c;
+}
+S053 e053() {
+	S053 c;
+
+	rep(i, N053) rep(j, N053) {
+		if (i == j) c[i][j] = vm{ 1 };
+		else c[i][j] = vm();
+	}
+
+	return c;
+}
+#define FPSMatrixMul_monoid S053, op053, e053
 
 
 //Åymin â¬ä∑ÉÇÉmÉCÉhÅz
@@ -315,7 +364,7 @@ S036 e036() { return { ~T036(0), T036(0) }; }
 
 //ÅyÉçÅ[ÉäÉìÉOÉnÉbÉVÉÖ ÉÇÉmÉCÉhÅz
 /* verify : https://atcoder.jp/contests/arc198/tasks/arc198_d */
-using S051 = pair<ull, ull>; // (Base^len, hash)
+using S051 = pair<ull, ull>; // (BASE^len, hash)
 constexpr ull MOD = (1ULL << 61) - 1;
 constexpr ull MASK30 = (1ULL << 30) - 1;
 constexpr ull MASK31 = (1ULL << 31) - 1;
@@ -528,7 +577,7 @@ S038 e038() { return { -T038(INFL), 0 }; }
 #define CntMax_monoid S038, op038, e038
 
 
-//ÅyëÊ K ç≈è¨å≥ÇÃå¬êî â¬ä∑ÉÇÉmÉCÉhÅz
+//ÅyëÊKç≈è¨å≥ÇÃå¬êî â¬ä∑ÉÇÉmÉCÉhÅz
 /*
 * S Åπ x[0..n) : x[i] = {v, c} : ëÊ i ç≈è¨íl v ÇÇ‡Ç¬óvëfÇ™ c å¬Ç†ÇÈÇ±Ç∆Çï\Ç∑ÅD
 * x op y : x, y Ç…ëŒâûÇ∑ÇÈãÊä‘ÇåqÇ∞ÇΩãÊä‘Çï\Ç∑ÅD
@@ -565,7 +614,7 @@ S039 e039() {
 #define CntKthMin_monoid S039, op039, e039
 
 
-//ÅyëÊ K ç≈ëÂå≥ÇÃå¬êî â¬ä∑ÉÇÉmÉCÉhÅz
+//ÅyëÊKç≈ëÂå≥ÇÃå¬êî â¬ä∑ÉÇÉmÉCÉhÅz
 /*
 * S Åπ x[0..n) : x[i] = {v, c} : ëÊ i ç≈ëÂíl v ÇÇ‡Ç¬óvëfÇ™ c å¬Ç†ÇÈÇ±Ç∆Çï\Ç∑ÅD
 * x op y : x, y Ç…ëŒâûÇ∑ÇÈãÊä‘ÇåqÇ∞ÇΩãÊä‘Çï\Ç∑ÅD
@@ -1024,6 +1073,57 @@ S048 e048() {
 	return z;
 }
 #define LIS_monoid S048, op048, e048
+
+
+//Åyç≈í∑òA ÉÇÉmÉCÉhÅz
+/*
+* S Åπ f = {fcL, flL, flA, fcR, flR, fl} : f Ç…ëŒâûÇ∑ÇÈï∂éöóÒÇ…Ç¬Ç¢ÇƒÇÃà»â∫ÇÃílÇï\Ç∑ÅF
+*	fcL : ç∂í[ÇÃï∂éö
+*	flL : ç∂í[ÇÃï∂éöÇä‹ÇﬁòAÇÃí∑Ç≥
+*	flA : ç≈í∑òAÇÃí∑Ç≥
+*	fcR : âEí[ÇÃï∂éö
+*	flR : âEí[ÇÃï∂éöÇä‹ÇﬁòAÇÃí∑Ç≥
+*	fl  : í∑Ç≥
+* f op g : f, g Ç…ëŒâûÇ∑ÇÈï∂éöóÒÇÇ±ÇÃèáÇ…åqÇ∞ÇΩï∂éöóÒÇï\Ç∑ÅD
+*/
+// verify : https://atcoder.jp/contests/abc415/tasks/abc415_f
+using S052 = tuple<char, int, int, char, int, int>;
+S052 op052(S052 f, S052 g) {
+	auto [fcL, flL, flA, fcR, flR, fl] = f;
+	auto [gcL, glL, glA, gcR, glR, gl] = g;
+
+	if (gcL == '-') return f;
+	if (fcL == '-') return g;
+
+	char hcL = fcL;
+
+	int hlL = flL;
+	if (flL == fl) { // f="aaaaaa"
+		if (fcL == gcL) {
+			hlL = flL + glL;
+		}
+	}
+
+	char hcR = gcR;
+
+	int hlR = glR;
+	if (glR == gl) { // g="aaaaaa"
+		if (gcR == fcR) {
+			hlR = glR + flR;
+		}
+	}
+
+	int hlA = max(flA, glA);
+	if (fcR == gcL) {
+		chmax(hlA, flR + glL);
+	}
+
+	int hl = fl + gl;
+
+	return { hcL, hlL, hlA, hcR, hlR, hl };
+}
+S052 e052() { return { '-', 0, 0, '-', 0, 0 }; }
+#define RunLength_monoid S052, op052, e052
 
 
 //Åyç≈í∑ê≥ãKäáå ïîï™óÒ ÉÇÉmÉCÉhÅz

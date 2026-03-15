@@ -76,6 +76,10 @@ struct FPS {
 	FPS& operator=(const FPS& f) = default;
 	FPS& operator=(const S& c0) { n = 1; c = { c0 }; return *this; }
 
+	void push_back(S cn) { c.emplace_back(cn); ++n; }
+	void pop_back() { c.pop_back(); --n; }
+	[[nodiscard]] S back() { return c.back(); }
+
 	// î‰är
 	[[nodiscard]] bool operator==(const FPS& g) const { return c == g.c; }
 	[[nodiscard]] bool operator!=(const FPS& g) const { return c != g.c; }

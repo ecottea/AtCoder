@@ -166,7 +166,7 @@ template <ll MOD> struct Static_modint {
 	}
 
 	// 逆元（0^(-1) は未定義）
-	Static_modint inv() const { Assert(v != 0); return pow(MOD - 2); }
+	Static_modint inv() const { assert(v != 0); return pow(MOD - 2); }
 
 	// 法の確認
 	static int mod() { return int(MOD); }
@@ -196,6 +196,7 @@ struct mll {
 	mll() noexcept : v(0) {}
 	mll(const mll& a) = default;
 	mll(int a) noexcept : v(a % MOD) { if (v < 0) v += MOD; }
+	mll(long int a) noexcept : v(a% MOD) { if (v < 0) v += MOD; }
 	mll(ll a) noexcept : v(a % MOD) { if (v < 0) v += MOD; }
 
 	// 代入

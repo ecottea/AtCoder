@@ -307,6 +307,7 @@ T interval_partitions_score(const vector<T>& a) {
 	T op1(T x, T y) { return x + y; }
 	T op2(T x, T y) { return x * y; }
 	T op3(T x, T y) { return x + y; }
+	T res = interval_partitions_score<T, op1, op2, op3>(a);
 	*/
 }
 

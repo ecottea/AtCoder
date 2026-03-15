@@ -106,6 +106,7 @@ T count_arithmetic_mod(T n, T m, T a, T b, T l, T r) {
 */
 mint count_increase_sequence(vi a_max, const Factorial_mint& fm) {
 	// éQçl : https://noshi91.hatenablog.com/entry/2023/07/21/235339
+	// verify : https://yukicoder.me/problems/no/3370
 
 	int n = sz(a_max);
 	if (n == 0) return 1;

@@ -96,7 +96,7 @@ int find_primitive_root() {
 *
 *（baby-step giant-step）
 */
-int log_mint(mint a, mint b, int x_max = INF) {
+int log_mint(mint a, mint b, int x_max = 2 * INF) {
 	// 参考：https://tjkendev.github.io/procon-library/python/math/baby-step-giant-step.html
 	// verify : https://judge.yosupo.jp/problem/kth_root_mod
 

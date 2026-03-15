@@ -248,6 +248,50 @@ bool simple_polygonQ(const vvc& c_, char o = '.') {
 */
 
 
+//【互いの効きに入らないキング配置の列挙】O(?)
+/*
+* hxw 上に互いの効きに入らないようにキングを配置する方法を，キングの個数毎に列挙したリストを返す．
+*/
+vector<vvvb> enumerate_nonattacking_king_placements(int h, int w) {
+	vector<vvvb> res;
+
+	vvb b(h, vb(w)); // 64 倍高速化すべき
+
+	// (i, j): 注目位置，c: 配置数
+	function<void(int, int, int)> dfs = [&](int i, int j, int c) {
+		// 完成していれば記録
+		if (i == h) {
+			if (sz(res) <= c) res.resize(c + 1);
+			res[c].push_back(b);
+			return;
+		}
+
+		// 右まで走査しきったら 1 つ下の行へ
+		if (j == w) {
+			dfs(i + 1, 0, c);
+			return;
+		}
+
+		// キングを置く場合		
+		if ((i == 0 || j == 0 || !b[i - 1][j - 1])
+			&& (i == 0 || !b[i - 1][j])
+			&& (i == 0 || j == w - 1 || !b[i - 1][j + 1])
+			&& (j == 0 || !b[i][j - 1]))
+		{
+			b[i][j] = 1;
+			dfs(i, j + 1, c + 1);
+			b[i][j] = 0;
+		}
+
+		// キングを置かない場合
+		dfs(i, j + 1, c);
+	};
+	dfs(0, 0, 0);
+
+	return res;
+}
+
+
 //【欠損修復】O(h w)
 /*
 * 二次元配列 c の欠損領域を周囲の値の平均で塗りつぶす．

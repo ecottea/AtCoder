@@ -75,8 +75,8 @@ struct MFPS {
 	MFPS() : n(0) {}
 	MFPS(mint c0) : n(1), c({ c0 }) {}
 	MFPS(int c0) : n(1), c({ mint(c0) }) {}
-	MFPS(mint c0, int d) : n(d), c(n) { c[0] = c0; }
-	MFPS(int c0, int d) : n(d), c(n) { c[0] = c0; }
+	MFPS(mint c0, int d) : n(d), c(n) { if (n > 0) c[0] = c0; }
+	MFPS(int c0, int d) : n(d), c(n) { if (n > 0) c[0] = c0; }
 	MFPS(const vm& c_) : n(sz(c_)), c(c_) {}
 	MFPS(const vi& c_) : n(sz(c_)), c(n) { rep(i, n) c[i] = c_[i]; }
 
@@ -1649,7 +1649,7 @@ pair<MFPS, MFPS> reduction(vector<MFPS> num, vector<MFPS> dnm) {
 
 //【累乗和（次数ごと）】O(n (log n)^2 + m log m)
 /*
-* 各 j∈[0..m) について，Σa[0..n)^j を格納したリストを返す．
+* 各 j∈[0..m) について，Σ(a[0..n)^j) を格納したリストを返す．
 *
 * 制約 : fm は m! まで計算可能
 *
@@ -2044,7 +2044,7 @@ MFPS lagrange_interpolation(const vm& x, const vm& y) {
 *
 * 利用：【一次式の積の展開（等比数列）】,【多点評価（等比数列）】
 */
-MFPS lagrange_interpolation(int n, mint a, mint r, const vm& y) {
+MFPS lagrange_interpolation(mint a, mint r, const vm& y) {
 	// 参考 : https://37zigen.com/lagrange-interpolation/
 	// verify : https://judge.yosupo.jp/problem/polynomial_interpolation_on_geometric_sequence
 
@@ -2059,6 +2059,7 @@ MFPS lagrange_interpolation(int n, mint a, mint r, const vm& y) {
 	// 対角行列をヴァンデルモンド行列の左右どちらから掛けるかの違いしかないので
 	// 多点評価の等比数列 ver を使い回すことができる．
 
+	int n = sz(y);
 	if (n == 0) return MFPS();
 
 	MFPS g = expand_geometric(n, -a, r);
@@ -2340,11 +2341,11 @@ MFPS half_GCD(MFPS f, MFPS g, MFPS& u, MFPS& v) {
 }
 
 
-//【多項式逆元】O(deg(a) deg(b))
+//【多項式逆元】O(N (log N)^2)（N = max(deg a, deg b)）
 /*
 * a(x) u(x) = 1 (mod b(x)) を満たす u(x) を格納する．（なければ false を返す）
 *
-* 利用：【拡張ユークリッドの互除法】
+* 利用：【多項式 GCD】
 */
 bool polynomial_inverse(const MFPS& a, const MFPS& b, MFPS& u) {
 	MFPS v;

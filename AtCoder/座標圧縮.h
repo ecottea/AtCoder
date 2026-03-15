@@ -382,6 +382,9 @@ public:
 * Auxiliary_tree(WGraph g, int rt) : O(n)
 *	rt を根とする重み付き根付き木 g で初期化する．
 *
+* Auxiliary_tree(Graph g, int rt) : O(n)
+*	rt を根とする根付き木 g で初期化する（重みは全て 1 とする）
+*
 * WGraph create(vi vs, vi& id) : O(k (log k + log n))  (k = |vs|)
 *	頂点集合 vs とそれらの LCA からなる座標圧縮された重み付き木 gc（根は 0）を構築して返す．
 *	gc[i] は g[id[i]] と対応する．
@@ -395,6 +398,15 @@ struct Auxiliary_tree {
 
 public:
 	Auxiliary_tree(const WGraph& g, int rt) : ET(g, rt) {
+	}
+
+	Auxiliary_tree(const Graph& g, int rt) {
+		// verify : https://atcoder.jp/contests/abc359/tasks/abc359_g
+
+		int n = sz(g);
+		WGraph g2(n);
+		rep(s, n) repe(t, g[s]) g2[s].emplace_back(t, 1);
+		ET = Euler_tour_weighted(g2, rt);
 	}
 
 	// 頂点集合 vs とそれらの LCA からなる座標圧縮された木 gc（根は 0）を構築して返す．

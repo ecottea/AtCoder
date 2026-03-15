@@ -1035,6 +1035,12 @@ public:
 };
 
 
+//【文字列オートマトン】
+/*
+* オートマトン.h へ
+*/
+
+
 //【Suffix Array と LCP Array】
 /*
 * ACL の sa = suffix_array(s), lcp = lcp_array(s, sa) を使えば良い．

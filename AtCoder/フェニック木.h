@@ -153,6 +153,159 @@ public:
 };
 
 
+//【区間加算フェニック木】
+/*
+* Fenwick_tree_range_add<T>(int n) : O(n)
+*	v[0..n) = 0 で初期化する．
+*
+* Fenwick_tree_range_add<T>(vT a) : O(n)
+*	v[0..n) = a[0..n) で初期化する．
+*
+* set(int i, T x) : O(log n)
+*	v[i] = x とする．
+*
+* T get(int i) : O(log n)
+*	v[i] を返す．
+*
+* T sum(int l, int r) : O(log n)
+*	Σv[l..r) を返す．空なら 0 を返す．
+*
+* add(int i, T x) : O(log n)
+*	v[i] += x とする．
+*
+* add(int l, int r, T x) : O(log n)
+*	v[l..r) += x とする．空なら何もしない．
+*/
+template <class T>
+class Fenwick_tree_range_add {
+	// 参考：https://algo-logic.info/binary-indexed-tree/
+
+	// n : 要素数
+	int n;
+
+	// Σv[1..i] を acc0[i] + i acc1[i] と分解する．
+	// さらに accD[i] = ΣrawD[1..i] と表されるような rawD を導入する．
+	// v[D][i] : ΣrawD[*..i] の値（i:1-indexed，v[D][0] は使わない）
+	vector<vector<T>> v;
+
+	// Σv[d][1..r] を返す．空なら 0 を返す．（r : 1-indexed）
+	T sum_sub(int r, int d) const {
+		T res = (T)0;
+
+		// 子に向かって累積和をとっていく．
+		while (r > 0) {
+			res += v[d][r];
+
+			// r の最下位ビットを 0 にすることで次の位置を得る．
+			r -= r & -r;
+		}
+		return res;
+	}
+
+	// Σv[1..r] を返す．空なら 0 を返す．（r : 1-indexed）
+	T sum_sub(int r) const {
+		return sum_sub(r, 0) + (T)r * sum_sub(r, 1);
+	}
+
+	// v[d][i] += x とする．（i : 1-indexed）
+	void add_sub(int i, T x, int d) {
+		// 根に向かって値を足していく．
+		while (i <= n) {
+			v[d][i] += x;
+
+			// i の最下位ビットに 1 を加算することで次の位置を得る．
+			i += i & -i;
+		}
+	}
+
+public:
+	// v[0..n) = 0 で初期化する．
+	Fenwick_tree_range_add(int n) : n(n), v(2, vector<T>(n + 1, (T)0)) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_G
+	}
+
+	// v[0..n) = a[0..n) で初期化する．
+	Fenwick_tree_range_add(const vector<T>& a) : n(sz(a)), v(2, vector<T>(n + 1, (T)0)) {
+		// 配列の値を仮登録する．
+		rep(i, n) v[0][i + 1] = a[i];
+
+		// 正しい値になるよう根に向かって累積和をとっていく．
+		for (int pow2 = 1; 2 * pow2 <= n; pow2 *= 2) {
+			for (int i = 2 * pow2; i <= n; i += 2 * pow2) {
+				v[0][i] += v[0][i - pow2];
+			}
+		}
+	}
+	Fenwick_tree_range_add() : n(0) {}
+
+	// Σv[l..r) を返す．空なら 0 を返す．（l, r : 0-indexed）
+	T sum(int l, int r) const {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_G
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return (T)0;
+
+		// 0-indexed での半開区間 [l, r) は，
+		// 1-indexed での閉区間 [l + 1, r] に対応する．
+		// よって閉区間 [1, r] の総和から閉区間 [1, l] の総和を引けば良い．
+		return sum_sub(r) - sum_sub(l);
+	}
+
+	// v[i] を返す．（i : 0-indexed）
+	T get(int i) const {
+		// verify : https://judge.yosupo.jp/problem/vertex_get_range_contour_add_on_tree
+
+		Assert(0 <= i && i < n);
+
+		return sum(i, i + 1);
+	}
+
+	// v[i] = x とする．（i : 0-indexed）
+	void set(int i, T x) {
+		// 差分を求める．
+		T d = x - get(i);
+
+		add(i, d);
+	}
+
+	// v[i] += x とする．（i : 0-indexed）
+	void add(int i, T x) {
+		Assert(0 <= i && i < n);
+
+		// i を 1-indexed に直す．
+		i++;
+
+		add_sub(i, x, 0);
+	}
+
+	// v[l..r) += x とする．（l, r : 0-indexed） 
+	void add(int l, int r, T x) {
+		// verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_G
+
+		chmax(l, 0); chmin(r, n);
+		if (l >= r) return;
+
+		// 0-indexed での半開区間 [l..r) は，
+		// 1-indexed での閉区間 [l+1..r] に対応する．
+		l++;
+
+		// 区間の端の値を調整する．
+		add_sub(l, (T)(1 - l) * x, 0);
+		add_sub(r + 1, (T)r * x, 0);
+
+		add_sub(l, x, 1);
+		add_sub(r + 1, -x, 1);
+	}
+
+#ifdef _MSC_VER
+	friend ostream& operator<<(ostream& os, const Fenwick_tree_range_add& ft) {
+		rep(i, ft.n) os << ft.get(i) << " ";
+		return os;
+	}
+#endif
+};
+
+
 //【区間加算フェニック木（Z-加群）】
 /*
 * Fenwick_tree_range_add<S, op, o, inv, mul>(int n) : O(n)

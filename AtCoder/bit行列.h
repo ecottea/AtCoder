@@ -140,7 +140,7 @@ Bit_matrix<M> prod_transpose(const Bit_matrix<M>& A, const Bit_matrix<M>& B) {
 
 //【行簡約階段形】O(n m min(n, m) / 64)
 /*
-* 行基本変形で m×n 行列 A を行簡約階段形に変形し，rank A を返す（ピボットの上下は全て 0）
+* 行基本変形で n×m 行列 A を行簡約階段形に変形し，rank A を返す（ピボットの上下は全て 0）
 * また変形後の第 i 行が元の第何行だったかを is[i] に，ピボットが第何列にあるかを js[i] に格納する．
 */
 template <int M>
@@ -182,7 +182,7 @@ int reduced_row_echelon_form(Bit_matrix<M>& A, vi* is = nullptr, vi* js = nullpt
 
 //【行簡約形（行交換なし）】O(n m min(n, m) / 64)
 /*
-* 行基本変形（行交換なし）で m×n 行列 A を行簡約形に変形し，rank A を返す（ピボットの上下は全て 0）
+* 行基本変形（行交換なし）で n×m 行列 A を行簡約形に変形し，rank A を返す（ピボットの上下は全て 0）
 * また 1 のある行のリストを is に，対応する行のピボットが第何列にあるかを js に格納する．
 */
 template <int M>

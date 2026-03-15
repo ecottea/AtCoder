@@ -219,13 +219,13 @@ public:
 * umap<ll, T> gcd_convolution(umap<ll, T> a, umap<ll, T> b) : O(σ(n) ω(n))
 *   c[k] = Σ_(GCD(i, j) = k) a[i] b[j] なる c を返す．
 */
-template <typename T>
-struct Limited_div_mul_transform {
+class Limited_div_mul_transform {
 	vl ps;   // n の素因数の昇順リスト
-	vl divs; // n の約数の昇順リスト
 	unordered_set<ll> divs_s;
 
 public:
+	vl divs; // n の約数の昇順リスト
+	
 	Limited_div_mul_transform(ll n) : divs{ 1 } {
 		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
 
@@ -276,6 +276,7 @@ public:
 	Limited_div_mul_transform() {}
 
 	// A[i] = Σ_(j | i) a[j] なる A に上書きする（約数からの寄与を足し込む）
+	template <class T>
 	void divisor_zeta(unordered_map<ll, T>& f) {
 		// verify : https://atcoder.jp/contests/abc335/tasks/abc335_g
 
@@ -289,6 +290,7 @@ public:
 	}
 
 	//  A[i] = Σ_(j | i) a[j] なる a に上書きする（約数からの寄与を取り除く）
+	template <class T>
 	void divisor_mobius(unordered_map<ll, T>& f) {
 		// verify : https://atcoder.jp/contests/arc064/tasks/arc064_d
 
@@ -303,6 +305,7 @@ public:
 	}
 
 	// c[k] = Σ_(LCM(i, j) = k) a[i] b[j] なる c を返す．
+	template <class T>
 	unordered_map<ll, T> lcm_convolution(unordered_map<ll, T> a, unordered_map<ll, T> b) {
 		// 各素因数の max をとったものが LCM なので max 畳込みを行う．
 		divisor_zeta(a);
@@ -313,7 +316,10 @@ public:
 	}
 
 	// A[i] = Σ_(i | j) a[j] なる A に上書きする（倍数からの寄与を足し込む）
+	template <class T>
 	void multiple_zeta(unordered_map<ll, T>& f) {
+		// verify : https://mojacoder.app/users/hide/problems/half_gcd_summation
+
 		// 各素因数ごとに上からの累積和をとる
 		repe(p, ps) {
 			for (auto it = divs.rbegin(); it != divs.rend(); it++) {
@@ -325,6 +331,7 @@ public:
 	}
 
 	// A[i] = Σ_(i | j) a[j] なる a に上書きする（倍数からの寄与を取り除く）
+	template <class T>
 	void multiple_mobius(unordered_map<ll, T>& f) {
 		// verify : https://atcoder.jp/contests/abc212/tasks/abc212_g
 
@@ -338,6 +345,7 @@ public:
 	}
 
 	// c[k] = Σ_(GCD(i, j) = k) a[i] b[j] なる c を返す．
+	template <class T>
 	unordered_map<ll, T> gcd_convolution(unordered_map<ll, T> a, unordered_map<ll, T> b) {
 		// 各素因数の min をとったものが GCD なので min 畳込みを行う．
 		multiple_zeta(a);

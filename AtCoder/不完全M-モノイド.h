@@ -185,7 +185,7 @@ FA03 idA03() { return FA03{ ~0, 0 }; }
 #define ANDOR_MaxANDOR_iamonoid SA03, opA03, eA03, FA03, actA03, compA03, idA03, failA03
 
 
-//【min,max,add 不完全作用付き min,max,sum モノイド】
+//【chmin,chmax,add 不完全作用付き min,max,sum モノイド】
 /*
 * S ∋ x = {l, u, l2, u2, s, c, cl, cu} :
 *	l : 元の min
@@ -325,5 +325,57 @@ FA04 compA04(FA04 f, FA04 g) {
 }
 FA04 idA04() { return FA04{ INFL, -INFL, 0 }; }
 #define MinMaxAdd_MinMaxSum_iamonoid SA04, opA04, eA04, FA04, actA04, compA04, idA04, failA04
+
+
+//【AND,OR 不完全作用付き popcount最大元の個数 可換モノイド】
+/*
+* S ∋ x = {o, a, m, c} :
+*	o : 区間内の元の総 OR
+*	a : 区間内の元の総 AND
+*	m : 区間内の元の popcount の最大値
+*	c : 区間内の popcount = m となる元の個数
+* F ∋ f = {o, a} :
+*	関数 f(x) = (x OR o) AND a を表す（ただし o ⊂ a）
+*/
+// verify : https://atcoder.jp/contests/abc430/tasks/abc430_g
+using SA05 = tuple<ll, ll, int, int>; // {or, and, pc max, cnt pc max} 
+using FA05 = pair<ll, ll>; // {or, and}
+SA05 failA05() { return SA05{ -1LL, -1LL, -1, -1 }; }
+SA05 opA05(SA05 x, SA05 y) {
+	auto [xo, xa, xm, xc] = x;
+	auto [yo, ya, ym, yc] = y;
+
+	ll zo = xo | yo;
+	ll za = xa & ya;
+	int zm = max(xm, ym);
+	int zc = (zm == xm ? xc : 0) + (zm == ym ? yc : 0);
+
+	return SA05{ zo, za, zm, zc };
+}
+SA05 eA05() { return SA05{ 0LL, ~0LL, 0, 0 }; }
+SA05 actA05(FA05 f, SA05 x) {
+	auto [xo, xa, xm, xc] = x;
+	auto [fo, fa] = f;
+
+	if ((fo | ~fa) & (xo ^ xa)) return failA05();
+
+	ll zo = (fo | xo) & fa;
+	ll za = (fo | xa) & fa;
+	int zm = xm + popcount(fo & ~xo) - popcount(~fa & xa);
+	int zc = xc;
+	return SA05{ zo, za, zm, zc };
+}
+FA05 compA05(FA05 f, FA05 g) {
+	auto [fo, fa] = f;
+	auto [go, ga] = g;
+
+	ll ho = fo | go;
+	ll ha = (fo | ga) & fa;
+	ho &= ha;
+
+	return FA05{ ho, ha };
+}
+FA05 idA05() { return { 0LL, ~0LL }; }
+#define OrAnd_CntPCMax_iamonoid SA05, opA05, eA05, FA05, actA05, compA05, idA05, failA05
 
 

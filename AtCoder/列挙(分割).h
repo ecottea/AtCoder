@@ -352,7 +352,33 @@ vvi integer_partitions_val(int n, const vi& a) {
 }
 
 
-//【非負整数の順序付き分割の列挙（d 個）】O(bin(n+d-1, d-1))
+//【非負整数の順序付き分割の列挙】O(2^n)
+/*
+* 非負整数 n を正整数に順序付きで分割する方法のリストを返す．
+*/
+vvi ordered_integer_partitions(int n) {
+	vvi ips;
+	vi ip;
+
+	function<void(int)> rf = [&](int s) {
+		if (s == 0) {
+			ips.push_back(ip);
+			return;
+		}
+
+		repi(x, 1, s) {
+			ip.push_back(x);
+			rf(s - x);
+			ip.pop_back();
+		}
+	};
+	rf(n);
+
+	return ips;
+}
+
+
+//【非負整数の順序付き分割の列挙（個数指定）】O(bin(n+d-1, d-1))
 /*
 * 非負整数 n を d 個の非負整数に順序付きで分割する方法のリストを返す．
 */
@@ -396,7 +422,9 @@ vvi ordered_integer_partitions_len(int n, int d) {
 /*
 * 非負整数 n を正整数列 a[0..m) の要素に順序付きで分割する方法のリストを返す．
 */
-vvi ordered_integer_partitions_val_len(int n, vi a) {
+vvi ordered_integer_partitions_val(int n, vi a) {
+	// verify : https://mojacoder.app/users/programgmg2/problems/1135
+
 	uniq(a);
 
 	vvi ips;
@@ -422,7 +450,7 @@ vvi ordered_integer_partitions_val_len(int n, vi a) {
 }
 
 
-//【非負整数の順序付き分割の列挙（d 個，値指定）】O(bin(n+d-1, d-1))
+//【非負整数の順序付き分割の列挙（個数指定，値指定）】O(bin(n+d-1, d-1))
 /*
 * 非負整数 n を非負整数列 a[0..m) の要素 d 個に順序付きで分割する方法のリストを返す．
 */
@@ -453,7 +481,7 @@ vvi ordered_integer_partitions_val_len(int n, int d, vi a) {
 }
 
 
-//【非負整数の組の分割の列挙（d 個）】O(?)
+//【非負整数の組の分割の列挙（個数指定）】O(?)
 /*
 * 自然数の組 (n1, n2) を d 個の非負整数の組（昇順）に分割する方法のリストを返す．
 */

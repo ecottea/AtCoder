@@ -223,11 +223,91 @@ tuple<T, T, T> arithmetic_linear_square_floor_sum(T n, T m, T a, T b) {
 }
 
 
+//【一般化 Floor Sum（モノイド）】O(log(n + m))
+/*
+* (0, 0) から (n, (an+b)//m) までの直線 y=(ax+b)/m 以下の上方向優先の最短格子路について，
+* 右に進むときは f，上に進むときは g を順に掛け合わせたモノイド (S, op, e) の元を返す．
+*
+* 制約：n≧0, m≧1, a≧0, b≧0
+*/
+template <class T, class S, S(*op)(S, S), S(*e)()>
+S multiple_along_line(T n, T m, T a, T b, S f, S g) {
+	// 参考 : https://github.com/hos-lyric/libra/blob/master/number/gojo.cpp
+	// verify : https://judge.yosupo.jp/problem/sum_of_floor_of_linear
+
+	Assert(n >= 0); Assert(m >= 1); Assert(a >= 0); Assert(b >= 0);
+
+	// x^n を返す
+	auto pow = [](const S& x, T n) {
+		S res(e()), pow2 = x;
+		while (n > 0) {
+			if (n & 1) res = op(res, pow2);
+			pow2 = op(pow2, pow2);
+			n /= 2;
+		}
+		return res;
+	};
+
+	S resL = e(), resR = e(); bool rev = false;
+
+	while (true) {
+		// 傾きを 1 未満，切片を 1 未満にする．
+		if (rev) {
+			resR = op(pow(g, b / m), resR);
+			f = op(pow(g, a / m), f);
+		}
+		else {
+			resL = op(resL, pow(g, b / m));
+			f = op(f, pow(g, a / m));
+		}
+
+		a %= m;
+		b %= m;
+		if (a == 0 || n == 0) break;
+
+		// 左側の中途半端に余っている部分を切り取る．
+		T l = (m - b + a - 1) / a;
+		if (l > n) {
+			if (rev) {
+				resR = op(pow(f, n), resR);
+			}
+			else {
+				resL = op(resL, pow(f, n));
+			}
+			n = 0;
+			break;
+		}
+
+		if (rev) {
+			resR = op(op(g, pow(f, l)), resR);
+		}
+		else {
+			resL = op(resL, op(pow(f, l), g));
+		}
+
+		b = a * l + b - m;
+		n -= l;
+		if (n == 0) break;
+
+		// 軸を取り直して傾きを 1 より大きくする．
+		T nn = (a * n + b) / m;
+		T nm = a;
+		T na = m;
+		T nb = a * n + b - m * nn;
+
+		n = nn; m = nm; a = na; b = nb; swap(f, g);
+		rev = !rev;
+	}
+
+	return op(resL, op(pow(f, n), resR));
+}
+
+
 //【一次式の累乗切り捨て和】O((P Q)^2 log(n + m))
 /*
 * Σi∈[0..n) i^P floor((a i + b) / m)^Q を返す．
 *
-* 利用：【直線に沿った格子路上の積（モノイド）】
+* 利用：【一般化 Floor Sum（モノイド）】
 */
 using T_apfs = mint; // 戻り値の型
 T_apfs bin_apfs[21][21] = { // 足りなければ適宜追加する．
@@ -355,9 +435,11 @@ T arithmetic_multiple_floor_sum(T n, T m, T a, T b1, T b2) {
 	// verify : https://atcoder.jp/contests/arc182/tasks/arc182_e
 
 	//【方法】
-	// 0 ≦ b1 ≦ b2 < m とすれば，恒等式
+	// 0 ≦ b1 ≦ b2 < m とすれば，
+	//		0 ≦ floor((a i + b2) / m) - floor((a i + b1) / m) < 1
+	// なので，恒等式
 	//		y(y+1) = 1/2 (y^2 + (y+1)^2 + y - (y+1))
-	//		y y = 1/2 (y^2 + y^2 + y - y)
+	//		y y    = 1/2 (y^2 + y^2     + y - y    )
 	// を用いて積を分離できる．
 
 	Assert(m != 0);
@@ -434,7 +516,7 @@ T arithmetic_mod_sum(T n, T m, T a, T b, T l, T r) {
 	// であることに注意すると，
 	//		(ai+b) mod m ∈ [l..r)  ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 1
 	//		(ai+b) mod m !∈ [l..r) ⇔ floor((ai+b-l)/m) - floor((ai+b-r)/m) = 0
-	// が分るので，これに重み (ai+b) mod m を付けて足し合わせれば良い．
+	// が分かるので，これに重み (ai+b) mod m を付けて足し合わせれば良い．
 	//		((ai+b) mod m) floor((ai+b')/m)
 	//		= (ai+b - floor((ai+b)/m) m) floor((ai+b')/m)
 	// なので【一次式の線形加重切り捨て和】や【一次式の積の切り捨て和】が利用できる．

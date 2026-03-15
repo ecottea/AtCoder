@@ -533,6 +533,61 @@ Circle<double> circircle(const Point<T>& a, const Point<T>& b, const Point<T>& c
 }
 
 
+//【最小包含円】O(n)
+/*
+* 点群 p[0..n) の最小包含円を求め，円上の点の 3 つ組 {i1, i2, i3} を返す．
+*	i1 = i2 = i3 = -1	: 空
+*	i2 = i3 = -1		: 1 点 p[i1]
+*	i3 = -1				: 2 点 p[i1], p[i2] を直径の両端とする円
+*	other				: 3 点 p[i1], p[i2], p[i3] を通る円
+*
+* 利用：【点の内外判定（円，直径指定）】,【点の内外判定（円，3 点指定）】
+*/
+template <class T>
+tuple<int, int, int> minimum_enclosing_circle(const vector<Point<T>>& p) {
+	// verify : https://judge.yosupo.jp/problem/minimum_enclosing_circle
+
+	int n = sz(p);
+
+	vi idx(n);
+	iota(all(idx), 0);
+
+	mt19937_64 mt((int)time(NULL));
+	shuffle(all(idx), mt);
+
+	int i1 = -1, i2 = -1, i3 = -1;
+
+	rep(t, n) {
+		int i = idx[t];
+
+		if (i3 != -1 && inner_circle_by_3points(p[i1], p[i2], p[i3], p[i]) >= 0) continue;
+		if (i3 == -1 && i2 != -1 && inner_circle_by_diameter(p[i1], p[i2], p[i]) >= 0) continue;
+		i1 = i;
+		i2 = -1;
+		i3 = -1;
+
+		rep(s, t) {
+			int j = idx[s];
+
+			if (i3 != -1 && inner_circle_by_3points(p[i1], p[i2], p[i3], p[j]) >= 0) continue;
+			if (i3 == -1 && i2 != -1 && inner_circle_by_diameter(p[i1], p[i2], p[j]) >= 0) continue;
+			i2 = j;
+			i3 = -1;
+
+			rep(u, s) {
+				int k = idx[u];
+
+				if (i3 != -1 && inner_circle_by_3points(p[i1], p[i2], p[i3], p[k]) >= 0) continue;
+				if (i3 == -1 && i2 != -1 && inner_circle_by_diameter(p[i1], p[i2], p[k]) >= 0) continue;
+				i3 = k;
+			}
+		}
+	}
+
+	return { i1, i2, i3 };
+}
+
+
 //【凸多角形の切断】O(n)
 /*
 * 凸 n 角形 poly を有向直線 l で切断した左側の凸多角形を返す．

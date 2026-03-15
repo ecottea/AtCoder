@@ -52,7 +52,7 @@ struct fast_io { fast_io() { cin.tie(nullptr); ios::sync_with_stdio(false); cout
 template <class T> inline ll powi(T n, int k) { ll v = 1; rep(i, k) v *= n; return v; } // 非負整数乗
 template <class T> inline bool chmax(T& M, const T& x) { if (M < x) { M = x; return true; } return false; } // 最大値を更新（更新されたら true を返す）
 template <class T> inline bool chmin(T& m, const T& x) { if (m > x) { m = x; return true; } return false; } // 最小値を更新（更新されたら true を返す）
-template <class T> inline T getb(T set, int i) { return (set >> i) & T(1); } // 第iビット
+template <class T> inline int getb(T set, int i) { return (set >> i) & T(1); } // 第iビット
 template <class T> inline T smod(T n, T m) { n %= m; if (n < 0) n += m; return n; } // 非負mod
 
 // 演算子オーバーロード
@@ -102,7 +102,7 @@ inline int msb(ll n) { return n != 0 ? (63 - __builtin_clzll(n)) : -1; }
 #define dump_math(v)
 #define input_from_file(f)
 #define output_to_file(f)
-#define Assert(b) { if (!(b)) { vc MLE(1<<30); EXIT(MLE.back()); } } // RE の代わりに MLE を出す
+#define Assert(b) { if (!(b)) { vc MLE(1<<30); rep(i,9)cout<<MLE[i]; exit(0); } } // RE の代わりに MLE を出す
 #endif
 
 
@@ -163,7 +163,7 @@ a.shrink_to_fit();
 // map を逆順で使う
 map<S, T, greater<S>>
 
-// 多倍長整数（入出力が O(n^2) なので注意！）
+// 多倍長整数（入出力が O(n^2) なので注意！，Codechef では使えない）
 #include <boost/multiprecision/cpp_int.hpp>
 using Bint = boost::multiprecision::cpp_int;
 using vB = vector<Bint>; using vvB = vector<vB>; using vvvB = vector<vvB>;
@@ -173,9 +173,9 @@ boost::swap ?
 #include <boost/move/move.hpp>
 boost::move
 
-// 多倍長整数（The GNU Multiple Precision Arithmetic Library）
+// 多倍長整数（The GNU Multiple Precision Arithmetic Library）（Codechef では使えない）
 #include <gmpxx.h>
-using Bint = mpz_class
+using Bint = mpz_class;
 
 // 動的にサイズを変更できる bitset
 #include <boost/dynamic_bitset.hpp>
@@ -206,7 +206,7 @@ auto msec = chrono::duration_cast<chrono::milliseconds>(now - start).count();
 if (msec >= 1950) break;
 
 // QCFium 法
-#pragma GCC target("avx2") // yukicoder では消す
+#pragma GCC target("avx2") // yukicoder と codechef では消す
 #pragma GCC optimize("O3") // たまにバグる
 #pragma GCC optimize("unroll-loops")
 */
@@ -301,32 +301,6 @@ void bug_find() {
 	exit(0);
 #endif
 }
-
---------------------------------------------------------------- */
-
-
-// Mathematica での P-recursive 実験用
-/* -----------------------------------------------------------------
-
-Clear[c, nn, dpsub];
-seq = { 愚直に計算した a[1..] } (* 添字が 1 始まりなのに注意！ *);
-terms = 3 (* 何項間漸化式の存在を仮定するか *);
-degree = 2 (* 係数多項式の次数を何次未満と仮定するか *);
-eqs = Table[Sum[c[i, j] (nn - i)^j seq[[nn - i]], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0, {nn, terms, Length@seq}];
-fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}], Integers, 2][[1]]
-sol = Solve[Sum[c[i, j] (nn - i)^j dpsub[nn - i], {i, 0, terms - 1}, {j, 0, degree - 1}] == 0 /. fi, dpsub[nn]][[1]]
-CForm@FullSimplify@sol[[1, 2]]
-
-時間がかかりすぎるようなら，fi の 1 行を以下の 2 行に置き換える：
-
-eqs = eqs~Join~{c[0, degree-1] == 1} (* 1 に固定する係数の位置は適宜調整する *);
-fi = FindInstance[eqs, Flatten@Table[c[i, j], {i, 0, terms - 1}, {j, 0, degree - 1}]][[1]]
-
-コピペ後の整形では以下の関数を利用できる：
-
-mint nn = i;
-auto dpsub = [&](const mint& x) { return dp[x.val()]; };
-auto Power = [&](const mint& x, int n) { mint res = 1; rep(hoge, n) res *= x; return res; };
 
 --------------------------------------------------------------- */
 

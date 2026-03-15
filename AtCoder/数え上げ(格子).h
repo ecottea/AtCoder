@@ -137,7 +137,7 @@ void count_manhattan_path(const vvc& c_, int d, vvm& seq, char WALL = '#') {
 *（格子上スライド bit DP）
 */
 template <class T>
-mint nonattacking_king_placement(vector<vector<T>>& c, T ng = '#') {
+mint count_nonattacking_king_placement(vector<vector<T>>& c, T ng = '#') {
 	// 参考 : https://twitter.com/e869120/status/1386138990361726978
 	// verify : https://atcoder.jp/contests/typical90/tasks/typical90_w
 

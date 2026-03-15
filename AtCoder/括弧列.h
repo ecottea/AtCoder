@@ -265,7 +265,7 @@ ll maximize_parenthesis_inner_product(const vl& a) {
 * i ”Ô–Ú‚Ì’¸“_‚Í‘Î‰‚·‚éŠ‡ŒÊ‚Ì‘g s[ls[i]] = '(', s[rs[i]] = ')' ‚É‘Î‰‚µCq‚Ù‚ÇƒlƒXƒg‚ª[‚¢‚à‚Ì‚Æ‚·‚éD
 * ‚½‚¾‚µ ls[0] = -1, rs[0] = 2n ‚Æ‚·‚éD
 */
-Graph parenthesis_tree(const string& s, vi* ls = nullptr, vi* rs = nullptr) {
+Graph parenthesis_to_tree(const string& s, vi* ls = nullptr, vi* rs = nullptr) {
 	// verify : https://atcoder.jp/contests/discovery2016-final/tasks/discovery_2016_final_c
 
 	int n = sz(s) / 2;
@@ -293,6 +293,29 @@ Graph parenthesis_tree(const string& s, vi* ls = nullptr, vi* rs = nullptr) {
 	}
 
 	return g;
+}
+
+
+//y–Ø ¨ ³‹KŠ‡ŒÊ—ñzO(n)
+/*
+*y³‹KŠ‡ŒÊ—ñ ¨ –Øz‚Ì‹t‚ğ‚·‚éD
+*/
+string tree_to_parenthesis(const Graph& g) {
+	string res;
+
+	function<void(int, int)> dfs = [&](int s, int p) {
+		if (s != 0) res += "(";
+
+		repe(t, g[s]) {
+			if (t == p) continue;
+			dfs(t, s);
+		}
+
+		if (s != 0) res += ")";
+	};
+	dfs(0, -1);
+
+	return res;
 }
 
 

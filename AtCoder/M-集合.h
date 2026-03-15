@@ -111,12 +111,14 @@ FB01 idB01() { return Fixed_matrix<TB01, NB01>(true); }
 
 
 //【行列乗算 右作用付き ベクトル 集合】
-int NB02 = 10;
-using SB02 = vm;
-using FB02 = Matrix<mint>;
-SB02 actB02(FB02 f, SB02 x) { return f * x; }
+/* verify : https://yukicoder.me/problems/no/1000 */
+constexpr int NB02 = 3;
+using TB02 = ll;
+using SB02 = array<TB02, NB02>;
+using FB02 = Fixed_matrix<TB02, NB02>;
+SB02 actB02(FB02 f, SB02 x) { return x * f; }
 FB02 compB02(FB02 f, FB02 g) { return g * f; }
-FB02 idB02() { return Matrix<mint>(NB02); }
+FB02 idB02() { return Fixed_matrix<TB02, NB02>(true); }
 #define MatrixRMul_Vector_mset SB02, FB02, actB02, compB02, idB02
 
 

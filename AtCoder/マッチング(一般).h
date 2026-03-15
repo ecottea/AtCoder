@@ -497,6 +497,65 @@ mint count_different_color_matching(const vector<T>& c) {
 */
 
 
+//【完全グラフのマッチングの列挙】O((2n-1)!! n)
+/*
+* n 頂点の完全グラフのマッチング全てのリストを返す．
+*/
+vector<vector<pii>> enumerate_perfect_matching(int n) {
+	vector<vector<pii>> mcs;
+
+	// used[v] : 頂点 v をマッチングに使用しているか
+	int used = 0;
+
+	// mc : 作成途中のマッチング
+	vector<pii> mc;
+
+	// 頂点 s 以降のマッチングを見つける
+	function<void(int)> rf = [&](int s) {
+		// マッチングを記録する．
+		if (s == n) {
+			mcs.push_back(mc);
+			return;
+		}
+
+		// 頂点 s を新たなマッチングに使用しない場合
+		rf(s + 1);
+
+		// 頂点 s が使用済だった場合はこれで終わり．
+		if (getb(used, s)) return;
+
+		// 頂点 s を j 番目のマッチングの片方に選ぶ．
+		used ^= (1 << s);
+		mc.emplace_back(s, -1);
+
+		// t : 頂点 s とマッチさせる頂点
+		repi(t, s + 1, n - 1) {
+			// 頂点 t が使用済だった場合は選べない．
+			if (getb(used, t)) continue;
+
+			// 頂点 t を頂点 s とマッチさせる．
+			used ^= (1 << t);
+			mc.back().second = t;
+
+			// 次の頂点に進む．
+			rf(s + 1);
+
+			// 頂点 t を未使用に戻しておく．
+			used ^= (1 << t);
+		}
+
+		// 頂点 s を未使用に戻しておく．
+		mc.pop_back();
+		used ^= (1 << s);
+
+		return;
+	};
+	rf(0);
+
+	return mcs;
+}
+
+
 //【完全グラフの完全マッチングの列挙】O((2n-1)!! n)
 /*
 * 頂点 v[0..2n) をもつ完全グラフの完全マッチング全てのリストを返す．
@@ -566,10 +625,72 @@ vector<vector<pair<T, T>>> enumerate_perfect_matching(const vector<T>& v) {
 }
 
 
+//【マッチングの列挙】O((2n-1)!! n)
+/*
+* 無向グラフ g のマッチング全てのリストを返す．
+*/
+vector<vector<pii>> enumerate_matching(const Graph& g) {
+	// verify : https://atcoder.jp/contests/arc095/tasks/arc095_c
+
+	int n = sz(g);
+	vector<vector<pii>> mcs;
+
+	// used[v] : 頂点 v をマッチングに使用しているか
+	int used = 0;
+
+	// mc : 作成途中のマッチング
+	vector<pii> mc;
+
+	// 頂点 s 以降のマッチングを見つける
+	function<void(int)> rf = [&](int s) {
+		// マッチングを記録する．
+		if (s == n) {
+			mcs.push_back(mc);
+			return;
+		}
+
+		// 頂点 s を新たなマッチングに使用しない場合
+		rf(s + 1);
+
+		// 頂点 s が使用済だった場合はこれで終わり．
+		if (getb(used, s)) return;
+
+		// 頂点 s を j 番目のマッチングの片方に選ぶ．
+		used ^= (1 << s);
+		mc.emplace_back(s, -1);
+
+		// t : 頂点 s とマッチさせる頂点
+		repe(t, g[s]) {
+			// 頂点 t が走査済または使用済だった場合は選べない．
+			if (t < s || getb(used, t)) continue;
+
+			// 頂点 t を頂点 s とマッチさせる．
+			used ^= (1 << t);
+			mc.back().second = t;
+
+			// 次の頂点に進む．
+			rf(s + 1);
+
+			// 頂点 t を未使用に戻しておく．
+			used ^= (1 << t);
+		}
+
+		// 頂点 s を未使用に戻しておく．
+		mc.pop_back();
+		used ^= (1 << s);
+
+		return;
+	};
+	rf(0);
+
+	return mcs;
+}
+
+
 //【マッチングの列挙（大きさ指定）】O(√perm(n, 2k) k)
 /*
 * 無向グラフ g の大きさ k のマッチング全てのリストを返す．
-* マッチングは n 個の頂点対のリストとして表す．
+* マッチングは k 個の頂点対のリストとして表す．
 */
 vector<vector<pii>> enumerate_matching(const Graph& g, int k) {
 	// verify : https://atcoder.jp/contests/arc095/tasks/arc095_c

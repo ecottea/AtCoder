@@ -449,7 +449,7 @@ T alien_DP(int n, int D, const FUNC& c, T c_max) {
 *	頂点集合が [0..n]
 *	辺 s→t（s<t）の重みが n+1 次狭義下三角 Monge 行列の成分 M[t][s]（向き注意！）
 * と定める．各 k∈[0..n], i∈[0..n] について，
-* 頂点 0 から i への長さ k のパスの重みの最小値を格納した二次元リストを返す．
+* 長さ k の頂点 0 から i へのパスの重みの最小値を格納した二次元リストを返す．
 */
 template <class T>
 vector<vector<T>> monge_DAG_shortest_path_all(const vector<vector<T>>& M) {
@@ -511,7 +511,7 @@ vector<vector<T>> monge_DAG_shortest_path_all(const vector<vector<T>>& M) {
 *	頂点集合が [0..n]
 *	辺 s→t（s<t）の重みが n+1 次狭義上三角 Monge 行列の成分 M(s,t)
 * と定める．各 k∈[0..K], i∈[0..n] について，
-* 頂点 0 から i への長さ k のパスの重みの最小値を格納した二次元リストを返す．
+* 長さ k の頂点 0 から i へのパスの重みの最小値を格納した二次元リストを返す．
 */
 template <class T, class FUNC>
 vector<vector<T>> monge_DAG_shortest_path_all(int K, int n, const FUNC& M) {

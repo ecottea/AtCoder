@@ -44,14 +44,14 @@ vector<string> enumerate_subsequences(const string& s) {
 /*
 * a[0..n) の長さ m の部分列全てを格納したリストを返す（重複含む）
 */
-template <class T>
-vector<vector<T>> enumerate_subsequences(const vector<T>& a, int m) {
+template <class STR>
+vector<STR> enumerate_subsequences(const STR& a, int m) {
 	// verify : https://atcoder.jp/contests/abc386/tasks/abc386_e
 
 	int n = sz(a);
 
-	vector<vector<T>> seqs;
-	vector<T> seq(m); // 作成途中の列
+	vector<STR> seqs;
+	STR seq; // 作成途中の列
 
 	// seq[j] の候補として a[l..n) が挙がっている．
 	function<void(int, int)> rf = [&](int l, int j) {
@@ -63,8 +63,9 @@ vector<vector<T>> enumerate_subsequences(const vector<T>& a, int m) {
 
 		// seq[j] を決定する．
 		repi(i, l, n - m + j) {
-			seq[j] = a[i];
+			seq.push_back(a[i]);
 			rf(i + 1, j + 1);
+			seq.pop_back();
 		}
 	};
 	rf(0, 0);

@@ -12,7 +12,7 @@
 * また必要なら最大個数を実現する仕事の番号のリストを sel に格納する．
 */
 template <class T>
-int interval_scheduling(const vector<T>& l, const vector<T>& r, vi* sel = nulptr) {
+int interval_scheduling(const vector<T>& l, const vector<T>& r, vi* sel = nullptr) {
 	// varify : https://atcoder.jp/contests/tessoku-book/tasks/tessoku_book_fm
 
 	int n = sz(l);
@@ -289,6 +289,8 @@ int cyclic_interval_scheduling(T m, const vector<T>& l, const vector<T>& r) {
 * 与えられた区間の集合 S について，
 * 互いに共通部分をもたないように選べる区間 I ∈ S の最大個数と，
 * 全ての区間が少なくとも 1 つの点を含むような点群 V の大きさの最小値は一致する．
+* 
+* verify : https://yukicoder.me/problems/no/1557
 */
 
 
@@ -436,7 +438,7 @@ ll unit_commitment_problem(const vvl& c) {
 
 //【区間の和の最大化】O(n)
 /*
-* a[0..n) に対して以下の値を返す：
+* 数列 a[0..n) に対して以下の値を返す：
 *		max_(i < j) Σa[i..j)
 * また最大値を与える (i, j) を ids に格納する．
 */

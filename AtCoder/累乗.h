@@ -61,6 +61,46 @@ public:
 };
 
 
+//【累乗（一括，指数が固定，底が連続整数）】O(?)
+/*
+* [0..n]^K を返す．
+*/
+vm pow_all(int n, ll K) {
+	// verify : https://mofecoder.com/contests/itfpc2025/tasks/itfpc2025_n
+
+	if (K == 0) return vm(n + 1, 1);
+
+	// フェルマーの小定理
+	K %= mint::mod() - 1;
+
+	vm res(n + 1);
+	res[1] = 1;
+
+	vi pf(n + 1);
+	iota(all(pf), 0);
+
+	int p = 2;
+	for (; p * p <= n; p++) {
+		if (pf[p] != p) {
+			res[p] = res[pf[p]] * res[p / pf[p]];
+			continue;
+		}
+
+		for (int i = p * p; i <= n; i += p) pf[i] = p;
+		res[p] = mint(p).pow(K);
+	}
+	for (; p <= n; p++) {
+		if (pf[p] != p) {
+			res[p] = res[pf[p]] * res[p / pf[p]];
+			continue;
+		}
+		res[p] = mint(p).pow(K);
+	}
+
+	return res;
+}
+
+
 //【累乗の剰余（64 bit）】O(log n)
 /*
 * x^n (mod m) を返す．
@@ -74,7 +114,7 @@ ll pow_mod_large(ll x, ll n, ll m) {
 	__int128 res = 1, pow2 = x;
 	while (n > 0) {
 		if (n & 1) {
-			res = res *= pow2;
+			res *= pow2;
 			res %= m;
 		}
 
@@ -106,6 +146,52 @@ S pow_monoid(const S& x, ll n) {
 	}
 	return res;
 }
+
+
+//【累乗（モノイド）】
+/*
+* Pow_monoid<S, op, e>(S x, ll N) : O(log N)
+*	x^[0..N] まで計算できるよう初期化する．
+*	x はモノイド (S, op, e) の元とする．
+*
+* S pow(ll n) : O(log n)
+*	x^n を返す．繰り返し二乗法の 2 倍速い．弱いケースなら 4 倍速い．
+*/
+template <class S, S(*op)(S, S), S(*e)()>
+class Pow_monoid {
+	vector<S> pow2; int K;
+
+public:
+	// x^[0..N] まで計算できるよう初期化する．x はモノイド (S, op, e) の元とする．
+	Pow_monoid(S x, ll N) {
+		// verify : https://yukicoder.me/problems/no/3343
+
+		K = msb(N) + 1;
+		pow2.resize(K);
+
+		rep(k, K) {
+			pow2[k] = x;
+			x = op(x, x);
+		}
+	}
+	Pow_monoid() {};
+
+	// x^n を返す．繰り返し二乗法の 2 倍速い．
+	S pow(ll n) {
+		// verify : https://yukicoder.me/problems/no/3343
+
+		S res(e()); int k = 0;
+
+		while (n > 0) {
+			if (n & 1) res = op(res, pow2[k]);
+
+			n /= 2;
+			k++;
+		}
+
+		return res;
+	}
+};
 
 
 //【累乗（切り詰め）】O(log_a(inf))
@@ -149,6 +235,8 @@ ll truncated_pow(ll a, ll n, ll inf = INFL) {
 */
 template <class T>
 T integer_sqrt(T a) {
+	// verify : https://atcoder.jp/contests/abc428/tasks/abc428_d
+
 	//【備考】
 	// double 精度だと，N = 622046740405562316 で
 	//		(int)sqrt(N) = 788699398 != 788699397 = floor(√N)

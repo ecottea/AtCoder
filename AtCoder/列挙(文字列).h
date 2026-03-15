@@ -40,7 +40,7 @@ vector<string> enumerate_all_strings(int n, const string& cs) {
 * s[0..n) に含まれる '?' それぞれを cs の要素のいずれかに置き換えて
 * 得られる文字列全てを格納したリストを返す．
 */
-vector<string> enumerate_all_strings(string s, const string& cs) {
+vector<string> enumerate_all_replace_strings(string s, const string& cs) {
 	int n = sz(s);
 	vector<string> strs;
 

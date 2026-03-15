@@ -2,6 +2,7 @@
 #include "header.h"
 #include "FPS(mint).h"
 #include "SPS.h"
+#include "エスパー.h"
 // ■■■■■ 行列 ■■■■■
 
 
@@ -387,6 +388,51 @@ int reduced_row_echelon_form(Matrix<T>& A, vector<pii>* piv = nullptr) {
 }
 
 
+//【行簡約形（行交換なし）】O(n m min(n, m))
+/*
+* 行基本変形（行交換なし）で n×m 行列 A を行簡約形に変形し，ピボット位置のリストを返す．
+*/
+template <class T>
+vector<pii> row_reduced_form(Matrix<T>& A) {
+	// verify : https://atcoder.jp/contests/agc045/tasks/agc045_a
+
+	int n = A.n, m = A.m;
+
+	vector<pii> piv;
+	piv.reserve(min(n, m));
+
+	// 未確定の列を記録しておくリスト
+	list<int> rjs;
+	rep(j, m) rjs.push_back(j);
+
+	rep(i, n) {
+		// 第 i 行の係数を左から走査し非 0 を見つける．
+		auto it = rjs.begin();
+		for (; it != rjs.end(); it++) if (A[i][*it] != 0) break;
+
+		// 第 i 行の全てが 0 なら無視する．
+		if (it == rjs.end()) continue;
+
+		// A[i][j] をピボットに選択する．
+		int j = *it;
+		rjs.erase(it);
+		piv.emplace_back(i, j);
+
+		// A[i][j] が 1 になるよう行全体を A[i][j] で割る．
+		T Aij_inv = T(1) / A[i][j];
+		repi(j2, j, m - 1) A[i][j2] *= Aij_inv;
+
+		// 第 i 行以外の第 j 列の成分が全て 0 になるよう第 i 行を定数倍して減じる．
+		rep(i2, n) if (A[i2][j] != 0 && i2 != i) {
+			T mul = A[i2][j];
+			repi(j2, j, m - 1) A[i2][j2] -= A[i][j2] * mul;
+		}
+	}
+
+	return piv;
+}
+
+
 //【線形方程式】O(n m min(n, m))
 /*
 * 与えられた n×m 行列 A と n 次元ベクトル b に対し，
@@ -672,225 +718,6 @@ vd functional_equation(const vi& f, const vector<T>& a, const vector<T>& b) {
 }
 
 
-//【線形回帰】O(cnt dim min(cnt, dim))
-/*
-* get_sample() で得た cnt 個のサンプル点を元に線形回帰を行い係数列を返す（失敗すれば空リスト）
-* code には，変数不足なら -(不足量)，さもなくば斉次方程式の解空間の次元を格納する．
-*
-* 利用：【行列】,【線形方程式】
-*/
-template <class FUNC>
-vm linear_regression(const FUNC& get_sample, int cnt, int* code = nullptr) {
-	// verify : https://mofecoder.com/contests/oupc2024day2/tasks/oupc2024day2_a
-
-	Matrix<mint> A(cnt, 0); vm b(cnt);
-
-	// 説明変数と目的変数の対を cnt 個用意する．
-	rep(i, cnt) {
-		auto [vec, ans] = get_sample();
-		A[i] = vec;
-		b[i] = ans;
-	}
-	A.m = sz(A.v[0]);
-
-	// 説明変数の数以上にデータがないといつでも非自明解をもってしまって意味がない（とも限らない）
-	if (A.n < A.m) {
-		if (code) *code = A.n - A.m;
-		return vm();
-	}
-
-	// 行列方程式 A x = b を解いて特殊解 x を求める．
-	vvm xs;
-	auto x = gauss_jordan_elimination(A, b, &xs);
-	if (code) *code = sz(xs);
-	//dumpel(xs);
-
-	// 解が係数列なのでそれを返す（解がなければ説明変数が足りておらず失敗）
-	return x;
-
-	/* 雛形
-	mt19937_64 mt((int)time(NULL));
-	uniform_int_distribution<ll> rnd(0, (ll)1e18);
-
-	int sample_num = -1;
-
-	auto get_sample = [&]() {
-		++sample_num;
-
-		// テストケースのランダム生成
-		int a = (int)(rnd(mt) % 11 - 5);
-		int b = (int)(rnd(mt) % 11 - 5);
-		string s;
-		rep(k, 8) s += "01"[rnd(mt) % 2];
-
-		// 手動で入れたいケースがある場合はここで作成する．
-		if (sample_num == -1) {
-			;
-		}
-		// 係数を決め打って自由度を殺したい場合はここに追加する．
-		else if (sample_num == -2) {
-			// coef[0] = 1 に決め打ち
-			vm vec(n + 1); vec[0] = 1;
-			mint ans = 1;
-			return make_pair(vec, ans);
-		}
-
-		// テストケースから説明変数ベクトルを作成
-		vm vec{ 1 };
-		vec.push_back(a);
-		vec.push_back(b);
-		vec.push_back(min(a, b));
-
-		// 目的変数の計算
-		mint ans = naive(a, b, s);
-
-		// 説明変数と目的変数の対を返す
-		return make_pair(vec, ans);
-	};
-
-	int code;
-	auto coef = linear_regression(get_sample, 500, &code);
-	dump(coef); dump("code:", code);
-	*/
-}
-
-
-//【線形回帰（ラベル毎）】O(cnt dim min(cnt, dim))
-/*
-* get_sample() で得た cnt 個のサンプル点（L 種のラベル付き）を元に線形回帰を行い，
-* 各ラベル lab 毎に係数列をまとめた二次元リストを返す（失敗すれば空リスト）
-* code[lab] には，変数不足なら -(不足量)，さもなくば斉次方程式の解空間の次元を格納する．
-*
-* 利用：【行列】,【線形方程式】
-*/
-template <class FUNC>
-vvm linear_regression(const FUNC& get_sample, int cnt, int L, vi* code = nullptr) {
-	// verify : https://atcoder.jp/contests/abc271/submissions/35791883
-
-	vector<Matrix<mint>> As(L);
-	vvm bs(L);
-
-	// 説明変数と目的変数の対を cnt 個用意する．
-	rep(i, cnt) {
-		auto [vec, lab, ans] = get_sample();
-		As[lab].push_back(vec);
-		bs[lab].push_back(ans);
-	}
-
-	vvm res(L);
-	if (code) code->resize(L);
-
-	rep(lab, L) {
-		// サンプルが 1 つもないラベルは無視する．
-		if (bs[lab].empty()) {
-			if (code) (*code)[lab] = 999;
-			continue;
-		}
-
-		// 説明変数の数以上にデータがないといつでも非自明解をもってしまって意味がない（とも限らない）
-		As[lab].m = sz(As[lab].v[0]);
-		if (As[lab].n < As[lab].m) {
-			if (code) (*code)[lab] = As[lab].n - As[lab].m;
-			continue;
-		}
-
-		// 行列方程式 A x = b を解いて特殊解 x を求める．
-		vvm xs;
-		auto x = gauss_jordan_elimination(As[lab], bs[lab], &xs);
-		if (code) (*code)[lab] = sz(xs);
-
-		// 解が係数列なのでそれを返す（解がなければ説明変数が足りておらず失敗）
-		res[lab] = x;
-	}
-
-	return res;
-
-	/* 雛形
-	mt19937_64 mt((int)time(NULL));
-	uniform_int_distribution<ll> rnd(0, (ll)1e18);
-
-	int sample_num = -1;
-
-	auto get_sample = [&]() {
-		++sample_num;
-
-		// テストケースのランダム生成
-		int a, b; string s;
-		while (1) {
-			a = (int)(rnd(mt) % 21 - 10);
-			b = (int)(rnd(mt) % 21 - 10);
-			if (abs(a) <= 3 && abs(b) <= 3) continue;
-
-			rep(k, 8) s += "01"[rnd(mt) % 2];
-			break;
-		}
-
-		// 手動で入れたいケースがある場合はここで作成する．
-		if (sample_num == -1) {
-			;
-		}
-		// 係数を決め打って自由度を殺したい場合はここに追加する．
-		else if (sample_num == -2) {
-			// coef[0] = 1 に決め打ち
-			vm vec(n + 1); vec[0] = 1;
-			mint ans = 1;
-			return make_pair(vec, ans);
-		}
-
-		// テストケースから説明変数ベクトルを作成
-		vm vec{ 1 };
-		vec.push_back(a);
-		vec.push_back(b);
-		vec.push_back(min(a, b));
-
-		// テストケースからラベルを作成
-		int lab = 0;
-		if (a + b > 0 && b == 0) lab = 0;
-		else if (a - b > 0 && b > 0) lab = 1;
-		else if (a - b == 0 && b > 0) lab = 2;
-		else if (a - b < 0 && a > 0) lab = 3;
-		else if (a - b < 0 && a == 0) lab = 4;
-		else if (a + b > 0 && a < 0) lab = 5;
-		else if (a + b == 0 && a < 0) lab = 6;
-		else if (a + b < 0 && b > 0) lab = 7;
-		else if (a + b < 0 && b == 0) lab = 8;
-		else if (a - b < 0 && b < 0) lab = 9;
-		else if (a - b == 0 && b < 0) lab = 10;
-		else if (a - b > 0 && a < 0) lab = 11;
-		else if (a - b > 0 && a == 0) lab = 12;
-		else if (a + b < 0 && a > 0) lab = 13;
-		else if (a + b == 0 && a > 0) lab = 14;
-		else if (a + b > 0 && b < 0) lab = 15;
-
-		lab *= 2;
-		lab += a & 1;
-
-		lab *= 2;
-		lab += b & 1;
-
-		rep(k, 8) {
-			lab *= 2;
-			lab += s[k] - '0';
-		}
-
-		// 目的変数の計算
-		mint ans = naive(a, b, s);
-
-		// 説明変数と目的変数の対を返す
-		return make_tuple(vec, lab, ans);
-	};
-
-	vi code;
-	auto coef = linear_regression(get_sample, 1000000, 16*2*2*(1<<8), &code);
-	int L = sz(coef);
-
-	unordered_map<int, int> code_dist;
-	repe(c, code) code_dist[c]++;
-	dump("code_dist:"); dumpel(code_dist);
-	*/
-}
-
-
 //【行列式】O(n^3)
 /*
 * n 次正方行列 mat の行列式を返す．
@@ -940,7 +767,7 @@ T determinant(const Matrix<T>& mat) {
 }
 
 
-//【行列式（法が任意）】O(n^3 log(mat))
+//【行列式（法が任意）】O(n^3 log mod)
 /*
 * n 次正方行列 mat の行列式を返す．
 */
@@ -975,7 +802,7 @@ mint determinant_arbitrary_mod(const Matrix<mint>& mat) {
 		while (i2 < n) {
 			int vi2j = v[i2][j].val();
 			int g = gcd(vij, vi2j);
-			while (vij != g) {
+			while (vij != g) { // 拡張ユークリッド互除法を使うべき．
 				int q = vi2j / vij;
 
 				repi(j2, j, n - 1) v[i2][j2] -= q * v[i][j2];
@@ -991,6 +818,8 @@ mint determinant_arbitrary_mod(const Matrix<mint>& mat) {
 		// v[i][j] より下方の行の成分が全て 0 になるよう i 行目を定数倍して減じる（行列式の値は変化しない）
 		repi(i2, i + 1, n - 1) {
 			mint mul = v[i2][j].val() / vij;
+
+			// これのせいで数がどんどん大きくなるところだが mint なので問題ない
 			repi(j2, j, n - 1) v[i2][j2] -= v[i][j2] * mul;
 		}
 		res *= vij;
@@ -1091,6 +920,45 @@ T determinant_arbitrary(const Matrix<T>& mat) {
 	}
 
 	return dp[(1LL << n) - 1];
+}
+
+
+//【行列式の補題】
+/*
+* 正則行列 A，列ベクトル u, v について以下の等式が成り立つ：
+*	det(A + u v^T) = (1 + v^T A^(-1) u) det(A)
+* 
+* 参考 : https://en.wikipedia.org/wiki/Matrix_determinant_lemma
+* verify : https://atcoder.jp/contests/fps-24/tasks/fps_24_t
+*/
+
+
+//【行列式補題（対角行列）】O(n (log n)^2)
+/*
+* 多項式対角行列 D = disg(d[0..n)) と多項式列ベクトル u[0..n), v[0..n) に対し det(D + u v^T) を返す．
+*
+* 利用：【多項式の積の展開】,【有理式の通分】
+*/
+MFPS matrix_determinant_lemma(const vector<MFPS>& d, const vector<MFPS>& u, const vector<MFPS>& v) {
+	// verify : https://atcoder.jp/contests/fps-24/tasks/fps_24_t
+
+	//【方法】
+	// 【行列式の補題】を特殊化した
+	//		det(D + u v^T) = (1 + Σi (u[i] v[i]) / d[i]) (Πi d[i])
+	// を用いて計算する．
+
+	int n = sz(d);
+
+	auto res = expand(d);
+
+	vector<MFPS> nums(n), dnms(n);
+	rep(i, n) {
+		nums[i] = u[i] * v[i];
+		dnms[i] = d[i];
+	}
+	auto [num, dnm] = reduction(nums, dnms);
+
+	return res + res * num / dnm;
 }
 
 
@@ -1403,6 +1271,147 @@ int rank_normal_form(const Matrix<T>& a, Matrix<T>& p, Matrix<T>& q) {
 	rep(i, m) rep(j, m) q[i][j] = v[n + i][j];
 
 	return pi + 1;
+}
+
+
+//【単因子標準形】O(?)（オーバーフロー注意！）
+/*
+* A = a[0..n)[0..m) を単因子標準形 E_r := diag(e[0..r)) に変換する行列，すなわち
+*		P A Q = E_r
+* を満たす正則行列 P[0..n)[0..n), Q[0..m)[0..m) を求め，3 つ組 {e, P, Q} を返す．
+*/
+template <class T>
+tuple<vector<T>, Matrix<T>, Matrix<T>> smith_normal_form(Matrix<T> A) {
+	// verify : https://yukicoder.me/submissions/1120537
+
+	int n = A.n, m = A.m;
+
+	Matrix<T> P(n), Q(m); int r = min(n, m);
+
+	rep(k, r) {
+		// A[k][k] に非 0 成分をもってくる
+		if (A[k][k] == 0) {
+			repi(i, k, n - 1) repi(j, k, m - 1) {
+				if (A[i][j] != 0) {
+					if (i != k) {
+						swap(A[k], A[i]);
+						swap(P[k], P[i]);
+					}
+					if (j != k) {
+						rep(i2, n) swap(A[i2][k], A[i2][j]);
+						rep(i2, m) swap(Q[i2][k], Q[i2][j]);
+					}
+					i = n;
+					break;
+				}
+			}
+		}
+
+		// 残りの成分が全て 0 ならランクを確定して終了
+		if (A[k][k] == 0) {
+			r = k;
+			break;
+		}
+
+		// A[k][k] が k 行目と k 列目の成分全ての gcd になるまで反復
+		while (1) {
+			bool updated = false;
+
+			// 行方向の gcd にする（行交換のせいで列方向の gcd でなくなることがある）
+			repi(i, k + 1, n - 1) {
+				T g = gcd(A[k][k], A[i][k]);
+
+				while (abs(A[k][k]) != g) { // 拡張ユークリッド互除法にすべき
+					T q = A[i][k] / A[k][k];
+
+					repi(j, k, m - 1) A[i][j] -= q * A[k][j];
+					rep(j, n) P[i][j] -= q * P[k][j];
+
+					swap(A[k], A[i]);
+					swap(P[k], P[i]);
+
+					updated = true;
+				}
+			}
+
+			// 列方向の gcd にする（列交換のせいで行方向の gcd でなくなることがある）
+			repi(j, k + 1, m - 1) {
+				T g = gcd(A[k][k], A[k][j]);
+
+				while (abs(A[k][k]) != g) { // 拡張ユークリッド互除法にすべき
+					T q = A[k][j] / A[k][k];
+
+					repi(i, k, n - 1) A[i][j] -= q * A[i][k];
+					rep(i, m) Q[i][j] -= q * Q[i][k];
+
+					rep(i, n) swap(A[i][k], A[i][j]);
+					rep(i, m) swap(Q[i][k], Q[i][j]);
+
+					updated = true;
+				}
+			}
+
+			if (!updated) break;
+		}
+
+		// 行方向の成分を全て 0 にする．
+		repi(i, k + 1, n - 1) {
+			if (A[i][k] == 0) continue;
+			T q = A[i][k] / A[k][k];
+			repi(j, k, m - 1) A[i][j] -= q * A[k][j];
+			rep(j, n) P[i][j] -= q * P[k][j];
+		}
+
+		// 列方向の成分を全て 0 にする．
+		repi(j, k + 1, m - 1) {
+			if (A[k][j] == 0) continue;
+			T q = A[k][j] / A[k][k];
+			repi(i, k, n - 1) A[i][j] -= q * A[i][k];
+			rep(i, m) Q[i][j] -= q * Q[i][k];
+		}
+	}
+
+	// 対角成分の整除条件を満たすようにする．
+	rep(k, r) {
+		repi(k2, k + 1, r - 1) {
+
+			A[k2][k] += A[k2][k2];
+			rep(i, m) Q[i][k] += Q[i][k2];
+
+			T g = gcd(A[k][k], A[k2][k]);
+
+			while (abs(A[k][k]) != g) { // 拡張ユークリッド互除法にすべき
+				T q = A[k2][k] / A[k][k];
+
+				A[k2][k] -= q * A[k][k];
+				A[k2][k2] -= q * A[k][k2];
+				rep(j, n) P[k2][j] -= q * P[k][j];
+
+				swap(A[k], A[k2]);
+				swap(P[k], P[k2]);
+			}
+
+			T q = A[k2][k] / A[k][k];
+			A[k2][k] -= q * A[k][k];
+			A[k2][k2] -= q * A[k][k2];
+			rep(j, n) P[k2][j] -= q * P[k][j];
+
+			q = A[k][k2] / A[k][k];
+			A[k][k2] -= q * A[k][k];
+			A[k2][k2] -= q * A[k2][k];
+			rep(i, m) Q[i][k2] -= q * Q[i][k];
+		}
+
+		if (A[k][k] < 0) {
+			A[k][k] = -A[k][k];
+			rep(j, n) P[k][j] = -P[k][j];
+		}
+	}
+
+	vector<T> e(r);
+	rep(i, r) e[i] = A[i][i];
+
+	return { e, P, Q };
 }
 
 

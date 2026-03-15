@@ -370,6 +370,8 @@ vvi next_greater_position(int m, const vi& a) {
 */
 template <class T>
 struct Cartesian_tree {
+	// 参考 : https://drken1215.hatenablog.com/entry/2023/10/19/025800
+
 	struct Node {
 		T val; // 区間の最小値
 		int l, r; // 区間 [l..r) に対応するノードであることを表す．

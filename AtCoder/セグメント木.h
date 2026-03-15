@@ -322,6 +322,16 @@ class Dynamic_segtree {
 		S acc; // 部分木の値
 		Node* l, * r;
 
+		//// 参考 : https://qiita.com/tubo28/items/f058582e457f6870a800
+		//static inline int node_count = 0;
+		//// 静的に確保した配列から返す
+		//void* operator new(std::size_t) {
+		//	constexpr int MAX_N = (int)7e6 + 10;
+		//	static Node pool[MAX_N];
+		//	return pool + node_count++;
+		//}
+
+		Node() : pos(-1), val(0), acc(0), l(nullptr), r(nullptr) {}
 		Node(ll pos, S val) : pos(pos), val(val), acc(val), l(nullptr), r(nullptr) {}
 
 		// acc を正しい値にする．
