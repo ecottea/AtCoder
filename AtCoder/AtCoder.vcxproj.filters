@@ -682,5 +682,23 @@
     <Text Include="answer.txt">
       <Filter>リソース ファイル</Filter>
     </Text>
+    <Text Include="in01.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+    <Text Include="in02.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+    <Text Include="in03.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+    <Text Include="out01.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+    <Text Include="out02.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
+    <Text Include="out03.txt">
+      <Filter>リソース ファイル</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -33,7 +33,7 @@ class Permutation_rev {
 
 public:
 	Permutation_rev(const vi& p) : n(sz(p)), p(p), p_inv(n) {
-		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+		// verify : https://atcoder.jp/contests/abc470/tasks/abc470_d
 
 		rep(i, n) p_inv[p[i]] = i;
 	}
@@ -41,21 +41,21 @@ public:
 
 	// p[i] の値を返す．
 	int get(int i) {
-		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+		// verify : https://atcoder.jp/contests/abc470/tasks/abc470_d
 
 		return p[i];
 	}
 
 	// x の位置を返す．
 	int pos(int x) {
-		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+		// verify : https://atcoder.jp/contests/abc470/tasks/abc470_d
 
 		return p_inv[x];
 	}
 
 	// p[i] の値と p[j] の値を入れ替える．
 	void swap_PP(int i, int j) {
-		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+		// verify : https://atcoder.jp/contests/abc470/tasks/abc470_d
 
 		if (i == j) return;
 
@@ -81,7 +81,7 @@ public:
 
 	// 値 x と値 y を入れ替える．
 	void swap_VV(int x, int y) {
-		// verify : https://atcoder.jp/contests/abc350/tasks/abc350_c
+		// verify : https://atcoder.jp/contests/abc470/tasks/abc470_d
 
 		if (x == y) return;
 

@@ -58,7 +58,7 @@ T meguru_search(T ok, T ng, const FUNC& okQ, bool debug_mode = false) {
 	auto okQ = [&](T x) {
 		return true || false;
 	};
-	auto x = meguru_search(ok, ng, okQ);
+	auto x = meguru_search<T>(ok, ng, okQ);
 	*/
 }
 

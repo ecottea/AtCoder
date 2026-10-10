@@ -356,7 +356,7 @@ F107 id107() { return { T107(1), T107(0) }; }
 // verify : https://yukicoder.me/problems/no/1099
 using T120 = ll;
 using S120 = tuple<T120, T120, T120>; // ベクトル (s2, s, c)
-using F120 = ll; // 行列 (1, 2f, f^2; 0, 1, f; 0, 0, 1)
+using F120 = T120; // 行列 (1, 2f, f^2; 0, 1, f; 0, 0, 1)
 S120 op120(S120 x, S120 y) {
 	auto [s2x, sx, cx] = x;
 	auto [s2y, sy, cy] = y;

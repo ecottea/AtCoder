@@ -347,7 +347,13 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="answer.txt" />
+    <Text Include="in01.txt" />
+    <Text Include="in02.txt" />
+    <Text Include="in03.txt" />
     <Text Include="input.txt" />
+    <Text Include="out01.txt" />
+    <Text Include="out02.txt" />
+    <Text Include="out03.txt" />
     <Text Include="output.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

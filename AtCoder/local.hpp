@@ -7,7 +7,7 @@ using namespace std;
 
 
 #define __int128 ll
-//#include <boost/multiprecision/cpp_int.hpp> // warning STL4038 がうざい．デバッグもしにくい．
+//#include <boost/multiprecision/cpp_int.hpp> // warning STL4038 が出る．デバッグもしにくい．
 //#define __int128 boost::multiprecision::int128_t // gcc の 10 倍くらい時間がかかる
 
 
@@ -315,7 +315,7 @@ template <class T, int n, int m> void dump_math(array<array<T, m>, n> a, bool el
 		if (i < n - 1) cout << ",";
 	}
 	cout << "}";
-
+	
 	if (el) cout << ";" << endl;
 }
 

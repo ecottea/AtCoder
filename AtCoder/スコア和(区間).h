@@ -218,7 +218,7 @@ mint interval_mean_sum(const vector<T>& a) {
 	vm w(n + 1);
 	repi(i, 1, n) w[i] = mint(i).inv();
 
-	Linear_weighted_cumulative_sum W(w);
+	Linear_cumulative_sum W(w);
 
 	mint res = 0;
 
