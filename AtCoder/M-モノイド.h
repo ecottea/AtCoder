@@ -807,7 +807,7 @@ S112 op112(S112 x, S112 y) {
 
 	return { inv, c0, c1 };
 }
-S112 e112() { return { 0LL, 0, 0 }; }
+S112 e112() { return { 0LL, 0LL, 0LL }; }
 S112 act112(F112 f, S112 x) {
 	if (!f) return x;
 
