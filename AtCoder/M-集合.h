@@ -22,7 +22,7 @@
 /* verify : https://onlinejudge.u-aizu.ac.jp/courses/library/3/DSL/all/DSL_2_D */
 using SB08 = int;
 using FB08 = int;
-FB08 idB08() { return INF + 1; } // 使わない値なら何でも OK
+FB08 idB08() { return FB08(INFL) + 1; } // 使わない値なら何でも OK
 SB08 actB08(FB08 f, SB08 x) { return f == idB08() ? x : f; }
 FB08 compB08(FB08 f, FB08 g) { return f == idB08() ? g : f; }
 #define LUpdate_Integer_mset SB08, FB08, actB08, compB08, idB08
