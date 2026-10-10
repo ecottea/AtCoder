@@ -1006,7 +1006,7 @@ F133 comp133(F133 f, F133 g) {
 using S122 = ll; // ベクトル (x, e)
 using F122 = pair<S122, S122>; // 行列 (a, b; o, e)
 S122 op122(S122 x, S122 y) { return x & y; }
-S122 e122() { return ~0; }
+S122 e122() { return ~S122(0); }
 S122 act122(F122 f, S122 x) {
 	auto [a, b] = f; // 行列 (a, b; o, e)
 
